@@ -1,0 +1,22 @@
+from os.path import join
+from buildutils import read_list_file, apply_items
+Import('config target items default_items')
+
+source_files = read_list_file('library.list')
+program_files = read_list_file(join('main', 'program.list'))
+
+# Creates a new environment and pre-configure it based on the set
+# of configuration items
+def create_environment():
+  result = Environment(CPPPATH=".")
+  apply_items(result, default_items)
+  apply_items(result, items)
+  return result
+
+env = create_environment()
+
+static_library = env.StaticLibrary(config['name'], source_files)
+program = env.Program(config['name'], source_files + program_files)
+config[target + '_static_library'] = static_library[0]
+config[target + '_program'] = program[0]
+env.Alias(target, [static_library, program])

@@ -1,0 +1,12 @@
+buffer-tests.cc
+builtin-string-tests.cc
+dictionary-tests.cc
+equality-tests.cc
+heap-tests.cc
+ref-tests.cc
+runtime-tests.cc
+sexp-tests.cc
+signal-tests.cc
+singleton-tests.cc
+tuple-tests.cc
+zone-tests.cc

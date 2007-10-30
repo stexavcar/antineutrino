@@ -1,0 +1,31 @@
+from os.path import join, abspath
+from buildutils import apply_items
+from testutils import run_neutrino_tests
+Import('config common')
+
+scheduled_tests = []
+def check_scheduled_tests(source, target, env):
+  if len(scheduled_tests) == 0: return
+  run_neutrino_tests(scheduled_tests)
+
+AlwaysBuild(Alias('check-scheduled-tests', [], check_scheduled_tests))
+
+default_items = config['targets'].items('default')
+
+# Instantiate the test builders for each configuration
+for target in config['targets'].sections():
+  if target == 'default': continue
+  env = common.Copy()
+  env.Append(LIBS = [config[target + '_static_library']])
+  apply_items(env, default_items)
+  apply_items(env, config['targets'].items(target))
+  SConscript(
+    join('cctest', 'SConscript'),
+    build_dir = 'cctest-' + target,
+    exports = 'config env target scheduled_tests',
+    duplicate = False
+  )
+
+env.Alias('check', ['debug-check', 'product-check'])
+
+BUILD_TARGETS.append('check-scheduled-tests')
