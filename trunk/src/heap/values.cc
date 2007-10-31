@@ -233,8 +233,7 @@ void Data::write_short_on(string_buffer &buf) {
 
 ref<Value> ref_traits<Lambda>::call() {
   Interpreter &interpreter = Runtime::current().interpreter();
-  Stack stack;
-  return interpreter.interpret(open(this), stack);
+  return interpreter.call(open(this));
 }
 
 // --- D i c t i o n a r y ---

@@ -1,6 +1,6 @@
 #include "heap/ref-inl.h"
 #include "heap/values-inl.h"
-#include "runtime/interpreter.h"
+#include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/checks.h"
 
@@ -12,7 +12,29 @@ FOR_EACH_OPCODE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
+// -----------------
+// --- F r a m e ---
+// -----------------
+
+uint32_t &Frame::prev_pc() {
+  return reinterpret_cast<uint32_t*>(fp_)[kPrevPcOffset];
+}
+
+word *&Frame::prev_fp() {
+  return reinterpret_cast<word**>(fp_)[kPrevFpOffset];
+}
+
+Lambda *&Frame::lambda() {
+  return reinterpret_cast<Lambda**>(fp_)[kLambdaOffset];
+}
+
+// -----------------
 // --- S t a c k ---
+// -----------------
+
+Stack::Stack()
+  : sp_(0)
+  , fp_(data_) { }
 
 Value *Stack::pop_value() {
   ASSERT(sp() > 0);
@@ -33,23 +55,41 @@ void Stack::push_word(word value) {
   data()[sp_++] = value;
 }
 
-// --- I n t e r p r e t e r ---
+Frame Stack::push_activation() {
+  Frame result(data_ + sp_);
+  result.prev_fp() = fp_;
+  fp_ = data_ + sp_;
+  sp_ += Frame::kSize;
+  return result;
+}
 
-ref<Value> Interpreter::interpret(ref<Lambda> lambda, Stack &stack) {
-  ref<Code> code = lambda.code();
-  ref<Tuple> literals = lambda.literals();
+// -----------------------------
+// --- I n t e r p r e t e r ---
+// -----------------------------
+
+ref<Value> Interpreter::call(ref<Lambda> lambda) {
+  Stack stack;
+  Frame top = stack.push_activation();
+  top.lambda() = *lambda;
+  return interpret(stack);
+}
+
+ref<Value> Interpreter::interpret(Stack &stack) {
+  Frame top = stack.top();
+  Code *code = top.lambda()->code();
+  Tuple *literals = top.lambda()->literals();
   uint32_t pc = 0;
   while (true) {
-    switch (code.at(pc)) {
+    switch (code->at(pc)) {
     case PUSH: {
-      uint16_t index = code.at(pc + 1);
+      uint16_t index = code->at(pc + 1);
       Value *value = literals->at(index);
       stack.push_value(value);
       pc += 2;
       break;
     }
     case GLOBAL: {
-      uint16_t index = code.at(pc + 1);
+      uint16_t index = code->at(pc + 1);
       Value *name = literals->at(index);
       Data *value = Runtime::current().toplevel()->get(name);
       if (is<Nothing>(value)) {
@@ -63,10 +103,10 @@ ref<Value> Interpreter::interpret(ref<Lambda> lambda, Stack &stack) {
     case CALL: {
       Value *value = stack.peek_value();
       Lambda *fun = cast<Lambda>(value);
-      stack.push_value(*lambda);
+      stack.push_value(top.lambda());
       stack.push_word(pc + 2);
-      code = new_ref(fun->code());
-      literals = new_ref(fun->literals());
+      code = fun->code();
+      literals = fun->literals();
       pc = 0;
       break;
     }
@@ -74,7 +114,7 @@ ref<Value> Interpreter::interpret(ref<Lambda> lambda, Stack &stack) {
       return new_ref(stack.pop_value());
     }
     default:
-      UNHANDLED(Opcode, code.at(pc));
+      UNHANDLED(Opcode, code->at(pc));
       return ref<Value>::empty();
     }
   }
