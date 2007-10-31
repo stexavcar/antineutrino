@@ -28,22 +28,26 @@ Lambda *&Frame::lambda() {
   return reinterpret_cast<Lambda**>(fp_)[kLambdaOffset];
 }
 
+Frame Frame::parent() {
+  return Frame(prev_fp());
+}
+
 // -----------------
 // --- S t a c k ---
 // -----------------
 
 Stack::Stack()
-  : sp_(0)
+  : sp_(data_ + Frame::kSize)
   , fp_(data_) { }
 
 Value *Stack::pop_value() {
   ASSERT(sp() > 0);
-  return reinterpret_cast<Value*>(data()[--sp_]);
+  return reinterpret_cast<Value*>(*(--sp_));
 }
 
 Value *Stack::peek_value() {
   ASSERT(sp() > 0);
-  return reinterpret_cast<Value*>(data()[sp_ - 1]);
+  return reinterpret_cast<Value*>(*(sp_ - 1));
 }
 
 void Stack::push_value(Value *value) {
@@ -51,14 +55,14 @@ void Stack::push_value(Value *value) {
 }
 
 void Stack::push_word(word value) {
-  ASSERT(sp() < kLimit);
-  data()[sp_++] = value;
+  ASSERT(sp() < data() + kLimit);
+  *(sp_++) = value;
 }
 
 Frame Stack::push_activation() {
-  Frame result(data_ + sp_);
+  Frame result(sp_);
   result.prev_fp() = fp_;
-  fp_ = data_ + sp_;
+  fp_ = sp_;
   sp_ += Frame::kSize;
   return result;
 }
@@ -69,28 +73,25 @@ Frame Stack::push_activation() {
 
 ref<Value> Interpreter::call(ref<Lambda> lambda) {
   Stack stack;
-  Frame top = stack.push_activation();
-  top.lambda() = *lambda;
+  stack.top().lambda() = *lambda;
   return interpret(stack);
 }
 
 ref<Value> Interpreter::interpret(Stack &stack) {
-  Frame top = stack.top();
-  Code *code = top.lambda()->code();
-  Tuple *literals = top.lambda()->literals();
+  Frame current = stack.top();
   uint32_t pc = 0;
   while (true) {
-    switch (code->at(pc)) {
+    switch (current.lambda()->code()->at(pc)) {
     case PUSH: {
-      uint16_t index = code->at(pc + 1);
-      Value *value = literals->at(index);
+      uint16_t index = current.lambda()->code()->at(pc + 1);
+      Value *value = current.lambda()->literals()->at(index);
       stack.push_value(value);
       pc += 2;
       break;
     }
     case GLOBAL: {
-      uint16_t index = code->at(pc + 1);
-      Value *name = literals->at(index);
+      uint16_t index = current.lambda()->code()->at(pc + 1);
+      Value *name = current.lambda()->literals()->at(index);
       Data *value = Runtime::current().toplevel()->get(name);
       if (is<Nothing>(value)) {
         stack.push_value(Runtime::current().roots().vhoid());
@@ -103,18 +104,25 @@ ref<Value> Interpreter::interpret(Stack &stack) {
     case CALL: {
       Value *value = stack.peek_value();
       Lambda *fun = cast<Lambda>(value);
-      stack.push_value(top.lambda());
-      stack.push_word(pc + 2);
-      code = fun->code();
-      literals = fun->literals();
+      Frame next = stack.push_activation();
+      next.prev_pc() = pc + 1;
+      next.lambda() = fun;
+      current = next;
       pc = 0;
       break;
     }
     case RETURN: {
-      return new_ref(stack.pop_value());
+      if (current.prev_fp() == stack.data())
+        return new_ref(stack.pop_value());
+      Value *value = stack.pop_value();
+      stack.sp() = current.fp();
+      pc = current.prev_pc();
+      current = current.parent();  
+      stack.push_value(value);
+      break;
     }
     default:
-      UNHANDLED(Opcode, code->at(pc));
+      UNHANDLED(Opcode, current.lambda()->code()->at(pc));
       return ref<Value>::empty();
     }
   }
