@@ -42,44 +42,44 @@ static void test_string_buffer_basic() {
   {
     string_buffer buf(1);
     str = buf.to_string();
-    ASSERT(str == "");
+    CHECK(str == "");
     str.dispose();
     buf.append("foo");
     buf.append('-');
     buf.append("bar"); 
     str = buf.to_string();
-    ASSERT(str == "foo-bar");
+    CHECK(str == "foo-bar");
     buf.clear();
-    ASSERT(str == "foo-bar");
+    CHECK(str == "foo-bar");
     str.dispose();
     buf.append("nirk!");
     str = buf.to_string();
-    ASSERT(str == "nirk!");
+    CHECK(str == "nirk!");
   }
-  ASSERT(str == "nirk!");
+  CHECK(str == "nirk!");
   str.dispose();
 }
 
 static void test_printf() {
   string_buffer buf;
   buf.printf("[$0 $1 $2]", "foo", "bar", "baz");
-  ASSERT(buf.to_string() == "[foo bar baz]");
+  CHECK(buf.to_string() == "[foo bar baz]");
   buf.clear();
   buf.printf("[% % %]", "foo", "bar", "baz");
-  ASSERT(buf.to_string() == "[foo bar baz]");
+  CHECK(buf.to_string() == "[foo bar baz]");
   buf.clear();
   buf.printf("[$2 $1 $0]", "foo", "bar", "baz");
-  ASSERT(buf.to_string() == "[baz bar foo]");
+  CHECK(buf.to_string() == "[baz bar foo]");
   buf.clear();
   buf.printf("$2-$1-$0", 6, 7, 8);
-  ASSERT(buf.to_string() == "8-7-6");
+  CHECK(buf.to_string() == "8-7-6");
   buf.clear();
   buf.printf("$0{4.}", 21);
-  ASSERT(buf.to_string() == "  21");
+  CHECK(buf.to_string() == "  21");
   buf.clear();
   buf.printf("[$0{.4}]", 3.1415926);
-  ASSERT(buf.to_string() == "[3.142]");
+  CHECK(buf.to_string() == "[3.142]");
   buf.clear();
   buf.printf("[%{04}]", 26);
-  ASSERT(buf.to_string() == "[0026]");
+  CHECK(buf.to_string() == "[0026]");
 }

@@ -38,7 +38,7 @@ static void test_deep(uint32_t n) {
     refs[i] = new_ref(Smi::from_int(n + i << 16));
   test_deep(n - 1);
   for (int i = 0; i < kCount; i++) {
-    ASSERT_EQ(refs[i]->value(), n + i << 16);
+    CHECK_EQ(refs[i]->value(), n + i << 16);
   }
 }
 

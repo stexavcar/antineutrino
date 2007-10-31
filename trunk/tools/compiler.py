@@ -271,6 +271,7 @@ class Parser:
       expr = self.parse_expression()
       args.append(expr)
     while self.token().is_delimiter(','):
+      self.advance()
       expr = self.parse_expression()
       args.append(expr)
     return args
@@ -346,8 +347,7 @@ class Definition(SyntaxTree):
     return '(define "' + self.name + '" ' + self.value.to_sexp() + ')'
 
 class Expression(SyntaxTree):
-  def compile(self):
-    state = CodeGeneratorState()
+  def compile(self, state):
     self.emit(state)
     state.write(RETURN)
     literals = state.literals
@@ -380,15 +380,24 @@ class Lambda(Expression):
     self.params = params
     self.body = body
   def to_sexp(self):
-    code = self.body.compile()
+    state = CodeGeneratorState()
+    state.scopes.append(self.params)
+    code = self.body.compile(state)
     return '(lambda ' + str(len(self.params)) + ' ' + code + ')'
 
 class Identifier(Expression):
   def __init__(self, name):
     self.name = name
   def emit(self, state):
-    index = state.literal_index(self.name)
-    state.write(GLOBAL, index)
+    top_scope = []
+    if len(state.scopes) > 0:
+      top_scope = state.scopes[-1]
+    try:
+      scope_index = len(top_scope) - top_scope.index(self.name) - 1
+      state.write(ARGUMENT, scope_index)
+    except ValueError:
+      index = state.literal_index(self.name)
+      state.write(GLOBAL, index)
 
 class Call(Expression):
   def __init__(self, fun, args):
@@ -406,16 +415,18 @@ class Call(Expression):
 # --- C o m p i l e r ---
 # -----------------------
 
-LITERAL = 0
-RETURN  = 1
-GLOBAL  = 2
-CALL    = 3
-SLAP    = 4
+LITERAL  = 0
+RETURN   = 1
+GLOBAL   = 2
+CALL     = 3
+SLAP     = 4
+ARGUMENT = 5
 
 class CodeGeneratorState:
   def __init__(self):
     self.code = []
     self.literals = []
+    self.scopes = []
   def literal_index(self, value):
     result = len(self.literals)
     self.literals.append(value)

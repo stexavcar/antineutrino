@@ -27,7 +27,8 @@ public:
 
 ref<Value> Interpreter::call(ref<Lambda> lambda) {
   Stack stack;
-  stack.top().lambda() = *lambda;
+  Frame top = stack.push_activation();
+  top.lambda() = *lambda;
   return interpret(stack);
 }
 
@@ -64,6 +65,13 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       pc += OpcodeInfo<GLOBAL>::kSize;
       break;
     }
+    case ARGUMENT: {
+      uint16_t index = current.lambda()->code()->at(pc + 1);
+      Value *value = stack.argument(index);
+      stack.push_value(value);
+      pc += OpcodeInfo<ARGUMENT>::kSize;
+      break;
+    }
     case CALL: {
       uint16_t argc = current.lambda()->code()->at(pc + 1);
       Value *value = stack[argc];
@@ -77,7 +85,7 @@ ref<Value> Interpreter::interpret(Stack &stack) {
     }
     case RETURN: {
       Value *value = stack.pop();
-      if (current.prev_fp() == stack.bottom())
+      if (current.prev_fp() == 0)
         return new_ref(value);
       pc = current.prev_pc();
       current = stack.pop_activation();
@@ -92,9 +100,9 @@ ref<Value> Interpreter::interpret(Stack &stack) {
 }
 
 void Log::instruction(uint16_t code, Stack &stack) {
-  EnumInfo<Opcode> info;
-  string name = info.get_name_for(code);
-  printf("%s (%i)\n", name.chars(), static_cast<int>(stack.sp() - stack.bottom()));
+//  EnumInfo<Opcode> info;
+//  string name = info.get_name_for(code);
+//  printf("%s (%i)\n", name.chars(), static_cast<int>(stack.sp() - stack.bottom()));
 }
 
 } // namespace neutrino

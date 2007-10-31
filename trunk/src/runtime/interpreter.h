@@ -7,7 +7,7 @@ namespace neutrino {
 
 #define FOR_EACH_OPCODE(VISIT)                                       \
   VISIT(PUSH, 0, 1)      VISIT(RETURN, 1, 0)    VISIT(GLOBAL, 2, 1)  \
-  VISIT(CALL, 3, 1)      VISIT(SLAP, 4, 1)
+  VISIT(CALL, 3, 1)      VISIT(SLAP, 4, 1)      VISIT(ARGUMENT, 5, 1)
  
 enum Opcode {
   _FIRST_OPCODE = -1
@@ -45,6 +45,7 @@ public:
   inline Frame pop_activation();
   inline Value *pop(uint32_t height = 1);
   inline Value *&operator[](uint32_t offset);
+  inline Value *&argument(uint32_t index);
   inline void push_value(Value *value);
   inline void push_word(word value);
   word *&sp() { return sp_; }

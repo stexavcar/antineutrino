@@ -1,8 +1,9 @@
-def main() -> fooa("knork");
+def main() -> fooa("knork", "knark");
 
-def fooa(x) -> foox(x);
+def fooa(x, y) -> y;
 def foox(x) -> fooy(x);
-def fooy(x) -> x;
+def fooy(x) -> fooz(x);
+def fooz(x) -> x;
 
 def foob(x) -> 2;
 def fooc(x, y) -> 1;

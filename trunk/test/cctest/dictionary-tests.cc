@@ -56,10 +56,10 @@ static void test_dictionary_iterator() {
     visited[i] = false;
   while (iter.next(&entry)) {
     int32_t i = cast<Smi>(entry.key)->value();
-    ASSERT_EQ(cast<Smi>(entry.value)->value(),
+    CHECK_EQ(cast<Smi>(entry.value)->value(),
               i + 7);
     visited[i] = true;
   }
   for (int i = 0; i < kCount; i++)
-    ASSERT(visited[i]);
+    CHECK(visited[i]);
 }

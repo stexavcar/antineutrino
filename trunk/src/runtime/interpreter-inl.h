@@ -26,8 +26,8 @@ Lambda *&Frame::lambda() {
 // -----------------
 
 Stack::Stack()
-  : sp_(bottom() + Frame::kSize)
-  , fp_(bottom()) { }
+  : sp_(bottom())
+  , fp_(0) { }
 
 Value *Stack::pop(uint32_t height) {
   ASSERT(sp() > 0);
@@ -39,6 +39,10 @@ Value *Stack::pop(uint32_t height) {
 Value *&Stack::operator[](uint32_t index) {
   ASSERT(sp() > bottom() + index);
   return *reinterpret_cast<Value**>(sp_ - 1 - index);
+}
+
+Value *&Stack::argument(uint32_t index) {
+  return *reinterpret_cast<Value**>(fp_ - index - 1);
 }
 
 void Stack::push_value(Value *value) {
