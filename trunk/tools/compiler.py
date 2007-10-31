@@ -263,14 +263,27 @@ class Parser:
   def parse_expression(self):
     return self.parse_call_expression()
 
+  # <arguments>
+  #   -> <expression> *: ','
+  def parse_arguments(self):
+    args = []
+    if not self.token().is_delimiter(')'):
+      expr = self.parse_expression()
+      args.append(expr)
+    while self.token().is_delimiter(','):
+      expr = self.parse_expression()
+      args.append(expr)
+    return args
+
   # <call_expression>
-  #   -> <atomic_expression> <invocation>*
+  #   -> <atomic_expression> '(' <arguments> ')'
   def parse_call_expression(self):
     expr = self.parse_atomic_expression()
     if self.token().is_delimiter('('):
       self.expect_delimiter('(')
+      args = self.parse_arguments()
       self.expect_delimiter(')')
-      return Call(expr)
+      return Call(expr, args)
     else:
       return expr
 
@@ -378,11 +391,16 @@ class Identifier(Expression):
     state.write(GLOBAL, index)
 
 class Call(Expression):
-  def __init__(self, fun):
+  def __init__(self, fun, args):
     self.fun = fun
+    self.args = args
   def emit(self, state):
     self.fun.emit(state)
-    state.write(CALL)
+    for arg in self.args:
+      arg.emit(state)
+    state.write(CALL, len(self.args))
+    if len(self.args) > 0:
+      state.write(SLAP, len(self.args))
 
 # -----------------------
 # --- C o m p i l e r ---
@@ -392,6 +410,7 @@ LITERAL = 0
 RETURN  = 1
 GLOBAL  = 2
 CALL    = 3
+SLAP    = 4
 
 class CodeGeneratorState:
   def __init__(self):

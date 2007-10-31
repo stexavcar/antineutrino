@@ -1,8 +1,10 @@
-def main() -> fooa();
+def main() -> fooa("knork");
 
-def fooa() -> foox();
-def foox() -> 5;
+def fooa(x) -> foox(x);
+def foox(x) -> fooy(x);
+def fooy(x) -> x;
+
 def foob(x) -> 2;
 def fooc(x, y) -> 1;
 def food(x, y, z) -> 0;
-def fooe(x, y, z, w ) -> 8;
+def fooe(x, y, z, w) -> 8;

@@ -6,12 +6,12 @@
 namespace neutrino {
 
 #define FOR_EACH_OPCODE(VISIT)                                       \
-  VISIT(PUSH, 0)        VISIT(RETURN, 1)      VISIT(GLOBAL, 2)       \
-  VISIT(CALL, 3)
+  VISIT(PUSH, 0, 1)      VISIT(RETURN, 1, 0)    VISIT(GLOBAL, 2, 1)  \
+  VISIT(CALL, 3, 1)      VISIT(SLAP, 4, 1)
  
 enum Opcode {
-  _FIRST_OPCODE
-#define DECLARE_OPCODE(NAME, value) , NAME = value
+  _FIRST_OPCODE = -1
+#define DECLARE_OPCODE(NAME, value, argc) , NAME = value
 FOR_EACH_OPCODE(DECLARE_OPCODE)
 #undef DECLARE_OPCODE
 };
@@ -40,11 +40,11 @@ private:
 class Stack {
 public:
   Stack();
-  inline Frame top() { return Frame(fp_); }
+  Frame top() { return Frame(fp_); }
   inline Frame push_activation();
   inline Frame pop_activation();
-  inline Value *pop_value();
-  inline Value *peek_value();
+  inline Value *pop(uint32_t height = 1);
+  inline Value *&operator[](uint32_t offset);
   inline void push_value(Value *value);
   inline void push_word(word value);
   word *&sp() { return sp_; }

@@ -7,67 +7,19 @@
 namespace neutrino {
 
 MAKE_ENUM_INFO_HEADER(Opcode)
-#define MAKE_ENTRY(NAME, Name) MAKE_ENUM_INFO_ENTRY(NAME)
+#define MAKE_ENTRY(NAME, value, argc) MAKE_ENUM_INFO_ENTRY(NAME)
 FOR_EACH_OPCODE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
-// -----------------
-// --- F r a m e ---
-// -----------------
+// -------------
+// --- L o g ---
+// -------------
 
-uint32_t &Frame::prev_pc() {
-  return reinterpret_cast<uint32_t*>(fp_)[kPrevPcOffset];
-}
-
-word *&Frame::prev_fp() {
-  return reinterpret_cast<word**>(fp_)[kPrevFpOffset];
-}
-
-Lambda *&Frame::lambda() {
-  return reinterpret_cast<Lambda**>(fp_)[kLambdaOffset];
-}
-
-// -----------------
-// --- S t a c k ---
-// -----------------
-
-Stack::Stack()
-  : sp_(bottom() + Frame::kSize)
-  , fp_(bottom()) { }
-
-Value *Stack::pop_value() {
-  ASSERT(sp() > 0);
-  return reinterpret_cast<Value*>(*(--sp_));
-}
-
-Value *Stack::peek_value() {
-  ASSERT(sp() > 0);
-  return reinterpret_cast<Value*>(*(sp_ - 1));
-}
-
-void Stack::push_value(Value *value) {
-  push_word(reinterpret_cast<word>(value));
-}
-
-void Stack::push_word(word value) {
-  ASSERT(sp() < bottom() + kLimit);
-  *(sp_++) = value;
-}
-
-Frame Stack::push_activation() {
-  Frame result(sp_);
-  result.prev_fp() = fp_;
-  fp_ = sp_;
-  sp_ += Frame::kSize;
-  return result;
-}
-
-Frame Stack::pop_activation() {
-  Frame top = this->top();
-  sp_ = top.fp();
-  return Frame(top.prev_fp());
-}
+class Log {
+public:
+  static inline void instruction(uint16_t opcode, Stack &stack);
+};
 
 // -----------------------------
 // --- I n t e r p r e t e r ---
@@ -83,12 +35,21 @@ ref<Value> Interpreter::interpret(Stack &stack) {
   Frame current = stack.top();
   uint32_t pc = 0;
   while (true) {
-    switch (current.lambda()->code()->at(pc)) {
+    uint16_t oc = current.lambda()->code()->at(pc);
+    Log::instruction(oc, stack);
+    switch (oc) {
     case PUSH: {
       uint16_t index = current.lambda()->code()->at(pc + 1);
       Value *value = current.lambda()->literals()->at(index);
       stack.push_value(value);
-      pc += 2;
+      pc += OpcodeInfo<PUSH>::kSize;
+      break;
+    }
+    case SLAP: {
+      uint16_t height = current.lambda()->code()->at(pc + 1);
+      stack[height] = stack[0];
+      stack.pop(height);
+      pc += OpcodeInfo<SLAP>::kSize;
       break;
     }
     case GLOBAL: {
@@ -100,33 +61,40 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       } else {
         stack.push_value(cast<Value>(value));
       }
-      pc += 2;
+      pc += OpcodeInfo<GLOBAL>::kSize;
       break;
     }
     case CALL: {
-      Value *value = stack.peek_value();
+      uint16_t argc = current.lambda()->code()->at(pc + 1);
+      Value *value = stack[argc];
       Lambda *fun = cast<Lambda>(value);
       Frame next = stack.push_activation();
-      next.prev_pc() = pc + 1;
+      next.prev_pc() = pc + OpcodeInfo<CALL>::kSize;
       next.lambda() = fun;
       current = next;
       pc = 0;
       break;
     }
     case RETURN: {
+      Value *value = stack.pop();
       if (current.prev_fp() == stack.bottom())
-        return new_ref(stack.pop_value());
-      Value *value = stack.pop_value();
+        return new_ref(value);
       pc = current.prev_pc();
       current = stack.pop_activation();
-      stack.push_value(value);
+      stack[0] = value;
       break;
     }
     default:
-      UNHANDLED(Opcode, current.lambda()->code()->at(pc));
+      UNHANDLED(Opcode, oc);
       return ref<Value>::empty();
     }
   }
 }
 
+void Log::instruction(uint16_t code, Stack &stack) {
+  EnumInfo<Opcode> info;
+  string name = info.get_name_for(code);
+  printf("%s (%i)\n", name.chars(), static_cast<int>(stack.sp() - stack.bottom()));
 }
+
+} // namespace neutrino
