@@ -22,7 +22,6 @@ public:
   inline uint32_t &prev_pc();
   inline word *&prev_fp();
   inline Lambda *&lambda();
-  inline Frame parent();
   word *fp() { return fp_; }
 
   static const uint32_t kPrevPcOffset = 0;
@@ -43,12 +42,13 @@ public:
   Stack();
   inline Frame top() { return Frame(fp_); }
   inline Frame push_activation();
+  inline Frame pop_activation();
   inline Value *pop_value();
   inline Value *peek_value();
   inline void push_value(Value *value);
   inline void push_word(word value);
   word *&sp() { return sp_; }
-  word *data() { return data_; }
+  word *bottom() { return data_; }
 private:
   static const uint32_t kLimit = 100;
   word *sp_;

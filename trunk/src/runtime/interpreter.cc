@@ -28,17 +28,13 @@ Lambda *&Frame::lambda() {
   return reinterpret_cast<Lambda**>(fp_)[kLambdaOffset];
 }
 
-Frame Frame::parent() {
-  return Frame(prev_fp());
-}
-
 // -----------------
 // --- S t a c k ---
 // -----------------
 
 Stack::Stack()
-  : sp_(data_ + Frame::kSize)
-  , fp_(data_) { }
+  : sp_(bottom() + Frame::kSize)
+  , fp_(bottom()) { }
 
 Value *Stack::pop_value() {
   ASSERT(sp() > 0);
@@ -55,7 +51,7 @@ void Stack::push_value(Value *value) {
 }
 
 void Stack::push_word(word value) {
-  ASSERT(sp() < data() + kLimit);
+  ASSERT(sp() < bottom() + kLimit);
   *(sp_++) = value;
 }
 
@@ -65,6 +61,12 @@ Frame Stack::push_activation() {
   fp_ = sp_;
   sp_ += Frame::kSize;
   return result;
+}
+
+Frame Stack::pop_activation() {
+  Frame top = this->top();
+  sp_ = top.fp();
+  return Frame(top.prev_fp());
 }
 
 // -----------------------------
@@ -112,12 +114,11 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       break;
     }
     case RETURN: {
-      if (current.prev_fp() == stack.data())
+      if (current.prev_fp() == stack.bottom())
         return new_ref(stack.pop_value());
       Value *value = stack.pop_value();
-      stack.sp() = current.fp();
       pc = current.prev_pc();
-      current = current.parent();  
+      current = stack.pop_activation();
       stack.push_value(value);
       break;
     }

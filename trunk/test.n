@@ -1,6 +1,7 @@
 def main() -> fooa();
 
-def fooa() -> 3;
+def fooa() -> foox();
+def foox() -> 5;
 def foob(x) -> 2;
 def fooc(x, y) -> 1;
 def food(x, y, z) -> 0;
