@@ -10,7 +10,7 @@ namespace neutrino {
   VISIT(CALL,  3,  1)   VISIT(SLAP,    4,  1) VISIT(ARGUMENT, 5,  1) \
   VISIT(VOID,  6,  0)   VISIT(NUHLL,   7,  0) VISIT(TRUE,     8,  0) \
   VISIT(FALSE, 9,  0)   VISIT(POP,    10,  1) VISIT(IF_TRUE, 11, 1)  \
-  VISIT(GOTO,  12, 1)
+  VISIT(GOTO,  12, 1)   VISIT(INVOKE, 13, 2)
 
 enum Opcode {
   _FIRST_OPCODE = -1
@@ -68,6 +68,8 @@ public:
   ref<Value> call(ref<Lambda> lambda);
 private:
   ref<Value> interpret(Stack &stack);
+  inline Class *get_class(Value *val);
+  inline Data *lookup_method(Class *chlass, Value *name);
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
 };

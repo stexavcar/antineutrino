@@ -7,23 +7,24 @@
 #include "utils/globals.h"
 
 #define FOR_EACH_SIMPLE_ROOT(VISIT)                                  \
-  VISIT(Class, string_class, new_class(STRING_TAG))                     \
-  VISIT(Class, tuple_class, new_class(TUPLE_TAG))                       \
-  VISIT(Class, void_class, new_class(VOID_TAG))                         \
-  VISIT(Void, vhoid, new_singleton(void_class()))                     \
-  VISIT(Class, null_class, new_class(NULL_TAG))                         \
-  VISIT(Null, nuhll, new_singleton(null_class()))                     \
-  VISIT(Class, true_class, new_class(TRUE_TAG))                         \
-  VISIT(True, thrue, new_singleton(true_class()))                     \
-  VISIT(Class, false_class, new_class(FALSE_TAG))                       \
-  VISIT(False, fahlse, new_singleton(false_class()))                  \
-  VISIT(Class, literal_class, new_class(LITERAL_TAG))                   \
-  VISIT(Class, dictionary_class, new_class(DICTIONARY_TAG))             \
-  VISIT(Class, lambda_class, new_class(LAMBDA_TAG))                     \
+  VISIT(Class, string_class, new_class(STRING_TYPE))                 \
+  VISIT(Class, tuple_class, new_class(TUPLE_TYPE))                   \
+  VISIT(Class, void_class, new_class(VOID_TYPE))                     \
+  VISIT(Void, vhoid, new_singleton(void_class()))                    \
+  VISIT(Class, null_class, new_class(NULL_TYPE))                     \
+  VISIT(Null, nuhll, new_singleton(null_class()))                    \
+  VISIT(Class, true_class, new_class(TRUE_TYPE))                     \
+  VISIT(True, thrue, new_singleton(true_class()))                    \
+  VISIT(Class, false_class, new_class(FALSE_TYPE))                   \
+  VISIT(False, fahlse, new_singleton(false_class()))                 \
+  VISIT(Class, literal_class, new_class(LITERAL_TYPE))               \
+  VISIT(Class, dictionary_class, new_class(DICTIONARY_TYPE))         \
+  VISIT(Class, lambda_class, new_class(LAMBDA_TYPE))                 \
   VISIT(Dictionary, toplevel, new_dictionary())                      \
-  VISIT(Class, buffer_class, new_class(BUFFER_TAG))                     \
-  VISIT(Class, code_class, new_class(CODE_TAG))                         \
-  VISIT(Class, method_class, new_class(METHOD_TAG))
+  VISIT(Class, buffer_class, new_class(BUFFER_TYPE))                 \
+  VISIT(Class, code_class, new_class(CODE_TYPE))                     \
+  VISIT(Class, method_class, new_class(METHOD_TYPE))                 \
+  VISIT(Class, smi_class, new_class(SMI_TYPE))
 
 #define FOR_EACH_COMPLICATED_ROOT(VISIT)                             \
   VISIT(Class, class_class, NULL)

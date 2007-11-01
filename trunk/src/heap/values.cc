@@ -10,13 +10,13 @@ namespace neutrino {
 
 uint32_t Class::tag_of(Data *value) {
   if (is<Smi>(value)) {
-    return SMI_TAG;
+    return SMI_TYPE;
   } else if (is<Signal>(value)) {
     switch (cast<Signal>(value)->type()) {
-#define MAKE_SIGNAL_TYPE_CASE(NAME, Name) case Signal::NAME: return NAME##_TAG;
+#define MAKE_SIGNAL_TYPE_CASE(NAME, Name) case Signal::NAME: return NAME##_TYPE;
 FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
 #undef MAKE_SIGNAL_TYPE_CASE
-      default: UNREACHABLE(); return SIGNAL_TAG;
+      default: UNREACHABLE(); return SIGNAL_TYPE;
     }
   } else {
     return cast<Object>(value)->chlass()->instance_type();
@@ -25,7 +25,7 @@ FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
 
 const char *Class::tag_name(uint32_t tag) {
   switch (tag) {
-#define MAKE_TYPE_CASE(NAME, Name) case NAME##_TAG: return #NAME;
+#define MAKE_TYPE_CASE(NAME, Name) case NAME##_TYPE: return #NAME;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 #undef MAKE_TYPE_CASE
     default: return "<illegal>";
@@ -34,7 +34,7 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 
 const char *Class::class_name(uint32_t tag) {
   switch (tag) {
-#define MAKE_TYPE_CASE(NAME, Name) case NAME##_TAG: return #Name;
+#define MAKE_TYPE_CASE(NAME, Name) case NAME##_TYPE: return #Name;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 #undef MAKE_TYPE_CASE
     default: return "<illegal>";
@@ -46,8 +46,8 @@ bool Value::is_key() {
     return true;
   } if (is<Object>(this)) {
     switch (cast<Object>(this)->chlass()->instance_type()) {
-    case STRING_TAG: case VOID_TAG: case NULL_TAG: case TRUE_TAG:
-    case FALSE_TAG:
+    case STRING_TYPE: case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE:
+    case FALSE_TYPE:
       return true;
     }
   }
@@ -57,7 +57,7 @@ bool Value::is_key() {
 #endif // DEBUG
 
 MAKE_ENUM_INFO_HEADER(InstanceType)
-#define MAKE_ENTRY(NAME, Name) MAKE_ENUM_INFO_ENTRY(NAME##_TAG)
+#define MAKE_ENTRY(NAME, Name) MAKE_ENUM_INFO_ENTRY(NAME##_TYPE)
 FOR_EACH_DECLARED_TYPE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
@@ -103,34 +103,34 @@ static void write_string_short_on(String *obj, string_buffer &buf) {
 static void write_object_short_on(Object *obj, string_buffer &buf) {
   uint32_t instance_type = obj->chlass()->instance_type();
   switch (instance_type) {
-  case STRING_TAG:
+  case STRING_TYPE:
     write_string_short_on(cast<String>(obj), buf);
     break;
-  case TUPLE_TAG:
+  case TUPLE_TYPE:
     buf.append("#<tuple>");
     break;
-  case LAMBDA_TAG:
+  case LAMBDA_TYPE:
     buf.append("#<lambda>");
     break;
-  case VOID_TAG:
+  case VOID_TYPE:
     buf.append("void");
     break;
-  case NULL_TAG:
+  case NULL_TYPE:
     buf.append("null");
     break;
-  case TRUE_TAG:
+  case TRUE_TYPE:
     buf.append("true");
     break;
-  case FALSE_TAG:
+  case FALSE_TYPE:
     buf.append("false");
     break;
-  case LITERAL_TAG:
+  case LITERAL_TYPE:
     buf.append("#<literal>");
     break;
-  case DICTIONARY_TAG:
+  case DICTIONARY_TYPE:
     buf.append("#<dictionary>");
     break;
-  case CODE_TAG:
+  case CODE_TYPE:
     buf.append("#<code>");
     break;
   default:
@@ -195,16 +195,16 @@ static void write_dictionary_on(Dictionary *obj, string_buffer &buf) {
 
 static void write_object_on(Object *obj, string_buffer &buf) {
   switch (obj->chlass()->instance_type()) {
-  case TUPLE_TAG:
+  case TUPLE_TYPE:
     write_tuple_on(cast<Tuple>(obj), buf);
     break;
-  case LAMBDA_TAG:
+  case LAMBDA_TYPE:
     write_lambda_on(cast<Lambda>(obj), buf);
     break;
-  case LITERAL_TAG:
+  case LITERAL_TYPE:
     write_literal_on(cast<Literal>(obj), buf);
     break;
-  case DICTIONARY_TAG:
+  case DICTIONARY_TYPE:
     write_dictionary_on(cast<Dictionary>(obj), buf);
     break;
   default:
@@ -244,16 +244,16 @@ bool Value::equals(Value *that) {
   if (is<Smi>(this)) return this == that;
   uint32_t instance_type = cast<Object>(this)->chlass()->instance_type();
   switch (instance_type) {
-  case STRING_TAG:
+  case STRING_TYPE:
     if (!is<String>(that)) return false;
     return cast<String>(this)->string_equals(cast<String>(that));
-  case VOID_TAG:
+  case VOID_TYPE:
     return is<Void>(that);
-  case NULL_TAG:
+  case NULL_TYPE:
     return is<Null>(that);
-  case TRUE_TAG:
+  case TRUE_TYPE:
     return is<True>(that);
-  case FALSE_TAG:
+  case FALSE_TYPE:
     return is<False>(that);
   default:
     UNHANDLED(InstanceType, instance_type);

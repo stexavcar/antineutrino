@@ -157,6 +157,7 @@ void Parser::load_builtin(s::List &decl) {
     ref<Method> method = parse_method(method_ast);
     methods.set(i, method);
   }
+  type->set_methods(*methods);
 }
 
 void Parser::load_declaration(s::List &decl) {

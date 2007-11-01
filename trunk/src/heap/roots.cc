@@ -13,7 +13,7 @@ Roots::Roots() {
 
 bool Roots::initialize(Heap& heap) {
   // Complicated roots
-  Data *class_class_val = heap.allocate_class(CLASS_TAG);
+  Data *class_class_val = heap.allocate_class(CLASS_TYPE);
   if (is<AllocationFailed>(class_class_val)) return false;
   Class *class_class_obj = reinterpret_cast<Class*>(class_class_val);
   class_class_obj->set_chlass(class_class_obj);

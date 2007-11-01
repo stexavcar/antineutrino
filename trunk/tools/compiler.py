@@ -141,6 +141,8 @@ class Scanner:
       return Delimiter(':')
     elif c == ',':
       return Delimiter(',')
+    elif c == '.':
+      return Delimiter('.')
     elif c == '{':
       return Delimiter('{')
     elif c == '}':
@@ -329,15 +331,17 @@ class Parser:
 
   # <arguments>
   #   -> <expression> *: ','
-  def parse_arguments(self):
+  def parse_arguments(self, start, end):
     args = []
-    if not self.token().is_delimiter(')'):
+    self.expect_delimiter(start)
+    if not self.token().is_delimiter(end):
       expr = self.parse_expression(False)
       args.append(expr)
     while self.token().is_delimiter(','):
       self.advance()
       expr = self.parse_expression(False)
       args.append(expr)
+    self.expect_delimiter(end)
     return args
 
   # <control_expression>
@@ -352,7 +356,7 @@ class Parser:
     elif self.token().is_keyword('if'):
       return self.parse_conditional_expression(is_toplevel)
     else:
-      return self.parse_call_expression();
+      return self.parse_call_expression()
 
   # <conditional-expression>
   #   -> 'if' '(' <expression> ')' <expression> ('else' <expression>)?
@@ -370,23 +374,28 @@ class Parser:
     return Conditional(cond, then_part, else_part)
 
   # <call_expression>
-  #   -> <atomic_expression> '(' <arguments> ')'
-  #   -> <atomic expression> ':' <atomic expression> '(' <arguments> ')'
+  #   -> <atomic_expression> <arguments>
+  #   -> <atomic_expression> ':' <atomic expression> <arguments>
+  #   -> <atomic_expression> '.' $name <arguments>
   def parse_call_expression(self):
     expr = self.parse_atomic_expression()
-    if self.token().is_delimiter(':'):
-      self.expect_delimiter(':')
-      recv = expr
-      expr = self.parse_atomic_expression()
-    elif self.token().is_delimiter('('):
-      recv = This()
-    if self.token().is_delimiter('('):
-      self.expect_delimiter('(')
-      args = self.parse_arguments()
-      self.expect_delimiter(')')
-      return Call(recv, expr, args)
+    if self.token().is_delimiter('.'):
+      self.expect_delimiter('.')
+      name = self.expect_ident()
+      args = self.parse_arguments('(', ')')
+      return Invoke(expr, name, args)
     else:
-      return expr
+      if self.token().is_delimiter(':'):
+        self.expect_delimiter(':')
+        recv = expr
+        expr = self.parse_atomic_expression()
+      elif self.token().is_delimiter('('):
+        recv = This()
+      if self.token().is_delimiter('('):
+        args = self.parse_arguments('(', ')')
+        return Call(recv, expr, args)
+      else:
+        return expr
 
   # <atomic_expression>
   #   -> $number
@@ -556,6 +565,20 @@ class Call(Expression):
     state.write(CALL, len(self.args))
     state.write(SLAP, len(self.args) + 1)
 
+class Invoke(Expression):
+  def __init__(self, recv, name, args):
+    self.recv = recv
+    self.name = name
+    self.args = args
+  def emit(self, state):
+    self.recv.emit(state)
+    for arg in self.args:
+      arg.emit(state)
+    name_index = state.literal_index(self.name)
+    state.write(INVOKE, name_index, len(self.args))
+    if len(self.args) > 0:
+      state.write(SLAP, len(self.args))
+
 class This(Expression):
   def emit(self, state):
     assert len(state.scopes) > 0
@@ -629,6 +652,7 @@ FALSE       = 9
 POP         = 10
 IF_TRUE     = 11
 GOTO        = 12
+INVOKE      = 13
 PLACEHOLDER = 0xBADDEAD
 
 class CodeGeneratorState:

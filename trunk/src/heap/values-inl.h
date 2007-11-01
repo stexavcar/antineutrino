@@ -24,7 +24,7 @@ template <class C> class ValueInfo { };
 #define SPECIALIZE_VALUE_INFO(NAME, Name)                            \
 template <> class ValueInfo<Name> {                                  \
 public:                                                              \
-  static const int kTag = NAME##_TAG;                                \
+  static const int kTag = NAME##_TYPE;                               \
 };
 FOR_EACH_DECLARED_TYPE(SPECIALIZE_VALUE_INFO)
 #undef SPECIALIZE_VALUE_INFO
@@ -70,7 +70,7 @@ inline bool is<Value>(Data *val) {
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
     return is<Object>(val)                                           \
-        && cast<Object>(val)->chlass()->instance_type() == NAME##_TAG; \
+        && cast<Object>(val)->chlass()->instance_type() == NAME##_TYPE; \
   }
 FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
 #undef DEFINE_QUERY
@@ -299,6 +299,7 @@ DEFINE_ACCESSORS(Lambda*, Method, lambda, kLambdaOffset)
 
 DEFINE_ACCESSOR(uint32_t, Class, instance_type, kInstanceTypeOffset)
 
+DEFINE_ACCESSORS(Tuple*, Class, methods, kMethodsOffset)
 
 // ---------------------
 // --- S i g n a l s ---

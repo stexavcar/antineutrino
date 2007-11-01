@@ -36,6 +36,21 @@ ref<Value> Interpreter::call(ref<Lambda> lambda) {
   return interpret(stack);
 }
 
+Class *Interpreter::get_class(Value *value) {
+  if (is<Smi>(value)) return runtime().roots().smi_class();
+  else return cast<Object>(value)->chlass();
+}
+
+Data *Interpreter::lookup_method(Class *chlass, Value *name) {
+  Tuple *methods = chlass->methods();
+  for (uint32_t i = 0; i < methods->length(); i++) {
+    Method *method = cast<Method>(methods->at(i));
+    if (method->name()->equals(name))
+      return method;
+  }
+  return Nothing::make();
+}
+
 ref<Value> Interpreter::interpret(Stack &stack) {
   Frame current = stack.top();
   uint32_t pc = 0;
@@ -89,6 +104,24 @@ ref<Value> Interpreter::interpret(Stack &stack) {
     case GOTO: {
       uint16_t address = current.lambda()->code()->at(pc + 1);
       pc = address;
+      break;
+    }
+    case INVOKE: {
+      uint16_t name_index = current.lambda()->code()->at(pc + 1);
+      Value *name = current.lambda()->literals()->at(name_index);
+      uint16_t argc = current.lambda()->code()->at(pc + 2);
+      Value *recv = stack[argc];
+      Class *chlass = get_class(recv);
+      Data *lookup_result = lookup_method(chlass, name);
+      if (is<Nothing>(lookup_result)) {
+        UNREACHABLE();
+      }
+      Method *method = cast<Method>(lookup_result);
+      Frame next = stack.push_activation();
+      next.prev_pc() = pc + OpcodeInfo<INVOKE>::kSize;
+      next.lambda() = method->lambda();
+      current = next;
+      pc = 0;
       break;
     }
     case CALL: {

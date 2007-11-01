@@ -67,9 +67,9 @@ namespace neutrino {
 
 enum InstanceType {
   ILLEGAL_TAG = 0
-#define DECLARE_CLASS_TAG(NAME, Name) , NAME##_TAG
-FOR_EACH_DECLARED_TYPE(DECLARE_CLASS_TAG)
-#undef DECLARE_CLASS_TAG
+#define DECLARE_INSTANCE_TYPE(NAME, Name) , NAME##_TYPE
+FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
+#undef DECLARE_INSTANCE_TYPE
 };
 
 
@@ -406,12 +406,16 @@ class Class : public Object {
 public:
   inline uint32_t &instance_type();
 
+  inline Tuple *methods();
+  inline void set_methods(Tuple *methods);
+
   IF_DEBUG(static uint32_t tag_of(Data *value);)
   IF_DEBUG(static const char *tag_name(uint32_t tag);)
   IF_DEBUG(static const char *class_name(uint32_t tag);)
 
   static const int kInstanceTypeOffset = Object::kHeaderSize;
-  static const int kSize = kInstanceTypeOffset + kPointerSize;
+  static const int kMethodsOffset      = kInstanceTypeOffset + kPointerSize;
+  static const int kSize               = kMethodsOffset + kPointerSize;
 };
 
 
