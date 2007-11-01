@@ -45,13 +45,9 @@ Value *&Stack::argument(uint32_t index) {
   return *reinterpret_cast<Value**>(fp_ - index - 1);
 }
 
-void Stack::push_value(Value *value) {
-  push_word(reinterpret_cast<word>(value));
-}
-
-void Stack::push_word(word value) {
+void Stack::push(Value *value) {
   ASSERT(sp() < bottom() + kLimit);
-  *(sp_++) = value;
+  *(sp_++) = reinterpret_cast<word>(value);
 }
 
 Frame Stack::push_activation() {

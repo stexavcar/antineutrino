@@ -57,7 +57,9 @@ class Delimiter(Token):
   def __str__(self):
     return self.value
 
-KEYWORDS = ['def']
+KEYWORDS = [
+  'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return'
+]
 
 # ---------------------
 # --- S c a n n e r ---
@@ -134,8 +136,14 @@ class Scanner:
       return Delimiter(')')
     elif c == ';':
       return Delimiter(';')
+    elif c == ':':
+      return Delimiter(':')
     elif c == ',':
       return Delimiter(',')
+    elif c == '{':
+      return Delimiter('{')
+    elif c == '}':
+      return Delimiter('}')
     elif c == '-':
       if not self.has_more(): return Delimiter('-')
       c = self.current()
@@ -229,23 +237,40 @@ class Parser:
 
   # <definition>
   #   -> 'def' $ident ':=' <expression> ';'
-  #   -> 'def' $ident '(' <params> ')' '->' <expression>
+  #   -> 'def' $ident '(' <params> ')' <function-body>
   def parse_definition(self):
     self.expect_keyword('def')
     name = self.expect_ident()
     if self.token() == ':=':
       self.expect(':=')
-      value = self.parse_expression()
+      value = self.parse_expression(False)
       self.expect_delimiter(';')
       return Definition(name, value)
     else:
       self.expect_delimiter('(')
       params = self.parse_params()
       self.expect_delimiter(')')
+      body = self.parse_function_body()
+      return Definition(name, Lambda(params, body))
+
+  # <function-body>
+  #   -> '->' <expression>
+  #   -> <block-expression>
+  def parse_function_body(self):
+    if self.token().is_delimiter('->'):
       self.expect_delimiter('->')
-      value = self.parse_expression()
+      value = self.parse_expression(False)
       self.expect_delimiter(';')
-      return Definition(name, Lambda(params, value))
+      return Return(value)
+    elif self.token().is_delimiter('{'):
+      exprs = []
+      self.expect_delimiter('{')
+      while not self.token().is_delimiter('}'):
+        expr = self.parse_expression(True)
+        exprs.append(expr)
+      self.expect_delimiter('}')
+      exprs.append(Return(Void()))
+      return Sequence(exprs)
 
   # <params>
   #   -> $ident *: ','
@@ -259,38 +284,56 @@ class Parser:
     return params
 
   # <expression>
-  #   -> <call_expression>
-  def parse_expression(self):
-    return self.parse_call_expression()
+  #   -> <control_expression>
+  def parse_expression(self, is_toplevel):
+    return self.parse_control_expression(is_toplevel)
 
   # <arguments>
   #   -> <expression> *: ','
   def parse_arguments(self):
     args = []
     if not self.token().is_delimiter(')'):
-      expr = self.parse_expression()
+      expr = self.parse_expression(False)
       args.append(expr)
     while self.token().is_delimiter(','):
       self.advance()
-      expr = self.parse_expression()
+      expr = self.parse_expression(False)
       args.append(expr)
     return args
 
+  # <control_expression>
+  def parse_control_expression(self, is_toplevel):
+    if self.token().is_keyword('return'):
+      self.expect_keyword('return')
+      value = self.parse_expression(False)
+      if is_toplevel: self.expect_delimiter(';')
+      return Return(value)
+    else:
+      return self.parse_call_expression();
+
   # <call_expression>
   #   -> <atomic_expression> '(' <arguments> ')'
+  #   -> <atomic expression> ':' <atomic expression> '(' <arguments> ')'
   def parse_call_expression(self):
     expr = self.parse_atomic_expression()
+    if self.token().is_delimiter(':'):
+      self.expect_delimiter(':')
+      recv = expr
+      expr = self.parse_atomic_expression()
+    elif self.token().is_delimiter('('):
+      recv = This()
     if self.token().is_delimiter('('):
       self.expect_delimiter('(')
       args = self.parse_arguments()
       self.expect_delimiter(')')
-      return Call(expr, args)
+      return Call(recv, expr, args)
     else:
       return expr
 
   # <atomic_expression>
   #   -> $number
   #   -> $string
+  #   -> 'this'
   def parse_atomic_expression(self):
     if self.token().is_number():
       value = self.token().value
@@ -304,6 +347,9 @@ class Parser:
       name = self.token().name
       self.advance()
       return Identifier(name)
+    elif self.token().is_keyword('this'):
+      self.advance()
+      return This()
     else:
       self.parse_error()
 
@@ -349,7 +395,6 @@ class Definition(SyntaxTree):
 class Expression(SyntaxTree):
   def compile(self, state):
     self.emit(state)
-    state.write(RETURN)
     literals = state.literals
     result = '('
     first = True
@@ -391,7 +436,7 @@ class Identifier(Expression):
   def emit(self, state):
     top_scope = []
     if len(state.scopes) > 0:
-      top_scope = state.scopes[-1]
+      top_scope = state.scopes[0]
     try:
       scope_index = len(top_scope) - top_scope.index(self.name) - 1
       state.write(ARGUMENT, scope_index)
@@ -400,16 +445,48 @@ class Identifier(Expression):
       state.write(GLOBAL, index)
 
 class Call(Expression):
-  def __init__(self, fun, args):
+  def __init__(self, recv, fun, args):
+    self.recv = recv
     self.fun = fun
     self.args = args
   def emit(self, state):
+    self.recv.emit(state)
     self.fun.emit(state)
     for arg in self.args:
       arg.emit(state)
     state.write(CALL, len(self.args))
-    if len(self.args) > 0:
-      state.write(SLAP, len(self.args))
+    state.write(SLAP, len(self.args) + 1)
+
+class This(Expression):
+  def __init__(self): pass
+  def emit(self, state):
+    assert len(state.scopes) > 0
+    top_scope = state.scopes[0]
+    state.write(ARGUMENT, len(top_scope) + 1)
+
+class Void(Expression):
+  def __init__(self): pass
+  def emit(self, state): state.write(VOID)
+
+class Return(Expression):
+  def __init__(self, value):
+    self.value = value
+  def emit(self, state):
+    self.value.emit(state)
+    state.write(RETURN)
+
+class Sequence(Expression):
+  def __init__(self, exprs):
+    self.exprs = exprs
+  def emit(self, state):
+    if len(self.exprs) == 0:
+      state.write(VOID)
+    else:
+      first = True
+      for expr in self.exprs:
+        if first: first = False
+        else: state.write(POP, 1)
+        expr.emit(state)        
 
 # -----------------------
 # --- C o m p i l e r ---
@@ -421,6 +498,11 @@ GLOBAL   = 2
 CALL     = 3
 SLAP     = 4
 ARGUMENT = 5
+VOID     = 6
+NULL     = 7
+TRUE     = 8
+FALSE    = 9
+POP      = 10
 
 class CodeGeneratorState:
   def __init__(self):

@@ -1,9 +1,13 @@
-def main() -> fooa("knork", "knark");
+def main() -> "fnis":fooa(3, 4);
 
-def fooa(x, y) -> y;
+def fooa(x, y) -> foox(y);
 def foox(x) -> fooy(x);
 def fooy(x) -> fooz(x);
-def fooz(x) -> x;
+def fooz(x) -> fuzzing(this);
+
+def fuzzing(v) {
+  return v;
+}
 
 def foob(x) -> 2;
 def fooc(x, y) -> 1;

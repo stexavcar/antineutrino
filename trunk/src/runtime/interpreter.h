@@ -6,9 +6,11 @@
 namespace neutrino {
 
 #define FOR_EACH_OPCODE(VISIT)                                       \
-  VISIT(PUSH, 0, 1)      VISIT(RETURN, 1, 0)    VISIT(GLOBAL, 2, 1)  \
-  VISIT(CALL, 3, 1)      VISIT(SLAP, 4, 1)      VISIT(ARGUMENT, 5, 1)
- 
+  VISIT(PUSH, 0, 1)     VISIT(RETURN, 1, 0)   VISIT(GLOBAL, 2, 1)    \
+  VISIT(CALL, 3, 1)     VISIT(SLAP, 4, 1)     VISIT(ARGUMENT, 5, 1)  \
+  VISIT(VOID, 6, 0)     VISIT(NUHLL, 7, 0)    VISIT(TRUE, 8, 0)      \
+  VISIT(FALSE, 9, 0)
+  
 enum Opcode {
   _FIRST_OPCODE = -1
 #define DECLARE_OPCODE(NAME, value, argc) , NAME = value
@@ -46,8 +48,7 @@ public:
   inline Value *pop(uint32_t height = 1);
   inline Value *&operator[](uint32_t offset);
   inline Value *&argument(uint32_t index);
-  inline void push_value(Value *value);
-  inline void push_word(word value);
+  inline void push(Value *value);
   word *&sp() { return sp_; }
   word *bottom() { return data_; }
 private:

@@ -27,6 +27,8 @@ public:
 
 ref<Value> Interpreter::call(ref<Lambda> lambda) {
   Stack stack;
+  stack.push(runtime().roots().vhoid()); // initial 'this'
+  stack.push(runtime().roots().vhoid()); // initial lambda
   Frame top = stack.push_activation();
   top.lambda() = *lambda;
   return interpret(stack);
@@ -42,7 +44,7 @@ ref<Value> Interpreter::interpret(Stack &stack) {
     case PUSH: {
       uint16_t index = current.lambda()->code()->at(pc + 1);
       Value *value = current.lambda()->literals()->at(index);
-      stack.push_value(value);
+      stack.push(value);
       pc += OpcodeInfo<PUSH>::kSize;
       break;
     }
@@ -56,11 +58,11 @@ ref<Value> Interpreter::interpret(Stack &stack) {
     case GLOBAL: {
       uint16_t index = current.lambda()->code()->at(pc + 1);
       Value *name = current.lambda()->literals()->at(index);
-      Data *value = Runtime::current().toplevel()->get(name);
+      Data *value = runtime().toplevel()->get(name);
       if (is<Nothing>(value)) {
-        stack.push_value(Runtime::current().roots().vhoid());
+        stack.push(runtime().roots().vhoid());
       } else {
-        stack.push_value(cast<Value>(value));
+        stack.push(cast<Value>(value));
       }
       pc += OpcodeInfo<GLOBAL>::kSize;
       break;
@@ -68,7 +70,7 @@ ref<Value> Interpreter::interpret(Stack &stack) {
     case ARGUMENT: {
       uint16_t index = current.lambda()->code()->at(pc + 1);
       Value *value = stack.argument(index);
-      stack.push_value(value);
+      stack.push(value);
       pc += OpcodeInfo<ARGUMENT>::kSize;
       break;
     }
@@ -90,6 +92,11 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       pc = current.prev_pc();
       current = stack.pop_activation();
       stack[0] = value;
+      break;
+    }
+    case VOID: {
+      stack.push(runtime().roots().vhoid());
+      pc += OpcodeInfo<VOID>::kSize;
       break;
     }
     default:
