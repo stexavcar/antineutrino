@@ -6,11 +6,12 @@
 namespace neutrino {
 
 #define FOR_EACH_OPCODE(VISIT)                                       \
-  VISIT(PUSH, 0, 1)     VISIT(RETURN, 1, 0)   VISIT(GLOBAL, 2, 1)    \
-  VISIT(CALL, 3, 1)     VISIT(SLAP, 4, 1)     VISIT(ARGUMENT, 5, 1)  \
-  VISIT(VOID, 6, 0)     VISIT(NUHLL, 7, 0)    VISIT(TRUE, 8, 0)      \
-  VISIT(FALSE, 9, 0)
-  
+  VISIT(PUSH,  0,  1)   VISIT(RETURN,  1,  0) VISIT(GLOBAL,   2,  1) \
+  VISIT(CALL,  3,  1)   VISIT(SLAP,    4,  1) VISIT(ARGUMENT, 5,  1) \
+  VISIT(VOID,  6,  0)   VISIT(NUHLL,   7,  0) VISIT(TRUE,     8,  0) \
+  VISIT(FALSE, 9,  0)   VISIT(POP,    10,  1) VISIT(IF_TRUE, 11, 1)  \
+  VISIT(GOTO,  12, 1)
+
 enum Opcode {
   _FIRST_OPCODE = -1
 #define DECLARE_OPCODE(NAME, value, argc) , NAME = value

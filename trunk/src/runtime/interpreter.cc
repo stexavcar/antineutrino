@@ -19,6 +19,8 @@ MAKE_ENUM_INFO_FOOTER()
 class Log {
 public:
   static inline void instruction(uint16_t opcode, Stack &stack);
+private:
+  static const bool kTraceInstructions = false;
 };
 
 // -----------------------------
@@ -74,6 +76,21 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       pc += OpcodeInfo<ARGUMENT>::kSize;
       break;
     }
+    case IF_TRUE: {
+      Value *value = stack.pop();
+      if (is<True>(value)) {
+        uint16_t index = current.lambda()->code()->at(pc + 1);
+        pc = index;
+      } else {
+        pc += OpcodeInfo<IF_TRUE>::kSize;
+      }
+      break;
+    }
+    case GOTO: {
+      uint16_t address = current.lambda()->code()->at(pc + 1);
+      pc = address;
+      break;
+    }
     case CALL: {
       uint16_t argc = current.lambda()->code()->at(pc + 1);
       Value *value = stack[argc];
@@ -99,6 +116,21 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       pc += OpcodeInfo<VOID>::kSize;
       break;
     }
+    case NUHLL: {
+      stack.push(runtime().roots().nuhll());
+      pc += OpcodeInfo<NUHLL>::kSize;
+      break;
+    }
+    case TRUE: {
+      stack.push(runtime().roots().thrue());
+      pc += OpcodeInfo<TRUE>::kSize;
+      break;
+    }
+    case FALSE: {
+      stack.push(runtime().roots().fahlse());
+      pc += OpcodeInfo<FALSE>::kSize;
+      break;
+    }
     default:
       UNHANDLED(Opcode, oc);
       return ref<Value>::empty();
@@ -107,9 +139,11 @@ ref<Value> Interpreter::interpret(Stack &stack) {
 }
 
 void Log::instruction(uint16_t code, Stack &stack) {
-//  EnumInfo<Opcode> info;
-//  string name = info.get_name_for(code);
-//  printf("%s (%i)\n", name.chars(), static_cast<int>(stack.sp() - stack.bottom()));
+  if (kTraceInstructions) {
+    EnumInfo<Opcode> info;
+    string name = info.get_name_for(code);
+    printf("%s (%i)\n", name.chars(), static_cast<int>(stack.sp() - stack.bottom()));
+  }
 }
 
 } // namespace neutrino

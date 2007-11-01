@@ -6,7 +6,7 @@ def fooy(x) -> fooz(x);
 def fooz(x) -> fuzzing(this);
 
 def fuzzing(v) {
-  return v;
+  return (if (false) 5);
 }
 
 def foob(x) -> 2;

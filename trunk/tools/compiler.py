@@ -58,7 +58,8 @@ class Delimiter(Token):
     return self.value
 
 KEYWORDS = [
-  'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return'
+  'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return',
+  'null', 'true', 'false'
 ]
 
 # ---------------------
@@ -302,14 +303,33 @@ class Parser:
     return args
 
   # <control_expression>
+  #   -> 'return' <expression>
+  #   -> <conditional-expression>
   def parse_control_expression(self, is_toplevel):
     if self.token().is_keyword('return'):
       self.expect_keyword('return')
       value = self.parse_expression(False)
       if is_toplevel: self.expect_delimiter(';')
       return Return(value)
+    elif self.token().is_keyword('if'):
+      return self.parse_conditional_expression(is_toplevel)
     else:
       return self.parse_call_expression();
+
+  # <conditional-expression>
+  #   -> 'if' '(' <expression> ')' <expression> ('else' <expression>)?
+  def parse_conditional_expression(self, is_toplevel):
+    self.expect_keyword('if')
+    self.expect_delimiter('(')
+    cond = self.parse_expression(False)
+    self.expect_delimiter(')')
+    then_part = self.parse_expression(is_toplevel)
+    if self.token().is_keyword('else'):
+      self.expect_keyword('else')
+      else_part = self.parse_expression(is_toplevel)
+    else:
+      else_part = Void()
+    return Conditional(cond, then_part, else_part)
 
   # <call_expression>
   #   -> <atomic_expression> '(' <arguments> ')'
@@ -334,6 +354,8 @@ class Parser:
   #   -> $number
   #   -> $string
   #   -> 'this'
+  #   -> 'true' | 'false' | 'null'
+  #   -> '(' <expression> ')'
   def parse_atomic_expression(self):
     if self.token().is_number():
       value = self.token().value
@@ -350,6 +372,20 @@ class Parser:
     elif self.token().is_keyword('this'):
       self.advance()
       return This()
+    elif self.token().is_keyword('true'):
+      self.advance()
+      return Thrue()
+    elif self.token().is_keyword('false'):
+      self.advance()
+      return Fahlse()
+    elif self.token().is_keyword('null'):
+      self.advance()
+      return Null()
+    elif self.token().is_delimiter('('):
+      self.expect_delimiter('(')
+      value = self.parse_expression(False)
+      self.expect_delimiter(')')
+      return value
     else:
       self.parse_error()
 
@@ -458,15 +494,26 @@ class Call(Expression):
     state.write(SLAP, len(self.args) + 1)
 
 class This(Expression):
-  def __init__(self): pass
   def emit(self, state):
     assert len(state.scopes) > 0
     top_scope = state.scopes[0]
     state.write(ARGUMENT, len(top_scope) + 1)
 
 class Void(Expression):
-  def __init__(self): pass
-  def emit(self, state): state.write(VOID)
+  def emit(self, state):
+    state.write(VOID)
+
+class Null(Expression):
+  def emit(self, state):
+    state.write(NULL)
+
+class Thrue(Expression):
+  def emit(self, state):
+    state.write(TRUE)
+
+class Fahlse(Expression):
+  def emit(self, state):
+    state.write(FALSE)
 
 class Return(Expression):
   def __init__(self, value):
@@ -486,23 +533,40 @@ class Sequence(Expression):
       for expr in self.exprs:
         if first: first = False
         else: state.write(POP, 1)
-        expr.emit(state)        
+        expr.emit(state)
+
+class Conditional(Expression):
+  def __init__(self, cond, then_part, else_part):
+    self.cond = cond
+    self.then_part = then_part
+    self.else_part = else_part
+  def emit(self, state):
+    self.cond.emit(state)
+    if_true_jump = state.write(IF_TRUE, PLACEHOLDER)
+    self.else_part.emit(state)
+    end_jump = state.write(GOTO, PLACEHOLDER)
+    state.bind(if_true_jump)
+    self.then_part.emit(state)
+    state.bind(end_jump)
 
 # -----------------------
 # --- C o m p i l e r ---
 # -----------------------
 
-LITERAL  = 0
-RETURN   = 1
-GLOBAL   = 2
-CALL     = 3
-SLAP     = 4
-ARGUMENT = 5
-VOID     = 6
-NULL     = 7
-TRUE     = 8
-FALSE    = 9
-POP      = 10
+LITERAL     = 0
+RETURN      = 1
+GLOBAL      = 2
+CALL        = 3
+SLAP        = 4
+ARGUMENT    = 5
+VOID        = 6
+NULL        = 7
+TRUE        = 8
+FALSE       = 9
+POP         = 10
+IF_TRUE     = 11
+GOTO        = 12
+PLACEHOLDER = 0xBADDEAD
 
 class CodeGeneratorState:
   def __init__(self):
@@ -515,6 +579,10 @@ class CodeGeneratorState:
     return result
   def write(self, *args):
     self.code += args
+    return len(self.code) - 1
+  def bind(self, offset):
+    assert self.code[offset] == PLACEHOLDER
+    self.code[offset] = len(self.code)
 
 def serialize_value(value):
   if type(value) is str:
