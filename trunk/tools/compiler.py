@@ -572,12 +572,12 @@ class Invoke(Expression):
     self.args = args
   def emit(self, state):
     self.recv.emit(state)
+    state.write(VOID)
     for arg in self.args:
       arg.emit(state)
     name_index = state.literal_index(self.name)
     state.write(INVOKE, name_index, len(self.args))
-    if len(self.args) > 0:
-      state.write(SLAP, len(self.args))
+    state.write(SLAP, len(self.args) + 1)
 
 class This(Expression):
   def emit(self, state):

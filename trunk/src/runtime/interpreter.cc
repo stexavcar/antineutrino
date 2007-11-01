@@ -36,11 +36,18 @@ ref<Value> Interpreter::call(ref<Lambda> lambda) {
   return interpret(stack);
 }
 
+/**
+ * Returns the class object for the given value.
+ */
 Class *Interpreter::get_class(Value *value) {
   if (is<Smi>(value)) return runtime().roots().smi_class();
   else return cast<Object>(value)->chlass();
 }
 
+/**
+ * Returns the method with the specified name in the given class.  If
+ * no method is found Nothing is returned.
+ */
 Data *Interpreter::lookup_method(Class *chlass, Value *name) {
   Tuple *methods = chlass->methods();
   for (uint32_t i = 0; i < methods->length(); i++) {
@@ -110,7 +117,7 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       uint16_t name_index = current.lambda()->code()->at(pc + 1);
       Value *name = current.lambda()->literals()->at(name_index);
       uint16_t argc = current.lambda()->code()->at(pc + 2);
-      Value *recv = stack[argc];
+      Value *recv = stack[argc + 1];
       Class *chlass = get_class(recv);
       Data *lookup_result = lookup_method(chlass, name);
       if (is<Nothing>(lookup_result)) {

@@ -19,5 +19,5 @@ class True {
 }
 
 class String {
-  def length() -> 10;
+  def length() -> this;
 }
