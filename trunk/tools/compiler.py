@@ -174,6 +174,12 @@ class Scanner:
 # --- P a r s e r ---
 # -------------------
 
+BUILTINS = {
+  'True':   0,
+  'False':  1,
+  'String': 2
+}
+
 class Parser:
 
   def __init__(self, tokens):
@@ -228,13 +234,44 @@ class Parser:
     self.cursor = self.cursor + 1
 
   # <program>
-  #   -> <definition>*
+  #   -> <declaration>*
   def parse_program(self):
     decls = []
     while not self.token().is_eof():
-      decl = self.parse_definition()
+      decl = self.parse_declaration()
       decls.append(decl)
     return Program(decls)
+
+  # <declaration>
+  #   -> <definition>
+  #   -> <class_declaration>
+  def parse_declaration(self):
+    if self.token().is_keyword('def'):
+      return self.parse_definition()
+    else:
+      return self.parse_class_declaration()
+  
+  # <class_declaration>
+  #   -> 'class' $ident '{' <member_declaration>* '}'
+  def parse_class_declaration(self):
+    self.expect_keyword('class')
+    name = self.expect_ident()
+    index = BUILTINS[name]
+    self.expect_delimiter('{')
+    members = []
+    while not self.token().is_delimiter('}'):
+      member = self.parse_member_declaration()
+      members.append(member)
+    self.expect_delimiter('}')
+    return BuiltinClass(index, members)
+
+  # <member_declaration>
+  #   -> 'def' <method_header> <method_body>
+  def parse_member_declaration(self):
+    self.expect_keyword('def')
+    name = self.expect_ident()
+    params = self.parse_params('(', ')')
+    body = self.parse_function_body()
 
   # <definition>
   #   -> 'def' $ident ':=' <expression> ';'
@@ -248,9 +285,7 @@ class Parser:
       self.expect_delimiter(';')
       return Definition(name, value)
     else:
-      self.expect_delimiter('(')
-      params = self.parse_params()
-      self.expect_delimiter(')')
+      params = self.parse_params('(', ')')
       body = self.parse_function_body()
       return Definition(name, Lambda(params, body))
 
@@ -275,13 +310,15 @@ class Parser:
 
   # <params>
   #   -> $ident *: ','
-  def parse_params(self):
+  def parse_params(self, start, end):
     params = []
-    if self.token().is_ident(): params.append(self.expect_ident())
-    else: return params
-    while self.token().is_delimiter(','):
-      self.expect_delimiter(',')
+    self.expect_delimiter(start)
+    if self.token().is_ident():
       params.append(self.expect_ident())
+      while self.token().is_delimiter(','):
+        self.expect_delimiter(',')
+        params.append(self.expect_ident())
+    self.expect_delimiter(end)
     return params
 
   # <expression>
@@ -427,6 +464,13 @@ class Definition(SyntaxTree):
     self.value = value
   def to_sexp(self):
     return '(define "' + self.name + '" ' + self.value.to_sexp() + ')'
+
+class BuiltinClass(SyntaxTree):
+  def __init__(self, index, members):
+    self.index = index
+    self.members = members
+  def to_sexp(self):
+    return '(builtin ' + str(self.index) + ')'
 
 class Expression(SyntaxTree):
   def compile(self, state):

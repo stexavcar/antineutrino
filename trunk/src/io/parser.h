@@ -19,7 +19,12 @@ public:
 class Parser {
 public:
   Parser(Runtime &runtime);
+  
   void load(sexp::List &program);
+  void load_definition(sexp::List &def);
+  void load_builtin(sexp::List &decl);
+  void load_declaration(sexp::List &decl);
+  
   ref<Value> parse_value(sexp::Sexp &expr);
   ref<Code> parse_code(sexp::List &expr);
   ref<Tuple> parse_literals(sexp::List &expr);
@@ -28,6 +33,7 @@ public:
   Runtime &runtime() { return runtime_; }
   Factory &factory() { return factory_; }
 private:
+  ref<Type> get_builtin_type(uint32_t index);
   Runtime &runtime_;
   Factory &factory_;
 };

@@ -12,7 +12,7 @@ namespace s = sexp;
 
 #define FOR_EACH_KIND(V)                                             \
   V(program, PROGRAM)   V(lambda, LAMBDA)     V(define,  DEFINE)     \
-  V(number, NUMBER)
+  V(number, NUMBER)     V(class, CLASS)       V(builtin, BUILTIN)
 
 enum TreeTag {
   _FIRST_TREE_TAG
@@ -113,15 +113,50 @@ ref<Value> Parser::parse_value(sexp::List &expr) {
   }
 }
 
+ref<Type> Parser::get_builtin_type(uint32_t index) {
+  switch (index) {
+    case 0:
+      return runtime().true_type();
+    case 1:
+      return runtime().false_type();
+    case 2:
+      return runtime().string_type();
+    default:
+      UNREACHABLE();
+      return 0;
+  }
+}
+
+void Parser::load_definition(s::List &def) {
+  string name = s::cast<s::String>(def[1]).str();
+  ref<Value> value = parse_value(s::cast<s::List>(def[2]));
+  runtime().toplevel().set(factory().new_string(name), value);
+}
+
+void Parser::load_builtin(s::List &decl) {
+  uint32_t index = s::cast<s::Number>(decl[1]).value();
+  ref<Type> type = get_builtin_type(index);
+}
+
+void Parser::load_declaration(s::List &decl) {
+  switch (decl.tag()) {
+    case DEFINE:
+      load_definition(decl);
+      break;
+    case BUILTIN:
+      load_builtin(decl);
+      break;
+    default:
+      UNHANDLED(TreeTag, decl.tag());
+  }
+}
+
 void Parser::load(sexp::List &program) {
   ASSERT_EQ(PROGRAM, program.tag());
   for (uint32_t i = 1; i < program.length(); i++) {
     RefScope ref_scope;
     sexp::List &decl = sexp::cast<sexp::List>(program[i]);
-    ASSERT_EQ(DEFINE, decl.tag());
-    string name = sexp::cast<s::String>(decl[1]).str();
-    ref<Value> value = parse_value(s::cast<s::List>(decl[2]));
-    runtime().toplevel().set(factory().new_string(name), value);
+    load_declaration(decl);
   }
 }
 

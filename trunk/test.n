@@ -13,3 +13,11 @@ def foob(x) -> 2;
 def fooc(x, y) -> 1;
 def food(x, y, z) -> 0;
 def fooe(x, y, z, w) -> 8;
+
+class True {
+
+}
+
+class String {
+  def length() -> 10;
+}
