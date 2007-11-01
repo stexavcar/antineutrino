@@ -1,5 +1,5 @@
-#ifndef _VALUES_INL
-#define _VALUES_INL
+#ifndef _HEAP_VALUES_INL
+#define _HEAP_VALUES_INL
 
 #include "heap/pointer-inl.h"
 #include "heap/ref-inl.h"
@@ -9,6 +9,7 @@
 #include "utils/types-inl.h"
 
 namespace neutrino {
+
 
 // ---------------------------
 // --- V a l u e   I n f o ---
@@ -27,6 +28,7 @@ public:                                                              \
 };
 FOR_EACH_DECLARED_TYPE(SPECIALIZE_VALUE_INFO)
 #undef SPECIALIZE_VALUE_INFO
+
 
 // ---------------------------
 // --- P r e d i c a t e s ---
@@ -68,7 +70,7 @@ inline bool is<Value>(Data *val) {
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
     return is<Object>(val)                                           \
-        && cast<Object>(val)->type()->instance_type() == NAME##_TAG; \
+        && cast<Object>(val)->chlass()->instance_type() == NAME##_TAG; \
   }
 FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
 #undef DEFINE_QUERY
@@ -92,7 +94,10 @@ inline bool is<Signal>(Data *val) {
 FOR_EACH_SIGNAL_TYPE(DEFINE_SIGNAL_QUERY)
 #undef DEFINE_SIGNAL_QUERY
 
+
+// -----------------
 // --- V a l u e ---
+// -----------------
 
 string ref_traits<Value>::to_string() {
   return open(this)->to_string();
@@ -102,17 +107,10 @@ void ref_traits<Value>::print(FILE *out) {
   open(this)->print(out);
 }
 
-// --- S m a l l   I n t e g e r ---
 
-Smi* Smi::from_int(int32_t value) {
-  return ValuePointer::tag_as_smi(value);
-}
-
-int32_t Smi::value() {
-  return ValuePointer::value_of(this);
-}
-
+// -------------------------------------
 // --- A c c e s s o r   M a c r o s ---
+// -------------------------------------
 
 #define DEFINE_ACCESSOR(T, Class, name, kOffset)                     \
 T &Class::name() {                                                   \
@@ -135,11 +133,30 @@ void Class::set_##name(T value) {                                    \
   DEFINE_GETTER(T, Class, name, kOffset)                             \
   DEFINE_SETTER(T, Class, name, kOffset)
 
+
+// ---------------------------------
+// --- S m a l l   I n t e g e r ---
+// ---------------------------------
+
+Smi* Smi::from_int(int32_t value) {
+  return ValuePointer::tag_as_smi(value);
+}
+
+int32_t Smi::value() {
+  return ValuePointer::value_of(this);
+}
+
+
+// -------------------
 // --- O b j e c t ---
+// -------------------
 
-DEFINE_ACCESSORS(Type*, Object, type, kTypeOffset)
+DEFINE_ACCESSORS(Class*, Object, chlass, kChlassOffset)
 
+
+// -------------------
 // --- S t r i n g ---
+// -------------------
 
 DEFINE_ACCESSOR(uint32_t, String, length, kLengthOffset)
 
@@ -152,7 +169,10 @@ uint32_t String::size_for(uint32_t chars) {
   return ValuePointer::align(raw_size);
 }
 
+
+// -----------------
 // --- T u p l e ---
+// -----------------
 
 DEFINE_ACCESSOR(uint32_t, Tuple, length, kLengthOffset)
 
@@ -169,7 +189,14 @@ ref<Value> ref_traits<Tuple>::get(uint32_t index) {
   return new_ref(open(this)->at(index));
 }
 
+void ref_traits<Tuple>::set(uint32_t index, ref<Value> value) {
+  open(this)->at(index) = *value;
+}
+
+
+// ---------------------------
 // --- D i c t i o n a r y ---
+// ---------------------------
 
 DEFINE_ACCESSORS(Tuple*, Dictionary, table, kTableOffset)
 
@@ -199,7 +226,10 @@ bool Dictionary::Iterator::next(Dictionary::Iterator::Entry *entry) {
   }
 }
 
+
+// -------------------
 // --- L a m b d a ---
+// -------------------
 
 DEFINE_ACCESSOR(uint32_t, Lambda, argc, kArgcOffset)
 DEFINE_ACCESSORS(Code*, Lambda, code, kCodeOffset)
@@ -213,7 +243,10 @@ ref<Tuple> ref_traits<Lambda>::literals() {
   return new_ref(open(this)->literals());
 }
 
+
+// -------------------
 // --- B u f f e r ---
+// -------------------
 
 template <typename T>
 uint32_t AbstractBuffer::size() {
@@ -238,7 +271,10 @@ uint32_t AbstractBuffer::size_for(uint32_t byte_count) {
   return ValuePointer::align(raw_size);
 }
 
+
+// ---------------
 // --- C o d e ---
+// ---------------
 
 uint16_t &Code::at(uint32_t index) {
   return AbstractBuffer::at<uint16_t>(index);
@@ -248,11 +284,25 @@ uint16_t &ref_traits<Code>::at(uint32_t index) {
   return open(this)->at(index);
 }
 
-// --- T y p e ---
 
-DEFINE_ACCESSOR(uint32_t, Type, instance_type, kInstanceTypeOffset)
+// -------------------
+// --- M e t h o d ---
+// -------------------
 
+DEFINE_ACCESSORS(String*, Method, name, kNameOffset)
+DEFINE_ACCESSORS(Lambda*, Method, lambda, kLambdaOffset)
+
+
+// -----------------
+// --- C l a s s ---
+// -----------------
+
+DEFINE_ACCESSOR(uint32_t, Class, instance_type, kInstanceTypeOffset)
+
+
+// ---------------------
 // --- S i g n a l s ---
+// ---------------------
 
 uint32_t Signal::type() {
   return ValuePointer::signal_type(this);
@@ -279,4 +329,4 @@ Nothing *Nothing::make() {
 
 } // namespace neutrino
 
-#endif // _VALUES_INL
+#endif // _HEAP_VALUES_INL

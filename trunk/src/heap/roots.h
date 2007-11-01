@@ -1,5 +1,5 @@
-#ifndef _ROOTS
-#define _ROOTS
+#ifndef _HEAP_ROOTS
+#define _HEAP_ROOTS
 
 #include "heap/values.h"
 #include "heap/heap.h"
@@ -7,25 +7,26 @@
 #include "utils/globals.h"
 
 #define FOR_EACH_SIMPLE_ROOT(VISIT)                                  \
-  VISIT(Type, string_type, new_type(STRING_TAG))                     \
-  VISIT(Type, tuple_type, new_type(TUPLE_TAG))                       \
-  VISIT(Type, void_type, new_type(VOID_TAG))                         \
-  VISIT(Void, vhoid, new_singleton(void_type()))                     \
-  VISIT(Type, null_type, new_type(NULL_TAG))                         \
-  VISIT(Null, nuhll, new_singleton(null_type()))                     \
-  VISIT(Type, true_type, new_type(TRUE_TAG))                         \
-  VISIT(True, thrue, new_singleton(true_type()))                     \
-  VISIT(Type, false_type, new_type(FALSE_TAG))                       \
-  VISIT(False, fahlse, new_singleton(false_type()))                  \
-  VISIT(Type, literal_type, new_type(LITERAL_TAG))                   \
-  VISIT(Type, dictionary_type, new_type(DICTIONARY_TAG))             \
-  VISIT(Type, lambda_type, new_type(LAMBDA_TAG))                     \
+  VISIT(Class, string_class, new_class(STRING_TAG))                     \
+  VISIT(Class, tuple_class, new_class(TUPLE_TAG))                       \
+  VISIT(Class, void_class, new_class(VOID_TAG))                         \
+  VISIT(Void, vhoid, new_singleton(void_class()))                     \
+  VISIT(Class, null_class, new_class(NULL_TAG))                         \
+  VISIT(Null, nuhll, new_singleton(null_class()))                     \
+  VISIT(Class, true_class, new_class(TRUE_TAG))                         \
+  VISIT(True, thrue, new_singleton(true_class()))                     \
+  VISIT(Class, false_class, new_class(FALSE_TAG))                       \
+  VISIT(False, fahlse, new_singleton(false_class()))                  \
+  VISIT(Class, literal_class, new_class(LITERAL_TAG))                   \
+  VISIT(Class, dictionary_class, new_class(DICTIONARY_TAG))             \
+  VISIT(Class, lambda_class, new_class(LAMBDA_TAG))                     \
   VISIT(Dictionary, toplevel, new_dictionary())                      \
-  VISIT(Type, buffer_type, new_type(BUFFER_TAG))                     \
-  VISIT(Type, code_type, new_type(CODE_TAG))
+  VISIT(Class, buffer_class, new_class(BUFFER_TAG))                     \
+  VISIT(Class, code_class, new_class(CODE_TAG))                         \
+  VISIT(Class, method_class, new_class(METHOD_TAG))
 
 #define FOR_EACH_COMPLICATED_ROOT(VISIT)                             \
-  VISIT(Type, type_type, NULL)
+  VISIT(Class, class_class, NULL)
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT(VISIT)                                   \
@@ -33,9 +34,13 @@
 
 namespace neutrino {
 
-class RootContainer {
+/**
+ * A container class for the root object set.  One of these containers
+ * exists for each runtime object.
+ */
+class Roots {
 public:
-  RootContainer();
+  Roots();
   
   /**
    * Set up the root objects.
@@ -61,4 +66,4 @@ FOR_EACH_ROOT(DECLARE_ROOT_FIELD)
 
 }
 
-#endif // _ROOTS
+#endif // _HEAP_ROOTS

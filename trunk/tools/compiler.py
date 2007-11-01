@@ -272,6 +272,7 @@ class Parser:
     name = self.expect_ident()
     params = self.parse_params('(', ')')
     body = self.parse_function_body()
+    return Method(name, params, body)
 
   # <definition>
   #   -> 'def' $ident ':=' <expression> ';'
@@ -470,7 +471,22 @@ class BuiltinClass(SyntaxTree):
     self.index = index
     self.members = members
   def to_sexp(self):
-    return '(builtin ' + str(self.index) + ')'
+    result = '(builtin ' + str(self.index) + ' ('
+    first = True
+    for member in self.members:
+      if first: first = False
+      else: result += ' '
+      result += member.to_sexp()
+    return result + '))'
+
+class Method(SyntaxTree):
+  def __init__(self, name, params, body):
+    self.name = name
+    self.params = params
+    self.body = body
+  def to_sexp(self):
+    body = lambda_to_sexp(self.params, self.body)
+    return '(method "' + self.name + '" ' + body + ')'
 
 class Expression(SyntaxTree):
   def compile(self, state):
@@ -500,15 +516,18 @@ class Literal(Expression):
   def to_sexp(self):
     return '(number ' + str(self.value) + ')'
 
+def lambda_to_sexp(params, body):
+  state = CodeGeneratorState()
+  state.scopes.append(params)
+  code = body.compile(state)
+  return '(lambda ' + str(len(params)) + ' ' + code + ')'
+
 class Lambda(Expression):
   def __init__(self, params, body):
     self.params = params
     self.body = body
   def to_sexp(self):
-    state = CodeGeneratorState()
-    state.scopes.append(self.params)
-    code = self.body.compile(state)
-    return '(lambda ' + str(len(self.params)) + ' ' + code + ')'
+    return lambda_to_sexp(self.params, self.body)
 
 class Identifier(Expression):
   def __init__(self, name):

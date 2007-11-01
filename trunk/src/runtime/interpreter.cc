@@ -139,11 +139,13 @@ ref<Value> Interpreter::interpret(Stack &stack) {
 }
 
 void Log::instruction(uint16_t code, Stack &stack) {
+#ifdef DEBUG
   if (kTraceInstructions) {
     EnumInfo<Opcode> info;
     string name = info.get_name_for(code);
     printf("%s (%i)\n", name.chars(), static_cast<int>(stack.sp() - stack.bottom()));
   }
+#endif
 }
 
 } // namespace neutrino

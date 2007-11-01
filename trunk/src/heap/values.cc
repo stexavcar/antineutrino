@@ -8,7 +8,7 @@ namespace neutrino {
 
 #ifdef DEBUG
 
-uint32_t Type::tag_of(Data *value) {
+uint32_t Class::tag_of(Data *value) {
   if (is<Smi>(value)) {
     return SMI_TAG;
   } else if (is<Signal>(value)) {
@@ -19,11 +19,11 @@ FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
       default: UNREACHABLE(); return SIGNAL_TAG;
     }
   } else {
-    return cast<Object>(value)->type()->instance_type();
+    return cast<Object>(value)->chlass()->instance_type();
   }
 }
 
-const char *Type::tag_name(uint32_t tag) {
+const char *Class::tag_name(uint32_t tag) {
   switch (tag) {
 #define MAKE_TYPE_CASE(NAME, Name) case NAME##_TAG: return #NAME;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
@@ -32,7 +32,7 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
   }
 }
 
-const char *Type::class_name(uint32_t tag) {
+const char *Class::class_name(uint32_t tag) {
   switch (tag) {
 #define MAKE_TYPE_CASE(NAME, Name) case NAME##_TAG: return #Name;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
@@ -45,7 +45,7 @@ bool Value::is_key() {
   if (is<Smi>(this)) {
     return true;
   } if (is<Object>(this)) {
-    switch (cast<Object>(this)->type()->instance_type()) {
+    switch (cast<Object>(this)->chlass()->instance_type()) {
     case STRING_TAG: case VOID_TAG: case NULL_TAG: case TRUE_TAG:
     case FALSE_TAG:
       return true;
@@ -56,7 +56,7 @@ bool Value::is_key() {
 
 #endif // DEBUG
 
-MAKE_ENUM_INFO_HEADER(TypeTag)
+MAKE_ENUM_INFO_HEADER(InstanceType)
 #define MAKE_ENTRY(NAME, Name) MAKE_ENUM_INFO_ENTRY(NAME##_TAG)
 FOR_EACH_DECLARED_TYPE(MAKE_ENTRY)
 #undef MAKE_ENTRY
@@ -101,7 +101,7 @@ static void write_string_short_on(String *obj, string_buffer &buf) {
 }
 
 static void write_object_short_on(Object *obj, string_buffer &buf) {
-  uint32_t instance_type = obj->type()->instance_type();
+  uint32_t instance_type = obj->chlass()->instance_type();
   switch (instance_type) {
   case STRING_TAG:
     write_string_short_on(cast<String>(obj), buf);
@@ -134,7 +134,7 @@ static void write_object_short_on(Object *obj, string_buffer &buf) {
     buf.append("#<code>");
     break;
   default:
-    UNHANDLED(TypeTag, instance_type);
+    UNHANDLED(InstanceType, instance_type);
   }
 }
 
@@ -194,7 +194,7 @@ static void write_dictionary_on(Dictionary *obj, string_buffer &buf) {
 }
 
 static void write_object_on(Object *obj, string_buffer &buf) {
-  switch (obj->type()->instance_type()) {
+  switch (obj->chlass()->instance_type()) {
   case TUPLE_TAG:
     write_tuple_on(cast<Tuple>(obj), buf);
     break;
@@ -242,7 +242,7 @@ bool Value::equals(Value *that) {
   ASSERT(this->is_key());
   ASSERT(that->is_key());
   if (is<Smi>(this)) return this == that;
-  uint32_t instance_type = cast<Object>(this)->type()->instance_type();
+  uint32_t instance_type = cast<Object>(this)->chlass()->instance_type();
   switch (instance_type) {
   case STRING_TAG:
     if (!is<String>(that)) return false;
@@ -256,7 +256,7 @@ bool Value::equals(Value *that) {
   case FALSE_TAG:
     return is<False>(that);
   default:
-    UNHANDLED(TypeTag, instance_type);
+    UNHANDLED(InstanceType, instance_type);
     return false;
   }
 }

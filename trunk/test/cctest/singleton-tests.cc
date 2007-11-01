@@ -6,7 +6,7 @@ using namespace neutrino;
 static void test_tuples() {
   Runtime runtime;
   runtime.initialize();
-  RootContainer &roots = runtime.roots();
+  Roots &roots = runtime.roots();
 
   CHECK_IS(Void, roots.vhoid());
   CHECK_IS(Null, roots.nuhll());

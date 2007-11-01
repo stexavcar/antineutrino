@@ -7,7 +7,7 @@ namespace neutrino {
 
 template <typename T>
 Data *Heap::new_buffer(uint32_t size) {
-  return new_abstract_buffer(sizeof(T) * size, roots().buffer_type());
+  return new_abstract_buffer(sizeof(T) * size, roots().buffer_class());
 }
 
 }

@@ -25,6 +25,7 @@ public:
   void load_builtin(sexp::List &decl);
   void load_declaration(sexp::List &decl);
   
+  ref<Method> parse_method(sexp::List &ast);
   ref<Value> parse_value(sexp::Sexp &expr);
   ref<Code> parse_code(sexp::List &expr);
   ref<Tuple> parse_literals(sexp::List &expr);
@@ -33,7 +34,7 @@ public:
   Runtime &runtime() { return runtime_; }
   Factory &factory() { return factory_; }
 private:
-  ref<Type> get_builtin_type(uint32_t index);
+  ref<Class> get_builtin_class(uint32_t index);
   Runtime &runtime_;
   Factory &factory_;
 };

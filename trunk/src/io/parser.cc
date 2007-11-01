@@ -12,7 +12,8 @@ namespace s = sexp;
 
 #define FOR_EACH_KIND(V)                                             \
   V(program, PROGRAM)   V(lambda, LAMBDA)     V(define,  DEFINE)     \
-  V(number, NUMBER)     V(class, CLASS)       V(builtin, BUILTIN)
+  V(number, NUMBER)     V(class, CLASS)       V(builtin, BUILTIN)    \
+  V(method, METHOD)
 
 enum TreeTag {
   _FIRST_TREE_TAG
@@ -113,14 +114,14 @@ ref<Value> Parser::parse_value(sexp::List &expr) {
   }
 }
 
-ref<Type> Parser::get_builtin_type(uint32_t index) {
+ref<Class> Parser::get_builtin_class(uint32_t index) {
   switch (index) {
     case 0:
-      return runtime().true_type();
+      return runtime().true_class();
     case 1:
-      return runtime().false_type();
+      return runtime().false_class();
     case 2:
-      return runtime().string_type();
+      return runtime().string_class();
     default:
       UNREACHABLE();
       return 0;
@@ -133,9 +134,29 @@ void Parser::load_definition(s::List &def) {
   runtime().toplevel().set(factory().new_string(name), value);
 }
 
+ref<Method> Parser::parse_method(s::List &ast) {
+  ASSERT(ast.tag() == METHOD);
+  string name_str = s::cast<s::String>(ast[1]).str();
+  ref<String> name = runtime().factory().new_string(name_str);
+  s::List &body = s::cast<s::List>(ast[2]);
+  ASSERT(body.tag() == LAMBDA);
+  int32_t argc = s::cast<s::Number>(body[1]).value();
+  ref<Code> code = parse_code(s::cast<s::List>(body[2]));
+  ref<Tuple> literals = parse_literals(s::cast<s::List>(body[3]));
+  ref<Lambda> lambda = factory().new_lambda(argc, code, literals);
+  return runtime().factory().new_method(name, lambda);
+}
+
 void Parser::load_builtin(s::List &decl) {
   uint32_t index = s::cast<s::Number>(decl[1]).value();
-  ref<Type> type = get_builtin_type(index);
+  ref<Class> type = get_builtin_class(index);
+  s::List &method_asts = s::cast<s::List>(decl[2]);
+  ref<Tuple> methods = runtime().factory().new_tuple(method_asts.length());
+  for (uint32_t i = 0; i < method_asts.length(); i++) {
+    s::List &method_ast = s::cast<s::List>(method_asts[i]);
+    ref<Method> method = parse_method(method_ast);
+    methods.set(i, method);
+  }
 }
 
 void Parser::load_declaration(s::List &decl) {

@@ -39,4 +39,9 @@ ref<Code> Factory::new_code(uint32_t size) {
   return new_ref(cast<Code>(result));
 }
 
+ref<Method> Factory::new_method(ref<String> name, ref<Lambda> lambda) {
+  Data *result = runtime().heap().new_method(*name, *lambda);
+  return new_ref(cast<Method>(result));
+}
+
 }

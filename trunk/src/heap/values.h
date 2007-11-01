@@ -7,6 +7,11 @@
 
 namespace neutrino {
 
+
+// ---------------------------
+// --- G e n e r a t o r s ---
+// ---------------------------
+
 #define FOR_EACH_SYNTAX_TREE_TYPE(VISIT)                             \
   VISIT(LITERAL, Literal)
 
@@ -15,7 +20,7 @@ namespace neutrino {
  * instances.
  */
 #define FOR_EACH_OBJECT_TYPE(VISIT)                                  \
-  VISIT(TYPE, Type)                                                  \
+  VISIT(CLASS, Class)                                                \
   VISIT(STRING, String)                                              \
   VISIT(TUPLE, Tuple)                                                \
   VISIT(DICTIONARY, Dictionary)                                      \
@@ -26,6 +31,8 @@ namespace neutrino {
   VISIT(LAMBDA, Lambda)                                              \
   VISIT(BUFFER, Buffer)                                              \
   VISIT(CODE, Code)                                                  \
+  VISIT(METHOD, Method)                                              \
+  VISIT(PROTOCOL, Protocol)                                          \
   FOR_EACH_SYNTAX_TREE_TYPE(VISIT)
 
 /**
@@ -58,12 +65,17 @@ namespace neutrino {
   FOR_EACH_VALUE_TYPE(VISIT)                                         \
   FOR_EACH_VIRTUAL_TYPE(VISIT)
 
-enum TypeTag {
+enum InstanceType {
   ILLEGAL_TAG = 0
-#define DECLARE_TYPE_TAG(NAME, Name) , NAME##_TAG
-FOR_EACH_DECLARED_TYPE(DECLARE_TYPE_TAG)
-#undef DECLARE_TYPE_TAG
+#define DECLARE_CLASS_TAG(NAME, Name) , NAME##_TAG
+FOR_EACH_DECLARED_TYPE(DECLARE_CLASS_TAG)
+#undef DECLARE_CLASS_TAG
 };
+
+
+// ---------------
+// --- D a t a ---
+// ---------------
 
 /**
  * The superclass of all object/value/signal references in neutrino.
@@ -81,6 +93,11 @@ public:
   string to_short_string();
   
 };
+
+
+// -----------------
+// --- V a l u e ---
+// -----------------
 
 class Value : public Data {
 public:
@@ -108,6 +125,11 @@ public:
 
 DEFINE_REF_CLASS(Value);
 
+
+// ---------------------------------
+// --- S m a l l   I n t e g e r ---
+// ---------------------------------
+
 class Smi : public Value {
 public:
   inline int32_t value();
@@ -117,17 +139,24 @@ public:
 
 class Object : public Value {
 public:
-  inline Type *type();
-  inline void set_type(Type*);
+  inline Class *chlass();
+  inline void set_chlass(Class*);
   
-  static const int kTypeOffset = 0;
-  static const int kHeaderSize = kTypeOffset + kPointerSize;
+  static const int kChlassOffset = 0;
+  static const int kHeaderSize   = kChlassOffset + kPointerSize;
 };
 
 template <> class ref_traits<Object> : public ref_traits<Value> { };
 
-// --- A b s t r a c t   B u f f e r ---
 
+// -------------------------------------
+// --- A b s t r a c t   B u f f e r ---
+// -------------------------------------
+
+/**
+ * The superclass of objects that consist of a length field and then
+ * a length-sized buffer of raw data.
+ */
 class AbstractBuffer : public Object {
 public:
   
@@ -171,7 +200,10 @@ public:
 
 DEFINE_REF_CLASS(AbstractBuffer);
 
+
+// -------------------
 // --- S t r i n g ---
+// -------------------
 
 class String : public Object {
 public:
@@ -186,13 +218,22 @@ public:
   static const int kHeaderSize   = kLengthOffset + kPointerSize;
 };
 
-// --- B u f f e r ---
 
+// -------------------
+// --- B u f f e r ---
+// -------------------
+
+/**
+ * A fixed-length piece of memory which can be used for... whatever.
+ */
 class Buffer : public AbstractBuffer {
   
 };
 
+
+// ---------------
 // --- C o d e ---
+// ---------------
 
 class Code : public AbstractBuffer {
 public:
@@ -207,7 +248,10 @@ public:
 
 DEFINE_REF_CLASS(Code);
 
+
+// -----------------
 // --- T u p l e ---
+// -----------------
 
 class Tuple : public Object {
 public:
@@ -222,12 +266,16 @@ public:
 
 template <> class ref_traits<Tuple> : public ref_traits<Object> {
 public:
-  inline ref<Value> get(uint32_t index);  
+  inline ref<Value> get(uint32_t index);
+  inline void set(uint32_t index, ref<Value> value);
 };
 
 DEFINE_REF_CLASS(Tuple);
 
+
+// ---------------------------
 // --- D i c t i o n a r y ---
+// ---------------------------
 
 class Dictionary : public Object {
 public:
@@ -261,17 +309,20 @@ public:
 
 DEFINE_REF_CLASS(Dictionary);
 
+
+// -------------------
 // --- L a m b d a ---
+// -------------------
 
 class Lambda : public Object {
 public:
   inline uint32_t &argc();
   
-  inline void set_code(Code *value);
   inline Code *code();
+  inline void set_code(Code *code);
   
-  inline void set_literals(Tuple *literals);
   inline Tuple *literals();
+  inline void set_literals(Tuple *literals);
   
   static const int kArgcOffset     = Object::kHeaderSize;
   static const int kCodeOffset     = kArgcOffset + kPointerSize;
@@ -288,10 +339,56 @@ public:
 
 DEFINE_REF_CLASS(Lambda);
 
+
+// -------------------------
+// --- S i n g l e t o n ---
+// -------------------------
+
 class Singleton : public Object {
 public:
   static const int kSize = Object::kHeaderSize;
 };
+
+class Void : public Singleton { };
+class Null : public Singleton { };
+class True : public Singleton { };
+class False : public Singleton { };
+
+
+// -------------------
+// --- M e t h o d ---
+// -------------------
+
+class Method : public Object {
+public:
+  inline String *name();
+  inline void set_name(String *name);
+  
+  inline Lambda *lambda();
+  inline void set_lambda(Lambda *lambda);
+  
+  static const int kNameOffset   = Object::kHeaderSize;
+  static const int kLambdaOffset = kNameOffset + kPointerSize;
+  static const int kSize         = kLambdaOffset + kPointerSize;
+};
+
+
+// -----------------------
+// --- P r o t o c o l ---
+// -----------------------
+
+class Protocol : public Object {
+public:
+  inline uint32_t &id();
+  
+  static const int kIdOffset = Object::kHeaderSize;
+  static const int kSize     = kIdOffset + kPointerSize;
+};
+
+
+// -----------------------------
+// --- S y n t a x   T r e e ---
+// -----------------------------
 
 class SyntaxTree : public Object {
 public:
@@ -300,12 +397,12 @@ public:
   static const int kHeaderSize = Object::kHeaderSize;
 };
 
-class Void : public Singleton { };
-class Null : public Singleton { };
-class True : public Singleton { };
-class False : public Singleton { };
 
-class Type : public Object {
+// -----------------
+// --- C l a s s ---
+// -----------------
+
+class Class : public Object {
 public:
   inline uint32_t &instance_type();
 
@@ -317,8 +414,15 @@ public:
   static const int kSize = kInstanceTypeOffset + kPointerSize;
 };
 
-// --- S i g n a l s ---
 
+// ---------------------
+// --- S i g n a l ---
+// ---------------------
+
+/**
+ * A value distinct from "real" neutrino values which can be used to
+ * carry information internally in the vm.
+ */
 class Signal : public Data {
 public:
   inline uint32_t type();

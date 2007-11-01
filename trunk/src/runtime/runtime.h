@@ -18,7 +18,7 @@ public:
   bool initialize();
   Factory &factory() { return factory_; }
   Heap &heap() { return heap_; }
-  RootContainer &roots() { return roots_; }
+  Roots &roots() { return roots_; }
   Interpreter &interpreter() { return interpreter_; }
   void start();
 
@@ -44,7 +44,7 @@ public:
   
 private:
   static Runtime *current_;
-  RootContainer roots_;
+  Roots roots_;
   Heap heap_;
   Factory factory_;
   Interpreter interpreter_;

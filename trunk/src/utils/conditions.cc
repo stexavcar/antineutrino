@@ -30,10 +30,10 @@ void Conditions::check_is_failed(const char *file_name, int line_number,
     "#   expected: %s\n"
     "#   found: %s\n"
     "#\n";
-  EnumInfo<TypeTag> enum_info;
-  const char *expected_name = Type::class_name(type_tag);
-  uint32_t value_tag = Type::tag_of(data);
-  const char *value_type_name = Type::class_name(value_tag);
+  EnumInfo<InstanceType> enum_info;
+  const char *expected_name = Class::class_name(type_tag);
+  uint32_t value_tag = Class::tag_of(data);
+  const char *value_type_name = Class::class_name(value_tag);
   printf(kErrorMessage, file_name, line_number, type_name, value_source,
       expected_name, value_type_name);
 #else // DEBUG

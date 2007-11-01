@@ -9,7 +9,7 @@ namespace neutrino {
 
 class Heap {
 public:
-  Heap(RootContainer &roots);
+  Heap(Roots &roots);
 
   /**
    * Allocates a new object of the specified size and returns it
@@ -18,25 +18,25 @@ public:
    * to contain object pointers must have been initialized before any
    * more memory is allocated.
    */
-  Data *allocate_object(uint32_t size, Type *type);
+  Data *allocate_object(uint32_t size, Class *chlass);
   
   /**
    * Creates and initializes a new type object but does not check that
    * the object is valid.  This function should only be used directly
    * during bootstrapping.
    */
-  Data *allocate_type(TypeTag instance_type);
+  Data *allocate_class(InstanceType instance_type);
   
   /**
    * Creates and validates a new type object.
    */
-  Data *new_type(TypeTag instance_type);
+  Data *new_class(InstanceType instance_type);
   
   Data *new_string(string value);
 
   Data *new_tuple(uint32_t length);
   
-  Data *new_singleton(Type *type);
+  Data *new_singleton(Class *chlass);
   
   Data *new_dictionary();
   
@@ -44,16 +44,18 @@ public:
   
   Data *new_literal(Value *value);
   
-  Data *new_abstract_buffer(uint32_t size, Type *type);
+  Data *new_abstract_buffer(uint32_t size, Class *chlass);
   
   template <typename T> Data *new_buffer(uint32_t size);
   
   Data *new_code(uint32_t size);
+  
+  Data *new_method(String *name, Lambda *lambda);
 
   Space &space() { return space_; }
-  RootContainer &roots() { return roots_; }
+  Roots &roots() { return roots_; }
 private:
-  RootContainer &roots_;
+  Roots &roots_;
   Space space_;
 };
 
