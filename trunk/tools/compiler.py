@@ -59,7 +59,7 @@ class Delimiter(Token):
 
 KEYWORDS = [
   'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return',
-  'null', 'true', 'false'
+  'null', 'true', 'false', 'internal'
 ]
 
 # ---------------------
@@ -176,10 +176,14 @@ class Scanner:
 # --- P a r s e r ---
 # -------------------
 
-BUILTINS = {
+BUILTIN_CLASSES = {
   'True':   0,
   'False':  1,
   'String': 2
+}
+
+BUILTIN_METHODS = {
+  ('String', 'length'): 0
 }
 
 class Parser:
@@ -253,27 +257,46 @@ class Parser:
     else:
       return self.parse_class_declaration()
   
+  def is_modifier(self, token):
+    return token.is_keyword('internal')
+
+  # <modifiers>
+  #   -> <modifier>*
+  def parse_modifiers(self):
+    modifiers = { }
+    while self.is_modifier(self.token()):
+      modifiers[self.token().value] = True
+      self.advance()
+    return modifiers
+  
   # <class_declaration>
-  #   -> 'class' $ident '{' <member_declaration>* '}'
+  #   -> <modifiers> 'class' $ident '{' <member_declaration>* '}'
   def parse_class_declaration(self):
+    modifiers = self.parse_modifiers()
     self.expect_keyword('class')
     name = self.expect_ident()
-    index = BUILTINS[name]
+    index = BUILTIN_CLASSES[name]
     self.expect_delimiter('{')
     members = []
     while not self.token().is_delimiter('}'):
-      member = self.parse_member_declaration()
+      member = self.parse_member_declaration(name)
       members.append(member)
     self.expect_delimiter('}')
     return BuiltinClass(index, members)
 
   # <member_declaration>
-  #   -> 'def' <method_header> <method_body>
-  def parse_member_declaration(self):
+  #   -> <modifiers> 'def' <method_header> <method_body>
+  def parse_member_declaration(self, class_name):
+    modifiers = self.parse_modifiers()
     self.expect_keyword('def')
     name = self.expect_ident()
     params = self.parse_params('(', ')')
-    body = self.parse_function_body()
+    if 'internal' in modifiers:
+      self.expect_delimiter(';')
+      index = BUILTIN_METHODS[(class_name, name)]
+      body = InternalCall(index, len(params))
+    else:
+      body = self.parse_function_body()
     return Method(name, params, body)
 
   # <definition>
@@ -579,6 +602,14 @@ class Invoke(Expression):
     state.write(INVOKE, name_index, len(self.args))
     state.write(SLAP, len(self.args) + 1)
 
+class InternalCall(Expression):
+  def __init__(self, index, argc):
+    self.index = index
+    self.argc = argc
+  def emit(self, state):
+    state.write(INTERNAL, self.index, self.argc)
+    state.write(RETURN)
+    
 class This(Expression):
   def emit(self, state):
     assert len(state.scopes) > 0
@@ -653,6 +684,8 @@ POP         = 10
 IF_TRUE     = 11
 GOTO        = 12
 INVOKE      = 13
+INTERNAL    = 14
+
 PLACEHOLDER = 0xBADDEAD
 
 class CodeGeneratorState:

@@ -2,6 +2,7 @@
 #define _RUNTIME_INTERPRETER_INL
 
 #include "runtime/interpreter.h"
+#include "utils/checks.h"
 
 namespace neutrino {
 
@@ -44,6 +45,11 @@ Value *&Stack::operator[](uint32_t index) {
 Value *&Stack::argument(uint32_t index) {
   return *reinterpret_cast<Value**>(fp_ - index - 1);
 }
+
+Value *&Stack::self(uint32_t argc) {
+  return argument(argc + 1);
+}
+
 
 void Stack::push(Value *value) {
   ASSERT(sp() < bottom() + kLimit);

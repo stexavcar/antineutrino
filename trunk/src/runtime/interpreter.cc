@@ -1,5 +1,6 @@
 #include "heap/ref-inl.h"
 #include "heap/values-inl.h"
+#include "runtime/builtins-inl.h"
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/checks.h"
@@ -140,6 +141,16 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       next.lambda() = fun;
       current = next;
       pc = 0;
+      break;
+    }
+    case INTERNAL: {
+      uint16_t index = current.lambda()->code()->at(pc + 1);
+      uint16_t argc = current.lambda()->code()->at(pc + 2);
+      Builtin *builtin = Builtins::get(index);
+      Arguments args(runtime(), argc, stack);
+      Value *value = builtin(args);
+      stack.push(value);
+      pc += OpcodeInfo<INTERNAL>::kSize;
       break;
     }
     case RETURN: {

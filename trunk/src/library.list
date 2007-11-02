@@ -9,6 +9,7 @@ heap/values.cc
 heap/zone.cc
 io/parser.cc
 io/sexp.cc
+runtime/builtins.cc
 runtime/interpreter.cc
 runtime/runtime.cc
 utils/conditions.cc

@@ -14,10 +14,10 @@ def fooc(x, y) -> 1;
 def food(x, y, z) -> 0;
 def fooe(x, y, z, w) -> 8;
 
-class True {
+internal class True {
 
 }
 
-class String {
-  def length() -> this;
+internal class String {
+  internal def length();
 }

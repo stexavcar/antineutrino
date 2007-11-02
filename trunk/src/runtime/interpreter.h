@@ -10,7 +10,7 @@ namespace neutrino {
   VISIT(CALL,  3,  1)   VISIT(SLAP,    4,  1) VISIT(ARGUMENT, 5,  1) \
   VISIT(VOID,  6,  0)   VISIT(NUHLL,   7,  0) VISIT(TRUE,     8,  0) \
   VISIT(FALSE, 9,  0)   VISIT(POP,    10,  1) VISIT(IF_TRUE, 11, 1)  \
-  VISIT(GOTO,  12, 1)   VISIT(INVOKE, 13, 2)
+  VISIT(GOTO,  12, 1)   VISIT(INVOKE, 13, 2)  VISIT(INTERNAL, 14, 2) 
 
 enum Opcode {
   _FIRST_OPCODE = -1
@@ -42,13 +42,14 @@ private:
 
 class Stack {
 public:
-  Stack();
+  inline Stack();
   Frame top() { return Frame(fp_); }
   inline Frame push_activation();
   inline Frame pop_activation();
   inline Value *pop(uint32_t height = 1);
   inline Value *&operator[](uint32_t offset);
   inline Value *&argument(uint32_t index);
+  inline Value *&self(uint32_t argc);
   inline void push(Value *value);
   word *&sp() { return sp_; }
   word *bottom() { return data_; }
