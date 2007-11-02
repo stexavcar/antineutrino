@@ -177,9 +177,10 @@ class Scanner:
 # -------------------
 
 BUILTIN_CLASSES = {
-  'True':   0,
-  'False':  1,
-  'String': 2
+  'True':         0,
+  'False':        1,
+  'String':       2,
+  'SmallInteger': 3
 }
 
 BUILTIN_METHODS = {

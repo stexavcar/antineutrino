@@ -1,3 +1,4 @@
+#include "heap/values-inl.h"
 #include "runtime/builtins-inl.h"
 #include "runtime/runtime.h"
 #include "utils/checks.h"
@@ -40,8 +41,8 @@ FOR_EACH_BUILTIN(MAKE_CASE)
 // -------------------
 
 Value *Builtins::String_length(Arguments &args) {
-  Value *self = args.self();
-  return self;
+  String *self = cast<String>(args.self());
+  return Smi::from_int(self->length());
 }
 
 } // namespace neutrino

@@ -122,6 +122,8 @@ ref<Class> Parser::get_builtin_class(uint32_t index) {
       return runtime().false_class();
     case 2:
       return runtime().string_class();
+    case 3:
+      return runtime().smi_class();
     default:
       UNREACHABLE();
       return 0;
