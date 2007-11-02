@@ -15,7 +15,7 @@ def food(x, y, z) -> 0;
 def fooe(x, y, z, w) -> 8;
 
 internal class SmallInteger {
-  def operator+(that) -> 93;
+  def operator +(that) -> 93;
 }
 
 internal class True {
