@@ -6,13 +6,17 @@
 
 namespace neutrino {
 
-Arguments::Arguments(Runtime &runtime, uint32_t argc, Stack &stack)
+Arguments::Arguments(Runtime &runtime, uint32_t count, Stack &stack)
     : runtime_(runtime)
-    , argc_(argc)
+    , count_(count)
     , stack_(stack) { }
 
 Value *Arguments::self() {
-  return stack().self(argc());
+  return stack().self(count());
+}
+
+Value *Arguments::operator[](uint32_t index) {
+  return stack().argument(count() - index - 1);
 }
 
 }

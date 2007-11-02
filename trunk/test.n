@@ -6,16 +6,12 @@ def fooy(x) -> fooz(x);
 def fooz(x) -> fuzzing(this);
 
 def fuzzing(v) {
-  return "flab".length();
+  return "flab".length() - 1 + 2;
 }
 
-def foob(x) -> 2;
-def fooc(x, y) -> 1;
-def food(x, y, z) -> 0;
-def fooe(x, y, z, w) -> 8;
-
 internal class SmallInteger {
-  def operator +(that) -> 93;
+  internal def operator +(that);
+  internal def operator -(that);
 }
 
 internal class True {

@@ -7,18 +7,20 @@
 namespace neutrino {
 
 #define FOR_EACH_BUILTIN(VISIT)                                      \
-  VISIT(0, String, length)
+  VISIT(0, String, length)                                           \
+  VISIT(1, Smi, plus)      VISIT(2, Smi, minus)
 
 class Arguments {
 public:
   inline Arguments(Runtime &runtime, uint32_t argc, Stack &stack);
   inline Value *self();
+  inline Value *operator[](uint32_t index);
   Runtime &runtime() { return runtime_; }
-  uint32_t argc() { return argc_; }
+  uint32_t count() { return count_; }
 private:
   Stack &stack() { return stack_; }
   Runtime &runtime_;
-  uint32_t argc_;
+  uint32_t count_;
   Stack &stack_;
 };
 

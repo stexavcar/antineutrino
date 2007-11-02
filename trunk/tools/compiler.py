@@ -18,6 +18,7 @@ class Token:
   def is_delimiter(self, name): return False
   def is_number(self): return False
   def is_string(self): return False
+  def is_operator(self): return False
 
 class Keyword(Token):
   def __init__(self, value):
@@ -31,6 +32,12 @@ class Ident(Token):
   def __init__(self, name):
     self.name = name
   def is_ident(self):
+    return True
+
+class Operator(Token):
+  def __init__(self, name):
+    self.name = name
+  def is_operator(self):
     return True
 
 class Number(Token):
@@ -59,7 +66,11 @@ class Delimiter(Token):
 
 KEYWORDS = [
   'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return',
-  'null', 'true', 'false', 'internal'
+  'null', 'true', 'false', 'internal', 'operator'
+]
+
+RESERVED = [
+  '->'
 ]
 
 # ---------------------
@@ -77,6 +88,9 @@ def is_digit(char):
 
 def is_ident_part(char):
   return char.isdigit() or is_ident_start(char)
+
+def is_operator(char):
+  return char == '+' or char == '-' or char == '>'
 
 class Scanner:
 
@@ -111,6 +125,14 @@ class Scanner:
       self.advance()
     if value in KEYWORDS: return Keyword(value)
     else: return Ident(value)
+
+  def scan_operator(self):
+    value = ''
+    while self.has_more() and is_operator(self.current()):
+      value += self.current()
+      self.advance()
+    if value in RESERVED: return Delimiter(value)
+    else: return Operator(value)
 
   def scan_number(self):
     value = 0
@@ -157,7 +179,7 @@ class Scanner:
         return Delimiter('-')
     else:
       raise c
-
+  
   def get_next_token(self):
     if is_ident_start(self.current()):
       return self.scan_ident()
@@ -165,6 +187,8 @@ class Scanner:
       return self.scan_number()
     elif self.current() == '"':
       return self.scan_string();
+    elif is_operator(self.current()):
+      return self.scan_operator()
     else:
       return self.scan_delimiter()
 
@@ -184,7 +208,9 @@ BUILTIN_CLASSES = {
 }
 
 BUILTIN_METHODS = {
-  ('String', 'length'): 0
+  ('String', 'length'):  0,
+  ('SmallInteger', '+'): 1,
+  ('SmallInteger', '-'): 2
 }
 
 class Parser:
@@ -210,7 +236,7 @@ class Parser:
 
   def expect_delimiter(self, expected):
     if not self.token().is_delimiter(expected):
-      print "Expected " + str(expected) + ", found " + self.token().value
+      print "Expected " + str(expected) + ", found " + str(self.token())
       self.parse_error()
     self.advance()
 
@@ -219,7 +245,15 @@ class Parser:
   # reported.
   def expect_ident(self):
     if not self.token().is_ident():
-      print "Expected identifier, found " + str(token)
+      print "Expected identifier, found " + str(self.token())
+      self.parse_error()
+    name = self.token().name
+    self.advance()
+    return name
+
+  def expect_operator(self):
+    if not self.token().is_operator():
+      print "Expected operator, found " + str(self.token())
       self.parse_error()
     name = self.token().name
     self.advance()
@@ -270,6 +304,16 @@ class Parser:
       self.advance()
     return modifiers
   
+  # <member_name>
+  #   -> $ident
+  #   -> 'operator' $operator
+  def parse_member_name(self):
+    if self.token().is_ident():
+      return self.expect_ident()
+    else:
+      self.expect_keyword('operator')
+      return self.expect_operator()
+  
   # <class_declaration>
   #   -> <modifiers> 'class' $ident '{' <member_declaration>* '}'
   def parse_class_declaration(self):
@@ -290,7 +334,7 @@ class Parser:
   def parse_member_declaration(self, class_name):
     modifiers = self.parse_modifiers()
     self.expect_keyword('def')
-    name = self.expect_ident()
+    name = self.parse_member_name()
     params = self.parse_params('(', ')')
     if 'internal' in modifiers:
       self.expect_delimiter(';')
@@ -380,7 +424,15 @@ class Parser:
     elif self.token().is_keyword('if'):
       return self.parse_conditional_expression(is_toplevel)
     else:
-      return self.parse_call_expression()
+      return self.parse_operator_expression()
+  
+  def parse_operator_expression(self):
+    expr = self.parse_call_expression()
+    while self.token().is_operator():
+      op = self.expect_operator()
+      right = self.parse_call_expression()
+      expr = Invoke(expr, op, [right])
+    return expr
 
   # <conditional-expression>
   #   -> 'if' '(' <expression> ')' <expression> ('else' <expression>)?

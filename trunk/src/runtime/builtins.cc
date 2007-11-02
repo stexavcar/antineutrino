@@ -45,4 +45,23 @@ Value *Builtins::String_length(Arguments &args) {
   return Smi::from_int(self->length());
 }
 
+
+// ---------------------------------
+// --- S m a l l   I n t e g e r ---
+// ---------------------------------
+
+Value *Builtins::Smi_plus(Arguments &args) {
+  ASSERT(args.count() == 1);
+  Smi *self = cast<Smi>(args.self());
+  Smi *that = cast<Smi>(args[0]);
+  return Smi::from_int(self->value() + that->value());
+}
+
+Value *Builtins::Smi_minus(Arguments &args) {
+  ASSERT(args.count() == 1);
+  Smi *self = cast<Smi>(args.self());
+  Smi *that = cast<Smi>(args[0]);
+  return Smi::from_int(self->value() - that->value());
+}
+
 } // namespace neutrino
