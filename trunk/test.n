@@ -3,10 +3,10 @@ def main() -> "fnis":fooa(3, 4);
 def fooa(x, y) -> foox(y);
 def foox(x) -> fooy(x);
 def fooy(x) -> fooz(x);
-def fooz(x) -> fuzzing(this);
+def fooz(x) -> fuzzing(this, x);
 
-def fuzzing(v) {
-  return "flab".length() - 1 + 2;
+def fuzzing(x, y) {
+  return x.length() - 1 + y;
 }
 
 internal class SmallInteger {
