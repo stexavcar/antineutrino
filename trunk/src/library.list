@@ -7,6 +7,7 @@ heap/roots.cc
 heap/space.cc
 heap/values.cc
 heap/zone.cc
+io/image.cc
 io/parser.cc
 io/sexp.cc
 runtime/builtins.cc

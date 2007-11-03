@@ -49,10 +49,10 @@ private:
   static RefBlock *spare_block_;
 };
 
-// TODO: move this fucking nuisance of a function to the inl file.
-//   Fucking gcc.
 
-// --- R e f ---
+// ---------------------------
+// --- R e f e r e n c e s ---
+// ---------------------------
 
 /**
  * An abstract superclass used to hold the behavior shared between
@@ -67,6 +67,7 @@ public:
   inline C* operator*();
   inline C* operator->();
   inline C** cell() { return cell_; }
+  inline bool is_empty() { return cell_ == 0; }
   static inline ref<C> empty();
 protected:
   C **cell_;

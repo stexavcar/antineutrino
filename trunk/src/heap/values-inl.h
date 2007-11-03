@@ -315,17 +315,22 @@ uint32_t Signal::payload() {
 
 AllocationFailed *AllocationFailed::make(int size) {
   Signal *result = ValuePointer::tag_as_signal(ALLOCATION_FAILED, size);
-  return reinterpret_cast<AllocationFailed*>(result);
+  return cast<AllocationFailed>(result);
 }
 
 InternalError *InternalError::make(int code) {
   Signal *result = ValuePointer::tag_as_signal(INTERNAL_ERROR, code);
-  return reinterpret_cast<InternalError*>(result);
+  return cast<InternalError>(result);
 }
 
 Nothing *Nothing::make() {
   Signal *result = ValuePointer::tag_as_signal(NOTHING, 0);
-  return reinterpret_cast<Nothing*>(result);
+  return cast<Nothing>(result);
+}
+
+PendingRegister *PendingRegister::make(uint32_t reg) {
+  Signal *result = ValuePointer::tag_as_signal(PENDING_REGISTER, reg);
+  return cast<PendingRegister>(result);
 }
 
 } // namespace neutrino

@@ -133,6 +133,9 @@ static void write_object_short_on(Object *obj, string_buffer &buf) {
   case CODE_TYPE:
     buf.append("#<code>");
     break;
+  case CLASS_TYPE:
+    buf.append("#<class>");
+    break;
   default:
     UNHANDLED(InstanceType, instance_type);
   }
@@ -141,7 +144,10 @@ static void write_object_short_on(Object *obj, string_buffer &buf) {
 static void write_signal_short_on(Signal *obj, string_buffer &buf) {
   switch (obj->type()) {
   case Signal::NOTHING:
-    buf.append("%<nothing>");
+    buf.append("@<nothing>");
+    break;
+  case Signal::PENDING_REGISTER:
+    buf.printf("@<pending register %>", cast<PendingRegister>(obj)->payload());
     break;
   default:
     UNHANDLED(Signal::Type, obj->type());

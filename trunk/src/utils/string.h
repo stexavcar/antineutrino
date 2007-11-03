@@ -59,6 +59,7 @@ public:
   public:
     element(double value) : tag_(DOUBLE_TAG) { value_.u_double = value; }
     element(int32_t value) : tag_(INT_TAG) { value_.u_int = value; }
+    element(uint32_t value) : tag_(INT_TAG) { value_.u_int = value; }
     element(const char *value) : tag_(STRING_TAG) { value_.u_string = value; }
     /**
      * Prints this element on the specified buffer.  If the params

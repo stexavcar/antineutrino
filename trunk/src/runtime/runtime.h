@@ -19,11 +19,12 @@ public:
   Factory &factory() { return factory_; }
   Heap &heap() { return heap_; }
   Roots &roots() { return roots_; }
+  bool load_image(Image &image);
   Interpreter &interpreter() { return interpreter_; }
   void start();
 
   // Declare root field ref accessors
-  #define DECLARE_ROOT_ACCESSOR(Type, name, allocator) \
+  #define DECLARE_ROOT_ACCESSOR(Type, name, NAME, allocator) \
     ref<Type> name() { return ref<Type>(&roots().name()); }
   FOR_EACH_ROOT(DECLARE_ROOT_ACCESSOR)
   #undef DECLARE_ROOT_ACCESSOR

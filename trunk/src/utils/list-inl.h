@@ -31,13 +31,13 @@ list_buffer<T>::~list_buffer() {
 }
 
 template <typename T>
-void list_buffer<T>::append(T &obj) {
+void list_buffer<T>::append(T obj) {
   if (length() >= capacity_) extend_capacity();
   data()[length_++] = obj;
 }
 
 template <typename T>
-void list_buffer<T>::push(T &obj) {
+void list_buffer<T>::push(T obj) {
   append(obj);
 }
 
@@ -45,6 +45,12 @@ template <typename T>
 T list_buffer<T>::remove_last() {
   ASSERT(length() > 0);
   return data()[--length_];
+}
+
+template <typename T>
+T list_buffer<T>::peek() {
+  ASSERT(length() > 0);
+  return data()[length_ - 1];
 }
 
 template <typename T>

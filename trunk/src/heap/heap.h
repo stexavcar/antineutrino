@@ -40,6 +40,8 @@ public:
   
   Data *new_dictionary();
   
+  Data *new_dictionary(Tuple *store);
+  
   Data *new_lambda(uint32_t argc, Code *code, Tuple *literals);
   
   Data *new_literal(Value *value);

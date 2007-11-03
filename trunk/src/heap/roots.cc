@@ -21,7 +21,7 @@ bool Roots::initialize(Heap& heap) {
   
   // All the simple roots get allocated the same way, which is what
   // makes them simple.
-#define ALLOCATE_ROOT(Type, name, allocator)                         \
+#define ALLOCATE_ROOT(Type, name, NAME, allocator)                   \
   Data *name##_val = heap.allocator;                                 \
   if (is<AllocationFailed>(name##_val)) return false;                \
   name##_ = cast<Type>(name##_val);

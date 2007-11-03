@@ -21,10 +21,11 @@ class list_buffer {
 public:
   list_buffer();
   ~list_buffer();
-  void append(T &obj);
-  void push(T &obj);
+  void append(T obj);
+  void push(T obj);
   T remove_last();
   T pop();
+  T peek();
   T *data() { return data_; }
   uint32_t length() { return length_; }
 private:

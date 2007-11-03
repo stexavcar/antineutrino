@@ -104,7 +104,10 @@ Data *Heap::new_singleton(Class *type) {
 Data *Heap::new_dictionary() {
   Data *table_val = new_tuple(0);
   if (is<AllocationFailed>(table_val)) return table_val;
-  Tuple *table = cast<Tuple>(table_val);
+  return new_dictionary(cast<Tuple>(table_val));
+}
+
+Data *Heap::new_dictionary(Tuple *table) {
   Data *val = allocate_object(Dictionary::kSize, roots().dictionary_class());
   if (is<AllocationFailed>(val)) return val;
   Dictionary *result = cast<Dictionary>(val);

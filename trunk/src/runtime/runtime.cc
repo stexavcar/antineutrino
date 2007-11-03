@@ -21,7 +21,7 @@ void Runtime::start() {
   Runtime::Scope runtime_scope(*this);
   RefScope ref_scope;
   ref<Value> value = toplevel().get(factory().new_string("main"));
-  if (is<Nothing>(value)) {
+  if (value.is_empty()) {
     Conditions::get().error_occurred("Error: no function 'main' was defined.");
   } else if (!is<Lambda>(value)) {
     Conditions::get().error_occurred("Value 'main' is not a function.");

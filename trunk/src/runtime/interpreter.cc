@@ -21,7 +21,7 @@ class Log {
 public:
   static inline void instruction(uint16_t opcode, Stack &stack);
 private:
-  static const bool kTraceInstructions = false;
+  static const bool kTraceInstructions = true;
 };
 
 // -----------------------------
@@ -194,7 +194,7 @@ void Log::instruction(uint16_t code, Stack &stack) {
   if (kTraceInstructions) {
     EnumInfo<Opcode> info;
     string name = info.get_name_for(code);
-    printf("%s (%i)\n", name.chars(), static_cast<int>(stack.sp() - stack.bottom()));
+    printf("%s (%i %i)\n", name.chars(), code, static_cast<int>(stack.sp() - stack.bottom()));
   }
 #endif
 }

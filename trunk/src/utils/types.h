@@ -15,6 +15,7 @@ class Code;
 class Data;
 class Dictionary;
 class Heap;
+class Image;
 class Lambda;
 class Object;
 template <class T> class ref;

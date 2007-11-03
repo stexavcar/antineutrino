@@ -29,7 +29,8 @@
 #define FOR_EACH_SIGNAL_TYPE(VISIT)                                  \
   VISIT(30, ALLOCATION_FAILED, AllocationFailed)                     \
   VISIT(31, INTERNAL_ERROR, InternalError)                           \
-  VISIT(32, NOTHING, Nothing)
+  VISIT(32, NOTHING, Nothing)                                        \
+  VISIT(33, PENDING_REGISTER, PendingRegister)
 
 #define FOR_EACH_VALUE_TYPE(VISIT)                                   \
   VISIT(40, SMI, Smi)                                                \
@@ -53,8 +54,8 @@
   VISIT(PUSH,  0,  1)   VISIT(RETURN,  1,  0) VISIT(GLOBAL,   2,  1) \
   VISIT(CALL,  3,  1)   VISIT(SLAP,    4,  1) VISIT(ARGUMENT, 5,  1) \
   VISIT(VOID,  6,  0)   VISIT(NUHLL,   7,  0) VISIT(TRUE,     8,  0) \
-  VISIT(FALSE, 9,  0)   VISIT(POP,    10,  1) VISIT(IF_TRUE, 11, 1)  \
-  VISIT(GOTO,  12, 1)   VISIT(INVOKE, 13, 2)  VISIT(INTERNAL, 14, 2)
+  VISIT(FALSE, 9,  0)   VISIT(POP,    10,  1) VISIT(IF_TRUE,  11, 1) \
+  VISIT(GOTO,  12, 1)   VISIT(INVOKE, 13,  2) VISIT(INTERNAL, 14, 2)
 
 
 // -------------------------------------------
@@ -65,10 +66,53 @@
   VISIT(1,  SET_DICTIONARY_CLASS) VISIT(2,  SET_TOPLEVEL)            \
   VISIT(3,  SET_CLASS_CLASS)      VISIT(4,  SET_LAMBDA_CLASS)        \
   VISIT(5,  SET_TUPLE_CLASS)      VISIT(6,  SET_CODE_CLASS)          \
-  VISIT(7,  SET_STRING_CLASS)                                        \
-  VISIT(20, NEW_DICTIONARY)       VISIT(21, NEW_STRING)              \
-  VISIT(22, NEW_LAMBDA)           VISIT(23, NEW_CODE)                \
-  VISIT(24, NEW_TUPLE)            VISIT(25, NEW_CLASS)               \
-  VISIT(40, LOAD_REGISTER)
+  VISIT(7,  SET_STRING_CLASS)     VISIT(8,  SET_BUFFER_CLASS)        \
+  VISIT(9,  SET_FALSE_CLASS)      VISIT(10, SET_FALSE)               \
+  VISIT(11, SET_TRUE_CLASS)       VISIT(12, SET_TRUE)                \
+  VISIT(13, SET_NULL_CLASS)       VISIT(14, SET_NULL)                \
+  VISIT(15, SET_VOID_CLASS)       VISIT(16, SET_VOID)                \
+  VISIT(17, SET_LITERAL_CLASS)    VISIT(18, SET_METHOD_CLASS)        \
+  VISIT(19, SET_SMI_CLASS)                                           \
+                                                                     \
+  VISIT(30, NEW_DICTIONARY)       VISIT(31, NEW_STRING)              \
+  VISIT(32, NEW_LAMBDA)           VISIT(33, NEW_CODE)                \
+  VISIT(34, NEW_TUPLE)            VISIT(35, NEW_CLASS)               \
+  VISIT(36, NEW_NUMBER)                                              \
+                                                                     \
+  VISIT(40, LOAD_REGISTER)        VISIT(41, PENDING_REGISTER)        \
+  VISIT(42, STORE_REGISTER)
+
+
+// -----------------
+// --- R o o t s ---
+// -----------------
+
+#define FOR_EACH_SIMPLE_ROOT(VISIT)                                  \
+  VISIT(Class, string_class, STRING_CLASS, new_class(STRING_TYPE))   \
+  VISIT(Class, tuple_class, TUPLE_CLASS, new_class(TUPLE_TYPE))      \
+  VISIT(Class, void_class, VOID_CLASS, new_class(VOID_TYPE))         \
+  VISIT(Void, vhoid, VOID, new_singleton(void_class()))              \
+  VISIT(Class, null_class, NULL_CLASS, new_class(NULL_TYPE))         \
+  VISIT(Null, nuhll, NULL, new_singleton(null_class()))              \
+  VISIT(Class, true_class, TRUE_CLASS, new_class(TRUE_TYPE))         \
+  VISIT(True, thrue, TRUE, new_singleton(true_class()))              \
+  VISIT(Class, false_class, FALSE_CLASS, new_class(FALSE_TYPE))      \
+  VISIT(False, fahlse, FALSE, new_singleton(false_class()))          \
+  VISIT(Class, literal_class, LITERAL_CLASS, new_class(LITERAL_TYPE))\
+  VISIT(Class, dictionary_class, DICTIONARY_CLASS, new_class(DICTIONARY_TYPE))\
+  VISIT(Class, lambda_class, LAMBDA_CLASS, new_class(LAMBDA_TYPE))   \
+  VISIT(Dictionary, toplevel, TOPLEVEL, new_dictionary())            \
+  VISIT(Class, buffer_class, BUFFER_CLASS, new_class(BUFFER_TYPE))   \
+  VISIT(Class, code_class, CODE_CLASS, new_class(CODE_TYPE))         \
+  VISIT(Class, method_class, METHOD_CLASS, new_class(METHOD_TYPE))   \
+  VISIT(Class, smi_class, SMI_CLASS, new_class(SMI_TYPE))
+
+#define FOR_EACH_COMPLICATED_ROOT(VISIT)                             \
+  VISIT(Class, class_class, CLASS_CLASS, NULL)
+
+#define FOR_EACH_ROOT(VISIT)                                         \
+  FOR_EACH_COMPLICATED_ROOT(VISIT)                                   \
+  FOR_EACH_SIMPLE_ROOT(VISIT)
+
 
 #endif // _HEAP_CONSTS

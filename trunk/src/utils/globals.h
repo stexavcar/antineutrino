@@ -18,6 +18,7 @@
 #endif
 
 static const int kPointerSize = sizeof(void*);
+static const int kWordSize = sizeof(word);
 
 /**
  * Returns the new extended capacity given that the current capacity

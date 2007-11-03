@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
-# A simple compiler that produces binaries to be executed by the
-# neutrino runtime.  This is not the "real" compiler but is only used
+# A compiler that produces binaries to be executed by the neutrino
+# runtime.  This is not the "real" compiler but is only used
 # when bootstrapping the runtime.
 
 from optparse import OptionParser, Option
 from os import path
-import re, string
+import re, string, struct
 
 # -------------------
 # --- T o k e n s ---
@@ -484,11 +484,11 @@ class Parser:
     if self.token().is_number():
       value = self.token().value
       self.advance()
-      return Literal(value)
+      return Literal(HeapNumber(value))
     elif self.token().is_string():
       value = self.token().value
       self.advance()
-      return Literal(value)
+      return Literal(HeapString(value))
     elif self.token().is_ident():
       name = self.token().name
       self.advance()
@@ -581,13 +581,14 @@ class Literal(Expression):
     self.value = value
   def emit(self, state):
     index = state.literal_index(self.value)
-    state.write(PUSH, index)
+    state.write(OC_PUSH, index)
   def to_sexp(self):
     return '(number ' + str(self.value) + ')'
 
 def create_lambda(params, body):
   state = CodeGeneratorState()
   body.emit(state)
+  print state.code
   code = HeapCode(state.code)
   literals = HeapTuple(state.literals)
   return HeapLambda(len(params), code, literals)
@@ -608,10 +609,10 @@ class Identifier(Expression):
       top_scope = state.scopes[0]
     try:
       scope_index = len(top_scope) - top_scope.index(self.name) - 1
-      state.write(ARGUMENT, scope_index)
+      state.write(OC_ARGUMENT, scope_index)
     except ValueError:
-      index = state.literal_index(self.name)
-      state.write(GLOBAL, index)
+      index = state.literal_index(HeapString(self.name))
+      state.write(OC_GLOBAL, index)
 
 class Call(Expression):
   def __init__(self, recv, fun, args):
@@ -623,8 +624,8 @@ class Call(Expression):
     self.fun.emit(state)
     for arg in self.args:
       arg.emit(state)
-    state.write(CALL, len(self.args))
-    state.write(SLAP, len(self.args) + 1)
+    state.write(OC_CALL, len(self.args))
+    state.write(OC_SLAP, len(self.args) + 1)
 
 class Invoke(Expression):
   def __init__(self, recv, name, args):
@@ -633,61 +634,61 @@ class Invoke(Expression):
     self.args = args
   def emit(self, state):
     self.recv.emit(state)
-    state.write(VOID)
+    state.write(OC_VOID)
     for arg in self.args:
       arg.emit(state)
-    name_index = state.literal_index(self.name)
-    state.write(INVOKE, name_index, len(self.args))
-    state.write(SLAP, len(self.args) + 1)
+    name_index = state.literal_index(HeapString(self.name))
+    state.write(OC_INVOKE, name_index, len(self.args))
+    state.write(OC_SLAP, len(self.args) + 1)
 
 class InternalCall(Expression):
   def __init__(self, index, argc):
     self.index = index
     self.argc = argc
   def emit(self, state):
-    state.write(INTERNAL, self.index, self.argc)
-    state.write(RETURN)
+    state.write(OC_INTERNAL, self.index, self.argc)
+    state.write(OC_RETURN)
     
 class This(Expression):
   def emit(self, state):
     assert len(state.scopes) > 0
     top_scope = state.scopes[0]
-    state.write(ARGUMENT, len(top_scope) + 1)
+    state.write(OC_ARGUMENT, len(top_scope) + 1)
 
 class Void(Expression):
   def emit(self, state):
-    state.write(VOID)
+    state.write(OC_VOID)
 
 class Null(Expression):
   def emit(self, state):
-    state.write(NULL)
+    state.write(OC_NULL)
 
 class Thrue(Expression):
   def emit(self, state):
-    state.write(TRUE)
+    state.write(OC_TRUE)
 
 class Fahlse(Expression):
   def emit(self, state):
-    state.write(FALSE)
+    state.write(OC_FALSE)
 
 class Return(Expression):
   def __init__(self, value):
     self.value = value
   def emit(self, state):
     self.value.emit(state)
-    state.write(RETURN)
+    state.write(OC_RETURN)
 
 class Sequence(Expression):
   def __init__(self, exprs):
     self.exprs = exprs
   def emit(self, state):
     if len(self.exprs) == 0:
-      state.write(VOID)
+      state.write(OC_VOID)
     else:
       first = True
       for expr in self.exprs:
         if first: first = False
-        else: state.write(POP, 1)
+        else: state.write(OC_POP, 1)
         expr.emit(state)
 
 class Conditional(Expression):
@@ -697,9 +698,9 @@ class Conditional(Expression):
     self.else_part = else_part
   def emit(self, state):
     self.cond.emit(state)
-    if_true_jump = state.write(IF_TRUE, PLACEHOLDER)
+    if_true_jump = state.write(OC_IF_TRUE, PLACEHOLDER)
     self.else_part.emit(state)
-    end_jump = state.write(GOTO, PLACEHOLDER)
+    end_jump = state.write(OC_GOTO, PLACEHOLDER)
     state.bind(if_true_jump)
     self.then_part.emit(state)
     state.bind(end_jump)
@@ -710,28 +711,24 @@ class Conditional(Expression):
 
 class Roots:
   def __init__(self):
-    self.entries = { }
+    self.entries = [ ]
   def initialize(self):
+    self.toplevel_ = HeapDictionary()
     class_class = HeapClass(CLASS_TYPE, None)
     class_class.chlass = class_class
-    self.entries['class_class'] = class_class
-    self.entries['code_class'] = HeapClass(CODE_TYPE, class_class)
-    self.entries['tuple_class'] = HeapClass(TUPLE_TYPE, class_class)
-    self.entries['lambda_class'] = HeapClass(LAMBDA_TYPE, class_class)
-    self.entries['string_class'] = HeapClass(STRING_TYPE, class_class)
-    self.entries['dictionary_class'] = HeapClass(DICTIONARY_TYPE, class_class)
-    self.entries['toplevel'] = HeapDictionary()
+    self.entries.append(('class_class', class_class))
+    self.entries.append(('code_class', HeapClass(CODE_TYPE, class_class)))
+    self.entries.append(('tuple_class', HeapClass(TUPLE_TYPE, class_class)))
+    self.entries.append(('lambda_class', HeapClass(LAMBDA_TYPE, class_class)))
+    self.entries.append(('string_class', HeapClass(STRING_TYPE, class_class)))
+    self.entries.append(('dictionary_class', HeapClass(DICTIONARY_TYPE, class_class)))
+    self.entries.append(('toplevel', self.toplevel()))
   def toplevel(self):
-    return self.entries['toplevel']
-  def get_class(self, name):
-    return self.entries[name + '_class']
+    return self.toplevel_
   def write_to(self, stream):
-    for key, value in self.entries.items():
-      index = globals()['SET_' + key.upper()]
-      stream.write(index)
+    for (key, value) in self.entries:
       stream.write(value)
-
-CURRENT_RUNTIME = None
+      stream.write(globals()['SET_' + key.upper()])
 
 class Runtime:
   current_runtime = None
@@ -750,103 +747,118 @@ class Runtime:
     return cls.current_runtime
   current = classmethod(current)
 
-def get_class(name):
-  roots = Runtime.current().roots()
-  return roots.get_class(name)
-
 class HeapValue:
   def __init__(self):
     self.offset = None
 
 class HeapObject(HeapValue):
-  def __init__(self, chlass):
+  def __init__(self, chlass = None):
     HeapValue.__init__(self)
     self.chlass = chlass
-  def write_to(self, stream):
-    stream.write(self.chlass)
 
 class HeapString(HeapObject):
   def __init__(self, value):
-    HeapObject.__init__(self, get_class('string'))
+    HeapObject.__init__(self)
     self.value = value
   def write_to(self, stream):
-    stream.write(NEW_STRING)
-    stream.write(self.value)
+    stream.write(NEW_STRING, self.value)
+
+class HeapNumber(HeapObject):
+  def __init__(self, value):
+    HeapObject.__init__(self)
+    self.value = value
+  def write_to(self, stream):
+    stream.write(NEW_NUMBER, self.value)
 
 class HeapClass(HeapObject):
   def __init__(self, instance_type, chlass):
     HeapObject.__init__(self, chlass)
     self.instance_type = instance_type
   def write_to(self, stream):
-    stream.write(NEW_CLASS)
-    HeapObject.write_to(self, stream)
-    stream.write(self.instance_type)
+    stream.write(self.chlass)
+    stream.write(NEW_CLASS, self.instance_type)
 
 class HeapTuple(HeapObject):
   def __init__(self, values):
-    HeapObject.__init__(self, get_class('tuple'))
+    HeapObject.__init__(self)
     self.values = values
   def write_to(self, stream):
-    stream.write(NEW_TUPLE)
-    stream.write(len(self.values))
     for value in self.values:
       stream.write(value)
+    stream.write(NEW_TUPLE, len(self.values))
 
 class HeapLambda(HeapObject):
   def __init__(self, argc, code, literals):
-    HeapObject.__init__(self, get_class('lambda'))
+    HeapObject.__init__(self, None)
     self.argc = argc
     self.code = code
     self.literals = literals
   def write_to(self, stream):
-    stream.write(NEW_LAMBDA)
-    stream.write(self.argc)
     stream.write(self.code)
     stream.write(self.literals)
+    stream.write(NEW_LAMBDA, self.argc)
 
 class HeapDictionary(HeapObject):
   def __init__(self):
-    HeapObject.__init__(self, get_class('dictionary'))
+    HeapObject.__init__(self, None)
     self.contents = { }
   def set(self, key, value):
     self.contents[HeapString(key)] = value
   def write_to(self, stream):
-    stream.write(NEW_DICTIONARY)
-    stream.write(len(self.contents))
+    elms = [ ]
     for key, value in self.contents.items():
-      stream.write(key)
-      stream.write(value)
+      elms.append(key)
+      elms.append(value)
+    stream.write(HeapTuple(elms))
+    stream.write(NEW_DICTIONARY)
 
 class HeapCode(HeapObject):
   def __init__(self, buffer):
-    HeapObject.__init__(self, get_class('code'))
+    HeapObject.__init__(self, None)
     self.buffer = buffer
   def write_to(self, stream):
-    stream.write(NEW_CODE)
-    stream.write(len(self.buffer))
+    stream.write(NEW_CODE, len(self.buffer))
     for instr in self.buffer:
       stream.write(instr)
 
 class ImageOutputStream:
   def __init__(self):
     self.buffer = []
-    self.registers = {}
-  def write(self, value):
-    self.buffer.append(value)
+    self.registers = { }
+    self.full_registers = { }
+  def write(self, *value):
+    self.buffer += value
   def cursor(self):
     return len(self.buffer)
   def ensure_register(self, offset):
     if offset in self.registers:
-      return self.registers[offset]
+      return (self.registers[offset], offset in self.full_registers)
     next = len(self.registers)
     self.registers[offset] = next
-    return next
+    return (next, False)
+  def done(self, offset):
+    if offset in self.registers:
+      self.full_registers[offset] = True
+      return True
+    else:
+      return False
+  def write_output(self, file):
+    def write(value):
+      output.write(struct.pack('<I', value))
+    output = open(file, 'wb')
+    write(4206546606L)
+    write(len(self.buffer))
+    write(len(self.registers))
+    for value in self.buffer:
+      write(value)
+    output.close()
+
 
 class ImageStream:
   def __init__(self):
     self.data = []
-  def write(self, value):
-    self.data.append(value)
+  def write(self, *value):
+    self.data += value
   def flush(self, buffer):
     offset = 0
     while offset < len(self.data):
@@ -857,16 +869,20 @@ class ImageStream:
         buffer.write(len(elem))
         for char in elem:
           buffer.write(ord(char))
+      elif elem.offset is None:
+        elem.offset = buffer.cursor()
+        sub_stream = ImageStream()
+        elem.write_to(sub_stream)
+        sub_stream.flush(buffer)
+        if buffer.done(elem.offset):
+          (index, _) = buffer.ensure_register(elem.offset)
+          buffer.write(STORE_REGISTER, index)
       else:
-        if elem.offset:
-          register = buffer.ensure_register(elem.offset)
-          buffer.write(LOAD_REGISTER)
-          buffer.write(register)
+        (register, full) = buffer.ensure_register(elem.offset)
+        if full:
+          buffer.write(LOAD_REGISTER, register)
         else:
-          elem.offset = buffer.cursor()
-          sub_stream = ImageStream()
-          elem.write_to(sub_stream)
-          sub_stream.flush(buffer)
+          buffer.write(PENDING_REGISTER, register)
       offset = offset + 1
     return buffer
 
@@ -972,11 +988,25 @@ def read_consts(file):
 def define_type_tag(n, TYPE, Type):
   globals()[TYPE + '_TYPE'] = int(n)
 
-def define_opcode(NAME, argc, n):
-  globals()[NAME] = int(n)
+def define_opcode(NAME, n, argc):
+  globals()['OC_' + NAME] = int(n)
 
 def define_instruction(n, NAME):
   globals()[NAME] = int(n)
+
+def import_constants(file):
+  consts = read_consts(file)
+  consts.apply('FOR_EACH_DECLARED_TYPE', define_type_tag)
+  consts.apply('FOR_EACH_OPCODE', define_opcode)
+  consts.apply('FOR_EACH_INSTRUCTION', define_instruction)
+
+def load_files(files):
+  Runtime.set_current(Runtime())
+  Runtime.current().initialize()
+  for file in files:
+    source = open(file).read()
+    tree = compile(source)
+    tree.load()
 
 def main():
   parser = OptionParser(option_list=options)
@@ -984,25 +1014,13 @@ def main():
   if not process_args(values, files):
     parser.print_help()
     return
-  consts = read_consts(values.consts)
-  consts.apply('FOR_EACH_DECLARED_TYPE', define_type_tag)
-  consts.apply('FOR_EACH_OPCODE', define_opcode)
-  consts.apply('FOR_EACH_INSTRUCTION', define_instruction)
-  Runtime.set_current(Runtime())
-  Runtime.current().initialize()
-  for file in files:
-    source = open(file).read()
-    tree = compile(source)
-    tree.load()
+  import_constants(values.consts)
+  load_files(files)
   stream = ImageStream()
   Runtime.current().write_to(stream)
   data = ImageOutputStream()
   stream.flush(data)
-  print data.buffer
-  print data.registers
-  output = open(values.out, 'w')
-  output.close()
-
+  data.write_output(values.out)
 
 if __name__ == '__main__':
   main()
