@@ -2,72 +2,16 @@
 #define _VALUES
 
 #include "heap/ref.h"
+#include "utils/consts.h"
 #include "utils/globals.h"
 #include "utils/string.h"
 
 namespace neutrino {
 
 
-// ---------------------------
-// --- G e n e r a t o r s ---
-// ---------------------------
-
-#define FOR_EACH_SYNTAX_TREE_TYPE(VISIT)                             \
-  VISIT(LITERAL, Literal)
-
-/**
- * Visits all leaf object types, that is, types that can have concrete
- * instances.
- */
-#define FOR_EACH_OBJECT_TYPE(VISIT)                                  \
-  VISIT(CLASS, Class)                                                \
-  VISIT(STRING, String)                                              \
-  VISIT(TUPLE, Tuple)                                                \
-  VISIT(DICTIONARY, Dictionary)                                      \
-  VISIT(VOID, Void)                                                  \
-  VISIT(NULL, Null)                                                  \
-  VISIT(TRUE, True)                                                  \
-  VISIT(FALSE, False)                                                \
-  VISIT(LAMBDA, Lambda)                                              \
-  VISIT(BUFFER, Buffer)                                              \
-  VISIT(CODE, Code)                                                  \
-  VISIT(METHOD, Method)                                              \
-  VISIT(PROTOCOL, Protocol)                                          \
-  FOR_EACH_SYNTAX_TREE_TYPE(VISIT)
-
-/**
- * Visits all non-leaf object types, that is, types that have subtypes
- * but not concrete instances.
- */
-#define FOR_EACH_VIRTUAL_TYPE(VISIT)                                 \
-  VISIT(OBJECT, Object)                                              \
-  VISIT(VALUE, Value)                                                \
-  VISIT(ABSTRACT_BUFFER, AbstractBuffer)
-
-#define FOR_EACH_SIGNAL_TYPE(VISIT)                                  \
-  VISIT(ALLOCATION_FAILED, AllocationFailed)                         \
-  VISIT(INTERNAL_ERROR, InternalError)                               \
-  VISIT(NOTHING, Nothing)
-
-/**
- * Visits all leaf object and non-object types.
- */
-#define FOR_EACH_VALUE_TYPE(VISIT)                                   \
-  VISIT(SMI, Smi)                                                    \
-  VISIT(SIGNAL, Signal)                                              \
-  FOR_EACH_SIGNAL_TYPE(VISIT)                                        \
-  FOR_EACH_OBJECT_TYPE(VISIT)
-
-/**
- * Visits all types, non-object and object, non-leaf and leaf.
- */
-#define FOR_EACH_DECLARED_TYPE(VISIT)                                \
-  FOR_EACH_VALUE_TYPE(VISIT)                                         \
-  FOR_EACH_VIRTUAL_TYPE(VISIT)
-
 enum InstanceType {
   ILLEGAL_TAG = 0
-#define DECLARE_INSTANCE_TYPE(NAME, Name) , NAME##_TYPE
+#define DECLARE_INSTANCE_TYPE(n, NAME, Name) , NAME##_TYPE = n
 FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
 #undef DECLARE_INSTANCE_TYPE
 };
@@ -433,7 +377,7 @@ public:
   inline uint32_t payload();
   enum Type {
     FIRST_SIGNAL_TYPE = -1
-#define DECLARE_SIGNAL_TYPE(NAME, Name) , NAME
+#define DECLARE_SIGNAL_TYPE(n, NAME, Name) , NAME
 FOR_EACH_SIGNAL_TYPE(DECLARE_SIGNAL_TYPE)
 #undef DECLARE_SIGNAL_TYPE
   };

@@ -13,7 +13,7 @@ uint32_t Class::tag_of(Data *value) {
     return SMI_TYPE;
   } else if (is<Signal>(value)) {
     switch (cast<Signal>(value)->type()) {
-#define MAKE_SIGNAL_TYPE_CASE(NAME, Name) case Signal::NAME: return NAME##_TYPE;
+#define MAKE_SIGNAL_TYPE_CASE(n, NAME, Name) case Signal::NAME: return NAME##_TYPE;
 FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
 #undef MAKE_SIGNAL_TYPE_CASE
       default: UNREACHABLE(); return SIGNAL_TYPE;
@@ -25,7 +25,7 @@ FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
 
 const char *Class::tag_name(uint32_t tag) {
   switch (tag) {
-#define MAKE_TYPE_CASE(NAME, Name) case NAME##_TYPE: return #NAME;
+#define MAKE_TYPE_CASE(n, NAME, Name) case NAME##_TYPE: return #NAME;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 #undef MAKE_TYPE_CASE
     default: return "<illegal>";
@@ -34,7 +34,7 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 
 const char *Class::class_name(uint32_t tag) {
   switch (tag) {
-#define MAKE_TYPE_CASE(NAME, Name) case NAME##_TYPE: return #Name;
+#define MAKE_TYPE_CASE(n, NAME, Name) case NAME##_TYPE: return #Name;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 #undef MAKE_TYPE_CASE
     default: return "<illegal>";
@@ -57,13 +57,13 @@ bool Value::is_key() {
 #endif // DEBUG
 
 MAKE_ENUM_INFO_HEADER(InstanceType)
-#define MAKE_ENTRY(NAME, Name) MAKE_ENUM_INFO_ENTRY(NAME##_TYPE)
+#define MAKE_ENTRY(n, NAME, Name) MAKE_ENUM_INFO_ENTRY(NAME##_TYPE)
 FOR_EACH_DECLARED_TYPE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
 MAKE_ENUM_INFO_HEADER(Signal::Type)
-#define MAKE_ENTRY(NAME, Name) MAKE_ENUM_INFO_ENTRY(Signal::NAME)
+#define MAKE_ENTRY(n, NAME, Name) MAKE_ENUM_INFO_ENTRY(Signal::NAME)
 FOR_EACH_SIGNAL_TYPE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()

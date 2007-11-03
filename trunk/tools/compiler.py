@@ -6,6 +6,7 @@
 
 from optparse import OptionParser, Option
 from os import path
+import re, string
 
 # -------------------
 # --- T o k e n s ---
@@ -208,9 +209,9 @@ BUILTIN_CLASSES = {
 }
 
 BUILTIN_METHODS = {
-  ('String', 'length'):  0,
-  ('SmallInteger', '+'): 1,
-  ('SmallInteger', '-'): 2
+  ('String',       'length'):  0,
+  ('SmallInteger', '+'):       1,
+  ('SmallInteger', '-'):       2
 }
 
 class Parser:
@@ -512,18 +513,6 @@ class Parser:
     else:
       self.parse_error()
 
-# Validates the parsed command-line arguments
-def process_args(values, files):
-  if not values.out:
-    print "An output file must be specified."
-    return False
-  output_file = values.out
-  for file in files:
-    if not path.exists(file):
-      print "Could not find file " + file + "."
-      return False
-  return True
-
 # -------------------------------
 # --- S y n t a x   T r e e s ---
 # -------------------------------
@@ -534,22 +523,17 @@ class SyntaxTree:
 class Program(SyntaxTree):
   def __init__(self, decls):
     self.decls = decls
-  def to_sexp(self):
-    result = '(program '
-    first = True
+  def load(self):
     for decl in self.decls:
-      if first: first = False
-      else: result += ' '
-      result += decl.to_sexp()
-    result += ')'
-    return result
+      decl.define()
+      return
 
 class Definition(SyntaxTree):
   def __init__(self, name, value):
     self.name = name
     self.value = value
-  def to_sexp(self):
-    return '(define "' + self.name + '" ' + self.value.to_sexp() + ')'
+  def define(self):
+    Runtime.current().roots().toplevel().set(self.name, self.value.create())
 
 class BuiltinClass(SyntaxTree):
   def __init__(self, index, members):
@@ -597,22 +581,23 @@ class Literal(Expression):
     self.value = value
   def emit(self, state):
     index = state.literal_index(self.value)
-    state.write(LITERAL, index)
+    state.write(PUSH, index)
   def to_sexp(self):
     return '(number ' + str(self.value) + ')'
 
-def lambda_to_sexp(params, body):
+def create_lambda(params, body):
   state = CodeGeneratorState()
-  state.scopes.append(params)
-  code = body.compile(state)
-  return '(lambda ' + str(len(params)) + ' ' + code + ')'
+  body.emit(state)
+  code = HeapCode(state.code)
+  literals = HeapTuple(state.literals)
+  return HeapLambda(len(params), code, literals)
 
 class Lambda(Expression):
   def __init__(self, params, body):
     self.params = params
     self.body = body
-  def to_sexp(self):
-    return lambda_to_sexp(self.params, self.body)
+  def create(self):
+    return create_lambda(self.params, self.body)
 
 class Identifier(Expression):
   def __init__(self, name):
@@ -719,25 +704,175 @@ class Conditional(Expression):
     self.then_part.emit(state)
     state.bind(end_jump)
 
+# ---------------------------
+# --- H e a p   I m a g e ---
+# ---------------------------
+
+class Roots:
+  def __init__(self):
+    self.entries = { }
+  def initialize(self):
+    class_class = HeapClass(CLASS_TYPE, None)
+    class_class.chlass = class_class
+    self.entries['class_class'] = class_class
+    self.entries['code_class'] = HeapClass(CODE_TYPE, class_class)
+    self.entries['tuple_class'] = HeapClass(TUPLE_TYPE, class_class)
+    self.entries['lambda_class'] = HeapClass(LAMBDA_TYPE, class_class)
+    self.entries['string_class'] = HeapClass(STRING_TYPE, class_class)
+    self.entries['dictionary_class'] = HeapClass(DICTIONARY_TYPE, class_class)
+    self.entries['toplevel'] = HeapDictionary()
+  def toplevel(self):
+    return self.entries['toplevel']
+  def get_class(self, name):
+    return self.entries[name + '_class']
+  def write_to(self, stream):
+    for key, value in self.entries.items():
+      index = globals()['SET_' + key.upper()]
+      stream.write(index)
+      stream.write(value)
+
+CURRENT_RUNTIME = None
+
+class Runtime:
+  current_runtime = None
+  def __init__(self):
+    self.roots_ = Roots()
+  def initialize(self):
+    self.roots().initialize()
+  def roots(self):
+    return self.roots_
+  def write_to(self, stream):
+    self.roots().write_to(stream)
+  def set_current(cls, runtime):
+    cls.current_runtime = runtime
+  set_current = classmethod(set_current)
+  def current(cls):
+    return cls.current_runtime
+  current = classmethod(current)
+
+def get_class(name):
+  roots = Runtime.current().roots()
+  return roots.get_class(name)
+
+class HeapValue:
+  def __init__(self):
+    self.offset = None
+
+class HeapObject(HeapValue):
+  def __init__(self, chlass):
+    HeapValue.__init__(self)
+    self.chlass = chlass
+  def write_to(self, stream):
+    stream.write(self.chlass)
+
+class HeapString(HeapObject):
+  def __init__(self, value):
+    HeapObject.__init__(self, get_class('string'))
+    self.value = value
+  def write_to(self, stream):
+    stream.write(NEW_STRING)
+    stream.write(self.value)
+
+class HeapClass(HeapObject):
+  def __init__(self, instance_type, chlass):
+    HeapObject.__init__(self, chlass)
+    self.instance_type = instance_type
+  def write_to(self, stream):
+    stream.write(NEW_CLASS)
+    HeapObject.write_to(self, stream)
+    stream.write(self.instance_type)
+
+class HeapTuple(HeapObject):
+  def __init__(self, values):
+    HeapObject.__init__(self, get_class('tuple'))
+    self.values = values
+  def write_to(self, stream):
+    stream.write(NEW_TUPLE)
+    stream.write(len(self.values))
+    for value in self.values:
+      stream.write(value)
+
+class HeapLambda(HeapObject):
+  def __init__(self, argc, code, literals):
+    HeapObject.__init__(self, get_class('lambda'))
+    self.argc = argc
+    self.code = code
+    self.literals = literals
+  def write_to(self, stream):
+    stream.write(NEW_LAMBDA)
+    stream.write(self.argc)
+    stream.write(self.code)
+    stream.write(self.literals)
+
+class HeapDictionary(HeapObject):
+  def __init__(self):
+    HeapObject.__init__(self, get_class('dictionary'))
+    self.contents = { }
+  def set(self, key, value):
+    self.contents[HeapString(key)] = value
+  def write_to(self, stream):
+    stream.write(NEW_DICTIONARY)
+    stream.write(len(self.contents))
+    for key, value in self.contents.items():
+      stream.write(key)
+      stream.write(value)
+
+class HeapCode(HeapObject):
+  def __init__(self, buffer):
+    HeapObject.__init__(self, get_class('code'))
+    self.buffer = buffer
+  def write_to(self, stream):
+    stream.write(NEW_CODE)
+    stream.write(len(self.buffer))
+    for instr in self.buffer:
+      stream.write(instr)
+
+class ImageOutputStream:
+  def __init__(self):
+    self.buffer = []
+    self.registers = {}
+  def write(self, value):
+    self.buffer.append(value)
+  def cursor(self):
+    return len(self.buffer)
+  def ensure_register(self, offset):
+    if offset in self.registers:
+      return self.registers[offset]
+    next = len(self.registers)
+    self.registers[offset] = next
+    return next
+
+class ImageStream:
+  def __init__(self):
+    self.data = []
+  def write(self, value):
+    self.data.append(value)
+  def flush(self, buffer):
+    offset = 0
+    while offset < len(self.data):
+      elem = self.data[offset]
+      if type(elem) is int:
+        buffer.write(elem)
+      elif type(elem) is str:
+        buffer.write(len(elem))
+        for char in elem:
+          buffer.write(ord(char))
+      else:
+        if elem.offset:
+          register = buffer.ensure_register(elem.offset)
+          buffer.write(LOAD_REGISTER)
+          buffer.write(register)
+        else:
+          elem.offset = buffer.cursor()
+          sub_stream = ImageStream()
+          elem.write_to(sub_stream)
+          sub_stream.flush(buffer)
+      offset = offset + 1
+    return buffer
+
 # -----------------------
 # --- C o m p i l e r ---
 # -----------------------
-
-LITERAL     = 0
-RETURN      = 1
-GLOBAL      = 2
-CALL        = 3
-SLAP        = 4
-ARGUMENT    = 5
-VOID        = 6
-NULL        = 7
-TRUE        = 8
-FALSE       = 9
-POP         = 10
-IF_TRUE     = 11
-GOTO        = 12
-INVOKE      = 13
-INTERNAL    = 14
 
 PLACEHOLDER = 0xBADDEAD
 
@@ -769,19 +904,79 @@ def compile(str):
   parser = Parser(tokens)
   return parser.parse_program()
 
-def emit(tree, out):
-  str = tree.to_sexp()
-  out.write(str)
-  out.write('\n')
-
 # ---------------
 # --- M a i n ---
 # ---------------
 
 # The set of command-line options
 options = [
-  Option("-o", "--output", dest='out', help='output file', nargs=1)
+  Option('-o', '--output', dest='out', help='output file', nargs=1),
+  Option('-c', '--consts', dest='consts', help='constants', nargs=1)
 ]
+
+# Validates the parsed command-line arguments
+def process_args(values, files):
+  if not values.out:
+    print "An output file must be specified."
+    return False
+  if not values.consts:
+    print "A constants file must be specified."
+    return False
+  for file in files:
+    if not path.exists(file):
+      print "Could not find file " + file + "."
+      return False
+  return True
+
+class MacroCollection:
+  def __init__(self):
+    self.defines = { }
+  def add(self, name, value):
+    self.defines[name] = value
+  def apply(self, name, function):
+    macro = self.defines[name]
+    macro.apply(self, function)
+
+class Macro:
+  def __init__(self, args, body):
+    self.args = args
+    self.body = body
+  def apply(self, macros, function):
+    for arg in self.args:
+      call_pattern = re.compile(arg + "\(([^)]*)\)")
+      calls = call_pattern.findall(self.body)
+      for call in calls:
+        args = map(string.strip, call.split(","))
+        function(*args)
+    forward_pattern = re.compile("([A-Za-z0-9_]+)\(" + ", ".join(self.args) + '\)')
+    forwards = forward_pattern.findall(self.body)
+    for forward in forwards:
+      macros.apply(forward, function)
+
+const_pattern = re.compile("^#define ([a-zA-Z0-9_]+)\(([^)]*)\)(.*)$")
+def read_consts(file):
+  defines = MacroCollection()
+  input = open(file).read()
+  input = input.replace("\\\n", "")
+  lines = input.split("\n")
+  for line in lines:
+    stripped = line.strip()
+    match = const_pattern.match(stripped)
+    if not match: continue
+    name = match.group(1).strip()
+    args = match.group(2).strip().split()
+    body = match.group(3).strip()
+    defines.add(name, Macro(args, body))
+  return defines
+
+def define_type_tag(n, TYPE, Type):
+  globals()[TYPE + '_TYPE'] = int(n)
+
+def define_opcode(NAME, argc, n):
+  globals()[NAME] = int(n)
+
+def define_instruction(n, NAME):
+  globals()[NAME] = int(n)
 
 def main():
   parser = OptionParser(option_list=options)
@@ -789,11 +984,23 @@ def main():
   if not process_args(values, files):
     parser.print_help()
     return
-  output = open(values.out, 'w')
+  consts = read_consts(values.consts)
+  consts.apply('FOR_EACH_DECLARED_TYPE', define_type_tag)
+  consts.apply('FOR_EACH_OPCODE', define_opcode)
+  consts.apply('FOR_EACH_INSTRUCTION', define_instruction)
+  Runtime.set_current(Runtime())
+  Runtime.current().initialize()
   for file in files:
     source = open(file).read()
     tree = compile(source)
-    emit(tree, output)
+    tree.load()
+  stream = ImageStream()
+  Runtime.current().write_to(stream)
+  data = ImageOutputStream()
+  stream.flush(data)
+  print data.buffer
+  print data.registers
+  output = open(values.out, 'w')
   output.close()
 
 

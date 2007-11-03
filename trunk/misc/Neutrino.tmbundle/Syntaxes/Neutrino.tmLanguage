@@ -29,6 +29,23 @@
 				</dict>
 			</dict>
 			<key>match</key>
+			<string>(def)\s+\b(operator\b\s*[+\-&gt;]+)</string>
+		</dict>
+		<dict>
+			<key>captures</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>keyword.neutrino</string>
+				</dict>
+				<key>2</key>
+				<dict>
+					<key>name</key>
+					<string>entity.name.function.neutrino</string>
+				</dict>
+			</dict>
+			<key>match</key>
 			<string>(def)\s+(\w+)</string>
 		</dict>
 		<dict>

@@ -21,7 +21,7 @@ namespace neutrino {
  */
 template <class C> class ValueInfo { };
 
-#define SPECIALIZE_VALUE_INFO(NAME, Name)                            \
+#define SPECIALIZE_VALUE_INFO(n, NAME, Name)                         \
 template <> class ValueInfo<Name> {                                  \
 public:                                                              \
   static const int kTag = NAME##_TYPE;                               \
@@ -66,7 +66,7 @@ inline bool is<Value>(Data *val) {
   return is<Smi>(val) || is<Object>(val);
 }
 
-#define DEFINE_QUERY(NAME, Name)                                     \
+#define DEFINE_QUERY(n, NAME, Name)                                  \
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
     return is<Object>(val)                                           \
@@ -85,7 +85,7 @@ inline bool is<Signal>(Data *val) {
   return ValuePointer::has_signal_tag(val);
 }
 
-#define DEFINE_SIGNAL_QUERY(NAME, Name)                              \
+#define DEFINE_SIGNAL_QUERY(n, NAME, Name)                           \
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
     return is<Signal>(val)                                           \
