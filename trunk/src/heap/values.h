@@ -81,10 +81,19 @@ public:
   static inline Smi *from_int(int32_t value);
 };
 
+
+// -------------------
+// --- O b j e c t ---
+// -------------------
+
+typedef void (*FieldCallback)(Data **, void*);
+
 class Object : public Value {
 public:
-  inline Class *chlass();
+  inline Class *&chlass();
   inline void set_chlass(Class*);
+  
+  void for_each_field(void (*)(Data**, void*), void*);
   
   static const int kChlassOffset = 0;
   static const int kHeaderSize   = kChlassOffset + kPointerSize;
@@ -223,7 +232,7 @@ DEFINE_REF_CLASS(Tuple);
 
 class Dictionary : public Object {
 public:
-  inline Tuple *table();
+  inline Tuple *&table();
   inline void set_table(Tuple *value);
   
   Data *get(Value *key);
@@ -262,10 +271,10 @@ class Lambda : public Object {
 public:
   inline uint32_t &argc();
   
-  inline Code *code();
+  inline Code *&code();
   inline void set_code(Code *code);
   
-  inline Tuple *literals();
+  inline Tuple *&literals();
   inline void set_literals(Tuple *literals);
   
   static const int kArgcOffset     = Object::kHeaderSize;
@@ -305,10 +314,10 @@ class False : public Singleton { };
 
 class Method : public Object {
 public:
-  inline String *name();
+  inline String *&name();
   inline void set_name(String *name);
   
-  inline Lambda *lambda();
+  inline Lambda *&lambda();
   inline void set_lambda(Lambda *lambda);
   
   static const int kNameOffset   = Object::kHeaderSize;
@@ -350,8 +359,10 @@ class Class : public Object {
 public:
   inline uint32_t &instance_type();
 
-  inline Tuple *methods();
+  inline Tuple *&methods();
   inline void set_methods(Tuple *methods);
+  
+  void for_each_class_field(FieldCallback callback, void *data);
 
   IF_DEBUG(static uint32_t tag_of(Data *value);)
   IF_DEBUG(static const char *tag_name(uint32_t tag);)
@@ -400,6 +411,7 @@ public:
 
 class PendingRegister : public Signal {
 public:
+  inline uint32_t index();
   static inline PendingRegister *make(uint32_t reg);
 };
 

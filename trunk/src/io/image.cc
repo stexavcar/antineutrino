@@ -45,14 +45,10 @@ static inline C *load_cast(Data *val) {
 
 bool Runtime::load_image(Image &image) {
   list_buffer<Data*> stack;
+  list_buffer<Object*> fixups;
   while (image.has_more()) {
     uint32_t instr = image.read_word();
     switch (instr) {
-    case PENDING_REGISTER: {
-      uint32_t reg = image.read_word();
-      stack.push(PendingRegister::make(reg));
-      break;
-    }
     case NEW_CLASS: {
       Class *chlass = load_cast<Class>(stack.pop());
       InstanceType instance_type = static_cast<InstanceType>(image.read_word());
@@ -105,6 +101,15 @@ bool Runtime::load_image(Image &image) {
       stack.push(tuple);
       break;
     }
+    case PENDING_REGISTER: {
+      uint32_t reg = image.read_word();
+      stack.push(PendingRegister::make(reg));
+      break;
+    }
+    case SCHEDULE_FIXUP: {
+      fixups.append(load_cast<Object>(stack.peek()));
+      break;
+    }
     case STORE_REGISTER: {
       uint32_t index = image.read_word();
       image.registers()[index] = stack.peek();
@@ -126,7 +131,19 @@ FOR_EACH_ROOT(MAKE_ROOT_SETTER)
       return false;
     }
   }
+  for (uint32_t i = 0; i < fixups.length(); i++) {
+    Object *obj = fixups[i];
+    obj->for_each_field(Image::fixup_field, &image);
+  }
   return true;
+}
+
+void Image::fixup_field(Data **field, void *data) {
+  if (is<PendingRegister>(*field)) {
+    PendingRegister *pending = cast<PendingRegister>(*field);
+    Image &image = *reinterpret_cast<Image*>(data);
+    *field = image.registers()[pending->index()];
+  }
 }
 
 bool Image::has_more() {

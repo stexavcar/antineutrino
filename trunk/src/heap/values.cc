@@ -68,7 +68,10 @@ FOR_EACH_SIGNAL_TYPE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
+
+// -----------------------
 // --- P r i n t i n g ---
+// -----------------------
 
 string Data::to_string() {
   string_buffer buf;
@@ -235,7 +238,34 @@ void Data::write_short_on(string_buffer &buf) {
   write_data_short_on(this, buf);
 }
 
+
+// -------------------------
+// --- I t e r a t i o n ---
+// -------------------------
+
+#define VISIT(field) callback(reinterpret_cast<Data**>(&field), data)
+
+void Object::for_each_field(FieldCallback callback, void *data) {
+  VISIT(chlass());
+  uint32_t type = chlass()->instance_type();
+  switch (type) {
+    case CLASS_TYPE:
+      cast<Class>(this)->for_each_class_field(callback, data);
+      break;
+    default:
+      UNHANDLED(InstanceType, type);
+  }
+}
+
+void Class::for_each_class_field(FieldCallback callback, void *data) {
+  VISIT(methods());
+}
+
+#undef VISIT
+
+// -------------------
 // --- L a m b d a ---
+// -------------------
 
 ref<Value> ref_traits<Lambda>::call() {
   Interpreter &interpreter = Runtime::current().interpreter();

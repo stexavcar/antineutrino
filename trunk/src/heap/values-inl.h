@@ -117,12 +117,6 @@ T &Class::name() {                                                   \
   return ValuePointer::access_field<T>(this, Class::kOffset);        \
 }
 
-#define DEFINE_GETTER(T, Class, name, kOffset)                       \
-T Class::name() {                                                    \
-  T value = ValuePointer::access_field<T>(this, Class::kOffset);     \
-  return value;                                                      \
-}
-
 #define DEFINE_SETTER(T, Class, name, kOffset)                       \
 void Class::set_##name(T value) {                                    \
   T &field = ValuePointer::access_field<T>(this, Class::kOffset);    \
@@ -130,7 +124,7 @@ void Class::set_##name(T value) {                                    \
 }
 
 #define DEFINE_ACCESSORS(T, Class, name, kOffset)                    \
-  DEFINE_GETTER(T, Class, name, kOffset)                             \
+  DEFINE_ACCESSOR(T, Class, name, kOffset)                           \
   DEFINE_SETTER(T, Class, name, kOffset)
 
 
@@ -331,6 +325,10 @@ Nothing *Nothing::make() {
 PendingRegister *PendingRegister::make(uint32_t reg) {
   Signal *result = ValuePointer::tag_as_signal(PENDING_REGISTER, reg);
   return cast<PendingRegister>(result);
+}
+
+uint32_t PendingRegister::index() {
+  return payload();
 }
 
 } // namespace neutrino

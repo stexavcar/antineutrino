@@ -74,6 +74,7 @@ RESERVED = [
   '->'
 ]
 
+
 # ---------------------
 # --- S c a n n e r ---
 # ---------------------
@@ -196,6 +197,7 @@ class Scanner:
   def skip_whitespace(self):
     while self.has_more() and is_space(self.current()):
       self.advance()
+
 
 # -------------------
 # --- P a r s e r ---
@@ -727,8 +729,8 @@ class Roots:
     return self.toplevel_
   def write_to(self, stream):
     for (key, value) in self.entries:
-      stream.write(value)
-      stream.write(globals()['SET_' + key.upper()])
+      stream.write(self, value)
+      stream.write(self, globals()['SET_' + key.upper()])
 
 class Runtime:
   current_runtime = None
@@ -750,6 +752,7 @@ class Runtime:
 class HeapValue:
   def __init__(self):
     self.offset = None
+    self.requires_fixup = False
 
 class HeapObject(HeapValue):
   def __init__(self, chlass = None):
@@ -761,22 +764,22 @@ class HeapString(HeapObject):
     HeapObject.__init__(self)
     self.value = value
   def write_to(self, stream):
-    stream.write(NEW_STRING, self.value)
+    stream.write(self, NEW_STRING, self.value)
 
 class HeapNumber(HeapObject):
   def __init__(self, value):
     HeapObject.__init__(self)
     self.value = value
   def write_to(self, stream):
-    stream.write(NEW_NUMBER, self.value)
+    stream.write(self, NEW_NUMBER, self.value)
 
 class HeapClass(HeapObject):
   def __init__(self, instance_type, chlass):
     HeapObject.__init__(self, chlass)
     self.instance_type = instance_type
   def write_to(self, stream):
-    stream.write(self.chlass)
-    stream.write(NEW_CLASS, self.instance_type)
+    stream.write(self, self.chlass)
+    stream.write(self, NEW_CLASS, self.instance_type)
 
 class HeapTuple(HeapObject):
   def __init__(self, values):
@@ -784,8 +787,8 @@ class HeapTuple(HeapObject):
     self.values = values
   def write_to(self, stream):
     for value in self.values:
-      stream.write(value)
-    stream.write(NEW_TUPLE, len(self.values))
+      stream.write(self, value)
+    stream.write(self, NEW_TUPLE, len(self.values))
 
 class HeapLambda(HeapObject):
   def __init__(self, argc, code, literals):
@@ -794,9 +797,9 @@ class HeapLambda(HeapObject):
     self.code = code
     self.literals = literals
   def write_to(self, stream):
-    stream.write(self.code)
-    stream.write(self.literals)
-    stream.write(NEW_LAMBDA, self.argc)
+    stream.write(self, self.code)
+    stream.write(self, self.literals)
+    stream.write(self, NEW_LAMBDA, self.argc)
 
 class HeapDictionary(HeapObject):
   def __init__(self):
@@ -809,17 +812,17 @@ class HeapDictionary(HeapObject):
     for key, value in self.contents.items():
       elms.append(key)
       elms.append(value)
-    stream.write(HeapTuple(elms))
-    stream.write(NEW_DICTIONARY)
+    stream.write(self, HeapTuple(elms))
+    stream.write(self, NEW_DICTIONARY)
 
 class HeapCode(HeapObject):
   def __init__(self, buffer):
     HeapObject.__init__(self, None)
     self.buffer = buffer
   def write_to(self, stream):
-    stream.write(NEW_CODE, len(self.buffer))
+    stream.write(self, NEW_CODE, len(self.buffer))
     for instr in self.buffer:
-      stream.write(instr)
+      stream.write(self, instr)
 
 class ImageOutputStream:
   def __init__(self):
@@ -857,12 +860,14 @@ class ImageOutputStream:
 class ImageStream:
   def __init__(self):
     self.data = []
-  def write(self, *value):
-    self.data += value
+  def write(self, holder, *values):
+    assert len(values) > 0
+    for value in values:
+      self.data.append((holder, value))
   def flush(self, buffer):
     offset = 0
     while offset < len(self.data):
-      elem = self.data[offset]
+      (holder, elem) = self.data[offset]
       if type(elem) is int:
         buffer.write(elem)
       elif type(elem) is str:
@@ -877,11 +882,14 @@ class ImageStream:
         if buffer.done(elem.offset):
           (index, _) = buffer.ensure_register(elem.offset)
           buffer.write(STORE_REGISTER, index)
+        if elem.requires_fixup:
+          buffer.write(SCHEDULE_FIXUP)
       else:
         (register, full) = buffer.ensure_register(elem.offset)
         if full:
           buffer.write(LOAD_REGISTER, register)
         else:
+          holder.requires_fixup = True
           buffer.write(PENDING_REGISTER, register)
       offset = offset + 1
     return buffer

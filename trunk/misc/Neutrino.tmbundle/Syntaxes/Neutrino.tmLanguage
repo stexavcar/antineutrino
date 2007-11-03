@@ -118,6 +118,49 @@
 				</dict>
 			</array>
 		</dict>
+		<dict>
+			<key>begin</key>
+			<string>#</string>
+			<key>end</key>
+			<string>$</string>
+			<key>groups</key>
+			<dict>
+				<key>1</key>
+				<dict>
+					<key>name</key>
+					<string>comment.block.documentation.neutrino</string>
+				</dict>
+			</dict>
+			<key>name</key>
+			<string>comment.block.documentation.neutrino</string>
+			<key>patterns</key>
+			<array>
+				<dict>
+					<key>match</key>
+					<string>\\(param)\b</string>
+					<key>name</key>
+					<string>keyword.other.doc.neutrino</string>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>\B\*[^*]*\*\B</string>
+					<key>name</key>
+					<string>markup.bold.doc.neutrino</string>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>\b_[^_]*_\b</string>
+					<key>name</key>
+					<string>markup.italic.doc.neutrino</string>
+				</dict>
+				<dict>
+					<key>match</key>
+					<string>\B=[^=]*=\B</string>
+					<key>name</key>
+					<string>markup.underline.doc.neutrino</string>
+				</dict>
+			</array>
+		</dict>
 	</array>
 	<key>scopeName</key>
 	<string>source.neutrino</string>

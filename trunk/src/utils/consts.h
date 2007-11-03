@@ -80,7 +80,7 @@
   VISIT(36, NEW_NUMBER)                                              \
                                                                      \
   VISIT(40, LOAD_REGISTER)        VISIT(41, PENDING_REGISTER)        \
-  VISIT(42, STORE_REGISTER)
+  VISIT(42, STORE_REGISTER)       VISIT(43, SCHEDULE_FIXUP)
 
 
 // -----------------

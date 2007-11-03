@@ -13,6 +13,7 @@ public:
   uint32_t read_word();
   bool has_more();
   Data **registers() { return registers_; }
+  static void fixup_field(Data **field, void *image);
 private:
   static const uint32_t kMagicNumber = 0xFABACEAE;
   static const uint32_t kHeaderSize = 3 * kWordSize;
