@@ -552,23 +552,7 @@ class Method(SyntaxTree):
     return HeapMethod(HeapString(self.name), body)
 
 class Expression(SyntaxTree):
-  def compile(self, state):
-    self.emit(state)
-    literals = state.literals
-    result = '('
-    first = True
-    for instr in state.code:
-      if first: first = False
-      else: result += ' '
-      result += str(instr)
-    result += ') ('
-    first = True
-    for literal in state.literals:
-      if first: first = False
-      else: result += ' '
-      result += serialize_value(literal)
-    result += ')'
-    return result
+  pass
 
 class Literal(Expression):
   def __init__(self, value):
@@ -576,8 +560,6 @@ class Literal(Expression):
   def emit(self, state):
     index = state.literal_index(self.value)
     state.write(OC_PUSH, index)
-  def to_sexp(self):
-    return '(number ' + str(self.value) + ')'
 
 def create_lambda(params, body):
   state = CodeGeneratorState()

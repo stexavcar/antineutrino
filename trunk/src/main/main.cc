@@ -1,8 +1,6 @@
 #include <stdio.h>
 
 #include "io/image.h"
-#include "io/parser.h"
-#include "io/sexp.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
 
@@ -18,7 +16,6 @@ void Main::main(list<char*> &args) {
   Runtime runtime;
   runtime.initialize();
   Runtime::Scope runtime_scope(runtime);
-  Parser parser(runtime);
   for (uint32_t i = 1; i < args.length(); i++) {
     RefScope ref_scope;
     char *arg = args[i];
