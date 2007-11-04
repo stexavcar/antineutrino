@@ -147,10 +147,8 @@ FOR_EACH_ROOT(MAKE_ROOT_SETTER)
     obj->for_each_field(Image::fixup_field, &image);
   }
 #ifdef DEBUG
-  for (uint32_t i = 0; i < values.length(); i++) {
-    Value *value = values[i];
-    value->validate();
-  }
+  for (uint32_t i = 0; i < values.length(); i++)
+    values[i]->validate();
 #endif
   return true;
 }
