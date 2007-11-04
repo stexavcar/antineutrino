@@ -50,7 +50,8 @@ public:
    * Returns true if this object supports comparisons with other
    * objecs.
    */
-  IF_DEBUG(bool is_key();)
+  IF_DEBUG(bool is_key());
+  IF_DEBUG(void validate());
   
   /**
    * Built-in support for comparing certain objects.  This method
@@ -191,6 +192,8 @@ class Buffer : public AbstractBuffer {
 class Code : public AbstractBuffer {
 public:
   inline uint16_t &at(uint32_t index);
+  inline uint32_t length();
+  string disassemble();
 };
 
 template <>
@@ -364,9 +367,9 @@ public:
   
   void for_each_class_field(FieldCallback callback, void *data);
 
-  IF_DEBUG(static uint32_t tag_of(Data *value);)
-  IF_DEBUG(static const char *tag_name(uint32_t tag);)
-  IF_DEBUG(static const char *class_name(uint32_t tag);)
+  IF_DEBUG(static uint32_t tag_of(Data *value));
+  IF_DEBUG(static const char *tag_name(uint32_t tag));
+  IF_DEBUG(static const char *class_name(uint32_t tag));
 
   static const int kInstanceTypeOffset = Object::kHeaderSize;
   static const int kMethodsOffset      = kInstanceTypeOffset + kPointerSize;

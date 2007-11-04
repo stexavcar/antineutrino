@@ -2,6 +2,7 @@
 #include "heap/ref-inl.h"
 #include "heap/values-inl.h"
 #include "io/ast-inl.h"
+#include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
 
 namespace neutrino {
@@ -239,6 +240,39 @@ void Data::write_short_on(string_buffer &buf) {
 }
 
 
+// -------------------------------
+// --- D i s a s s e m b l e r ---
+// -------------------------------
+
+static void disassemble_buffer(uint16_t *data, uint32_t size,
+    string_buffer &buf) {
+  uint32_t pc = 0;
+  while (pc < size) {
+    switch (data[pc]) {
+#define MAKE_CASE(NAME, n, argc)                                     \
+      case NAME:                                                     \
+        buf.printf("%{ 3} %\n", pc, #NAME);                          \
+        pc += OpcodeInfo<NAME>::kSize;                               \
+        break;
+FOR_EACH_OPCODE(MAKE_CASE)
+#undef MAKE_CASE
+      default:
+        buf.printf("<unknown: %>\n", data[pc]);
+        pc += 1;
+        break;
+    }
+  }
+}
+
+string Code::disassemble() {
+  uint32_t size = length();
+  uint16_t *data = &at(0);
+  string_buffer buf;
+  disassemble_buffer(data, size, buf);
+  return buf.to_string();
+}
+
+
 // -------------------------
 // --- I t e r a t i o n ---
 // -------------------------
@@ -262,6 +296,83 @@ void Class::for_each_class_field(FieldCallback callback, void *data) {
 }
 
 #undef VISIT
+
+
+// ---------------------------
+// --- V a l i d a t i o n ---
+// ---------------------------
+
+#ifdef DEBUG
+
+// In order to validate, the following must hold about an object.  All
+// fields that were set on construction must hold values of the type
+// required by those fields.  All fields whose value may change during
+// execution must hold valid non-signal pointers.
+
+static void validate_pointer(Value *ptr) {
+  CHECK(is<Object>(ptr) || is<Smi>(ptr));
+}
+
+static void validate_class(Class *obj) {
+  validate_pointer(obj->methods());
+}
+
+static void validate_string(String *obj) {
+  // nothing to do
+}
+
+static void validate_code(Code *obj) {
+  // nothing to do
+}
+
+static void validate_tuple(Tuple *obj) {
+  for (uint32_t i = 0; i < obj->length(); i++)
+    validate_pointer(obj->at(i));
+}
+
+static void validate_lambda(Lambda *obj) {
+  CHECK_IS(Code, obj->code());
+  CHECK_IS(Tuple, obj->literals());
+}
+
+static void validate_dictionary(Dictionary *obj) {
+  CHECK_IS(Tuple, obj->table());
+  obj->table()->validate();
+}
+
+static void validate_object(Object *obj) {
+  CHECK_IS(Class, obj->chlass());
+  uint32_t type = obj->chlass()->instance_type();
+  switch (type) {
+    case CLASS_TYPE:
+      validate_class(cast<Class>(obj));
+      break;
+    case STRING_TYPE:
+      validate_string(cast<String>(obj));
+      break;
+    case CODE_TYPE:
+      validate_code(cast<Code>(obj));
+      break;
+    case TUPLE_TYPE:
+      validate_tuple(cast<Tuple>(obj));
+      break;
+    case LAMBDA_TYPE:
+      validate_lambda(cast<Lambda>(obj));
+      break;
+    case DICTIONARY_TYPE:
+      validate_dictionary(cast<Dictionary>(obj));
+      break;
+    default:
+      UNHANDLED(InstanceType, type);
+  }
+}
+
+void Value::validate() {
+  if (is<Object>(this)) validate_object(cast<Object>(this));
+}
+
+#endif
+
 
 // -------------------
 // --- L a m b d a ---

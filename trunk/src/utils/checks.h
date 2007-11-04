@@ -7,7 +7,10 @@
 
 namespace neutrino {
 
+
+// -----------------------------------
 // --- D y n a m i c   C h e c k s ---
+// -----------------------------------
 
 class AbstractEnumInfo {
 public:
@@ -121,7 +124,10 @@ public:
 
 #endif // DEBUG
 
+
+// -------------------------------------------
 // --- D y n a m i c   A s s e r t i o n s ---
+// -------------------------------------------
 
 #define ASSERT(value)                  IF_DEBUG(CHECK(value))
 #define ASSERT_C(cond, value)          IF_DEBUG(CHECK_C(cond, value))
@@ -129,18 +135,16 @@ public:
 #define ASSERT_IS(Type, value)         IF_DEBUG(CHECK_IS(Type, value))
 #define ASSERT_IS_C(cond, Type, value) IF_DEBUG(CHECK_IS_C(cond, Type, value))
 
+
+// -----------------------------------------
 // --- S t a t i c   A s s e r t i o n s ---
+// -----------------------------------------
 
 // This is inspired by the static assertion facility in boost.  This
 // is pretty magical.  If it causes you trouble on a platform you may
 // find a fix in the boost code.
 template <bool> class StaticAssertion;
 template <> class StaticAssertion<true> { };
-
-// This macro joins two tokens.  If one of the tokens is a macro the
-// helper call causes it to be resolved before joining.
-#define SEMI_STATIC_JOIN(a, b) SEMI_STATIC_JOIN_HELPER(a, b)
-#define SEMI_STATIC_JOIN_HELPER(a, b) a##b
 
 // Causes an error during compilation of the condition is not
 // statically known to be true.  It is formulated as a typedef so that

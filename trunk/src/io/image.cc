@@ -46,6 +46,7 @@ static inline C *load_cast(Data *val) {
 bool Runtime::load_image(Image &image) {
   list_buffer<Data*> stack;
   list_buffer<Object*> fixups;
+  IF_DEBUG(list_buffer<Value*> values);
   while (image.has_more()) {
     uint32_t instr = image.read_word();
     switch (instr) {
@@ -54,6 +55,7 @@ bool Runtime::load_image(Image &image) {
       InstanceType instance_type = static_cast<InstanceType>(image.read_word());
       Class *result = cast<Class>(heap().new_class(instance_type));
       result->set_chlass(chlass);
+      IF_DEBUG(values.push(result));
       stack.push(result);
       break;
     }
@@ -63,8 +65,10 @@ bool Runtime::load_image(Image &image) {
       buffer[length] = '\0';
       for (uint32_t i = 0; i < length; i++)
         buffer[i] = image.read_word();
-      stack.push(cast<String>(heap().new_string(string(buffer, length))));
+      String *result = cast<String>(heap().new_string(string(buffer, length)));
       delete[] buffer;
+      stack.push(result);
+      IF_DEBUG(values.push(result));
       break;
     }
     case NEW_NUMBER: {
@@ -75,22 +79,28 @@ bool Runtime::load_image(Image &image) {
     case NEW_CODE: {
       uint32_t length = image.read_word();
       Code *code = cast<Code>(heap().new_code(length));
-      for (uint32_t i = 0; i < length; i++)
-        code->at(i) = image.read_word();
+      for (uint32_t i = 0; i < length; i++) {
+        uint32_t next = image.read_word();
+        code->at(i) = next;
+      }
+      IF_DEBUG(values.push(code));
       stack.push(code);
       break;
     }
     case NEW_LAMBDA: {
       uint32_t argc = image.read_word();
-      Code *code = load_cast<Code>(stack.pop());
       Tuple *literals = load_cast<Tuple>(stack.pop());
-      stack.push(heap().new_lambda(argc, code, literals));
+      Code *code = load_cast<Code>(stack.pop());
+      Lambda *result = cast<Lambda>(heap().new_lambda(argc, code, literals));
+      stack.push(result);
+      IF_DEBUG(values.push(result));
       break;
     }
     case NEW_DICTIONARY: {
       Tuple *elements = load_cast<Tuple>(stack.pop());
       Dictionary *result = cast<Dictionary>(heap().new_dictionary(elements));
       stack.push(result);
+      IF_DEBUG(values.push(result));
       break;
     }
     case NEW_TUPLE: {
@@ -99,6 +109,7 @@ bool Runtime::load_image(Image &image) {
       for (uint32_t i = 0; i < length; i++)
         tuple->at(length - i - 1) = load_cast<Value>(stack.pop());
       stack.push(tuple);
+      IF_DEBUG(values.push(tuple));
       break;
     }
     case PENDING_REGISTER: {
@@ -135,6 +146,12 @@ FOR_EACH_ROOT(MAKE_ROOT_SETTER)
     Object *obj = fixups[i];
     obj->for_each_field(Image::fixup_field, &image);
   }
+#ifdef DEBUG
+  for (uint32_t i = 0; i < values.length(); i++) {
+    Value *value = values[i];
+    value->validate();
+  }
+#endif
   return true;
 }
 

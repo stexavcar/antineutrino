@@ -274,6 +274,10 @@ uint16_t &Code::at(uint32_t index) {
   return AbstractBuffer::at<uint16_t>(index);
 }
 
+uint32_t Code::length() {
+  return AbstractBuffer::size<uint16_t>();
+}
+
 uint16_t &ref_traits<Code>::at(uint32_t index) {
   return open(this)->at(index);
 }

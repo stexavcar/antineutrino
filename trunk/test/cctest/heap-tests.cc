@@ -31,7 +31,7 @@ static void test_to_string() {
   CHECK(heap.new_string("knallert")->to_string() == "\"knallert\"");
   CHECK(Smi::from_int(123)->to_short_string() == "123");
   CHECK(heap.new_string("knallert")->to_short_string() == "\"knallert\"");
-  CHECK(Nothing::make()->to_string() == "%<nothing>");
+  CHECK(Nothing::make()->to_string() == "@<nothing>");
   Tuple *tuple = cast<Tuple>(heap.new_tuple(3));
   tuple->at(0) = Smi::from_int(123);
   tuple->at(1) = Smi::from_int(456);

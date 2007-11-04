@@ -590,7 +590,6 @@ class Literal(Expression):
 def create_lambda(params, body):
   state = CodeGeneratorState()
   body.emit(state)
-  print state.code
   code = HeapCode(state.code)
   literals = HeapTuple(state.literals)
   return HeapLambda(len(params), code, literals)

@@ -64,6 +64,7 @@ ref<SyntaxTree> Parser::parse_expression(s::List &expr) {
 }
 
 ref<Code> Parser::parse_code(s::List &expr) {
+  UNREACHABLE();
   uint32_t length = expr.length();
   ref<Code> result = runtime().factory().new_code(length);
   for (uint32_t i = 0; i < length; i++) {

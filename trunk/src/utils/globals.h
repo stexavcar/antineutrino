@@ -11,10 +11,15 @@
 #define KB * 1024
 #define MB KB KB
 
+// This macro joins two tokens.  If one of the tokens is a macro the
+// helper call causes it to be resolved before joining.
+#define SEMI_STATIC_JOIN(a, b) SEMI_STATIC_JOIN_HELPER(a, b)
+#define SEMI_STATIC_JOIN_HELPER(a, b) a##b
+
 #ifdef DEBUG
-#define IF_DEBUG(action) action
+#define IF_DEBUG(arg) arg
 #else
-#define IF_DEBUG(action)
+#define IF_DEBUG(arg) typedef void SEMI_STATIC_JOIN(__IfDebug__, __LINE__)
 #endif
 
 static const int kPointerSize = sizeof(void*);
