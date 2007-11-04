@@ -203,13 +203,6 @@ class Scanner:
 # --- P a r s e r ---
 # -------------------
 
-BUILTIN_CLASSES = {
-  'True':         0,
-  'False':        1,
-  'String':       2,
-  'SmallInteger': 3
-}
-
 BUILTIN_METHODS = {
   ('String',       'length'):  0,
   ('SmallInteger', '+'):       1,
@@ -323,14 +316,14 @@ class Parser:
     modifiers = self.parse_modifiers()
     self.expect_keyword('class')
     name = self.expect_ident()
-    index = BUILTIN_CLASSES[name]
+    info = BUILTIN_CLASSES[name]
     self.expect_delimiter('{')
     members = []
     while not self.token().is_delimiter('}'):
       member = self.parse_member_declaration(name)
       members.append(member)
     self.expect_delimiter('}')
-    return BuiltinClass(index, members)
+    return BuiltinClass(info, members)
 
   # <member_declaration>
   #   -> <modifiers> 'def' <method_header> <method_body>
@@ -528,7 +521,6 @@ class Program(SyntaxTree):
   def load(self):
     for decl in self.decls:
       decl.define()
-      return
 
 class Definition(SyntaxTree):
   def __init__(self, name, value):
@@ -538,26 +530,26 @@ class Definition(SyntaxTree):
     Runtime.current().roots().toplevel().set(self.name, self.value.create())
 
 class BuiltinClass(SyntaxTree):
-  def __init__(self, index, members):
-    self.index = index
+  def __init__(self, info, members):
+    self.info = info
     self.members = members
-  def to_sexp(self):
-    result = '(builtin ' + str(self.index) + ' ('
-    first = True
-    for member in self.members:
-      if first: first = False
-      else: result += ' '
-      result += member.to_sexp()
-    return result + '))'
+  def define(self):
+    instance_type_name = self.info.instance_type
+    instance_type_index = globals()[instance_type_name + '_TYPE']
+    class_class = Runtime().current().roots().class_class()
+    chlass = HeapClass(instance_type_index, class_class)
+    chlass.methods = HeapTuple(map(Method.compile, self.members))
+    setter = self.info.instance_type.lower() + '_class'
+    Runtime.current().roots().set(setter, chlass)
 
 class Method(SyntaxTree):
   def __init__(self, name, params, body):
     self.name = name
     self.params = params
     self.body = body
-  def to_sexp(self):
-    body = lambda_to_sexp(self.params, self.body)
-    return '(method "' + self.name + '" ' + body + ')'
+  def compile(self):
+    body = create_lambda(self.params, self.body)
+    return HeapMethod(HeapString(self.name), body)
 
 class Expression(SyntaxTree):
   def compile(self, state):
@@ -589,6 +581,7 @@ class Literal(Expression):
 
 def create_lambda(params, body):
   state = CodeGeneratorState()
+  state.scopes.append(params)
   body.emit(state)
   code = HeapCode(state.code)
   literals = HeapTuple(state.literals)
@@ -717,17 +710,27 @@ class Roots:
     self.toplevel_ = HeapDictionary()
     class_class = HeapClass(CLASS_TYPE, None)
     class_class.chlass = class_class
-    self.entries.append(('class_class', class_class))
-    self.entries.append(('code_class', HeapClass(CODE_TYPE, class_class)))
-    self.entries.append(('tuple_class', HeapClass(TUPLE_TYPE, class_class)))
-    self.entries.append(('lambda_class', HeapClass(LAMBDA_TYPE, class_class)))
-    self.entries.append(('string_class', HeapClass(STRING_TYPE, class_class)))
-    self.entries.append(('dictionary_class', HeapClass(DICTIONARY_TYPE, class_class)))
-    self.entries.append(('toplevel', self.toplevel()))
+    self.class_class_ = class_class
+    self.entries.append(['class_class', class_class])
+    self.entries.append(['code_class', HeapClass(CODE_TYPE, class_class)])
+    self.entries.append(['tuple_class', HeapClass(TUPLE_TYPE, class_class)])
+    self.entries.append(['lambda_class', HeapClass(LAMBDA_TYPE, class_class)])
+    self.entries.append(['string_class', HeapClass(STRING_TYPE, class_class)])
+    self.entries.append(['dictionary_class', HeapClass(DICTIONARY_TYPE, class_class)])
+    self.entries.append(['toplevel', self.toplevel()])
+  def set(self, key, value):
+    for entry in self.entries:
+      [ekey, evalue] = entry
+      if ekey == key:
+        entry[1] = value
+        return
+    self.entries.append([key, value])
   def toplevel(self):
     return self.toplevel_
+  def class_class(self):
+    return self.class_class_
   def write_to(self, stream):
-    for (key, value) in self.entries:
+    for [key, value] in self.entries:
       stream.write(self, value)
       stream.write(self, globals()['SET_' + key.upper()])
 
@@ -773,10 +776,12 @@ class HeapNumber(HeapObject):
     stream.write(self, NEW_NUMBER, self.value)
 
 class HeapClass(HeapObject):
-  def __init__(self, instance_type, chlass):
+  def __init__(self, instance_type, chlass = None):
     HeapObject.__init__(self, chlass)
     self.instance_type = instance_type
+    self.methods = HeapTuple([])
   def write_to(self, stream):
+    stream.write(self, self.methods)
     stream.write(self, self.chlass)
     stream.write(self, NEW_CLASS, self.instance_type)
 
@@ -791,7 +796,7 @@ class HeapTuple(HeapObject):
 
 class HeapLambda(HeapObject):
   def __init__(self, argc, code, literals):
-    HeapObject.__init__(self, None)
+    HeapObject.__init__(self)
     self.argc = argc
     self.code = code
     self.literals = literals
@@ -799,6 +804,16 @@ class HeapLambda(HeapObject):
     stream.write(self, self.code)
     stream.write(self, self.literals)
     stream.write(self, NEW_LAMBDA, self.argc)
+
+class HeapMethod(HeapObject):
+  def __init__(self, name, body):
+    HeapObject.__init__(self)
+    self.name = name
+    self.body = body
+  def write_to(self, stream):
+    stream.write(self, self.name)
+    stream.write(self, self.body)
+    stream.write(self, NEW_METHOD)
 
 class HeapDictionary(HeapObject):
   def __init__(self):
@@ -816,7 +831,7 @@ class HeapDictionary(HeapObject):
 
 class HeapCode(HeapObject):
   def __init__(self, buffer):
-    HeapObject.__init__(self, None)
+    HeapObject.__init__(self)
     self.buffer = buffer
   def write_to(self, stream):
     stream.write(self, NEW_CODE, len(self.buffer))
@@ -862,6 +877,7 @@ class ImageStream:
   def write(self, holder, *values):
     assert len(values) > 0
     for value in values:
+      assert not value is None
       self.data.append((holder, value))
   def flush(self, buffer):
     offset = 0
@@ -995,17 +1011,28 @@ def read_consts(file):
 def define_type_tag(n, TYPE, Type):
   globals()[TYPE + '_TYPE'] = int(n)
 
-def define_opcode(NAME, n, argc):
+def define_opcode(n, NAME, argc):
   globals()['OC_' + NAME] = int(n)
 
 def define_instruction(n, NAME):
   globals()[NAME] = int(n)
+
+class BuiltinClassInfo:
+  def __init__(self, index, name, instance_type):
+    self.index = index
+    self.name = name
+    self.instance_type = instance_type
+
+BUILTIN_CLASSES = { }
+def define_builtin_class(n, Class, name, NAME):
+  BUILTIN_CLASSES[Class] = BuiltinClassInfo(int(n), name, NAME)
 
 def import_constants(file):
   consts = read_consts(file)
   consts.apply('FOR_EACH_DECLARED_TYPE', define_type_tag)
   consts.apply('FOR_EACH_OPCODE', define_opcode)
   consts.apply('FOR_EACH_INSTRUCTION', define_instruction)
+  consts.apply('FOR_EACH_BUILTIN_CLASS', define_builtin_class)
 
 def load_files(files):
   Runtime.set_current(Runtime())

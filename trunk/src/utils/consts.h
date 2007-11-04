@@ -51,11 +51,11 @@
 // ---------------------
 
 #define FOR_EACH_OPCODE(VISIT)                                       \
-  VISIT(PUSH,  0,  1)   VISIT(RETURN,  1,  0) VISIT(GLOBAL,   2,  1) \
-  VISIT(CALL,  3,  1)   VISIT(SLAP,    4,  1) VISIT(ARGUMENT, 5,  1) \
-  VISIT(VOID,  6,  0)   VISIT(NUHLL,   7,  0) VISIT(TRUE,     8,  0) \
-  VISIT(FALSE, 9,  0)   VISIT(POP,    10,  1) VISIT(IF_TRUE,  11, 1) \
-  VISIT(GOTO,  12, 1)   VISIT(INVOKE, 13,  2) VISIT(INTERNAL, 14, 2)
+  VISIT(0,  PUSH,  1)   VISIT(1,  RETURN, 0) VISIT(2,  GLOBAL,   1)  \
+  VISIT(3,  CALL,  1)   VISIT(4,  SLAP,   1) VISIT(5,  ARGUMENT, 1)  \
+  VISIT(6,  VOID,  0)   VISIT(7,  NUHLL,  0) VISIT(8,  TRUE,     0)  \
+  VISIT(9,  FALSE, 0)   VISIT(10, POP,    1) VISIT(11, IF_TRUE,  1)  \
+  VISIT(12, GOTO,  1)   VISIT(13, INVOKE, 2) VISIT(14, INTERNAL, 2)
 
 
 // -------------------------------------------
@@ -77,7 +77,7 @@
   VISIT(30, NEW_DICTIONARY)       VISIT(31, NEW_STRING)              \
   VISIT(32, NEW_LAMBDA)           VISIT(33, NEW_CODE)                \
   VISIT(34, NEW_TUPLE)            VISIT(35, NEW_CLASS)               \
-  VISIT(36, NEW_NUMBER)                                              \
+  VISIT(36, NEW_NUMBER)           VISIT(37, NEW_METHOD)              \
                                                                      \
   VISIT(40, LOAD_REGISTER)        VISIT(41, PENDING_REGISTER)        \
   VISIT(42, STORE_REGISTER)       VISIT(43, SCHEDULE_FIXUP)
@@ -114,5 +114,14 @@
   FOR_EACH_COMPLICATED_ROOT(VISIT)                                   \
   FOR_EACH_SIMPLE_ROOT(VISIT)
 
+
+// ---------------------------------------
+// --- B u i l t - i n   C l a s s e s ---
+// ---------------------------------------
+
+#define FOR_EACH_BUILTIN_CLASS(VISIT)                                \
+  VISIT(0, SmallInteger, smi,  SMI)  VISIT(1, String, string, STRING)      \
+  VISIT(2, True,         true, TRUE) VISIT(3, False,  false,  FALSE)       \
+  VISIT(4, Void,         void, VOID) VISIT(5, Null,   null,   NULL)
 
 #endif // _HEAP_CONSTS

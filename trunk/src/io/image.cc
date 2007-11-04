@@ -26,15 +26,22 @@ Image::Image(uint32_t size, const uint8_t *data)
     , data_(data)
     , registers_(NULL) { }
 
+Data *&Image::reg(uint32_t index) {
+  ASSERT(index < register_count_);
+  return registers_[index];
+}
+
 bool Image::reset() {
   if (size_ < kHeaderSize) return false;
   uint32_t first_word = read_word();
   if (first_word != kMagicNumber) return false;
   code_size_ = read_word();
   if (size_ < kHeaderSize + code_size_) return false;
-  uint32_t register_count = read_word();
-  if (register_count > size_) return false;
-  registers_ = new Data*[register_count];
+  register_count_ = read_word();
+  if (register_count_ > size_) return false;
+  registers_ = new Data*[register_count_];
+  for (uint32_t i = 0; i < register_count_; i++)
+    reg(i) = Nothing::make();
   return true;
 }
 
@@ -52,9 +59,11 @@ bool Runtime::load_image(Image &image) {
     switch (instr) {
     case NEW_CLASS: {
       Class *chlass = load_cast<Class>(stack.pop());
+      Tuple *methods = load_cast<Tuple>(stack.pop());
       InstanceType instance_type = static_cast<InstanceType>(image.read_word());
       Class *result = cast<Class>(heap().new_class(instance_type));
       result->set_chlass(chlass);
+      result->set_methods(methods);
       IF_DEBUG(values.push(result));
       stack.push(result);
       break;
@@ -96,6 +105,14 @@ bool Runtime::load_image(Image &image) {
       IF_DEBUG(values.push(result));
       break;
     }
+    case NEW_METHOD: {
+      Lambda *lambda = load_cast<Lambda>(stack.pop());
+      String *name = load_cast<String>(stack.pop());
+      Method *result = cast<Method>(heap().new_method(name, lambda));
+      stack.push(result);
+      IF_DEBUG(values.push(result));
+      break;
+    }
     case NEW_DICTIONARY: {
       Tuple *elements = load_cast<Tuple>(stack.pop());
       Dictionary *result = cast<Dictionary>(heap().new_dictionary(elements));
@@ -123,12 +140,14 @@ bool Runtime::load_image(Image &image) {
     }
     case STORE_REGISTER: {
       uint32_t index = image.read_word();
-      image.registers()[index] = stack.peek();
+      image.reg(index) = stack.peek();
       break;
     }
     case LOAD_REGISTER: {
       uint32_t index = image.read_word();
-      stack.push(image.registers()[index]);
+      Data *value = image.reg(index);
+      ASSERT(!is<Nothing>(value));
+      stack.push(value);
       break;
     }
 #define MAKE_ROOT_SETTER(Type, name, NAME, allocator)                \
@@ -157,7 +176,7 @@ void Image::fixup_field(Data **field, void *data) {
   if (is<PendingRegister>(*field)) {
     PendingRegister *pending = cast<PendingRegister>(*field);
     Image &image = *reinterpret_cast<Image*>(data);
-    *field = image.registers()[pending->index()];
+    *field = image.reg(pending->index());
   }
 }
 

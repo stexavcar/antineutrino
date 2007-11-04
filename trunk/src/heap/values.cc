@@ -249,7 +249,7 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
   uint32_t pc = 0;
   while (pc < size) {
     switch (data[pc]) {
-#define MAKE_CASE(NAME, n, argc)                                     \
+#define MAKE_CASE(n, NAME, argc)                                     \
       case NAME:                                                     \
         buf.printf("%{ 3} %\n", pc, #NAME);                          \
         pc += OpcodeInfo<NAME>::kSize;                               \
@@ -340,6 +340,11 @@ static void validate_dictionary(Dictionary *obj) {
   obj->table()->validate();
 }
 
+static void validate_method(Method *obj) {
+  CHECK_IS(String, obj->name());
+  CHECK_IS(Lambda, obj->lambda());
+}
+
 static void validate_object(Object *obj) {
   CHECK_IS(Class, obj->chlass());
   uint32_t type = obj->chlass()->instance_type();
@@ -361,6 +366,9 @@ static void validate_object(Object *obj) {
       break;
     case DICTIONARY_TYPE:
       validate_dictionary(cast<Dictionary>(obj));
+      break;
+    case METHOD_TYPE:
+      validate_method(cast<Method>(obj));
       break;
     default:
       UNHANDLED(InstanceType, type);

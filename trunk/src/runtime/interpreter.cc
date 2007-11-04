@@ -8,7 +8,7 @@
 namespace neutrino {
 
 MAKE_ENUM_INFO_HEADER(Opcode)
-#define MAKE_ENTRY(NAME, value, argc) MAKE_ENUM_INFO_ENTRY(NAME)
+#define MAKE_ENTRY(n, NAME, argc) MAKE_ENUM_INFO_ENTRY(NAME)
 FOR_EACH_OPCODE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
@@ -21,7 +21,7 @@ class Log {
 public:
   static inline void instruction(uint16_t opcode, Stack &stack);
 private:
-  static const bool kTraceInstructions = true;
+  static const bool kTraceInstructions = false;
 };
 
 // -----------------------------

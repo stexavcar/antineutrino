@@ -27,7 +27,7 @@ void Main::main(list<char*> &args) {
       printf("Invalid image %s.\n", arg);
       exit(1);
     }
-    runtime.load_image(*image);
+    ASSERT(runtime.load_image(*image));
   }
   runtime.start();
 }

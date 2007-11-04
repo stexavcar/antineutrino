@@ -8,7 +8,7 @@ namespace neutrino {
 
 enum Opcode {
   __first__opcode = -1
-#define DECLARE_OPCODE(NAME, value, argc) , NAME = value
+#define DECLARE_OPCODE(n, NAME, argc) , NAME = n
 FOR_EACH_OPCODE(DECLARE_OPCODE)
 #undef DECLARE_OPCODE
 };
