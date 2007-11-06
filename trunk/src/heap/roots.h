@@ -11,7 +11,7 @@ namespace neutrino {
 
 enum RootName {
   __first_root_tag
-#define DECLARE_ROOT_ENUM(Type, name, NAME, allocator) , NAME##_ROOT
+#define DECLARE_ROOT_ENUM(n, Type, name, NAME, allocator) , NAME##_ROOT
 FOR_EACH_ROOT(DECLARE_ROOT_ENUM)
 #undef DECLARE_ROOT_ENUM
 };
@@ -32,7 +32,7 @@ public:
   template <typename D> void for_each(void (*)(Value**, D), D);
 
 // Declare root field accessors
-#define DECLARE_ROOT_ACCESSOR(Type, name, NAME, allocator) \
+#define DECLARE_ROOT_ACCESSOR(n, Type, name, NAME, allocator) \
   Type *&name() { return name##_; }
 FOR_EACH_ROOT(DECLARE_ROOT_ACCESSOR)
 #undef DECLARE_ROOT_ACCESSOR
@@ -40,7 +40,7 @@ FOR_EACH_ROOT(DECLARE_ROOT_ACCESSOR)
 private:
 
 // Declare root fields
-#define DECLARE_ROOT_FIELD(Type, name, NAME, allocator) \
+#define DECLARE_ROOT_FIELD(n, Type, name, NAME, allocator) \
   Type *name##_;
 FOR_EACH_ROOT(DECLARE_ROOT_FIELD)
 #undef DECLARE_ROOT_FIELD

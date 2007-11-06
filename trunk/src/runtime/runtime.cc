@@ -1,5 +1,6 @@
 #include "heap/ref-inl.h"
 #include "heap/values-inl.h"
+#include "io/image.h"
 #include "runtime/runtime-inl.h"
 
 namespace neutrino {
@@ -29,6 +30,11 @@ void Runtime::start() {
   ref<Lambda> main = cast<Lambda>(value);
   ref<Value> result = main.call();
   result.print();
+}
+
+bool Runtime::load_image(Image &image) {
+  if (!image.initialize()) return false;
+  
 }
 
 }

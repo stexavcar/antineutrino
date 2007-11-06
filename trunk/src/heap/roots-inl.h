@@ -8,7 +8,7 @@ namespace neutrino {
 
 template <typename D> void Roots::for_each(void (*callback)(Value**, D),
     D data) {
-#define VISIT_FIELD(Type, name, NAME, allocator)                     \
+#define VISIT_FIELD(n, Type, name, NAME, allocator)                  \
   callback(pointer_cast<Value*>(&name##_), data);
 FOR_EACH_ROOT(VISIT_FIELD)
 #undef VISIT_FIELD

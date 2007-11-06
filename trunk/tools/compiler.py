@@ -41,13 +41,13 @@ class Operator(Token):
   def is_operator(self):
     return True
 
-class Number(Token):
+class NumberToken(Token):
   def __init__(self, value):
     self.value = value
   def is_number(self):
     return True
 
-class String(Token):
+class StringToken(Token):
   def __init__(self, value):
     self.value = value
   def is_string(self):
@@ -141,7 +141,7 @@ class Scanner:
     while self.has_more() and is_digit(self.current()):
       value = 10 * value + (ord(self.current()) - ord('0'))
       self.advance()
-    return Number(value)
+    return NumberToken(value)
 
   def scan_string(self):
     value = ''
@@ -150,7 +150,7 @@ class Scanner:
       value += self.current()
       self.advance()
     if self.has_more(): self.advance();
-    return String(value)
+    return StringToken(value)
 
   def scan_delimiter(self):
     c = self.current()
@@ -479,11 +479,11 @@ class Parser:
     if self.token().is_number():
       value = self.token().value
       self.advance()
-      return Literal(HeapNumber(value))
+      return Literal(HEAP.new_number(value))
     elif self.token().is_string():
       value = self.token().value
       self.advance()
-      return Literal(HeapString(value))
+      return Literal(HEAP.new_string(value))
     elif self.token().is_ident():
       name = self.token().name
       self.advance()
@@ -527,13 +527,14 @@ class Definition(SyntaxTree):
     self.name = name
     self.value = value
   def define(self):
-    Runtime.current().roots().toplevel().set(self.name, self.value.create())
+    ROOTS.toplevel[HEAP.new_string(self.name)] = self.value.compile()
 
 class BuiltinClass(SyntaxTree):
   def __init__(self, info, members):
     self.info = info
     self.members = members
   def define(self):
+    return
     instance_type_name = self.info.instance_type
     instance_type_index = globals()[instance_type_name + '_TYPE']
     class_class = Runtime().current().roots().class_class()
@@ -549,7 +550,7 @@ class Method(SyntaxTree):
     self.body = body
   def compile(self):
     body = create_lambda(self.params, self.body)
-    return HeapMethod(HeapString(self.name), body)
+    return HeapMethod(HEAP.new_string(self.name), body)
 
 class Expression(SyntaxTree):
   pass
@@ -561,20 +562,20 @@ class Literal(Expression):
     index = state.literal_index(self.value)
     state.write(OC_PUSH, index)
 
-def create_lambda(params, body):
+def compile_lambda(params, body):
   state = CodeGeneratorState()
   state.scopes.append(params)
   body.emit(state)
-  code = HeapCode(state.code)
-  literals = HeapTuple(state.literals)
-  return HeapLambda(len(params), code, literals)
+  code = HEAP.new_code(state.code)
+  literals = HEAP.new_tuple(values = state.literals)
+  return HEAP.new_lambda(len(params), code, literals)
 
 class Lambda(Expression):
   def __init__(self, params, body):
     self.params = params
     self.body = body
-  def create(self):
-    return create_lambda(self.params, self.body)
+  def compile(self):
+    return compile_lambda(self.params, self.body)
 
 class Identifier(Expression):
   def __init__(self, name):
@@ -587,7 +588,7 @@ class Identifier(Expression):
       scope_index = len(top_scope) - top_scope.index(self.name) - 1
       state.write(OC_ARGUMENT, scope_index)
     except ValueError:
-      index = state.literal_index(HeapString(self.name))
+      index = state.literal_index(HEAP.new_string(self.name))
       state.write(OC_GLOBAL, index)
 
 class Call(Expression):
@@ -613,7 +614,7 @@ class Invoke(Expression):
     state.write(OC_VOID)
     for arg in self.args:
       arg.emit(state)
-    name_index = state.literal_index(HeapString(self.name))
+    name_index = state.literal_index(HEAP.new_string(self.name))
     state.write(OC_INVOKE, name_index, len(self.args))
     state.write(OC_SLAP, len(self.args) + 1)
 
@@ -685,21 +686,181 @@ class Conditional(Expression):
 # --- H e a p   I m a g e ---
 # ---------------------------
 
+def tag_as_smi(value):
+  return value << 1
+
+def tag_as_object(value):
+  return (value << 1) + 1
+
+class Heap:
+  def __init__(self):
+    self.capacity = 1024
+    self.cursor = 0
+    self.memory = self.capacity * [ 0 ]
+    self.dicts = [ ]
+  def set_raw(self, offset, value):
+    self.memory[offset] = value
+  def __setitem__(self, offset, value):
+    if type(value) is int:
+      self.memory[offset] = tag_as_smi(value)
+    else:
+      addr = value.addr
+      self.memory[offset] = tag_as_object(addr)
+  def allocate(self, size):
+    addr = self.cursor
+    self.cursor += size
+    return addr
+  def new_class(self, instance_type):
+    result = Class(self.allocate(Class.kSize), instance_type)
+    result.set_class(CLASS_TYPE)
+    return result
+  def new_lambda(self, argc, code, literals):
+    result = HeapLambda(self.allocate(HeapLambda.kSize), argc, code, literals)
+    result.set_class(LAMBDA_TYPE)
+    return result
+  def new_number(self, value):
+    return value
+  def new_dictionary(self):
+    result = HeapDictionary(self.allocate(HeapDictionary.kSize))
+    result.set_class(DICTIONARY_TYPE)
+    self.dicts.append(result)
+    return result
+  def new_tuple(self, length = None, values = None):
+    if length is None: length = len(values)
+    result = HeapTuple(self.allocate(HeapTuple.kHeaderSize + length), length)
+    result.set_class(TUPLE_TYPE)
+    if not values is None:
+      for i in xrange(length):
+        result[i] = values[i]
+    return result
+  def new_string(self, contents):
+    length = len(contents)
+    result = HeapString(self.allocate(HeapString.kHeaderSize + length), length)
+    result.set_class(STRING_TYPE)
+    for i in xrange(length):
+      result[i] = ord(contents[i])
+    return result
+  def new_code(self, contents):
+    length = len(contents)
+    result = HeapCode(self.allocate(HeapCode.kHeaderSize + length), length)
+    result.set_class(CODE_TYPE)
+    for i in xrange(length):
+      result[i] = contents[i]
+    return result
+  def set_raw_field(self, obj, offset, value):
+    assert type(value) is int
+    self.set_raw(obj.addr + offset, value)
+  def set_field(self, obj, offset, value):
+    self[obj.addr + offset] = value
+  def flush(self):
+    for dict in self.dicts:
+      dict.commit()
+    return self.memory[:self.cursor]
+
+HEAP = Heap()
+
+class HeapValue:
+  pass
+
+class HeapObject(HeapValue):
+  kClassOffset = 0
+  kHeaderSize  = kClassOffset + 1
+  def __init__(self, addr):
+    self.addr = addr
+  def set_class(self, value):
+    HEAP.set_raw_field(self, HeapObject.kClassOffset, value)
+
+class HeapClass(HeapObject):
+  kInstanceTypeOffset = HeapObject.kHeaderSize
+  kSize               = kInstanceTypeOffset + 1
+  def __init__(self, addr, instance_type):
+    HeapObject.__init__(self, addr)
+    self.set_instance_type(instance_type)
+  def set_instance_type(self, value):
+    HEAP.set_raw_field(self, Class.kInstanceTypeOffset, value)
+
+class HeapTuple(HeapObject):
+  kLengthOffset = HeapObject.kHeaderSize
+  kHeaderSize   = kLengthOffset + 1
+  def __init__(self, addr, length):
+    HeapObject.__init__(self, addr)
+    self.set_length(length)
+  def set_length(self, value):
+    HEAP.set_raw_field(self, HeapTuple.kLengthOffset, value)
+  def __setitem__(self, index, value):
+    HEAP.set_field(self, HeapTuple.kHeaderSize + index, value)
+
+class HeapNumber(HeapObject):
+  kValueOffset = HeapObject.kHeaderSize
+  kSize        = kValueOffset + 1
+  def __init__(self, addr, value):
+    HeapObject.__init__(self, addr)
+    self.set_value(value)
+  def set_value(self, value):
+    HEAP.set_raw_field(self, Number.kValueOffset, value)
+
+class HeapLambda(HeapObject):
+  kArgcOffset     = HeapObject.kHeaderSize
+  kCodeOffset     = kArgcOffset + 1
+  kLiteralsOffset = kCodeOffset + 1
+  kSize           = kLiteralsOffset + 1
+  def __init__(self, addr, argc, code, literals):
+    HeapObject.__init__(self, addr)
+    self.set_argc(argc)
+    self.set_code(code)
+    self.set_literals(literals)
+  def set_argc(self, value):
+    HEAP.set_raw_field(self, HeapLambda.kArgcOffset, value)
+  def set_code(self, value):
+    HEAP.set_field(self, HeapLambda.kCodeOffset, value)
+  def set_literals(self, value):
+    HEAP.set_field(self, HeapLambda.kLiteralsOffset, value)
+
+class HeapString(HeapObject):
+  kLengthOffset = HeapObject.kHeaderSize
+  kHeaderSize   = kLengthOffset + 1
+  def __init__(self, addr, length):
+    HeapObject.__init__(self, addr)
+    self.set_length(length)
+  def set_length(self, value):
+    HEAP.set_raw_field(self, HeapString.kLengthOffset, value)
+  def __setitem__(self, index, value):
+    HEAP.set_raw_field(self, HeapString.kHeaderSize + index, value)
+
+class HeapCode(HeapObject):
+  kLengthOffset = HeapObject.kHeaderSize
+  kHeaderSize   = kLengthOffset + 1
+  def __init__(self, addr, length):
+    HeapObject.__init__(self, addr)
+    self.set_length(length)
+  def set_length(self, value):
+    HEAP.set_raw_field(self, HeapCode.kLengthOffset, value)
+  def __setitem__(self, index, value):
+    HEAP.set_raw_field(self, HeapCode.kHeaderSize + index, value)
+
+class HeapDictionary(HeapObject):
+  kTableOffset = HeapObject.kHeaderSize
+  kSize        = kTableOffset + 1
+  def __init__(self, addr):
+    HeapObject.__init__(self, addr)
+    self.entries = { }
+  def __setitem__(self, name, value):
+    self.entries[name] = value
+  def commit(self):
+    table = HEAP.new_tuple(len(self.entries) * 2)
+    self.entries.keys().sort()
+    cursor = 0
+    for (key, value) in self.entries.items():
+      table[cursor] = key
+      cursor += 1
+      table[cursor] = value
+      cursor += 1
+
 class Roots:
   def __init__(self):
     self.entries = [ ]
   def initialize(self):
-    self.toplevel_ = HeapDictionary()
-    class_class = HeapClass(CLASS_TYPE, None)
-    class_class.chlass = class_class
-    self.class_class_ = class_class
-    self.entries.append(['class_class', class_class])
-    self.entries.append(['code_class', HeapClass(CODE_TYPE, class_class)])
-    self.entries.append(['tuple_class', HeapClass(TUPLE_TYPE, class_class)])
-    self.entries.append(['lambda_class', HeapClass(LAMBDA_TYPE, class_class)])
-    self.entries.append(['string_class', HeapClass(STRING_TYPE, class_class)])
-    self.entries.append(['dictionary_class', HeapClass(DICTIONARY_TYPE, class_class)])
-    self.entries.append(['toplevel', self.toplevel()])
+    self.toplevel = HEAP.new_dictionary()
   def set(self, key, value):
     for entry in self.entries:
       [ekey, evalue] = entry
@@ -707,189 +868,18 @@ class Roots:
         entry[1] = value
         return
     self.entries.append([key, value])
-  def toplevel(self):
-    return self.toplevel_
-  def class_class(self):
-    return self.class_class_
-  def write_to(self, stream):
-    for [key, value] in self.entries:
-      stream.write(self, value)
-      stream.write(self, globals()['SET_' + key.upper()])
 
-class Runtime:
-  current_runtime = None
-  def __init__(self):
-    self.roots_ = Roots()
-  def initialize(self):
-    self.roots().initialize()
-  def roots(self):
-    return self.roots_
-  def write_to(self, stream):
-    self.roots().write_to(stream)
-  def set_current(cls, runtime):
-    cls.current_runtime = runtime
-  set_current = classmethod(set_current)
-  def current(cls):
-    return cls.current_runtime
-  current = classmethod(current)
+ROOTS = Roots()
 
-class HeapValue:
-  def __init__(self):
-    self.offset = None
-    self.requires_fixup = False
-
-class HeapObject(HeapValue):
-  def __init__(self, chlass = None):
-    HeapValue.__init__(self)
-    self.chlass = chlass
-
-class HeapString(HeapObject):
-  def __init__(self, value):
-    HeapObject.__init__(self)
-    self.value = value
-  def write_to(self, stream):
-    stream.write(self, NEW_STRING, self.value)
-
-class HeapNumber(HeapObject):
-  def __init__(self, value):
-    HeapObject.__init__(self)
-    self.value = value
-  def write_to(self, stream):
-    stream.write(self, NEW_NUMBER, self.value)
-
-class HeapClass(HeapObject):
-  def __init__(self, instance_type, chlass = None):
-    HeapObject.__init__(self, chlass)
-    self.instance_type = instance_type
-    self.methods = HeapTuple([])
-  def write_to(self, stream):
-    stream.write(self, self.methods)
-    stream.write(self, self.chlass)
-    stream.write(self, NEW_CLASS, self.instance_type)
-
-class HeapTuple(HeapObject):
-  def __init__(self, values):
-    HeapObject.__init__(self)
-    self.values = values
-  def write_to(self, stream):
-    for value in self.values:
-      stream.write(self, value)
-    stream.write(self, NEW_TUPLE, len(self.values))
-
-class HeapLambda(HeapObject):
-  def __init__(self, argc, code, literals):
-    HeapObject.__init__(self)
-    self.argc = argc
-    self.code = code
-    self.literals = literals
-  def write_to(self, stream):
-    stream.write(self, self.code)
-    stream.write(self, self.literals)
-    stream.write(self, NEW_LAMBDA, self.argc)
-
-class HeapMethod(HeapObject):
-  def __init__(self, name, body):
-    HeapObject.__init__(self)
-    self.name = name
-    self.body = body
-  def write_to(self, stream):
-    stream.write(self, self.name)
-    stream.write(self, self.body)
-    stream.write(self, NEW_METHOD)
-
-class HeapDictionary(HeapObject):
-  def __init__(self):
-    HeapObject.__init__(self, None)
-    self.contents = { }
-  def set(self, key, value):
-    self.contents[HeapString(key)] = value
-  def write_to(self, stream):
-    elms = [ ]
-    for key, value in self.contents.items():
-      elms.append(key)
-      elms.append(value)
-    stream.write(self, HeapTuple(elms))
-    stream.write(self, NEW_DICTIONARY)
-
-class HeapCode(HeapObject):
-  def __init__(self, buffer):
-    HeapObject.__init__(self)
-    self.buffer = buffer
-  def write_to(self, stream):
-    stream.write(self, NEW_CODE, len(self.buffer))
-    for instr in self.buffer:
-      stream.write(self, instr)
-
-class ImageOutputStream:
-  def __init__(self):
-    self.buffer = []
-    self.registers = { }
-    self.full_registers = { }
-  def write(self, *value):
-    self.buffer += value
-  def cursor(self):
-    return len(self.buffer)
-  def ensure_register(self, offset):
-    if offset in self.registers:
-      return (self.registers[offset], offset in self.full_registers)
-    next = len(self.registers)
-    self.registers[offset] = next
-    return (next, False)
-  def done(self, offset):
-    if offset in self.registers:
-      self.full_registers[offset] = True
-      return True
-    else:
-      return False
-  def write_output(self, file):
-    def write(value):
-      output.write(struct.pack('<I', value))
-    output = open(file, 'wb')
-    write(4206546606L)
-    write(len(self.buffer))
-    write(len(self.registers))
-    for value in self.buffer:
-      write(value)
-    output.close()
-
-
-class ImageStream:
-  def __init__(self):
-    self.data = []
-  def write(self, holder, *values):
-    assert len(values) > 0
-    for value in values:
-      assert not value is None
-      self.data.append((holder, value))
-  def flush(self, buffer):
-    offset = 0
-    while offset < len(self.data):
-      (holder, elem) = self.data[offset]
-      if type(elem) is int:
-        buffer.write(elem)
-      elif type(elem) is str:
-        buffer.write(len(elem))
-        for char in elem:
-          buffer.write(ord(char))
-      elif elem.offset is None:
-        elem.offset = buffer.cursor()
-        sub_stream = ImageStream()
-        elem.write_to(sub_stream)
-        sub_stream.flush(buffer)
-        if buffer.done(elem.offset):
-          (index, _) = buffer.ensure_register(elem.offset)
-          buffer.write(STORE_REGISTER, index)
-        if elem.requires_fixup:
-          buffer.write(SCHEDULE_FIXUP)
-      else:
-        (register, full) = buffer.ensure_register(elem.offset)
-        if full:
-          buffer.write(LOAD_REGISTER, register)
-        else:
-          holder.requires_fixup = True
-          buffer.write(PENDING_REGISTER, register)
-      offset = offset + 1
-    return buffer
+def write_output(file, buffer):
+  def write(value):
+    output.write(struct.pack('<I', value))
+  output = open(file, 'wb')
+  write(4206546606L)
+  write(len(buffer))
+  for value in buffer:
+    write(value)
+  output.close()
 
 # -----------------------
 # --- C o m p i l e r ---
@@ -1009,16 +999,20 @@ BUILTIN_CLASSES = { }
 def define_builtin_class(n, Class, name, NAME):
   BUILTIN_CLASSES[Class] = BuiltinClassInfo(int(n), name, NAME)
 
+ROOT_INDEX = { }
+def define_root(n, Class, name, NAME, allocator):
+  ROOT_INDEX[name] = int(n)
+
 def import_constants(file):
   consts = read_consts(file)
   consts.apply('FOR_EACH_DECLARED_TYPE', define_type_tag)
   consts.apply('FOR_EACH_OPCODE', define_opcode)
   consts.apply('FOR_EACH_INSTRUCTION', define_instruction)
   consts.apply('FOR_EACH_BUILTIN_CLASS', define_builtin_class)
+  consts.apply('FOR_EACH_ROOT', define_root)
 
 def load_files(files):
-  Runtime.set_current(Runtime())
-  Runtime.current().initialize()
+  ROOTS.initialize()
   for file in files:
     source = open(file).read()
     tree = compile(source)
@@ -1032,11 +1026,8 @@ def main():
     return
   import_constants(values.consts)
   load_files(files)
-  stream = ImageStream()
-  Runtime.current().write_to(stream)
-  data = ImageOutputStream()
-  stream.flush(data)
-  data.write_output(values.out)
+  data = HEAP.flush()
+  write_output(values.out, data)
 
 if __name__ == '__main__':
   main()

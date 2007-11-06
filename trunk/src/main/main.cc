@@ -20,11 +20,8 @@ void Main::main(list<char*> &args) {
     RefScope ref_scope;
     char *arg = args[i];
     Image *image = read_image(arg);
-    if (!image->reset()) {
-      printf("Invalid image %s.\n", arg);
-      exit(1);
-    }
-    ASSERT(runtime.load_image(*image));
+    bool loaded = runtime.load_image(*image);
+    ASSERT(loaded);
   }
   runtime.start();
 }
@@ -41,16 +38,23 @@ Image *Main::read_image(char *name) {
   fseek(file, 0, SEEK_END);
   uint32_t size = ftell(file);
   rewind(file);
-  uint8_t *buffer = new uint8_t[size + 1];
-  buffer[size] = '\0';
-  for (uint32_t i = 0; i < size;) {
-    uint32_t count = fread(buffer + i, 1, size - i, file);
+  uint32_t *buffer = new uint32_t[size];
+  for (uint32_t i = 0; i < size / kWordSize;) {
+    const uint32_t kSize = 256;
+    uint8_t bytes[kSize];
+    uint32_t count = fread(bytes, kWordSize, kSize / kWordSize, file);
     if (count <= 0) {
       fclose(file);
-      free(buffer);
+      delete[] buffer;
       return NULL;
     }
-    i += count;
+    for (uint32_t j = 0; j < count; j++) {
+      uint8_t b0 = bytes[kWordSize * j + 0];
+      uint8_t b1 = bytes[kWordSize * j + 1];
+      uint8_t b2 = bytes[kWordSize * j + 2];
+      uint8_t b3 = bytes[kWordSize * j + 3];
+      buffer[i++] = (b0 << 0) | (b1 << 8) | (b2 << 16) | (b3 << 24);
+    }
   }
   fclose(file);
   return new Image(size, buffer);
