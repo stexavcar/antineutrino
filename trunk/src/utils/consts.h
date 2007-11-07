@@ -62,25 +62,8 @@
 // --- I m a g e   I n s t r u c t i o n s ---
 // -------------------------------------------
 
-#define FOR_EACH_INSTRUCTION(VISIT)                                  \
-  VISIT(1,  SET_DICTIONARY_CLASS) VISIT(2,  SET_TOPLEVEL)            \
-  VISIT(3,  SET_CLASS_CLASS)      VISIT(4,  SET_LAMBDA_CLASS)        \
-  VISIT(5,  SET_TUPLE_CLASS)      VISIT(6,  SET_CODE_CLASS)          \
-  VISIT(7,  SET_STRING_CLASS)     VISIT(8,  SET_BUFFER_CLASS)        \
-  VISIT(9,  SET_FALSE_CLASS)      VISIT(10, SET_FALSE)               \
-  VISIT(11, SET_TRUE_CLASS)       VISIT(12, SET_TRUE)                \
-  VISIT(13, SET_NULL_CLASS)       VISIT(14, SET_NULL)                \
-  VISIT(15, SET_VOID_CLASS)       VISIT(16, SET_VOID)                \
-  VISIT(17, SET_LITERAL_CLASS)    VISIT(18, SET_METHOD_CLASS)        \
-  VISIT(19, SET_SMI_CLASS)                                           \
-                                                                     \
-  VISIT(30, NEW_DICTIONARY)       VISIT(31, NEW_STRING)              \
-  VISIT(32, NEW_LAMBDA)           VISIT(33, NEW_CODE)                \
-  VISIT(34, NEW_TUPLE)            VISIT(35, NEW_CLASS)               \
-  VISIT(36, NEW_NUMBER)           VISIT(37, NEW_METHOD)              \
-                                                                     \
-  VISIT(40, LOAD_REGISTER)        VISIT(41, PENDING_REGISTER)        \
-  VISIT(42, STORE_REGISTER)       VISIT(43, SCHEDULE_FIXUP)
+#define FOR_EACH_IMAGE_OBJECT_FIELD(VISIT)                           \
+  VISIT(0, Object, Type)
 
 
 // -----------------

@@ -690,7 +690,7 @@ def tag_as_smi(value):
   return value << 1
 
 def tag_as_object(value):
-  return (value << 1) + 1
+  return value | 0x1
 
 class Heap:
   def __init__(self):
@@ -986,9 +986,6 @@ def define_type_tag(n, TYPE, Type):
 def define_opcode(n, NAME, argc):
   globals()['OC_' + NAME] = int(n)
 
-def define_instruction(n, NAME):
-  globals()[NAME] = int(n)
-
 class BuiltinClassInfo:
   def __init__(self, index, name, instance_type):
     self.index = index
@@ -1007,7 +1004,6 @@ def import_constants(file):
   consts = read_consts(file)
   consts.apply('FOR_EACH_DECLARED_TYPE', define_type_tag)
   consts.apply('FOR_EACH_OPCODE', define_opcode)
-  consts.apply('FOR_EACH_INSTRUCTION', define_instruction)
   consts.apply('FOR_EACH_BUILTIN_CLASS', define_builtin_class)
   consts.apply('FOR_EACH_ROOT', define_root)
 

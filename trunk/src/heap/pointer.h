@@ -25,9 +25,9 @@ public:
    */
   static inline Object *tag_as_object(address addr);
 
-  static inline bool has_object_tag(Data *val);
+  static inline bool has_object_tag(void *val);
   
-  static inline bool has_smi_tag(Data *val);
+  static inline bool has_smi_tag(void *val);
   
   /**
    * Converts this literal integer into a tagged small integer.  The

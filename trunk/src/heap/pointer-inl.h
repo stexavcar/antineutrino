@@ -2,6 +2,7 @@
 #define _POINTER_INL
 
 #include "heap/pointer.h"
+#include "utils/checks.h"
 
 namespace neutrino {
 
@@ -15,11 +16,13 @@ Object *ValuePointer::tag_as_object(address addr) {
   return reinterpret_cast<Object*>(reinterpret_cast<word>(addr) + kObjectTag);
 }
 
-bool ValuePointer::has_object_tag(Data *val) {
+bool ValuePointer::has_object_tag(void *val) {
+  STATIC_CHECK(sizeof(void*) == sizeof(word));
   return (reinterpret_cast<word>(val) & kObjectTagMask) == kObjectTag;
 }
 
-bool ValuePointer::has_smi_tag(Data *val) {
+bool ValuePointer::has_smi_tag(void *val) {
+  STATIC_CHECK(sizeof(void*) == sizeof(word));
   return (reinterpret_cast<word>(val) & kSmiTagMask) == kSmiTag;
 }
 
