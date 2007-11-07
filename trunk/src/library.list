@@ -6,7 +6,6 @@ heap/ref.cc
 heap/roots.cc
 heap/space.cc
 heap/values.cc
-heap/zone.cc
 io/image.cc
 runtime/builtins.cc
 runtime/interpreter.cc
