@@ -10,7 +10,7 @@ namespace neutrino {
 
 
 enum InstanceType {
-  ILLEGAL_TAG = 0
+  __first_instance_type = 0
 #define DECLARE_INSTANCE_TYPE(n, NAME, Name) , NAME##_TYPE = n
 FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
 #undef DECLARE_INSTANCE_TYPE

@@ -527,7 +527,7 @@ class Definition(SyntaxTree):
     self.name = name
     self.value = value
   def define(self):
-    ROOTS.toplevel[HEAP.new_string(self.name)] = self.value.compile()
+    HEAP.toplevel[HEAP.new_string(self.name)] = self.value.compile()
 
 class BuiltinClass(SyntaxTree):
   def __init__(self, info, members):
@@ -539,7 +539,7 @@ class BuiltinClass(SyntaxTree):
     instance_type_index = globals()[instance_type_name + '_TYPE']
     class_class = Runtime().current().roots().class_class()
     chlass = HeapClass(instance_type_index, class_class)
-    chlass.methods = HeapTuple(map(Method.compile, self.members))
+    chlass.methods = ImageTuple(map(Method.compile, self.members))
     setter = self.info.instance_type.lower() + '_class'
     Runtime.current().roots().set(setter, chlass)
 
@@ -690,16 +690,27 @@ def tag_as_smi(value):
   return value << 1
 
 def tag_as_object(value):
+  assert value & 0x3 is 0
   return value | 0x1
 
+POINTER_SIZE = 4
+
 class Heap:
+  kRootCount  = 19
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
-    self.memory = self.capacity * [ 0 ]
+    self.memory = self.capacity * [ tag_as_smi(0) ]
     self.dicts = [ ]
+    self.roots = Heap.kRootCount * [ tag_as_smi(0) ]
+  def initialize(self):
+    self.toplevel = self.new_dictionary()
+    self.set_root(ROOT_INDEX['toplevel'], self.toplevel)
   def set_raw(self, offset, value):
     self.memory[offset] = value
+  def set_root(self, index, value):
+    assert 0 <= index < Heap.kRootCount;
+    self.roots[index] = tag_as_object(value.addr)
   def __setitem__(self, offset, value):
     if type(value) is int:
       self.memory[offset] = tag_as_smi(value)
@@ -707,7 +718,7 @@ class Heap:
       addr = value.addr
       self.memory[offset] = tag_as_object(addr)
   def allocate(self, size):
-    addr = self.cursor
+    addr = self.cursor * POINTER_SIZE
     self.cursor += size
     return addr
   def new_class(self, instance_type):
@@ -715,19 +726,19 @@ class Heap:
     result.set_class(CLASS_TYPE)
     return result
   def new_lambda(self, argc, code, literals):
-    result = HeapLambda(self.allocate(HeapLambda.kSize), argc, code, literals)
+    result = ImageLambda(self.allocate(ImageLambda_Size), argc, code, literals)
     result.set_class(LAMBDA_TYPE)
     return result
   def new_number(self, value):
     return value
   def new_dictionary(self):
-    result = HeapDictionary(self.allocate(HeapDictionary.kSize))
+    result = HeapDictionary(self.allocate(ImageDictionary_Size))
     result.set_class(DICTIONARY_TYPE)
     self.dicts.append(result)
     return result
   def new_tuple(self, length = None, values = None):
     if length is None: length = len(values)
-    result = HeapTuple(self.allocate(HeapTuple.kHeaderSize + length), length)
+    result = ImageTuple(self.allocate(ImageTuple_HeaderSize + length), length)
     result.set_class(TUPLE_TYPE)
     if not values is None:
       for i in xrange(length):
@@ -735,114 +746,107 @@ class Heap:
     return result
   def new_string(self, contents):
     length = len(contents)
-    result = HeapString(self.allocate(HeapString.kHeaderSize + length), length)
+    result = ImageString(self.allocate(ImageString_HeaderSize + length), length)
     result.set_class(STRING_TYPE)
     for i in xrange(length):
       result[i] = ord(contents[i])
     return result
   def new_code(self, contents):
     length = len(contents)
-    result = HeapCode(self.allocate(HeapCode.kHeaderSize + length), length)
+    result = ImageCode(self.allocate(ImageCode_HeaderSize + length), length)
     result.set_class(CODE_TYPE)
     for i in xrange(length):
       result[i] = contents[i]
     return result
   def set_raw_field(self, obj, offset, value):
     assert type(value) is int
-    self.set_raw(obj.addr + offset, value)
+    self.set_raw((obj.addr / POINTER_SIZE) + offset, value)
   def set_field(self, obj, offset, value):
-    self[obj.addr + offset] = value
+    self[(obj.addr / POINTER_SIZE) + offset] = value
   def flush(self):
     for dict in self.dicts:
       dict.commit()
     return self.memory[:self.cursor]
-
-HEAP = Heap()
+  def write_to(self, file):
+    buffer = self.flush()
+    def write(value):
+      output.write(struct.pack('<I', value))
+    output = open(file, 'wb')
+    write(4206546606L)
+    write(len(buffer))
+    write(Heap.kRootCount)
+    for root in self.roots:
+      write(root)
+    for value in buffer:
+      write(value)
+    output.close()
 
 class HeapValue:
   pass
 
-class HeapObject(HeapValue):
-  kClassOffset = 0
-  kHeaderSize  = kClassOffset + 1
+class ImageObject(HeapValue):
   def __init__(self, addr):
     self.addr = addr
   def set_class(self, value):
-    HEAP.set_raw_field(self, HeapObject.kClassOffset, value)
+    HEAP.set_field(self, ImageObject_TypeOffset, value)
 
-class HeapClass(HeapObject):
-  kInstanceTypeOffset = HeapObject.kHeaderSize
-  kSize               = kInstanceTypeOffset + 1
+class HeapClass(ImageObject):
   def __init__(self, addr, instance_type):
-    HeapObject.__init__(self, addr)
+    ImageObject.__init__(self, addr)
     self.set_instance_type(instance_type)
   def set_instance_type(self, value):
     HEAP.set_raw_field(self, Class.kInstanceTypeOffset, value)
 
-class HeapTuple(HeapObject):
-  kLengthOffset = HeapObject.kHeaderSize
-  kHeaderSize   = kLengthOffset + 1
+class ImageTuple(ImageObject):
   def __init__(self, addr, length):
-    HeapObject.__init__(self, addr)
+    ImageObject.__init__(self, addr)
     self.set_length(length)
   def set_length(self, value):
-    HEAP.set_raw_field(self, HeapTuple.kLengthOffset, value)
+    HEAP.set_raw_field(self, ImageTuple_LengthOffset, value)
   def __setitem__(self, index, value):
-    HEAP.set_field(self, HeapTuple.kHeaderSize + index, value)
+    HEAP.set_field(self, ImageTuple_HeaderSize + index, value)
 
-class HeapNumber(HeapObject):
-  kValueOffset = HeapObject.kHeaderSize
-  kSize        = kValueOffset + 1
+class HeapNumber(ImageObject):
   def __init__(self, addr, value):
-    HeapObject.__init__(self, addr)
+    ImageObject.__init__(self, addr)
     self.set_value(value)
   def set_value(self, value):
     HEAP.set_raw_field(self, Number.kValueOffset, value)
 
-class HeapLambda(HeapObject):
-  kArgcOffset     = HeapObject.kHeaderSize
-  kCodeOffset     = kArgcOffset + 1
-  kLiteralsOffset = kCodeOffset + 1
-  kSize           = kLiteralsOffset + 1
+class ImageLambda(ImageObject):
   def __init__(self, addr, argc, code, literals):
-    HeapObject.__init__(self, addr)
+    ImageObject.__init__(self, addr)
     self.set_argc(argc)
     self.set_code(code)
     self.set_literals(literals)
   def set_argc(self, value):
-    HEAP.set_raw_field(self, HeapLambda.kArgcOffset, value)
+    HEAP.set_raw_field(self, ImageLambda_ArgcOffset, value)
   def set_code(self, value):
-    HEAP.set_field(self, HeapLambda.kCodeOffset, value)
+    HEAP.set_field(self, ImageLambda_CodeOffset, value)
   def set_literals(self, value):
-    HEAP.set_field(self, HeapLambda.kLiteralsOffset, value)
+    HEAP.set_field(self, ImageLambda_LiteralsOffset, value)
 
-class HeapString(HeapObject):
-  kLengthOffset = HeapObject.kHeaderSize
-  kHeaderSize   = kLengthOffset + 1
+class ImageString(ImageObject):
   def __init__(self, addr, length):
-    HeapObject.__init__(self, addr)
+    ImageObject.__init__(self, addr)
     self.set_length(length)
   def set_length(self, value):
-    HEAP.set_raw_field(self, HeapString.kLengthOffset, value)
+    HEAP.set_raw_field(self, ImageString_LengthOffset, value)
   def __setitem__(self, index, value):
-    HEAP.set_raw_field(self, HeapString.kHeaderSize + index, value)
+    HEAP.set_raw_field(self, ImageString_HeaderSize + index, value)
 
-class HeapCode(HeapObject):
-  kLengthOffset = HeapObject.kHeaderSize
-  kHeaderSize   = kLengthOffset + 1
+class ImageCode(ImageObject):
   def __init__(self, addr, length):
-    HeapObject.__init__(self, addr)
+    ImageObject.__init__(self, addr)
     self.set_length(length)
   def set_length(self, value):
-    HEAP.set_raw_field(self, HeapCode.kLengthOffset, value)
+    HEAP.set_raw_field(self, ImageCode_LengthOffset, value)
   def __setitem__(self, index, value):
-    HEAP.set_raw_field(self, HeapCode.kHeaderSize + index, value)
+    HEAP.set_raw_field(self, ImageCode_HeaderSize + index, value)
 
-class HeapDictionary(HeapObject):
-  kTableOffset = HeapObject.kHeaderSize
-  kSize        = kTableOffset + 1
+class HeapDictionary(ImageObject):
   def __init__(self, addr):
-    HeapObject.__init__(self, addr)
+    ImageObject.__init__(self, addr)
     self.entries = { }
   def __setitem__(self, name, value):
     self.entries[name] = value
@@ -855,31 +859,6 @@ class HeapDictionary(HeapObject):
       cursor += 1
       table[cursor] = value
       cursor += 1
-
-class Roots:
-  def __init__(self):
-    self.entries = [ ]
-  def initialize(self):
-    self.toplevel = HEAP.new_dictionary()
-  def set(self, key, value):
-    for entry in self.entries:
-      [ekey, evalue] = entry
-      if ekey == key:
-        entry[1] = value
-        return
-    self.entries.append([key, value])
-
-ROOTS = Roots()
-
-def write_output(file, buffer):
-  def write(value):
-    output.write(struct.pack('<I', value))
-  output = open(file, 'wb')
-  write(4206546606L)
-  write(len(buffer))
-  for value in buffer:
-    write(value)
-  output.close()
 
 # -----------------------
 # --- C o m p i l e r ---
@@ -1000,15 +979,19 @@ ROOT_INDEX = { }
 def define_root(n, Class, name, NAME, allocator):
   ROOT_INDEX[name] = int(n)
 
+def define_image_object_const(n, Type, Name):
+  name = 'Image' + Type + '_' + Name
+  globals()[name] = int(n)
+
 def import_constants(file):
   consts = read_consts(file)
   consts.apply('FOR_EACH_DECLARED_TYPE', define_type_tag)
   consts.apply('FOR_EACH_OPCODE', define_opcode)
   consts.apply('FOR_EACH_BUILTIN_CLASS', define_builtin_class)
   consts.apply('FOR_EACH_ROOT', define_root)
+  consts.apply('FOR_EACH_IMAGE_OBJECT_CONST', define_image_object_const)
 
 def load_files(files):
-  ROOTS.initialize()
   for file in files:
     source = open(file).read()
     tree = compile(source)
@@ -1021,9 +1004,11 @@ def main():
     parser.print_help()
     return
   import_constants(values.consts)
+  global HEAP
+  HEAP = Heap()
+  HEAP.initialize()
   load_files(files)
-  data = HEAP.flush()
-  write_output(values.out, data)
+  HEAP.write_to(values.out)
 
 if __name__ == '__main__':
   main()

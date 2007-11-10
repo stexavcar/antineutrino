@@ -18,12 +18,19 @@ public:
    * Converts an object pointer into a direct C pointer to the
    * beginning address of the object in the heap.
    */
-  static inline address address_of(Object *obj);
+  static inline address address_of(void *obj);
+  
+  /**
+   * Converts an object pointer into an offset within a buffer.
+   */
+  static inline uint32_t offset_of(void *obj);
 
   /**
    * Converts the heap address of an object to a tagged object pointer.
    */
   static inline Object *tag_as_object(address addr);
+  
+  static inline uint32_t tag_offset_as_object(uint32_t value);
 
   static inline bool has_object_tag(void *val);
   
@@ -38,7 +45,7 @@ public:
   /**
    * Returns the value of a tagged small integer.
    */
-  static inline int32_t value_of(Smi *val);
+  static inline int32_t value_of(void *val);
   
   static inline bool is_valid_smi(int32_t val);
   
@@ -49,7 +56,10 @@ public:
    */
   static inline Signal *tag_as_signal(uint32_t type, uint32_t payload);
 
-  static inline bool has_signal_tag(Data *val);
+  static inline uint32_t tag_as_signal(address addr);
+  static inline uint32_t un_signal_tag(void *value);
+  
+  static inline bool has_signal_tag(void *val);
   
   /**
    * Masks out and returns the type field of a signal.

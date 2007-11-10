@@ -2,4 +2,4 @@
 
 ./tools/compiler.py $1 -c src/utils/consts.h -o temp.nc
 ./build/debug/neutrino temp.nc
-rm temp.nc
+

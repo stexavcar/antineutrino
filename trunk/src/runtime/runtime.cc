@@ -34,7 +34,8 @@ void Runtime::start() {
 
 bool Runtime::load_image(Image &image) {
   if (!image.initialize()) return false;
-  return true;
+  Runtime::Scope scope(*this);
+  return image.load();
 }
 
 }

@@ -30,20 +30,19 @@ public:
   bool initialize(Heap& heap);
 
   template <typename D> void for_each(void (*)(Value**, D), D);
+  
+  static const uint32_t kCount = 19;
 
 // Declare root field accessors
 #define DECLARE_ROOT_ACCESSOR(n, Type, name, NAME, allocator) \
-  Type *&name() { return name##_; }
+  Type *&name() { return reinterpret_cast<Type**>(entries_)[n]; }
 FOR_EACH_ROOT(DECLARE_ROOT_ACCESSOR)
 #undef DECLARE_ROOT_ACCESSOR
 
 private:
-
-// Declare root fields
-#define DECLARE_ROOT_FIELD(n, Type, name, NAME, allocator) \
-  Type *name##_;
-FOR_EACH_ROOT(DECLARE_ROOT_FIELD)
-#undef DECLARE_ROOT_FIELD
+  
+  Value *entries_[kCount];
+  
 };
 
 }

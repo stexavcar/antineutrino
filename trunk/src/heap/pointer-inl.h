@@ -6,14 +6,24 @@
 
 namespace neutrino {
 
-address ValuePointer::address_of(Object *obj) {
+address ValuePointer::address_of(void *obj) {
   ASSERT(has_object_tag(obj));
   return reinterpret_cast<address>(reinterpret_cast<word>(obj) & ~kObjectTagMask);
+}
+
+uint32_t ValuePointer::offset_of(void *obj) {
+  STATIC_CHECK(kWordSize == (1 << kObjectTagSize));
+  ASSERT(has_object_tag(obj));
+  return reinterpret_cast<word>(obj) >> kObjectTagSize;
 }
 
 Object *ValuePointer::tag_as_object(address addr) {
   ASSERT_EQ(0, reinterpret_cast<word>(addr) & kObjectTagMask);
   return reinterpret_cast<Object*>(reinterpret_cast<word>(addr) + kObjectTag);
+}
+
+uint32_t ValuePointer::tag_offset_as_object(uint32_t value) {
+  return (value << kObjectTagSize) + kObjectTag;
 }
 
 bool ValuePointer::has_object_tag(void *val) {
@@ -31,13 +41,23 @@ Smi *ValuePointer::tag_as_smi(int32_t val) {
   return reinterpret_cast<Smi*>((val << kSmiTagSize) | kSmiTag);
 }
 
-int32_t ValuePointer::value_of(Smi *val) {
+int32_t ValuePointer::value_of(void *val) {
   ASSERT(has_smi_tag(val));
   return reinterpret_cast<int32_t>(val) >> kSmiTagSize;
 }
 
-bool ValuePointer::has_signal_tag(Data *val) {
+bool ValuePointer::has_signal_tag(void *val) {
   return (reinterpret_cast<word>(val) & kObjectTagMask) == kSignalTag;
+}
+
+uint32_t ValuePointer::tag_as_signal(address addr) {
+  ASSERT_EQ(0, reinterpret_cast<word>(addr) & kObjectTagMask);
+  return reinterpret_cast<word>(addr) | kSignalTag;
+}
+
+uint32_t ValuePointer::un_signal_tag(void *value) {
+  ASSERT(has_signal_tag(value));
+  return reinterpret_cast<word>(value) & ~kObjectTagMask;
 }
 
 Signal *ValuePointer::tag_as_signal(uint32_t type, uint32_t payload) {

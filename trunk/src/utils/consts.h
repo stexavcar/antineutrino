@@ -62,8 +62,14 @@
 // --- I m a g e   I n s t r u c t i o n s ---
 // -------------------------------------------
 
-#define FOR_EACH_IMAGE_OBJECT_FIELD(VISIT)                           \
-  VISIT(0, Object, Type)
+#define FOR_EACH_IMAGE_OBJECT_CONST(VISIT)                           \
+  VISIT(0, Object, TypeOffset)     VISIT(1, Object, HeaderSize)      \
+  VISIT(2, Dictionary, Size)                                         \
+  VISIT(1, String, LengthOffset)   VISIT(2, String, HeaderSize)      \
+  VISIT(1, Code, LengthOffset)     VISIT(2, Code, HeaderSize)        \
+  VISIT(1, Tuple, LengthOffset)    VISIT(2, Tuple, HeaderSize)       \
+  VISIT(1, Lambda, ArgcOffset)     VISIT(2, Lambda, CodeOffset)      \
+  VISIT(3, Lambda, LiteralsOffset) VISIT(4, Lambda, Size)
 
 
 // -----------------
@@ -71,27 +77,27 @@
 // -----------------
 
 #define FOR_EACH_SIMPLE_ROOT(VISIT)                                  \
-  VISIT(1,  Class, string_class, STRING_CLASS, new_class(STRING_TYPE))\
-  VISIT(2,  Class, tuple_class, TUPLE_CLASS, new_class(TUPLE_TYPE))  \
-  VISIT(3,  Class, void_class, VOID_CLASS, new_class(VOID_TYPE))     \
-  VISIT(4,  Void, vhoid, VOID, new_singleton(void_class()))          \
-  VISIT(5,  Class, null_class, NULL_CLASS, new_class(NULL_TYPE))     \
-  VISIT(6,  Null, nuhll, NULL, new_singleton(null_class()))          \
-  VISIT(7,  Class, true_class, TRUE_CLASS, new_class(TRUE_TYPE))     \
-  VISIT(8,  True, thrue, TRUE, new_singleton(true_class()))          \
-  VISIT(9,  Class, false_class, FALSE_CLASS, new_class(FALSE_TYPE))  \
-  VISIT(10, False, fahlse, FALSE, new_singleton(false_class()))      \
-  VISIT(11, Class, literal_class, LITERAL_CLASS, new_class(LITERAL_TYPE))\
-  VISIT(12, Class, dictionary_class, DICTIONARY_CLASS, new_class(DICTIONARY_TYPE))\
-  VISIT(13, Class, lambda_class, LAMBDA_CLASS, new_class(LAMBDA_TYPE))\
-  VISIT(14, Dictionary, toplevel, TOPLEVEL, new_dictionary())        \
-  VISIT(15, Class, buffer_class, BUFFER_CLASS, new_class(BUFFER_TYPE))\
-  VISIT(16, Class, code_class, CODE_CLASS, new_class(CODE_TYPE))     \
-  VISIT(17, Class, method_class, METHOD_CLASS, new_class(METHOD_TYPE))\
-  VISIT(18, Class, smi_class, SMI_CLASS, new_class(SMI_TYPE))
+  VISIT(0,  Class, string_class, STRING_CLASS, new_class(STRING_TYPE))\
+  VISIT(1,  Class, tuple_class, TUPLE_CLASS, new_class(TUPLE_TYPE))  \
+  VISIT(2,  Class, void_class, VOID_CLASS, new_class(VOID_TYPE))     \
+  VISIT(3,  Void, vhoid, VOID, new_singleton(void_class()))          \
+  VISIT(4,  Class, null_class, NULL_CLASS, new_class(NULL_TYPE))     \
+  VISIT(5,  Null, nuhll, NULL, new_singleton(null_class()))          \
+  VISIT(6,  Class, true_class, TRUE_CLASS, new_class(TRUE_TYPE))     \
+  VISIT(7,  True, thrue, TRUE, new_singleton(true_class()))          \
+  VISIT(8,  Class, false_class, FALSE_CLASS, new_class(FALSE_TYPE))  \
+  VISIT(9, False, fahlse, FALSE, new_singleton(false_class()))      \
+  VISIT(10, Class, literal_class, LITERAL_CLASS, new_class(LITERAL_TYPE))\
+  VISIT(11, Class, dictionary_class, DICTIONARY_CLASS, new_class(DICTIONARY_TYPE))\
+  VISIT(12, Class, lambda_class, LAMBDA_CLASS, new_class(LAMBDA_TYPE))\
+  VISIT(13, Dictionary, toplevel, TOPLEVEL, new_dictionary())        \
+  VISIT(14, Class, buffer_class, BUFFER_CLASS, new_class(BUFFER_TYPE))\
+  VISIT(15, Class, code_class, CODE_CLASS, new_class(CODE_TYPE))     \
+  VISIT(16, Class, method_class, METHOD_CLASS, new_class(METHOD_TYPE))\
+  VISIT(17, Class, smi_class, SMI_CLASS, new_class(SMI_TYPE))
 
 #define FOR_EACH_COMPLICATED_ROOT(VISIT)                             \
-  VISIT(19, Class, class_class, CLASS_CLASS, NULL)
+  VISIT(18, Class, class_class, CLASS_CLASS, NULL)
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT(VISIT)                                   \

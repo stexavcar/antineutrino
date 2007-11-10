@@ -8,7 +8,8 @@
 namespace neutrino {
 
 Runtime &Runtime::current() {
-  ASSERT(current_ != NULL); return *current_;
+  ASSERT(current_ != NULL);
+  return *current_;
 }
 
 Runtime::Scope::Scope(Runtime &runtime)
