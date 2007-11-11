@@ -54,7 +54,7 @@ Data *Heap::new_literal(Value *value) {
 }
 
 
-Data *Heap::new_class(InstanceType instance_type) {
+Data *Heap::new_empty_class(InstanceType instance_type) {
   Data *result = allocate_class(instance_type);
   if (is<AllocationFailed>(result)) return result;
   ASSERT_IS(Class, result);

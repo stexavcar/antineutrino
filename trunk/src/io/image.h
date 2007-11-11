@@ -87,7 +87,7 @@ class Image {
 public:
   Image(uint32_t size, uint32_t *data);
   bool initialize();
-  bool load();
+  Tuple *load();
   static inline Image &current();
   uint32_t *heap() { return heap_; }
 

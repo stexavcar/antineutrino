@@ -99,6 +99,15 @@ FOR_EACH_SIGNAL_TYPE(DEFINE_SIGNAL_QUERY)
 // --- V a l u e ---
 // -----------------
 
+InstanceType Value::type() {
+  if (is<Smi>(this)) {
+    return SMI_TYPE;
+  } else {
+    uint32_t result = cast<Object>(this)->chlass()->instance_type();
+    return static_cast<InstanceType>(result);
+  }
+}
+
 string ref_traits<Value>::to_string() {
   return open(this)->to_string();
 }
@@ -107,6 +116,9 @@ void ref_traits<Value>::print(FILE *out) {
   open(this)->print(out);
 }
 
+InstanceType ref_traits<Value>::type() {
+  return open(this)->type();
+}
 
 // -------------------------------------
 // --- A c c e s s o r   M a c r o s ---
@@ -179,6 +191,10 @@ uint32_t Tuple::size_for(uint32_t elms) {
   return Tuple::kHeaderSize + elms * kPointerSize;
 }
 
+uint32_t ref_traits<Tuple>::length() {
+  return open(this)->length();
+}
+
 ref<Value> ref_traits<Tuple>::get(uint32_t index) {
   return new_ref(open(this)->at(index));
 }
@@ -202,6 +218,10 @@ ref<Value> ref_traits<Dictionary>::get(ref<Value> value) {
 
 void ref_traits<Dictionary>::set(ref<Value> key, ref<Value> value) {
   open(this)->set(*key, *value);
+}
+
+uint32_t ref_traits<Dictionary>::size() {
+  return open(this)->size();
 }
 
 Dictionary::Iterator::Iterator(Dictionary *dict)

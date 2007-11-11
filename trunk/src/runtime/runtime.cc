@@ -34,8 +34,58 @@ void Runtime::start() {
 
 bool Runtime::load_image(Image &image) {
   if (!image.initialize()) return false;
-  Runtime::Scope scope(*this);
-  return image.load();
+  Runtime::Scope runtime_scope(*this);
+  Tuple *roots = image.load();
+  RefScope ref_scope;
+  return install_loaded_roots(new_ref(roots));
+}
+
+bool Runtime::install_loaded_roots(ref<Tuple> roots) {
+  for (uint32_t i = 0; i < roots.length(); i++) {
+    RefScope scope;
+    ref<Value> raw_changes = roots.get(i);
+    if (is<Smi>(raw_changes)) continue;
+    ref<Object> changes = cast<Object>(raw_changes);
+    ref<Object> root = get_root(i);
+    if (root.type() != changes.type()) return false;
+    if (!install_object(root, changes)) return false;
+  }
+  return true;
+}
+
+bool Runtime::install_object(ref<Object> root, ref<Object> changes) {
+  uint32_t type = root.type();
+  switch (type) {
+    case DICTIONARY_TYPE:
+      return install_dictionary(cast<Dictionary>(root), cast<Dictionary>(changes));
+    default:
+      UNHANDLED(InstanceType, type);
+      return false;
+  }
+}
+
+bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) {
+  // First copy all elements into the tables so that we can iterate
+  // through the elements independent of whether a gc occurs or not
+  uint32_t length = changes.size();
+  ref<Tuple> keys = factory().new_tuple(length);
+  ref<Tuple> values = factory().new_tuple(length);
+  Dictionary::Iterator iter(*changes);
+  Dictionary::Iterator::Entry entry;
+  for (uint32_t i = 0; i < length; i++) {
+    bool next_result = iter.next(&entry);
+    ASSERT(next_result);
+    keys->at(i) = entry.key;
+    values->at(i) = entry.value;
+  }
+  // Check that we've reached the end
+  ASSERT(!iter.next(&entry));
+  // Then add the elements to the root object
+  for (uint32_t i = 0; i < length; i++) {
+    RefScope scope;
+    root.set(keys.get(i), values.get(i));
+  }
+  return true;
 }
 
 }

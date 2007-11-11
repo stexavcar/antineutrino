@@ -50,6 +50,7 @@ Class *Interpreter::get_class(Value *value) {
  * no method is found Nothing is returned.
  */
 Data *Interpreter::lookup_method(Class *chlass, Value *name) {
+  ASSERT(!chlass->is_empty());
   Tuple *methods = chlass->methods();
   for (uint32_t i = 0; i < methods->length(); i++) {
     Method *method = cast<Method>(methods->at(i));

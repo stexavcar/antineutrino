@@ -20,6 +20,9 @@ public:
   Heap &heap() { return heap_; }
   Roots &roots() { return roots_; }
   bool load_image(Image &image);
+  bool install_loaded_roots(ref<Tuple> roots);
+  bool install_object(ref<Object> root, ref<Object> changes);
+  bool install_dictionary(ref<Dictionary> root, ref<Dictionary> changes);
   Interpreter &interpreter() { return interpreter_; }
   void start();
 
@@ -28,6 +31,8 @@ public:
     ref<Type> name() { return ref<Type>(&roots().name()); }
   FOR_EACH_ROOT(DECLARE_ROOT_ACCESSOR)
   #undef DECLARE_ROOT_ACCESSOR
+  
+  inline ref<Object> get_root(uint32_t index);
   
   /**
    * Stack-allocated class that sets the given runtime as the current

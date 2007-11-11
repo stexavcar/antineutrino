@@ -46,6 +46,8 @@ public:
 class Value : public Data {
 public:
   
+  inline InstanceType type();
+  
   /**
    * Returns true if this object supports comparisons with other
    * objecs.
@@ -65,6 +67,7 @@ public:
 template <> class ref_traits<Value> {
 public:
   inline string to_string();
+  inline InstanceType type();
   inline void print(FILE *out = stdout);
 };
 
@@ -100,8 +103,11 @@ public:
   static const int kHeaderSize   = kChlassOffset + kPointerSize;
 };
 
-template <> class ref_traits<Object> : public ref_traits<Value> { };
+template <> class ref_traits<Object> : public ref_traits<Value> {
+public:
+};
 
+DEFINE_REF_CLASS(Object);
 
 // -------------------------------------
 // --- A b s t r a c t   B u f f e r ---
@@ -222,6 +228,7 @@ public:
 
 template <> class ref_traits<Tuple> : public ref_traits<Object> {
 public:
+  inline uint32_t length();
   inline ref<Value> get(uint32_t index);
   inline void set(uint32_t index, ref<Value> value);
 };
@@ -237,6 +244,8 @@ class Dictionary : public Object {
 public:
   inline Tuple *&table();
   inline void set_table(Tuple *value);
+  
+  uint32_t size();
   
   Data *get(Value *key);
   bool set(Value *key, Value *value);
@@ -260,7 +269,8 @@ public:
 template <> class ref_traits<Dictionary> : public ref_traits<Object> {
 public:
   inline ref<Value> get(ref<Value> key);
-  inline void set(ref<Value> key, ref<Value> value);  
+  inline void set(ref<Value> key, ref<Value> value);
+  inline uint32_t size();
 };
 
 DEFINE_REF_CLASS(Dictionary);
@@ -364,6 +374,8 @@ public:
 
   inline Tuple *&methods();
   inline void set_methods(Tuple *methods);
+  
+  bool is_empty();
   
   void for_each_class_field(FieldCallback callback, void *data);
 

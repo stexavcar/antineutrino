@@ -2,6 +2,7 @@
 #define _RUNTIME_RUNTIME_INL
 
 #include "heap/heap-inl.h"
+#include "heap/roots-inl.h"
 #include "runtime/runtime.h"
 #include "utils/checks.h"
 
@@ -10,6 +11,10 @@ namespace neutrino {
 Runtime &Runtime::current() {
   ASSERT(current_ != NULL);
   return *current_;
+}
+
+ref<Object> Runtime::get_root(uint32_t n) {
+  return ref<Object>(&roots().get(n));
 }
 
 Runtime::Scope::Scope(Runtime &runtime)

@@ -48,14 +48,12 @@ bool Image::initialize() {
   return true;
 }
 
-bool Image::load() {
+Tuple *Image::load() {
   Image::Scope scope(*this);
   for_each_object(copy_object_shallow);
   for_each_object(fixup_shallow_object);
   ImageTuple *roots_img = image_cast<ImageTuple>(ImageValue::from(data_[kRootsOffset]));
-  Tuple *roots = cast<Tuple>(roots_img->forward_pointer());
-  printf("%s\n", roots->to_string().chars());
-  return true;
+  return cast<Tuple>(roots_img->forward_pointer());
 }
 
 void Image::copy_object_shallow(ImageObject *obj) {

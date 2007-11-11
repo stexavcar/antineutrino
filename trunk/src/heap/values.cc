@@ -10,9 +10,7 @@ namespace neutrino {
 #ifdef DEBUG
 
 uint32_t Class::tag_of(Data *value) {
-  if (is<Smi>(value)) {
-    return SMI_TYPE;
-  } else if (is<Signal>(value)) {
+  if (is<Signal>(value)) {
     switch (cast<Signal>(value)->type()) {
 #define MAKE_SIGNAL_TYPE_CASE(n, NAME, Name) case Signal::NAME: return NAME##_TYPE;
 FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
@@ -20,7 +18,7 @@ FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
       default: UNREACHABLE(); return SIGNAL_TYPE;
     }
   } else {
-    return cast<Object>(value)->chlass()->instance_type();
+    return cast<Value>(value)->type();
   }
 }
 
@@ -391,7 +389,10 @@ ref<Value> ref_traits<Lambda>::call() {
   return interpreter.call(open(this));
 }
 
-// --- D i c t i o n a r y ---
+
+// -----------------------
+// --- E q u a l i t y ---
+// -----------------------
 
 bool Value::equals(Value *that) {
   ASSERT(this->is_key());
@@ -425,6 +426,11 @@ bool String::string_equals(String *that) {
   }
   return true;
 }
+
+
+// ---------------------------
+// --- D i c t i o n a r y ---
+// ---------------------------
 
 struct DictionaryLookup {
   Value **value;
@@ -467,5 +473,19 @@ bool Dictionary::set(Value *key, Value *value) {
   }
   return true;
 }
+
+uint32_t Dictionary::size() {
+  return table()->length() / 2;
+}
+
+
+// -----------------
+// --- C l a s s ---
+// -----------------
+
+bool Class::is_empty() {
+  return !is<Tuple>(methods());
+}
+
 
 } // namespace neutrino

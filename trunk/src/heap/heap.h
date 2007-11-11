@@ -30,7 +30,7 @@ public:
   /**
    * Creates and validates a new type object.
    */
-  Data *new_class(InstanceType instance_type);
+  Data *new_empty_class(InstanceType instance_type);
   
   Data *new_string(string value);
 

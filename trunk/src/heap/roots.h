@@ -39,9 +39,11 @@ public:
 FOR_EACH_ROOT(DECLARE_ROOT_ACCESSOR)
 #undef DECLARE_ROOT_ACCESSOR
 
+  inline Object *&get(uint32_t index);
+
 private:
   
-  Value *entries_[kCount];
+  Object *entries_[kCount];
   
 };
 

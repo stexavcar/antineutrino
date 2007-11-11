@@ -14,6 +14,11 @@ FOR_EACH_ROOT(VISIT_FIELD)
 #undef VISIT_FIELD
 }
 
+Object *&Roots::get(uint32_t n) {
+  ASSERT(n < kCount);
+  return entries_[n];
+}
+
 }
 
 #endif // _ROOTS_INL
