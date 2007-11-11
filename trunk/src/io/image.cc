@@ -44,23 +44,93 @@ bool Image::initialize() {
     Conditions::get().error_occurred("Invalid image");
     return false;
   }
-  uint32_t root_count = data_[kRootCountOffset];
-  if (root_count != Roots::kCount) {
-    Conditions::get().error_occurred("Invalid image");
-    return false;
-  }
   heap_ = data_ + kHeaderSize;
   return true;
 }
 
-void Image::copy_shallow(ImageObject *obj) {
+bool Image::load() {
+  Image::Scope scope(*this);
+  for_each_object(copy_object_shallow);
+  for_each_object(fixup_shallow_object);
+  ImageTuple *roots_img = image_cast<ImageTuple>(ImageValue::from(data_[kRootsOffset]));
+  Tuple *roots = cast<Tuple>(roots_img->forward_pointer());
+  printf("%s\n", roots->to_string().chars());
+  return true;
+}
+
+void Image::copy_object_shallow(ImageObject *obj) {
   uint32_t instance_type = obj->instance_type();
   switch (instance_type) {
     case DICTIONARY_TYPE: {
-      Data *data = Runtime::current().heap().new_dictionary();
-      obj->point_forward(cast<Object>(data));
+      Dictionary *dict = cast<Dictionary>(Runtime::current().heap().new_dictionary());
+      obj->point_forward(dict);
       break;
     }
+    case STRING_TYPE: {
+      ImageString *img = image_cast<ImageString>(obj);
+      uint32_t length = img->length();
+      String *str = cast<String>(Runtime::current().heap().new_string(length));
+      for (uint32_t i = 0; i < length; i++)
+        str->at(i) = img->at(i);
+      obj->point_forward(str);
+      break;
+    }
+    case CODE_TYPE: {
+      ImageCode *img = image_cast<ImageCode>(obj);
+      uint32_t length = img->length();
+      Code *code = cast<Code>(Runtime::current().heap().new_code(length));
+      for (uint32_t i = 0; i < length; i++)
+        code->at(i) = img->at(i);
+      obj->point_forward(code);
+      break;
+    }
+    case TUPLE_TYPE: {
+      ImageTuple *img = image_cast<ImageTuple>(obj);
+      uint32_t length = img->length();
+      Tuple *tuple = cast<Tuple>(Runtime::current().heap().new_tuple(length));
+      obj->point_forward(tuple);
+      break;
+    }
+    case LAMBDA_TYPE: {
+      ImageLambda *img = image_cast<ImageLambda>(obj);
+      uint32_t argc = img->argc();
+      Lambda *lambda = cast<Lambda>(Runtime::current().heap().new_lambda(argc));
+      obj->point_forward(lambda);
+      break;
+    }
+    default:
+      UNHANDLED(InstanceType, instance_type);
+      break;
+  }
+}
+
+void Image::fixup_shallow_object(ImageObject *obj) {
+  uint32_t instance_type = obj->instance_type();
+  switch (instance_type) {
+    case DICTIONARY_TYPE: {
+      ImageDictionary *img = image_cast<ImageDictionary>(obj);
+      Dictionary *dict = cast<Dictionary>(img->forward_pointer());
+      dict->set_table(cast<Tuple>(img->table()->forward_pointer()));
+      break;
+    }
+    case TUPLE_TYPE: {
+      ImageTuple *img = image_cast<ImageTuple>(obj);
+      Tuple *tuple = cast<Tuple>(img->forward_pointer());
+      uint32_t length = tuple->length();
+      for (uint32_t i = 0; i < length; i++)
+        tuple->at(i) = img->at(i)->forward_pointer();
+      break;
+    }
+    case LAMBDA_TYPE: {
+      ImageLambda *img = image_cast<ImageLambda>(obj);
+      Lambda *lambda = cast<Lambda>(img->forward_pointer());
+      lambda->set_code(cast<Code>(img->code()->forward_pointer()));
+      lambda->set_literals(cast<Tuple>(img->literals()->forward_pointer()));
+      break;
+    }
+    case STRING_TYPE: case CODE_TYPE:
+      // Nothing to fix
+      break;
     default:
       UNHANDLED(InstanceType, instance_type);
       break;
@@ -75,12 +145,6 @@ void Image::for_each_object(ObjectCallback callback) {
     callback(obj);
     cursor += obj->memory_size();
   }
-}
-
-bool Image::load() {
-  Image::Scope scope(*this);
-  for_each_object(copy_shallow);
-  return true;
 }
 
 uint32_t ImageObject::instance_type() {
@@ -131,16 +195,6 @@ uint32_t ImageCode::code_memory_size() {
 
 uint32_t ImageTuple::tuple_memory_size() {
   return ImageTuple_HeaderSize + length();
-}
-
-// ---------------------------------------
-// --- F o r w a r d   P o i n t e r s ---
-// ---------------------------------------
-
-void ImageObject::point_forward(Object *obj) {
-  uint32_t offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
-  ImageForwardPointer *pointer = ImageForwardPointer::to(obj);
-  Image::current().heap()[offset] = reinterpret_cast<uint32_t>(pointer);
 }
 
 }

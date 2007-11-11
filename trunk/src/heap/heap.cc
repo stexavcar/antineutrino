@@ -37,6 +37,14 @@ Data *Heap::new_lambda(uint32_t argc, Code *code, Tuple *literals) {
   return result;
 }
 
+Data *Heap::new_lambda(uint32_t argc) {
+  Data *val = allocate_object(Lambda::kSize, roots().lambda_class());
+  if (is<AllocationFailed>(val)) return val;
+  Lambda *result = cast<Lambda>(val);
+  result->argc() = argc;
+  return result;
+}
+
 Data *Heap::new_literal(Value *value) {
   Data *val = allocate_object(Literal::kSize, roots().literal_class());
   if (is<AllocationFailed>(val)) return val;
@@ -70,6 +78,15 @@ Data *Heap::new_string(string value) {
   result->length() = value.length();
   for (uint32_t i = 0; i < value.length(); i++)
     result->at(i) = value[i];
+  return result;
+}
+
+Data *Heap::new_string(uint32_t length) {
+  int size = String::size_for(length);
+  Data *val = allocate_object(size, roots().string_class());
+  if (is<AllocationFailed>(val)) return val;
+  String *result = cast<String>(val);
+  result->length() = length;
   return result;
 }
 

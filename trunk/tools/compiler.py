@@ -702,15 +702,15 @@ class Heap:
     self.cursor = 0
     self.memory = self.capacity * [ tag_as_smi(0) ]
     self.dicts = [ ]
-    self.roots = Heap.kRootCount * [ tag_as_smi(0) ]
   def initialize(self):
+    self.roots = self.new_tuple(Heap.kRootCount)
     self.toplevel = self.new_dictionary()
     self.set_root(ROOT_INDEX['toplevel'], self.toplevel)
   def set_raw(self, offset, value):
     self.memory[offset] = value
   def set_root(self, index, value):
     assert 0 <= index < Heap.kRootCount;
-    self.roots[index] = tag_as_object(value.addr)
+    self.roots[index] = value
   def __setitem__(self, offset, value):
     if type(value) is int:
       self.memory[offset] = tag_as_smi(value)
@@ -732,7 +732,7 @@ class Heap:
   def new_number(self, value):
     return value
   def new_dictionary(self):
-    result = HeapDictionary(self.allocate(ImageDictionary_Size))
+    result = ImageDictionary(self.allocate(ImageDictionary_Size))
     result.set_class(DICTIONARY_TYPE)
     self.dicts.append(result)
     return result
@@ -774,9 +774,7 @@ class Heap:
     output = open(file, 'wb')
     write(4206546606L)
     write(len(buffer))
-    write(Heap.kRootCount)
-    for root in self.roots:
-      write(root)
+    write(tag_as_object(self.roots.addr))
     for value in buffer:
       write(value)
     output.close()
@@ -844,12 +842,14 @@ class ImageCode(ImageObject):
   def __setitem__(self, index, value):
     HEAP.set_raw_field(self, ImageCode_HeaderSize + index, value)
 
-class HeapDictionary(ImageObject):
+class ImageDictionary(ImageObject):
   def __init__(self, addr):
     ImageObject.__init__(self, addr)
     self.entries = { }
   def __setitem__(self, name, value):
     self.entries[name] = value
+  def set_table(self, value):
+    HEAP.set_field(self, ImageDictionary_TableOffset, value)
   def commit(self):
     table = HEAP.new_tuple(len(self.entries) * 2)
     self.entries.keys().sort()
@@ -859,6 +859,7 @@ class HeapDictionary(ImageObject):
       cursor += 1
       table[cursor] = value
       cursor += 1
+    self.set_table(table)
 
 # -----------------------
 # --- C o m p i l e r ---

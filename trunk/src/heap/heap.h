@@ -34,6 +34,8 @@ public:
   
   Data *new_string(string value);
 
+  Data *new_string(uint32_t length);
+
   Data *new_tuple(uint32_t length);
   
   Data *new_singleton(Class *chlass);
@@ -44,6 +46,8 @@ public:
   
   Data *new_lambda(uint32_t argc, Code *code, Tuple *literals);
   
+  Data *new_lambda(uint32_t argc);
+
   Data *new_literal(Value *value);
   
   Data *new_abstract_buffer(uint32_t size, Class *chlass);

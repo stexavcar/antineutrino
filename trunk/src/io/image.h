@@ -26,17 +26,20 @@ public:
 
 class ImageValue : public ImageData {
 public:
+  inline Value *forward_pointer();
 };
 
 class ImageSmi : public ImageValue {
 public:
   inline int32_t value();
+  inline Smi *forward_pointer();
 };
 
 class ImageObject : public ImageValue {
 public:
   uint32_t instance_type();
   void point_forward(Object *target);
+  inline Object *forward_pointer();
   uint32_t memory_size();
 
 };
@@ -44,24 +47,34 @@ public:
 class ImageString : public ImageObject {
 public:
   inline uint32_t length();
+  inline uint32_t at(uint32_t offset);
   uint32_t string_memory_size();
 };
 
 class ImageTuple : public ImageObject {
 public:
   inline uint32_t length();
+  inline ImageValue *at(uint32_t offset);
   uint32_t tuple_memory_size();
 };
 
 class ImageCode : public ImageObject {
 public:
   inline uint32_t length();
+  inline uint32_t at(uint32_t offset);
   uint32_t code_memory_size();
+};
+
+class ImageLambda : public ImageObject {
+public:
+  inline uint32_t argc();
+  inline ImageCode *code();
+  inline ImageTuple *literals();
 };
 
 class ImageDictionary : public ImageObject {
 public:
-  
+  inline ImageTuple *table();
 };
 
 template <class C>
@@ -89,20 +102,19 @@ public:
 private:
   typedef void (ObjectCallback)(ImageObject *obj);
   void for_each_object(ObjectCallback callback);
-  static void copy_shallow(ImageObject *obj);
+  static void copy_object_shallow(ImageObject *obj);
+  static void fixup_shallow_object(ImageObject *obj);
   uint32_t heap_size() { return heap_size_; }
   
   uint32_t size_, heap_size_;
   uint32_t *data_, *heap_;
-  ImageValue *roots_[Roots::kCount];
   static Image *current_;
   
   static const uint32_t kMagicNumber = 0xFABACEAE;
   static const uint32_t kMagicNumberOffset = 0;
   static const uint32_t kHeapSizeOffset    = kMagicNumberOffset + 1;
-  static const uint32_t kRootCountOffset   = kHeapSizeOffset + 1;
-  static const uint32_t kRootsOffset       = kRootCountOffset + 1;
-  static const uint32_t kHeaderSize        = kRootsOffset + Roots::kCount;
+  static const uint32_t kRootsOffset       = kHeapSizeOffset + 1;
+  static const uint32_t kHeaderSize        = kRootsOffset + 1;
 
 };
 

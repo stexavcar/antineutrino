@@ -63,13 +63,13 @@
 // -------------------------------------------
 
 #define FOR_EACH_IMAGE_OBJECT_CONST(VISIT)                           \
-  VISIT(0, Object, TypeOffset)     VISIT(1, Object, HeaderSize)      \
-  VISIT(2, Dictionary, Size)                                         \
-  VISIT(1, String, LengthOffset)   VISIT(2, String, HeaderSize)      \
-  VISIT(1, Code, LengthOffset)     VISIT(2, Code, HeaderSize)        \
-  VISIT(1, Tuple, LengthOffset)    VISIT(2, Tuple, HeaderSize)       \
-  VISIT(1, Lambda, ArgcOffset)     VISIT(2, Lambda, CodeOffset)      \
-  VISIT(3, Lambda, LiteralsOffset) VISIT(4, Lambda, Size)
+  VISIT(0, Object, TypeOffset)      VISIT(1, Object, HeaderSize)     \
+  VISIT(1, Dictionary, TableOffset) VISIT(2, Dictionary, Size)       \
+  VISIT(1, String, LengthOffset)    VISIT(2, String, HeaderSize)     \
+  VISIT(1, Code, LengthOffset)      VISIT(2, Code, HeaderSize)       \
+  VISIT(1, Tuple, LengthOffset)     VISIT(2, Tuple, HeaderSize)      \
+  VISIT(1, Lambda, ArgcOffset)      VISIT(2, Lambda, CodeOffset)     \
+  VISIT(3, Lambda, LiteralsOffset)  VISIT(4, Lambda, Size)
 
 
 // -----------------
