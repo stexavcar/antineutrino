@@ -90,7 +90,7 @@ def is_space(char):
   return char.isspace()
 
 def is_ident_start(char):
-  return char.isalpha()
+  return char.isalpha() or (char == '_')
 
 def is_digit(char):
   return char.isdigit()
@@ -100,7 +100,7 @@ def is_ident_part(char):
 
 def is_operator(char):
   return char == '+' or char == '-' or char == '>' or char == '*' \
-      or char == '/' or char == '%'
+      or char == '/' or char == '%' or char == '='
 
 class Scanner:
 
@@ -305,10 +305,11 @@ class Parser:
   #   -> <doc>? <class_declaration>
   def parse_declaration(self):
     doc = self.parse_doc_opt()
+    modifiers = self.parse_modifiers()
     if self.token().is_keyword('def'):
-      return self.parse_definition()
+      return self.parse_definition(modifiers)
     else:
-      return self.parse_class_declaration()
+      return self.parse_class_declaration(modifiers)
   
   def is_modifier(self, token):
     return token.is_keyword('internal')
@@ -333,19 +334,26 @@ class Parser:
       return self.expect_operator()
   
   # <class_declaration>
-  #   -> <doc>? <modifiers> 'class' $ident '{' <member_declaration>* '}'
-  def parse_class_declaration(self):
-    modifiers = self.parse_modifiers()
+  #   -> 'class' $ident (':' $super)? '{' <member_declaration>* '}'
+  def parse_class_declaration(self, modifiers):
     self.expect_keyword('class')
     name = self.expect_ident()
-    info = BUILTIN_CLASSES[name]
+    if self.token().is_delimiter(':'):
+      self.expect_delimiter(':')
+      parent = self.expect_ident()
+    else:
+      parent = None
     self.expect_delimiter('{')
     members = []
     while not self.token().is_delimiter('}'):
       member = self.parse_member_declaration(name)
       members.append(member)
     self.expect_delimiter('}')
-    return BuiltinClass(info, members)
+    if 'internal' in modifiers:
+      info = BUILTIN_CLASSES[name]
+      return BuiltinClass(info, members, parent)
+    else:
+      return Class(name, members, parent)
 
   # <member_declaration>
   #   -> <modifiers> 'def' <method_header> <method_body>
@@ -369,7 +377,7 @@ class Parser:
   # <definition>
   #   -> 'def' $ident ':=' <expression> ';'
   #   -> 'def' $ident '(' <params> ')' <function-body>
-  def parse_definition(self):
+  def parse_definition(self, modifiers):
     self.expect_keyword('def')
     name = self.expect_ident()
     if self.token() == ':=':
@@ -379,7 +387,12 @@ class Parser:
       return Definition(name, value)
     else:
       params = self.parse_params('(', ')')
-      body = self.parse_function_body()
+      if 'internal' in modifiers:
+        index = BUILTIN_FUNCTIONS[name]
+        body = InternalCall(index, len(params));
+        self.expect_delimiter(';')
+      else:
+        body = self.parse_function_body()
       return Definition(name, Lambda(params, body))
 
   # <function-body>
@@ -437,6 +450,7 @@ class Parser:
   # <control_expression>
   #   -> 'return' <expression>
   #   -> <conditional-expression>
+  #   -> <operator-expression> ';'
   def parse_control_expression(self, is_toplevel):
     if self.token().is_keyword('return'):
       self.expect_keyword('return')
@@ -446,7 +460,9 @@ class Parser:
     elif self.token().is_keyword('if'):
       return self.parse_conditional_expression(is_toplevel)
     else:
-      return self.parse_operator_expression()
+      value = self.parse_operator_expression()
+      if (is_toplevel): self.expect_delimiter(';')
+      return value
   
   def parse_operator_expression(self):
     expr = self.parse_call_expression()
@@ -544,28 +560,58 @@ class SyntaxTree:
 class Program(SyntaxTree):
   def __init__(self, decls):
     self.decls = decls
-  def load(self):
+  def load(self, namespace):
     for decl in self.decls:
-      decl.define()
+      decl.define(namespace)
+  def resolve(self, namespace):
+    for decl in self.decls:
+      decl.resolve(namespace)
 
 class Definition(SyntaxTree):
   def __init__(self, name, value):
     self.name = name
     self.value = value
-  def define(self):
-    HEAP.toplevel[HEAP.new_string(self.name)] = self.value.compile()
+  def define(self, namespace):
+    value = self.value.compile()
+    HEAP.toplevel[HEAP.new_string(self.name)] = value
+    namespace[self.name] = self
+  def resolve(self, namespace):
+    pass
 
 class BuiltinClass(SyntaxTree):
-  def __init__(self, info, members):
+  def __init__(self, info, members, parent):
     self.info = info
     self.members = members
-  def define(self):
+    self.parent = parent
+  def define(self, namespace):
     instance_type_name = self.info.instance_type
     instance_type_index = globals()[instance_type_name + '_TYPE']
     methods = HEAP.new_tuple(values = map(Method.compile, self.members))
     chlass = HEAP.new_class(instance_type_index)
     chlass.set_methods(methods)
     HEAP.set_root(self.info.root_index, chlass)
+    self.image = chlass
+  def resolve(self, namespace):
+    if self.parent:
+      parent_value = namespace[self.parent]
+      self.image.set_parent(parent_value.image)
+
+class Class(SyntaxTree):
+  def __init__(self, name, members, parent):
+    self.name = name
+    self.members = members
+    self.parent = parent
+  def define(self, namespace):
+    methods = HEAP.new_tuple(values = map(Method.compile, self.members))
+    chlass = HEAP.new_class(OBJECT_TYPE)
+    chlass.set_methods(methods)
+    HEAP.toplevel[HEAP.new_string(self.name)] = chlass
+    self.image = chlass
+    namespace[self.name] = self
+  def resolve(self, namespace):
+    if self.parent:
+      parent_value = namespace[self.parent]
+      self.image.set_parent(parent_value.image)
 
 class Method(SyntaxTree):
   def __init__(self, name, params, body):
@@ -649,7 +695,7 @@ class InternalCall(Expression):
   def emit(self, state):
     state.write(OC_INTERNAL, self.index, self.argc)
     state.write(OC_RETURN)
-    
+
 class This(Expression):
   def emit(self, state):
     assert len(state.scopes) > 0
@@ -822,8 +868,10 @@ class ImageClass(ImageObject):
     self.set_instance_type(instance_type)
   def set_instance_type(self, value):
     HEAP.set_raw_field(self, ImageClass_InstanceTypeOffset, value)
-  def set_methods(self, methods):
-    HEAP.set_field(self, ImageClass_MethodsOffset, methods)
+  def set_methods(self, value):
+    HEAP.set_field(self, ImageClass_MethodsOffset, value)
+  def set_parent(self, value):
+    HEAP.set_field(self, ImageClass_SuperOffset, value)
 
 class ImageTuple(ImageObject):
   def __init__(self, addr, length):
@@ -1023,7 +1071,9 @@ def define_image_object_const(n, Type, Name):
 BUILTIN_CLASSES = { }
 CLASSES_BY_ROOT_NAME = { }
 def define_builtin_class(Class, name, NAME):
-  root_index = globals()[NAME + '_CLASS_ROOT']
+  root_name = NAME + '_CLASS_ROOT'
+  if root_name in globals(): root_index = globals()[root_name]
+  else: root_index = -1
   info = BuiltinClassInfo(root_index, name, NAME, Class)
   BUILTIN_CLASSES[Class] = info
   CLASSES_BY_ROOT_NAME[name] = info
@@ -1033,6 +1083,11 @@ def define_builtin_method(n, root, name, string):
   string_name = string[1:-1]
   Class = CLASSES_BY_ROOT_NAME[root].class_name
   BUILTIN_METHODS[(Class, string_name)] = int(n)
+
+BUILTIN_FUNCTIONS = { }
+def define_builtin_function(n, name, string):
+  string_name = string[1:-1]
+  BUILTIN_FUNCTIONS[string_name] = int(n)
 
 # This function imports a set of constants from a C++ header file, by
 # expanding macros into the global python namespace.  Slightly cheesy
@@ -1045,6 +1100,7 @@ def import_constants(file):
   consts.apply('FOR_EACH_BUILTIN_CLASS', define_builtin_class)
   consts.apply('FOR_EACH_IMAGE_OBJECT_CONST', define_image_object_const)
   consts.apply('FOR_EACH_BUILTIN_METHOD', define_builtin_method)
+  consts.apply('FOR_EACH_BUILTIN_FUNCTION', define_builtin_function)
 
 # Returns a list of all source files in the given directory
 def find_source_files(dir):
@@ -1058,13 +1114,18 @@ def find_source_files(dir):
   return result
 
 def load_files(files):
+  trees = []
+  namespace = {}
   for file in files:
     if path.isdir(file):
       files += find_source_files(file)
     else:
       source = open(file).read()
       tree = compile(source)
-      tree.load()
+      tree.load(namespace)
+      trees.append(tree)
+  for tree in trees:
+    tree.resolve(namespace)
 
 def main():
   parser = OptionParser(option_list=options)

@@ -1,6 +1,15 @@
 #ifndef _HEAP_CONSTS
 #define _HEAP_CONSTS
 
+/**
+ * This file contains a number of index tables mapping names and
+ * properties to integer indices.  This file is written in a
+ * particular style, with all values being defined through FOR_EACH
+ * macros.  This is important because this file will be parsed by
+ * the python compiler so that we only need to define the constants
+ * in one place.
+ */
+
 // ---------------------------
 // --- C l a s s   T a g s ---
 // ---------------------------
@@ -50,10 +59,14 @@
 // --- O p c o d e s ---
 // ---------------------
 
+/**
+ * This index defines all opcodes, their index and the number of
+ * arguments they expect.
+ */
 #define FOR_EACH_OPCODE(VISIT)                                       \
   VISIT(0,  PUSH,  1)   VISIT(1,  RETURN, 0) VISIT(2,  GLOBAL,   1)  \
   VISIT(3,  CALL,  1)   VISIT(4,  SLAP,   1) VISIT(5,  ARGUMENT, 1)  \
-  VISIT(6,  VOID,  0)   VISIT(7,  NUHLL,  0) VISIT(8,  TRUE,     0)  \
+  VISIT(6,  VOID,  0)   VISIT(7,  NULL,  0)  VISIT(8,  TRUE,     0)  \
   VISIT(9,  FALSE, 0)   VISIT(10, POP,    1) VISIT(11, IF_TRUE,  1)  \
   VISIT(12, GOTO,  1)   VISIT(13, INVOKE, 2) VISIT(14, INTERNAL, 2)
 
@@ -71,7 +84,7 @@
   VISIT(1, Lambda, ArgcOffset)        VISIT(2, Lambda, CodeOffset)   \
   VISIT(3, Lambda, LiteralsOffset)    VISIT(4, Lambda, Size)         \
   VISIT(1, Class, InstanceTypeOffset) VISIT(2, Class, MethodsOffset) \
-  VISIT(3, Class, Size)                                              \
+  VISIT(3, Class, SuperOffset)        VISIT(4, Class, Size)          \
   VISIT(1, Method, NameOffset)        VISIT(2, Method, LambdaOffset) \
   VISIT(3, Method, Size)
 
@@ -112,20 +125,45 @@
 // --- B u i l t - i n   C l a s s e s ---
 // ---------------------------------------
 
+/**
+ * This index gives a mapping from built-in source class names to root
+ * names and associated enumeration values.  Any class that is a root
+ * or has built in methods should be mentioned in this list.
+ */
 #define FOR_EACH_BUILTIN_CLASS(VISIT)                                \
-  VISIT(SmallInteger, smi,  SMI)  VISIT(String, string, STRING)      \
-  VISIT(True,         true, TRUE) VISIT(False,  false,  FALSE)       \
-  VISIT(Void,         void, VOID) VISIT(Null,   null,   NULL)
+  VISIT(SmallInteger, smi,  SMI) VISIT(String, string, STRING)       \
+  VISIT(True, true, TRUE)        VISIT(False,  false,  FALSE)        \
+  VISIT(Void, void, VOID)        VISIT(Null,   null,   NULL)         \
+  VISIT(Object, object, OBJECT)
 
 
 // ---------------------------------------
 // --- B u i l t - i n   M e t h o d s ---
 // ---------------------------------------
 
+/**
+ * This index defines the index, class, name and source name for all
+ * internal methods.  Whenever a method is added here an associated
+ * implementation must be added in builtins.cc.
+ */
 #define FOR_EACH_BUILTIN_METHOD(VISIT)                               \
-  VISIT(0, string, length, "length")                                 \
+  VISIT(0, string, length, "length")  VISIT(1, string, eq, "=")      \
   VISIT(10, smi, plus, "+")           VISIT(11, smi, minus, "-")     \
-  VISIT(12, smi, times, "*")          VISIT(13, smi, divide, "/")
+  VISIT(12, smi, times, "*")          VISIT(13, smi, divide, "/")    \
+  VISIT(20, object, eq, "=")
+
+
+// -------------------------------------------
+// --- B u i l t - i n   F u n c t i o n s ---
+// -------------------------------------------
+
+/**
+ * This index defines the index, name and source name of all internal
+ * functions.  Whenever a method is added here an associated
+ * implementation must be added in builtins.cc.
+ */
+#define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
+  VISIT(100, fail, "fail")
 
 
 #endif // _HEAP_CONSTS

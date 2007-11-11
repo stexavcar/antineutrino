@@ -1,6 +1,6 @@
 #include "heap/values-inl.h"
 #include "runtime/builtins-inl.h"
-#include "runtime/runtime.h"
+#include "runtime/runtime-inl.h"
 #include "utils/checks.h"
 #include "utils/globals.h"
 
@@ -13,9 +13,15 @@ namespace neutrino {
 
 Builtin *Builtins::get(uint32_t index) {
   switch (index) {
+
 #define MAKE_CASE(n, type, name, str) case n: return &Builtins::type##_##name;
 FOR_EACH_BUILTIN_METHOD(MAKE_CASE)
 #undef MAKE_CASE
+
+#define MAKE_CASE(n, name, str) case n: return &Builtins::name;
+FOR_EACH_BUILTIN_FUNCTION(MAKE_CASE)
+#undef MAKE_CASE
+
     default:
       UNREACHABLE();
       return NULL;
@@ -28,8 +34,24 @@ FOR_EACH_BUILTIN_METHOD(MAKE_CASE)
 // -------------------
 
 Value *Builtins::string_length(Arguments &args) {
+  ASSERT_EQ(0, args.count());
   String *self = cast<String>(args.self());
   return Smi::from_int(self->length());
+}
+
+Value *Builtins::string_eq(Arguments &args) {
+  ASSERT_EQ(1, args.count());
+  String *self = cast<String>(args.self());
+  if (!is<String>(args[0])) return Runtime::current().roots().fahlse();
+  String *that = cast<String>(args[1]);
+  uint32_t length = self->length();
+  if (length != that->length())
+    return Runtime::current().roots().fahlse();
+  for (uint32_t i = 0; i < length; i++) {
+    if (self->at(i) != that->at(i))
+      return Runtime::current().roots().fahlse();
+  }
+  return Runtime::current().roots().thrue();
 }
 
 
@@ -38,31 +60,57 @@ Value *Builtins::string_length(Arguments &args) {
 // ---------------------------------
 
 Value *Builtins::smi_plus(Arguments &args) {
-  ASSERT(args.count() == 1);
+  ASSERT_EQ(1, args.count());
   Smi *self = cast<Smi>(args.self());
   Smi *that = cast<Smi>(args[0]);
   return Smi::from_int(self->value() + that->value());
 }
 
 Value *Builtins::smi_minus(Arguments &args) {
-  ASSERT(args.count() == 1);
+  ASSERT_EQ(1, args.count());
   Smi *self = cast<Smi>(args.self());
   Smi *that = cast<Smi>(args[0]);
   return Smi::from_int(self->value() - that->value());
 }
 
 Value *Builtins::smi_times(Arguments &args) {
-  ASSERT(args.count() == 1);
+  ASSERT_EQ(1, args.count());
   Smi *self = cast<Smi>(args.self());
   Smi *that = cast<Smi>(args[0]);
   return Smi::from_int(self->value() * that->value());
 }
 
 Value *Builtins::smi_divide(Arguments &args) {
-  ASSERT(args.count() == 1);
+  ASSERT_EQ(1, args.count());
   Smi *self = cast<Smi>(args.self());
   Smi *that = cast<Smi>(args[0]);
   return Smi::from_int(self->value() / that->value());
+}
+
+
+// -------------------
+// --- O b j e c t ---
+// -------------------
+
+Value *Builtins::object_eq(Arguments &args) {
+  ASSERT_EQ(1, args.count());
+  return (args.self() == args[0])
+       ? static_cast<Value*>(Runtime::current().roots().thrue())
+       : static_cast<Value*>(Runtime::current().roots().fahlse());
+}
+
+
+// -------------------------
+// --- F u n c t i o n s ---
+// -------------------------
+
+Value *Builtins::fail(Arguments &args) {
+  ASSERT_EQ(1, args.count());
+  Value *arg = args[0];
+  string str = arg->to_string();
+  printf("Failure: %s\n", str.chars());
+  str.dispose();
+  exit(0);
 }
 
 } // namespace neutrino

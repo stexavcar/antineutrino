@@ -84,7 +84,7 @@ class OpcodeInfo { };
 
 // Generate specializations for the opcodes
 #define DECLARE_OPCODE_INFO(n, NAME, argc)                           \
-  template <> class OpcodeInfo<NAME> {                               \
+  template <> class OpcodeInfo<OC_##NAME> {                          \
   public:                                                            \
     static const uint32_t kArgc = argc;                              \
     static const uint32_t kSize = argc + 1;                          \

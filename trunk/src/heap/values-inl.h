@@ -316,8 +316,10 @@ DEFINE_ACCESSORS(Lambda*, Method, lambda, kLambdaOffset)
 // -----------------
 
 DEFINE_ACCESSOR(uint32_t, Class, instance_type, kInstanceTypeOffset)
+DEFINE_ACCESSOR(Value*, Class, super, kSuperOffset)
 
 DEFINE_ACCESSORS(Tuple*, Class, methods, kMethodsOffset)
+
 
 // ---------------------
 // --- S i g n a l s ---

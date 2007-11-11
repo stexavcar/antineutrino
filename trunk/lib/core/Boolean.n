@@ -1,9 +1,13 @@
+class Boolean : Object {
+  
+}
+
 # The class of the singleton true value
-internal class True {
+internal class True : Boolean {
 
 }
 
 # The class of the singleton false value
-internal class False {
+internal class False : Boolean {
   
 }

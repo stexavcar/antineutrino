@@ -375,6 +375,8 @@ public:
   inline Tuple *&methods();
   inline void set_methods(Tuple *methods);
   
+  inline Value *&super();
+  
   bool is_empty();
   
   void for_each_class_field(FieldCallback callback, void *data);
@@ -385,7 +387,8 @@ public:
 
   static const int kInstanceTypeOffset = Object::kHeaderSize;
   static const int kMethodsOffset      = kInstanceTypeOffset + kPointerSize;
-  static const int kSize               = kMethodsOffset + kPointerSize;
+  static const int kSuperOffset        = kMethodsOffset + kPointerSize;
+  static const int kSize               = kSuperOffset + kPointerSize;
 };
 
 

@@ -1,0 +1,11 @@
+internal def fail(value);
+
+def assert(value) {
+  if (value) return null;
+  fail(value);
+}
+
+def assert_equals(expected, value) {
+  if (expected = value) return null;
+  fail(value);
+}

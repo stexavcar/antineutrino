@@ -8,7 +8,7 @@
 namespace neutrino {
 
 MAKE_ENUM_INFO_HEADER(Opcode)
-#define MAKE_ENTRY(n, NAME, argc) MAKE_ENUM_INFO_ENTRY(NAME)
+#define MAKE_ENTRY(n, NAME, argc) MAKE_ENUM_INFO_ENTRY(OC_##NAME)
 FOR_EACH_OPCODE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
@@ -50,12 +50,17 @@ Class *Interpreter::get_class(Value *value) {
  * no method is found Nothing is returned.
  */
 Data *Interpreter::lookup_method(Class *chlass, Value *name) {
-  ASSERT(!chlass->is_empty());
-  Tuple *methods = chlass->methods();
-  for (uint32_t i = 0; i < methods->length(); i++) {
-    Method *method = cast<Method>(methods->at(i));
-    if (method->name()->equals(name))
-      return method;
+  while (true) {
+    ASSERT(!chlass->is_empty());
+    Tuple *methods = chlass->methods();
+    for (uint32_t i = 0; i < methods->length(); i++) {
+      Method *method = cast<Method>(methods->at(i));
+      if (method->name()->equals(name))
+        return method;
+    }
+    Value *super = chlass->super();
+    if (is<Smi>(super)) break;
+    chlass = cast<Class>(super);
   }
   return Nothing::make();
 }
@@ -67,21 +72,21 @@ ref<Value> Interpreter::interpret(Stack &stack) {
     uint16_t oc = current.lambda()->code()->at(pc);
     Log::instruction(oc, stack);
     switch (oc) {
-    case PUSH: {
+    case OC_PUSH: {
       uint16_t index = current.lambda()->code()->at(pc + 1);
       Value *value = current.lambda()->literals()->at(index);
       stack.push(value);
-      pc += OpcodeInfo<PUSH>::kSize;
+      pc += OpcodeInfo<OC_PUSH>::kSize;
       break;
     }
-    case SLAP: {
+    case OC_SLAP: {
       uint16_t height = current.lambda()->code()->at(pc + 1);
       stack[height] = stack[0];
       stack.pop(height);
-      pc += OpcodeInfo<SLAP>::kSize;
+      pc += OpcodeInfo<OC_SLAP>::kSize;
       break;
     }
-    case GLOBAL: {
+    case OC_GLOBAL: {
       uint16_t index = current.lambda()->code()->at(pc + 1);
       Value *name = current.lambda()->literals()->at(index);
       Data *value = runtime().toplevel()->get(name);
@@ -90,32 +95,32 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       } else {
         stack.push(cast<Value>(value));
       }
-      pc += OpcodeInfo<GLOBAL>::kSize;
+      pc += OpcodeInfo<OC_GLOBAL>::kSize;
       break;
     }
-    case ARGUMENT: {
+    case OC_ARGUMENT: {
       uint16_t index = current.lambda()->code()->at(pc + 1);
       Value *value = stack.argument(index);
       stack.push(value);
-      pc += OpcodeInfo<ARGUMENT>::kSize;
+      pc += OpcodeInfo<OC_ARGUMENT>::kSize;
       break;
     }
-    case IF_TRUE: {
+    case OC_IF_TRUE: {
       Value *value = stack.pop();
       if (is<True>(value)) {
         uint16_t index = current.lambda()->code()->at(pc + 1);
         pc = index;
       } else {
-        pc += OpcodeInfo<IF_TRUE>::kSize;
+        pc += OpcodeInfo<OC_IF_TRUE>::kSize;
       }
       break;
     }
-    case GOTO: {
+    case OC_GOTO: {
       uint16_t address = current.lambda()->code()->at(pc + 1);
       pc = address;
       break;
     }
-    case INVOKE: {
+    case OC_INVOKE: {
       uint16_t name_index = current.lambda()->code()->at(pc + 1);
       Value *name = current.lambda()->literals()->at(name_index);
       uint16_t argc = current.lambda()->code()->at(pc + 2);
@@ -128,34 +133,34 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       }
       Method *method = cast<Method>(lookup_result);
       Frame next = stack.push_activation();
-      next.prev_pc() = pc + OpcodeInfo<INVOKE>::kSize;
+      next.prev_pc() = pc + OpcodeInfo<OC_INVOKE>::kSize;
       next.lambda() = method->lambda();
       current = next;
       pc = 0;
       break;
     }
-    case CALL: {
+    case OC_CALL: {
       uint16_t argc = current.lambda()->code()->at(pc + 1);
       Value *value = stack[argc];
       Lambda *fun = cast<Lambda>(value);
       Frame next = stack.push_activation();
-      next.prev_pc() = pc + OpcodeInfo<CALL>::kSize;
+      next.prev_pc() = pc + OpcodeInfo<OC_CALL>::kSize;
       next.lambda() = fun;
       current = next;
       pc = 0;
       break;
     }
-    case INTERNAL: {
+    case OC_INTERNAL: {
       uint16_t index = current.lambda()->code()->at(pc + 1);
       uint16_t argc = current.lambda()->code()->at(pc + 2);
       Builtin *builtin = Builtins::get(index);
       Arguments args(runtime(), argc, stack);
       Value *value = builtin(args);
       stack.push(value);
-      pc += OpcodeInfo<INTERNAL>::kSize;
+      pc += OpcodeInfo<OC_INTERNAL>::kSize;
       break;
     }
-    case RETURN: {
+    case OC_RETURN: {
       Value *value = stack.pop();
       if (current.prev_fp() == 0)
         return new_ref(value);
@@ -164,24 +169,30 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       stack[0] = value;
       break;
     }
-    case VOID: {
+    case OC_VOID: {
       stack.push(runtime().roots().vhoid());
-      pc += OpcodeInfo<VOID>::kSize;
+      pc += OpcodeInfo<OC_VOID>::kSize;
       break;
     }
-    case NUHLL: {
+    case OC_NULL: {
       stack.push(runtime().roots().nuhll());
-      pc += OpcodeInfo<NUHLL>::kSize;
+      pc += OpcodeInfo<OC_NULL>::kSize;
       break;
     }
-    case TRUE: {
+    case OC_TRUE: {
       stack.push(runtime().roots().thrue());
-      pc += OpcodeInfo<TRUE>::kSize;
+      pc += OpcodeInfo<OC_TRUE>::kSize;
       break;
     }
-    case FALSE: {
+    case OC_FALSE: {
       stack.push(runtime().roots().fahlse());
-      pc += OpcodeInfo<FALSE>::kSize;
+      pc += OpcodeInfo<OC_FALSE>::kSize;
+      break;
+    }
+    case OC_POP: {
+      uint16_t height = current.lambda()->code()->at(pc + 1);
+      stack.pop(height);
+      pc += OpcodeInfo<OC_POP>::kSize;
       break;
     }
     default:

@@ -1,7 +1,7 @@
 # Small and very light-weight integers.  You can think of small integers
 # as an implementation trick and you don't need to be aware of whether
 # you're dealing with small or big integers.
-internal class SmallInteger {
+internal class SmallInteger : Object {
 
   internal def operator +(that);
 

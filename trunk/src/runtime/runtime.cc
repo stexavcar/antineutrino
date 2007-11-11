@@ -93,6 +93,7 @@ bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) 
 bool Runtime::install_class(ref<Class> root, ref<Class> changes) {
   if (!root->is_empty()) return false;
   root->set_methods(changes->methods());
+  root->super() = changes->super();
   ASSERT(!root->is_empty());
   return true;
 }

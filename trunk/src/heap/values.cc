@@ -258,9 +258,9 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
   while (pc < size) {
     switch (data[pc]) {
 #define MAKE_CASE(n, NAME, argc)                                     \
-      case NAME:                                                     \
+      case OC_##NAME:                                                \
         buf.printf("%{ 3} %\n", pc, #NAME);                          \
-        pc += OpcodeInfo<NAME>::kSize;                               \
+        pc += OpcodeInfo<OC_##NAME>::kSize;                          \
         break;
 FOR_EACH_OPCODE(MAKE_CASE)
 #undef MAKE_CASE

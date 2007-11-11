@@ -26,9 +26,15 @@ class Builtins {
 public:
   static Builtin *get(uint32_t index);
 private:
+
 #define DECLARE_BUILTIN(n, chlass, name, str) static Value *chlass##_##name(Arguments&);
 FOR_EACH_BUILTIN_METHOD(DECLARE_BUILTIN)
 #undef DECLARE_BUILTIN
+
+#define DECLARE_BUILTIN(n, name, str) static Value *name(Arguments&);
+FOR_EACH_BUILTIN_FUNCTION(DECLARE_BUILTIN)
+#undef DECLARE_BUILTIN
+
 };
 
 }

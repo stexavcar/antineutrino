@@ -1,0 +1,6 @@
+# The root of the neutrino class hierarchy
+class Object {
+
+  internal def operator=(that);
+
+}

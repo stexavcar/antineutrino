@@ -125,10 +125,13 @@ int32_t ImageSmi::value() {
     return image_cast<Image##T>(data);                               \
   }
 
+
 // --- C l a s s ---
 
 DEFINE_RAW_GETTER(uint32_t, Class, instance_type, InstanceType)
 DEFINE_GETTER(Tuple, Class, methods, Methods)
+DEFINE_GETTER(Value, Class, super, Super)
+
 
 // --- S t r i n g ---
 
@@ -139,6 +142,7 @@ uint32_t ImageString::at(uint32_t index) {
   uint32_t offset = ValuePointer::offset_of(this) + ImageString_HeaderSize + index;
   return Image::current().heap()[offset];
 }
+
 
 // --- T u p l e ---
 
@@ -151,6 +155,7 @@ ImageValue *ImageTuple::at(uint32_t index) {
   return image_cast<ImageValue>(data);
 }
 
+
 // --- C o d e ---
 
 DEFINE_RAW_GETTER(uint32_t, Code, length, Length)
@@ -161,6 +166,7 @@ uint32_t ImageCode::at(uint32_t index) {
   return Image::current().heap()[offset];
 }
 
+
 // --- L a m b d a ---
 
 DEFINE_RAW_GETTER(uint32_t, Lambda, argc, Argc)
@@ -168,14 +174,17 @@ DEFINE_RAW_GETTER(uint32_t, Lambda, argc, Argc)
 DEFINE_GETTER(Code, Lambda, code, Code)
 DEFINE_GETTER(Tuple, Lambda, literals, Literals)
 
+
 // --- M e t h o d ---
 
 DEFINE_GETTER(String, Method, name, Name)
 DEFINE_GETTER(Lambda, Method, lambda, Lambda)
 
+
 // --- D i c t i o n a r y ---
 
 DEFINE_GETTER(Tuple, Dictionary, table, Table)
+
 
 #undef DEFINE_RAW_GETTER
 #undef DEFINE_GETTER

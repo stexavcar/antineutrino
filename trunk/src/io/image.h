@@ -47,6 +47,7 @@ class ImageClass : public ImageObject {
 public:
   inline uint32_t instance_type();
   inline ImageTuple *methods();
+  inline ImageValue *super();
 };
 
 class ImageString : public ImageObject {
