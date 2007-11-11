@@ -138,6 +138,9 @@ static void write_object_short_on(Object *obj, string_buffer &buf) {
   case CLASS_TYPE:
     buf.append("#<class>");
     break;
+  case METHOD_TYPE:
+    buf.append("#<method>");
+    break;
   default:
     UNHANDLED(InstanceType, instance_type);
   }
@@ -201,6 +204,11 @@ static void write_dictionary_on(Dictionary *obj, string_buffer &buf) {
   buf.append('}');
 }
 
+static void write_method_on(Method *obj, string_buffer &buf) {
+  buf.append("method ");
+  obj->name()->write_short_on(buf);
+}
+
 static void write_object_on(Object *obj, string_buffer &buf) {
   switch (obj->chlass()->instance_type()) {
   case TUPLE_TYPE:
@@ -215,6 +223,8 @@ static void write_object_on(Object *obj, string_buffer &buf) {
   case DICTIONARY_TYPE:
     write_dictionary_on(cast<Dictionary>(obj), buf);
     break;
+  case METHOD_TYPE:
+    write_method_on(cast<Method>(obj), buf);
   default:
     write_object_short_on(obj, buf);
     break;

@@ -57,8 +57,8 @@ Tuple *Image::load() {
 }
 
 void Image::copy_object_shallow(ImageObject *obj) {
-  uint32_t instance_type = obj->instance_type();
-  switch (instance_type) {
+  uint32_t type = obj->type();
+  switch (type) {
     case DICTIONARY_TYPE: {
       Dictionary *dict = cast<Dictionary>(Runtime::current().heap().new_dictionary());
       obj->point_forward(dict);
@@ -96,15 +96,27 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(lambda);
       break;
     }
+    case CLASS_TYPE: {
+      ImageClass *img = image_cast<ImageClass>(obj);
+      InstanceType instance_type = static_cast<InstanceType>(img->instance_type());
+      Class *chlass = cast<Class>(Runtime::current().heap().new_empty_class(instance_type));
+      obj->point_forward(chlass);
+      break;
+    }
+    case METHOD_TYPE: {
+      Method *method = cast<Method>(Runtime::current().heap().new_method());
+      obj->point_forward(method);
+      break;
+    }
     default:
-      UNHANDLED(InstanceType, instance_type);
+      UNHANDLED(InstanceType, type);
       break;
   }
 }
 
 void Image::fixup_shallow_object(ImageObject *obj) {
-  uint32_t instance_type = obj->instance_type();
-  switch (instance_type) {
+  uint32_t type = obj->type();
+  switch (type) {
     case DICTIONARY_TYPE: {
       ImageDictionary *img = image_cast<ImageDictionary>(obj);
       Dictionary *dict = cast<Dictionary>(img->forward_pointer());
@@ -126,11 +138,24 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       lambda->set_literals(cast<Tuple>(img->literals()->forward_pointer()));
       break;
     }
+    case METHOD_TYPE: {
+      ImageMethod *img = image_cast<ImageMethod>(obj);
+      Method *method = cast<Method>(img->forward_pointer());
+      method->set_name(cast<String>(img->name()->forward_pointer()));
+      method->set_lambda(cast<Lambda>(img->lambda()->forward_pointer()));
+      break;
+    }
+    case CLASS_TYPE: {
+      ImageClass *img = image_cast<ImageClass>(obj);
+      Class *chlass = cast<Class>(img->forward_pointer());
+      chlass->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
+      break;
+    }
     case STRING_TYPE: case CODE_TYPE:
       // Nothing to fix
       break;
     default:
-      UNHANDLED(InstanceType, instance_type);
+      UNHANDLED(InstanceType, type);
       break;
   }
 }
@@ -145,7 +170,7 @@ void Image::for_each_object(ObjectCallback callback) {
   }
 }
 
-uint32_t ImageObject::instance_type() {
+uint32_t ImageObject::type() {
   uint32_t offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
   uint32_t value = Image::current().heap()[offset];
   ImageData *data = ImageData::from(value);
@@ -165,12 +190,16 @@ uint32_t ImageObject::instance_type() {
 // -----------------------------
 
 uint32_t ImageObject::memory_size() {
-  uint32_t type = instance_type();
+  uint32_t type = this->type();
   switch (type) {
     case DICTIONARY_TYPE:
       return ImageDictionary_Size;
     case LAMBDA_TYPE:
       return ImageLambda_Size;
+    case CLASS_TYPE:
+      return ImageClass_Size;
+    case METHOD_TYPE:
+      return ImageMethod_Size;
     case STRING_TYPE:
       return image_cast<ImageString>(this)->string_memory_size();
     case CODE_TYPE:

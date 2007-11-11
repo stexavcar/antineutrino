@@ -57,6 +57,8 @@ public:
   Data *new_code(uint32_t size);
   
   Data *new_method(String *name, Lambda *lambda);
+  
+  Data *new_method();
 
   Space &space() { return space_; }
   Roots &roots() { return roots_; }

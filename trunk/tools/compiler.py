@@ -534,14 +534,12 @@ class BuiltinClass(SyntaxTree):
     self.info = info
     self.members = members
   def define(self):
-    return
     instance_type_name = self.info.instance_type
     instance_type_index = globals()[instance_type_name + '_TYPE']
-    class_class = Runtime().current().roots().class_class()
-    chlass = HeapClass(instance_type_index, class_class)
-    chlass.methods = ImageTuple(map(Method.compile, self.members))
-    setter = self.info.instance_type.lower() + '_class'
-    Runtime.current().roots().set(setter, chlass)
+    methods = HEAP.new_tuple(values = map(Method.compile, self.members))
+    chlass = HEAP.new_class(instance_type_index)
+    chlass.set_methods(methods)
+    HEAP.set_root(self.info.root_index, chlass)
 
 class Method(SyntaxTree):
   def __init__(self, name, params, body):
@@ -549,8 +547,8 @@ class Method(SyntaxTree):
     self.params = params
     self.body = body
   def compile(self):
-    body = create_lambda(self.params, self.body)
-    return HeapMethod(HEAP.new_string(self.name), body)
+    body = compile_lambda(self.params, self.body)
+    return HEAP.new_method(HEAP.new_string(self.name), body)
 
 class Expression(SyntaxTree):
   pass
@@ -705,7 +703,7 @@ class Heap:
   def initialize(self):
     self.roots = self.new_tuple(Heap.kRootCount)
     self.toplevel = self.new_dictionary()
-    self.set_root(ROOT_INDEX['toplevel'], self.toplevel)
+    self.set_root(TOPLEVEL_ROOT, self.toplevel)
   def set_raw(self, offset, value):
     self.memory[offset] = value
   def set_root(self, index, value):
@@ -722,12 +720,16 @@ class Heap:
     self.cursor += size
     return addr
   def new_class(self, instance_type):
-    result = Class(self.allocate(Class.kSize), instance_type)
+    result = ImageClass(self.allocate(ImageClass_Size), instance_type)
     result.set_class(CLASS_TYPE)
     return result
   def new_lambda(self, argc, code, literals):
     result = ImageLambda(self.allocate(ImageLambda_Size), argc, code, literals)
     result.set_class(LAMBDA_TYPE)
+    return result
+  def new_method(self, name, body):
+    result = ImageMethod(self.allocate(ImageMethod_Size), name, body)
+    result.set_class(METHOD_TYPE)
     return result
   def new_number(self, value):
     return value
@@ -779,21 +781,23 @@ class Heap:
       write(value)
     output.close()
 
-class HeapValue:
+class ImageValue:
   pass
 
-class ImageObject(HeapValue):
+class ImageObject(ImageValue):
   def __init__(self, addr):
     self.addr = addr
   def set_class(self, value):
     HEAP.set_field(self, ImageObject_TypeOffset, value)
 
-class HeapClass(ImageObject):
+class ImageClass(ImageObject):
   def __init__(self, addr, instance_type):
     ImageObject.__init__(self, addr)
     self.set_instance_type(instance_type)
   def set_instance_type(self, value):
-    HEAP.set_raw_field(self, Class.kInstanceTypeOffset, value)
+    HEAP.set_raw_field(self, ImageClass_InstanceTypeOffset, value)
+  def set_methods(self, methods):
+    HEAP.set_field(self, ImageClass_MethodsOffset, methods)
 
 class ImageTuple(ImageObject):
   def __init__(self, addr, length):
@@ -823,6 +827,16 @@ class ImageLambda(ImageObject):
     HEAP.set_field(self, ImageLambda_CodeOffset, value)
   def set_literals(self, value):
     HEAP.set_field(self, ImageLambda_LiteralsOffset, value)
+
+class ImageMethod(ImageObject):
+  def __init__(self, addr, name, body):
+    ImageObject.__init__(self, addr)
+    self.set_name(name)
+    self.set_body(body)
+  def set_name(self, value):
+    HEAP.set_field(self, ImageMethod_NameOffset, value)
+  def set_body(self, value):
+    HEAP.set_field(self, ImageMethod_LambdaOffset, value)
 
 class ImageString(ImageObject):
   def __init__(self, addr, length):
@@ -967,18 +981,18 @@ def define_opcode(n, NAME, argc):
   globals()['OC_' + NAME] = int(n)
 
 class BuiltinClassInfo:
-  def __init__(self, index, name, instance_type):
-    self.index = index
+  def __init__(self, root_index, name, instance_type):
+    self.root_index = root_index
     self.name = name
     self.instance_type = instance_type
 
 BUILTIN_CLASSES = { }
-def define_builtin_class(n, Class, name, NAME):
-  BUILTIN_CLASSES[Class] = BuiltinClassInfo(int(n), name, NAME)
+def define_builtin_class(Class, name, NAME):
+  root_index = globals()[NAME + '_CLASS_ROOT']
+  BUILTIN_CLASSES[Class] = BuiltinClassInfo(root_index, name, NAME)
 
-ROOT_INDEX = { }
 def define_root(n, Class, name, NAME, allocator):
-  ROOT_INDEX[name] = int(n)
+  globals()[NAME + '_ROOT'] = int(n)
 
 def define_image_object_const(n, Type, Name):
   name = 'Image' + Type + '_' + Name
@@ -988,8 +1002,8 @@ def import_constants(file):
   consts = read_consts(file)
   consts.apply('FOR_EACH_DECLARED_TYPE', define_type_tag)
   consts.apply('FOR_EACH_OPCODE', define_opcode)
-  consts.apply('FOR_EACH_BUILTIN_CLASS', define_builtin_class)
   consts.apply('FOR_EACH_ROOT', define_root)
+  consts.apply('FOR_EACH_BUILTIN_CLASS', define_builtin_class)
   consts.apply('FOR_EACH_IMAGE_OBJECT_CONST', define_image_object_const)
 
 def load_files(files):

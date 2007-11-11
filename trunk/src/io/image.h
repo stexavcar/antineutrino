@@ -37,11 +37,16 @@ public:
 
 class ImageObject : public ImageValue {
 public:
-  uint32_t instance_type();
+  uint32_t type();
   void point_forward(Object *target);
   inline Object *forward_pointer();
   uint32_t memory_size();
+};
 
+class ImageClass : public ImageObject {
+public:
+  inline uint32_t instance_type();
+  inline ImageTuple *methods();
 };
 
 class ImageString : public ImageObject {
@@ -70,6 +75,12 @@ public:
   inline uint32_t argc();
   inline ImageCode *code();
   inline ImageTuple *literals();
+};
+
+class ImageMethod : public ImageObject {
+public:
+  inline ImageString *name();
+  inline ImageLambda *lambda();
 };
 
 class ImageDictionary : public ImageObject {

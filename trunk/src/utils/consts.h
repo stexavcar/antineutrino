@@ -58,18 +58,22 @@
   VISIT(12, GOTO,  1)   VISIT(13, INVOKE, 2) VISIT(14, INTERNAL, 2)
 
 
-// -------------------------------------------
-// --- I m a g e   I n s t r u c t i o n s ---
-// -------------------------------------------
+// -------------------------------------
+// --- I m a g e   C o n s t a n t s ---
+// -------------------------------------
 
 #define FOR_EACH_IMAGE_OBJECT_CONST(VISIT)                           \
-  VISIT(0, Object, TypeOffset)      VISIT(1, Object, HeaderSize)     \
-  VISIT(1, Dictionary, TableOffset) VISIT(2, Dictionary, Size)       \
-  VISIT(1, String, LengthOffset)    VISIT(2, String, HeaderSize)     \
-  VISIT(1, Code, LengthOffset)      VISIT(2, Code, HeaderSize)       \
-  VISIT(1, Tuple, LengthOffset)     VISIT(2, Tuple, HeaderSize)      \
-  VISIT(1, Lambda, ArgcOffset)      VISIT(2, Lambda, CodeOffset)     \
-  VISIT(3, Lambda, LiteralsOffset)  VISIT(4, Lambda, Size)
+  VISIT(0, Object, TypeOffset)        VISIT(1, Object, HeaderSize)   \
+  VISIT(1, Dictionary, TableOffset)   VISIT(2, Dictionary, Size)     \
+  VISIT(1, String, LengthOffset)      VISIT(2, String, HeaderSize)   \
+  VISIT(1, Code, LengthOffset)        VISIT(2, Code, HeaderSize)     \
+  VISIT(1, Tuple, LengthOffset)       VISIT(2, Tuple, HeaderSize)    \
+  VISIT(1, Lambda, ArgcOffset)        VISIT(2, Lambda, CodeOffset)   \
+  VISIT(3, Lambda, LiteralsOffset)    VISIT(4, Lambda, Size)         \
+  VISIT(1, Class, InstanceTypeOffset) VISIT(2, Class, MethodsOffset) \
+  VISIT(3, Class, Size)                                              \
+  VISIT(1, Method, NameOffset)        VISIT(2, Method, LambdaOffset) \
+  VISIT(3, Method, Size)
 
 
 // -----------------
@@ -109,8 +113,15 @@
 // ---------------------------------------
 
 #define FOR_EACH_BUILTIN_CLASS(VISIT)                                \
-  VISIT(0, SmallInteger, smi,  SMI)  VISIT(1, String, string, STRING)      \
-  VISIT(2, True,         true, TRUE) VISIT(3, False,  false,  FALSE)       \
-  VISIT(4, Void,         void, VOID) VISIT(5, Null,   null,   NULL)
+  VISIT(SmallInteger, smi,  SMI)  VISIT(String, string, STRING)      \
+  VISIT(True,         true, TRUE) VISIT(False,  false,  FALSE)       \
+  VISIT(Void,         void, VOID) VISIT(Null,   null,   NULL)
+
+
+// ---------------------------------------
+// --- B u i l t - i n   M e t h o d s ---
+// ---------------------------------------
+
+
 
 #endif // _HEAP_CONSTS

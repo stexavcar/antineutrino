@@ -28,6 +28,8 @@ class String;
 class SyntaxTree;
 class Tuple;
 
+class ImageTuple;
+
 class AbstractEnumInfo;
 
 }

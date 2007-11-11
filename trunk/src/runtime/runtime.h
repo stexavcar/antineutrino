@@ -23,6 +23,7 @@ public:
   bool install_loaded_roots(ref<Tuple> roots);
   bool install_object(ref<Object> root, ref<Object> changes);
   bool install_dictionary(ref<Dictionary> root, ref<Dictionary> changes);
+  bool install_class(ref<Class> root, ref<Class> changes);
   Interpreter &interpreter() { return interpreter_; }
   void start();
 

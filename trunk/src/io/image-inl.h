@@ -35,7 +35,7 @@ static inline bool is<ImageForwardPointer>(ImageData *data) {
   template <>                                                        \
   static inline bool is<Image##Class>(ImageData *value) {            \
     return is<ImageObject>(value)                                    \
-        && image_cast<ImageObject>(value)->instance_type() == CLASS##_TYPE; \
+        && image_cast<ImageObject>(value)->type() == CLASS##_TYPE;   \
   }
 
 DEFINE_IMAGE_OBJECT_QUERY(String, STRING)
@@ -43,6 +43,8 @@ DEFINE_IMAGE_OBJECT_QUERY(Code, CODE)
 DEFINE_IMAGE_OBJECT_QUERY(Tuple, TUPLE)
 DEFINE_IMAGE_OBJECT_QUERY(Lambda, LAMBDA)
 DEFINE_IMAGE_OBJECT_QUERY(Dictionary, DICTIONARY)
+DEFINE_IMAGE_OBJECT_QUERY(Class, CLASS)
+DEFINE_IMAGE_OBJECT_QUERY(Method, METHOD)
 
 template <class C>
 static inline C *image_cast(ImageData *val) {
@@ -123,6 +125,11 @@ int32_t ImageSmi::value() {
     return image_cast<Image##T>(data);                               \
   }
 
+// --- C l a s s ---
+
+DEFINE_RAW_GETTER(uint32_t, Class, instance_type, InstanceType)
+DEFINE_GETTER(Tuple, Class, methods, Methods)
+
 // --- S t r i n g ---
 
 DEFINE_RAW_GETTER(uint32_t, String, length, Length)
@@ -160,6 +167,11 @@ DEFINE_RAW_GETTER(uint32_t, Lambda, argc, Argc)
 
 DEFINE_GETTER(Code, Lambda, code, Code)
 DEFINE_GETTER(Tuple, Lambda, literals, Literals)
+
+// --- M e t h o d ---
+
+DEFINE_GETTER(String, Method, name, Name)
+DEFINE_GETTER(Lambda, Method, lambda, Lambda)
 
 // --- D i c t i o n a r y ---
 

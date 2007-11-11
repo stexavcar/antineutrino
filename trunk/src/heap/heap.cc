@@ -70,6 +70,13 @@ Data *Heap::new_method(String *name, Lambda *lambda) {
   return result;
 }
 
+Data *Heap::new_method() {
+  Data *val = allocate_object(Method::kSize, roots().method_class());
+  if (is<AllocationFailed>(val)) return val;
+  Method *result = cast<Method>(val);
+  return result;
+}
+
 Data *Heap::new_string(string value) {
   int size = String::size_for(value.length());
   Data *val = allocate_object(size, roots().string_class());
