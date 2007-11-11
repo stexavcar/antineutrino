@@ -122,6 +122,10 @@
 // --- B u i l t - i n   M e t h o d s ---
 // ---------------------------------------
 
+#define FOR_EACH_BUILTIN_METHOD(VISIT)                               \
+  VISIT(0, string, length, "length")                                 \
+  VISIT(10, smi, plus, "+")           VISIT(11, smi, minus, "-")     \
+  VISIT(12, smi, times, "*")          VISIT(13, smi, divide, "/")
 
 
 #endif // _HEAP_CONSTS

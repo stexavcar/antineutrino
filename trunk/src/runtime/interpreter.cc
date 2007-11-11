@@ -123,6 +123,7 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       Class *chlass = get_class(recv);
       Data *lookup_result = lookup_method(chlass, name);
       if (is<Nothing>(lookup_result)) {
+        // Method lookup failure
         UNREACHABLE();
       }
       Method *method = cast<Method>(lookup_result);

@@ -6,10 +6,6 @@
 
 namespace neutrino {
 
-#define FOR_EACH_BUILTIN(VISIT)                                      \
-  VISIT(0, String, length)                                           \
-  VISIT(1, Smi, plus)      VISIT(2, Smi, minus)
-
 class Arguments {
 public:
   inline Arguments(Runtime &runtime, uint32_t argc, Stack &stack);
@@ -30,8 +26,8 @@ class Builtins {
 public:
   static Builtin *get(uint32_t index);
 private:
-#define DECLARE_BUILTIN(n, Class, name) static Value *Class##_##name(Arguments&);
-FOR_EACH_BUILTIN(DECLARE_BUILTIN)
+#define DECLARE_BUILTIN(n, chlass, name, str) static Value *chlass##_##name(Arguments&);
+FOR_EACH_BUILTIN_METHOD(DECLARE_BUILTIN)
 #undef DECLARE_BUILTIN
 };
 

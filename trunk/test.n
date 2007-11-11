@@ -12,6 +12,8 @@ def fuzzing(x, y) {
 internal class SmallInteger {
   internal def operator +(that);
   internal def operator -(that);
+  internal def operator *(that);
+  internal def operator /(that);
 }
 
 internal class True {

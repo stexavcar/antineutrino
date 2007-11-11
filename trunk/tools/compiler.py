@@ -92,7 +92,8 @@ def is_ident_part(char):
   return char.isdigit() or is_ident_start(char)
 
 def is_operator(char):
-  return char == '+' or char == '-' or char == '>'
+  return char == '+' or char == '-' or char == '>' or char == '*' \
+      or char == '/' or char == '%'
 
 class Scanner:
 
@@ -180,7 +181,7 @@ class Scanner:
       else:
         return Delimiter('-')
     else:
-      raise c
+      raise "Unexpected character " + c
   
   def get_next_token(self):
     if is_ident_start(self.current()):
@@ -202,12 +203,6 @@ class Scanner:
 # -------------------
 # --- P a r s e r ---
 # -------------------
-
-BUILTIN_METHODS = {
-  ('String',       'length'):  0,
-  ('SmallInteger', '+'):       1,
-  ('SmallInteger', '-'):       2
-}
 
 class Parser:
 
@@ -334,7 +329,10 @@ class Parser:
     params = self.parse_params('(', ')')
     if 'internal' in modifiers:
       self.expect_delimiter(';')
-      index = BUILTIN_METHODS[(class_name, name)]
+      key = (class_name, name)
+      if not key in BUILTIN_METHODS:
+        raise "Unknown built-in method " + class_name + " " + name
+      index = BUILTIN_METHODS[key]
       body = InternalCall(index, len(params))
     else:
       body = self.parse_function_body()
@@ -981,15 +979,11 @@ def define_opcode(n, NAME, argc):
   globals()['OC_' + NAME] = int(n)
 
 class BuiltinClassInfo:
-  def __init__(self, root_index, name, instance_type):
+  def __init__(self, root_index, name, instance_type, class_name):
     self.root_index = root_index
     self.name = name
     self.instance_type = instance_type
-
-BUILTIN_CLASSES = { }
-def define_builtin_class(Class, name, NAME):
-  root_index = globals()[NAME + '_CLASS_ROOT']
-  BUILTIN_CLASSES[Class] = BuiltinClassInfo(root_index, name, NAME)
+    self.class_name = class_name
 
 def define_root(n, Class, name, NAME, allocator):
   globals()[NAME + '_ROOT'] = int(n)
@@ -997,7 +991,24 @@ def define_root(n, Class, name, NAME, allocator):
 def define_image_object_const(n, Type, Name):
   name = 'Image' + Type + '_' + Name
   globals()[name] = int(n)
+  
+BUILTIN_CLASSES = { }
+CLASSES_BY_ROOT_NAME = { }
+def define_builtin_class(Class, name, NAME):
+  root_index = globals()[NAME + '_CLASS_ROOT']
+  info = BuiltinClassInfo(root_index, name, NAME, Class)
+  BUILTIN_CLASSES[Class] = info
+  CLASSES_BY_ROOT_NAME[name] = info
 
+BUILTIN_METHODS = { }
+def define_builtin_method(n, root, name, string):
+  string_name = string[1:-1]
+  Class = CLASSES_BY_ROOT_NAME[root].class_name
+  BUILTIN_METHODS[(Class, string_name)] = int(n)
+
+# This function imports a set of constants from a C++ header file, by
+# expanding macros into the global python namespace.  Slightly cheesy
+# but very convenient indeed.
 def import_constants(file):
   consts = read_consts(file)
   consts.apply('FOR_EACH_DECLARED_TYPE', define_type_tag)
@@ -1005,6 +1016,7 @@ def import_constants(file):
   consts.apply('FOR_EACH_ROOT', define_root)
   consts.apply('FOR_EACH_BUILTIN_CLASS', define_builtin_class)
   consts.apply('FOR_EACH_IMAGE_OBJECT_CONST', define_image_object_const)
+  consts.apply('FOR_EACH_BUILTIN_METHOD', define_builtin_method)
 
 def load_files(files):
   for file in files:
