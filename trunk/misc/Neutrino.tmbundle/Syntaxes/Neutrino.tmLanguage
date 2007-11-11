@@ -67,7 +67,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(def|class|return|operator)\b</string>
+			<string>\b(def|class|return|operator|if|else|while)\b</string>
 			<key>name</key>
 			<string>keyword.control.neutrino</string>
 		</dict>

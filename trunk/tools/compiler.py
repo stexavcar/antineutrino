@@ -20,6 +20,7 @@ class Token:
   def is_number(self): return False
   def is_string(self): return False
   def is_operator(self): return False
+  def is_doc(self): return False
 
 class Keyword(Token):
   def __init__(self, value):
@@ -51,6 +52,12 @@ class StringToken(Token):
   def __init__(self, value):
     self.value = value
   def is_string(self):
+    return True
+
+class DocToken(Token):
+  def __init__(self, value):
+    self.value = value
+  def is_doc(self):
     return True
 
 class EOS(Token):
@@ -152,6 +159,15 @@ class Scanner:
       self.advance()
     if self.has_more(): self.advance();
     return StringToken(value)
+  
+  def scan_documentation(self):
+    value = ''
+    while self.has_more() and self.current() == '#':
+      while self.has_more() and self.current() != '\n':
+        value += self.current()
+        self.advance()
+      self.skip_whitespace()
+    return DocToken(value)
 
   def scan_delimiter(self):
     c = self.current()
@@ -192,6 +208,8 @@ class Scanner:
       return self.scan_string();
     elif is_operator(self.current()):
       return self.scan_operator()
+    elif self.current() == '#':
+      return self.scan_documentation()
     else:
       return self.scan_delimiter()
 
@@ -273,11 +291,20 @@ class Parser:
       decl = self.parse_declaration()
       decls.append(decl)
     return Program(decls)
+  
+  def parse_doc_opt(self):
+    if self.token().is_doc():
+      value = self.token().value
+      self.advance()
+      return value
+    else:
+      return None
 
   # <declaration>
-  #   -> <definition>
-  #   -> <class_declaration>
+  #   -> <doc>? <definition>
+  #   -> <doc>? <class_declaration>
   def parse_declaration(self):
+    doc = self.parse_doc_opt()
     if self.token().is_keyword('def'):
       return self.parse_definition()
     else:
@@ -306,7 +333,7 @@ class Parser:
       return self.expect_operator()
   
   # <class_declaration>
-  #   -> <modifiers> 'class' $ident '{' <member_declaration>* '}'
+  #   -> <doc>? <modifiers> 'class' $ident '{' <member_declaration>* '}'
   def parse_class_declaration(self):
     modifiers = self.parse_modifiers()
     self.expect_keyword('class')
@@ -323,6 +350,7 @@ class Parser:
   # <member_declaration>
   #   -> <modifiers> 'def' <method_header> <method_body>
   def parse_member_declaration(self, class_name):
+    doc = self.parse_doc_opt()
     modifiers = self.parse_modifiers()
     self.expect_keyword('def')
     name = self.parse_member_name()
@@ -1018,11 +1046,25 @@ def import_constants(file):
   consts.apply('FOR_EACH_IMAGE_OBJECT_CONST', define_image_object_const)
   consts.apply('FOR_EACH_BUILTIN_METHOD', define_builtin_method)
 
+# Returns a list of all source files in the given directory
+def find_source_files(dir):
+  result = []
+  def visit(result, dirname, fnames):
+    if path.basename(dirname).startswith('.'): return
+    for fname in fnames:
+      if fname.endswith('.n'):
+        result.append(path.join(dirname, fname))
+  path.walk(dir, visit, result)
+  return result
+
 def load_files(files):
   for file in files:
-    source = open(file).read()
-    tree = compile(source)
-    tree.load()
+    if path.isdir(file):
+      files += find_source_files(file)
+    else:
+      source = open(file).read()
+      tree = compile(source)
+      tree.load()
 
 def main():
   parser = OptionParser(option_list=options)

@@ -1,5 +1,5 @@
 #!/bin/sh
 
-./tools/compiler.py $1 -c src/utils/consts.h -o temp.nc
+./tools/compiler.py lib/ $1 -c src/utils/consts.h -o temp.nc
 ./build/debug/neutrino temp.nc
 

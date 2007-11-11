@@ -1,0 +1,9 @@
+# The class of the singleton true value
+internal class True {
+
+}
+
+# The class of the singleton false value
+internal class False {
+  
+}

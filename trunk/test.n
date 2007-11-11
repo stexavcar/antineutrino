@@ -8,18 +8,3 @@ def fooz(x) -> fuzzing(this, x);
 def fuzzing(x, y) {
   return x.length() - 1 + y;
 }
-
-internal class SmallInteger {
-  internal def operator +(that);
-  internal def operator -(that);
-  internal def operator *(that);
-  internal def operator /(that);
-}
-
-internal class True {
-
-}
-
-internal class String {
-  internal def length();
-}
