@@ -33,6 +33,10 @@ void string::dispose() {
   delete[] chars_;
 }
 
+void string::println() {
+  printf("%s\n", chars());
+}
+
 // --- S t r i n g   b u f f e r ---
 
 string_buffer::string_buffer(uint32_t capacity)

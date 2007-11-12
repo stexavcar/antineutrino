@@ -1,4 +1,5 @@
 internal def fail(value);
+internal def print(value);
 
 def assert(value) {
   if (value) return null;

@@ -16,6 +16,7 @@ Value *Arguments::self() {
 }
 
 Value *Arguments::operator[](uint32_t index) {
+  ASSERT(index < count());
   return stack().argument(count() - index - 1);
 }
 

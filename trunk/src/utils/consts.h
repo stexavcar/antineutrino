@@ -163,7 +163,7 @@
  * implementation must be added in builtins.cc.
  */
 #define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
-  VISIT(100, fail, "fail")
+  VISIT(100, fail, "fail") VISIT(101, print, "print")
 
 
 #endif // _HEAP_CONSTS

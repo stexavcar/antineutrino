@@ -112,10 +112,6 @@ string ref_traits<Value>::to_string() {
   return open(this)->to_string();
 }
 
-void ref_traits<Value>::print(FILE *out) {
-  open(this)->print(out);
-}
-
 InstanceType ref_traits<Value>::type() {
   return open(this)->type();
 }

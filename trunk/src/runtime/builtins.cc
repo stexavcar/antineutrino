@@ -43,7 +43,7 @@ Value *Builtins::string_eq(Arguments &args) {
   ASSERT_EQ(1, args.count());
   String *self = cast<String>(args.self());
   if (!is<String>(args[0])) return Runtime::current().roots().fahlse();
-  String *that = cast<String>(args[1]);
+  String *that = cast<String>(args[0]);
   uint32_t length = self->length();
   if (length != that->length())
     return Runtime::current().roots().fahlse();
@@ -111,6 +111,13 @@ Value *Builtins::fail(Arguments &args) {
   printf("Failure: %s\n", str.chars());
   str.dispose();
   exit(0);
+}
+
+Value *Builtins::print(Arguments &args) {
+  ASSERT_EQ(1, args.count());
+  string::local str(args[0]->to_string());
+  printf("%s\n", str.chars());
+  return Runtime::current().roots().vhoid();
 }
 
 } // namespace neutrino

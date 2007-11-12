@@ -32,7 +32,6 @@ public:
   void write_on(string_buffer &buf);
   void write_short_on(string_buffer &buf);
   
-  void print(FILE *out = stdout);
   string to_string();
   string to_short_string();
   
@@ -68,7 +67,6 @@ template <> class ref_traits<Value> {
 public:
   inline string to_string();
   inline InstanceType type();
-  inline void print(FILE *out = stdout);
 };
 
 DEFINE_REF_CLASS(Value);
@@ -199,7 +197,6 @@ class Code : public AbstractBuffer {
 public:
   inline uint16_t &at(uint32_t index);
   inline uint32_t length();
-  string disassemble();
 };
 
 template <>
@@ -289,6 +286,8 @@ public:
   
   inline Tuple *&literals();
   inline void set_literals(Tuple *literals);
+  
+  string disassemble();
   
   static const int kArgcOffset     = Object::kHeaderSize;
   static const int kCodeOffset     = kArgcOffset + kPointerSize;

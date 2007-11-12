@@ -16,6 +16,15 @@ public:
   inline uint32_t length() { return length_; }
   inline uint32_t operator[](uint32_t index);
   
+  class local {
+  public:
+    local(string str) : value_(str) { }
+    ~local() { value_.dispose(); }
+    const char *chars() { return value_.chars(); }
+  private:
+    string &value_;
+  };
+  
   /**
    * Returns the characters of this string.  The value returned is
    * a pointer to the internal buffer of this string so it will be
@@ -25,6 +34,7 @@ public:
   
   bool operator==(string that);
   void dispose();
+  void println();
   bool is_empty() { return chars_ == NULL; }
   static uint32_t length(const char* chars);
   static bool equals(const char* a, const char* b);

@@ -29,7 +29,7 @@ void Runtime::start() {
   }
   ref<Lambda> main = cast<Lambda>(value);
   ref<Value> result = main.call();
-  result.print();
+  result.to_string().println();
 }
 
 bool Runtime::load_image(Image &image) {

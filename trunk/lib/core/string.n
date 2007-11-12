@@ -8,5 +8,7 @@ internal class String : Object {
   # always considered to be a single character when calculating the length of
   # a string.
   internal def length();
+  
+  internal def operator=(that);
 
 }

@@ -84,13 +84,6 @@ string Data::to_short_string() {
   return buf.to_string();
 }
 
-void Data::print(FILE *out) {
-  string_buffer buf;
-  write_on(buf);
-  buf.append('\0');
-  fprintf(out, "%s\n", buf.raw_string().chars());
-}
-
 static void write_smi_short_on(Smi *obj, string_buffer &buf) {
   buf.printf("%", obj->value());
 }
@@ -253,30 +246,79 @@ void Data::write_short_on(string_buffer &buf) {
 // -------------------------------
 
 static void disassemble_buffer(uint16_t *data, uint32_t size,
-    string_buffer &buf) {
+    Tuple *literals, string_buffer &buf) {
   uint32_t pc = 0;
   while (pc < size) {
+    buf.printf("%{ 3} ", pc);
     switch (data[pc]) {
-#define MAKE_CASE(n, NAME, argc)                                     \
-      case OC_##NAME:                                                \
-        buf.printf("%{ 3} %\n", pc, #NAME);                          \
-        pc += OpcodeInfo<OC_##NAME>::kSize;                          \
+      case OC_ARGUMENT:
+        buf.printf("argument %", data[pc + 1]);
+        pc += OpcodeInfo<OC_ARGUMENT>::kSize;
         break;
-FOR_EACH_OPCODE(MAKE_CASE)
-#undef MAKE_CASE
+      case OC_GLOBAL: {
+        string::local name(literals->at(data[pc + 1])->to_string());
+        buf.printf("global %", name.chars());
+        pc += OpcodeInfo<OC_GLOBAL>::kSize;
+        break;
+      }
+      case OC_PUSH: {
+        string::local value(literals->at(data[pc + 1])->to_string());
+        buf.printf("push %", value.chars());
+        pc += OpcodeInfo<OC_PUSH>::kSize;
+        break;
+      }
+      case OC_SLAP:
+        buf.printf("slap %", data[pc + 1]);
+        pc += OpcodeInfo<OC_SLAP>::kSize;
+        break;
+      case OC_POP:
+        buf.printf("pop %", data[pc + 1]);
+        pc += OpcodeInfo<OC_POP>::kSize;
+        break;
+      case OC_CALL: {
+        buf.printf("call %", data[pc + 1]);
+        pc += OpcodeInfo<OC_CALL>::kSize;
+        break;
+      }
+      case OC_INVOKE: {
+        string::local name(literals->at(data[pc + 1])->to_string());
+        buf.printf("invoke %", name.chars());
+        pc += OpcodeInfo<OC_INVOKE>::kSize;
+        break;
+      }
+      case OC_IF_TRUE:
+        buf.printf("if_true %", data[pc + 1]);
+        pc += OpcodeInfo<OC_IF_TRUE>::kSize;
+        break;
+      case OC_GOTO:
+        buf.printf("goto %", data[pc + 1]);
+        pc += OpcodeInfo<OC_GOTO>::kSize;
+        break;
+      case OC_VOID:
+        buf.append("void");
+        pc += OpcodeInfo<OC_VOID>::kSize;
+        break;
+      case OC_NULL:
+        buf.append("null");
+        pc += OpcodeInfo<OC_NULL>::kSize;
+        break;
+      case OC_RETURN:
+        buf.append("return");
+        pc += OpcodeInfo<OC_RETURN>::kSize;
+        break;
       default:
-        buf.printf("<unknown: %>\n", data[pc]);
-        pc += 1;
-        break;
+        UNHANDLED(Opcode, data[pc]);
+        return;
     }
+    buf.append("\n");
   }
 }
 
-string Code::disassemble() {
-  uint32_t size = length();
-  uint16_t *data = &at(0);
+string Lambda::disassemble() {
+  uint32_t size = code()->length();
+  uint16_t *data = &code()->at(0);
   string_buffer buf;
-  disassemble_buffer(data, size, buf);
+  disassemble_buffer(data, size, literals(), buf);
   return buf.to_string();
 }
 
