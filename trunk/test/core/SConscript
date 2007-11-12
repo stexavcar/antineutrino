@@ -1,0 +1,30 @@
+Import('scheduled_tests env target config')
+from os.path import join, walk
+from testutils import PyNeutrinoTestCase
+
+executable = config[target + '_program']
+def schedule_test(source, target, env):
+  scheduled_tests.append(PyNeutrinoTestCase(str(executable), str(source[0])))
+
+env['BUILDERS']['SchedulePyNeutrinoTest'] = Builder(action = schedule_test)
+env['BUILDERS']['CompilePyNeutrinoTest'] = Builder(action = "python " + join('tools', 'compiler.py') + " -c " + join('src', 'utils', 'consts.h') + " lib $SOURCE -o $TARGET")
+
+def add_test(arg, dir, fnames):
+  tests = []
+  for fname in fnames:
+    if fname.endswith('.n'):
+      full_path = join(dir, fname)
+      short_name = target + '-' + fname[:-2]
+      compile = env.CompilePyNeutrinoTest(short_name + '.nc', full_path)
+      schedule = env.SchedulePyNeutrinoTest(short_name + '-schedule', compile)
+      env.Depends(schedule, executable)
+      env.AlwaysBuild(schedule)
+      env.Alias(short_name, schedule)
+      tests.append(short_name)
+  env.Depends(target + '-check', tests)
+
+# We have to manually construct the absolute path because otherwise
+# scons screws us over by creating an empty clone of the core folder
+# in the build directory and automagically using that.
+root = join(config['src'], 'test', 'core')
+walk(root, add_test, None)

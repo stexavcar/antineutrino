@@ -249,7 +249,11 @@ public:
   
   class Iterator {
   public:
-    struct Entry { Value *key, *value; };
+    class Entry {
+    public:
+      Entry() : key(NULL), value(NULL) { }
+      Value *key, *value;
+    };
     inline Iterator(Dictionary *dict);
     inline bool next(Entry *entry);
   private:

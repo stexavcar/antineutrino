@@ -10,5 +10,6 @@ internal class String : Object {
   internal def length();
   
   internal def operator=(that);
+  internal def operator+(that);
 
 }

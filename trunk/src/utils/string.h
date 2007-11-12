@@ -20,6 +20,7 @@ public:
   public:
     local(string str) : value_(str) { }
     ~local() { value_.dispose(); }
+    string &operator*() { return value_; }
     const char *chars() { return value_.chars(); }
   private:
     string &value_;

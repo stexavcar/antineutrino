@@ -19,9 +19,15 @@ for target in config['targets'].sections():
   env.Append(LIBS = [config[target + '_static_library']])
   apply_items(env, default_items)
   apply_items(env, config['targets'].items(target))
-  SConscript(
+  env.SConscript(
     join('cctest', 'SConscript'),
     build_dir = 'cctest-' + target,
+    exports = 'config env target scheduled_tests',
+    duplicate = False
+  )
+  env.SConscript(
+    join('core', 'SConscript'),
+    build_dir = 'core-' + target,
     exports = 'config env target scheduled_tests',
     duplicate = False
   )

@@ -54,6 +54,19 @@ Value *Builtins::string_eq(Arguments &args) {
   return Runtime::current().roots().thrue();
 }
 
+Value *Builtins::string_plus(Arguments &args) {
+  ASSERT_EQ(1, args.count());
+  String *self = cast<String>(args.self());
+  String *that = cast<String>(args[0]);
+  uint32_t length = self->length() + that->length();
+  String *result = cast<String>(Runtime::current().heap().new_string(length));
+  for (uint32_t i = 0; i < self->length(); i++)
+    result->at(i) = self->at(i);
+  for (uint32_t i = 0; i < that->length(); i++)
+    result->at(self->length() + i) = that->at(i);
+  return result;
+}
+
 
 // ---------------------------------
 // --- S m a l l   I n t e g e r ---
@@ -99,6 +112,12 @@ Value *Builtins::object_eq(Arguments &args) {
        : static_cast<Value*>(Runtime::current().roots().fahlse());
 }
 
+Value *Builtins::object_to_string(Arguments &args) {
+  ASSERT_EQ(0, args.count());
+  string::local str(args.self()->to_string());
+  return cast<Value>(Runtime::current().heap().new_string(*str));
+}
+
 
 // -------------------------
 // --- F u n c t i o n s ---
@@ -110,7 +129,7 @@ Value *Builtins::fail(Arguments &args) {
   string str = arg->to_string();
   printf("Failure: %s\n", str.chars());
   str.dispose();
-  exit(0);
+  exit(1);
 }
 
 Value *Builtins::print(Arguments &args) {

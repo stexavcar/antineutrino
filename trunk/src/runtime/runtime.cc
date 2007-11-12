@@ -28,8 +28,7 @@ void Runtime::start() {
     Conditions::get().error_occurred("Value 'main' is not a function.");
   }
   ref<Lambda> main = cast<Lambda>(value);
-  ref<Value> result = main.call();
-  result.to_string().println();
+  main.call();
 }
 
 bool Runtime::load_image(Image &image) {
@@ -76,7 +75,7 @@ bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) 
   Dictionary::Iterator::Entry entry;
   for (uint32_t i = 0; i < length; i++) {
     bool next_result = iter.next(&entry);
-    ASSERT(next_result);
+    USE(next_result); ASSERT(next_result);
     keys->at(i) = entry.key;
     values->at(i) = entry.value;
   }

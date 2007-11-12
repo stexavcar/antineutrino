@@ -22,6 +22,9 @@
 #define IF_DEBUG(arg) typedef void SEMI_STATIC_JOIN(__IfDebug__, __LINE__)
 #endif
 
+template <typename T>
+static inline void USE(T t) { }
+
 static const int kPointerSize = sizeof(void*);
 static const int kWordSize = sizeof(word);
 

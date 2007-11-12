@@ -1,3 +1,5 @@
 def main() {
   assert_equals("false", "false");
+  assert_equals("foo", 4);
+  assert(true);
 }

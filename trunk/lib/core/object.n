@@ -2,5 +2,6 @@
 class Object {
 
   internal def operator=(that);
+  internal def to_string();
 
 }

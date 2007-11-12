@@ -17,7 +17,7 @@ generated_file_template = """
 #include "utils/string.h"
 int main(int argc, const char* argv[]) {
   bool has_run_tests = false;
-  for (int i = 0; i < argc; i++) {
+  for (int i = 1; i < argc; i++) {
     const char* current = argv[i];
     %(cases)s
   }
@@ -66,7 +66,7 @@ def generate_runner(source, target, env):
   output.write(text)
   output.close()
 
-env['BUILDERS']['ScheduleTest'] = Builder(action = schedule_test)
+env['BUILDERS']['ScheduleCCTest'] = Builder(action = schedule_test)
 env['BUILDERS']['GenerateRunner'] = Builder(action = generate_runner)
 
 def add_schedulers():
@@ -77,7 +77,7 @@ def add_schedulers():
     target_test_name = target + '-' + file_name_base
     scheduled_name = file_name_base + '-schedule'
     source_file = cctest_file
-    scheduled = env.ScheduleTest(scheduled_name, cctest_file)
+    scheduled = env.ScheduleCCTest(scheduled_name, cctest_file)
     env.AlwaysBuild(scheduled)
     env.Alias(target_test_name, scheduled)
     schedulers.append(scheduled)

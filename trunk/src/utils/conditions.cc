@@ -115,7 +115,7 @@ void Conditions::unhandled(const char *file_name, int line_number,
 void Conditions::error_occurred(const char *format) {
   printf(format);
   printf("\n");
-  exit(0);
+  exit(1);
 }
 
 } // namespace neutrino

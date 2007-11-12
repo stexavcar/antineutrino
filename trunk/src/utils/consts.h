@@ -148,9 +148,10 @@
  */
 #define FOR_EACH_BUILTIN_METHOD(VISIT)                               \
   VISIT(0, string, length, "length")  VISIT(1, string, eq, "=")      \
+  VISIT(2, string, plus, "+")                                        \
   VISIT(10, smi, plus, "+")           VISIT(11, smi, minus, "-")     \
   VISIT(12, smi, times, "*")          VISIT(13, smi, divide, "/")    \
-  VISIT(20, object, eq, "=")
+  VISIT(20, object, eq, "=")          VISIT(21, object, to_string, "to_string")
 
 
 // -------------------------------------------

@@ -1,5 +1,10 @@
-from os.path import abspath, basename
+from os.path import abspath, basename, join
 import os
+
+def execute(executable, args):
+  from subprocess import Popen
+  exit_code = os.spawnv(os.P_WAIT, abspath(str(executable)), args)
+  return exit_code
 
 class CCTestCase:
   def __init__(self, executable, test_case):
@@ -8,17 +13,27 @@ class CCTestCase:
   def __str__(self):
     return self.test_case + " (" + basename(str(self.executable)) + ")"
   def run(self):
-    command = self.command()
-    from subprocess import Popen
-    exit_code = os.spawnv(os.P_WAIT, abspath(str(self.executable)), [self.test_case] )
-    os.spawnv(os.P_WAIT, "sleep 1", [])
+    exit_code = execute(self.executable, [ '', self.test_case ])
     status = None
-    if exit_code == 0: status = 'passed'
-    else: status = 'failed'
-    return [ status ]
+    if exit_code == 0: return [ 'passed' ]
+    else: return [ 'failed' ]
   def command(self):
     list = [ str(self.executable), self.test_case ]
     return ' '.join(list)
+
+class PyNeutrinoTestCase:
+  def __init__(self, executable, test_case):
+    self.executable = executable
+    self.test_case = test_case
+  def __str__(self):
+    return basename(self.test_case)[:-3]
+  def command(self):
+    list = [ self.executable, self.test_case ]
+    return ' '.join(list)
+  def run(self):
+    exit_code = execute(self.executable, [ '', self.test_case ])
+    if exit_code == 0: return [ 'passed' ]
+    else: return [ 'failed' ]
 
 def truncate(str, length):
   if len(str) > (length - 3): return str[:length] + "..."

@@ -40,7 +40,8 @@ config = {
  'arch':      get_arch_id(),
  'os':        get_os_id(),
  'name':      'neutrino',
- 'targets':   read_config(join('src', targets_file))
+ 'targets':   read_config(join('src', targets_file)),
+ 'src':       abspath('.')
 }
 
 def generate_coverage_report(source, target, env):
