@@ -1,7 +1,18 @@
 def test_addition() {
-  assert_equals(3, 1 + 1);
+  assert_equals(2, 1 + 1);
+  assert_equals(3, 2 + 1);
+  assert_equals(3, 1 + 2);
+  assert_equals(1000, 500 + 500);
+}
+
+def test_multiplication() {
+  assert_equals(1, 1 * 1);
+  assert_equals(0, 1 * 0);
+  assert_equals(100, 2 * 50);
+  assert_equals(100, 50 * 2);
 }
 
 def main() {
   test_addition();
+  test_multiplication();
 }

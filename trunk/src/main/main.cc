@@ -21,7 +21,7 @@ void Main::main(list<char*> &args) {
     char *arg = args[i];
     Image *image = read_image(arg);
     bool loaded = runtime.load_image(*image);
-    ASSERT(loaded);
+    USE(loaded); ASSERT(loaded);
   }
   runtime.start();
 }

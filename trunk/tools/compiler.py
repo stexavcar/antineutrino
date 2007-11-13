@@ -1,4 +1,5 @@
 #!/usr/bin/python
+#coding=utf8
 
 # A compiler that produces binaries to be executed by the neutrino
 # runtime.  This is not the "real" compiler but is only used
@@ -157,7 +158,7 @@ class Scanner:
     while self.has_more() and self.current() != '"':
       value += self.current()
       self.advance()
-    if self.has_more(): self.advance();
+    if self.has_more(): self.advance()
     return StringToken(value)
   
   def scan_documentation(self):
@@ -188,6 +189,8 @@ class Scanner:
       return Delimiter('{')
     elif c == '}':
       return Delimiter('}')
+    elif c == '•':
+      return Delimiter('•')
     elif c == '-':
       if not self.has_more(): return Delimiter('-')
       c = self.current()
@@ -499,8 +502,8 @@ class Parser:
       args = self.parse_arguments('(', ')')
       return Invoke(expr, name, args)
     else:
-      if self.token().is_delimiter(':'):
-        self.expect_delimiter(':')
+      if self.token().is_delimiter('•'):
+        self.expect_delimiter('•')
         recv = expr
         expr = self.parse_atomic_expression()
       elif self.token().is_delimiter('('):
@@ -788,6 +791,13 @@ class Heap:
       addr = value.addr
       self.memory[offset] = tag_as_object(addr)
   def allocate(self, size):
+    if self.cursor + size > self.capacity:
+      new_capacity = self.capacity * 2
+      new_memory = new_capacity * [ tag_as_smi(0) ]
+      for i in xrange(0, self.cursor):
+        new_memory[i] = self.memory[i]
+      self.capacity = new_capacity
+      self.memory = new_memory
     addr = self.cursor * POINTER_SIZE
     self.cursor += size
     return addr

@@ -1,0 +1,22 @@
+def fun(a, b, c, d, e) {
+  assert_equals(3, a);
+  assert_equals(6, b);
+  assert_equals(10, c);
+  assert_equals(1, d);
+  assert_equals(7, e);
+  return a + b + c + d + e;
+}
+
+def get_void() { }
+
+def get_this() -> this;
+
+def test_calls() {
+  assert_equals(27, fun(3, 6, 10, 1, 7));
+  assert_equals(get_void(), get_this());
+  "foo"•get_this();
+}
+
+def main() {
+  test_calls();
+}

@@ -134,8 +134,10 @@ Value *Builtins::fail(Arguments &args) {
 
 Value *Builtins::print(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  string::local str(args[0]->to_string());
-  printf("%s\n", str.chars());
+  String *str_obj = cast<String>(args[0]);
+  for (uint32_t i = 0; i < str_obj->length(); i++)
+    putc(str_obj->at(i), stdout);
+  putc('\n', stdout);
   return Runtime::current().roots().vhoid();
 }
 
