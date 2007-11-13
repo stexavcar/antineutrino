@@ -656,9 +656,12 @@ class Tuple(Expression):
     state.write(OC_TUPLE, len(self.values))
 
 def compile_lambda(params, body):
-  state = CodeGeneratorState()
-  state.scopes.append(params)
-  body.emit(state)
+  state = CodeGeneratorState(len(params))
+  try:
+    state.scope = ArgumentScope(state.scope, params)
+    body.emit(state)
+  finally:
+    state.scope = state.scope.parent
   code = HEAP.new_code(state.code)
   literals = HEAP.new_tuple(values = state.literals)
   return HEAP.new_lambda(len(params), code, literals)
@@ -674,15 +677,15 @@ class Identifier(Expression):
   def __init__(self, name):
     self.name = name
   def emit(self, state):
-    top_scope = []
-    if len(state.scopes) > 0:
-      top_scope = state.scopes[0]
-    try:
-      scope_index = len(top_scope) - top_scope.index(self.name) - 1
+    ( type, data ) = state.scope.lookup(self.name)
+    if type == 'argument':
+      scope_index = state.argc - data - 1
       state.write(OC_ARGUMENT, scope_index)
-    except ValueError:
+    elif type == 'global':
       index = state.literal_index(HEAP.new_string(self.name))
       state.write(OC_GLOBAL, index)
+    else:
+      assert False
 
 class Call(Expression):
   def __init__(self, recv, fun, args):
@@ -721,9 +724,7 @@ class InternalCall(Expression):
 
 class This(Expression):
   def emit(self, state):
-    assert len(state.scopes) > 0
-    top_scope = state.scopes[0]
-    state.write(OC_ARGUMENT, len(top_scope) + 1)
+    state.write(OC_ARGUMENT, state.argc + 1)
 
 class Void(Expression):
   def emit(self, state):
@@ -985,11 +986,26 @@ class ImageDictionary(ImageObject):
 
 PLACEHOLDER = 0xBADDEAD
 
+class GlobalScope:
+  def lookup(self, name):
+    return ( 'global', name )
+
+class ArgumentScope:
+  def __init__(self, parent, vars):
+    self.vars = vars
+    self.parent = parent
+  def lookup(self, name):
+    if name in self.vars:
+      return ( 'argument', self.vars.index(name) )
+    else:
+      return self.parent.lookup(name)
+
 class CodeGeneratorState:
-  def __init__(self):
+  def __init__(self, argc):
     self.code = []
     self.literals = []
-    self.scopes = []
+    self.scope = GlobalScope()
+    self.argc = argc
   def literal_index(self, value):
     result = len(self.literals)
     self.literals.append(value)

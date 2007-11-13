@@ -1,0 +1,11 @@
+def get_four() {
+  return 4;
+}
+
+def local_test() {
+  assert_equals(4, get_four());
+}
+
+def main() {
+  local_test();
+}
