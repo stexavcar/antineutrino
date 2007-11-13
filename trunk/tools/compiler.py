@@ -1,5 +1,5 @@
 #!/usr/bin/python
-#coding=utf8
+# -*- coding: utf-8 -*-
 
 # A compiler that produces binaries to be executed by the neutrino
 # runtime.  This is not the "real" compiler but is only used
@@ -7,7 +7,7 @@
 
 from optparse import OptionParser, Option
 from os import path
-import re, string, struct
+import re, string, struct, codecs
 
 # -------------------
 # --- T o k e n s ---
@@ -189,8 +189,8 @@ class Scanner:
       return Delimiter('{')
     elif c == '}':
       return Delimiter('}')
-    elif c == '•':
-      return Delimiter('•')
+    elif c == u'·':
+      return Delimiter(u'·')
     elif c == '-':
       if not self.has_more(): return Delimiter('-')
       c = self.current()
@@ -502,8 +502,8 @@ class Parser:
       args = self.parse_arguments('(', ')')
       return Invoke(expr, name, args)
     else:
-      if self.token().is_delimiter('•'):
-        self.expect_delimiter('•')
+      if self.token().is_delimiter(u'·'):
+        self.expect_delimiter(u'·')
         recv = expr
         expr = self.parse_atomic_expression()
       elif self.token().is_delimiter('('):
@@ -1130,7 +1130,7 @@ def load_files(files):
     if path.isdir(file):
       files += find_source_files(file)
     else:
-      source = open(file).read()
+      source = codecs.open(file, "r", "utf-8").read()
       tree = compile(source)
       tree.load(namespace)
       trees.append(tree)
