@@ -195,6 +195,15 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       pc += OpcodeInfo<OC_POP>::kSize;
       break;
     }
+    case OC_TUPLE: {
+      uint16_t length = current.lambda()->code()->at(pc + 1);
+      Tuple *result = cast<Tuple>(runtime().heap().new_tuple(length));
+      for (int32_t i = length - 1; i >= 0; i--)
+        result->at(i) = stack.pop();
+      stack.push(result);
+      pc += OpcodeInfo<OC_TUPLE>::kSize;
+      break;
+    }
     default:
       UNHANDLED(Opcode, oc);
       return ref<Value>::empty();

@@ -17,6 +17,13 @@ def test_calls() {
   assert_equals("foo", "foo"·get_this());
 }
 
+def call_get_this() -> get_this();
+
+def test_implicit_self() {
+  assert_equals(8, 8·call_get_this());
+}
+
 def main() {
   test_calls();
+  test_implicit_self();
 }

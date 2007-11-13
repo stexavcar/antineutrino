@@ -189,6 +189,10 @@ class Scanner:
       return Delimiter('{')
     elif c == '}':
       return Delimiter('}')
+    elif c == '[':
+      return Delimiter('[')
+    elif c == ']':
+      return Delimiter(']')
     elif c == u'·':
       return Delimiter(u'·')
     elif c == '-':
@@ -550,6 +554,9 @@ class Parser:
     elif self.token().is_keyword('null'):
       self.advance()
       return Null()
+    elif self.token().is_delimiter('['):
+      exprs = self.parse_arguments('[', ']')
+      return Tuple(exprs)
     elif self.token().is_delimiter('('):
       self.expect_delimiter('(')
       value = self.parse_expression(False)
@@ -639,6 +646,14 @@ class Literal(Expression):
   def emit(self, state):
     index = state.literal_index(self.value)
     state.write(OC_PUSH, index)
+
+class Tuple(Expression):
+  def __init__(self, values):
+    self.values = values
+  def emit(self, state):
+    for value in self.values:
+      value.emit(state)
+    state.write(OC_TUPLE, len(self.values))
 
 def compile_lambda(params, body):
   state = CodeGeneratorState()

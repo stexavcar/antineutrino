@@ -68,7 +68,8 @@
   VISIT(3,  CALL,  1)   VISIT(4,  SLAP,   1) VISIT(5,  ARGUMENT, 1)  \
   VISIT(6,  VOID,  0)   VISIT(7,  NULL,  0)  VISIT(8,  TRUE,     0)  \
   VISIT(9,  FALSE, 0)   VISIT(10, POP,    1) VISIT(11, IF_TRUE,  1)  \
-  VISIT(12, GOTO,  1)   VISIT(13, INVOKE, 2) VISIT(14, INTERNAL, 2)
+  VISIT(12, GOTO,  1)   VISIT(13, INVOKE, 2) VISIT(14, INTERNAL, 2)  \
+  VISIT(15, TUPLE, 1)
 
 
 // -------------------------------------
@@ -131,10 +132,11 @@
  * or has built in methods should be mentioned in this list.
  */
 #define FOR_EACH_BUILTIN_CLASS(VISIT)                                \
-  VISIT(SmallInteger, smi,  SMI) VISIT(String, string, STRING)       \
-  VISIT(True, true, TRUE)        VISIT(False,  false,  FALSE)        \
-  VISIT(Void, void, VOID)        VISIT(Null,   null,   NULL)         \
-  VISIT(Object, object, OBJECT)  VISIT(Lambda, lambda, LAMBDA)
+  VISIT(SmallInteger, smi,  SMI)   VISIT(String, string, STRING)     \
+  VISIT(True, true, TRUE)          VISIT(False,  false,  FALSE)      \
+  VISIT(Void, void, VOID)          VISIT(Null,   null,   NULL)       \
+  VISIT(Object, object, OBJECT)    VISIT(Lambda, lambda, LAMBDA)     \
+  VISIT(Tuple, tuple, TUPLE)
 
 
 // ---------------------------------------
