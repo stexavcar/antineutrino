@@ -1,0 +1,13 @@
+def add() -> this + 1;
+
+def me() -> me;
+
+def test_chaining() {
+  assert_equals(4, 1·add()·add()·add());
+  assert_equals(me, me()()()());
+  assert_equals(6, 1 + 1 + 1 + 1 + 1 + 1);
+}
+
+def main() {
+  test_chaining();
+}

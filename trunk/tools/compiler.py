@@ -490,29 +490,34 @@ class Parser:
       else_part = Void()
     return Conditional(cond, then_part, else_part)
 
+  def at_call_prefix_start(self):
+    return self.token().is_delimiter('.')   \
+        or self.token().is_delimiter(u'·')  \
+        or self.token().is_delimiter('(')
+
   # <call_expression>
   #   -> <atomic_expression> <arguments>
-  #   -> <atomic_expression> ':' <atomic expression> <arguments>
+  #   -> <atomic_expression> '·' <atomic expression> <arguments>
   #   -> <atomic_expression> '.' $name <arguments>
   def parse_call_expression(self):
     expr = self.parse_atomic_expression()
-    if self.token().is_delimiter('.'):
-      self.expect_delimiter('.')
-      name = self.expect_ident()
-      args = self.parse_arguments('(', ')')
-      return Invoke(expr, name, args)
-    else:
-      if self.token().is_delimiter(u'·'):
-        self.expect_delimiter(u'·')
-        recv = expr
-        expr = self.parse_atomic_expression()
-      elif self.token().is_delimiter('('):
-        recv = This()
-      if self.token().is_delimiter('('):
+    while self.at_call_prefix_start():
+      if self.token().is_delimiter('.'):
+        self.expect_delimiter('.')
+        name = self.expect_ident()
         args = self.parse_arguments('(', ')')
-        return Call(recv, expr, args)
+        expr = Invoke(expr, name, args)
       else:
-        return expr
+        if self.token().is_delimiter(u'·'):
+          self.expect_delimiter(u'·')
+          recv = expr
+          expr = self.parse_atomic_expression()
+          args = self.parse_arguments('(', ')')
+          expr = Call(recv, expr, args)
+        else:
+          args = self.parse_arguments('(', ')')
+          expr = Call(This(), expr, args)
+    return expr
 
   # <atomic_expression>
   #   -> $number

@@ -134,7 +134,7 @@
   VISIT(SmallInteger, smi,  SMI) VISIT(String, string, STRING)       \
   VISIT(True, true, TRUE)        VISIT(False,  false,  FALSE)        \
   VISIT(Void, void, VOID)        VISIT(Null,   null,   NULL)         \
-  VISIT(Object, object, OBJECT)
+  VISIT(Object, object, OBJECT)  VISIT(Lambda, lambda, LAMBDA)
 
 
 // ---------------------------------------

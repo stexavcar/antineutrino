@@ -14,7 +14,7 @@ def get_this() -> this;
 def test_calls() {
   assert_equals(27, fun(3, 6, 10, 1, 7));
   assert_equals(get_void(), get_this());
-  "foo"·get_this();
+  assert_equals("foo", "foo"·get_this());
 }
 
 def main() {
