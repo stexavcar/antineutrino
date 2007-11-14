@@ -20,7 +20,7 @@ class Token:
   def is_delimiter(self, name): return False
   def is_number(self): return False
   def is_string(self): return False
-  def is_operator(self): return False
+  def is_operator(self, name = None): return False
   def is_doc(self): return False
 
 class Keyword(Token):
@@ -42,6 +42,8 @@ class Operator(Token):
     self.name = name
   def is_operator(self):
     return True
+  def is_operator(self, name = None):
+    return (not name) or (self.name == name)
 
 class NumberToken(Token):
   def __init__(self, value):
@@ -101,7 +103,7 @@ def is_ident_part(char):
 
 def is_operator(char):
   return char == '+' or char == '-' or char == '>' or char == '*'    \
-      or char == '/' or char == '%' or char == '='                   \
+      or char == '/' or char == '%' or char == '=' or char == '<'    \
       or is_circumfix_operator(char)
 
 def is_circumfix_operator(char):
@@ -276,8 +278,8 @@ class Parser:
     self.advance()
     return name
 
-  def expect_operator(self):
-    if not self.token().is_operator():
+  def expect_operator(self, op = None):
+    if not self.token().is_operator(op):
       print "Expected operator, found " + str(self.token())
       self.parse_error()
     name = self.token().name
@@ -582,12 +584,16 @@ class Parser:
       value = self.parse_expression(False)
       self.expect_delimiter(')')
       return value
+    elif self.token().is_operator('<'):
+      self.expect_operator('<')
+      value = self.parse_atomic_expression()
+      self.expect_operator('>')
+      return value
     elif self.token().is_operator():
       op = self.expect_circumfix_operator()
       value = self.parse_atomic_expression()
-      match = self.expect_operator()
-      if not match == circumfix_match(op):
-        self.parse_error()
+      match = circumfix_match(op)
+      self.expect_operator(match)
       return Invoke(value, op + match, [])
     else:
       self.parse_error()
