@@ -489,13 +489,13 @@ class Parser:
     elif self.token().is_keyword('if'):
       return self.parse_conditional_expression(is_toplevel)
     else:
-      value = self.parse_operator_expression()
+      value = self.parse_operator_expression(None)
       if (is_toplevel): self.expect_delimiter(';')
       return value
   
-  def parse_operator_expression(self):
+  def parse_operator_expression(self, end):
     expr = self.parse_call_expression()
-    while self.token().is_operator():
+    while self.token().is_operator() and (self.token().name != end):
       op = self.expect_operator()
       right = self.parse_call_expression()
       expr = Invoke(expr, op, [right])
@@ -591,8 +591,8 @@ class Parser:
       return Quote(value)
     elif self.token().is_operator():
       op = self.expect_circumfix_operator()
-      value = self.parse_atomic_expression()
       match = circumfix_match(op)
+      value = self.parse_operator_expression(match)
       self.expect_operator(match)
       return Invoke(value, op + match, [])
     else:

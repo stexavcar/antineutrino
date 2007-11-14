@@ -133,10 +133,10 @@ Value *Builtins::object_to_string(Arguments &args) {
 
 Value *Builtins::fail(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  Value *arg = args[0];
-  string str = arg->to_string();
-  printf("Failure: %s\n", str.chars());
-  str.dispose();
+  String *arg = cast<String>(args[0]);
+  string_buffer buf;
+  arg->write_chars_on(buf);
+  fprintf(stderr, "Failure: %s\n", buf.raw_string().chars());
   exit(1);
 }
 

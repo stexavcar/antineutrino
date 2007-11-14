@@ -1,7 +1,7 @@
 def circumfix_test() {
   assert_equals(4, |"abcd"|);
   assert_equals(3, |"a"| + |"b"| + |"c"|);
-  assert_equals(1, |(4 - 5)|);
+  assert_equals(1, |4 - 5|);
 }
 
 def main() {
