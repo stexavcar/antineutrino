@@ -70,6 +70,7 @@ def run_neutrino_tests(all_tests):
     if status == 'failed':
       clear_line()
       print "--- Failed: " + str(test) + " ---"
+      print "Command: " + test.command()
     elif len(stdout) > 0 or len(stderr) > 0:
       clear_line()
       print "--- " + str(test) + " ---"

@@ -8,5 +8,5 @@ static void test_equality() {
   runtime.initialize();
   Heap &heap = runtime.heap();
   
-  CHECK_EQ(cast<Value>(heap.new_string("foo")), cast<Value>(heap.new_string("foo")));
+  CHECK_EQ(cast<Tuple>(heap.new_string("foo")), cast<Value>(heap.new_string("foo")));
 }
