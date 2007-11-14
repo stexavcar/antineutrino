@@ -45,11 +45,18 @@ Data *Heap::new_lambda(uint32_t argc) {
   return result;
 }
 
-Data *Heap::new_literal(Value *value) {
+Data *Heap::new_literal() {
   Data *val = allocate_object(Literal::kSize, roots().literal_class());
   if (is<AllocationFailed>(val)) return val;
   Literal *result = cast<Literal>(val);
-  result->value() = value;
+  return result;
+}
+
+
+Data *Heap::new_invoke() {
+  Data *val = allocate_object(Invoke::kSize, roots().invoke_class());
+  if (is<AllocationFailed>(val)) return val;
+  Invoke *result = cast<Invoke>(val);
   return result;
 }
 

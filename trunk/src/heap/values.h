@@ -169,6 +169,7 @@ public:
   inline char &at(uint32_t index);
   
   bool string_equals(String *that);
+  void write_chars_on(string_buffer &buf);
   
   static inline uint32_t size_for(uint32_t chars);
 

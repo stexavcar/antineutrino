@@ -24,11 +24,6 @@ ref<Lambda> Factory::new_lambda(uint32_t argc, ref<Code> code,
   return new_ref(cast<Lambda>(result));
 }
 
-ref<Literal> Factory::new_literal(ref<Value> value) {
-  Data *result = runtime().heap().new_literal(*value);
-  return new_ref(cast<Literal>(result));
-}
-
 ref<Dictionary> Factory::new_dictionary() {
   Data *result = runtime().heap().new_dictionary();
   return new_ref(cast<Dictionary>(result));

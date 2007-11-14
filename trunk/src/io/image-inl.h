@@ -31,6 +31,17 @@ static inline bool is<ImageForwardPointer>(ImageData *data) {
   return ValuePointer::has_signal_tag(data);
 }
 
+template <>
+static inline bool is<ImageSyntaxTree>(ImageData *data) {
+  if (!is<ImageObject>(data)) return false;
+  switch (image_cast<ImageObject>(data)->type()) {
+    case INVOKE_TYPE: case LITERAL_TYPE:
+      return true;
+    default:
+      return false;
+  }
+}
+
 #define DEFINE_IMAGE_OBJECT_QUERY(Class, CLASS)                      \
   template <>                                                        \
   static inline bool is<Image##Class>(ImageData *value) {            \
@@ -45,6 +56,8 @@ DEFINE_IMAGE_OBJECT_QUERY(Lambda, LAMBDA)
 DEFINE_IMAGE_OBJECT_QUERY(Dictionary, DICTIONARY)
 DEFINE_IMAGE_OBJECT_QUERY(Class, CLASS)
 DEFINE_IMAGE_OBJECT_QUERY(Method, METHOD)
+DEFINE_IMAGE_OBJECT_QUERY(Literal, LITERAL)
+DEFINE_IMAGE_OBJECT_QUERY(Invoke, INVOKE)
 
 template <class C>
 static inline C *image_cast(ImageData *val) {
@@ -81,6 +94,20 @@ Object *ImageObject::forward_pointer() {
   return pointer->target();
 }
 
+ImageForwardPointer *ImageForwardPointer::to(Object *obj) {
+  uint32_t value = ValuePointer::tag_as_signal(ValuePointer::address_of(obj));
+  return reinterpret_cast<ImageForwardPointer*>(value);
+}
+
+Object *ImageForwardPointer::target() {
+  return ValuePointer::tag_as_object(reinterpret_cast<address>(ValuePointer::un_signal_tag(this)));
+}
+
+
+// -----------------
+// --- I m a g e ---
+// -----------------
+
 Image &Image::current() {
   ASSERT(current_ != NULL);
   return *current_;
@@ -97,15 +124,6 @@ Image::Scope::~Scope() {
 
 ImageData *ImageData::from(uint32_t addr) {
   return reinterpret_cast<ImageData*>(addr);
-}
-
-ImageForwardPointer *ImageForwardPointer::to(Object *obj) {
-  uint32_t value = ValuePointer::tag_as_signal(ValuePointer::address_of(obj));
-  return reinterpret_cast<ImageForwardPointer*>(value);
-}
-
-Object *ImageForwardPointer::target() {
-  return ValuePointer::tag_as_object(reinterpret_cast<address>(ValuePointer::un_signal_tag(this)));
 }
 
 int32_t ImageSmi::value() {
@@ -184,6 +202,18 @@ DEFINE_GETTER(Lambda, Method, lambda, Lambda)
 // --- D i c t i o n a r y ---
 
 DEFINE_GETTER(Tuple, Dictionary, table, Table)
+
+
+// --- L i t e r a l ---
+
+DEFINE_GETTER(Value, Literal, value, Value)
+
+
+// --- I n v o k e ---
+
+DEFINE_GETTER(SyntaxTree, Invoke, receiver, Receiver)
+DEFINE_GETTER(String, Invoke, name, Name)
+DEFINE_GETTER(Tuple, Invoke, arguments, Arguments)
 
 
 #undef DEFINE_RAW_GETTER

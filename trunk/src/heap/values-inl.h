@@ -66,6 +66,17 @@ inline bool is<Value>(Data *val) {
   return is<Smi>(val) || is<Object>(val);
 }
 
+template <>
+inline bool is<SyntaxTree>(Data *val) {
+  if (!is<Object>(val)) return false;
+  switch (cast<Object>(val)->type()) {
+#define MAKE_CASE(n, NAME, Name) case NAME##_TYPE: return true;
+FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
+#undef MAKE_CASE
+    default: return false;
+  }
+}
+
 #define DEFINE_QUERY(n, NAME, Name)                                  \
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \

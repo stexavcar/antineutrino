@@ -48,7 +48,9 @@ public:
   
   Data *new_lambda(uint32_t argc);
 
-  Data *new_literal(Value *value);
+  Data *new_literal();
+  
+  Data *new_invoke();
   
   Data *new_abstract_buffer(uint32_t size, Class *chlass);
   

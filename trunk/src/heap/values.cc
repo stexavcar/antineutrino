@@ -88,11 +88,21 @@ static void write_smi_short_on(Smi *obj, string_buffer &buf) {
   buf.printf("%", obj->value());
 }
 
+void String::write_chars_on(string_buffer &buf) {
+  for (uint32_t i = 0; i < length(); i++)
+    buf.append(at(i));
+}
+
 static void write_string_short_on(String *obj, string_buffer &buf) {
   buf.append('"');
-  for (uint32_t i = 0; i < obj->length(); i++)
-    buf.append(obj->at(i));
+  obj->write_chars_on(buf);
   buf.append('"');
+}
+
+static void write_literal_short_on(Literal *obj, string_buffer &buf) {
+  buf.append('<');
+  obj->value()->write_short_on(buf);
+  buf.append('>');
 }
 
 static void write_object_short_on(Object *obj, string_buffer &buf) {
@@ -120,7 +130,10 @@ static void write_object_short_on(Object *obj, string_buffer &buf) {
     buf.append("false");
     break;
   case LITERAL_TYPE:
-    buf.append("#<literal>");
+    write_literal_short_on(cast<Literal>(obj), buf);
+    break;
+  case INVOKE_TYPE:
+    buf.append("#<invoke>");
     break;
   case DICTIONARY_TYPE:
     buf.append("#<dictionary>");
@@ -179,7 +192,24 @@ static void write_lambda_on(Lambda *obj, string_buffer &buf) {
 }
 
 static void write_literal_on(Literal *obj, string_buffer &buf) {
+  buf.append('<');
   obj->value()->write_on(buf);
+  buf.append('>');
+}
+
+static void write_invoke_on(Invoke *obj, string_buffer &buf) {
+  buf.append('<');
+  obj->receiver()->write_short_on(buf);
+  buf.append('.');
+  obj->name()->write_chars_on(buf);
+  buf.append('(');
+  bool is_first = true;
+  for (uint32_t i = 0; i < obj->arguments()->length(); i++) {
+    if (is_first) is_first = false;
+    else buf.append(", ");
+    obj->arguments()->at(i)->write_short_on(buf);
+  }
+  buf.append(")>");
 }
 
 static void write_dictionary_on(Dictionary *obj, string_buffer &buf) {
@@ -212,6 +242,9 @@ static void write_object_on(Object *obj, string_buffer &buf) {
     break;
   case LITERAL_TYPE:
     write_literal_on(cast<Literal>(obj), buf);
+    break;
+  case INVOKE_TYPE:
+    write_invoke_on(cast<Invoke>(obj), buf);
     break;
   case DICTIONARY_TYPE:
     write_dictionary_on(cast<Dictionary>(obj), buf);

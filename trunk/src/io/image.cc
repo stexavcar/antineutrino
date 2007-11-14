@@ -1,5 +1,6 @@
 #include "heap/roots.h"
 #include "heap/values-inl.h"
+#include "io/ast-inl.h"
 #include "io/image-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/consts.h"
@@ -58,16 +59,17 @@ Tuple *Image::load() {
 
 void Image::copy_object_shallow(ImageObject *obj) {
   uint32_t type = obj->type();
+  Heap &heap = Runtime::current().heap();
   switch (type) {
     case DICTIONARY_TYPE: {
-      Dictionary *dict = cast<Dictionary>(Runtime::current().heap().new_dictionary());
+      Dictionary *dict = cast<Dictionary>(heap.new_dictionary());
       obj->point_forward(dict);
       break;
     }
     case STRING_TYPE: {
       ImageString *img = image_cast<ImageString>(obj);
       uint32_t length = img->length();
-      String *str = cast<String>(Runtime::current().heap().new_string(length));
+      String *str = cast<String>(heap.new_string(length));
       for (uint32_t i = 0; i < length; i++)
         str->at(i) = img->at(i);
       obj->point_forward(str);
@@ -76,7 +78,7 @@ void Image::copy_object_shallow(ImageObject *obj) {
     case CODE_TYPE: {
       ImageCode *img = image_cast<ImageCode>(obj);
       uint32_t length = img->length();
-      Code *code = cast<Code>(Runtime::current().heap().new_code(length));
+      Code *code = cast<Code>(heap.new_code(length));
       for (uint32_t i = 0; i < length; i++)
         code->at(i) = img->at(i);
       obj->point_forward(code);
@@ -85,27 +87,37 @@ void Image::copy_object_shallow(ImageObject *obj) {
     case TUPLE_TYPE: {
       ImageTuple *img = image_cast<ImageTuple>(obj);
       uint32_t length = img->length();
-      Tuple *tuple = cast<Tuple>(Runtime::current().heap().new_tuple(length));
+      Tuple *tuple = cast<Tuple>(heap.new_tuple(length));
       obj->point_forward(tuple);
       break;
     }
     case LAMBDA_TYPE: {
       ImageLambda *img = image_cast<ImageLambda>(obj);
       uint32_t argc = img->argc();
-      Lambda *lambda = cast<Lambda>(Runtime::current().heap().new_lambda(argc));
+      Lambda *lambda = cast<Lambda>(heap.new_lambda(argc));
       obj->point_forward(lambda);
       break;
     }
     case CLASS_TYPE: {
       ImageClass *img = image_cast<ImageClass>(obj);
       InstanceType instance_type = static_cast<InstanceType>(img->instance_type());
-      Class *chlass = cast<Class>(Runtime::current().heap().new_empty_class(instance_type));
+      Class *chlass = cast<Class>(heap.new_empty_class(instance_type));
       obj->point_forward(chlass);
       break;
     }
     case METHOD_TYPE: {
-      Method *method = cast<Method>(Runtime::current().heap().new_method());
+      Method *method = cast<Method>(heap.new_method());
       obj->point_forward(method);
+      break;
+    }
+    case LITERAL_TYPE: {
+      Literal *literal = cast<Literal>(heap.new_literal());
+      obj->point_forward(literal);
+      break;
+    }
+    case INVOKE_TYPE: {
+      Invoke *invoke = cast<Invoke>(heap.new_invoke());
+      obj->point_forward(invoke);
       break;
     }
     default:
@@ -150,6 +162,20 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       Class *chlass = cast<Class>(img->forward_pointer());
       chlass->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
       chlass->super() = img->super()->forward_pointer();
+      break;
+    }
+    case LITERAL_TYPE: {
+      ImageLiteral *img = image_cast<ImageLiteral>(obj);
+      Literal *literal = cast<Literal>(img->forward_pointer());
+      literal->value() = img->value()->forward_pointer();
+      break;
+    }
+    case INVOKE_TYPE: {
+      ImageInvoke *img = image_cast<ImageInvoke>(obj);
+      Invoke *invoke = cast<Invoke>(img->forward_pointer());
+      invoke->set_receiver(cast<SyntaxTree>(img->receiver()->forward_pointer()));
+      invoke->set_name(cast<String>(img->name()->forward_pointer()));
+      invoke->set_arguments(cast<Tuple>(img->arguments()->forward_pointer()));
       break;
     }
     case STRING_TYPE: case CODE_TYPE:
@@ -201,6 +227,10 @@ uint32_t ImageObject::memory_size() {
       return ImageClass_Size;
     case METHOD_TYPE:
       return ImageMethod_Size;
+    case LITERAL_TYPE:
+      return ImageLiteral_Size;
+    case INVOKE_TYPE:
+      return ImageInvoke_Size;
     case STRING_TYPE:
       return image_cast<ImageString>(this)->string_memory_size();
     case CODE_TYPE:

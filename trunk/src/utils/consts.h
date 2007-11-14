@@ -33,7 +33,8 @@
 #define FOR_EACH_VIRTUAL_TYPE(VISIT)                                 \
   VISIT(20, OBJECT, Object)                                          \
   VISIT(21, VALUE, Value)                                            \
-  VISIT(22, ABSTRACT_BUFFER, AbstractBuffer)
+  VISIT(22, ABSTRACT_BUFFER, AbstractBuffer)                         \
+  VISIT(23, SYNTAX_TREE, SyntaxTree)
 
 #define FOR_EACH_SIGNAL_TYPE(VISIT)                                  \
   VISIT(30, ALLOCATION_FAILED, AllocationFailed)                     \
@@ -52,7 +53,8 @@
   FOR_EACH_VIRTUAL_TYPE(VISIT)
 
 #define FOR_EACH_SYNTAX_TREE_TYPE(VISIT)                             \
-  VISIT(50, LITERAL, Literal)
+  VISIT(50, LITERAL, Literal)                                        \
+  VISIT(51, INVOKE, Invoke)
 
 
 // ---------------------
@@ -87,7 +89,10 @@
   VISIT(1, Class, InstanceTypeOffset) VISIT(2, Class, MethodsOffset) \
   VISIT(3, Class, SuperOffset)        VISIT(4, Class, Size)          \
   VISIT(1, Method, NameOffset)        VISIT(2, Method, LambdaOffset) \
-  VISIT(3, Method, Size)
+  VISIT(3, Method, Size)                                             \
+  VISIT(1, Literal, ValueOffset)      VISIT(2, Literal, Size)        \
+  VISIT(1, Invoke, ReceiverOffset)    VISIT(2, Invoke, NameOffset)   \
+  VISIT(3, Invoke, ArgumentsOffset)   VISIT(4, Invoke, Size)
 
 
 // -----------------
@@ -112,10 +117,11 @@
   VISIT(14, Class, buffer_class, BUFFER_CLASS, new_empty_class(BUFFER_TYPE))\
   VISIT(15, Class, code_class, CODE_CLASS, new_empty_class(CODE_TYPE))\
   VISIT(16, Class, method_class, METHOD_CLASS, new_empty_class(METHOD_TYPE))\
-  VISIT(17, Class, smi_class, SMI_CLASS, new_empty_class(SMI_TYPE))
+  VISIT(17, Class, smi_class, SMI_CLASS, new_empty_class(SMI_TYPE))  \
+  VISIT(18, Class, invoke_class, INVOKE_CLASS, new_empty_class(INVOKE_TYPE))
 
 #define FOR_EACH_COMPLICATED_ROOT(VISIT)                             \
-  VISIT(18, Class, class_class, CLASS_CLASS, NULL)
+  VISIT(19, Class, class_class, CLASS_CLASS, NULL)
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT(VISIT)                                   \
@@ -136,7 +142,8 @@
   VISIT(True, true, TRUE)          VISIT(False,  false,  FALSE)      \
   VISIT(Void, void, VOID)          VISIT(Null,   null,   NULL)       \
   VISIT(Object, object, OBJECT)    VISIT(Lambda, lambda, LAMBDA)     \
-  VISIT(Tuple, tuple, TUPLE)
+  VISIT(Tuple, tuple, TUPLE)       VISIT(Literal, literal, LITERAL)  \
+  VISIT(Invoke, invoke, INVOKE)
 
 
 // ---------------------------------------

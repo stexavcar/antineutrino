@@ -588,7 +588,7 @@ class Parser:
       self.expect_operator('<')
       value = self.parse_atomic_expression()
       self.expect_operator('>')
-      return value
+      return Quote(value)
     elif self.token().is_operator():
       op = self.expect_circumfix_operator()
       value = self.parse_atomic_expression()
@@ -673,12 +673,19 @@ class Method(SyntaxTree):
 class Expression(SyntaxTree):
   pass
 
+def quote_value(val):
+  if type(val) is int: return val
+  else: raise val
+
 class Literal(Expression):
   def __init__(self, value):
     self.value = value
   def emit(self, state):
     index = state.literal_index(self.value)
     state.write(OC_PUSH, index)
+  def quote(self):
+    val = quote_value(self.value)
+    return HEAP.new_literal(val)
 
 class Tuple(Expression):
   def __init__(self, values):
@@ -733,6 +740,14 @@ class Call(Expression):
     state.write(OC_CALL, len(self.args))
     state.write(OC_SLAP, len(self.args) + 1)
 
+class Quote(Expression):
+  def __init__(self, value):
+    self.value = value
+  def emit(self, state):
+    obj = self.value.quote()
+    index = state.literal_index(obj)
+    state.write(OC_PUSH, index)
+
 class Invoke(Expression):
   def __init__(self, recv, name, args):
     self.recv = recv
@@ -746,6 +761,11 @@ class Invoke(Expression):
     name_index = state.literal_index(HEAP.new_string(self.name))
     state.write(OC_INVOKE, name_index, len(self.args))
     state.write(OC_SLAP, len(self.args) + 1)
+  def quote(self):
+    recv = self.recv.quote()
+    name = HEAP.new_string(self.name)
+    args = HEAP.new_tuple(values = map(lambda x: x.quote(), self.args))
+    return HEAP.new_invoke(recv, name, args)
 
 class InternalCall(Expression):
   def __init__(self, index, argc):
@@ -823,7 +843,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 19
+  kRootCount  = 20
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -844,6 +864,9 @@ class Heap:
     else:
       addr = value.addr
       self.memory[offset] = tag_as_object(addr)
+
+  # --- A l l o c a t i o n ---      
+
   def allocate(self, size):
     if self.cursor + size > self.capacity:
       new_capacity = self.capacity * 2
@@ -855,25 +878,31 @@ class Heap:
     addr = self.cursor * POINTER_SIZE
     self.cursor += size
     return addr
+  
   def new_class(self, instance_type):
     result = ImageClass(self.allocate(ImageClass_Size), instance_type)
     result.set_class(CLASS_TYPE)
     return result
+  
   def new_lambda(self, argc, code, literals):
     result = ImageLambda(self.allocate(ImageLambda_Size), argc, code, literals)
     result.set_class(LAMBDA_TYPE)
     return result
+  
   def new_method(self, name, body):
     result = ImageMethod(self.allocate(ImageMethod_Size), name, body)
     result.set_class(METHOD_TYPE)
     return result
+
   def new_number(self, value):
     return value
+
   def new_dictionary(self):
     result = ImageDictionary(self.allocate(ImageDictionary_Size))
     result.set_class(DICTIONARY_TYPE)
     self.dicts.append(result)
     return result
+  
   def new_tuple(self, length = None, values = None):
     if length is None: length = len(values)
     result = ImageTuple(self.allocate(ImageTuple_HeaderSize + length), length)
@@ -882,6 +911,7 @@ class Heap:
       for i in xrange(length):
         result[i] = values[i]
     return result
+  
   def new_string(self, contents):
     length = len(contents)
     result = ImageString(self.allocate(ImageString_HeaderSize + length), length)
@@ -889,6 +919,7 @@ class Heap:
     for i in xrange(length):
       result[i] = ord(contents[i])
     return result
+
   def new_code(self, contents):
     length = len(contents)
     result = ImageCode(self.allocate(ImageCode_HeaderSize + length), length)
@@ -896,15 +927,31 @@ class Heap:
     for i in xrange(length):
       result[i] = contents[i]
     return result
+
+  def new_literal(self, value):
+    result = ImageLiteral(self.allocate(ImageLiteral_Size), value)
+    result.set_class(LITERAL_TYPE)
+    return result
+
+  def new_invoke(self, recv, name, args):
+    result = ImageInvoke(self.allocate(ImageInvoke_Size), recv, name, args)
+    result.set_class(INVOKE_TYPE)
+    return result
+
+  # --- A c c e s s ---
+
   def set_raw_field(self, obj, offset, value):
     assert type(value) is int
     self.set_raw((obj.addr / POINTER_SIZE) + offset, value)
+
   def set_field(self, obj, offset, value):
     self[(obj.addr / POINTER_SIZE) + offset] = value
+
   def flush(self):
     for dict in self.dicts:
       dict.commit()
     return self.memory[:self.cursor]
+
   def write_to(self, file):
     buffer = self.flush()
     def write(value):
@@ -945,13 +992,6 @@ class ImageTuple(ImageObject):
     HEAP.set_raw_field(self, ImageTuple_LengthOffset, value)
   def __setitem__(self, index, value):
     HEAP.set_field(self, ImageTuple_HeaderSize + index, value)
-
-class HeapNumber(ImageObject):
-  def __init__(self, addr, value):
-    ImageObject.__init__(self, addr)
-    self.set_value(value)
-  def set_value(self, value):
-    HEAP.set_raw_field(self, Number.kValueOffset, value)
 
 class ImageLambda(ImageObject):
   def __init__(self, addr, argc, code, literals):
@@ -1012,6 +1052,30 @@ class ImageDictionary(ImageObject):
       table[cursor] = value
       cursor += 1
     self.set_table(table)
+
+class ImageSyntaxTree(ImageObject):
+  def __init__(self, addr):
+    ImageObject.__init__(self, addr)
+
+class ImageLiteral(ImageSyntaxTree):
+  def __init__(self, addr, value):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_value(value)
+  def set_value(self, value):
+    HEAP.set_field(self, ImageLiteral_ValueOffset, value)
+
+class ImageInvoke(ImageSyntaxTree):
+  def __init__(self, addr, recv, name, args):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_recv(recv)
+    self.set_name(name)
+    self.set_args(args)
+  def set_recv(self, value):
+    HEAP.set_field(self, ImageInvoke_ReceiverOffset, value)
+  def set_name(self, value):
+    HEAP.set_field(self, ImageInvoke_NameOffset, value)
+  def set_args(self, value):
+    HEAP.set_field(self, ImageInvoke_ArgumentsOffset, value)
 
 # -----------------------
 # --- C o m p i l e r ---

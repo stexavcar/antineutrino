@@ -35,6 +35,10 @@ public:
   inline Smi *forward_pointer();
 };
 
+// ---------------------
+// --- O b j e c t s ---
+// ---------------------
+
 class ImageObject : public ImageValue {
 public:
   uint32_t type();
@@ -87,6 +91,27 @@ public:
 class ImageDictionary : public ImageObject {
 public:
   inline ImageTuple *table();
+};
+
+
+// -------------------------------
+// --- S y n t a x   T r e e s ---
+// -------------------------------
+
+class ImageSyntaxTree : public ImageObject {
+  
+};
+
+class ImageLiteral : public ImageSyntaxTree {
+public:
+  inline ImageValue *value();
+};
+
+class ImageInvoke : public ImageSyntaxTree {
+public:
+  inline ImageSyntaxTree *receiver();
+  inline ImageString *name();
+  inline ImageTuple *arguments();
 };
 
 template <class C>

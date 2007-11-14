@@ -7,7 +7,8 @@ def schedule_test(source, target, env):
   scheduled_tests.append(PyNeutrinoTestCase(str(executable), str(source[0])))
 
 env['BUILDERS']['SchedulePyNeutrinoTest'] = Builder(action = schedule_test)
-env['BUILDERS']['CompilePyNeutrinoTest'] = Builder(action = "python " + join('tools', 'compiler.py') + " -c " + join('src', 'utils', 'consts.h') + " lib $SOURCE -o $TARGET")
+compiler = join('tools', 'compiler.py')
+env['BUILDERS']['CompilePyNeutrinoTest'] = Builder(action = "python " + compiler + " -c " + join('src', 'utils', 'consts.h') + " lib $SOURCE -o $TARGET")
 
 def add_test(arg, dir, fnames):
   tests = []
@@ -18,6 +19,7 @@ def add_test(arg, dir, fnames):
       compile = env.CompilePyNeutrinoTest(short_name + '.nc', full_path)
       schedule = env.SchedulePyNeutrinoTest(short_name + '-schedule', compile)
       env.Depends(schedule, executable)
+      env.Depends(compile, join(config['src'], compiler))
       env.AlwaysBuild(schedule)
       env.Alias(short_name, schedule)
       tests.append(short_name)

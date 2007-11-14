@@ -10,6 +10,13 @@ namespace neutrino {
 
 DEFINE_ACCESSOR(Value*, Literal, value, kValueOffset)
 
+// --- I n v o k e ---
+
+DEFINE_ACCESSORS(SyntaxTree*, Invoke, receiver, kReceiverOffset)
+DEFINE_ACCESSORS(String*, Invoke, name, kNameOffset)
+DEFINE_ACCESSORS(Tuple*, Invoke, arguments, kArgumentsOffset)
+
+
 }
 
 #endif // _IO_AST_INL

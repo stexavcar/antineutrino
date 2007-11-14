@@ -1,0 +1,11 @@
+class SyntaxTree : Object {
+
+}
+
+internal class Literal : SyntaxTree {
+
+}
+
+internal class Invoke : SyntaxTree {
+
+}
