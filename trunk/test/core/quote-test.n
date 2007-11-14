@@ -1,0 +1,7 @@
+def quote_test() {
+  
+}
+
+def main() {
+  quote_test();
+}

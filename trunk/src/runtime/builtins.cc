@@ -100,6 +100,14 @@ Value *Builtins::smi_divide(Arguments &args) {
   return Smi::from_int(self->value() / that->value());
 }
 
+Value *Builtins::smi_abs(Arguments &args) {
+  ASSERT_EQ(0, args.count());
+  Smi *self = cast<Smi>(args.self());
+  int32_t value = self->value();
+  if (value >= 0) return self;
+  else return Smi::from_int(-value);
+}
+
 
 // -------------------
 // --- O b j e c t ---

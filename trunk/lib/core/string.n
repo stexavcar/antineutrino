@@ -7,7 +7,7 @@ internal class String : Object {
   # two characters, a lower-case 'e' composed with a combining acute, it is
   # always considered to be a single character when calculating the length of
   # a string.
-  internal def length();
+  internal def operator||();
   
   internal def operator=(that);
   internal def operator+(that);

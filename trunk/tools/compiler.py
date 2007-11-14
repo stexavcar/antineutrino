@@ -100,8 +100,17 @@ def is_ident_part(char):
   return char.isdigit() or is_ident_start(char)
 
 def is_operator(char):
-  return char == '+' or char == '-' or char == '>' or char == '*' \
-      or char == '/' or char == '%' or char == '='
+  return char == '+' or char == '-' or char == '>' or char == '*'    \
+      or char == '/' or char == '%' or char == '='                   \
+      or is_circumfix_operator(char)
+
+def is_circumfix_operator(char):
+  return char == '|' or char == u'‖'
+
+def circumfix_match(char):
+  if char == '|': return '|'
+  elif char == u'‖': return u'‖'
+  else: raise "Error"
 
 class Scanner:
 
@@ -204,7 +213,7 @@ class Scanner:
       else:
         return Delimiter('-')
     else:
-      raise "Unexpected character " + c
+      raise "Unexpected character " + str(c)
   
   def get_next_token(self):
     if is_ident_start(self.current()):
@@ -272,6 +281,17 @@ class Parser:
       print "Expected operator, found " + str(self.token())
       self.parse_error()
     name = self.token().name
+    self.advance()
+    return name
+
+  def expect_circumfix_operator(self):
+    if not self.token().is_operator():
+      print "Expected operator, found " + str(self.token())
+      self.parse_error()
+    name = self.token().name
+    if not is_circumfix_operator(name):
+      print "Expected circumfix, found " + name
+      self.parse_error()
     self.advance()
     return name
 
@@ -374,7 +394,7 @@ class Parser:
       self.expect_delimiter(';')
       key = (class_name, name)
       if not key in BUILTIN_METHODS:
-        raise "Unknown built-in method " + class_name + " " + name
+        raise "Unknown built-in method " + str(class_name) + " " + str(name)
       index = BUILTIN_METHODS[key]
       body = InternalCall(index, len(params))
     else:
@@ -562,6 +582,13 @@ class Parser:
       value = self.parse_expression(False)
       self.expect_delimiter(')')
       return value
+    elif self.token().is_operator():
+      op = self.expect_circumfix_operator()
+      value = self.parse_atomic_expression()
+      match = self.expect_operator()
+      if not match == circumfix_match(op):
+        self.parse_error()
+      return Invoke(value, op + match, [])
     else:
       self.parse_error()
 

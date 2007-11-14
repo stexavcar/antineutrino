@@ -3,6 +3,8 @@
 # you're dealing with small or big integers.
 internal class SmallInteger : Object {
 
+  internal def operator ||();
+
   internal def operator +(that);
 
   internal def operator -(that);
