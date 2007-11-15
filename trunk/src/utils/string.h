@@ -117,4 +117,4 @@ private:
 
 }
 
-#endif _UTILS_STRING
+#endif // _UTILS_STRING

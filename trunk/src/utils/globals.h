@@ -39,4 +39,4 @@ static inline uint32_t grow_value(uint32_t n) {
 }
 
 
-#endif _GLOBALS
+#endif // _GLOBALS

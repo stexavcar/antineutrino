@@ -2,6 +2,7 @@
 #define _HEAP_HEAP_H
 
 #include "heap/heap.h"
+#include "heap/roots.h"
 
 namespace neutrino {
 

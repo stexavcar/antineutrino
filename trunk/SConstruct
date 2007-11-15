@@ -93,3 +93,5 @@ SConscript(
 report_coverage_target = common.GenerateCoverageReport('coverage', ['debug-coverage-check', 'check-scheduled-tests'])
 common.Alias('coverage', [report_coverage_target])
 common.AlwaysBuild(report_coverage_target)
+
+Default('check')

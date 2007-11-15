@@ -1,7 +1,7 @@
 #ifndef _TYPES
 #define _TYPES
 
-#include <sys/types.h>
+#include <stdint.h>
 
 typedef int32_t word;
 typedef int8_t* address;
