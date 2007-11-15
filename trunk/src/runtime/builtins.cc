@@ -127,6 +127,18 @@ Value *Builtins::object_to_string(Arguments &args) {
 }
 
 
+// ---------------------------------------
+// --- C l a s s   E x p r e s s i o n ---
+// ---------------------------------------
+
+Value *Builtins::class_expression_evaluate(Arguments &args) {
+  ASSERT_EQ(0, args.count());
+  ClassExpression *expr = cast<ClassExpression>(args.self());
+  Class *result = expr->evaluate();
+  return result;
+}
+
+
 // -------------------------
 // --- F u n c t i o n s ---
 // -------------------------
@@ -140,7 +152,7 @@ Value *Builtins::fail(Arguments &args) {
   exit(1);
 }
 
-Value *Builtins::print(Arguments &args) {
+Value *Builtins::raw_print(Arguments &args) {
   ASSERT_EQ(1, args.count());
   String *str_obj = cast<String>(args[0]);
   for (uint32_t i = 0; i < str_obj->length(); i++)

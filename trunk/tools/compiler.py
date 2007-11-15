@@ -639,6 +639,7 @@ class BuiltinClass(SyntaxTree):
     methods = HEAP.new_tuple(values = map(Method.compile, self.members))
     chlass = HEAP.new_class(instance_type_index)
     chlass.set_methods(methods)
+    chlass.set_name(HEAP.new_string(self.info.name))
     HEAP.set_root(self.info.root_index, chlass)
     self.image = chlass
   def resolve(self, namespace):
@@ -655,6 +656,7 @@ class Class(SyntaxTree):
     methods = HEAP.new_tuple(values = map(Method.compile, self.members))
     chlass = HEAP.new_class(OBJECT_TYPE)
     chlass.set_methods(methods)
+    chlass.set_name(HEAP.new_string(self.name))
     HEAP.toplevel[HEAP.new_string(self.name)] = chlass
     self.image = chlass
     namespace[self.name] = self
@@ -992,6 +994,8 @@ class ImageClass(ImageObject):
     HEAP.set_field(self, ImageClass_MethodsOffset, value)
   def set_parent(self, value):
     HEAP.set_field(self, ImageClass_SuperOffset, value)
+  def set_name(self, value):
+    HEAP.set_field(self, ImageClass_NameOffset, value)
 
 class ImageTuple(ImageObject):
   def __init__(self, addr, length):

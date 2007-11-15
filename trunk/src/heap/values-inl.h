@@ -1,10 +1,10 @@
 #ifndef _HEAP_VALUES_INL
 #define _HEAP_VALUES_INL
 
+#include "compiler/ast.h"
 #include "heap/pointer-inl.h"
 #include "heap/ref-inl.h"
 #include "heap/values.h"
-#include "io/ast.h"
 #include "utils/checks.h"
 #include "utils/types-inl.h"
 
@@ -324,6 +324,7 @@ DEFINE_ACCESSORS(Lambda*, Method, lambda, kLambdaOffset)
 
 DEFINE_ACCESSOR(uint32_t, Class, instance_type, kInstanceTypeOffset)
 DEFINE_ACCESSOR(Value*, Class, super, kSuperOffset)
+DEFINE_ACCESSOR(Value*, Class, name, kNameOffset)
 
 DEFINE_ACCESSORS(Tuple*, Class, methods, kMethodsOffset)
 

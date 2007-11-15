@@ -1,7 +1,7 @@
+#include "compiler/ast-inl.h"
 #include "heap/heap.h"
 #include "heap/ref-inl.h"
 #include "heap/values-inl.h"
-#include "io/ast-inl.h"
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
 
@@ -88,15 +88,25 @@ static void write_smi_short_on(Smi *obj, string_buffer &buf) {
   buf.printf("%", obj->value());
 }
 
-void String::write_chars_on(string_buffer &buf) {
-  for (uint32_t i = 0; i < length(); i++)
-    buf.append(at(i));
+void Value::write_chars_on(string_buffer &buf) {
+  if (is<String>(this)) {
+    for (uint32_t i = 0; i < cast<String>(this)->length(); i++)
+      buf.append(cast<String>(this)->at(i));
+  } else {
+    write_short_on(buf);
+  }
 }
 
 static void write_string_short_on(String *obj, string_buffer &buf) {
   buf.append('"');
   obj->write_chars_on(buf);
   buf.append('"');
+}
+
+static void write_class_short_on(Class *obj, string_buffer &buf) {
+  buf.append("#<class ");
+  obj->name()->write_chars_on(buf);
+  buf.append(">");
 }
 
 static void write_literal_expression_short_on(LiteralExpression *obj,
@@ -146,7 +156,7 @@ static void write_object_short_on(Object *obj, string_buffer &buf) {
     buf.append("#<code>");
     break;
   case CLASS_TYPE:
-    buf.append("#<class>");
+    write_class_short_on(cast<Class>(obj), buf);
     break;
   case METHOD_TYPE:
     buf.append("#<method>");

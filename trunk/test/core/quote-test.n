@@ -1,6 +1,7 @@
 def quote_test() {
-  print(<1 + 1 + 1>.to_string());
-  print(<class Foo { }>.to_string());
+  <1 + 1 + 1>;
+  assert_equals("#<class Boolean>", Boolean.to_string());
+  assert_equals("#<class Foo>", <class Foo { }>.evaluate().to_string());
 }
 
 def main() {

@@ -52,6 +52,7 @@ public:
   inline uint32_t instance_type();
   inline ImageTuple *methods();
   inline ImageValue *super();
+  inline ImageValue *name();
 };
 
 class ImageString : public ImageObject {

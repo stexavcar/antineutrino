@@ -46,6 +46,7 @@ class Value : public Data {
 public:
   
   inline InstanceType type();
+  void write_chars_on(string_buffer &buf);
   
   /**
    * Returns true if this object supports comparisons with other
@@ -169,7 +170,6 @@ public:
   inline char &at(uint32_t index);
   
   bool string_equals(String *that);
-  void write_chars_on(string_buffer &buf);
   
   static inline uint32_t size_for(uint32_t chars);
 
@@ -382,6 +382,7 @@ public:
   inline void set_methods(Tuple *methods);
   
   inline Value *&super();
+  inline Value *&name();
   
   bool is_empty();
   
@@ -391,10 +392,11 @@ public:
   IF_DEBUG(static const char *tag_name(uint32_t tag));
   IF_DEBUG(static const char *class_name(uint32_t tag));
 
-  static const int kInstanceTypeOffset = Object::kHeaderSize;
-  static const int kMethodsOffset      = kInstanceTypeOffset + kPointerSize;
-  static const int kSuperOffset        = kMethodsOffset + kPointerSize;
-  static const int kSize               = kSuperOffset + kPointerSize;
+  static const uint32_t kInstanceTypeOffset = Object::kHeaderSize;
+  static const uint32_t kMethodsOffset      = kInstanceTypeOffset + kPointerSize;
+  static const uint32_t kSuperOffset        = kMethodsOffset + kPointerSize;
+  static const uint32_t kNameOffset         = kSuperOffset + kPointerSize;
+  static const uint32_t kSize               = kNameOffset + kPointerSize;
 };
 
 

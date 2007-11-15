@@ -152,6 +152,7 @@ int32_t ImageSmi::value() {
 DEFINE_RAW_GETTER(uint32_t, Class, instance_type, InstanceType)
 DEFINE_GETTER(Tuple, Class, methods, Methods)
 DEFINE_GETTER(Value, Class, super, Super)
+DEFINE_GETTER(Value, Class, name, Name)
 
 
 // --- S t r i n g ---

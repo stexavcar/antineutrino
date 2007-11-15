@@ -88,7 +88,8 @@
   VISIT(1, Lambda, ArgcOffset)        VISIT(2, Lambda, CodeOffset)   \
   VISIT(3, Lambda, LiteralsOffset)    VISIT(4, Lambda, Size)         \
   VISIT(1, Class, InstanceTypeOffset) VISIT(2, Class, MethodsOffset) \
-  VISIT(3, Class, SuperOffset)        VISIT(4, Class, Size)          \
+  VISIT(3, Class, SuperOffset)        VISIT(4, Class, NameOffset)    \
+  VISIT(5, Class, Size)                                              \
   VISIT(1, Method, NameOffset)        VISIT(2, Method, LambdaOffset) \
   VISIT(3, Method, Size)                                             \
   VISIT(1, LiteralExpression, ValueOffset)                           \
@@ -149,7 +150,7 @@
   VISIT(True, true, TRUE)          VISIT(False,  false,  FALSE)      \
   VISIT(Void, void, VOID)          VISIT(Null,   null,   NULL)       \
   VISIT(Object, object, OBJECT)    VISIT(Lambda, lambda, LAMBDA)     \
-  VISIT(Tuple, tuple, TUPLE)                                         \
+  VISIT(Tuple, tuple, TUPLE)       VISIT(Class, class, CLASS)        \
   VISIT(LiteralExpression, literal_expression, LITERAL_EXPRESSION)   \
   VISIT(InvokeExpression, invoke_expression, INVOKE_EXPRESSION)      \
   VISIT(ClassExpression, class_expression, CLASS_EXPRESSION)
@@ -165,12 +166,17 @@
  * implementation must be added in builtins.cc.
  */
 #define FOR_EACH_BUILTIN_METHOD(VISIT)                               \
-  VISIT(0, string, length, "||")      VISIT(1, string, eq, "=")      \
+  VISIT(0, string, length, "||")                                     \
+  VISIT(1, string, eq, "=")                                          \
   VISIT(2, string, plus, "+")                                        \
-  VISIT(10, smi, plus, "+")           VISIT(11, smi, minus, "-")     \
-  VISIT(12, smi, times, "*")          VISIT(13, smi, divide, "/")    \
+  VISIT(10, smi, plus, "+")                                          \
+  VISIT(11, smi, minus, "-")                                         \
+  VISIT(12, smi, times, "*")                                         \
+  VISIT(13, smi, divide, "/")                                        \
   VISIT(14, smi, abs, "||")                                          \
-  VISIT(20, object, eq, "=")          VISIT(21, object, to_string, "to_string")
+  VISIT(20, object, eq, "=")                                         \
+  VISIT(21, object, to_string, "to_string")                          \
+  VISIT(31, class_expression, evaluate, "evaluate")
 
 
 // -------------------------------------------
@@ -183,7 +189,7 @@
  * implementation must be added in builtins.cc.
  */
 #define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
-  VISIT(100, fail, "fail") VISIT(101, print, "print")
+  VISIT(100, fail, "fail") VISIT(101, raw_print, "raw_print")
 
 
 #endif // _HEAP_CONSTS

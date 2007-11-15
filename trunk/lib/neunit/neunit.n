@@ -1,5 +1,6 @@
 internal def fail(value);
-internal def print(value);
+internal def raw_print(value);
+def print(obj) -> raw_print(obj.to_string());
 
 def assert(value) {
   if (value) return null;

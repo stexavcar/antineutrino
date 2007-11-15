@@ -1,6 +1,6 @@
+#include "compiler/ast-inl.h"
 #include "heap/roots.h"
 #include "heap/values-inl.h"
-#include "io/ast-inl.h"
 #include "io/image-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/consts.h"
@@ -167,6 +167,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       Class *chlass = cast<Class>(img->forward_pointer());
       chlass->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
       chlass->super() = img->super()->forward_pointer();
+      chlass->name() = img->name()->forward_pointer();
       break;
     }
     case LITERAL_EXPRESSION_TYPE: {

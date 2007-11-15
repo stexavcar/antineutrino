@@ -33,6 +33,8 @@ public:
   inline String *&name();
   inline void set_name(String *value);
   
+  Class *evaluate();
+  
   static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kNameOffset + kPointerSize;
 };

@@ -11,5 +11,5 @@ internal class InvokeExpression : SyntaxTree {
 }
 
 internal class ClassExpression : SyntaxTree {
-
+  internal def evaluate();
 }

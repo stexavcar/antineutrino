@@ -1,8 +1,8 @@
 #ifndef _HEAP_FACTORY
 #define _HEAP_FACTORY
 
+#include "compiler/ast.h"
 #include "heap/values.h"
-#include "io/ast.h"
 #include "utils/string.h"
 #include "utils/globals.h"
 

@@ -1,8 +1,8 @@
 #ifndef _IO_AST_INL
 #define _IO_AST_INL
 
+#include "compiler/ast.h"
 #include "heap/values-inl.h"
-#include "io/ast.h"
 
 namespace neutrino {
 
