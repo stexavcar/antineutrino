@@ -133,9 +133,10 @@ Value *Builtins::object_to_string(Arguments &args) {
 
 Value *Builtins::class_expression_evaluate(Arguments &args) {
   ASSERT_EQ(0, args.count());
-  ClassExpression *expr = cast<ClassExpression>(args.self());
-  Class *result = expr->evaluate();
-  return result;
+  RefScope scope;
+  ref<ClassExpression> expr = new_ref(cast<ClassExpression>(args.self()));
+  ref<Class> result = expr.evaluate();
+  return *result;
 }
 
 

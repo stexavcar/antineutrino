@@ -125,6 +125,16 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(expr);
       break;
     }
+    case RETURN_EXPRESSION_TYPE: {
+      ReturnExpression *expr = cast<ReturnExpression>(heap.new_return_expression());
+      obj->point_forward(expr);
+      break;
+    }
+    case METHOD_EXPRESSION_TYPE: {
+      MethodExpression *expr = cast<MethodExpression>(heap.new_method_expression());
+      obj->point_forward(expr);
+      break;
+    }
     default:
       UNHANDLED(InstanceType, type);
       break;
@@ -188,6 +198,20 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       ImageClassExpression *img = image_cast<ImageClassExpression>(obj);
       ClassExpression *expr = cast<ClassExpression>(img->forward_pointer());
       expr->set_name(cast<String>(img->name()->forward_pointer()));
+      expr->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
+      break;
+    }
+    case RETURN_EXPRESSION_TYPE: {
+      ImageReturnExpression *img = image_cast<ImageReturnExpression>(obj);
+      ReturnExpression *expr = cast<ReturnExpression>(img->forward_pointer());
+      expr->set_value(cast<SyntaxTree>(img->value()->forward_pointer()));
+      break;
+    }
+    case METHOD_EXPRESSION_TYPE: {
+      ImageMethodExpression *img = image_cast<ImageMethodExpression>(obj);
+      MethodExpression *expr = cast<MethodExpression>(img->forward_pointer());
+      expr->set_name(cast<String>(img->name()->forward_pointer()));
+      expr->set_body(cast<SyntaxTree>(img->body()->forward_pointer()));
       break;
     }
     case STRING_TYPE: case CODE_TYPE:
@@ -245,6 +269,10 @@ uint32_t ImageObject::memory_size() {
       return ImageInvokeExpression_Size;
     case CLASS_EXPRESSION_TYPE:
       return ImageClassExpression_Size;
+    case RETURN_EXPRESSION_TYPE:
+      return ImageReturnExpression_Size;
+    case METHOD_EXPRESSION_TYPE:
+      return ImageMethodExpression_Size;
     case STRING_TYPE:
       return image_cast<ImageString>(this)->string_memory_size();
     case CODE_TYPE:

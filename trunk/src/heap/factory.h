@@ -17,6 +17,7 @@ public:
   ref<Method> new_method(ref<String> name, ref<Lambda> lambda);
   ref<Dictionary> new_dictionary();
   ref<Code> new_code(uint32_t size);
+  ref<Class> new_empty_class(InstanceType instance_type);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;

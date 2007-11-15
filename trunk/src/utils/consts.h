@@ -55,7 +55,9 @@
 #define FOR_EACH_SYNTAX_TREE_TYPE(VISIT)                             \
   VISIT(50, LITERAL_EXPRESSION, LiteralExpression)                   \
   VISIT(51, INVOKE_EXPRESSION, InvokeExpression)                     \
-  VISIT(52, CLASS_EXPRESSION, ClassExpression)
+  VISIT(52, CLASS_EXPRESSION, ClassExpression)                       \
+  VISIT(53, RETURN_EXPRESSION, ReturnExpression)                     \
+  VISIT(54, METHOD_EXPRESSION, MethodExpression)
 
 
 // ---------------------
@@ -99,7 +101,13 @@
   VISIT(3, InvokeExpression, ArgumentsOffset)                        \
   VISIT(4, InvokeExpression, Size)                                   \
   VISIT(1, ClassExpression, NameOffset)                              \
-  VISIT(2, ClassExpression, Size)
+  VISIT(2, ClassExpression, MethodsOffset)                           \
+  VISIT(3, ClassExpression, Size)                                    \
+  VISIT(1, ReturnExpression, ValueOffset)                            \
+  VISIT(2, ReturnExpression, Size)                                   \
+  VISIT(1, MethodExpression, NameOffset)                             \
+  VISIT(2, MethodExpression, BodyOffset)                             \
+  VISIT(3, MethodExpression, Size)
 
 
 // -----------------
@@ -126,10 +134,12 @@
   VISIT(16, Class, method_class, METHOD_CLASS, new_empty_class(METHOD_TYPE))\
   VISIT(17, Class, smi_class, SMI_CLASS, new_empty_class(SMI_TYPE))  \
   VISIT(18, Class, invoke_expression_class, INVOKE_EXPRESSION_CLASS, new_empty_class(INVOKE_EXPRESSION_TYPE))\
-  VISIT(19, Class, class_expression_class, CLASS_EXPRESSION_CLASS, new_empty_class(CLASS_EXPRESSION_TYPE))
+  VISIT(19, Class, class_expression_class, CLASS_EXPRESSION_CLASS, new_empty_class(CLASS_EXPRESSION_TYPE))\
+  VISIT(20, Class, return_expression_class, RETURN_EXPRESSION_CLASS, new_empty_class(RETURN_EXPRESSION_TYPE))\
+  VISIT(21, Class, method_expression_class, METHOD_EXPRESSION_CLASS, new_empty_class(METHOD_EXPRESSION_TYPE))
 
 #define FOR_EACH_COMPLICATED_ROOT(VISIT)                             \
-  VISIT(20, Class, class_class, CLASS_CLASS, NULL)
+  VISIT(22, Class, class_class, CLASS_CLASS, NULL)
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT(VISIT)                                   \

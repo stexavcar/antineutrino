@@ -271,52 +271,6 @@ void Data::write_short_on(string_buffer &buf) {
   write_data_short_on(this, buf);
 }
 
-static void unparse_literal_expression_on(LiteralExpression *obj,
-    string_buffer &buf) {
-  obj->value()->write_on(buf);
-}
-
-static void unparse_invoke_expression_on(InvokeExpression *obj, string_buffer &buf) {
-  obj->receiver()->unparse_on(buf);
-  buf.append('.');
-  obj->name()->write_chars_on(buf);
-  buf.append('(');
-  bool is_first = true;
-  for (uint32_t i = 0; i < obj->arguments()->length(); i++) {
-    if (is_first) is_first = false;
-    else buf.append(", ");
-    cast<SyntaxTree>(obj->arguments()->at(i))->unparse_on(buf);
-  }
-  buf.append(')');
-}
-
-static void unparse_class_expression(ClassExpression *obj, string_buffer &buf) {
-  buf.append("class ");
-  obj->name()->write_chars_on(buf);
-  buf.append(" { }");
-}
-
-static void unparse_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
-  InstanceType type = obj->type();
-  switch (type) {
-  case LITERAL_EXPRESSION_TYPE:
-    unparse_literal_expression_on(cast<LiteralExpression>(obj), buf);
-    break;
-  case INVOKE_EXPRESSION_TYPE:
-    unparse_invoke_expression_on(cast<InvokeExpression>(obj), buf);
-    break;
-  case CLASS_EXPRESSION_TYPE:
-    unparse_class_expression(cast<ClassExpression>(obj), buf);
-    break;
-  default:
-    UNHANDLED(InstanceType, type);
-  }
-}
-
-void SyntaxTree::unparse_on(string_buffer &buf) {
-  unparse_syntax_tree_on(this, buf);
-}
-
 
 // -------------------------------
 // --- D i s a s s e m b l e r ---

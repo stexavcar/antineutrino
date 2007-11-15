@@ -665,7 +665,8 @@ class Class(SyntaxTree):
       parent_value = namespace[self.parent]
       self.image.set_parent(parent_value.image)
   def quote(self):
-    return HEAP.new_class_expression(HEAP.new_string(self.name))
+    methods = HEAP.new_tuple(values = [ m.quote() for m in self.members ])
+    return HEAP.new_class_expression(HEAP.new_string(self.name), methods)
 
 class Method(SyntaxTree):
   def __init__(self, name, params, body):
@@ -675,6 +676,9 @@ class Method(SyntaxTree):
   def compile(self):
     body = compile_lambda(self.params, self.body)
     return HEAP.new_method(HEAP.new_string(self.name), body)
+  def quote(self):
+    body = self.body.quote()
+    return HEAP.new_method_expression(HEAP.new_string(self.name), body)
 
 class Expression(SyntaxTree):
   pass
@@ -807,6 +811,8 @@ class Return(Expression):
   def emit(self, state):
     self.value.emit(state)
     state.write(OC_RETURN)
+  def quote(self):
+    return HEAP.new_return_expression(self.value.quote())
 
 class Sequence(Expression):
   def __init__(self, exprs):
@@ -849,7 +855,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 21
+  kRootCount  = 23
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -944,10 +950,20 @@ class Heap:
     result.set_class(INVOKE_EXPRESSION_TYPE)
     return result
 
-  def new_class_expression(self, name):
-    result = ImageClassExpression(self.allocate(ImageClassExpression_Size), name)
+  def new_class_expression(self, name, methods):
+    result = ImageClassExpression(self.allocate(ImageClassExpression_Size), name, methods)
     result.set_class(CLASS_EXPRESSION_TYPE)
     return result
+
+  def new_return_expression(self, value):
+    result = ImageReturnExpression(self.allocate(ImageReturnExpression_Size), value)
+    result.set_class(RETURN_EXPRESSION_TYPE)
+    return result
+
+  def new_method_expression(self, name, body):
+    result = ImageMethodExpression(self.allocate(ImageMethodExpression_Size), name, body)
+    result.set_class(METHOD_EXPRESSION_TYPE)
+    return result;
 
   # --- A c c e s s ---
 
@@ -1091,11 +1107,31 @@ class ImageInvokeExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageInvokeExpression_ArgumentsOffset, value)
 
 class ImageClassExpression(ImageSyntaxTree):
-  def __init__(self, addr, name):
+  def __init__(self, addr, name, methods):
     ImageSyntaxTree.__init__(self, addr)
     self.set_name(name)
+    self.set_methods(methods)
   def set_name(self, value):
     HEAP.set_field(self, ImageClassExpression_NameOffset, value)
+  def set_methods(self, value):
+    HEAP.set_field(self, ImageClassExpression_MethodsOffset, value)
+
+class ImageReturnExpression(ImageSyntaxTree):
+  def __init__(self, addr, value):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_value(value)
+  def set_value(self, value):
+    HEAP.set_field(self, ImageReturnExpression_ValueOffset, value)
+
+class ImageMethodExpression(ImageSyntaxTree):
+  def __init__(self, addr, name, body):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_name(name)
+    self.set_body(body)
+  def set_name(self, value):
+    HEAP.set_field(self, ImageMethodExpression_NameOffset, value)
+  def set_body(self, value):
+    HEAP.set_field(self, ImageMethodExpression_BodyOffset, value)
 
 # -----------------------
 # --- C o m p i l e r ---

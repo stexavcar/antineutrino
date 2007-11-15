@@ -118,6 +118,18 @@ public:
 class ImageClassExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();
+  inline ImageTuple *methods();
+};
+
+class ImageReturnExpression : public ImageSyntaxTree {
+public:
+  inline ImageSyntaxTree *value();
+};
+
+class ImageMethodExpression : public ImageSyntaxTree {
+public:
+  inline ImageString *name();
+  inline ImageSyntaxTree *body();
 };
 
 template <class C>

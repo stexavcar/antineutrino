@@ -19,6 +19,16 @@ DEFINE_ACCESSORS(Tuple*, InvokeExpression, arguments, kArgumentsOffset)
 // --- C l a s s   E x p r e s s i o n ---
 
 DEFINE_ACCESSORS(String*, ClassExpression, name, kNameOffset)
+DEFINE_ACCESSORS(Tuple*, ClassExpression, methods, kMethodsOffset)
+
+// --- R e t u r n   E x p r e s s i o n ---
+
+DEFINE_ACCESSORS(SyntaxTree*, ReturnExpression, value, kValueOffset)
+
+// --- M e t h o d   E x p r e s s i o n ---
+
+DEFINE_ACCESSORS(String*, MethodExpression, name, kNameOffset)
+DEFINE_ACCESSORS(SyntaxTree*, MethodExpression, body, kBodyOffset)
 
 }
 

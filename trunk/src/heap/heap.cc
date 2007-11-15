@@ -69,6 +69,22 @@ Data *Heap::new_class_expression() {
 }
 
 
+Data *Heap::new_return_expression() {
+  Data *val = allocate_object(ReturnExpression::kSize, roots().return_expression_class());
+  if (is<AllocationFailed>(val)) return val;
+  ReturnExpression *result = cast<ReturnExpression>(val);
+  return result;
+}
+
+
+Data *Heap::new_method_expression() {
+  Data *val = allocate_object(MethodExpression::kSize, roots().method_expression_class());
+  if (is<AllocationFailed>(val)) return val;
+  MethodExpression *result = cast<MethodExpression>(val);
+  return result;
+}
+
+
 Data *Heap::new_empty_class(InstanceType instance_type) {
   Data *result = allocate_class(instance_type);
   if (is<AllocationFailed>(result)) return result;

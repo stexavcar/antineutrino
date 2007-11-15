@@ -58,9 +58,10 @@ DEFINE_IMAGE_OBJECT_QUERY(Lambda, LAMBDA)
 DEFINE_IMAGE_OBJECT_QUERY(Dictionary, DICTIONARY)
 DEFINE_IMAGE_OBJECT_QUERY(Class, CLASS)
 DEFINE_IMAGE_OBJECT_QUERY(Method, METHOD)
-DEFINE_IMAGE_OBJECT_QUERY(LiteralExpression, LITERAL_EXPRESSION)
-DEFINE_IMAGE_OBJECT_QUERY(InvokeExpression, INVOKE_EXPRESSION)
-DEFINE_IMAGE_OBJECT_QUERY(ClassExpression, CLASS_EXPRESSION)
+#define DEFINE_SYNTAX_TREE_QUERY(n, NAME, Name) DEFINE_IMAGE_OBJECT_QUERY(Name, NAME)
+FOR_EACH_SYNTAX_TREE_TYPE(DEFINE_SYNTAX_TREE_QUERY)
+#undef DEFINE_SYNTAX_TREE_QUERY
+
 
 template <class C>
 static inline C *image_cast(ImageData *val) {
@@ -223,6 +224,19 @@ DEFINE_GETTER(Tuple, InvokeExpression, arguments, Arguments)
 // --- C l a s s   E x p r e s s i o n ---
 
 DEFINE_GETTER(String, ClassExpression, name, Name)
+DEFINE_GETTER(Tuple, ClassExpression, methods, Methods)
+
+
+// --- R e t u r n   E x p r e s s i o n ---
+
+DEFINE_GETTER(SyntaxTree, ReturnExpression, value, Value)
+
+
+// --- M e t h o d   E x p r e s s i o n ---
+
+DEFINE_GETTER(String, MethodExpression, name, Name)
+DEFINE_GETTER(SyntaxTree, MethodExpression, body, Body)
+
 
 #undef DEFINE_RAW_GETTER
 #undef DEFINE_GETTER

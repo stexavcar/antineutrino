@@ -54,6 +54,10 @@ public:
   
   Data *new_class_expression();
   
+  Data *new_return_expression();
+  
+  Data *new_method_expression();
+  
   Data *new_abstract_buffer(uint32_t size, Class *chlass);
   
   template <typename T> Data *new_buffer(uint32_t size);

@@ -39,4 +39,9 @@ ref<Method> Factory::new_method(ref<String> name, ref<Lambda> lambda) {
   return new_ref(cast<Method>(result));
 }
 
+ref<Class> Factory::new_empty_class(InstanceType instance_type) {
+  Data *result = runtime().heap().new_empty_class(instance_type);
+  return new_ref(cast<Class>(result));
+}
+
 }
