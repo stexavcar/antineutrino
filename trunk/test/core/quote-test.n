@@ -1,5 +1,6 @@
 def quote_test() {
-  <(1 + 1)>.to_string();
+  print(<1 + 1 + 1>.to_string());
+  print(<class Foo { }>.to_string());
 }
 
 def main() {

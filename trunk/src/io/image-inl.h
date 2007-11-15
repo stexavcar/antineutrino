@@ -35,7 +35,9 @@ template <>
 static inline bool is<ImageSyntaxTree>(ImageData *data) {
   if (!is<ImageObject>(data)) return false;
   switch (image_cast<ImageObject>(data)->type()) {
-    case INVOKE_TYPE: case LITERAL_TYPE:
+#define MAKE_CASE(n, NAME, Name) case NAME##_TYPE: return true;
+FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
+#undef MAKE_CASE
       return true;
     default:
       return false;
@@ -56,8 +58,9 @@ DEFINE_IMAGE_OBJECT_QUERY(Lambda, LAMBDA)
 DEFINE_IMAGE_OBJECT_QUERY(Dictionary, DICTIONARY)
 DEFINE_IMAGE_OBJECT_QUERY(Class, CLASS)
 DEFINE_IMAGE_OBJECT_QUERY(Method, METHOD)
-DEFINE_IMAGE_OBJECT_QUERY(Literal, LITERAL)
-DEFINE_IMAGE_OBJECT_QUERY(Invoke, INVOKE)
+DEFINE_IMAGE_OBJECT_QUERY(LiteralExpression, LITERAL_EXPRESSION)
+DEFINE_IMAGE_OBJECT_QUERY(InvokeExpression, INVOKE_EXPRESSION)
+DEFINE_IMAGE_OBJECT_QUERY(ClassExpression, CLASS_EXPRESSION)
 
 template <class C>
 static inline C *image_cast(ImageData *val) {
@@ -204,17 +207,21 @@ DEFINE_GETTER(Lambda, Method, lambda, Lambda)
 DEFINE_GETTER(Tuple, Dictionary, table, Table)
 
 
-// --- L i t e r a l ---
+// --- L i t e r a l   E x p r e s s i o n ---
 
-DEFINE_GETTER(Value, Literal, value, Value)
+DEFINE_GETTER(Value, LiteralExpression, value, Value)
 
 
-// --- I n v o k e ---
+// --- I n v o k e   E x p r e s s i o n ---
 
-DEFINE_GETTER(SyntaxTree, Invoke, receiver, Receiver)
-DEFINE_GETTER(String, Invoke, name, Name)
-DEFINE_GETTER(Tuple, Invoke, arguments, Arguments)
+DEFINE_GETTER(SyntaxTree, InvokeExpression, receiver, Receiver)
+DEFINE_GETTER(String, InvokeExpression, name, Name)
+DEFINE_GETTER(Tuple, InvokeExpression, arguments, Arguments)
 
+
+// --- C l a s s   E x p r e s s i o n ---
+
+DEFINE_GETTER(String, ClassExpression, name, Name)
 
 #undef DEFINE_RAW_GETTER
 #undef DEFINE_GETTER

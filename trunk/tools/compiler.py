@@ -579,6 +579,8 @@ class Parser:
     elif self.token().is_delimiter('['):
       exprs = self.parse_arguments('[', ']')
       return Tuple(exprs)
+    elif self.token().is_keyword('class'):
+      return self.parse_class_declaration([])
     elif self.token().is_delimiter('('):
       self.expect_delimiter('(')
       value = self.parse_expression(False)
@@ -586,7 +588,7 @@ class Parser:
       return value
     elif self.token().is_operator('<'):
       self.expect_operator('<')
-      value = self.parse_atomic_expression()
+      value = self.parse_operator_expression('>')
       self.expect_operator('>')
       return Quote(value)
     elif self.token().is_operator():
@@ -660,6 +662,8 @@ class Class(SyntaxTree):
     if self.parent:
       parent_value = namespace[self.parent]
       self.image.set_parent(parent_value.image)
+  def quote(self):
+    return HEAP.new_class_expression(HEAP.new_string(self.name))
 
 class Method(SyntaxTree):
   def __init__(self, name, params, body):
@@ -685,7 +689,7 @@ class Literal(Expression):
     state.write(OC_PUSH, index)
   def quote(self):
     val = quote_value(self.value)
-    return HEAP.new_literal(val)
+    return HEAP.new_literal_expression(val)
 
 class Tuple(Expression):
   def __init__(self, values):
@@ -765,7 +769,7 @@ class Invoke(Expression):
     recv = self.recv.quote()
     name = HEAP.new_string(self.name)
     args = HEAP.new_tuple(values = map(lambda x: x.quote(), self.args))
-    return HEAP.new_invoke(recv, name, args)
+    return HEAP.new_invoke_expression(recv, name, args)
 
 class InternalCall(Expression):
   def __init__(self, index, argc):
@@ -843,7 +847,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 20
+  kRootCount  = 21
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -928,14 +932,19 @@ class Heap:
       result[i] = contents[i]
     return result
 
-  def new_literal(self, value):
-    result = ImageLiteral(self.allocate(ImageLiteral_Size), value)
-    result.set_class(LITERAL_TYPE)
+  def new_literal_expression(self, value):
+    result = ImageLiteralExpression(self.allocate(ImageLiteralExpression_Size), value)
+    result.set_class(LITERAL_EXPRESSION_TYPE)
     return result
 
-  def new_invoke(self, recv, name, args):
-    result = ImageInvoke(self.allocate(ImageInvoke_Size), recv, name, args)
-    result.set_class(INVOKE_TYPE)
+  def new_invoke_expression(self, recv, name, args):
+    result = ImageInvokeExpression(self.allocate(ImageInvokeExpression_Size), recv, name, args)
+    result.set_class(INVOKE_EXPRESSION_TYPE)
+    return result
+
+  def new_class_expression(self, name):
+    result = ImageClassExpression(self.allocate(ImageClassExpression_Size), name)
+    result.set_class(CLASS_EXPRESSION_TYPE)
     return result
 
   # --- A c c e s s ---
@@ -1057,25 +1066,32 @@ class ImageSyntaxTree(ImageObject):
   def __init__(self, addr):
     ImageObject.__init__(self, addr)
 
-class ImageLiteral(ImageSyntaxTree):
+class ImageLiteralExpression(ImageSyntaxTree):
   def __init__(self, addr, value):
     ImageSyntaxTree.__init__(self, addr)
     self.set_value(value)
   def set_value(self, value):
-    HEAP.set_field(self, ImageLiteral_ValueOffset, value)
+    HEAP.set_field(self, ImageLiteralExpression_ValueOffset, value)
 
-class ImageInvoke(ImageSyntaxTree):
+class ImageInvokeExpression(ImageSyntaxTree):
   def __init__(self, addr, recv, name, args):
     ImageSyntaxTree.__init__(self, addr)
     self.set_recv(recv)
     self.set_name(name)
     self.set_args(args)
   def set_recv(self, value):
-    HEAP.set_field(self, ImageInvoke_ReceiverOffset, value)
+    HEAP.set_field(self, ImageInvokeExpression_ReceiverOffset, value)
   def set_name(self, value):
-    HEAP.set_field(self, ImageInvoke_NameOffset, value)
+    HEAP.set_field(self, ImageInvokeExpression_NameOffset, value)
   def set_args(self, value):
-    HEAP.set_field(self, ImageInvoke_ArgumentsOffset, value)
+    HEAP.set_field(self, ImageInvokeExpression_ArgumentsOffset, value)
+
+class ImageClassExpression(ImageSyntaxTree):
+  def __init__(self, addr, name):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_name(name)
+  def set_name(self, value):
+    HEAP.set_field(self, ImageClassExpression_NameOffset, value)
 
 # -----------------------
 # --- C o m p i l e r ---

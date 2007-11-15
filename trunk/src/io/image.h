@@ -102,16 +102,21 @@ class ImageSyntaxTree : public ImageObject {
   
 };
 
-class ImageLiteral : public ImageSyntaxTree {
+class ImageLiteralExpression : public ImageSyntaxTree {
 public:
   inline ImageValue *value();
 };
 
-class ImageInvoke : public ImageSyntaxTree {
+class ImageInvokeExpression : public ImageSyntaxTree {
 public:
   inline ImageSyntaxTree *receiver();
   inline ImageString *name();
   inline ImageTuple *arguments();
+};
+
+class ImageClassExpression : public ImageSyntaxTree {
+public:
+  inline ImageString *name();
 };
 
 template <class C>

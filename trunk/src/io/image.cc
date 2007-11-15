@@ -110,14 +110,19 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(method);
       break;
     }
-    case LITERAL_TYPE: {
-      Literal *literal = cast<Literal>(heap.new_literal());
+    case LITERAL_EXPRESSION_TYPE: {
+      LiteralExpression *literal = cast<LiteralExpression>(heap.new_literal_expression());
       obj->point_forward(literal);
       break;
     }
-    case INVOKE_TYPE: {
-      Invoke *invoke = cast<Invoke>(heap.new_invoke());
+    case INVOKE_EXPRESSION_TYPE: {
+      InvokeExpression *invoke = cast<InvokeExpression>(heap.new_invoke_expression());
       obj->point_forward(invoke);
+      break;
+    }
+    case CLASS_EXPRESSION_TYPE: {
+      ClassExpression *expr = cast<ClassExpression>(heap.new_class_expression());
+      obj->point_forward(expr);
       break;
     }
     default:
@@ -164,18 +169,24 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       chlass->super() = img->super()->forward_pointer();
       break;
     }
-    case LITERAL_TYPE: {
-      ImageLiteral *img = image_cast<ImageLiteral>(obj);
-      Literal *literal = cast<Literal>(img->forward_pointer());
+    case LITERAL_EXPRESSION_TYPE: {
+      ImageLiteralExpression *img = image_cast<ImageLiteralExpression>(obj);
+      LiteralExpression *literal = cast<LiteralExpression>(img->forward_pointer());
       literal->value() = img->value()->forward_pointer();
       break;
     }
-    case INVOKE_TYPE: {
-      ImageInvoke *img = image_cast<ImageInvoke>(obj);
-      Invoke *invoke = cast<Invoke>(img->forward_pointer());
+    case INVOKE_EXPRESSION_TYPE: {
+      ImageInvokeExpression *img = image_cast<ImageInvokeExpression>(obj);
+      InvokeExpression *invoke = cast<InvokeExpression>(img->forward_pointer());
       invoke->set_receiver(cast<SyntaxTree>(img->receiver()->forward_pointer()));
       invoke->set_name(cast<String>(img->name()->forward_pointer()));
       invoke->set_arguments(cast<Tuple>(img->arguments()->forward_pointer()));
+      break;
+    }
+    case CLASS_EXPRESSION_TYPE: {
+      ImageClassExpression *img = image_cast<ImageClassExpression>(obj);
+      ClassExpression *expr = cast<ClassExpression>(img->forward_pointer());
+      expr->set_name(cast<String>(img->name()->forward_pointer()));
       break;
     }
     case STRING_TYPE: case CODE_TYPE:
@@ -227,10 +238,12 @@ uint32_t ImageObject::memory_size() {
       return ImageClass_Size;
     case METHOD_TYPE:
       return ImageMethod_Size;
-    case LITERAL_TYPE:
-      return ImageLiteral_Size;
-    case INVOKE_TYPE:
-      return ImageInvoke_Size;
+    case LITERAL_EXPRESSION_TYPE:
+      return ImageLiteralExpression_Size;
+    case INVOKE_EXPRESSION_TYPE:
+      return ImageInvokeExpression_Size;
+    case CLASS_EXPRESSION_TYPE:
+      return ImageClassExpression_Size;
     case STRING_TYPE:
       return image_cast<ImageString>(this)->string_memory_size();
     case CODE_TYPE:

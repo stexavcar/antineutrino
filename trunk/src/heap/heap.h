@@ -48,9 +48,11 @@ public:
   
   Data *new_lambda(uint32_t argc);
 
-  Data *new_literal();
+  Data *new_literal_expression();
   
-  Data *new_invoke();
+  Data *new_invoke_expression();
+  
+  Data *new_class_expression();
   
   Data *new_abstract_buffer(uint32_t size, Class *chlass);
   

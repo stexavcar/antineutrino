@@ -45,18 +45,26 @@ Data *Heap::new_lambda(uint32_t argc) {
   return result;
 }
 
-Data *Heap::new_literal() {
-  Data *val = allocate_object(Literal::kSize, roots().literal_class());
+Data *Heap::new_literal_expression() {
+  Data *val = allocate_object(LiteralExpression::kSize, roots().literal_expression_class());
   if (is<AllocationFailed>(val)) return val;
-  Literal *result = cast<Literal>(val);
+  LiteralExpression *result = cast<LiteralExpression>(val);
   return result;
 }
 
 
-Data *Heap::new_invoke() {
-  Data *val = allocate_object(Invoke::kSize, roots().invoke_class());
+Data *Heap::new_invoke_expression() {
+  Data *val = allocate_object(InvokeExpression::kSize, roots().invoke_expression_class());
   if (is<AllocationFailed>(val)) return val;
-  Invoke *result = cast<Invoke>(val);
+  InvokeExpression *result = cast<InvokeExpression>(val);
+  return result;
+}
+
+
+Data *Heap::new_class_expression() {
+  Data *val = allocate_object(ClassExpression::kSize, roots().class_expression_class());
+  if (is<AllocationFailed>(val)) return val;
+  ClassExpression *result = cast<ClassExpression>(val);
   return result;
 }
 

@@ -53,8 +53,9 @@
   FOR_EACH_VIRTUAL_TYPE(VISIT)
 
 #define FOR_EACH_SYNTAX_TREE_TYPE(VISIT)                             \
-  VISIT(50, LITERAL, Literal)                                        \
-  VISIT(51, INVOKE, Invoke)
+  VISIT(50, LITERAL_EXPRESSION, LiteralExpression)                   \
+  VISIT(51, INVOKE_EXPRESSION, InvokeExpression)                     \
+  VISIT(52, CLASS_EXPRESSION, ClassExpression)
 
 
 // ---------------------
@@ -90,9 +91,14 @@
   VISIT(3, Class, SuperOffset)        VISIT(4, Class, Size)          \
   VISIT(1, Method, NameOffset)        VISIT(2, Method, LambdaOffset) \
   VISIT(3, Method, Size)                                             \
-  VISIT(1, Literal, ValueOffset)      VISIT(2, Literal, Size)        \
-  VISIT(1, Invoke, ReceiverOffset)    VISIT(2, Invoke, NameOffset)   \
-  VISIT(3, Invoke, ArgumentsOffset)   VISIT(4, Invoke, Size)
+  VISIT(1, LiteralExpression, ValueOffset)                           \
+  VISIT(2, LiteralExpression, Size)                                  \
+  VISIT(1, InvokeExpression, ReceiverOffset)                         \
+  VISIT(2, InvokeExpression, NameOffset)                             \
+  VISIT(3, InvokeExpression, ArgumentsOffset)                        \
+  VISIT(4, InvokeExpression, Size)                                   \
+  VISIT(1, ClassExpression, NameOffset)                              \
+  VISIT(2, ClassExpression, Size)
 
 
 // -----------------
@@ -110,7 +116,7 @@
   VISIT(7,  True, thrue, TRUE, new_singleton(true_class()))          \
   VISIT(8,  Class, false_class, FALSE_CLASS, new_empty_class(FALSE_TYPE))\
   VISIT(9,  False, fahlse, FALSE, new_singleton(false_class()))      \
-  VISIT(10, Class, literal_class, LITERAL_CLASS, new_empty_class(LITERAL_TYPE))\
+  VISIT(10, Class, literal_expression_class, LITERAL_EXPRESSION_CLASS, new_empty_class(LITERAL_EXPRESSION_TYPE))\
   VISIT(11, Class, dictionary_class, DICTIONARY_CLASS, new_empty_class(DICTIONARY_TYPE))\
   VISIT(12, Class, lambda_class, LAMBDA_CLASS, new_empty_class(LAMBDA_TYPE))\
   VISIT(13, Dictionary, toplevel, TOPLEVEL, new_dictionary())        \
@@ -118,10 +124,11 @@
   VISIT(15, Class, code_class, CODE_CLASS, new_empty_class(CODE_TYPE))\
   VISIT(16, Class, method_class, METHOD_CLASS, new_empty_class(METHOD_TYPE))\
   VISIT(17, Class, smi_class, SMI_CLASS, new_empty_class(SMI_TYPE))  \
-  VISIT(18, Class, invoke_class, INVOKE_CLASS, new_empty_class(INVOKE_TYPE))
+  VISIT(18, Class, invoke_expression_class, INVOKE_EXPRESSION_CLASS, new_empty_class(INVOKE_EXPRESSION_TYPE))\
+  VISIT(19, Class, class_expression_class, CLASS_EXPRESSION_CLASS, new_empty_class(CLASS_EXPRESSION_TYPE))
 
 #define FOR_EACH_COMPLICATED_ROOT(VISIT)                             \
-  VISIT(19, Class, class_class, CLASS_CLASS, NULL)
+  VISIT(20, Class, class_class, CLASS_CLASS, NULL)
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT(VISIT)                                   \
@@ -142,8 +149,10 @@
   VISIT(True, true, TRUE)          VISIT(False,  false,  FALSE)      \
   VISIT(Void, void, VOID)          VISIT(Null,   null,   NULL)       \
   VISIT(Object, object, OBJECT)    VISIT(Lambda, lambda, LAMBDA)     \
-  VISIT(Tuple, tuple, TUPLE)       VISIT(Literal, literal, LITERAL)  \
-  VISIT(Invoke, invoke, INVOKE)
+  VISIT(Tuple, tuple, TUPLE)                                         \
+  VISIT(LiteralExpression, literal_expression, LITERAL_EXPRESSION)   \
+  VISIT(InvokeExpression, invoke_expression, INVOKE_EXPRESSION)      \
+  VISIT(ClassExpression, class_expression, CLASS_EXPRESSION)
 
 
 // ---------------------------------------

@@ -99,7 +99,8 @@ static void write_string_short_on(String *obj, string_buffer &buf) {
   buf.append('"');
 }
 
-static void write_literal_short_on(Literal *obj, string_buffer &buf) {
+static void write_literal_expression_short_on(LiteralExpression *obj,
+    string_buffer &buf) {
   buf.append('<');
   obj->value()->write_short_on(buf);
   buf.append('>');
@@ -129,11 +130,14 @@ static void write_object_short_on(Object *obj, string_buffer &buf) {
   case FALSE_TYPE:
     buf.append("false");
     break;
-  case LITERAL_TYPE:
-    write_literal_short_on(cast<Literal>(obj), buf);
+  case LITERAL_EXPRESSION_TYPE:
+    write_literal_expression_short_on(cast<LiteralExpression>(obj), buf);
     break;
-  case INVOKE_TYPE:
-    buf.append("#<invoke>");
+  case CLASS_EXPRESSION_TYPE:
+    buf.append("@<class>");
+    break;
+  case INVOKE_EXPRESSION_TYPE:
+    buf.append("@<invoke>");
     break;
   case DICTIONARY_TYPE:
     buf.append("#<dictionary>");
@@ -191,25 +195,10 @@ static void write_lambda_on(Lambda *obj, string_buffer &buf) {
   obj->code()->write_on(buf);
 }
 
-static void write_literal_on(Literal *obj, string_buffer &buf) {
+static void write_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
   buf.append('<');
-  obj->value()->write_on(buf);
+  obj->unparse_on(buf);
   buf.append('>');
-}
-
-static void write_invoke_on(Invoke *obj, string_buffer &buf) {
-  buf.append('<');
-  obj->receiver()->write_short_on(buf);
-  buf.append('.');
-  obj->name()->write_chars_on(buf);
-  buf.append('(');
-  bool is_first = true;
-  for (uint32_t i = 0; i < obj->arguments()->length(); i++) {
-    if (is_first) is_first = false;
-    else buf.append(", ");
-    obj->arguments()->at(i)->write_short_on(buf);
-  }
-  buf.append(")>");
 }
 
 static void write_dictionary_on(Dictionary *obj, string_buffer &buf) {
@@ -233,18 +222,17 @@ static void write_method_on(Method *obj, string_buffer &buf) {
 }
 
 static void write_object_on(Object *obj, string_buffer &buf) {
-  switch (obj->chlass()->instance_type()) {
+  switch (obj->type()) {
   case TUPLE_TYPE:
     write_tuple_on(cast<Tuple>(obj), buf);
     break;
   case LAMBDA_TYPE:
     write_lambda_on(cast<Lambda>(obj), buf);
     break;
-  case LITERAL_TYPE:
-    write_literal_on(cast<Literal>(obj), buf);
-    break;
-  case INVOKE_TYPE:
-    write_invoke_on(cast<Invoke>(obj), buf);
+  case LITERAL_EXPRESSION_TYPE:
+  case INVOKE_EXPRESSION_TYPE:
+  case CLASS_EXPRESSION_TYPE:
+    write_syntax_tree_on(cast<SyntaxTree>(obj), buf);
     break;
   case DICTIONARY_TYPE:
     write_dictionary_on(cast<Dictionary>(obj), buf);
@@ -271,6 +259,52 @@ void Data::write_on(string_buffer &buf) {
 
 void Data::write_short_on(string_buffer &buf) {
   write_data_short_on(this, buf);
+}
+
+static void unparse_literal_expression_on(LiteralExpression *obj,
+    string_buffer &buf) {
+  obj->value()->write_on(buf);
+}
+
+static void unparse_invoke_expression_on(InvokeExpression *obj, string_buffer &buf) {
+  obj->receiver()->unparse_on(buf);
+  buf.append('.');
+  obj->name()->write_chars_on(buf);
+  buf.append('(');
+  bool is_first = true;
+  for (uint32_t i = 0; i < obj->arguments()->length(); i++) {
+    if (is_first) is_first = false;
+    else buf.append(", ");
+    cast<SyntaxTree>(obj->arguments()->at(i))->unparse_on(buf);
+  }
+  buf.append(')');
+}
+
+static void unparse_class_expression(ClassExpression *obj, string_buffer &buf) {
+  buf.append("class ");
+  obj->name()->write_chars_on(buf);
+  buf.append(" { }");
+}
+
+static void unparse_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
+  InstanceType type = obj->type();
+  switch (type) {
+  case LITERAL_EXPRESSION_TYPE:
+    unparse_literal_expression_on(cast<LiteralExpression>(obj), buf);
+    break;
+  case INVOKE_EXPRESSION_TYPE:
+    unparse_invoke_expression_on(cast<InvokeExpression>(obj), buf);
+    break;
+  case CLASS_EXPRESSION_TYPE:
+    unparse_class_expression(cast<ClassExpression>(obj), buf);
+    break;
+  default:
+    UNHANDLED(InstanceType, type);
+  }
+}
+
+void SyntaxTree::unparse_on(string_buffer &buf) {
+  unparse_syntax_tree_on(this, buf);
 }
 
 

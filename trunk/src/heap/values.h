@@ -364,6 +364,8 @@ class SyntaxTree : public Object {
 public:
   inline Value *&at(uint32_t index);
   
+  void unparse_on(string_buffer &buf);
+  
   static const int kHeaderSize = Object::kHeaderSize;
 };
 

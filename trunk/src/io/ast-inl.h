@@ -6,16 +6,19 @@
 
 namespace neutrino {
 
-// --- L i t e r a l ---
+// --- L i t e r a l   E x p r e s s i o n ---
 
-DEFINE_ACCESSOR(Value*, Literal, value, kValueOffset)
+DEFINE_ACCESSOR(Value*, LiteralExpression, value, kValueOffset)
 
-// --- I n v o k e ---
+// --- I n v o k e   E x p r e s s i o n ---
 
-DEFINE_ACCESSORS(SyntaxTree*, Invoke, receiver, kReceiverOffset)
-DEFINE_ACCESSORS(String*, Invoke, name, kNameOffset)
-DEFINE_ACCESSORS(Tuple*, Invoke, arguments, kArgumentsOffset)
+DEFINE_ACCESSORS(SyntaxTree*, InvokeExpression, receiver, kReceiverOffset)
+DEFINE_ACCESSORS(String*, InvokeExpression, name, kNameOffset)
+DEFINE_ACCESSORS(Tuple*, InvokeExpression, arguments, kArgumentsOffset)
 
+// --- C l a s s   E x p r e s s i o n ---
+
+DEFINE_ACCESSORS(String*, ClassExpression, name, kNameOffset)
 
 }
 
