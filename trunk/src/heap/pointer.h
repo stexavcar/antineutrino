@@ -78,13 +78,28 @@ public:
    */
   static inline uint32_t align(uint32_t size);
 
+  template <typename T>
+  static inline void set_field(Object *obj, uint32_t offset, T value);
+  
   /**
-   * Reads the word-sized field with the specified offset in the given
-   * object.
+   * Accesses the field at the specified offset, viewed as the
+   * specified type.  The offset is counted in bytes, which must be
+   * word size aligned, and is not affected by the type under which the
+   * result is viewed.
    */
   template <typename T>
   static inline T &access_field(Object *obj, uint32_t offset);
   
+  /**
+   * Accesses the field at the specified offset, viewed as the
+   * specified type.  The offset is counted in bytes and is not affected
+   * by the type under which the result is viewed.
+   */
+  template <typename T>
+  static inline T &access_direct(Object *obj, uint32_t offset);
+  
+  static const uint32_t kUninitialized = 0xFeedDead;
+
 private:
   
 #define MASK(value) ((1 << value) - 1)

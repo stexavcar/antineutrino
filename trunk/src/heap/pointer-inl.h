@@ -87,13 +87,22 @@ uint32_t ValuePointer::align(uint32_t size) {
   return (size + kObjectAlignmentMask) & ~kObjectAlignmentMask;
 }
 
-/**
- * Accesses the field at the specified offset, viewed as the
- * specified type.  The offset is counted in bytes and is not affected
- * by the type under which the result is viewed.
- */
 template <typename T>
 T &ValuePointer::access_field(Object *obj, uint32_t offset) {
+  ASSERT(is_aligned(offset));
+  address addr = address_of(obj) + offset;
+  ASSERT(*reinterpret_cast<uint32_t*>(addr) != kUninitialized);
+  return *reinterpret_cast<T*>(addr);
+}
+
+template <typename T>
+void ValuePointer::set_field(Object *obj, uint32_t offset, T value) {
+  address addr = address_of(obj) + offset;
+  *reinterpret_cast<T*>(addr) = value;
+}
+
+template <typename T>
+T &ValuePointer::access_direct(Object *obj, uint32_t offset) {
   return *reinterpret_cast<T*>(address_of(obj) + offset);
 }
 

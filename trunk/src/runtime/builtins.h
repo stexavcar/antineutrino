@@ -9,8 +9,8 @@ namespace neutrino {
 class Arguments {
 public:
   inline Arguments(Runtime &runtime, uint32_t argc, Stack &stack);
-  inline Value *self();
-  inline Value *operator[](uint32_t index);
+  inline ref<Value> self();
+  inline ref<Value> operator[](uint32_t index);
   Runtime &runtime() { return runtime_; }
   uint32_t count() { return count_; }
 private:

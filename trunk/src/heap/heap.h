@@ -67,6 +67,8 @@ public:
   Data *new_method(String *name, Lambda *lambda);
   
   Data *new_method();
+  
+  Data *new_instance(Class *chlass);
 
   Space &space() { return space_; }
   Roots &roots() { return roots_; }

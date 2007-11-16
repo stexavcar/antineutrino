@@ -1,3 +1,5 @@
 internal class Class : Object {
   
+  internal def operator new();
+  
 }

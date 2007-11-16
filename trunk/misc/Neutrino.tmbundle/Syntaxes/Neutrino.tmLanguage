@@ -29,7 +29,7 @@
 				</dict>
 			</dict>
 			<key>match</key>
-			<string>(def)\s+\b(operator\b\s*[+\-&gt;]+)</string>
+			<string>(def)\s+\b(operator\b\s*[+\-&gt;a-z]+)</string>
 		</dict>
 		<dict>
 			<key>captures</key>
@@ -67,7 +67,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(def|class|return|operator|if|else|while)\b</string>
+			<string>\b(def|class|return|operator|if|else|while|new)\b</string>
 			<key>name</key>
 			<string>keyword.control.neutrino</string>
 		</dict>

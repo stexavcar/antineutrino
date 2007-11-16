@@ -136,15 +136,24 @@ T &Class::name() {                                                   \
   return ValuePointer::access_field<T>(this, Class::kOffset);        \
 }
 
+#define DEFINE_REF_GETTER(T, Class, name)                            \
+ref<T> ref_traits<Class>::name() {                                   \
+  return new_ref(open(this)->name());                                \
+}
+
 #define DEFINE_SETTER(T, Class, name, kOffset)                       \
 void Class::set_##name(T value) {                                    \
-  T &field = ValuePointer::access_field<T>(this, Class::kOffset);    \
-  field = value;                                                     \
+  ValuePointer::set_field<T>(this, Class::kOffset, value);           \
 }
 
 #define DEFINE_ACCESSORS(T, Class, name, kOffset)                    \
   DEFINE_ACCESSOR(T, Class, name, kOffset)                           \
   DEFINE_SETTER(T, Class, name, kOffset)
+
+#define DEFINE_FIELD_ACCESSORS(T, Class, name, kOffset)              \
+  DEFINE_ACCESSOR(T*, Class, name, kOffset)                          \
+  DEFINE_SETTER(T*, Class, name, kOffset)                            \
+  DEFINE_REF_GETTER(T, Class, name)
 
 
 // ---------------------------------
@@ -171,10 +180,16 @@ DEFINE_ACCESSORS(Class*, Object, chlass, kChlassOffset)
 // --- S t r i n g ---
 // -------------------
 
-DEFINE_ACCESSOR(uint32_t, String, length, kLengthOffset)
+DEFINE_ACCESSORS(uint32_t, String, length, kLengthOffset)
 
 char &String::at(uint32_t index) {
-  return ValuePointer::access_field<char>(this, String::kHeaderSize + sizeof(char) * index);
+  ASSERT_C(OUT_OF_BOUNDS, index < length());
+  return ValuePointer::access_direct<char>(this, String::kHeaderSize + sizeof(char) * index);
+}
+
+void String::set(uint32_t index, char value) {
+  ASSERT_C(OUT_OF_BOUNDS, index < length());
+  return ValuePointer::set_field<char>(this, String::kHeaderSize + sizeof(char) * index, value);
 }
 
 uint32_t String::size_for(uint32_t chars) {
@@ -187,11 +202,16 @@ uint32_t String::size_for(uint32_t chars) {
 // --- T u p l e ---
 // -----------------
 
-DEFINE_ACCESSOR(uint32_t, Tuple, length, kLengthOffset)
+DEFINE_ACCESSORS(uint32_t, Tuple, length, kLengthOffset)
 
 Value *&Tuple::at(uint32_t index) {
   ASSERT_C(OUT_OF_BOUNDS, index < length());
   return ValuePointer::access_field<Value*>(this, Tuple::kHeaderSize + kPointerSize * index);
+}
+
+void Tuple::set(uint32_t index, Value *value) {
+  ASSERT_C(OUT_OF_BOUNDS, index < length());
+  return ValuePointer::set_field<Value*>(this, Tuple::kHeaderSize + kPointerSize * index, value);
 }
 
 uint32_t Tuple::size_for(uint32_t elms) {
@@ -252,18 +272,9 @@ bool Dictionary::Iterator::next(Dictionary::Iterator::Entry *entry) {
 // --- L a m b d a ---
 // -------------------
 
-DEFINE_ACCESSOR(uint32_t, Lambda, argc, kArgcOffset)
-DEFINE_ACCESSORS(Code*, Lambda, code, kCodeOffset)
-DEFINE_ACCESSORS(Tuple*, Lambda, literals, kLiteralsOffset)
-
-ref<Code> ref_traits<Lambda>::code() {
-  return new_ref(open(this)->code());
-}
-
-ref<Tuple> ref_traits<Lambda>::literals() {
-  return new_ref(open(this)->literals());
-}
-
+DEFINE_ACCESSORS(uint32_t, Lambda, argc, kArgcOffset)
+DEFINE_FIELD_ACCESSORS(Code, Lambda, code, kCodeOffset)
+DEFINE_FIELD_ACCESSORS(Tuple, Lambda, literals, kLiteralsOffset)
 
 // -------------------
 // --- B u f f e r ---
@@ -278,13 +289,13 @@ uint32_t AbstractBuffer::size() {
 template <typename T>
 void AbstractBuffer::set_size(uint32_t size) {
   uint32_t value = size / sizeof(T);
-  ValuePointer::access_field<uint32_t>(this, kSizeOffset) = value;
+  ValuePointer::set_field<uint32_t>(this, kSizeOffset, value);
 }
 
 template <typename T>
 T &AbstractBuffer::at(uint32_t index) {
   ASSERT_C(OUT_OF_BOUNDS, index < size<T>());
-  return ValuePointer::access_field<T>(this, kHeaderSize + index * sizeof(T));
+  return ValuePointer::access_direct<T>(this, kHeaderSize + index * sizeof(T));
 }
 
 uint32_t AbstractBuffer::size_for(uint32_t byte_count) {
@@ -322,9 +333,9 @@ DEFINE_ACCESSORS(Lambda*, Method, lambda, kLambdaOffset)
 // --- C l a s s ---
 // -----------------
 
-DEFINE_ACCESSOR(uint32_t, Class, instance_type, kInstanceTypeOffset)
-DEFINE_ACCESSOR(Value*, Class, super, kSuperOffset)
-DEFINE_ACCESSOR(Value*, Class, name, kNameOffset)
+DEFINE_ACCESSORS(uint32_t, Class, instance_type, kInstanceTypeOffset)
+DEFINE_ACCESSORS(Value*, Class, super, kSuperOffset)
+DEFINE_ACCESSORS(Value*, Class, name, kNameOffset)
 
 DEFINE_ACCESSORS(Tuple*, Class, methods, kMethodsOffset)
 

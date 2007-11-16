@@ -15,6 +15,11 @@ Data *Heap::allocate_object(uint32_t size, Class *type) {
   address addr = space().allocate_raw(size);
   Object *result = ValuePointer::tag_as_object(addr);
   result->set_chlass(type);
+#ifdef DEBUG
+  uint32_t *fields = reinterpret_cast<uint32_t*>(addr);
+  for (uint32_t i = 1; i < size / kPointerSize; i++)
+    fields[i] = ValuePointer::kUninitialized;
+#endif
   return result;
 }
 
@@ -23,7 +28,7 @@ Data *Heap::allocate_class(InstanceType instance_type) {
   if (is<AllocationFailed>(val)) return val;
   Class *result = reinterpret_cast<Class*>(cast<Object>(val));
   result->set_chlass(roots().class_class());
-  result->instance_type() = instance_type;
+  result->set_instance_type(instance_type);
   return result;  
 }
 
@@ -31,7 +36,7 @@ Data *Heap::new_lambda(uint32_t argc, Code *code, Tuple *literals) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_class());
   if (is<AllocationFailed>(val)) return val;
   Lambda *result = cast<Lambda>(val);
-  result->argc() = argc;
+  result->set_argc(argc);
   result->set_code(code);
   result->set_literals(literals);
   return result;
@@ -41,7 +46,7 @@ Data *Heap::new_lambda(uint32_t argc) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_class());
   if (is<AllocationFailed>(val)) return val;
   Lambda *result = cast<Lambda>(val);
-  result->argc() = argc;
+  result->set_argc(argc);
   return result;
 }
 
@@ -86,9 +91,11 @@ Data *Heap::new_method_expression() {
 
 
 Data *Heap::new_empty_class(InstanceType instance_type) {
-  Data *result = allocate_class(instance_type);
-  if (is<AllocationFailed>(result)) return result;
-  ASSERT_IS(Class, result);
+  Data *val = allocate_class(instance_type);
+  if (is<AllocationFailed>(val)) return val;
+  ASSERT_IS(Class, val);
+  Class *result = cast<Class>(val);
+  result->set_methods(roots().empty_tuple());
   return result;
 }
 
@@ -113,9 +120,9 @@ Data *Heap::new_string(string value) {
   Data *val = allocate_object(size, roots().string_class());
   if (is<AllocationFailed>(val)) return val;
   String *result = cast<String>(val);
-  result->length() = value.length();
+  result->set_length(value.length());
   for (uint32_t i = 0; i < value.length(); i++)
-    result->at(i) = value[i];
+    result->set(i, value[i]);
   return result;
 }
 
@@ -124,7 +131,7 @@ Data *Heap::new_string(uint32_t length) {
   Data *val = allocate_object(size, roots().string_class());
   if (is<AllocationFailed>(val)) return val;
   String *result = cast<String>(val);
-  result->length() = length;
+  result->set_length(length);
   return result;
 }
 
@@ -146,9 +153,9 @@ Data *Heap::new_tuple(uint32_t length) {
   Data *val = allocate_object(size, roots().tuple_class());
   if (is<AllocationFailed>(val)) return val;
   Tuple *result = cast<Tuple>(val);
-  result->length() = length;
+  result->set_length(length);
   for (uint32_t i = 0; i < length; i++)
-    result->at(i) = roots().vhoid();
+    result->set(i, roots().vhoid());
   return result;
 }
 
@@ -167,5 +174,14 @@ Data *Heap::new_dictionary(Tuple *table) {
   if (is<AllocationFailed>(val)) return val;
   Dictionary *result = cast<Dictionary>(val);
   result->set_table(table);
+  return result;
+}
+
+Data *Heap::new_instance(Class *chlass) {
+  ASSERT_EQ(INSTANCE_TYPE, chlass->instance_type());
+  uint32_t size = Instance::kHeaderSize;
+  Data *val = allocate_object(size, chlass);
+  if (is<AllocationFailed>(val)) return val;
+  Instance *result = cast<Instance>(val);
   return result;
 }

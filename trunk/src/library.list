@@ -1,6 +1,7 @@
 # These are the files that make up the neutrino library.
 
 compiler/ast.cc
+compiler/compiler.cc
 heap/factory.cc
 heap/heap.cc
 heap/ref.cc

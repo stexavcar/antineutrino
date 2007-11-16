@@ -28,6 +28,7 @@
   VISIT(11, CODE, Code)                                              \
   VISIT(12, METHOD, Method)                                          \
   VISIT(13, PROTOCOL, Protocol)                                      \
+  VISIT(14, INSTANCE, Instance)                                      \
   FOR_EACH_SYNTAX_TREE_TYPE(VISIT)
 
 #define FOR_EACH_VIRTUAL_TYPE(VISIT)                                 \
@@ -136,10 +137,11 @@
   VISIT(18, Class, invoke_expression_class, INVOKE_EXPRESSION_CLASS, new_empty_class(INVOKE_EXPRESSION_TYPE))\
   VISIT(19, Class, class_expression_class, CLASS_EXPRESSION_CLASS, new_empty_class(CLASS_EXPRESSION_TYPE))\
   VISIT(20, Class, return_expression_class, RETURN_EXPRESSION_CLASS, new_empty_class(RETURN_EXPRESSION_TYPE))\
-  VISIT(21, Class, method_expression_class, METHOD_EXPRESSION_CLASS, new_empty_class(METHOD_EXPRESSION_TYPE))
+  VISIT(21, Class, method_expression_class, METHOD_EXPRESSION_CLASS, new_empty_class(METHOD_EXPRESSION_TYPE))\
+  VISIT(22, Tuple, empty_tuple, EMPTY_TUPLE, new_tuple(0))
 
 #define FOR_EACH_COMPLICATED_ROOT(VISIT)                             \
-  VISIT(22, Class, class_class, CLASS_CLASS, NULL)
+  VISIT(23, Class, class_class, CLASS_CLASS, NULL)
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT(VISIT)                                   \
@@ -186,7 +188,8 @@
   VISIT(14, smi, abs, "||")                                          \
   VISIT(20, object, eq, "=")                                         \
   VISIT(21, object, to_string, "to_string")                          \
-  VISIT(31, class_expression, evaluate, "evaluate")
+  VISIT(30, class_expression, evaluate, "evaluate")                  \
+  VISIT(40, class, new, "new")
 
 
 // -------------------------------------------

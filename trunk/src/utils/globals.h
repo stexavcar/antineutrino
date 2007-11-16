@@ -25,8 +25,8 @@
 template <typename T>
 static inline void USE(T t) { }
 
-static const int kPointerSize = sizeof(void*);
-static const int kWordSize = sizeof(word);
+static const uint32_t kPointerSize = sizeof(void*);
+static const uint32_t kWordSize = sizeof(word);
 
 /**
  * Returns the new extended capacity given that the current capacity

@@ -18,6 +18,7 @@ public:
   ref<Dictionary> new_dictionary();
   ref<Code> new_code(uint32_t size);
   ref<Class> new_empty_class(InstanceType instance_type);
+  ref<Instance> new_instance(ref<Class> chlass);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;

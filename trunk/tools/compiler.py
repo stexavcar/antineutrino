@@ -77,7 +77,7 @@ class Delimiter(Token):
 
 KEYWORDS = [
   'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return',
-  'null', 'true', 'false', 'internal', 'operator'
+  'null', 'true', 'false', 'internal', 'operator', 'new'
 ]
 
 RESERVED = [
@@ -352,6 +352,13 @@ class Parser:
       self.advance()
     return modifiers
   
+  def expect_method_name(self):
+    if self.token().is_operator():
+      return self.expect_operator();
+    elif self.token().is_keyword('new'):
+      self.expect_keyword('new')
+      return 'new'
+  
   # <member_name>
   #   -> $ident
   #   -> 'operator' $operator
@@ -360,7 +367,7 @@ class Parser:
       return self.expect_ident()
     else:
       self.expect_keyword('operator')
-      return self.expect_operator()
+      return self.expect_method_name()
   
   # <class_declaration>
   #   -> 'class' $ident (':' $super)? '{' <member_declaration>* '}'
@@ -545,6 +552,12 @@ class Parser:
           expr = Call(This(), expr, args)
     return expr
 
+  def parse_new_expression(self):
+    self.expect_keyword('new')
+    constr = self.parse_atomic_expression()
+    args = self.parse_arguments('(', ')')
+    return Invoke(constr, 'new', args)
+
   # <atomic_expression>
   #   -> $number
   #   -> $string
@@ -576,6 +589,8 @@ class Parser:
     elif self.token().is_keyword('null'):
       self.advance()
       return Null()
+    elif self.token().is_keyword('new'):
+      return self.parse_new_expression()
     elif self.token().is_delimiter('['):
       exprs = self.parse_arguments('[', ']')
       return Tuple(exprs)
@@ -654,7 +669,7 @@ class Class(SyntaxTree):
     self.parent = parent
   def define(self, namespace):
     methods = HEAP.new_tuple(values = map(Method.compile, self.members))
-    chlass = HEAP.new_class(OBJECT_TYPE)
+    chlass = HEAP.new_class(INSTANCE_TYPE)
     chlass.set_methods(methods)
     chlass.set_name(HEAP.new_string(self.name))
     HEAP.toplevel[HEAP.new_string(self.name)] = chlass
@@ -855,7 +870,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 23
+  kRootCount  = 24
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0

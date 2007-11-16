@@ -44,4 +44,9 @@ ref<Class> Factory::new_empty_class(InstanceType instance_type) {
   return new_ref(cast<Class>(result));
 }
 
+ref<Instance> Factory::new_instance(ref<Class> chlass) {
+  Data *result = runtime().heap().new_instance(*chlass);
+  return new_ref(cast<Instance>(result));
+}
+
 }

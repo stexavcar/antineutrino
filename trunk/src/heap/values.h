@@ -17,6 +17,11 @@ FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
 };
 
 
+#define DEFINE_FIELD(Type, name)                                     \
+  inline Type &name();                                               \
+  inline void set_##name(Type value);
+
+
 // ---------------
 // --- D a t a ---
 // ---------------
@@ -108,6 +113,16 @@ public:
 
 DEFINE_REF_CLASS(Object);
 
+// -----------------------
+// --- I n s t a n c e ---
+// -----------------------
+
+class Instance : public Object {
+public:
+  static const int kHeaderSize = Object::kHeaderSize;
+};
+
+
 // -------------------------------------
 // --- A b s t r a c t   B u f f e r ---
 // -------------------------------------
@@ -166,10 +181,12 @@ DEFINE_REF_CLASS(AbstractBuffer);
 
 class String : public Object {
 public:
-  inline uint32_t &length();
+  DEFINE_FIELD(uint32_t, length)
   inline char &at(uint32_t index);
+  inline void set(uint32_t index, char value);
   
   bool string_equals(String *that);
+  bool starts_with_vowel();
   
   static inline uint32_t size_for(uint32_t chars);
 
@@ -215,8 +232,9 @@ DEFINE_REF_CLASS(Code);
 
 class Tuple : public Object {
 public:
-  inline uint32_t &length();
+  DEFINE_FIELD(uint32_t, length)
   inline Value *&at(uint32_t index);
+  inline void set(uint32_t index, Value *value);
   
   static inline uint32_t size_for(uint32_t elms);
   
@@ -284,13 +302,9 @@ DEFINE_REF_CLASS(Dictionary);
 
 class Lambda : public Object {
 public:
-  inline uint32_t &argc();
-  
-  inline Code *&code();
-  inline void set_code(Code *code);
-  
-  inline Tuple *&literals();
-  inline void set_literals(Tuple *literals);
+  DEFINE_FIELD(uint32_t, argc)
+  DEFINE_FIELD(Code*, code)
+  DEFINE_FIELD(Tuple*, literals)
   
   string disassemble();
   
@@ -377,15 +391,15 @@ public:
 class Class : public Object {
 public:
   inline uint32_t &instance_type();
-
+  inline void set_instance_type(uint32_t value);
   inline Tuple *&methods();
   inline void set_methods(Tuple *methods);
-  
   inline Value *&super();
+  inline void set_super(Value *value);
   inline Value *&name();
+  inline void set_name(Value *value);
   
   bool is_empty();
-  
   void for_each_class_field(FieldCallback callback, void *data);
 
   IF_DEBUG(static uint32_t tag_of(Data *value));

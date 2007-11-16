@@ -116,6 +116,22 @@ static void write_literal_expression_short_on(LiteralExpression *obj,
   buf.append('>');
 }
 
+static void write_instance_short_on(Instance *obj, string_buffer &buf) {
+  Value *class_name = obj->chlass()->name();
+  if (is<String>(class_name)) {
+    buf.append("#<");
+    if (cast<String>(class_name)->starts_with_vowel()) {
+      buf.append("an ");
+    } else {
+      buf.append("a ");
+    }
+    class_name->write_chars_on(buf);
+    buf.append(">");
+  } else {
+    buf.append("#<instance>");
+  }
+}
+
 static void write_object_short_on(Object *obj, string_buffer &buf) {
   uint32_t instance_type = obj->chlass()->instance_type();
   switch (instance_type) {
@@ -160,6 +176,9 @@ static void write_object_short_on(Object *obj, string_buffer &buf) {
     break;
   case METHOD_TYPE:
     buf.append("#<method>");
+    break;
+  case INSTANCE_TYPE:
+    write_instance_short_on(cast<Instance>(obj), buf);
     break;
   default:
     UNHANDLED(InstanceType, instance_type);
@@ -508,6 +527,24 @@ bool String::string_equals(String *that) {
       return false;
   }
   return true;
+}
+
+
+// -------------------
+// --- S t r i n g ---
+// -------------------
+
+// TODO(1): Implement proper unicode vowel/consonant predicate
+bool String::starts_with_vowel() {
+  if (length() == 0) return false;
+  uint32_t chr = at(0);
+  if ('A' <= chr && chr <= 'Z') chr += 'a' - 'A';
+  switch (chr) {
+  case 'a': case 'e': case 'i': case 'o': case 'u':
+    return true;
+  default:
+    return false;
+  }
 }
 
 

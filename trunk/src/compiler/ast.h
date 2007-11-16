@@ -7,7 +7,7 @@ namespace neutrino {
 
 class LiteralExpression : public SyntaxTree {
 public:
-  inline Value *&value();
+  DEFINE_FIELD(Value*, value)
   
   static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kValueOffset + kPointerSize;
@@ -28,25 +28,41 @@ public:
   static const uint32_t kSize = kArgumentsOffset + kPointerSize;
 };
 
+
+// ---------------------------------------
+// --- C l a s s   E x p r e s s i o n ---
+// ---------------------------------------
+
 class ClassExpression : public SyntaxTree {
 public:
   inline String *&name();
   inline void set_name(String *value);
   inline Tuple *&methods();
   inline void set_methods(Tuple *value);
+  inline Class *&super();
+  inline void set_super(Class *value);
   
   static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kMethodsOffset = kNameOffset + kPointerSize;
-  static const uint32_t kSize = kMethodsOffset + kPointerSize;
+  static const uint32_t kSuperOffset = kMethodsOffset + kPointerSize;
+  static const uint32_t kSize = kSuperOffset + kPointerSize;
 };
 
 template <>
 class ref_traits<ClassExpression> {
 public:
-  ref<Class> evaluate();
+  inline ref<String> name();
+  inline ref<Tuple> methods();
+  inline ref<Class> super();
+  ref<Class> compile();
 };
 
 DEFINE_REF_CLASS(ClassExpression);
+
+
+// -----------------------------------------
+// --- R e t u r n   E x p r e s s i o n ---
+// -----------------------------------------
 
 class ReturnExpression : public SyntaxTree {
 public:
@@ -56,6 +72,11 @@ public:
   static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kValueOffset + kPointerSize;
 };
+
+
+// -----------------------------------------
+// --- M e t h o d   E x p r e s s i o n ---
+// -----------------------------------------
 
 class MethodExpression : public SyntaxTree {
 public:
@@ -68,6 +89,16 @@ public:
   static const uint32_t kBodyOffset = kNameOffset + kPointerSize;
   static const uint32_t kSize = kBodyOffset + kPointerSize;
 };
+
+template <>
+class ref_traits<MethodExpression> {
+public:
+  inline ref<String> name();
+  inline ref<SyntaxTree> body();
+  ref<Method> compile();
+};
+
+DEFINE_REF_CLASS(MethodExpression);
 
 }
 

@@ -176,14 +176,14 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       ImageClass *img = image_cast<ImageClass>(obj);
       Class *chlass = cast<Class>(img->forward_pointer());
       chlass->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
-      chlass->super() = img->super()->forward_pointer();
-      chlass->name() = img->name()->forward_pointer();
+      chlass->set_super(img->super()->forward_pointer());
+      chlass->set_name(img->name()->forward_pointer());
       break;
     }
     case LITERAL_EXPRESSION_TYPE: {
       ImageLiteralExpression *img = image_cast<ImageLiteralExpression>(obj);
       LiteralExpression *literal = cast<LiteralExpression>(img->forward_pointer());
-      literal->value() = img->value()->forward_pointer();
+      literal->set_value(img->value()->forward_pointer());
       break;
     }
     case INVOKE_EXPRESSION_TYPE: {

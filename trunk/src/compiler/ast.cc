@@ -1,14 +1,42 @@
 #include "compiler/ast-inl.h"
+#include "compiler/compiler.h"
 #include "runtime/runtime-inl.h"
 
 namespace neutrino {
 
-ref<Class> ref_traits<ClassExpression>::evaluate() {
+// -------------------------
+// --- C o m p i l i n g ---
+// -------------------------
+
+ref<Class> ref_traits<ClassExpression>::compile() {
   ref<ClassExpression> self = open(this);
-  ref<Class> result = Runtime::current().factory().new_empty_class(OBJECT_TYPE);
+  Factory &factory = Runtime::current().factory();
+  ref<Tuple> method_asts = methods();
+  ref<Tuple> methods = factory.new_tuple(method_asts.length());
+  for (uint32_t i = 0; i < method_asts.length(); i++) {
+    RefScope scope;
+    ref<MethodExpression> method_ast = cast<MethodExpression>(method_asts.get(i));
+    ref<Method> method = method_ast.compile();
+    methods.set(i, method);
+  }
+  ref<Class> result = factory.new_empty_class(INSTANCE_TYPE);
   result->name() = self->name();
+  result->set_methods(*methods);
+  result->super() = self->super();
   return result;
 }
+
+ref<Method> ref_traits<MethodExpression>::compile() {
+  ref<MethodExpression> self = open(this);
+  ref<Lambda> code = Compiler::compile(body());
+  ref<Method> result = Runtime::current().factory().new_method(name(), code);
+  return result;
+}
+
+
+// -------------------------
+// --- U n p a r s i n g ---
+// -------------------------
 
 static void unparse_literal_expression_on(LiteralExpression *obj,
     string_buffer &buf) {

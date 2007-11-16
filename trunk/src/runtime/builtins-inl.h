@@ -11,13 +11,13 @@ Arguments::Arguments(Runtime &runtime, uint32_t count, Stack &stack)
     , count_(count)
     , stack_(stack) { }
 
-Value *Arguments::self() {
-  return stack().self(count());
+ref<Value> Arguments::self() {
+  return ref<Value>(&stack().self(count()));
 }
 
-Value *Arguments::operator[](uint32_t index) {
+ref<Value> Arguments::operator[](uint32_t index) {
   ASSERT(index < count());
-  return stack().argument(count() - index - 1);
+  return ref<Value>(&stack().argument(count() - index - 1));
 }
 
 }
