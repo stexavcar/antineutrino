@@ -59,7 +59,7 @@ Data *Interpreter::lookup_method(Class *chlass, Value *name) {
         return method;
     }
     Value *super = chlass->super();
-    if (is<Smi>(super)) break;
+    if (!is<Class>(super)) break;
     chlass = cast<Class>(super);
   }
   return Nothing::make();
@@ -128,8 +128,10 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       Class *chlass = get_class(recv);
       Data *lookup_result = lookup_method(chlass, name);
       if (is<Nothing>(lookup_result)) {
-        // Method lookup failure
-        UNREACHABLE();
+        string::local name_str(name->to_string());
+        string::local recv_str(recv->to_string());
+        Conditions::get().error_occurred("Lookup failure: %s::%s",
+            recv_str.chars(), name_str.chars());
       }
       Method *method = cast<Method>(lookup_result);
       Frame next = stack.push_activation();

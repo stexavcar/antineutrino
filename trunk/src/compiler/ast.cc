@@ -20,9 +20,9 @@ ref<Class> ref_traits<ClassExpression>::compile() {
     methods.set(i, method);
   }
   ref<Class> result = factory.new_empty_class(INSTANCE_TYPE);
-  result->name() = self->name();
+  result->set_name(self->name());
   result->set_methods(*methods);
-  result->super() = self->super();
+  result->set_super(self->super());
   return result;
 }
 

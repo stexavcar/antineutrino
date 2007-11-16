@@ -176,7 +176,10 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       ImageClass *img = image_cast<ImageClass>(obj);
       Class *chlass = cast<Class>(img->forward_pointer());
       chlass->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
-      chlass->set_super(img->super()->forward_pointer());
+      if (img->super()->forward_pointer() == Smi::from_int(0))
+        chlass->set_super(Runtime::current().roots().vhoid());
+      else
+        chlass->set_super(img->super()->forward_pointer());
       chlass->set_name(img->name()->forward_pointer());
       break;
     }
@@ -199,6 +202,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       ClassExpression *expr = cast<ClassExpression>(img->forward_pointer());
       expr->set_name(cast<String>(img->name()->forward_pointer()));
       expr->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
+      expr->set_super(Runtime::current().roots().vhoid());
       break;
     }
     case RETURN_EXPRESSION_TYPE: {

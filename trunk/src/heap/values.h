@@ -17,9 +17,9 @@ FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
 };
 
 
-#define DEFINE_FIELD(Type, name)                                     \
+#define DECLARE_FIELD(Type, name)                                    \
   inline Type &name();                                               \
-  inline void set_##name(Type value);
+  inline void set_##name(Type value)
 
 
 // ---------------
@@ -181,7 +181,7 @@ DEFINE_REF_CLASS(AbstractBuffer);
 
 class String : public Object {
 public:
-  DEFINE_FIELD(uint32_t, length)
+  DECLARE_FIELD(uint32_t, length);
   inline char &at(uint32_t index);
   inline void set(uint32_t index, char value);
   
@@ -232,7 +232,7 @@ DEFINE_REF_CLASS(Code);
 
 class Tuple : public Object {
 public:
-  DEFINE_FIELD(uint32_t, length)
+  DECLARE_FIELD(uint32_t, length);
   inline Value *&at(uint32_t index);
   inline void set(uint32_t index, Value *value);
   
@@ -302,9 +302,9 @@ DEFINE_REF_CLASS(Dictionary);
 
 class Lambda : public Object {
 public:
-  DEFINE_FIELD(uint32_t, argc)
-  DEFINE_FIELD(Code*, code)
-  DEFINE_FIELD(Tuple*, literals)
+  DECLARE_FIELD(uint32_t, argc);
+  DECLARE_FIELD(Code*, code);
+  DECLARE_FIELD(Tuple*, literals);
   
   string disassemble();
   
@@ -390,10 +390,10 @@ public:
 
 class Class : public Object {
 public:
-  DEFINE_FIELD(uint32_t, instance_type)
-  DEFINE_FIELD(Tuple*, methods)
-  DEFINE_FIELD(Value*, super)
-  DEFINE_FIELD(Value*, name)
+  DECLARE_FIELD(uint32_t, instance_type);
+  DECLARE_FIELD(Tuple*, methods);
+  DECLARE_FIELD(Value*, super);
+  DECLARE_FIELD(Value*, name);
   
   bool is_empty();
   void for_each_class_field(FieldCallback callback, void *data);

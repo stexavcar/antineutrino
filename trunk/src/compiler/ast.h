@@ -7,7 +7,7 @@ namespace neutrino {
 
 class LiteralExpression : public SyntaxTree {
 public:
-  DEFINE_FIELD(Value*, value)
+  DECLARE_FIELD(Value*, value);
   
   static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kValueOffset + kPointerSize;
@@ -35,12 +35,9 @@ public:
 
 class ClassExpression : public SyntaxTree {
 public:
-  inline String *&name();
-  inline void set_name(String *value);
-  inline Tuple *&methods();
-  inline void set_methods(Tuple *value);
-  inline Class *&super();
-  inline void set_super(Class *value);
+  DECLARE_FIELD(String*, name);
+  DECLARE_FIELD(Tuple*, methods);
+  DECLARE_FIELD(Value*, super);
   
   static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kMethodsOffset = kNameOffset + kPointerSize;
@@ -53,7 +50,7 @@ class ref_traits<ClassExpression> {
 public:
   inline ref<String> name();
   inline ref<Tuple> methods();
-  inline ref<Class> super();
+  inline ref<Value> super();
   ref<Class> compile();
 };
 

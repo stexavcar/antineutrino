@@ -20,7 +20,7 @@ DEFINE_ACCESSORS(Tuple*, InvokeExpression, arguments, kArgumentsOffset)
 
 DEFINE_FIELD_ACCESSORS(String, ClassExpression, name, kNameOffset)
 DEFINE_FIELD_ACCESSORS(Tuple, ClassExpression, methods, kMethodsOffset)
-DEFINE_FIELD_ACCESSORS(Class, ClassExpression, super, kSuperOffset)
+DEFINE_FIELD_ACCESSORS(Value, ClassExpression, super, kSuperOffset)
 
 // --- R e t u r n   E x p r e s s i o n ---
 
