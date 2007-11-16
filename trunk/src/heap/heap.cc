@@ -29,7 +29,8 @@ Data *Heap::allocate_class(InstanceType instance_type) {
   Class *result = reinterpret_cast<Class*>(cast<Object>(val));
   result->set_chlass(roots().class_class());
   result->set_instance_type(instance_type);
-  return result;  
+  result->set_super(Smi::from_int(0));
+  return result;
 }
 
 Data *Heap::new_lambda(uint32_t argc, Code *code, Tuple *literals) {
@@ -95,8 +96,8 @@ Data *Heap::new_empty_class(InstanceType instance_type) {
   if (is<AllocationFailed>(val)) return val;
   ASSERT_IS(Class, val);
   Class *result = cast<Class>(val);
-  result->set_methods(roots().empty_tuple());
-  result->set_super(roots().vhoid());
+  result->set_super(Smi::from_int(0));
+  ASSERT(result->is_empty());
   return result;
 }
 

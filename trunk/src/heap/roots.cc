@@ -34,9 +34,6 @@ bool Roots::initialize(Heap& heap) {
 FOR_EACH_SIMPLE_ROOT(ALLOCATE_ROOT)
 #undef ALLOCATE_ROOT
 
-  class_class()->set_super(vhoid());
-  class_class()->set_methods(empty_tuple());
-
   Data *class_name;
 #define SET_CLASS_NAME(n, Type, name, NAME, allocator)               \
   class_name = heap.new_string(#name);                               \
