@@ -1,3 +1,5 @@
+#include <stdarg.h>
+
 #include "heap/values-inl.h"
 #include "utils/checks.h"
 
@@ -112,8 +114,12 @@ void Conditions::unhandled(const char *file_name, int line_number,
   abort();
 }
 
-void Conditions::error_occurred(const char *message) {
-  fprintf(stderr, "%s\n", message);
+void Conditions::error_occurred(const char *format, ...) {
+  va_list ap;
+  va_start(ap, format);
+  vfprintf(stderr, format, ap);
+  fprintf(stderr, "\n");
+  va_end(ap);
   exit(1);
 }
 

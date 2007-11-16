@@ -47,7 +47,7 @@ public:
       const char *enum_name, int32_t value, AbstractEnumInfo &info,
       Condition cause);
   
-  void error_occurred(const char *format);
+  void error_occurred(const char *format, ...);
   
   virtual void notify(Condition cause);
   

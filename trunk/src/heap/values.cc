@@ -604,7 +604,7 @@ uint32_t Dictionary::size() {
 // -----------------
 
 bool Class::is_empty() {
-  return !is<Tuple>(methods());
+  return is<Void>(super());
 }
 
 

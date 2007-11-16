@@ -390,14 +390,10 @@ public:
 
 class Class : public Object {
 public:
-  inline uint32_t &instance_type();
-  inline void set_instance_type(uint32_t value);
-  inline Tuple *&methods();
-  inline void set_methods(Tuple *methods);
-  inline Value *&super();
-  inline void set_super(Value *value);
-  inline Value *&name();
-  inline void set_name(Value *value);
+  DEFINE_FIELD(uint32_t, instance_type)
+  DEFINE_FIELD(Tuple*, methods)
+  DEFINE_FIELD(Value*, super)
+  DEFINE_FIELD(Value*, name)
   
   bool is_empty();
   void for_each_class_field(FieldCallback callback, void *data);
@@ -412,6 +408,15 @@ public:
   static const uint32_t kNameOffset         = kSuperOffset + kPointerSize;
   static const uint32_t kSize               = kNameOffset + kPointerSize;
 };
+
+template <> class ref_traits<Class> {
+public:
+  inline ref<Tuple> methods();
+  inline ref<Value> super();
+  inline ref<Value> name();
+};
+
+DEFINE_REF_CLASS(Class);
 
 
 // ---------------------

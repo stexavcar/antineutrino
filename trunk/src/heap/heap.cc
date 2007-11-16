@@ -96,6 +96,7 @@ Data *Heap::new_empty_class(InstanceType instance_type) {
   ASSERT_IS(Class, val);
   Class *result = cast<Class>(val);
   result->set_methods(roots().empty_tuple());
+  result->set_super(roots().vhoid());
   return result;
 }
 

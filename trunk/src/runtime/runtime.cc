@@ -90,7 +90,11 @@ bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) 
 }
 
 bool Runtime::install_class(ref<Class> root, ref<Class> changes) {
-  if (!root->is_empty()) return false;
+  if (!root->is_empty()) {
+    string::local str(root.name().to_string());
+    Conditions::get().error_occurred("Root class %s is not empty.", str.chars());
+    return false;
+  }
   root->set_methods(changes->methods());
   root->set_super(changes->super());
   ASSERT(!root->is_empty());

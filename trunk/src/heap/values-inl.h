@@ -334,10 +334,9 @@ DEFINE_ACCESSORS(Lambda*, Method, lambda, kLambdaOffset)
 // -----------------
 
 DEFINE_ACCESSORS(uint32_t, Class, instance_type, kInstanceTypeOffset)
-DEFINE_ACCESSORS(Value*, Class, super, kSuperOffset)
-DEFINE_ACCESSORS(Value*, Class, name, kNameOffset)
-
-DEFINE_ACCESSORS(Tuple*, Class, methods, kMethodsOffset)
+DEFINE_FIELD_ACCESSORS(Value, Class, super, kSuperOffset)
+DEFINE_FIELD_ACCESSORS(Value, Class, name, kNameOffset)
+DEFINE_FIELD_ACCESSORS(Tuple, Class, methods, kMethodsOffset)
 
 
 // ---------------------
