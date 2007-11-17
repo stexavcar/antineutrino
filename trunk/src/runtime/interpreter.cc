@@ -59,7 +59,7 @@ Data *Interpreter::lookup_method(Class *chlass, Value *name) {
         return method;
     }
     Value *super = chlass->super();
-    if (!is<Class>(super)) break;
+    if (is<Void>(super)) break;
     chlass = cast<Class>(super);
   }
   return Nothing::make();

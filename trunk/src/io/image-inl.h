@@ -225,6 +225,7 @@ DEFINE_GETTER(Tuple, InvokeExpression, arguments, Arguments)
 
 DEFINE_GETTER(String, ClassExpression, name, Name)
 DEFINE_GETTER(Tuple, ClassExpression, methods, Methods)
+DEFINE_GETTER(Value, ClassExpression, super, Super)
 
 
 // --- R e t u r n   E x p r e s s i o n ---

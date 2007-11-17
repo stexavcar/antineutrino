@@ -103,7 +103,8 @@
   VISIT(4, InvokeExpression, Size)                                   \
   VISIT(1, ClassExpression, NameOffset)                              \
   VISIT(2, ClassExpression, MethodsOffset)                           \
-  VISIT(3, ClassExpression, Size)                                    \
+  VISIT(3, ClassExpression, SuperOffset)                             \
+  VISIT(4, ClassExpression, Size)                                    \
   VISIT(1, ReturnExpression, ValueOffset)                            \
   VISIT(2, ReturnExpression, Size)                                   \
   VISIT(1, MethodExpression, NameOffset)                             \

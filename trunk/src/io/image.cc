@@ -202,7 +202,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       ClassExpression *expr = cast<ClassExpression>(img->forward_pointer());
       expr->set_name(cast<String>(img->name()->forward_pointer()));
       expr->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
-      expr->set_super(Runtime::current().roots().vhoid());
+      expr->set_super(img->super()->forward_pointer());
       break;
     }
     case RETURN_EXPRESSION_TYPE: {

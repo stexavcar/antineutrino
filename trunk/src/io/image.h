@@ -119,6 +119,7 @@ class ImageClassExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();
   inline ImageTuple *methods();
+  inline ImageValue *super();
 };
 
 class ImageReturnExpression : public ImageSyntaxTree {

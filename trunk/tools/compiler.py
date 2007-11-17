@@ -625,59 +625,76 @@ class SyntaxTree:
 class Program(SyntaxTree):
   def __init__(self, decls):
     self.decls = decls
-  def load(self, namespace):
+  def load(self):
     for decl in self.decls:
-      decl.define(namespace)
-  def resolve(self, namespace):
+      decl.define()
+  def resolve(self):
     for decl in self.decls:
-      decl.resolve(namespace)
+      decl.resolve()
+  def compile(self):
+    for decl in self.decls:
+      decl.compile()
 
 class Definition(SyntaxTree):
   def __init__(self, name, value):
     self.name = name
     self.value = value
-  def define(self, namespace):
+  def define(self):
+    pass
+  def resolve(self):
+    pass
+  def compile(self):
     value = self.value.compile()
     HEAP.toplevel[HEAP.new_string(self.name)] = value
-    namespace[self.name] = self
-  def resolve(self, namespace):
-    pass
+    NAMESPACE[self.name] = self
 
 class BuiltinClass(SyntaxTree):
   def __init__(self, info, members, parent):
     self.info = info
     self.members = members
-    self.parent = parent
-  def define(self, namespace):
+    if parent:
+      self.parent = parent
+    elif not self.name == u'Object':
+      self.parent = u'Object'
+  def resolve(self):
+    pass
+  def define(self):
     instance_type_name = self.info.instance_type
     instance_type_index = globals()[instance_type_name + '_TYPE']
-    methods = HEAP.new_tuple(values = map(Method.compile, self.members))
     chlass = HEAP.new_class(instance_type_index)
-    chlass.set_methods(methods)
     chlass.set_name(HEAP.new_string(self.info.name))
     HEAP.set_root(self.info.root_index, chlass)
     self.image = chlass
-  def resolve(self, namespace):
+  def compile(self):
+    methods = HEAP.new_tuple(values = map(Method.compile, self.members))
+    self.image.set_methods(methods)
     if self.parent:
-      parent_value = namespace[self.parent]
+      parent_value = NAMESPACE[self.parent]
       self.image.set_parent(parent_value.image)
 
 class Class(SyntaxTree):
   def __init__(self, name, members, parent):
     self.name = name
     self.members = members
-    self.parent = parent
-  def define(self, namespace):
-    methods = HEAP.new_tuple(values = map(Method.compile, self.members))
+    if parent:
+      self.parent = parent
+    elif not self.name == 'Object':
+      self.parent = 'Object'
+    else:
+      self.parent = None
+  def define(self):
     chlass = HEAP.new_class(INSTANCE_TYPE)
-    chlass.set_methods(methods)
     chlass.set_name(HEAP.new_string(self.name))
     HEAP.toplevel[HEAP.new_string(self.name)] = chlass
     self.image = chlass
-    namespace[self.name] = self
-  def resolve(self, namespace):
+    NAMESPACE[str(self.name)] = self
+  def resolve(self):
+    pass
+  def compile(self):
+    methods = HEAP.new_tuple(values = map(Method.compile, self.members))
+    self.image.set_methods(methods)
     if self.parent:
-      parent_value = namespace[self.parent]
+      parent_value = NAMESPACE[self.parent]
       self.image.set_parent(parent_value.image)
   def quote(self):
     methods = HEAP.new_tuple(values = [ m.quote() for m in self.members ])
@@ -1327,19 +1344,22 @@ def find_source_files(dir):
   path.walk(dir, visit, result)
   return result
 
+NAMESPACE = { }
+
 def load_files(files):
   trees = []
-  namespace = {}
   for file in files:
     if path.isdir(file):
       files += find_source_files(file)
     else:
       source = codecs.open(file, "r", "utf-8").read()
       tree = compile(source)
-      tree.load(namespace)
+      tree.load()
       trees.append(tree)
   for tree in trees:
-    tree.resolve(namespace)
+    tree.resolve()
+  for tree in trees:
+    tree.compile()
 
 def main():
   parser = OptionParser(option_list=options)
