@@ -625,77 +625,54 @@ class SyntaxTree:
 class Program(SyntaxTree):
   def __init__(self, decls):
     self.decls = decls
-  def load(self):
+  def accept(self, visitor):
+    visitor.visit_program(self)
+  def traverse(self, visitor):
     for decl in self.decls:
-      decl.define()
-  def resolve(self):
-    for decl in self.decls:
-      decl.resolve()
-  def compile(self):
-    for decl in self.decls:
-      decl.compile()
+      decl.accept(visitor)
 
 class Definition(SyntaxTree):
   def __init__(self, name, value):
     self.name = name
     self.value = value
-  def define(self):
-    pass
-  def resolve(self):
-    pass
-  def compile(self):
-    value = self.value.compile()
-    HEAP.toplevel[HEAP.new_string(self.name)] = value
-    NAMESPACE[self.name] = self
+  def accept(self, visitor):
+    visitor.visit_definition(self)
+  def traverse(self, visitor):
+    self.value.accept(visitor)
 
 class BuiltinClass(SyntaxTree):
-  def __init__(self, info, members, parent):
+  def __init__(self, info, members, super):
     self.info = info
     self.members = members
-    if parent:
-      self.parent = parent
+    if super:
+      self.super = super
     elif not self.name == u'Object':
-      self.parent = u'Object'
+      self.super = u'Object'
+  def accept(self, visitor):
+    visitor.visit_builtin_class(self)
+  def traverse(self, visitor):
+    for member in self.members:
+      member.accept(visitor)
   def resolve(self):
     pass
-  def define(self):
-    instance_type_name = self.info.instance_type
-    instance_type_index = globals()[instance_type_name + '_TYPE']
-    chlass = HEAP.new_class(instance_type_index)
-    chlass.set_name(HEAP.new_string(self.info.name))
-    HEAP.set_root(self.info.root_index, chlass)
-    self.image = chlass
-  def compile(self):
-    methods = HEAP.new_tuple(values = map(Method.compile, self.members))
-    self.image.set_methods(methods)
-    if self.parent:
-      parent_value = NAMESPACE[self.parent]
-      self.image.set_parent(parent_value.image)
 
 class Class(SyntaxTree):
-  def __init__(self, name, members, parent):
+  def __init__(self, name, members, super):
     self.name = name
     self.members = members
-    if parent:
-      self.parent = parent
+    if super:
+      self.super = super
     elif not self.name == 'Object':
-      self.parent = 'Object'
+      self.super = 'Object'
     else:
-      self.parent = None
-  def define(self):
-    chlass = HEAP.new_class(INSTANCE_TYPE)
-    chlass.set_name(HEAP.new_string(self.name))
-    HEAP.toplevel[HEAP.new_string(self.name)] = chlass
-    self.image = chlass
-    NAMESPACE[str(self.name)] = self
+      self.super = None
+  def accept(self, visitor):
+    visitor.visit_class(self)
+  def traverse(self, visitor):
+    for member in self.members:
+      member.accept(visitor)
   def resolve(self):
     pass
-  def compile(self):
-    methods = HEAP.new_tuple(values = map(Method.compile, self.members))
-    self.image.set_methods(methods)
-    if self.parent:
-      parent_value = NAMESPACE[self.parent]
-      self.image.set_parent(parent_value.image)
   def quote(self):
     methods = HEAP.new_tuple(values = [ m.quote() for m in self.members ])
     return HEAP.new_class_expression(HEAP.new_string(self.name), methods)
@@ -705,6 +682,10 @@ class Method(SyntaxTree):
     self.name = name
     self.params = params
     self.body = body
+  def accept(self, visitor):
+    visitor.visit_method(self)
+  def traverse(self, visitor):
+    self.body.accept(visitor)
   def compile(self):
     body = compile_lambda(self.params, self.body)
     return HEAP.new_method(HEAP.new_string(self.name), body)
@@ -722,6 +703,10 @@ def quote_value(val):
 class Literal(Expression):
   def __init__(self, value):
     self.value = value
+  def accept(self, visitor):
+    visitor.visit_literal(self)
+  def traverse(self, visitor):
+    pass
   def emit(self, state):
     index = state.literal_index(self.value)
     state.write(OC_PUSH, index)
@@ -732,6 +717,10 @@ class Literal(Expression):
 class Tuple(Expression):
   def __init__(self, values):
     self.values = values
+  def accept(self, visitor):
+    visitor.visit_tuple(self)
+  def traverse(self, visitor):
+    for value in self.values: value.accept(visitor)
   def emit(self, state):
     for value in self.values:
       value.emit(state)
@@ -752,12 +741,20 @@ class Lambda(Expression):
   def __init__(self, params, body):
     self.params = params
     self.body = body
+  def accept(self, visitor):
+    visitor.visit_lambda(self)
+  def traverse(self, visitor):
+    self.body.accept(visitor)
   def compile(self):
     return compile_lambda(self.params, self.body)
 
 class Identifier(Expression):
   def __init__(self, name):
     self.name = name
+  def accept(self, visitor):
+    visitor.visit_identifier(self)
+  def traverse(self, visitor):
+    pass
   def emit(self, state):
     ( type, data ) = state.scope.lookup(self.name)
     if type == 'argument':
@@ -774,6 +771,12 @@ class Call(Expression):
     self.recv = recv
     self.fun = fun
     self.args = args
+  def accept(self, visitor):
+    visitor.visit_call(self)
+  def traverse(self, visitor):
+    self.recv.accept(visitor)
+    self.fun.accept(visitor)
+    for arg in self.args: arg.accept(visitor)
   def emit(self, state):
     self.recv.emit(state)
     self.fun.emit(state)
@@ -785,6 +788,10 @@ class Call(Expression):
 class Quote(Expression):
   def __init__(self, value):
     self.value = value
+  def accept(self, visitor):
+    visitor.visit_quote(self)
+  def traverse(self, visitor):
+    self.value.accept(visitor)
   def emit(self, state):
     obj = self.value.quote()
     index = state.literal_index(obj)
@@ -795,6 +802,11 @@ class Invoke(Expression):
     self.recv = recv
     self.name = name
     self.args = args
+  def accept(self, visitor):
+    visitor.visit_invoke(self)
+  def traverse(self, visitor):
+    self.recv.accept(visitor)
+    for arg in self.args: arg.accept(visitor)
   def emit(self, state):
     self.recv.emit(state)
     state.write(OC_VOID)
@@ -813,33 +825,61 @@ class InternalCall(Expression):
   def __init__(self, index, argc):
     self.index = index
     self.argc = argc
+  def accept(self, visitor):
+    visitor.visit_internal_call(self)
+  def traverse(self, visitor):
+    pass
   def emit(self, state):
     state.write(OC_INTERNAL, self.index, self.argc)
     state.write(OC_RETURN)
 
 class This(Expression):
+  def accept(self, visitor):
+    visitor.visit_this(self)
+  def traverse(self, visitor):
+    pass
   def emit(self, state):
     state.write(OC_ARGUMENT, state.argc + 1)
 
 class Void(Expression):
+  def accept(self, visitor):
+    visitor.visit_void(self)
+  def traverse(self, visitor):
+    pass
   def emit(self, state):
     state.write(OC_VOID)
 
 class Null(Expression):
+  def accept(self, visitor):
+    visitor.visit_null(self)
+  def traverse(self, visitor):
+    pass
   def emit(self, state):
     state.write(OC_NULL)
 
 class Thrue(Expression):
+  def accept(self, visitor):
+    visitor.visit_true(self)
+  def traverse(self, visitor):
+    pass
   def emit(self, state):
     state.write(OC_TRUE)
 
 class Fahlse(Expression):
+  def accept(self, visitor):
+    visitor.visit_false(self)
+  def traverse(self, visitor):
+    pass
   def emit(self, state):
     state.write(OC_FALSE)
 
 class Return(Expression):
   def __init__(self, value):
     self.value = value
+  def accept(self, visitor):
+    visitor.visit_return(self)
+  def traverse(self, visitor):
+    self.value.accept(visitor)
   def emit(self, state):
     self.value.emit(state)
     state.write(OC_RETURN)
@@ -849,6 +889,11 @@ class Return(Expression):
 class Sequence(Expression):
   def __init__(self, exprs):
     self.exprs = exprs
+  def accept(self, visitor):
+    visitor.visit_sequence(self)
+  def traverse(self, visitor):
+    for expr in self.exprs:
+      expr.accept(visitor)
   def emit(self, state):
     if len(self.exprs) == 0:
       state.write(OC_VOID)
@@ -864,6 +909,12 @@ class Conditional(Expression):
     self.cond = cond
     self.then_part = then_part
     self.else_part = else_part
+  def accept(self, visitor):
+    visitor.visit_conditional(self)
+  def traverse(self, visitor):
+    self.cond.accept(visitor)
+    self.then_part.accept(visitor)
+    self.else_part.accept(visitor)
   def emit(self, state):
     self.cond.emit(state)
     if_true_jump = state.write(OC_IF_TRUE, PLACEHOLDER)
@@ -1214,6 +1265,114 @@ def compile(str):
   parser = Parser(tokens)
   return parser.parse_program()
 
+
+# -----------------------
+# --- V i s i t o r s ---
+# -----------------------
+
+class Visitor:
+  def visit_node(self, that):
+    that.traverse(self)
+  def visit_program(self, that):
+    self.visit_node(that)
+  def visit_definition(self, that):
+    self.visit_node(that)
+  def visit_class(self, that):
+    self.visit_node(that)
+  def visit_builtin_class(self, that):
+    self.visit_node(that)
+  def visit_lambda(self, that):
+    self.visit_node(that)
+  def visit_sequence(self, that):
+    self.visit_node(that)
+  def visit_call(self, that):
+    self.visit_node(that)
+  def visit_this(self, that):
+    self.visit_node(that)
+  def visit_void(self, that):
+    self.visit_node(that)
+  def visit_true(self, that):
+    self.visit_node(that)
+  def visit_false(self, that):
+    self.visit_node(that)
+  def visit_null(self, that):
+    self.visit_node(that)
+  def visit_literal(self, that):
+    self.visit_node(that)
+  def visit_identifier(self, that):
+    self.visit_node(that)
+  def visit_return(self, that):
+    self.visit_node(that)
+  def visit_invoke(self, that):
+    self.visit_node(that)
+  def visit_method(self, that):
+    self.visit_node(that)
+  def visit_internal_call(self, that):
+    self.visit_node(that)
+  def visit_conditional(self, that):
+    self.visit_node(that)
+  def visit_quote(self, that):
+    self.visit_node(that)
+  def visit_tuple(self, that):
+    self.visit_node(that)
+
+class LoadVisitor(Visitor):
+  def __init__(self):
+    self.is_toplevel = True
+  def visit_class(self, that):
+    chlass = HEAP.new_class(INSTANCE_TYPE)
+    name_str = HEAP.new_string(that.name)
+    chlass.set_name(name_str)
+    HEAP.toplevel[name_str] = chlass
+    that.image = chlass
+    if self.is_toplevel:
+      NAMESPACE[that.name] = that
+      self.is_toplevel = False
+      Visitor.visit_class(self, that)
+      self.is_toplevel = True
+  def visit_builtin_class(self, that):
+    instance_type_name = that.info.instance_type
+    instance_type_index = globals()[instance_type_name + '_TYPE']
+    chlass = HEAP.new_class(instance_type_index)
+    chlass.set_name(HEAP.new_string(that.info.name))
+    HEAP.set_root(that.info.root_index, chlass)
+    that.image = chlass
+    if self.is_toplevel:
+      NAMESPACE[that.info.name] = that
+      self.is_toplevel = False
+      Visitor.visit_class(self, that)
+      self.is_toplevel = True
+
+class ResolveVisitor(Visitor):
+  def resolve_class(self, that):
+    if that.super:
+      value = NAMESPACE[that.super]
+      that.image.set_parent(value.image)
+    else:
+      that.image.set_parent(ImageVoid())
+  def visit_class(self, that):
+    self.resolve_class(that)
+    Visitor.visit_class(self, that)
+  def visit_builtin_class(self, that):
+    self.resolve_class(that)
+    Visitor.visit_class(self, that)
+
+class CompileVisitor(Visitor):
+  def compile_class(self, that):
+    methods = HEAP.new_tuple(values = [ m.compile() for m in that.members ])
+    that.image.set_methods(methods)
+  def visit_class(self, that):
+    self.compile_class(that)
+    Visitor.visit_class(self, that)
+  def visit_builtin_class(self, that):
+    self.compile_class(that)
+    Visitor.visit_builtin_class(self, that)
+  def visit_definition(self, that):
+    value = that.value.compile()
+    HEAP.toplevel[HEAP.new_string(that.name)] = value
+    Visitor.visit_definition(self, that)
+
+
 # ---------------
 # --- M a i n ---
 # ---------------
@@ -1354,12 +1513,13 @@ def load_files(files):
     else:
       source = codecs.open(file, "r", "utf-8").read()
       tree = compile(source)
-      tree.load()
       trees.append(tree)
   for tree in trees:
-    tree.resolve()
+    tree.accept(LoadVisitor())
   for tree in trees:
-    tree.compile()
+    tree.accept(ResolveVisitor())
+  for tree in trees:
+    tree.accept(CompileVisitor())
 
 def main():
   parser = OptionParser(option_list=options)
