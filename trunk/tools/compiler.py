@@ -1514,12 +1514,9 @@ def load_files(files):
       source = codecs.open(file, "r", "utf-8").read()
       tree = compile(source)
       trees.append(tree)
-  for tree in trees:
-    tree.accept(LoadVisitor())
-  for tree in trees:
-    tree.accept(ResolveVisitor())
-  for tree in trees:
-    tree.accept(CompileVisitor())
+  for tree in trees: tree.accept(LoadVisitor())
+  for tree in trees: tree.accept(ResolveVisitor())
+  for tree in trees: tree.accept(CompileVisitor())
 
 def main():
   parser = OptionParser(option_list=options)
