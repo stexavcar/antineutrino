@@ -16,16 +16,6 @@ public:
   inline uint32_t length() { return length_; }
   inline uint32_t operator[](uint32_t index);
   
-  class local {
-  public:
-    local(string str) : value_(str) { }
-    ~local() { value_.dispose(); }
-    string &operator*() { return value_; }
-    const char *chars() { return value_.chars(); }
-  private:
-    string &value_;
-  };
-  
   /**
    * Returns the characters of this string.  The value returned is
    * a pointer to the internal buffer of this string so it will be
@@ -42,6 +32,16 @@ public:
 private:
   const char *chars_;
   uint32_t length_;
+};
+
+class scoped_string {
+public:
+  scoped_string(string str) : value_(str) { }
+  ~scoped_string() { value_.dispose(); }
+  string &operator*() { return value_; }
+  const char *chars() { return value_.chars(); }
+private:
+  string value_;
 };
 
 /**

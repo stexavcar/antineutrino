@@ -306,13 +306,13 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
         pc += OpcodeInfo<OC_ARGUMENT>::kSize;
         break;
       case OC_GLOBAL: {
-        string::local name(literals->at(data[pc + 1])->to_string());
+        scoped_string name(literals->at(data[pc + 1])->to_string());
         buf.printf("global %", name.chars());
         pc += OpcodeInfo<OC_GLOBAL>::kSize;
         break;
       }
       case OC_PUSH: {
-        string::local value(literals->at(data[pc + 1])->to_string());
+        scoped_string value(literals->at(data[pc + 1])->to_string());
         buf.printf("push %", value.chars());
         pc += OpcodeInfo<OC_PUSH>::kSize;
         break;
@@ -331,7 +331,7 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
         break;
       }
       case OC_INVOKE: {
-        string::local name(literals->at(data[pc + 1])->to_string());
+        scoped_string name(literals->at(data[pc + 1])->to_string());
         buf.printf("invoke %", name.chars());
         pc += OpcodeInfo<OC_INVOKE>::kSize;
         break;

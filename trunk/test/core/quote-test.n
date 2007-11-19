@@ -3,6 +3,7 @@ def quote_test() {
   assert_equals("#<class Boolean>", Boolean.to_string());
   assert_equals("#<class Foo>", <class Foo { }>.evaluate().to_string());
   assert_equals("#<class Foo>", <class Foo { def x() -> 4; }>.evaluate().to_string());
+  print(new (<class Foo { def x() -> 4; }>.evaluate())().x());
 }
 
 def main() {

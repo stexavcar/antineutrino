@@ -25,6 +25,13 @@ static inline ref<C> new_ref(C *obj) {
 }
 
 template <class C>
+static inline permanent<C> new_permanent(C *obj) {
+  C **cell = new C*;
+  *cell = obj;
+  return permanent<C>(cell);
+}
+
+template <class C>
 C* abstract_ref<C>::operator->() {
   ASSERT(cell_ != 0);
   return *cell_;

@@ -122,7 +122,7 @@ Value *Builtins::object_eq(Arguments &args) {
 
 Value *Builtins::object_to_string(Arguments &args) {
   ASSERT_EQ(0, args.count());
-  string::local str(args.self()->to_string());
+  scoped_string str(args.self()->to_string());
   return cast<Value>(Runtime::current().heap().new_string(*str));
 }
 

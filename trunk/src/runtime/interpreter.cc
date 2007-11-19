@@ -128,8 +128,8 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       Class *chlass = get_class(recv);
       Data *lookup_result = lookup_method(chlass, name);
       if (is<Nothing>(lookup_result)) {
-        string::local name_str(name->to_string());
-        string::local recv_str(recv->to_string());
+        scoped_string name_str(name->to_string());
+        scoped_string recv_str(recv->to_string());
         Conditions::get().error_occurred("Lookup failure: %s::%s",
             recv_str.chars(), name_str.chars());
       }
