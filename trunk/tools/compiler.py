@@ -671,11 +671,10 @@ class Class(SyntaxTree):
   def traverse(self, visitor):
     for member in self.members:
       member.accept(visitor)
-  def resolve(self):
-    pass
   def quote(self):
     methods = HEAP.new_tuple(values = [ m.quote() for m in self.members ])
-    return HEAP.new_class_expression(HEAP.new_string(self.name), methods)
+    super = NAMESPACE[self.super]
+    return HEAP.new_class_expression(HEAP.new_string(self.name), methods, super.image)
 
 class Method(SyntaxTree):
   def __init__(self, name, params, body):
@@ -944,6 +943,7 @@ class Heap:
     self.cursor = 0
     self.memory = self.capacity * [ tag_as_smi(0) ]
     self.dicts = [ ]
+    self.root_object_cache = { }
   def initialize(self):
     self.roots = self.new_tuple(Heap.kRootCount)
     self.toplevel = self.new_dictionary()
@@ -977,6 +977,14 @@ class Heap:
   def new_class(self, instance_type):
     result = ImageClass(self.allocate(ImageClass_Size), instance_type)
     result.set_class(CLASS_TYPE)
+    return result
+
+  def get_root(self, index):
+    if index in self.root_object_cache:
+      return self.root_object_cache[index]
+    result = ImageRoot(self.allocate(ImageRoot_Size), index)
+    result.set_class(SINGLETON_TYPE)
+    self.root_object_cache[index] = result
     return result
   
   def new_lambda(self, argc, code, literals):
@@ -1033,8 +1041,8 @@ class Heap:
     result.set_class(INVOKE_EXPRESSION_TYPE)
     return result
 
-  def new_class_expression(self, name, methods):
-    result = ImageClassExpression(self.allocate(ImageClassExpression_Size), name, methods)
+  def new_class_expression(self, name, methods, super):
+    result = ImageClassExpression(self.allocate(ImageClassExpression_Size), name, methods, super)
     result.set_class(CLASS_EXPRESSION_TYPE)
     return result
 
@@ -1165,6 +1173,13 @@ class ImageDictionary(ImageObject):
       cursor += 1
     self.set_table(table)
 
+class ImageRoot(ImageObject):
+  def __init__(self, addr, index):
+    ImageObject.__init__(self, addr)
+    self.set_index(index)
+  def set_index(self, value):
+    HEAP.set_raw_field(self, ImageRoot_IndexOffset, value)
+
 class ImageSyntaxTree(ImageObject):
   def __init__(self, addr):
     ImageObject.__init__(self, addr)
@@ -1190,14 +1205,17 @@ class ImageInvokeExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageInvokeExpression_ArgumentsOffset, value)
 
 class ImageClassExpression(ImageSyntaxTree):
-  def __init__(self, addr, name, methods):
+  def __init__(self, addr, name, methods, super):
     ImageSyntaxTree.__init__(self, addr)
     self.set_name(name)
     self.set_methods(methods)
+    self.set_super(super)
   def set_name(self, value):
     HEAP.set_field(self, ImageClassExpression_NameOffset, value)
   def set_methods(self, value):
     HEAP.set_field(self, ImageClassExpression_MethodsOffset, value)
+  def set_super(self, value):
+    HEAP.set_field(self, ImageClassExpression_SuperOffset, value)
 
 class ImageReturnExpression(ImageSyntaxTree):
   def __init__(self, addr, value):
@@ -1349,7 +1367,7 @@ class ResolveVisitor(Visitor):
       value = NAMESPACE[that.super]
       that.image.set_parent(value.image)
     else:
-      that.image.set_parent(ImageVoid())
+      that.image.set_parent(HEAP.get_root(VOID_ROOT))
   def visit_class(self, that):
     self.resolve_class(that)
     Visitor.visit_class(self, that)

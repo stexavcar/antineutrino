@@ -110,6 +110,11 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(method);
       break;
     }
+    case SINGLETON_TYPE: {
+      // Roots (which are singleton tagged) are handled specially in
+      // the Value::forward_pointer method.
+      break;
+    }
     case LITERAL_EXPRESSION_TYPE: {
       LiteralExpression *literal = cast<LiteralExpression>(heap.new_literal_expression());
       obj->point_forward(literal);
@@ -218,7 +223,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       expr->set_body(cast<SyntaxTree>(img->body()->forward_pointer()));
       break;
     }
-    case STRING_TYPE: case CODE_TYPE:
+    case STRING_TYPE: case CODE_TYPE: case SINGLETON_TYPE:
       // Nothing to fix
       break;
     default:
@@ -277,6 +282,8 @@ uint32_t ImageObject::memory_size() {
       return ImageReturnExpression_Size;
     case METHOD_EXPRESSION_TYPE:
       return ImageMethodExpression_Size;
+    case SINGLETON_TYPE:
+      return ImageRoot_Size;
     case STRING_TYPE:
       return image_cast<ImageString>(this)->string_memory_size();
     case CODE_TYPE:

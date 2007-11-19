@@ -35,7 +35,8 @@
   VISIT(20, OBJECT, Object)                                          \
   VISIT(21, VALUE, Value)                                            \
   VISIT(22, ABSTRACT_BUFFER, AbstractBuffer)                         \
-  VISIT(23, SYNTAX_TREE, SyntaxTree)
+  VISIT(23, SINGLETON, Singleton)                                    \
+  VISIT(24, SYNTAX_TREE, SyntaxTree)
 
 #define FOR_EACH_SIGNAL_TYPE(VISIT)                                  \
   VISIT(30, ALLOCATION_FAILED, AllocationFailed)                     \
@@ -95,6 +96,7 @@
   VISIT(5, Class, Size)                                              \
   VISIT(1, Method, NameOffset)        VISIT(2, Method, LambdaOffset) \
   VISIT(3, Method, Size)                                             \
+  VISIT(1, Root, IndexOffset)         VISIT(2, Root, Size)           \
   VISIT(1, LiteralExpression, ValueOffset)                           \
   VISIT(2, LiteralExpression, Size)                                  \
   VISIT(1, InvokeExpression, ReceiverOffset)                         \

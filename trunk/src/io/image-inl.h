@@ -3,6 +3,7 @@
 
 #include "heap/pointer-inl.h"
 #include "io/image.h"
+#include "runtime/runtime.h"
 #include "utils/types-inl.h"
 
 namespace neutrino {
@@ -58,6 +59,7 @@ DEFINE_IMAGE_OBJECT_QUERY(Lambda, LAMBDA)
 DEFINE_IMAGE_OBJECT_QUERY(Dictionary, DICTIONARY)
 DEFINE_IMAGE_OBJECT_QUERY(Class, CLASS)
 DEFINE_IMAGE_OBJECT_QUERY(Method, METHOD)
+DEFINE_IMAGE_OBJECT_QUERY(Root, SINGLETON)
 #define DEFINE_SYNTAX_TREE_QUERY(n, NAME, Name) DEFINE_IMAGE_OBJECT_QUERY(Name, NAME)
 FOR_EACH_SYNTAX_TREE_TYPE(DEFINE_SYNTAX_TREE_QUERY)
 #undef DEFINE_SYNTAX_TREE_QUERY
@@ -82,6 +84,8 @@ void ImageObject::point_forward(Object *obj) {
 Value *ImageValue::forward_pointer() {
   if (is<ImageSmi>(this)) {
     return image_cast<ImageSmi>(this)->forward_pointer();
+  } else if (is<ImageRoot>(this)) {
+    return Runtime::current().roots().get(image_cast<ImageRoot>(this)->index());
   } else {
     return image_cast<ImageObject>(this)->forward_pointer();
   }
@@ -207,6 +211,10 @@ DEFINE_GETTER(Lambda, Method, lambda, Lambda)
 // --- D i c t i o n a r y ---
 
 DEFINE_GETTER(Tuple, Dictionary, table, Table)
+
+// --- R o o t ---
+
+DEFINE_RAW_GETTER(uint32_t, Root, index, Index)
 
 
 // --- L i t e r a l   E x p r e s s i o n ---

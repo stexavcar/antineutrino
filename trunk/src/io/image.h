@@ -26,7 +26,7 @@ public:
 
 class ImageValue : public ImageData {
 public:
-  inline Value *forward_pointer();
+  Value *forward_pointer();
 };
 
 class ImageSmi : public ImageValue {
@@ -94,6 +94,10 @@ public:
   inline ImageTuple *table();
 };
 
+class ImageRoot : public ImageObject {
+public:
+  inline uint32_t index();
+};
 
 // -------------------------------
 // --- S y n t a x   T r e e s ---
