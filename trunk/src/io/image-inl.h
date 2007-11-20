@@ -247,6 +247,11 @@ DEFINE_GETTER(String, MethodExpression, name, Name)
 DEFINE_GETTER(SyntaxTree, MethodExpression, body, Body)
 
 
+// --- S e q u e n c e   E x p r e s s i o n ---
+
+DEFINE_GETTER(Tuple, SequenceExpression, expressions, Expressions)
+
+
 #undef DEFINE_RAW_GETTER
 #undef DEFINE_GETTER
 

@@ -31,6 +31,10 @@ DEFINE_FIELD_ACCESSORS(SyntaxTree, ReturnExpression, value, kValueOffset)
 DEFINE_FIELD_ACCESSORS(String, MethodExpression, name, kNameOffset)
 DEFINE_FIELD_ACCESSORS(SyntaxTree, MethodExpression, body, kBodyOffset)
 
+// --- S e q u e n c e   E x p r e s s i o n ---
+
+DEFINE_FIELD_ACCESSORS(Tuple, SequenceExpression, expressions, kExpressionsOffset)
+
 }
 
 #endif // _IO_AST_INL

@@ -2,6 +2,7 @@
 #include "compiler/compiler.h"
 #include "compiler/compile-utils-inl.h"
 #include "heap/ref-inl.h"
+#include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
 
@@ -25,10 +26,12 @@ public:
   uint16_t constant_pool_index(ref<Value> value);
   
   void push(uint16_t index);
+  void pop(uint16_t height = 1);
   void rethurn();
   
   virtual void visit_literal_expression(ref<LiteralExpression> that);
   virtual void visit_return_expression(ref<ReturnExpression> that);
+  virtual void visit_sequence_expression(ref<SequenceExpression> that);
 private:
   Factory &factory() { return factory_; }
   heap_list &pool() { return pool_; }
@@ -65,11 +68,19 @@ uint16_t Assembler::constant_pool_index(ref<Value> value) {
 }
 
 void Assembler::push(uint16_t index) {
+  STATIC_CHECK(OpcodeInfo<OC_PUSH>::kArgc == 1);
   code().append(OC_PUSH);
   code().append(index);
 }
 
+void Assembler::pop(uint16_t height) {
+  STATIC_CHECK(OpcodeInfo<OC_POP>::kArgc == 1);
+  code().append(OC_POP);
+  code().append(height);
+}
+
 void Assembler::rethurn() {
+  STATIC_CHECK(OpcodeInfo<OC_RETURN>::kArgc == 0);
   code().append(OC_RETURN);
 }
 
@@ -87,6 +98,21 @@ void Assembler::visit_return_expression(ref<ReturnExpression> that) {
 void Assembler::visit_literal_expression(ref<LiteralExpression> that) {
   uint16_t index = constant_pool_index(that.value());
   __ push(index);
+}
+
+void Assembler::visit_sequence_expression(ref<SequenceExpression> that) {
+  RefScope scope;
+  ref<Tuple> expressions = that.expressions();
+  ASSERT(expressions.length() > 1);
+  bool is_first = true;
+  for (uint32_t i = 0; i < expressions.length(); i++) {
+    if (is_first) {
+      is_first = false;
+    } else {
+      __ pop();
+    }
+    __ codegen(cast<SyntaxTree>(expressions.get(i)));
+  }
 }
 
 

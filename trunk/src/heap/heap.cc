@@ -91,6 +91,14 @@ Data *Heap::new_method_expression() {
 }
 
 
+Data *Heap::new_sequence_expression() {
+  Data *val = allocate_object(SequenceExpression::kSize, roots().sequence_expression_class());
+  if (is<AllocationFailed>(val)) return val;
+  SequenceExpression *result = cast<SequenceExpression>(val);
+  return result;
+}
+
+
 Data *Heap::new_empty_class(InstanceType instance_type) {
   Data *val = allocate_class(instance_type);
   if (is<AllocationFailed>(val)) return val;

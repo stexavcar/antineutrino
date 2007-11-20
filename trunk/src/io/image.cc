@@ -140,6 +140,11 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(expr);
       break;
     }
+    case SEQUENCE_EXPRESSION_TYPE: {
+      SequenceExpression *expr = cast<SequenceExpression>(heap.new_sequence_expression());
+      obj->point_forward(expr);
+      break;
+    }
     default:
       UNHANDLED(InstanceType, type);
       break;
@@ -223,6 +228,12 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       expr->set_body(cast<SyntaxTree>(img->body()->forward_pointer()));
       break;
     }
+    case SEQUENCE_EXPRESSION_TYPE: {
+      ImageSequenceExpression *img = image_cast<ImageSequenceExpression>(obj);
+      SequenceExpression *expr = cast<SequenceExpression>(img->forward_pointer());
+      expr->set_expressions(cast<Tuple>(img->expressions()->forward_pointer()));
+      break;
+    }
     case STRING_TYPE: case CODE_TYPE: case SINGLETON_TYPE:
       // Nothing to fix
       break;
@@ -282,6 +293,8 @@ uint32_t ImageObject::memory_size() {
       return ImageReturnExpression_Size;
     case METHOD_EXPRESSION_TYPE:
       return ImageMethodExpression_Size;
+    case SEQUENCE_EXPRESSION_TYPE:
+      return ImageSequenceExpression_Size;
     case SINGLETON_TYPE:
       return ImageRoot_Size;
     case STRING_TYPE:

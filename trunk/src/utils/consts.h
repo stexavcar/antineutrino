@@ -59,7 +59,8 @@
   VISIT(51, INVOKE_EXPRESSION, InvokeExpression)                     \
   VISIT(52, CLASS_EXPRESSION, ClassExpression)                       \
   VISIT(53, RETURN_EXPRESSION, ReturnExpression)                     \
-  VISIT(54, METHOD_EXPRESSION, MethodExpression)
+  VISIT(54, METHOD_EXPRESSION, MethodExpression)                     \
+  VISIT(55, SEQUENCE_EXPRESSION, SequenceExpression)
 
 
 // ---------------------
@@ -111,7 +112,9 @@
   VISIT(2, ReturnExpression, Size)                                   \
   VISIT(1, MethodExpression, NameOffset)                             \
   VISIT(2, MethodExpression, BodyOffset)                             \
-  VISIT(3, MethodExpression, Size)
+  VISIT(3, MethodExpression, Size)                                   \
+  VISIT(1, SequenceExpression, ExpressionsOffset)                    \
+  VISIT(2, SequenceExpression, Size)
 
 
 // -----------------
@@ -119,34 +122,35 @@
 // -----------------
 
 #define FOR_EACH_SIMPLE_ROOT_OBJECT(VISIT)                           \
-  VISIT(3,  Void, vhoid, VOID, new_singleton(void_class()))          \
-  VISIT(5,  Null, nuhll, NULL, new_singleton(null_class()))          \
-  VISIT(7,  True, thrue, TRUE, new_singleton(true_class()))          \
-  VISIT(9,  False, fahlse, FALSE, new_singleton(false_class()))      \
-  VISIT(13, Dictionary, toplevel, TOPLEVEL, new_dictionary())        \
-  VISIT(22, Tuple, empty_tuple, EMPTY_TUPLE, new_tuple(0))
+  VISIT(0,  Void, vhoid, VOID, new_singleton(void_class()))          \
+  VISIT(1,  Null, nuhll, NULL, new_singleton(null_class()))          \
+  VISIT(2,  True, thrue, TRUE, new_singleton(true_class()))          \
+  VISIT(3,  False, fahlse, FALSE, new_singleton(false_class()))      \
+  VISIT(4, Dictionary, toplevel, TOPLEVEL, new_dictionary())        \
+  VISIT(5, Tuple, empty_tuple, EMPTY_TUPLE, new_tuple(0))
 
 #define FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                       \
-  VISIT(23, Class, class_class, CLASS_CLASS, NULL)
+  VISIT(6, Class, class_class, CLASS_CLASS, NULL)
 
 #define FOR_EACH_SIMPLE_ROOT_CLASS(VISIT)                            \
-  VISIT(0,  Class, string_class, STRING_CLASS, new_empty_class(STRING_TYPE))\
-  VISIT(1,  Class, tuple_class, TUPLE_CLASS, new_empty_class(TUPLE_TYPE))\
-  VISIT(2,  Class, void_class, VOID_CLASS, new_empty_class(VOID_TYPE))\
-  VISIT(4,  Class, null_class, NULL_CLASS, new_empty_class(NULL_TYPE))\
-  VISIT(6,  Class, true_class, TRUE_CLASS, new_empty_class(TRUE_TYPE))\
-  VISIT(8,  Class, false_class, FALSE_CLASS, new_empty_class(FALSE_TYPE))\
-  VISIT(10, Class, literal_expression_class, LITERAL_EXPRESSION_CLASS, new_empty_class(LITERAL_EXPRESSION_TYPE))\
-  VISIT(11, Class, dictionary_class, DICTIONARY_CLASS, new_empty_class(DICTIONARY_TYPE))\
-  VISIT(12, Class, lambda_class, LAMBDA_CLASS, new_empty_class(LAMBDA_TYPE))\
-  VISIT(14, Class, buffer_class, BUFFER_CLASS, new_empty_class(BUFFER_TYPE))\
-  VISIT(15, Class, code_class, CODE_CLASS, new_empty_class(CODE_TYPE))\
-  VISIT(16, Class, method_class, METHOD_CLASS, new_empty_class(METHOD_TYPE))\
-  VISIT(17, Class, smi_class, SMI_CLASS, new_empty_class(SMI_TYPE))  \
-  VISIT(18, Class, invoke_expression_class, INVOKE_EXPRESSION_CLASS, new_empty_class(INVOKE_EXPRESSION_TYPE))\
-  VISIT(19, Class, class_expression_class, CLASS_EXPRESSION_CLASS, new_empty_class(CLASS_EXPRESSION_TYPE))\
-  VISIT(20, Class, return_expression_class, RETURN_EXPRESSION_CLASS, new_empty_class(RETURN_EXPRESSION_TYPE))\
-  VISIT(21, Class, method_expression_class, METHOD_EXPRESSION_CLASS, new_empty_class(METHOD_EXPRESSION_TYPE))\
+  VISIT(7,  Class, string_class, STRING_CLASS, new_empty_class(STRING_TYPE))\
+  VISIT(8,  Class, tuple_class, TUPLE_CLASS, new_empty_class(TUPLE_TYPE))\
+  VISIT(9,  Class, void_class, VOID_CLASS, new_empty_class(VOID_TYPE))\
+  VISIT(10,  Class, null_class, NULL_CLASS, new_empty_class(NULL_TYPE))\
+  VISIT(11,  Class, true_class, TRUE_CLASS, new_empty_class(TRUE_TYPE))\
+  VISIT(12,  Class, false_class, FALSE_CLASS, new_empty_class(FALSE_TYPE))\
+  VISIT(13, Class, literal_expression_class, LITERAL_EXPRESSION_CLASS, new_empty_class(LITERAL_EXPRESSION_TYPE))\
+  VISIT(14, Class, dictionary_class, DICTIONARY_CLASS, new_empty_class(DICTIONARY_TYPE))\
+  VISIT(15, Class, lambda_class, LAMBDA_CLASS, new_empty_class(LAMBDA_TYPE))\
+  VISIT(16, Class, buffer_class, BUFFER_CLASS, new_empty_class(BUFFER_TYPE))\
+  VISIT(17, Class, code_class, CODE_CLASS, new_empty_class(CODE_TYPE))\
+  VISIT(18, Class, method_class, METHOD_CLASS, new_empty_class(METHOD_TYPE))\
+  VISIT(19, Class, smi_class, SMI_CLASS, new_empty_class(SMI_TYPE))  \
+  VISIT(20, Class, invoke_expression_class, INVOKE_EXPRESSION_CLASS, new_empty_class(INVOKE_EXPRESSION_TYPE))\
+  VISIT(21, Class, class_expression_class, CLASS_EXPRESSION_CLASS, new_empty_class(CLASS_EXPRESSION_TYPE))\
+  VISIT(22, Class, return_expression_class, RETURN_EXPRESSION_CLASS, new_empty_class(RETURN_EXPRESSION_TYPE))\
+  VISIT(23, Class, method_expression_class, METHOD_EXPRESSION_CLASS, new_empty_class(METHOD_EXPRESSION_TYPE))\
+  VISIT(24, Class, sequence_expression_class, SEQUENCE_EXPRESSION_CLASS, new_empty_class(SEQUENCE_EXPRESSION_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \

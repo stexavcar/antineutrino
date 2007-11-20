@@ -1,4 +1,4 @@
-def quote_test() {
+def simple_quote_test() {
   <1 + 1 + 1>;
   assert_equals("#<class Boolean>", Boolean.to_string());
   assert_equals("#<class Foo>", <class Foo { }>.evaluate().to_string());
@@ -6,6 +6,13 @@ def quote_test() {
   assert_equals(4, new (<class Foo { def x() -> 4; }>.evaluate())().x());
 }
 
+def complex_quote_test() {
+  print(new (<class Foo {
+     def bar() { 1; return 2; 3; }
+  }>.evaluate())().bar());
+}
+
 def main() {
-  quote_test();
+  simple_quote_test();
+  complex_quote_test();
 }

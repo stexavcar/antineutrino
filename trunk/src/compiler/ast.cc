@@ -123,6 +123,8 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
     return visitor.visit_literal_expression(cast<LiteralExpression>(self));
   case RETURN_EXPRESSION_TYPE:
     return visitor.visit_return_expression(cast<ReturnExpression>(self));
+  case SEQUENCE_EXPRESSION_TYPE:
+    return visitor.visit_sequence_expression(cast<SequenceExpression>(self));
   default:
     UNHANDLED(InstanceType, type);
   }
@@ -137,6 +139,13 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
     break;
   case LITERAL_EXPRESSION_TYPE:
     break;
+  case SEQUENCE_EXPRESSION_TYPE: {
+    RefScope scope;
+    ref<Tuple> expressions = cast<SequenceExpression>(self).expressions();
+    for (uint32_t i = 0; i < expressions.length(); i++)
+      cast<SyntaxTree>(expressions.get(i)).accept(visitor);
+    break;
+  }
   default:
     UNHANDLED(InstanceType, type);
   }
@@ -153,6 +162,10 @@ void Visitor::visit_literal_expression(ref<LiteralExpression> that) {
 }
 
 void Visitor::visit_return_expression(ref<ReturnExpression> that) {
+  visit_node(that);
+}
+
+void Visitor::visit_sequence_expression(ref<SequenceExpression> that) {
   visit_node(that);
 }
 

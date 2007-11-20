@@ -137,6 +137,11 @@ public:
   inline ImageSyntaxTree *body();
 };
 
+class ImageSequenceExpression : public ImageSyntaxTree {
+public:
+  inline ImageTuple *expressions();
+};
+
 template <class C>
 static inline bool is(ImageData *val);
 

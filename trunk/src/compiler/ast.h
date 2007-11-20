@@ -121,10 +121,8 @@ DEFINE_REF_CLASS(ReturnExpression);
 
 class MethodExpression : public SyntaxTree {
 public:
-  inline String *&name();
-  inline void set_name(String *value);
-  inline SyntaxTree *&body();
-  inline void set_body(SyntaxTree *value);
+  DECLARE_FIELD(String*, name);
+  DECLARE_FIELD(SyntaxTree*, body);
   
   static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kBodyOffset = kNameOffset + kPointerSize;
@@ -142,6 +140,27 @@ public:
 DEFINE_REF_CLASS(MethodExpression);
 
 
+// ---------------------------------------------
+// --- S e q u e n c e   E x p r e s s i o n ---
+// ---------------------------------------------
+
+class SequenceExpression : public SyntaxTree {
+public:
+  DECLARE_FIELD(Tuple*, expressions);
+  
+  static const uint32_t kExpressionsOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kSize = kExpressionsOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<SequenceExpression> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<Tuple> expressions();
+};
+
+DEFINE_REF_CLASS(SequenceExpression);
+
+
 // ---------------------
 // --- V i s i t o r ---
 // ---------------------
@@ -152,6 +171,7 @@ public:
   virtual void visit_node(ref<SyntaxTree> that);
   virtual void visit_literal_expression(ref<LiteralExpression> that);
   virtual void visit_return_expression(ref<ReturnExpression> that);
+  virtual void visit_sequence_expression(ref<SequenceExpression> that);
 };
 
 

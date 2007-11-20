@@ -240,6 +240,11 @@ class Scanner:
 # --- P a r s e r ---
 # -------------------
 
+def new_sequence(exprs):
+  if len(exprs) == 0: return Void()
+  elif len(exprs) == 1: return exprs[0]
+  else: return Sequence(exprs)
+
 class Parser:
 
   def __init__(self, tokens):
@@ -448,7 +453,7 @@ class Parser:
         exprs.append(expr)
       self.expect_delimiter('}')
       exprs.append(Return(Void()))
-      return Sequence(exprs)
+      return new_sequence(exprs)
 
   # <params>
   #   -> $ident *: ','
@@ -845,6 +850,8 @@ class Void(Expression):
     visitor.visit_void(self)
   def traverse(self, visitor):
     pass
+  def quote(self):
+    return HEAP.new_literal_expression(HEAP.get_root(VOID_ROOT))  
   def emit(self, state):
     state.write(OC_VOID)
 
@@ -893,6 +900,9 @@ class Sequence(Expression):
   def traverse(self, visitor):
     for expr in self.exprs:
       expr.accept(visitor)
+  def quote(self):
+    exprs = HEAP.new_tuple(values = [ expr.quote() for expr in self.exprs ])
+    return HEAP.new_sequence_expression(exprs)
   def emit(self, state):
     if len(self.exprs) == 0:
       state.write(OC_VOID)
@@ -937,7 +947,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 24
+  kRootCount  = 25
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1049,6 +1059,11 @@ class Heap:
   def new_return_expression(self, value):
     result = ImageReturnExpression(self.allocate(ImageReturnExpression_Size), value)
     result.set_class(RETURN_EXPRESSION_TYPE)
+    return result
+
+  def new_sequence_expression(self, exprs):
+    result = ImageSequenceExpression(self.allocate(ImageSequenceExpression_Size), exprs)
+    result.set_class(SEQUENCE_EXPRESSION_TYPE)
     return result
 
   def new_method_expression(self, name, body):
@@ -1223,6 +1238,13 @@ class ImageReturnExpression(ImageSyntaxTree):
     self.set_value(value)
   def set_value(self, value):
     HEAP.set_field(self, ImageReturnExpression_ValueOffset, value)
+
+class ImageSequenceExpression(ImageSyntaxTree):
+  def __init__(self, addr, exprs):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_expressions(exprs)
+  def set_expressions(self, value):
+    HEAP.set_field(self, ImageSequenceExpression_ExpressionsOffset, value)
 
 class ImageMethodExpression(ImageSyntaxTree):
   def __init__(self, addr, name, body):
