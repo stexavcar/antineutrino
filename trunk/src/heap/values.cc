@@ -43,14 +43,17 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 bool Value::is_key() {
   if (is<Smi>(this)) {
     return true;
-  } if (is<Object>(this)) {
+  } else if (is<Object>(this)) {
     switch (cast<Object>(this)->chlass()->instance_type()) {
     case STRING_TYPE: case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE:
     case FALSE_TYPE:
       return true;
+    default:
+      return false;
     }
+  } else {
+    return false;
   }
-  return false;
 }
 
 #endif // DEBUG
@@ -381,7 +384,7 @@ string Lambda::disassemble() {
 
 void Object::for_each_field(FieldCallback callback, void *data) {
   VISIT(chlass());
-  uint32_t type = chlass()->instance_type();
+  InstanceType type = chlass()->instance_type();
   switch (type) {
     case CLASS_TYPE:
       cast<Class>(this)->for_each_class_field(callback, data);
@@ -447,7 +450,7 @@ static void validate_method(Method *obj) {
 
 static void validate_object(Object *obj) {
   CHECK_IS(Class, obj->chlass());
-  uint32_t type = obj->chlass()->instance_type();
+  InstanceType type = obj->chlass()->instance_type();
   switch (type) {
     case CLASS_TYPE:
       validate_class(cast<Class>(obj));

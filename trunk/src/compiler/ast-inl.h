@@ -8,7 +8,7 @@ namespace neutrino {
 
 // --- L i t e r a l   E x p r e s s i o n ---
 
-DEFINE_ACCESSORS(Value*, LiteralExpression, value, kValueOffset)
+DEFINE_FIELD_ACCESSORS(Value, LiteralExpression, value, kValueOffset)
 
 // --- I n v o k e   E x p r e s s i o n ---
 
@@ -24,7 +24,7 @@ DEFINE_FIELD_ACCESSORS(Value, ClassExpression, super, kSuperOffset)
 
 // --- R e t u r n   E x p r e s s i o n ---
 
-DEFINE_ACCESSORS(SyntaxTree*, ReturnExpression, value, kValueOffset)
+DEFINE_FIELD_ACCESSORS(SyntaxTree, ReturnExpression, value, kValueOffset)
 
 // --- M e t h o d   E x p r e s s i o n ---
 

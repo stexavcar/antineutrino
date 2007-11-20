@@ -221,6 +221,7 @@ template <>
 class ref_traits<Code> : public ref_traits<AbstractBuffer> {
 public:
   inline uint16_t &at(uint32_t index);
+  inline uint32_t length();
 };
 
 DEFINE_REF_CLASS(Code);
@@ -370,27 +371,13 @@ public:
 };
 
 
-// -----------------------------
-// --- S y n t a x   T r e e ---
-// -----------------------------
-
-class SyntaxTree : public Object {
-public:
-  inline Value *&at(uint32_t index);
-  
-  void unparse_on(string_buffer &buf);
-  
-  static const int kHeaderSize = Object::kHeaderSize;
-};
-
-
 // -----------------
 // --- C l a s s ---
 // -----------------
 
 class Class : public Object {
 public:
-  DECLARE_FIELD(uint32_t, instance_type);
+  DECLARE_FIELD(InstanceType, instance_type);
   DECLARE_FIELD(Tuple*, methods);
   DECLARE_FIELD(Value*, super);
   DECLARE_FIELD(Value*, name);

@@ -2,6 +2,7 @@
 
 compiler/ast.cc
 compiler/compiler.cc
+compiler/compile-utils.cc
 heap/factory.cc
 heap/heap.cc
 heap/ref.cc

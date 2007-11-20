@@ -110,4 +110,50 @@ void SyntaxTree::unparse_on(string_buffer &buf) {
   unparse_syntax_tree_on(this, buf);
 }
 
+
+// ---------------------
+// --- V i s i t o r ---
+// ---------------------
+
+void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
+  InstanceType type = this->type();
+  ref<SyntaxTree> self = open(this);
+  switch (type) {
+  case LITERAL_EXPRESSION_TYPE:
+    return visitor.visit_literal_expression(cast<LiteralExpression>(self));
+  case RETURN_EXPRESSION_TYPE:
+    return visitor.visit_return_expression(cast<ReturnExpression>(self));
+  default:
+    UNHANDLED(InstanceType, type);
+  }
+}
+
+void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
+  InstanceType type = this->type();
+  ref<SyntaxTree> self = open(this);
+  switch (type) {
+  case RETURN_EXPRESSION_TYPE:
+    cast<ReturnExpression>(self).value().accept(visitor);
+    break;
+  case LITERAL_EXPRESSION_TYPE:
+    break;
+  default:
+    UNHANDLED(InstanceType, type);
+  }
+}
+
+Visitor::~Visitor() { }
+
+void Visitor::visit_node(ref<SyntaxTree> that) {
+  that.traverse(*this);
+}
+
+void Visitor::visit_literal_expression(ref<LiteralExpression> that) {
+  visit_node(that);
+}
+
+void Visitor::visit_return_expression(ref<ReturnExpression> that) {
+  visit_node(that);
+}
+
 }

@@ -320,6 +320,10 @@ uint16_t &ref_traits<Code>::at(uint32_t index) {
   return open(this)->at(index);
 }
 
+uint32_t ref_traits<Code>::length() {
+  return open(this)->length();
+}
+
 
 // -------------------
 // --- M e t h o d ---
@@ -333,7 +337,7 @@ DEFINE_ACCESSORS(Lambda*, Method, lambda, kLambdaOffset)
 // --- C l a s s ---
 // -----------------
 
-DEFINE_ACCESSORS(uint32_t, Class, instance_type, kInstanceTypeOffset)
+DEFINE_ACCESSORS(InstanceType, Class, instance_type, kInstanceTypeOffset)
 DEFINE_FIELD_ACCESSORS(Value, Class, super, kSuperOffset)
 DEFINE_FIELD_ACCESSORS(Value, Class, name, kNameOffset)
 DEFINE_FIELD_ACCESSORS(Tuple, Class, methods, kMethodsOffset)

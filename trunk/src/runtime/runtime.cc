@@ -53,7 +53,7 @@ bool Runtime::install_loaded_roots(ref<Tuple> roots) {
 }
 
 bool Runtime::install_object(ref<Object> root, ref<Object> changes) {
-  uint32_t type = root.type();
+  InstanceType type = root.type();
   switch (type) {
     case DICTIONARY_TYPE:
       return install_dictionary(cast<Dictionary>(root), cast<Dictionary>(changes));

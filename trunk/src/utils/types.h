@@ -11,6 +11,7 @@ typedef int8_t* address;
 // Forward declarations
 namespace neutrino {
 
+class Class;
 class Code;
 class Data;
 class Dictionary;
@@ -22,8 +23,8 @@ template <class T> class ref;
 class Roots;
 class Runtime;
 class string_buffer;
-class Class;
 class Value;
+class Visitor;
 class String;
 class SyntaxTree;
 class Tuple;

@@ -48,7 +48,7 @@ public:
   }
 
   static inline void check_is(const char *file_name, int line_number,
-      const char *type_name, int type_tag, Data *data,
+      const char *type_name, uint32_t type_tag, Data *data,
       const char *value_source, bool holds, Condition cause = UNKNOWN) {
     if (!holds) {
       Conditions::get().check_is_failed(file_name, line_number,

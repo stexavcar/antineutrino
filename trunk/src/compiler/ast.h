@@ -5,6 +5,33 @@
 
 namespace neutrino {
 
+// -----------------------------
+// --- S y n t a x   T r e e ---
+// -----------------------------
+
+class SyntaxTree : public Object {
+public:
+  inline Value *&at(uint32_t index);
+  
+  void unparse_on(string_buffer &buf);
+  
+  static const int kHeaderSize = Object::kHeaderSize;
+};
+
+template <>
+class ref_traits<SyntaxTree> : public ref_traits<Object> {
+public:
+  void accept(Visitor &visitor);
+  void traverse(Visitor &visitor);
+};
+
+DEFINE_REF_CLASS(SyntaxTree);
+
+
+// -------------------------------------------
+// --- L i t e r a l   E x p r e s s i o n ---
+// -------------------------------------------
+
 class LiteralExpression : public SyntaxTree {
 public:
   DECLARE_FIELD(Value*, value);
@@ -13,14 +40,24 @@ public:
   static const uint32_t kSize = kValueOffset + kPointerSize;
 };
 
+template <>
+class ref_traits<LiteralExpression> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<Value> value();
+};
+
+DEFINE_REF_CLASS(LiteralExpression);
+
+
+// -----------------------------------------
+// --- I n v o k e   E x p r e s s i o n ---
+// -----------------------------------------
+
 class InvokeExpression : public SyntaxTree {
 public:
-  inline SyntaxTree *&receiver();
-  inline void set_receiver(SyntaxTree *value);
-  inline String *&name();
-  inline void set_name(String *value);
-  inline Tuple *&arguments();
-  inline void set_arguments(Tuple *value);
+  DECLARE_FIELD(SyntaxTree*, receiver);
+  DECLARE_FIELD(String*, name);
+  DECLARE_FIELD(Tuple*, arguments);
   
   static const uint32_t kReceiverOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kNameOffset = kReceiverOffset + kPointerSize;
@@ -46,7 +83,7 @@ public:
 };
 
 template <>
-class ref_traits<ClassExpression> {
+class ref_traits<ClassExpression> : public ref_traits<SyntaxTree> {
 public:
   inline ref<String> name();
   inline ref<Tuple> methods();
@@ -63,12 +100,19 @@ DEFINE_REF_CLASS(ClassExpression);
 
 class ReturnExpression : public SyntaxTree {
 public:
-  inline SyntaxTree *&value();
-  inline void set_value(SyntaxTree *value);
+  DECLARE_FIELD(SyntaxTree*, value);
   
   static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kValueOffset + kPointerSize;
 };
+
+template <>
+class ref_traits<ReturnExpression> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<SyntaxTree> value();
+};
+
+DEFINE_REF_CLASS(ReturnExpression);
 
 
 // -----------------------------------------
@@ -88,7 +132,7 @@ public:
 };
 
 template <>
-class ref_traits<MethodExpression> {
+class ref_traits<MethodExpression> : public ref_traits<SyntaxTree> {
 public:
   inline ref<String> name();
   inline ref<SyntaxTree> body();
@@ -96,6 +140,20 @@ public:
 };
 
 DEFINE_REF_CLASS(MethodExpression);
+
+
+// ---------------------
+// --- V i s i t o r ---
+// ---------------------
+
+class Visitor {
+public:
+  virtual ~Visitor();
+  virtual void visit_node(ref<SyntaxTree> that);
+  virtual void visit_literal_expression(ref<LiteralExpression> that);
+  virtual void visit_return_expression(ref<ReturnExpression> that);
+};
+
 
 }
 
