@@ -52,6 +52,8 @@ public:
   
   Data *new_invoke_expression();
   
+  Data *new_call_expression();
+  
   Data *new_class_expression();
   
   Data *new_return_expression();

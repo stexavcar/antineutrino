@@ -9,9 +9,10 @@ def test_expressions() {
   assert_equals(2, new (<class Foo { def x() -> 1 + 1; }>.evaluate())().x());
   assert_equals([1, 2, 3], new (<class Foo { def x() -> [1, 2, 3]; }>.evaluate())().x());
   assert_equals(blah, new (<class Foo { def x() -> blah; }>.evaluate())().x());
+  assert_equals(7, new (<class Foo { def x() -> 7·blah(); }>.evaluate())().x());
 }
 
-def blah() { }
+def blah() -> this;
 
 def main() {
   test_expressions();

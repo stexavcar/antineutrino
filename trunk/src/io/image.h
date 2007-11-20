@@ -119,6 +119,13 @@ public:
   inline ImageTuple *arguments();
 };
 
+class ImageCallExpression : public ImageSyntaxTree {
+public:
+  inline ImageSyntaxTree *receiver();
+  inline ImageSyntaxTree *function();
+  inline ImageTuple *arguments();
+};
+
 class ImageClassExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();

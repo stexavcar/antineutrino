@@ -12,6 +12,10 @@ DEFINE_FIELD_ACCESSORS(SyntaxTree, InvokeExpression, receiver, kReceiverOffset)
 DEFINE_FIELD_ACCESSORS(String, InvokeExpression, name, kNameOffset)
 DEFINE_FIELD_ACCESSORS(Tuple, InvokeExpression, arguments, kArgumentsOffset)
 
+DEFINE_FIELD_ACCESSORS(SyntaxTree, CallExpression, receiver, kReceiverOffset)
+DEFINE_FIELD_ACCESSORS(SyntaxTree, CallExpression, function, kFunctionOffset)
+DEFINE_FIELD_ACCESSORS(Tuple, CallExpression, arguments, kArgumentsOffset)
+
 DEFINE_FIELD_ACCESSORS(String, ClassExpression, name, kNameOffset)
 DEFINE_FIELD_ACCESSORS(Tuple, ClassExpression, methods, kMethodsOffset)
 DEFINE_FIELD_ACCESSORS(Value, ClassExpression, super, kSuperOffset)

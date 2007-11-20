@@ -32,6 +32,7 @@ public:
   void slap(uint16_t height);
   void rethurn();
   void invoke(ref<String> name, uint16_t argc);
+  void call(uint16_t argc);
   void tuple(uint32_t size);
   void global(ref<Value> name);
   
@@ -42,6 +43,7 @@ public:
   virtual void visit_invoke_expression(ref<InvokeExpression> that);
   virtual void visit_tuple_expression(ref<TupleExpression> that);
   virtual void visit_global_expression(ref<GlobalExpression> that);
+  virtual void visit_call_expression(ref<CallExpression> that);
 
 private:
   Factory &factory() { return runtime().factory(); }
@@ -84,6 +86,12 @@ void Assembler::invoke(ref<String> name, uint16_t argc) {
   uint16_t name_index = constant_pool_index(name);
   code().append(OC_INVOKE);
   code().append(name_index);
+  code().append(argc);
+}
+
+void Assembler::call(uint16_t argc) {
+  STATIC_CHECK(OpcodeInfo<OC_CALL>::kArgc == 1);
+  code().append(OC_CALL);
   code().append(argc);
 }
 
@@ -151,6 +159,17 @@ void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
   for (uint32_t i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
   __ invoke(that.name(), args.length());
+  __ slap(args.length() + 1);
+}
+
+void Assembler::visit_call_expression(ref<CallExpression> that) {
+  RefScope scope;
+  __ codegen(that.receiver());
+  __ codegen(that.function());
+  ref<Tuple> args = that.arguments();
+  for (uint32_t i = 0; i < args.length(); i++)
+    __ codegen(cast<SyntaxTree>(args.get(i)));
+  __ call(args.length());
   __ slap(args.length() + 1);
 }
 

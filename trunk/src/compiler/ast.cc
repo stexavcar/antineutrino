@@ -127,6 +127,8 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
     return visitor.visit_sequence_expression(cast<SequenceExpression>(self));
   case INVOKE_EXPRESSION_TYPE:
     return visitor.visit_invoke_expression(cast<InvokeExpression>(self));
+  case CALL_EXPRESSION_TYPE:
+    return visitor.visit_call_expression(cast<CallExpression>(self));
   case TUPLE_EXPRESSION_TYPE:
     return visitor.visit_tuple_expression(cast<TupleExpression>(self));
   case GLOBAL_EXPRESSION_TYPE:
@@ -153,6 +155,13 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
     RefScope scope;
     cast<InvokeExpression>(self).receiver().accept(visitor);
     traverse_tuple(visitor, cast<InvokeExpression>(self).arguments());
+    break;
+  }
+  case CALL_EXPRESSION_TYPE: {
+    RefScope scope;
+    cast<CallExpression>(self).receiver().accept(visitor);
+    cast<CallExpression>(self).function().accept(visitor);
+    traverse_tuple(visitor, cast<CallExpression>(self).arguments());
     break;
   }
   case SEQUENCE_EXPRESSION_TYPE: {
@@ -189,6 +198,10 @@ void Visitor::visit_sequence_expression(ref<SequenceExpression> that) {
 }
 
 void Visitor::visit_invoke_expression(ref<InvokeExpression> that) {
+  visit_syntax_tree(that);
+}
+
+void Visitor::visit_call_expression(ref<CallExpression> that) {
   visit_syntax_tree(that);
 }
 

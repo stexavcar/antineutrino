@@ -786,6 +786,12 @@ class Call(Expression):
     self.recv.accept(visitor)
     self.fun.accept(visitor)
     for arg in self.args: arg.accept(visitor)
+  def quote(self):
+    recv = self.recv.quote()
+    fun = self.fun.quote()
+    args = HEAP.new_tuple(values = map(lambda x: x.quote(), self.args))
+    return HEAP.new_call_expression(recv, fun, args)
+    
   def emit(self, state):
     self.recv.emit(state)
     self.fun.emit(state)
@@ -952,7 +958,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 27
+  kRootCount  = 28
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1054,6 +1060,11 @@ class Heap:
   def new_invoke_expression(self, recv, name, args):
     result = ImageInvokeExpression(self.allocate(ImageInvokeExpression_Size), recv, name, args)
     result.set_class(INVOKE_EXPRESSION_TYPE)
+    return result
+
+  def new_call_expression(self, recv, fun, args):
+    result = ImageCallExpression(self.allocate(ImageCallExpression_Size), recv, fun, args)
+    result.set_class(CALL_EXPRESSION_TYPE)
     return result
 
   def new_class_expression(self, name, methods, super):
@@ -1233,6 +1244,19 @@ class ImageInvokeExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageInvokeExpression_NameOffset, value)
   def set_args(self, value):
     HEAP.set_field(self, ImageInvokeExpression_ArgumentsOffset, value)
+
+class ImageCallExpression(ImageSyntaxTree):
+  def __init__(self, addr, recv, fun, args):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_recv(recv)
+    self.set_fun(fun)
+    self.set_args(args)
+  def set_recv(self, value):
+    HEAP.set_field(self, ImageCallExpression_ReceiverOffset, value)
+  def set_fun(self, value):
+    HEAP.set_field(self, ImageCallExpression_FunctionOffset, value)
+  def set_args(self, value):
+    HEAP.set_field(self, ImageCallExpression_ArgumentsOffset, value)
 
 class ImageClassExpression(ImageSyntaxTree):
   def __init__(self, addr, name, methods, super):

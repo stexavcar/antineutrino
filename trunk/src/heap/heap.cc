@@ -58,7 +58,6 @@ Data *Heap::new_literal_expression() {
   return result;
 }
 
-
 Data *Heap::new_invoke_expression() {
   Data *val = allocate_object(InvokeExpression::kSize, roots().invoke_expression_class());
   if (is<AllocationFailed>(val)) return val;
@@ -66,6 +65,12 @@ Data *Heap::new_invoke_expression() {
   return result;
 }
 
+Data *Heap::new_call_expression() {
+  Data *val = allocate_object(CallExpression::kSize, roots().call_expression_class());
+  if (is<AllocationFailed>(val)) return val;
+  CallExpression *result = cast<CallExpression>(val);
+  return result;
+}
 
 Data *Heap::new_class_expression() {
   Data *val = allocate_object(ClassExpression::kSize, roots().class_expression_class());

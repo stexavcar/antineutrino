@@ -207,6 +207,10 @@ DEFINE_GETTER(SyntaxTree, InvokeExpression, receiver, Receiver)
 DEFINE_GETTER(String, InvokeExpression, name, Name)
 DEFINE_GETTER(Tuple, InvokeExpression, arguments, Arguments)
 
+DEFINE_GETTER(SyntaxTree, CallExpression, receiver, Receiver)
+DEFINE_GETTER(SyntaxTree, CallExpression, function, Function)
+DEFINE_GETTER(Tuple, CallExpression, arguments, Arguments)
+
 DEFINE_GETTER(String, ClassExpression, name, Name)
 DEFINE_GETTER(Tuple, ClassExpression, methods, Methods)
 DEFINE_GETTER(Value, ClassExpression, super, Super)

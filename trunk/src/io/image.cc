@@ -121,8 +121,13 @@ void Image::copy_object_shallow(ImageObject *obj) {
       break;
     }
     case INVOKE_EXPRESSION_TYPE: {
-      InvokeExpression *invoke = cast<InvokeExpression>(heap.new_invoke_expression());
-      obj->point_forward(invoke);
+      InvokeExpression *expr = cast<InvokeExpression>(heap.new_invoke_expression());
+      obj->point_forward(expr);
+      break;
+    }
+    case CALL_EXPRESSION_TYPE: {
+      CallExpression *expr = cast<CallExpression>(heap.new_call_expression());
+      obj->point_forward(expr);
       break;
     }
     case CLASS_EXPRESSION_TYPE: {
@@ -214,6 +219,14 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       InvokeExpression *invoke = cast<InvokeExpression>(img->forward_pointer());
       invoke->set_receiver(cast<SyntaxTree>(img->receiver()->forward_pointer()));
       invoke->set_name(cast<String>(img->name()->forward_pointer()));
+      invoke->set_arguments(cast<Tuple>(img->arguments()->forward_pointer()));
+      break;
+    }
+    case CALL_EXPRESSION_TYPE: {
+      ImageCallExpression *img = image_cast<ImageCallExpression>(obj);
+      CallExpression *invoke = cast<CallExpression>(img->forward_pointer());
+      invoke->set_receiver(cast<SyntaxTree>(img->receiver()->forward_pointer()));
+      invoke->set_function(cast<SyntaxTree>(img->function()->forward_pointer()));
       invoke->set_arguments(cast<Tuple>(img->arguments()->forward_pointer()));
       break;
     }
@@ -309,6 +322,8 @@ uint32_t ImageObject::memory_size() {
       return ImageLiteralExpression_Size;
     case INVOKE_EXPRESSION_TYPE:
       return ImageInvokeExpression_Size;
+    case CALL_EXPRESSION_TYPE:
+      return ImageCallExpression_Size;
     case CLASS_EXPRESSION_TYPE:
       return ImageClassExpression_Size;
     case RETURN_EXPRESSION_TYPE:

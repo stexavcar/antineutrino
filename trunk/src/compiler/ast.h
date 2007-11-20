@@ -75,6 +75,32 @@ public:
 
 DEFINE_REF_CLASS(InvokeExpression);
 
+// -------------------------------------
+// --- C a l l   E x p r e s s i o n ---
+// -------------------------------------
+
+class CallExpression : public SyntaxTree {
+public:
+  DECLARE_FIELD(SyntaxTree*, receiver);
+  DECLARE_FIELD(SyntaxTree*, function);
+  DECLARE_FIELD(Tuple*, arguments);
+  
+  static const uint32_t kReceiverOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kFunctionOffset = kReceiverOffset + kPointerSize;
+  static const uint32_t kArgumentsOffset = kFunctionOffset + kPointerSize;
+  static const uint32_t kSize = kArgumentsOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<CallExpression> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<SyntaxTree> receiver();
+  inline ref<SyntaxTree> function();
+  inline ref<Tuple> arguments();
+};
+
+DEFINE_REF_CLASS(CallExpression);
+
 
 // ---------------------------------------
 // --- C l a s s   E x p r e s s i o n ---
@@ -227,6 +253,7 @@ public:
   virtual void visit_invoke_expression(ref<InvokeExpression> that);
   virtual void visit_tuple_expression(ref<TupleExpression> that);
   virtual void visit_global_expression(ref<GlobalExpression> that);
+  virtual void visit_call_expression(ref<CallExpression> that);
 };
 
 
