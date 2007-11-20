@@ -651,7 +651,7 @@ class BuiltinClass(SyntaxTree):
     self.members = members
     if super:
       self.super = super
-    elif not self.name == u'Object':
+    elif not self.info.name == u'Object':
       self.super = u'Object'
   def accept(self, visitor):
     visitor.visit_builtin_class(self)
@@ -791,7 +791,6 @@ class Call(Expression):
     fun = self.fun.quote()
     args = HEAP.new_tuple(values = map(lambda x: x.quote(), self.args))
     return HEAP.new_call_expression(recv, fun, args)
-    
   def emit(self, state):
     self.recv.emit(state)
     self.fun.emit(state)
@@ -871,6 +870,8 @@ class Null(Expression):
     visitor.visit_null(self)
   def traverse(self, visitor):
     pass
+  def quote(self):
+    return HEAP.new_literal_expression(HEAP.get_root(NULL_ROOT))  
   def emit(self, state):
     state.write(OC_NULL)
 
@@ -879,6 +880,8 @@ class Thrue(Expression):
     visitor.visit_true(self)
   def traverse(self, visitor):
     pass
+  def quote(self):
+    return HEAP.new_literal_expression(HEAP.get_root(TRUE_ROOT))  
   def emit(self, state):
     state.write(OC_TRUE)
 
@@ -887,6 +890,8 @@ class Fahlse(Expression):
     visitor.visit_false(self)
   def traverse(self, visitor):
     pass
+  def quote(self):
+    return HEAP.new_literal_expression(HEAP.get_root(FALSE_ROOT))  
   def emit(self, state):
     state.write(OC_FALSE)
 

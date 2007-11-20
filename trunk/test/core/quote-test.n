@@ -6,13 +6,15 @@ def test_expressions() {
   assert_equals(4, new (<class Foo { def x() -> 4; }>.evaluate())().x());
   assert_equals(2, new (<class Foo { def x() { 1; return 2; 3; } }>.evaluate())().x());
   assert_equals(2, new (<class Foo { def x() -> 1 + 1; }>.evaluate())().x());
-  assert_equals(2, new (<class Foo { def x() -> 1 + 1; }>.evaluate())().x());
   assert_equals([1, 2, 3], new (<class Foo { def x() -> [1, 2, 3]; }>.evaluate())().x());
-  assert_equals(blah, new (<class Foo { def x() -> blah; }>.evaluate())().x());
-  assert_equals(7, new (<class Foo { def x() -> 7·blah(); }>.evaluate())().x());
+  assert_equals(get_this, new (<class Foo { def x() -> get_this; }>.evaluate())().x());
+  assert_equals(7, new (<class Foo { def x() -> 7·get_this(); }>.evaluate())().x());
+  assert_equals(true, new (<class Foo { def x() -> true; }>.evaluate())().x());
+  assert_equals(false, new (<class Foo { def x() -> false; }>.evaluate())().x());
+  assert_equals(null, new (<class Foo { def x() -> null; }>.evaluate())().x());
 }
 
-def blah() -> this;
+def get_this() -> this;
 
 def main() {
   test_expressions();
