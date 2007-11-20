@@ -16,7 +16,9 @@ namespace neutrino {
 
 class Assembler : public Visitor {
 public:
-  Assembler(Factory &factory) : factory_(factory), pool_(factory) { }
+  Assembler(Runtime &runtime)
+      : runtime_(runtime)
+      , pool_(runtime.factory()) { }
   void initialize() { pool().initialize(); }
   void codegen(ref<SyntaxTree> that) { that.accept(*this); }
   
@@ -25,18 +27,28 @@ public:
   
   uint16_t constant_pool_index(ref<Value> value);
   
-  void push(uint16_t index);
+  void push(ref<Value> value);
   void pop(uint16_t height = 1);
+  void slap(uint16_t height);
   void rethurn();
+  void invoke(ref<String> name, uint16_t argc);
+  void tuple(uint32_t size);
+  void global(ref<Value> name);
   
+  virtual void visit_syntax_tree(ref<SyntaxTree> that);
   virtual void visit_literal_expression(ref<LiteralExpression> that);
   virtual void visit_return_expression(ref<ReturnExpression> that);
   virtual void visit_sequence_expression(ref<SequenceExpression> that);
+  virtual void visit_invoke_expression(ref<InvokeExpression> that);
+  virtual void visit_tuple_expression(ref<TupleExpression> that);
+  virtual void visit_global_expression(ref<GlobalExpression> that);
+
 private:
-  Factory &factory() { return factory_; }
+  Factory &factory() { return runtime().factory(); }
+  Runtime &runtime() { return runtime_; }
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }
-  Factory &factory_;
+  Runtime &runtime_;
   list_buffer<uint16_t> code_;
   heap_list pool_;
 };
@@ -67,9 +79,25 @@ uint16_t Assembler::constant_pool_index(ref<Value> value) {
   return result;
 }
 
-void Assembler::push(uint16_t index) {
+void Assembler::invoke(ref<String> name, uint16_t argc) {
+  STATIC_CHECK(OpcodeInfo<OC_INVOKE>::kArgc == 2);
+  uint16_t name_index = constant_pool_index(name);
+  code().append(OC_INVOKE);
+  code().append(name_index);
+  code().append(argc);
+}
+
+void Assembler::push(ref<Value> value) {
   STATIC_CHECK(OpcodeInfo<OC_PUSH>::kArgc == 1);
+  uint16_t index = constant_pool_index(value);
   code().append(OC_PUSH);
+  code().append(index);
+}
+
+void Assembler::global(ref<Value> value) {
+  STATIC_CHECK(OpcodeInfo<OC_GLOBAL>::kArgc == 1);
+  uint16_t index = constant_pool_index(value);
+  code().append(OC_GLOBAL);
   code().append(index);
 }
 
@@ -79,15 +107,31 @@ void Assembler::pop(uint16_t height) {
   code().append(height);
 }
 
+void Assembler::slap(uint16_t height) {
+  STATIC_CHECK(OpcodeInfo<OC_SLAP>::kArgc == 1);
+  code().append(OC_SLAP);
+  code().append(height);
+}
+
 void Assembler::rethurn() {
   STATIC_CHECK(OpcodeInfo<OC_RETURN>::kArgc == 0);
   code().append(OC_RETURN);
+}
+
+void Assembler::tuple(uint32_t size) {
+  STATIC_CHECK(OpcodeInfo<OC_TUPLE>::kArgc == 1);
+  code().append(OC_TUPLE);
+  code().append(size);
 }
 
 
 // -------------------------------------
 // --- C o d e   G e n e r a t i o n ---
 // -------------------------------------
+
+void Assembler::visit_syntax_tree(ref<SyntaxTree> that) {
+  UNHANDLED(InstanceType, that.type());
+}
 
 void Assembler::visit_return_expression(ref<ReturnExpression> that) {
   __ codegen(that.value());
@@ -96,8 +140,18 @@ void Assembler::visit_return_expression(ref<ReturnExpression> that) {
 }
 
 void Assembler::visit_literal_expression(ref<LiteralExpression> that) {
-  uint16_t index = constant_pool_index(that.value());
-  __ push(index);
+  __ push(that.value());
+}
+
+void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
+  RefScope scope;
+  __ codegen(that.receiver());
+  __ push(runtime().vhoid());
+  ref<Tuple> args = that.arguments();
+  for (uint32_t i = 0; i < args.length(); i++)
+    __ codegen(cast<SyntaxTree>(args.get(i)));
+  __ invoke(that.name(), args.length());
+  __ slap(args.length() + 1);
 }
 
 void Assembler::visit_sequence_expression(ref<SequenceExpression> that) {
@@ -115,6 +169,18 @@ void Assembler::visit_sequence_expression(ref<SequenceExpression> that) {
   }
 }
 
+void Assembler::visit_tuple_expression(ref<TupleExpression> that) {
+  RefScope scope;
+  ref<Tuple> values = that.values();
+  for (uint32_t i = 0; i < values.length(); i++)
+    __ codegen(cast<SyntaxTree>(values.get(i)));
+  __ tuple(values.length());
+}
+
+void Assembler::visit_global_expression(ref<GlobalExpression> that) {
+  __ global(that.name());
+}
+
 
 // -----------------------
 // --- C o m p i l e r ---
@@ -125,12 +191,12 @@ public:
   CompileSession(Runtime &runtime);
   ref<Lambda> compile(ref<SyntaxTree> tree);
 private:
-  Factory &factory() { return factory_; }
-  Factory &factory_;
+  Runtime &runtime() { return runtime_; }
+  Runtime &runtime_;
 };
 
 CompileSession::CompileSession(Runtime &runtime)
-    : factory_(runtime.factory()) { }
+    : runtime_(runtime) { }
 
 ref<Lambda> Compiler::compile(ref<SyntaxTree> tree) {
   CompileSession session(Runtime::current());
@@ -138,12 +204,12 @@ ref<Lambda> Compiler::compile(ref<SyntaxTree> tree) {
 }
 
 ref<Lambda> CompileSession::compile(ref<SyntaxTree> tree) {
-  Assembler assembler(factory());
+  Assembler assembler(runtime());
   assembler.initialize();
   tree.accept(assembler);
   ref<Code> code = assembler.flush_code();
   ref<Tuple> constant_pool = assembler.flush_constant_pool();
-  return factory().new_lambda(0, code, constant_pool);
+  return runtime().factory().new_lambda(0, code, constant_pool);
 }
 
 } // neutrino

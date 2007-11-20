@@ -142,6 +142,16 @@ public:
   inline ImageTuple *expressions();
 };
 
+class ImageTupleExpression : public ImageSyntaxTree {
+public:
+  inline ImageTuple *values();
+};
+
+class ImageGlobalExpression : public ImageSyntaxTree {
+public:
+  inline ImageString *name();
+};
+
 template <class C>
 static inline bool is(ImageData *val);
 

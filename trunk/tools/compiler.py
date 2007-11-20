@@ -725,6 +725,9 @@ class Tuple(Expression):
     visitor.visit_tuple(self)
   def traverse(self, visitor):
     for value in self.values: value.accept(visitor)
+  def quote(self):
+    values = HEAP.new_tuple(values = [ value.quote() for value in self.values ])
+    return HEAP.new_tuple_expression(values)
   def emit(self, state):
     for value in self.values:
       value.emit(state)
@@ -759,6 +762,8 @@ class Identifier(Expression):
     visitor.visit_identifier(self)
   def traverse(self, visitor):
     pass
+  def quote(self):
+    return HEAP.new_global(HEAP.new_string(self.name))
   def emit(self, state):
     ( type, data ) = state.scope.lookup(self.name)
     if type == 'argument':
@@ -947,7 +952,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 25
+  kRootCount  = 27
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1070,6 +1075,16 @@ class Heap:
     result = ImageMethodExpression(self.allocate(ImageMethodExpression_Size), name, body)
     result.set_class(METHOD_EXPRESSION_TYPE)
     return result;
+
+  def new_tuple_expression(self, exprs):
+    result = ImageTupleExpression(self.allocate(ImageTupleExpression_Size), exprs)
+    result.set_class(TUPLE_EXPRESSION_TYPE)
+    return result
+
+  def new_global(self, name):
+    result = ImageGlobalExpression(self.allocate(ImageGlobalExpression_Size), name)
+    result.set_class(GLOBAL_EXPRESSION_TYPE)
+    return result
 
   # --- A c c e s s ---
 
@@ -1246,6 +1261,13 @@ class ImageSequenceExpression(ImageSyntaxTree):
   def set_expressions(self, value):
     HEAP.set_field(self, ImageSequenceExpression_ExpressionsOffset, value)
 
+class ImageTupleExpression(ImageSyntaxTree):
+  def __init__(self, addr, exprs):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_values(exprs)
+  def set_values(self, value):
+    HEAP.set_field(self, ImageTupleExpression_ValuesOffset, value)
+
 class ImageMethodExpression(ImageSyntaxTree):
   def __init__(self, addr, name, body):
     ImageSyntaxTree.__init__(self, addr)
@@ -1255,6 +1277,13 @@ class ImageMethodExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageMethodExpression_NameOffset, value)
   def set_body(self, value):
     HEAP.set_field(self, ImageMethodExpression_BodyOffset, value)
+
+class ImageGlobalExpression(ImageSyntaxTree):
+  def __init__(self, addr, name):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_name(name)
+  def set_name(self, value):
+    HEAP.set_field(self, ImageGlobalExpression_NameOffset, value)
 
 # -----------------------
 # --- C o m p i l e r ---

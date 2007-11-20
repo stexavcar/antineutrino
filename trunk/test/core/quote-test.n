@@ -1,18 +1,18 @@
-def simple_quote_test() {
+def test_expressions() {
   <1 + 1 + 1>;
   assert_equals("#<class Boolean>", Boolean.to_string());
   assert_equals("#<class Foo>", <class Foo { }>.evaluate().to_string());
   assert_equals("#<class Foo>", <class Foo { def x() -> 4; }>.evaluate().to_string());
   assert_equals(4, new (<class Foo { def x() -> 4; }>.evaluate())().x());
+  assert_equals(2, new (<class Foo { def x() { 1; return 2; 3; } }>.evaluate())().x());
+  assert_equals(2, new (<class Foo { def x() -> 1 + 1; }>.evaluate())().x());
+  assert_equals(2, new (<class Foo { def x() -> 1 + 1; }>.evaluate())().x());
+  assert_equals([1, 2, 3], new (<class Foo { def x() -> [1, 2, 3]; }>.evaluate())().x());
+  assert_equals(blah, new (<class Foo { def x() -> blah; }>.evaluate())().x());
 }
 
-def complex_quote_test() {
-  print(new (<class Foo {
-     def bar() { 1; return 2; 3; }
-  }>.evaluate())().bar());
-}
+def blah() { }
 
 def main() {
-  simple_quote_test();
-  complex_quote_test();
+  test_expressions();
 }

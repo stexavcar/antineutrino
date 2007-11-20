@@ -151,14 +151,12 @@ int32_t ImageSmi::value() {
     return image_cast<Image##T>(data);                               \
   }
 
-
 // --- C l a s s ---
 
 DEFINE_RAW_GETTER(uint32_t, Class, instance_type, InstanceType)
 DEFINE_GETTER(Tuple, Class, methods, Methods)
 DEFINE_GETTER(Value, Class, super, Super)
 DEFINE_GETTER(Value, Class, name, Name)
-
 
 // --- S t r i n g ---
 
@@ -169,7 +167,6 @@ uint32_t ImageString::at(uint32_t index) {
   uint32_t offset = ValuePointer::offset_of(this) + ImageString_HeaderSize + index;
   return Image::current().heap()[offset];
 }
-
 
 // --- T u p l e ---
 
@@ -182,7 +179,6 @@ ImageValue *ImageTuple::at(uint32_t index) {
   return image_cast<ImageValue>(data);
 }
 
-
 // --- C o d e ---
 
 DEFINE_RAW_GETTER(uint32_t, Code, length, Length)
@@ -193,64 +189,38 @@ uint32_t ImageCode::at(uint32_t index) {
   return Image::current().heap()[offset];
 }
 
-
-// --- L a m b d a ---
-
 DEFINE_RAW_GETTER(uint32_t, Lambda, argc, Argc)
 
 DEFINE_GETTER(Code, Lambda, code, Code)
 DEFINE_GETTER(Tuple, Lambda, literals, Literals)
 
-
-// --- M e t h o d ---
-
 DEFINE_GETTER(String, Method, name, Name)
 DEFINE_GETTER(Lambda, Method, lambda, Lambda)
 
-
-// --- D i c t i o n a r y ---
-
 DEFINE_GETTER(Tuple, Dictionary, table, Table)
-
-// --- R o o t ---
 
 DEFINE_RAW_GETTER(uint32_t, Root, index, Index)
 
-
-// --- L i t e r a l   E x p r e s s i o n ---
-
 DEFINE_GETTER(Value, LiteralExpression, value, Value)
-
-
-// --- I n v o k e   E x p r e s s i o n ---
 
 DEFINE_GETTER(SyntaxTree, InvokeExpression, receiver, Receiver)
 DEFINE_GETTER(String, InvokeExpression, name, Name)
 DEFINE_GETTER(Tuple, InvokeExpression, arguments, Arguments)
 
-
-// --- C l a s s   E x p r e s s i o n ---
-
 DEFINE_GETTER(String, ClassExpression, name, Name)
 DEFINE_GETTER(Tuple, ClassExpression, methods, Methods)
 DEFINE_GETTER(Value, ClassExpression, super, Super)
 
-
-// --- R e t u r n   E x p r e s s i o n ---
-
 DEFINE_GETTER(SyntaxTree, ReturnExpression, value, Value)
-
-
-// --- M e t h o d   E x p r e s s i o n ---
 
 DEFINE_GETTER(String, MethodExpression, name, Name)
 DEFINE_GETTER(SyntaxTree, MethodExpression, body, Body)
 
-
-// --- S e q u e n c e   E x p r e s s i o n ---
-
 DEFINE_GETTER(Tuple, SequenceExpression, expressions, Expressions)
 
+DEFINE_GETTER(Tuple, TupleExpression, values, Values)
+
+DEFINE_GETTER(String, GlobalExpression, name, Name)
 
 #undef DEFINE_RAW_GETTER
 #undef DEFINE_GETTER

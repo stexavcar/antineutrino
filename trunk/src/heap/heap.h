@@ -60,6 +60,10 @@ public:
   
   Data *new_sequence_expression();
   
+  Data *new_tuple_expression();
+  
+  Data *new_global_expression();
+  
   Data *new_abstract_buffer(uint32_t size, Class *chlass);
   
   template <typename T> Data *new_buffer(uint32_t size);

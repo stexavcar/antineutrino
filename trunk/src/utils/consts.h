@@ -60,7 +60,9 @@
   VISIT(52, CLASS_EXPRESSION, ClassExpression)                       \
   VISIT(53, RETURN_EXPRESSION, ReturnExpression)                     \
   VISIT(54, METHOD_EXPRESSION, MethodExpression)                     \
-  VISIT(55, SEQUENCE_EXPRESSION, SequenceExpression)
+  VISIT(55, SEQUENCE_EXPRESSION, SequenceExpression)                 \
+  VISIT(56, TUPLE_EXPRESSION, TupleExpression)                       \
+  VISIT(57, GLOBAL_EXPRESSION, GlobalExpression)
 
 
 // ---------------------
@@ -114,7 +116,11 @@
   VISIT(2, MethodExpression, BodyOffset)                             \
   VISIT(3, MethodExpression, Size)                                   \
   VISIT(1, SequenceExpression, ExpressionsOffset)                    \
-  VISIT(2, SequenceExpression, Size)
+  VISIT(2, SequenceExpression, Size)                                 \
+  VISIT(1, TupleExpression, ValuesOffset)                            \
+  VISIT(2, TupleExpression, Size)                                    \
+  VISIT(1, GlobalExpression, NameOffset)                             \
+  VISIT(2, GlobalExpression, Size)
 
 
 // -----------------
@@ -126,8 +132,8 @@
   VISIT(1,  Null, nuhll, NULL, new_singleton(null_class()))          \
   VISIT(2,  True, thrue, TRUE, new_singleton(true_class()))          \
   VISIT(3,  False, fahlse, FALSE, new_singleton(false_class()))      \
-  VISIT(4, Dictionary, toplevel, TOPLEVEL, new_dictionary())        \
-  VISIT(5, Tuple, empty_tuple, EMPTY_TUPLE, new_tuple(0))
+  VISIT(4,  Dictionary, toplevel, TOPLEVEL, new_dictionary())       \
+  VISIT(5,  Tuple, empty_tuple, EMPTY_TUPLE, new_tuple(0))
 
 #define FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                       \
   VISIT(6, Class, class_class, CLASS_CLASS, NULL)
@@ -136,9 +142,9 @@
   VISIT(7,  Class, string_class, STRING_CLASS, new_empty_class(STRING_TYPE))\
   VISIT(8,  Class, tuple_class, TUPLE_CLASS, new_empty_class(TUPLE_TYPE))\
   VISIT(9,  Class, void_class, VOID_CLASS, new_empty_class(VOID_TYPE))\
-  VISIT(10,  Class, null_class, NULL_CLASS, new_empty_class(NULL_TYPE))\
-  VISIT(11,  Class, true_class, TRUE_CLASS, new_empty_class(TRUE_TYPE))\
-  VISIT(12,  Class, false_class, FALSE_CLASS, new_empty_class(FALSE_TYPE))\
+  VISIT(10, Class, null_class, NULL_CLASS, new_empty_class(NULL_TYPE))\
+  VISIT(11, Class, true_class, TRUE_CLASS, new_empty_class(TRUE_TYPE))\
+  VISIT(12, Class, false_class, FALSE_CLASS, new_empty_class(FALSE_TYPE))\
   VISIT(13, Class, literal_expression_class, LITERAL_EXPRESSION_CLASS, new_empty_class(LITERAL_EXPRESSION_TYPE))\
   VISIT(14, Class, dictionary_class, DICTIONARY_CLASS, new_empty_class(DICTIONARY_TYPE))\
   VISIT(15, Class, lambda_class, LAMBDA_CLASS, new_empty_class(LAMBDA_TYPE))\
@@ -150,7 +156,9 @@
   VISIT(21, Class, class_expression_class, CLASS_EXPRESSION_CLASS, new_empty_class(CLASS_EXPRESSION_TYPE))\
   VISIT(22, Class, return_expression_class, RETURN_EXPRESSION_CLASS, new_empty_class(RETURN_EXPRESSION_TYPE))\
   VISIT(23, Class, method_expression_class, METHOD_EXPRESSION_CLASS, new_empty_class(METHOD_EXPRESSION_TYPE))\
-  VISIT(24, Class, sequence_expression_class, SEQUENCE_EXPRESSION_CLASS, new_empty_class(SEQUENCE_EXPRESSION_TYPE))
+  VISIT(24, Class, sequence_expression_class, SEQUENCE_EXPRESSION_CLASS, new_empty_class(SEQUENCE_EXPRESSION_TYPE))\
+  VISIT(25, Class, tuple_expression_class, TUPLE_EXPRESSION_CLASS, new_empty_class(TUPLE_EXPRESSION_TYPE))\
+  VISIT(26, Class, global_expression_class, GLOBAL_EXPRESSION_CLASS, new_empty_class(GLOBAL_EXPRESSION_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \
@@ -205,7 +213,8 @@
   VISIT(20, object, eq, "=")                                         \
   VISIT(21, object, to_string, "to_string")                          \
   VISIT(30, class_expression, evaluate, "evaluate")                  \
-  VISIT(40, class, new, "new")
+  VISIT(40, class, new, "new")                                       \
+  VISIT(50, tuple, eq, "=")
 
 
 // -------------------------------------------

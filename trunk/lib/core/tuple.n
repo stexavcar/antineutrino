@@ -1,3 +1,5 @@
 internal class Tuple : Object {
 
+  internal def operator=(that);
+
 }

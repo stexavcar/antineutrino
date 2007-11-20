@@ -99,6 +99,20 @@ Data *Heap::new_sequence_expression() {
 }
 
 
+Data *Heap::new_tuple_expression() {
+  Data *val = allocate_object(TupleExpression::kSize, roots().tuple_expression_class());
+  if (is<AllocationFailed>(val)) return val;
+  TupleExpression *result = cast<TupleExpression>(val);
+  return result;
+}
+
+Data *Heap::new_global_expression() {
+  Data *val = allocate_object(GlobalExpression::kSize, roots().global_expression_class());
+  if (is<AllocationFailed>(val)) return val;
+  GlobalExpression *result = cast<GlobalExpression>(val);
+  return result;
+}
+
 Data *Heap::new_empty_class(InstanceType instance_type) {
   Data *val = allocate_class(instance_type);
   if (is<AllocationFailed>(val)) return val;

@@ -125,9 +125,21 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
     return visitor.visit_return_expression(cast<ReturnExpression>(self));
   case SEQUENCE_EXPRESSION_TYPE:
     return visitor.visit_sequence_expression(cast<SequenceExpression>(self));
+  case INVOKE_EXPRESSION_TYPE:
+    return visitor.visit_invoke_expression(cast<InvokeExpression>(self));
+  case TUPLE_EXPRESSION_TYPE:
+    return visitor.visit_tuple_expression(cast<TupleExpression>(self));
+  case GLOBAL_EXPRESSION_TYPE:
+    return visitor.visit_global_expression(cast<GlobalExpression>(self));
   default:
     UNHANDLED(InstanceType, type);
   }
+}
+
+static void traverse_tuple(Visitor &visitor, ref<Tuple> expressions) {
+  RefScope scope;
+  for (uint32_t i = 0; i < expressions.length(); i++)
+    cast<SyntaxTree>(expressions.get(i)).accept(visitor);
 }
 
 void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
@@ -137,15 +149,22 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
   case RETURN_EXPRESSION_TYPE:
     cast<ReturnExpression>(self).value().accept(visitor);
     break;
-  case LITERAL_EXPRESSION_TYPE:
-    break;
-  case SEQUENCE_EXPRESSION_TYPE: {
+  case INVOKE_EXPRESSION_TYPE: {
     RefScope scope;
-    ref<Tuple> expressions = cast<SequenceExpression>(self).expressions();
-    for (uint32_t i = 0; i < expressions.length(); i++)
-      cast<SyntaxTree>(expressions.get(i)).accept(visitor);
+    cast<InvokeExpression>(self).receiver().accept(visitor);
+    traverse_tuple(visitor, cast<InvokeExpression>(self).arguments());
     break;
   }
+  case SEQUENCE_EXPRESSION_TYPE: {
+    traverse_tuple(visitor, cast<SequenceExpression>(self).expressions());
+    break;
+  }
+  case TUPLE_EXPRESSION_TYPE: {
+    traverse_tuple(visitor, cast<TupleExpression>(self).values());
+    break;
+  }
+  case LITERAL_EXPRESSION_TYPE: case GLOBAL_EXPRESSION_TYPE:
+    break;
   default:
     UNHANDLED(InstanceType, type);
   }
@@ -153,20 +172,32 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
 
 Visitor::~Visitor() { }
 
-void Visitor::visit_node(ref<SyntaxTree> that) {
+void Visitor::visit_syntax_tree(ref<SyntaxTree> that) {
   that.traverse(*this);
 }
 
 void Visitor::visit_literal_expression(ref<LiteralExpression> that) {
-  visit_node(that);
+  visit_syntax_tree(that);
 }
 
 void Visitor::visit_return_expression(ref<ReturnExpression> that) {
-  visit_node(that);
+  visit_syntax_tree(that);
 }
 
 void Visitor::visit_sequence_expression(ref<SequenceExpression> that) {
-  visit_node(that);
+  visit_syntax_tree(that);
+}
+
+void Visitor::visit_invoke_expression(ref<InvokeExpression> that) {
+  visit_syntax_tree(that);
+}
+
+void Visitor::visit_tuple_expression(ref<TupleExpression> that) {
+  visit_syntax_tree(that);
+}
+
+void Visitor::visit_global_expression(ref<GlobalExpression> that) {
+  visit_syntax_tree(that);
 }
 
 }

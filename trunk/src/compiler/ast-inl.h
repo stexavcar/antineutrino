@@ -6,34 +6,26 @@
 
 namespace neutrino {
 
-// --- L i t e r a l   E x p r e s s i o n ---
-
 DEFINE_FIELD_ACCESSORS(Value, LiteralExpression, value, kValueOffset)
 
-// --- I n v o k e   E x p r e s s i o n ---
-
-DEFINE_ACCESSORS(SyntaxTree*, InvokeExpression, receiver, kReceiverOffset)
-DEFINE_ACCESSORS(String*, InvokeExpression, name, kNameOffset)
-DEFINE_ACCESSORS(Tuple*, InvokeExpression, arguments, kArgumentsOffset)
-
-// --- C l a s s   E x p r e s s i o n ---
+DEFINE_FIELD_ACCESSORS(SyntaxTree, InvokeExpression, receiver, kReceiverOffset)
+DEFINE_FIELD_ACCESSORS(String, InvokeExpression, name, kNameOffset)
+DEFINE_FIELD_ACCESSORS(Tuple, InvokeExpression, arguments, kArgumentsOffset)
 
 DEFINE_FIELD_ACCESSORS(String, ClassExpression, name, kNameOffset)
 DEFINE_FIELD_ACCESSORS(Tuple, ClassExpression, methods, kMethodsOffset)
 DEFINE_FIELD_ACCESSORS(Value, ClassExpression, super, kSuperOffset)
 
-// --- R e t u r n   E x p r e s s i o n ---
-
 DEFINE_FIELD_ACCESSORS(SyntaxTree, ReturnExpression, value, kValueOffset)
-
-// --- M e t h o d   E x p r e s s i o n ---
 
 DEFINE_FIELD_ACCESSORS(String, MethodExpression, name, kNameOffset)
 DEFINE_FIELD_ACCESSORS(SyntaxTree, MethodExpression, body, kBodyOffset)
 
-// --- S e q u e n c e   E x p r e s s i o n ---
-
 DEFINE_FIELD_ACCESSORS(Tuple, SequenceExpression, expressions, kExpressionsOffset)
+
+DEFINE_FIELD_ACCESSORS(Tuple, TupleExpression, values, kValuesOffset)
+
+DEFINE_FIELD_ACCESSORS(String, GlobalExpression, name, kNameOffset)
 
 }
 

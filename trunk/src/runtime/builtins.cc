@@ -153,6 +153,27 @@ Value *Builtins::class_new(Arguments &args) {
 }
 
 
+// -----------------
+// --- T u p l e ---
+// -----------------
+
+Value *Builtins::tuple_eq(Arguments &args) {
+  ASSERT_EQ(1, args.count());
+  ref<Tuple> self = cast<Tuple>(args.self());
+  ref<Value> other = args[0];
+  if (!is<Tuple>(other))
+    return Runtime::current().roots().fahlse();
+  ref<Tuple> that = cast<Tuple>(other);
+  if (self.length() != that.length())
+    return Runtime::current().roots().fahlse();
+  for (uint32_t i = 0; i < self.length(); i++) {
+    if (!self->at(i)->equals(that->at(i)))
+      return Runtime::current().roots().fahlse();
+  }
+  return Runtime::current().roots().thrue();
+}
+
+
 // -------------------------
 // --- F u n c t i o n s ---
 // -------------------------

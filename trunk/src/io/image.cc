@@ -145,6 +145,16 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(expr);
       break;
     }
+    case TUPLE_EXPRESSION_TYPE: {
+      TupleExpression *expr = cast<TupleExpression>(heap.new_tuple_expression());
+      obj->point_forward(expr);
+      break;
+    }
+    case GLOBAL_EXPRESSION_TYPE: {
+      GlobalExpression *expr = cast<GlobalExpression>(heap.new_global_expression());
+      obj->point_forward(expr);
+      break;
+    }
     default:
       UNHANDLED(InstanceType, type);
       break;
@@ -234,6 +244,18 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       expr->set_expressions(cast<Tuple>(img->expressions()->forward_pointer()));
       break;
     }
+    case TUPLE_EXPRESSION_TYPE: {
+      ImageTupleExpression *img = image_cast<ImageTupleExpression>(obj);
+      TupleExpression *expr = cast<TupleExpression>(img->forward_pointer());
+      expr->set_values(cast<Tuple>(img->values()->forward_pointer()));
+      break;
+    }
+    case GLOBAL_EXPRESSION_TYPE: {
+      ImageGlobalExpression *img = image_cast<ImageGlobalExpression>(obj);
+      GlobalExpression *expr = cast<GlobalExpression>(img->forward_pointer());
+      expr->set_name(cast<String>(img->name()->forward_pointer()));
+      break;
+    }
     case STRING_TYPE: case CODE_TYPE: case SINGLETON_TYPE:
       // Nothing to fix
       break;
@@ -295,6 +317,10 @@ uint32_t ImageObject::memory_size() {
       return ImageMethodExpression_Size;
     case SEQUENCE_EXPRESSION_TYPE:
       return ImageSequenceExpression_Size;
+    case TUPLE_EXPRESSION_TYPE:
+      return ImageTupleExpression_Size;
+    case GLOBAL_EXPRESSION_TYPE:
+      return ImageGlobalExpression_Size;
     case SINGLETON_TYPE:
       return ImageRoot_Size;
     case STRING_TYPE:

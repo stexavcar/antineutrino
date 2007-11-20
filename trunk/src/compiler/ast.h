@@ -65,6 +65,16 @@ public:
   static const uint32_t kSize = kArgumentsOffset + kPointerSize;
 };
 
+template <>
+class ref_traits<InvokeExpression> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<SyntaxTree> receiver();
+  inline ref<String> name();
+  inline ref<Tuple> arguments();
+};
+
+DEFINE_REF_CLASS(InvokeExpression);
+
 
 // ---------------------------------------
 // --- C l a s s   E x p r e s s i o n ---
@@ -161,6 +171,48 @@ public:
 DEFINE_REF_CLASS(SequenceExpression);
 
 
+// ---------------------------------------
+// --- T u p l e   E x p r e s s i o n ---
+// ---------------------------------------
+
+class TupleExpression : public SyntaxTree {
+public:
+  DECLARE_FIELD(Tuple*, values);
+  
+  static const uint32_t kValuesOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kSize = kValuesOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<TupleExpression> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<Tuple> values();
+};
+
+DEFINE_REF_CLASS(TupleExpression);
+
+
+// -----------------------------------------
+// --- G l o b a l   E x p r e s s i o n ---
+// -----------------------------------------
+
+class GlobalExpression : public SyntaxTree {
+public:
+  DECLARE_FIELD(String*, name);
+  
+  static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kSize = kNameOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<GlobalExpression> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<String> name();
+};
+
+DEFINE_REF_CLASS(GlobalExpression);
+
+
 // ---------------------
 // --- V i s i t o r ---
 // ---------------------
@@ -168,10 +220,13 @@ DEFINE_REF_CLASS(SequenceExpression);
 class Visitor {
 public:
   virtual ~Visitor();
-  virtual void visit_node(ref<SyntaxTree> that);
+  virtual void visit_syntax_tree(ref<SyntaxTree> that);
   virtual void visit_literal_expression(ref<LiteralExpression> that);
   virtual void visit_return_expression(ref<ReturnExpression> that);
   virtual void visit_sequence_expression(ref<SequenceExpression> that);
+  virtual void visit_invoke_expression(ref<InvokeExpression> that);
+  virtual void visit_tuple_expression(ref<TupleExpression> that);
+  virtual void visit_global_expression(ref<GlobalExpression> that);
 };
 
 
