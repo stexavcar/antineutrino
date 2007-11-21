@@ -15,8 +15,8 @@ public:
    * Allocates a new object of the specified size and returns it
    * without initializing its fields.  IMPORTANT NOTE: all fields
    * of the returned object that are expected by the garbage collector
-   * to contain object pointers must have been initialized before any
-   * more memory is allocated.
+   * to contain object pointers must have been initialized before a
+   * gc can be run.
    */
   Data *allocate_object(uint32_t size, Class *chlass);
   
@@ -65,6 +65,8 @@ public:
   Data *new_tuple_expression();
   
   Data *new_global_expression();
+  
+  Data *new_symbol();
   
   Data *new_abstract_buffer(uint32_t size, Class *chlass);
   

@@ -118,6 +118,13 @@ Data *Heap::new_global_expression() {
   return result;
 }
 
+Data *Heap::new_symbol() {
+  Data *val = allocate_object(Symbol::kSize, roots().symbol_class());
+  if (is<AllocationFailed>(val)) return val;
+  Symbol *result = cast<Symbol>(val);
+  return result;  
+}
+
 Data *Heap::new_empty_class(InstanceType instance_type) {
   Data *val = allocate_class(instance_type);
   if (is<AllocationFailed>(val)) return val;

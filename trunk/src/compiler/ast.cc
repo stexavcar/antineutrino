@@ -131,6 +131,8 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
     return visitor.visit_call_expression(cast<CallExpression>(self));
   case TUPLE_EXPRESSION_TYPE:
     return visitor.visit_tuple_expression(cast<TupleExpression>(self));
+  case SYMBOL_TYPE:
+    return visitor.visit_symbol(cast<Symbol>(self));
   case GLOBAL_EXPRESSION_TYPE:
     return visitor.visit_global_expression(cast<GlobalExpression>(self));
   default:
@@ -210,6 +212,10 @@ void Visitor::visit_tuple_expression(ref<TupleExpression> that) {
 }
 
 void Visitor::visit_global_expression(ref<GlobalExpression> that) {
+  visit_syntax_tree(that);
+}
+
+void Visitor::visit_symbol(ref<Symbol> that) {
   visit_syntax_tree(that);
 }
 

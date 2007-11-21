@@ -154,6 +154,11 @@ public:
   inline ImageTuple *values();
 };
 
+class ImageSymbol : public ImageSyntaxTree {
+public:
+  inline ImageValue *name();
+};
+
 class ImageGlobalExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();

@@ -250,6 +250,7 @@ class Parser:
   def __init__(self, tokens):
     self.tokens = tokens
     self.cursor = 0
+    self.scope = GlobalScope2()
 
   # Returns the current token, or <eof> when reaching the end of the
   # input
@@ -396,6 +397,12 @@ class Parser:
     else:
       return Class(name, members, parent)
 
+  def pop_scope(self):
+    self.scope = self.scope.parent
+
+  def push_scope(self, symbols):
+    self.scope = LocalScope2(self.scope, symbols)
+
   # <member_declaration>
   #   -> <modifiers> 'def' <method_header> <method_body>
   def parse_member_declaration(self, class_name):
@@ -404,6 +411,7 @@ class Parser:
     self.expect_keyword('def')
     name = self.parse_member_name()
     params = self.parse_params('(', ')')
+    symbols = [ Symbol(id) for id in params ]
     if 'internal' in modifiers:
       self.expect_delimiter(';')
       key = (class_name, name)
@@ -412,8 +420,10 @@ class Parser:
       index = BUILTIN_METHODS[key]
       body = InternalCall(index, len(params))
     else:
+      self.push_scope(symbols)
       body = self.parse_function_body()
-    return Method(name, params, body)
+      self.pop_scope()
+    return Method(name, symbols, body)
 
   # <definition>
   #   -> 'def' $ident ':=' <expression> ';'
@@ -563,6 +573,9 @@ class Parser:
     args = self.parse_arguments('(', ')')
     return Invoke(constr, 'new', args)
 
+  def resolve_identifier(self, name):
+    return self.scope.lookup(name)
+
   # <atomic_expression>
   #   -> $number
   #   -> $string
@@ -581,7 +594,7 @@ class Parser:
     elif self.token().is_ident():
       name = self.token().name
       self.advance()
-      return Identifier(name)
+      return self.resolve_identifier(name)
     elif self.token().is_keyword('this'):
       self.advance()
       return This()
@@ -756,14 +769,10 @@ class Lambda(Expression):
     return compile_lambda(self.params, self.body)
 
 class Identifier(Expression):
-  def __init__(self, name):
-    self.name = name
   def accept(self, visitor):
     visitor.visit_identifier(self)
   def traverse(self, visitor):
     pass
-  def quote(self):
-    return HEAP.new_global(HEAP.new_string(self.name))
   def emit(self, state):
     ( type, data ) = state.scope.lookup(self.name)
     if type == 'argument':
@@ -774,6 +783,19 @@ class Identifier(Expression):
       state.write(OC_GLOBAL, index)
     else:
       assert False
+
+class Global(Identifier):
+  def __init__(self, name):
+    self.name = name
+  def quote(self):
+    return HEAP.new_global(HEAP.new_string(self.name))
+
+class Local(Identifier):
+  def __init__(self, symbol):
+    self.symbol = symbol
+    self.name = symbol.name
+  def quote(self):
+    return self.symbol.quote()
 
 class Call(Expression):
   def __init__(self, recv, fun, args):
@@ -949,6 +971,12 @@ class Conditional(Expression):
     self.then_part.emit(state)
     state.bind(end_jump)
 
+class Symbol:
+  def __init__(self, name):
+    self.name = name
+  def quote(self):
+    return HEAP.get_symbol(self)
+
 # ---------------------------
 # --- H e a p   I m a g e ---
 # ---------------------------
@@ -963,13 +991,14 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 28
+  kRootCount  = 29
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
     self.memory = self.capacity * [ tag_as_smi(0) ]
     self.dicts = [ ]
     self.root_object_cache = { }
+    self.symbol_object_cache = { }
   def initialize(self):
     self.roots = self.new_tuple(Heap.kRootCount)
     self.toplevel = self.new_dictionary()
@@ -1012,12 +1041,21 @@ class Heap:
     result.set_class(SINGLETON_TYPE)
     self.root_object_cache[index] = result
     return result
+
+  def get_symbol(self, symbol):
+    if symbol in self.symbol_object_cache:
+      return self.symbol_object_cache[symbol]
+    name = HEAP.new_string(symbol.name)
+    result = ImageSymbol(self.allocate(ImageSymbol_Size), name)
+    result.set_class(SYMBOL_TYPE)
+    self.symbol_object_cache[symbol] = result
+    return result
   
   def new_lambda(self, argc, code, literals):
     result = ImageLambda(self.allocate(ImageLambda_Size), argc, code, literals)
     result.set_class(LAMBDA_TYPE)
     return result
-  
+
   def new_method(self, name, body):
     result = ImageMethod(self.allocate(ImageMethod_Size), name, body)
     result.set_class(METHOD_TYPE)
@@ -1191,6 +1229,13 @@ class ImageString(ImageObject):
   def __setitem__(self, index, value):
     HEAP.set_raw_field(self, ImageString_HeaderSize + index, value)
 
+class ImageSymbol(ImageObject):
+  def __init__(self, addr, name):
+    ImageObject.__init__(self, addr)
+    self.set_name(name)
+  def set_name(self, value):
+    HEAP.set_field(self, ImageSymbol_NameOffset, value)
+
 class ImageCode(ImageObject):
   def __init__(self, addr, length):
     ImageObject.__init__(self, addr)
@@ -1319,6 +1364,20 @@ class ImageGlobalExpression(ImageSyntaxTree):
 # -----------------------
 
 PLACEHOLDER = 0xBADDEAD
+
+class GlobalScope2:
+  def lookup(self, name):
+    return Global(name)
+
+class LocalScope2:
+  def __init__(self, parent, symbols):
+    self.symbols = symbols
+    self.parent = parent
+  def lookup(self, name):
+    for symbol in self.symbols:
+      if symbol.name == name:
+        return Local(symbol)
+    return self.parent.lookup(name)
 
 class GlobalScope:
   def lookup(self, name):

@@ -63,7 +63,8 @@
   VISIT(55, SEQUENCE_EXPRESSION, SequenceExpression)                 \
   VISIT(56, TUPLE_EXPRESSION, TupleExpression)                       \
   VISIT(57, GLOBAL_EXPRESSION, GlobalExpression)                     \
-  VISIT(58, CALL_EXPRESSION, CallExpression)
+  VISIT(58, CALL_EXPRESSION, CallExpression)                         \
+  VISIT(59, SYMBOL, Symbol)
 
 
 // ---------------------
@@ -126,6 +127,8 @@
   VISIT(2, CallExpression, FunctionOffset)                           \
   VISIT(3, CallExpression, ArgumentsOffset)                          \
   VISIT(4, CallExpression, Size)                                     \
+  VISIT(1, Symbol, NameOffset)                                       \
+  VISIT(2, Symbol, Size)                                             \
 
 
 // -----------------
@@ -164,7 +167,8 @@
   VISIT(24, Class, sequence_expression_class, SEQUENCE_EXPRESSION_CLASS, new_empty_class(SEQUENCE_EXPRESSION_TYPE))\
   VISIT(25, Class, tuple_expression_class, TUPLE_EXPRESSION_CLASS, new_empty_class(TUPLE_EXPRESSION_TYPE))\
   VISIT(26, Class, global_expression_class, GLOBAL_EXPRESSION_CLASS, new_empty_class(GLOBAL_EXPRESSION_TYPE))\
-  VISIT(27, Class, call_expression_class, CALL_EXPRESSION_CLASS, new_empty_class(CALL_EXPRESSION_TYPE))
+  VISIT(27, Class, symbol_class, SYMBOL_CLASS, new_empty_class(SYMBOL_TYPE))\
+  VISIT(28, Class, call_expression_class, CALL_EXPRESSION_CLASS, new_empty_class(CALL_EXPRESSION_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \

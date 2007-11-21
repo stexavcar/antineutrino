@@ -29,6 +29,8 @@ DEFINE_FIELD_ACCESSORS(Tuple, SequenceExpression, expressions, kExpressionsOffse
 
 DEFINE_FIELD_ACCESSORS(Tuple, TupleExpression, values, kValuesOffset)
 
+DEFINE_FIELD_ACCESSORS(Value, Symbol, name, kNameOffset)
+
 DEFINE_FIELD_ACCESSORS(String, GlobalExpression, name, kNameOffset)
 
 }

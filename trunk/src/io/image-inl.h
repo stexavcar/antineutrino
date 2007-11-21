@@ -224,6 +224,8 @@ DEFINE_GETTER(Tuple, SequenceExpression, expressions, Expressions)
 
 DEFINE_GETTER(Tuple, TupleExpression, values, Values)
 
+DEFINE_GETTER(Value, Symbol, name, Name)
+
 DEFINE_GETTER(String, GlobalExpression, name, Name)
 
 #undef DEFINE_RAW_GETTER

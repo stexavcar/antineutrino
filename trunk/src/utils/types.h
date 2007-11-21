@@ -26,6 +26,7 @@ class string_buffer;
 class Value;
 class Visitor;
 class String;
+class Symbol;
 class SyntaxTree;
 class Tuple;
 

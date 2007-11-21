@@ -50,8 +50,10 @@ private:
   Runtime &runtime() { return runtime_; }
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }
+  list_buffer< ref<Tuple> > &scopes() { return scopes_; }
   Runtime &runtime_;
   list_buffer<uint16_t> code_;
+  list_buffer< ref<Tuple> > scopes_;
   heap_list pool_;
 };
 

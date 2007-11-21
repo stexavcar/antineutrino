@@ -160,6 +160,11 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(expr);
       break;
     }
+    case SYMBOL_TYPE: {
+      Symbol *sym = cast<Symbol>(heap.new_symbol());
+      obj->point_forward(sym);
+      break;
+    }
     default:
       UNHANDLED(InstanceType, type);
       break;
@@ -263,6 +268,12 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       expr->set_values(cast<Tuple>(img->values()->forward_pointer()));
       break;
     }
+    case SYMBOL_TYPE: {
+      ImageSymbol *img = image_cast<ImageSymbol>(obj);
+      Symbol *sym = cast<Symbol>(img->forward_pointer());
+      sym->set_name(img->name()->forward_pointer());
+      break;
+    }
     case GLOBAL_EXPRESSION_TYPE: {
       ImageGlobalExpression *img = image_cast<ImageGlobalExpression>(obj);
       GlobalExpression *expr = cast<GlobalExpression>(img->forward_pointer());
@@ -336,6 +347,8 @@ uint32_t ImageObject::memory_size() {
       return ImageTupleExpression_Size;
     case GLOBAL_EXPRESSION_TYPE:
       return ImageGlobalExpression_Size;
+    case SYMBOL_TYPE:
+      return ImageSymbol_Size;
     case SINGLETON_TYPE:
       return ImageRoot_Size;
     case STRING_TYPE:

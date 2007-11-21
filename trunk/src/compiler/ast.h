@@ -239,6 +239,26 @@ public:
 DEFINE_REF_CLASS(GlobalExpression);
 
 
+// -------------------
+// --- S y m b o l ---
+// -------------------
+
+class Symbol : public SyntaxTree {
+public:
+  DECLARE_FIELD(Value*, name);
+  
+  static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kSize = kNameOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<Symbol> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<Value> name();
+};
+
+DEFINE_REF_CLASS(Symbol);
+
 // ---------------------
 // --- V i s i t o r ---
 // ---------------------
@@ -254,6 +274,7 @@ public:
   virtual void visit_tuple_expression(ref<TupleExpression> that);
   virtual void visit_global_expression(ref<GlobalExpression> that);
   virtual void visit_call_expression(ref<CallExpression> that);
+  virtual void visit_symbol(ref<Symbol> that);
 };
 
 
