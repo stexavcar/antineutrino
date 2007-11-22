@@ -27,7 +27,7 @@ public:
   T pop();
   T peek();
   T *data() { return data_; }
-  T operator[](uint32_t index) { return data()[index]; }
+  T &operator[](uint32_t index);
   uint32_t length() { return length_; }
 private:
   void extend_capacity();

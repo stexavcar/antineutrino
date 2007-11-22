@@ -16,6 +16,10 @@ DEFINE_FIELD_ACCESSORS(SyntaxTree, CallExpression, receiver, kReceiverOffset)
 DEFINE_FIELD_ACCESSORS(SyntaxTree, CallExpression, function, kFunctionOffset)
 DEFINE_FIELD_ACCESSORS(Tuple, CallExpression, arguments, kArgumentsOffset)
 
+DEFINE_FIELD_ACCESSORS(SyntaxTree, ConditionalExpression, condition, kConditionOffset)
+DEFINE_FIELD_ACCESSORS(SyntaxTree, ConditionalExpression, then_part, kThenPartOffset)
+DEFINE_FIELD_ACCESSORS(SyntaxTree, ConditionalExpression, else_part, kElsePartOffset)
+
 DEFINE_FIELD_ACCESSORS(String, ClassExpression, name, kNameOffset)
 DEFINE_FIELD_ACCESSORS(Tuple, ClassExpression, methods, kMethodsOffset)
 DEFINE_FIELD_ACCESSORS(Value, ClassExpression, super, kSuperOffset)

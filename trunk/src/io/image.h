@@ -126,6 +126,13 @@ public:
   inline ImageTuple *arguments();
 };
 
+class ImageConditionalExpression : public ImageSyntaxTree {
+public:
+  inline ImageSyntaxTree *condition();
+  inline ImageSyntaxTree *then_part();
+  inline ImageSyntaxTree *else_part();
+};
+
 class ImageClassExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();

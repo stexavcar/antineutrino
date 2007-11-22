@@ -31,6 +31,12 @@ list_buffer<T>::~list_buffer() {
 }
 
 template <typename T>
+T &list_buffer<T>::operator[](uint32_t index) {
+  ASSERT(index < length());
+  return data()[index];
+}
+
+template <typename T>
 void list_buffer<T>::append(T obj) {
   if (length() >= capacity_) extend_capacity();
   data()[length_++] = obj;

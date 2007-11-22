@@ -9,6 +9,7 @@
 namespace neutrino {
 
 class Scope;
+class Label;
 
 
 // -------------------------
@@ -42,6 +43,9 @@ public:
   void tuple(uint32_t size);
   void global(ref<Value> name);
   void argument(uint16_t index);
+  void if_true(Label &label);
+  void ghoto(Label &label);
+  void bind(Label &label);
   
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
   virtual void visit_literal_expression(ref<LiteralExpression> that);
@@ -52,6 +56,7 @@ public:
   virtual void visit_global_expression(ref<GlobalExpression> that);
   virtual void visit_call_expression(ref<CallExpression> that);
   virtual void visit_symbol(ref<Symbol> that);
+  virtual void visit_conditional_expression(ref<ConditionalExpression> that);
 
 private:
   Factory &factory() { return runtime().factory(); }
@@ -62,6 +67,19 @@ private:
   list_buffer<uint16_t> code_;
   heap_list pool_;
   Scope *scope_;
+};
+
+class Label {
+public:
+  Label()
+    : is_bound_(false)
+    , value_(0) { }
+  bool is_bound() { return is_bound_; }
+  uint32_t value() { return value_; }
+  void set_value(uint32_t addr) { value_ = addr; }
+private:
+  bool is_bound_;
+  uint32_t value_;
 };
 
 ref<Code> Assembler::flush_code() {
@@ -145,6 +163,32 @@ void Assembler::tuple(uint32_t size) {
   STATIC_CHECK(OpcodeInfo<OC_TUPLE>::kArgc == 1);
   code().append(OC_TUPLE);
   code().append(size);
+}
+
+void Assembler::if_true(Label &label) {
+  STATIC_CHECK(OpcodeInfo<OC_IF_TRUE>::kArgc == 1);
+  code().append(OC_IF_TRUE);
+  code().append(label.value());
+  if (!label.is_bound()) label.set_value(code().length() - 1);
+}
+
+void Assembler::ghoto(Label &label) {
+  STATIC_CHECK(OpcodeInfo<OC_GOTO>::kArgc == 1);
+  code().append(OC_GOTO);
+  code().append(label.value());
+  if (!label.is_bound()) label.set_value(code().length() - 1);
+}
+
+void Assembler::bind(Label &label) {
+  ASSERT(!label.is_bound());
+  uint32_t value = code().length();
+  uint32_t current = label.value();
+  label.set_value(value);
+  while (current != 0) {
+    uint32_t next = code()[current];
+    code()[current] = value;
+    current = next;
+  }
 }
 
 
@@ -264,6 +308,17 @@ void Assembler::visit_symbol(ref<Symbol> that) {
     default:
       UNREACHABLE();
   }
+}
+
+void Assembler::visit_conditional_expression(ref<ConditionalExpression> that) {
+  Label then, end;
+  __ codegen(that.condition());
+  __ if_true(then);
+  __ codegen(that.else_part());
+  __ ghoto(end);
+  __ bind(then);
+  __ codegen(that.then_part());
+  __ bind(end);
 }
 
 

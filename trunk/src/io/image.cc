@@ -130,6 +130,11 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(expr);
       break;
     }
+    case CONDITIONAL_EXPRESSION_TYPE: {
+      ConditionalExpression *expr = cast<ConditionalExpression>(heap.new_conditional_expression());
+      obj->point_forward(expr);
+      break;
+    }
     case CLASS_EXPRESSION_TYPE: {
       ClassExpression *expr = cast<ClassExpression>(heap.new_class_expression());
       obj->point_forward(expr);
@@ -235,6 +240,14 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       invoke->set_arguments(cast<Tuple>(img->arguments()->forward_pointer()));
       break;
     }
+    case CONDITIONAL_EXPRESSION_TYPE: {
+      ImageConditionalExpression *img = image_cast<ImageConditionalExpression>(obj);
+      ConditionalExpression *expr = cast<ConditionalExpression>(img->forward_pointer());
+      expr->set_condition(cast<SyntaxTree>(img->condition()->forward_pointer()));
+      expr->set_then_part(cast<SyntaxTree>(img->then_part()->forward_pointer()));
+      expr->set_else_part(cast<SyntaxTree>(img->else_part()->forward_pointer()));
+      break;
+    }
     case CLASS_EXPRESSION_TYPE: {
       ImageClassExpression *img = image_cast<ImageClassExpression>(obj);
       ClassExpression *expr = cast<ClassExpression>(img->forward_pointer());
@@ -336,6 +349,8 @@ uint32_t ImageObject::memory_size() {
       return ImageInvokeExpression_Size;
     case CALL_EXPRESSION_TYPE:
       return ImageCallExpression_Size;
+    case CONDITIONAL_EXPRESSION_TYPE:
+      return ImageConditionalExpression_Size;
     case CLASS_EXPRESSION_TYPE:
       return ImageClassExpression_Size;
     case RETURN_EXPRESSION_TYPE:

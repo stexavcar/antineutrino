@@ -102,6 +102,33 @@ public:
 DEFINE_REF_CLASS(CallExpression);
 
 
+// ---------------------------------------------------
+// --- C o n d i t i o n a l   E x p r e s s i o n ---
+// ---------------------------------------------------
+
+class ConditionalExpression : public SyntaxTree {
+public:
+  DECLARE_FIELD(SyntaxTree*, condition);
+  DECLARE_FIELD(SyntaxTree*, then_part);
+  DECLARE_FIELD(SyntaxTree*, else_part);
+  
+  static const uint32_t kConditionOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kThenPartOffset = kConditionOffset + kPointerSize;
+  static const uint32_t kElsePartOffset = kThenPartOffset + kPointerSize;
+  static const uint32_t kSize = kElsePartOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<ConditionalExpression> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<SyntaxTree> condition();
+  inline ref<SyntaxTree> then_part();
+  inline ref<SyntaxTree> else_part();
+};
+
+DEFINE_REF_CLASS(ConditionalExpression);
+
+
 // ---------------------------------------
 // --- C l a s s   E x p r e s s i o n ---
 // ---------------------------------------
@@ -277,6 +304,7 @@ public:
   virtual void visit_tuple_expression(ref<TupleExpression> that);
   virtual void visit_global_expression(ref<GlobalExpression> that);
   virtual void visit_call_expression(ref<CallExpression> that);
+  virtual void visit_conditional_expression(ref<ConditionalExpression> that);
   virtual void visit_symbol(ref<Symbol> that);
 };
 

@@ -54,6 +54,8 @@ public:
   
   Data *new_call_expression();
   
+  Data *new_conditional_expression();
+
   Data *new_class_expression();
   
   Data *new_return_expression();

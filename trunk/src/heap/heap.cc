@@ -72,6 +72,13 @@ Data *Heap::new_call_expression() {
   return result;
 }
 
+Data *Heap::new_conditional_expression() {
+  Data *val = allocate_object(ConditionalExpression::kSize, roots().conditional_expression_class());
+  if (is<AllocationFailed>(val)) return val;
+  ConditionalExpression *result = cast<ConditionalExpression>(val);
+  return result;
+}
+
 Data *Heap::new_class_expression() {
   Data *val = allocate_object(ClassExpression::kSize, roots().class_expression_class());
   if (is<AllocationFailed>(val)) return val;

@@ -129,6 +129,8 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
     return visitor.visit_invoke_expression(cast<InvokeExpression>(self));
   case CALL_EXPRESSION_TYPE:
     return visitor.visit_call_expression(cast<CallExpression>(self));
+  case CONDITIONAL_EXPRESSION_TYPE:
+    return visitor.visit_conditional_expression(cast<ConditionalExpression>(self));
   case TUPLE_EXPRESSION_TYPE:
     return visitor.visit_tuple_expression(cast<TupleExpression>(self));
   case SYMBOL_TYPE:
@@ -147,23 +149,31 @@ static void traverse_tuple(Visitor &visitor, ref<Tuple> expressions) {
 }
 
 void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
+#define VISIT_FIELD(Type, field) cast<Type>(self).field().accept(visitor)
   InstanceType type = this->type();
   ref<SyntaxTree> self = open(this);
   switch (type) {
   case RETURN_EXPRESSION_TYPE:
-    cast<ReturnExpression>(self).value().accept(visitor);
+    VISIT_FIELD(ReturnExpression, value);
     break;
   case INVOKE_EXPRESSION_TYPE: {
     RefScope scope;
-    cast<InvokeExpression>(self).receiver().accept(visitor);
+    VISIT_FIELD(InvokeExpression, receiver);
     traverse_tuple(visitor, cast<InvokeExpression>(self).arguments());
     break;
   }
   case CALL_EXPRESSION_TYPE: {
     RefScope scope;
-    cast<CallExpression>(self).receiver().accept(visitor);
-    cast<CallExpression>(self).function().accept(visitor);
+    VISIT_FIELD(CallExpression, receiver);
+    VISIT_FIELD(CallExpression, function);
     traverse_tuple(visitor, cast<CallExpression>(self).arguments());
+    break;
+  }
+  case CONDITIONAL_EXPRESSION_TYPE: {
+    RefScope scope;
+    VISIT_FIELD(ConditionalExpression, condition);
+    VISIT_FIELD(ConditionalExpression, then_part);
+    VISIT_FIELD(ConditionalExpression, else_part);
     break;
   }
   case SEQUENCE_EXPRESSION_TYPE: {
@@ -179,6 +189,7 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
   default:
     UNHANDLED(InstanceType, type);
   }
+#undef VISIT_FIELD
 }
 
 Visitor::~Visitor() { }
@@ -216,6 +227,10 @@ void Visitor::visit_global_expression(ref<GlobalExpression> that) {
 }
 
 void Visitor::visit_symbol(ref<Symbol> that) {
+  visit_syntax_tree(that);
+}
+
+void Visitor::visit_conditional_expression(ref<ConditionalExpression> that) {
   visit_syntax_tree(that);
 }
 

@@ -964,6 +964,8 @@ class Conditional(Expression):
     self.cond.accept(visitor)
     self.then_part.accept(visitor)
     self.else_part.accept(visitor)
+  def quote(self):
+    return HEAP.new_conditional(self.cond.quote(), self.then_part.quote(), self.else_part.quote())
   def emit(self, state):
     self.cond.emit(state)
     if_true_jump = state.write(OC_IF_TRUE, PLACEHOLDER)
@@ -993,7 +995,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 29
+  kRootCount  = 30
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1110,6 +1112,11 @@ class Heap:
   def new_call_expression(self, recv, fun, args):
     result = ImageCallExpression(self.allocate(ImageCallExpression_Size), recv, fun, args)
     result.set_class(CALL_EXPRESSION_TYPE)
+    return result
+
+  def new_conditional(self, cond, then_part, else_part):
+    result = ImageConditionalExpression(self.allocate(ImageConditionalExpression_Size), cond, then_part, else_part)
+    result.set_class(CONDITIONAL_EXPRESSION_TYPE)
     return result
 
   def new_class_expression(self, name, methods, super):
@@ -1309,6 +1316,20 @@ class ImageCallExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageCallExpression_FunctionOffset, value)
   def set_args(self, value):
     HEAP.set_field(self, ImageCallExpression_ArgumentsOffset, value)
+
+class ImageConditionalExpression(ImageSyntaxTree):
+  def __init__(self, addr, cond, then_part, else_part):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_cond(cond)
+    self.set_then_part(then_part)
+    self.set_else_part(else_part)
+  def set_cond(self, value):
+    HEAP.set_field(self, ImageConditionalExpression_ConditionOffset, value)
+  def set_then_part(self, value):
+    HEAP.set_field(self, ImageConditionalExpression_ThenPartOffset, value)
+  def set_else_part(self, value):
+    HEAP.set_field(self, ImageConditionalExpression_ElsePartOffset, value)
+
 
 class ImageClassExpression(ImageSyntaxTree):
   def __init__(self, addr, name, methods, super):
