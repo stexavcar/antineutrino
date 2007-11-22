@@ -1,4 +1,4 @@
-internal class Class : Object {
+internal class Class {
   
   internal def operator new();
   

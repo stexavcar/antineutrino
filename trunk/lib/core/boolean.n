@@ -1,4 +1,4 @@
-class Boolean : Object {
+class Boolean {
   
 }
 

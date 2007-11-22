@@ -1,4 +1,4 @@
-internal class Tuple : Object {
+internal class Tuple {
 
   internal def operator=(that);
 

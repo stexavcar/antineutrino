@@ -1,5 +1,5 @@
 # Built-in strings.
-internal class String : Object {
+internal class String {
   
   # Returns the number of characters in the string.  The concept of a character
   # is independent of any particular encoding.  For instance, even though some
