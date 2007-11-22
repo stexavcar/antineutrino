@@ -28,7 +28,7 @@ ref<Class> ref_traits<ClassExpression>::compile() {
 
 ref<Method> ref_traits<MethodExpression>::compile() {
   ref<MethodExpression> self = open(this);
-  ref<Lambda> code = Compiler::compile(body());
+  ref<Lambda> code = Compiler::compile(self);
   ref<Method> result = Runtime::current().factory().new_method(name(), code);
   return result;
 }

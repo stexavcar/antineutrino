@@ -253,6 +253,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       ImageMethodExpression *img = image_cast<ImageMethodExpression>(obj);
       MethodExpression *expr = cast<MethodExpression>(img->forward_pointer());
       expr->set_name(cast<String>(img->name()->forward_pointer()));
+      expr->set_params(cast<Tuple>(img->params()->forward_pointer()));
       expr->set_body(cast<SyntaxTree>(img->body()->forward_pointer()));
       break;
     }

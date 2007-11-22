@@ -23,6 +23,7 @@ DEFINE_FIELD_ACCESSORS(Value, ClassExpression, super, kSuperOffset)
 DEFINE_FIELD_ACCESSORS(SyntaxTree, ReturnExpression, value, kValueOffset)
 
 DEFINE_FIELD_ACCESSORS(String, MethodExpression, name, kNameOffset)
+DEFINE_FIELD_ACCESSORS(Tuple, MethodExpression, params, kParamsOffset)
 DEFINE_FIELD_ACCESSORS(SyntaxTree, MethodExpression, body, kBodyOffset)
 
 DEFINE_FIELD_ACCESSORS(Tuple, SequenceExpression, expressions, kExpressionsOffset)

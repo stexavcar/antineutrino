@@ -8,6 +8,9 @@
 
 namespace neutrino {
 
+class Scope;
+
+
 // -------------------------
 // --- A s s e m b l e r ---
 // -------------------------
@@ -18,15 +21,18 @@ class Assembler : public Visitor {
 public:
   Assembler(Runtime &runtime)
       : runtime_(runtime)
-      , pool_(runtime.factory()) { }
+      , pool_(runtime.factory())
+      , scope_(NULL) { }
   void initialize() { pool().initialize(); }
-  void codegen(ref<SyntaxTree> that) { that.accept(*this); }
+  Scope &scope() { ASSERT(scope_ != NULL); return *scope_; }
+  void set_scope(Scope &that) { scope_ = &that; }
   
   ref<Code> flush_code();
   ref<Tuple> flush_constant_pool();
   
   uint16_t constant_pool_index(ref<Value> value);
   
+  void codegen(ref<SyntaxTree> that) { that.accept(*this); }
   void push(ref<Value> value);
   void pop(uint16_t height = 1);
   void slap(uint16_t height);
@@ -35,6 +41,7 @@ public:
   void call(uint16_t argc);
   void tuple(uint32_t size);
   void global(ref<Value> name);
+  void argument(uint16_t index);
   
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
   virtual void visit_literal_expression(ref<LiteralExpression> that);
@@ -44,17 +51,17 @@ public:
   virtual void visit_tuple_expression(ref<TupleExpression> that);
   virtual void visit_global_expression(ref<GlobalExpression> that);
   virtual void visit_call_expression(ref<CallExpression> that);
+  virtual void visit_symbol(ref<Symbol> that);
 
 private:
   Factory &factory() { return runtime().factory(); }
   Runtime &runtime() { return runtime_; }
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }
-  list_buffer< ref<Tuple> > &scopes() { return scopes_; }
   Runtime &runtime_;
   list_buffer<uint16_t> code_;
-  list_buffer< ref<Tuple> > scopes_;
   heap_list pool_;
+  Scope *scope_;
 };
 
 ref<Code> Assembler::flush_code() {
@@ -111,6 +118,12 @@ void Assembler::global(ref<Value> value) {
   code().append(index);
 }
 
+void Assembler::argument(uint16_t index) {
+  STATIC_CHECK(OpcodeInfo<OC_ARGUMENT>::kArgc == 1);
+  code().append(OC_ARGUMENT);
+  code().append(index);
+}
+
 void Assembler::pop(uint16_t height) {
   STATIC_CHECK(OpcodeInfo<OC_POP>::kArgc == 1);
   code().append(OC_POP);
@@ -135,6 +148,46 @@ void Assembler::tuple(uint32_t size) {
 }
 
 
+// -----------------
+// --- S c o p e ---
+// -----------------
+
+enum Category {
+  MISSING, ARGUMENT
+};
+
+struct Lookup {
+  Lookup() : category(MISSING) { }
+  Category category;
+  union {
+    struct { uint16_t index; } argument_info;
+  };  
+};
+
+class Scope {
+public:
+  Scope(ref<Tuple> symbols, Scope *parent)
+      : symbols_(symbols)
+      , parent_(parent) { }
+  void lookup(ref<Symbol> symbol, Lookup &result);
+private:
+  ref<Tuple> symbols() { return symbols_; }
+  ref<Tuple> symbols_;
+  Scope *parent_;
+};
+
+void Scope::lookup(ref<Symbol> symbol, Lookup &result) {
+  for (uint32_t i = 0; i < symbols().length(); i++) {
+    if (symbol->equals(symbols()->at(i))) {
+      result.category = ARGUMENT;
+      result.argument_info.index = symbols().length() - i - 1;
+      return;
+    }
+  }
+  if (parent_ != NULL) return parent_->lookup(symbol, result);
+}
+
+
 // -------------------------------------
 // --- C o d e   G e n e r a t i o n ---
 // -------------------------------------
@@ -146,7 +199,6 @@ void Assembler::visit_syntax_tree(ref<SyntaxTree> that) {
 void Assembler::visit_return_expression(ref<ReturnExpression> that) {
   __ codegen(that.value());
   __ rethurn();
-  
 }
 
 void Assembler::visit_literal_expression(ref<LiteralExpression> that) {
@@ -202,6 +254,18 @@ void Assembler::visit_global_expression(ref<GlobalExpression> that) {
   __ global(that.name());
 }
 
+void Assembler::visit_symbol(ref<Symbol> that) {
+  Lookup lookup;
+  scope().lookup(that, lookup);
+  switch (lookup.category) {
+    case ARGUMENT:
+      __ argument(lookup.argument_info.index);
+      break;
+    default:
+      UNREACHABLE();
+  }
+}
+
 
 // -----------------------
 // --- C o m p i l e r ---
@@ -210,7 +274,7 @@ void Assembler::visit_global_expression(ref<GlobalExpression> that) {
 class CompileSession {
 public:
   CompileSession(Runtime &runtime);
-  ref<Lambda> compile(ref<SyntaxTree> tree);
+  ref<Lambda> compile(ref<MethodExpression> tree);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
@@ -219,18 +283,21 @@ private:
 CompileSession::CompileSession(Runtime &runtime)
     : runtime_(runtime) { }
 
-ref<Lambda> Compiler::compile(ref<SyntaxTree> tree) {
+ref<Lambda> Compiler::compile(ref<MethodExpression> method) {
   CompileSession session(Runtime::current());
-  return session.compile(tree);
+  return session.compile(method);
 }
 
-ref<Lambda> CompileSession::compile(ref<SyntaxTree> tree) {
+ref<Lambda> CompileSession::compile(ref<MethodExpression> method) {
   Assembler assembler(runtime());
+  ref<Tuple> params = method.params();
+  Scope scope(params, NULL);
+  assembler.set_scope(scope);
   assembler.initialize();
-  tree.accept(assembler);
+  method.body().accept(assembler);
   ref<Code> code = assembler.flush_code();
   ref<Tuple> constant_pool = assembler.flush_constant_pool();
-  return runtime().factory().new_lambda(0, code, constant_pool);
+  return runtime().factory().new_lambda(params.length(), code, constant_pool);
 }
 
 } // neutrino

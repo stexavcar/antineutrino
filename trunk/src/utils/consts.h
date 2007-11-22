@@ -115,8 +115,9 @@
   VISIT(1, ReturnExpression, ValueOffset)                            \
   VISIT(2, ReturnExpression, Size)                                   \
   VISIT(1, MethodExpression, NameOffset)                             \
-  VISIT(2, MethodExpression, BodyOffset)                             \
-  VISIT(3, MethodExpression, Size)                                   \
+  VISIT(2, MethodExpression, ParamsOffset)                           \
+  VISIT(3, MethodExpression, BodyOffset)                             \
+  VISIT(4, MethodExpression, Size)                                   \
   VISIT(1, SequenceExpression, ExpressionsOffset)                    \
   VISIT(2, SequenceExpression, Size)                                 \
   VISIT(1, TupleExpression, ValuesOffset)                            \

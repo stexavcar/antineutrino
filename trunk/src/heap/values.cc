@@ -41,18 +41,12 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 }
 
 bool Value::is_key() {
-  if (is<Smi>(this)) {
-    return true;
-  } else if (is<Object>(this)) {
-    switch (cast<Object>(this)->chlass()->instance_type()) {
+  switch (type()) {
     case STRING_TYPE: case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE:
-    case FALSE_TYPE:
+    case FALSE_TYPE: case SMI_TYPE: case SYMBOL_TYPE:
       return true;
     default:
       return false;
-    }
-  } else {
-    return false;
   }
 }
 
@@ -502,12 +496,13 @@ ref<Value> ref_traits<Lambda>::call() {
 bool Value::equals(Value *that) {
   ASSERT(this->is_key());
   ASSERT(that->is_key());
-  if (is<Smi>(this)) return this == that;
-  uint32_t instance_type = cast<Object>(this)->chlass()->instance_type();
-  switch (instance_type) {
+  InstanceType type = this->type();
+  switch (type) {
   case STRING_TYPE:
     if (!is<String>(that)) return false;
     return cast<String>(this)->string_equals(cast<String>(that));
+  case SMI_TYPE: case SYMBOL_TYPE:
+    return this == that;
   case VOID_TYPE:
     return is<Void>(that);
   case NULL_TYPE:
@@ -517,7 +512,7 @@ bool Value::equals(Value *that) {
   case FALSE_TYPE:
     return is<False>(that);
   default:
-    UNHANDLED(InstanceType, instance_type);
+    UNHANDLED(InstanceType, type);
     return false;
   }
 }

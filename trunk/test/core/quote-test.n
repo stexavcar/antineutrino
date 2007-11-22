@@ -12,7 +12,7 @@ def test_expressions() {
   assert_equals(true, new (<class Foo { def x() -> true; }>.evaluate())().x());
   assert_equals(false, new (<class Foo { def x() -> false; }>.evaluate())().x());
   assert_equals(null, new (<class Foo { def x() -> null; }>.evaluate())().x());
-  assert_equals(9, new (<class Foo { def x(a) -> a; }>.evaluate())().x(9));
+  assert_equals(9, new (<class Foo { def x(a, b, c) -> a; }>.evaluate())().x(9, 8, 7));
 }
 
 def get_this() -> this;

@@ -141,6 +141,7 @@ public:
 class ImageMethodExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();
+  inline ImageTuple *params();
   inline ImageSyntaxTree *body();
 };
 

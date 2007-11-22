@@ -708,7 +708,9 @@ class Method(SyntaxTree):
     return HEAP.new_method(HEAP.new_string(self.name), body)
   def quote(self):
     body = self.body.quote()
-    return HEAP.new_method_expression(HEAP.new_string(self.name), body)
+    params = [ HEAP.get_symbol(param) for param in self.params ]
+    tuple = HEAP.new_tuple(values = params)
+    return HEAP.new_method_expression(HEAP.new_string(self.name), tuple, body)
 
 class Expression(SyntaxTree):
   pass
@@ -1125,8 +1127,8 @@ class Heap:
     result.set_class(SEQUENCE_EXPRESSION_TYPE)
     return result
 
-  def new_method_expression(self, name, body):
-    result = ImageMethodExpression(self.allocate(ImageMethodExpression_Size), name, body)
+  def new_method_expression(self, name, params, body):
+    result = ImageMethodExpression(self.allocate(ImageMethodExpression_Size), name, params, body)
     result.set_class(METHOD_EXPRESSION_TYPE)
     return result;
 
@@ -1343,12 +1345,15 @@ class ImageTupleExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageTupleExpression_ValuesOffset, value)
 
 class ImageMethodExpression(ImageSyntaxTree):
-  def __init__(self, addr, name, body):
+  def __init__(self, addr, name, params, body):
     ImageSyntaxTree.__init__(self, addr)
     self.set_name(name)
+    self.set_params(params)
     self.set_body(body)
   def set_name(self, value):
     HEAP.set_field(self, ImageMethodExpression_NameOffset, value)
+  def set_params(self, value):
+    HEAP.set_field(self, ImageMethodExpression_ParamsOffset, value)
   def set_body(self, value):
     HEAP.set_field(self, ImageMethodExpression_BodyOffset, value)
 

@@ -7,7 +7,7 @@ namespace neutrino {
 
 class Compiler {
 public:
-  static ref<Lambda> compile(ref<SyntaxTree> tree);
+  static ref<Lambda> compile(ref<MethodExpression> tree);
 };
 
 } // neutrino
