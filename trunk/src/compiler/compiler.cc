@@ -71,12 +71,11 @@ private:
 
 class Label {
 public:
-  Label()
-    : is_bound_(false)
-    , value_(0) { }
+  Label() : is_bound_(false) , value_(kNoTarget) { }
   bool is_bound() { return is_bound_; }
   uint32_t value() { return value_; }
-  void set_value(uint32_t addr) { value_ = addr; }
+  void set_value(uint32_t addr) { ASSERT(addr != kNoTarget); value_ = addr; }
+  static const uint32_t kNoTarget = 0;
 private:
   bool is_bound_;
   uint32_t value_;
@@ -184,7 +183,7 @@ void Assembler::bind(Label &label) {
   uint32_t value = code().length();
   uint32_t current = label.value();
   label.set_value(value);
-  while (current != 0) {
+  while (current != Label::kNoTarget) {
     uint32_t next = code()[current];
     code()[current] = value;
     current = next;
