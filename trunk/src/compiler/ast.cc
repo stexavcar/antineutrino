@@ -78,8 +78,7 @@ static void unparse_return_expression(ReturnExpression *obj, string_buffer &buf)
 static void unparse_method_expression(MethodExpression *obj, string_buffer &buf) {
   buf.append("def ");
   obj->name()->write_chars_on(buf);
-  buf.append("() -> ");
-  obj->body()->unparse_on(buf);
+  obj->lambda()->unparse_on(buf);
   buf.append(";");
 }
 

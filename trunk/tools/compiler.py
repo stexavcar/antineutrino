@@ -710,7 +710,8 @@ class Method(SyntaxTree):
     body = self.body.quote()
     params = [ HEAP.get_symbol(param) for param in self.params ]
     tuple = HEAP.new_tuple(values = params)
-    return HEAP.new_method_expression(HEAP.new_string(self.name), tuple, body)
+    fun = HEAP.new_lambda_expression(tuple, body)
+    return HEAP.new_method_expression(HEAP.new_string(self.name), fun)
 
 class Expression(SyntaxTree):
   pass
@@ -1074,6 +1075,11 @@ class Heap:
     result.set_class(METHOD_TYPE)
     return result
 
+  def new_lambda_expression(self, params, body):
+    result = ImageLambdaExpression(self.allocate(ImageLambdaExpression_Size), params, body);
+    result.set_class(LAMBDA_EXPRESSION_TYPE)
+    return result
+
   def new_quote_expression(self, value):
     result = ImageQuoteExpression(self.allocate(ImageQuoteExpression_Size), value)
     result.set_class(QUOTE_EXPRESSION_TYPE)
@@ -1153,8 +1159,8 @@ class Heap:
     result.set_class(SEQUENCE_EXPRESSION_TYPE)
     return result
 
-  def new_method_expression(self, name, params, body):
-    result = ImageMethodExpression(self.allocate(ImageMethodExpression_Size), name, params, body)
+  def new_method_expression(self, name, fun):
+    result = ImageMethodExpression(self.allocate(ImageMethodExpression_Size), name, fun)
     result.set_class(METHOD_EXPRESSION_TYPE)
     return result;
 
@@ -1385,17 +1391,14 @@ class ImageTupleExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageTupleExpression_ValuesOffset, value)
 
 class ImageMethodExpression(ImageSyntaxTree):
-  def __init__(self, addr, name, params, body):
+  def __init__(self, addr, name, fun):
     ImageSyntaxTree.__init__(self, addr)
     self.set_name(name)
-    self.set_params(params)
-    self.set_body(body)
+    self.set_lambda(fun)
   def set_name(self, value):
     HEAP.set_field(self, ImageMethodExpression_NameOffset, value)
-  def set_params(self, value):
-    HEAP.set_field(self, ImageMethodExpression_ParamsOffset, value)
-  def set_body(self, value):
-    HEAP.set_field(self, ImageMethodExpression_BodyOffset, value)
+  def set_lambda(self, value):
+    HEAP.set_field(self, ImageMethodExpression_LambdaOffset, value)
 
 class ImageLambdaExpression(ImageSyntaxTree):
   def __init__(self, addr, params, body):

@@ -349,11 +349,11 @@ ref<Lambda> Compiler::compile(ref<MethodExpression> method) {
 
 ref<Lambda> CompileSession::compile(ref<MethodExpression> method) {
   Assembler assembler(runtime());
-  ref<Tuple> params = method.params();
+  ref<Tuple> params = method.lambda().params();
   Scope scope(params, NULL);
   assembler.set_scope(scope);
   assembler.initialize();
-  method.body().accept(assembler);
+  method.lambda().body().accept(assembler);
   ref<Code> code = assembler.flush_code();
   ref<Tuple> constant_pool = assembler.flush_constant_pool();
   return runtime().factory().new_lambda(params.length(), code, constant_pool);

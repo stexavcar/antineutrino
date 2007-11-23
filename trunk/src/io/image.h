@@ -145,11 +145,16 @@ public:
   inline ImageSyntaxTree *value();
 };
 
+class ImageLambdaExpression : public ImageSyntaxTree {
+public:
+  inline ImageTuple *params();
+  inline ImageSyntaxTree *body();
+};
+
 class ImageMethodExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();
-  inline ImageTuple *params();
-  inline ImageSyntaxTree *body();
+  inline ImageLambdaExpression *lambda();
 };
 
 class ImageSequenceExpression : public ImageSyntaxTree {
@@ -178,12 +183,6 @@ public:
 };
 
 class ImageThisExpression : public ImageSyntaxTree {
-};
-
-class ImageLambdaExpression : public ImageSyntaxTree {
-public:
-  inline ImageTuple *params();
-  inline ImageSyntaxTree *body();
 };
 
 template <class C>

@@ -1,5 +1,5 @@
-#ifndef _HEAP_CONSTS
-#define _HEAP_CONSTS
+#ifndef _UTILS_CONSTS
+#define _UTILS_CONSTS
 
 /**
  * This file contains a number of index tables mapping names and
@@ -93,57 +93,67 @@
 // -------------------------------------
 
 #define FOR_EACH_IMAGE_OBJECT_CONST(VISIT)                           \
-  VISIT(0, Object, TypeOffset)        VISIT(1, Object, HeaderSize)   \
-  VISIT(1, Dictionary, TableOffset)   VISIT(2, Dictionary, Size)     \
-  VISIT(1, String, LengthOffset)      VISIT(2, String, HeaderSize)   \
-  VISIT(1, Code, LengthOffset)        VISIT(2, Code, HeaderSize)     \
-  VISIT(1, Tuple, LengthOffset)       VISIT(2, Tuple, HeaderSize)    \
-  VISIT(1, Lambda, ArgcOffset)        VISIT(2, Lambda, CodeOffset)   \
-  VISIT(3, Lambda, LiteralsOffset)    VISIT(4, Lambda, Size)         \
-  VISIT(1, Class, InstanceTypeOffset) VISIT(2, Class, MethodsOffset) \
-  VISIT(3, Class, SuperOffset)        VISIT(4, Class, NameOffset)    \
-  VISIT(5, Class, Size)                                              \
-  VISIT(1, Method, NameOffset)        VISIT(2, Method, LambdaOffset) \
-  VISIT(3, Method, Size)                                             \
-  VISIT(1, Root, IndexOffset)         VISIT(2, Root, Size)           \
-  VISIT(1, LiteralExpression, ValueOffset)                           \
-  VISIT(2, LiteralExpression, Size)                                  \
-  VISIT(1, InvokeExpression, ReceiverOffset)                         \
-  VISIT(2, InvokeExpression, NameOffset)                             \
-  VISIT(3, InvokeExpression, ArgumentsOffset)                        \
-  VISIT(4, InvokeExpression, Size)                                   \
-  VISIT(1, ClassExpression, NameOffset)                              \
-  VISIT(2, ClassExpression, MethodsOffset)                           \
-  VISIT(3, ClassExpression, SuperOffset)                             \
-  VISIT(4, ClassExpression, Size)                                    \
-  VISIT(1, ReturnExpression, ValueOffset)                            \
-  VISIT(2, ReturnExpression, Size)                                   \
-  VISIT(1, MethodExpression, NameOffset)                             \
-  VISIT(2, MethodExpression, ParamsOffset)                           \
-  VISIT(3, MethodExpression, BodyOffset)                             \
-  VISIT(4, MethodExpression, Size)                                   \
-  VISIT(1, SequenceExpression, ExpressionsOffset)                    \
-  VISIT(2, SequenceExpression, Size)                                 \
-  VISIT(1, TupleExpression, ValuesOffset)                            \
-  VISIT(2, TupleExpression, Size)                                    \
-  VISIT(1, GlobalExpression, NameOffset)                             \
-  VISIT(2, GlobalExpression, Size)                                   \
-  VISIT(1, CallExpression, ReceiverOffset)                           \
-  VISIT(2, CallExpression, FunctionOffset)                           \
-  VISIT(3, CallExpression, ArgumentsOffset)                          \
-  VISIT(4, CallExpression, Size)                                     \
-  VISIT(1, Symbol, NameOffset)                                       \
-  VISIT(2, Symbol, Size)                                             \
+  VISIT(0, Object,                TypeOffset)                        \
+  VISIT(1, Object,                HeaderSize)                        \
+  VISIT(1, Dictionary,            TableOffset)                       \
+  VISIT(2, Dictionary,            Size)                              \
+  VISIT(1, String,                LengthOffset)                      \
+  VISIT(2, String,                HeaderSize)                        \
+  VISIT(1, Code,                  LengthOffset)                      \
+  VISIT(2, Code,                  HeaderSize)                        \
+  VISIT(1, Tuple,                 LengthOffset)                      \
+  VISIT(2, Tuple,                 HeaderSize)                        \
+  VISIT(1, Lambda,                ArgcOffset)                        \
+  VISIT(2, Lambda,                CodeOffset)                        \
+  VISIT(3, Lambda,                LiteralsOffset)                    \
+  VISIT(4, Lambda,                Size)                              \
+  VISIT(1, Class,                 InstanceTypeOffset)                \
+  VISIT(2, Class,                 MethodsOffset)                     \
+  VISIT(3, Class,                 SuperOffset)                       \
+  VISIT(4, Class,                 NameOffset)                        \
+  VISIT(5, Class,                 Size)                              \
+  VISIT(1, Method,                NameOffset)                        \
+  VISIT(2, Method,                LambdaOffset)                      \
+  VISIT(3, Method,                Size)                              \
+  VISIT(1, Root,                  IndexOffset)                       \
+  VISIT(2, Root,                  Size)                              \
+  VISIT(1, LiteralExpression,     ValueOffset)                       \
+  VISIT(2, LiteralExpression,     Size)                              \
+  VISIT(1, InvokeExpression,      ReceiverOffset)                    \
+  VISIT(2, InvokeExpression,      NameOffset)                        \
+  VISIT(3, InvokeExpression,      ArgumentsOffset)                   \
+  VISIT(4, InvokeExpression,      Size)                              \
+  VISIT(1, ClassExpression,       NameOffset)                        \
+  VISIT(2, ClassExpression,       MethodsOffset)                     \
+  VISIT(3, ClassExpression,       SuperOffset)                       \
+  VISIT(4, ClassExpression,       Size)                              \
+  VISIT(1, ReturnExpression,      ValueOffset)                       \
+  VISIT(2, ReturnExpression,      Size)                              \
+  VISIT(1, MethodExpression,      NameOffset)                        \
+  VISIT(2, MethodExpression,      LambdaOffset)                      \
+  VISIT(3, MethodExpression,      Size)                              \
+  VISIT(1, SequenceExpression,    ExpressionsOffset)                 \
+  VISIT(2, SequenceExpression,    Size)                              \
+  VISIT(1, TupleExpression,       ValuesOffset)                      \
+  VISIT(2, TupleExpression,       Size)                              \
+  VISIT(1, GlobalExpression,      NameOffset)                        \
+  VISIT(2, GlobalExpression,      Size)                              \
+  VISIT(1, CallExpression,        ReceiverOffset)                    \
+  VISIT(2, CallExpression,        FunctionOffset)                    \
+  VISIT(3, CallExpression,        ArgumentsOffset)                   \
+  VISIT(4, CallExpression,        Size)                              \
+  VISIT(1, Symbol,                NameOffset)                        \
+  VISIT(2, Symbol,                Size)                              \
   VISIT(1, ConditionalExpression, ConditionOffset)                   \
   VISIT(2, ConditionalExpression, ThenPartOffset)                    \
   VISIT(3, ConditionalExpression, ElsePartOffset)                    \
   VISIT(4, ConditionalExpression, Size)                              \
-  VISIT(1, ThisExpression, Size)                                     \
-  VISIT(1, QuoteExpression, ValueOffset)                             \
-  VISIT(2, QuoteExpression, Size)                                    \
-  VISIT(1, LambdaExpression, ParamsOffset)                           \
-  VISIT(2, LambdaExpression, BodyOffset)                             \
-  VISIT(3, LambdaExpression, Size)
+  VISIT(1, ThisExpression,        Size)                              \
+  VISIT(1, QuoteExpression,       ValueOffset)                       \
+  VISIT(2, QuoteExpression,       Size)                              \
+  VISIT(1, LambdaExpression,      ParamsOffset)                      \
+  VISIT(2, LambdaExpression,      BodyOffset)                        \
+  VISIT(3, LambdaExpression,      Size)
 
 
 // -----------------
@@ -211,11 +221,16 @@
  * or has built in methods should be mentioned in this list.
  */
 #define FOR_EACH_BUILTIN_CLASS(VISIT)                                \
-  VISIT(SmallInteger, smi,  SMI)   VISIT(String, string, STRING)     \
-  VISIT(True, true, TRUE)          VISIT(False,  false,  FALSE)      \
-  VISIT(Void, void, VOID)          VISIT(Null,   null,   NULL)       \
-  VISIT(Object, object, OBJECT)    VISIT(Lambda, lambda, LAMBDA)     \
-  VISIT(Tuple, tuple, TUPLE)       VISIT(Class, class, CLASS)        \
+  VISIT(SmallInteger, smi,  SMI)                                     \
+  VISIT(String, string, STRING)                                      \
+  VISIT(True, true, TRUE)                                            \
+  VISIT(False,  false,  FALSE)                                       \
+  VISIT(Void, void, VOID)                                            \
+  VISIT(Null,   null,   NULL)                                        \
+  VISIT(Object, object, OBJECT)                                      \
+  VISIT(Lambda, lambda, LAMBDA)                                      \
+  VISIT(Tuple, tuple, TUPLE)                                         \
+  VISIT(Class, class, CLASS)                                         \
   VISIT(LiteralExpression, literal_expression, LITERAL_EXPRESSION)   \
   VISIT(InvokeExpression, invoke_expression, INVOKE_EXPRESSION)      \
   VISIT(ClassExpression, class_expression, CLASS_EXPRESSION)         \
@@ -232,19 +247,19 @@
  * implementation must be added in builtins.cc.
  */
 #define FOR_EACH_BUILTIN_METHOD(VISIT)                               \
-  VISIT(0, string, length, "||")                                     \
-  VISIT(1, string, eq, "=")                                          \
-  VISIT(2, string, plus, "+")                                        \
-  VISIT(10, smi, plus, "+")                                          \
-  VISIT(11, smi, minus, "-")                                         \
-  VISIT(12, smi, times, "*")                                         \
-  VISIT(13, smi, divide, "/")                                        \
-  VISIT(14, smi, abs, "||")                                          \
-  VISIT(20, object, eq, "=")                                         \
-  VISIT(21, object, to_string, "to_string")                          \
-  VISIT(30, class_expression, evaluate, "evaluate")                  \
-  VISIT(40, class, new, "new")                                       \
-  VISIT(50, tuple, eq, "=")
+  VISIT(0,  string,           length,    "||")                       \
+  VISIT(1,  string,           eq,        "=")                        \
+  VISIT(2,  string,           plus,      "+")                        \
+  VISIT(10, smi,              plus,      "+")                        \
+  VISIT(11, smi,              minus,     "-")                        \
+  VISIT(12, smi,              times,     "*")                        \
+  VISIT(13, smi,              divide,    "/")                        \
+  VISIT(14, smi,              abs,       "||")                       \
+  VISIT(20, object,           eq,        "=")                        \
+  VISIT(21, object,           to_string, "to_string")                \
+  VISIT(30, class_expression, evaluate,  "evaluate")                 \
+  VISIT(40, class,            new,       "new")                      \
+  VISIT(50, tuple,            eq,        "=")
 
 
 // -------------------------------------------
@@ -257,7 +272,8 @@
  * implementation must be added in builtins.cc.
  */
 #define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
-  VISIT(100, fail, "fail") VISIT(101, raw_print, "raw_print")
+  VISIT(100, fail,      "fail")                                      \
+  VISIT(101, raw_print, "raw_print")
 
 
-#endif // _HEAP_CONSTS
+#endif // _UTILS_CONSTS

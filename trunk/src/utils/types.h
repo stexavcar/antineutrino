@@ -18,6 +18,7 @@ class Dictionary;
 class Heap;
 class Image;
 class Lambda;
+class LambdaExpression;
 class Object;
 template <class T> class ref;
 class Roots;

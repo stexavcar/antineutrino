@@ -222,8 +222,7 @@ DEFINE_GETTER(Value, ClassExpression, super, Super)
 DEFINE_GETTER(SyntaxTree, ReturnExpression, value, Value)
 
 DEFINE_GETTER(String, MethodExpression, name, Name)
-DEFINE_GETTER(Tuple, MethodExpression, params, Params)
-DEFINE_GETTER(SyntaxTree, MethodExpression, body, Body)
+DEFINE_GETTER(LambdaExpression, MethodExpression, lambda, Lambda)
 
 DEFINE_GETTER(Tuple, LambdaExpression, params, Params)
 DEFINE_GETTER(SyntaxTree, LambdaExpression, body, Body)

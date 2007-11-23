@@ -185,21 +185,18 @@ DEFINE_REF_CLASS(ReturnExpression);
 class MethodExpression : public SyntaxTree {
 public:
   DECLARE_FIELD(String*, name);
-  DECLARE_FIELD(Tuple*, params);
-  DECLARE_FIELD(SyntaxTree*, body);
+  DECLARE_FIELD(LambdaExpression*, lambda);
   
   static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kParamsOffset = kNameOffset + kPointerSize;
-  static const uint32_t kBodyOffset = kParamsOffset + kPointerSize;
-  static const uint32_t kSize = kBodyOffset + kPointerSize;
+  static const uint32_t kLambdaOffset = kNameOffset + kPointerSize;
+  static const uint32_t kSize = kLambdaOffset + kPointerSize;
 };
 
 template <>
 class ref_traits<MethodExpression> : public ref_traits<SyntaxTree> {
 public:
   inline ref<String> name();
-  inline ref<Tuple> params();
-  inline ref<SyntaxTree> body();
+  inline ref<LambdaExpression> lambda();
   ref<Method> compile();
 };
 
