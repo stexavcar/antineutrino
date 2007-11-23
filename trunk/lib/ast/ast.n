@@ -13,3 +13,7 @@ internal class InvokeExpression : SyntaxTree {
 internal class ClassExpression : SyntaxTree {
   internal def evaluate();
 }
+
+internal class ThisExpression : SyntaxTree {
+
+}

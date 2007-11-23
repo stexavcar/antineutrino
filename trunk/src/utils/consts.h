@@ -65,7 +65,10 @@
   VISIT(57, GLOBAL_EXPRESSION, GlobalExpression)                     \
   VISIT(58, CALL_EXPRESSION, CallExpression)                         \
   VISIT(59, SYMBOL, Symbol)                                          \
-  VISIT(60, CONDITIONAL_EXPRESSION, ConditionalExpression)
+  VISIT(60, CONDITIONAL_EXPRESSION, ConditionalExpression)           \
+  VISIT(61, QUOTE_EXPRESSION, QuoteExpression)                       \
+  VISIT(62, THIS_EXPRESSION, ThisExpression)                         \
+  VISIT(63, LAMBDA_EXPRESSION, LambdaExpression)
 
 
 // ---------------------
@@ -134,7 +137,13 @@
   VISIT(1, ConditionalExpression, ConditionOffset)                   \
   VISIT(2, ConditionalExpression, ThenPartOffset)                    \
   VISIT(3, ConditionalExpression, ElsePartOffset)                    \
-  VISIT(4, ConditionalExpression, Size)
+  VISIT(4, ConditionalExpression, Size)                              \
+  VISIT(1, ThisExpression, Size)                                     \
+  VISIT(1, QuoteExpression, ValueOffset)                             \
+  VISIT(2, QuoteExpression, Size)                                    \
+  VISIT(1, LambdaExpression, ParamsOffset)                           \
+  VISIT(2, LambdaExpression, BodyOffset)                             \
+  VISIT(3, LambdaExpression, Size)
 
 
 // -----------------
@@ -175,7 +184,10 @@
   VISIT(26, Class, global_expression_class, GLOBAL_EXPRESSION_CLASS, new_empty_class(GLOBAL_EXPRESSION_TYPE))\
   VISIT(27, Class, symbol_class, SYMBOL_CLASS, new_empty_class(SYMBOL_TYPE))\
   VISIT(28, Class, call_expression_class, CALL_EXPRESSION_CLASS, new_empty_class(CALL_EXPRESSION_TYPE))\
-  VISIT(29, Class, conditional_expression_class, CONDITIONAL_EXPRESSION_CLASS, new_empty_class(CONDITIONAL_EXPRESSION_TYPE))
+  VISIT(29, Class, conditional_expression_class, CONDITIONAL_EXPRESSION_CLASS, new_empty_class(CONDITIONAL_EXPRESSION_TYPE))\
+  VISIT(30, Class, this_expression_class, THIS_EXPRESSION_CLASS, new_empty_class(THIS_EXPRESSION_TYPE))\
+  VISIT(31, Class, quote_expression_class, QUOTE_EXPRESSION_CLASS, new_empty_class(QUOTE_EXPRESSION_TYPE))\
+  VISIT(32, Class, lambda_expression_class, LAMBDA_EXPRESSION_CLASS, new_empty_class(LAMBDA_EXPRESSION_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \
@@ -206,7 +218,8 @@
   VISIT(Tuple, tuple, TUPLE)       VISIT(Class, class, CLASS)        \
   VISIT(LiteralExpression, literal_expression, LITERAL_EXPRESSION)   \
   VISIT(InvokeExpression, invoke_expression, INVOKE_EXPRESSION)      \
-  VISIT(ClassExpression, class_expression, CLASS_EXPRESSION)
+  VISIT(ClassExpression, class_expression, CLASS_EXPRESSION)         \
+  VISIT(ThisExpression, this_expression, THIS_EXPRESSION)
 
 
 // ---------------------------------------

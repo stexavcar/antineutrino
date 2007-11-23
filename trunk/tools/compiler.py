@@ -767,6 +767,11 @@ class Lambda(Expression):
     visitor.visit_lambda(self)
   def traverse(self, visitor):
     self.body.accept(visitor)
+  def quote(self):
+    body = self.body.quote()
+    params = [ HEAP.get_symbol(param) for param in self.params ]
+    tuple = HEAP.new_tuple(values = params)
+    return HEAP.new_lambda_expression(tuple, body)
   def compile(self):
     return compile_lambda(self.params, self.body)
 
@@ -830,6 +835,8 @@ class Quote(Expression):
     visitor.visit_quote(self)
   def traverse(self, visitor):
     self.value.accept(visitor)
+  def quote(self):
+    return HEAP.new_quote_expression(self.value.quote())
   def emit(self, state):
     obj = self.value.quote()
     index = state.literal_index(obj)
@@ -876,6 +883,8 @@ class This(Expression):
     visitor.visit_this(self)
   def traverse(self, visitor):
     pass
+  def quote(self):
+    return HEAP.new_this_expression()
   def emit(self, state):
     state.write(OC_ARGUMENT, state.argc + 1)
 
@@ -995,7 +1004,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 30
+  kRootCount  = 33
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1063,6 +1072,16 @@ class Heap:
   def new_method(self, name, body):
     result = ImageMethod(self.allocate(ImageMethod_Size), name, body)
     result.set_class(METHOD_TYPE)
+    return result
+
+  def new_quote_expression(self, value):
+    result = ImageQuoteExpression(self.allocate(ImageQuoteExpression_Size), value)
+    result.set_class(QUOTE_EXPRESSION_TYPE)
+    return result
+
+  def new_this_expression(self):
+    result = ImageThisExpression(self.allocate(ImageThisExpression_Size))
+    result.set_class(THIS_EXPRESSION_TYPE)
     return result
 
   def new_number(self, value):
@@ -1378,12 +1397,33 @@ class ImageMethodExpression(ImageSyntaxTree):
   def set_body(self, value):
     HEAP.set_field(self, ImageMethodExpression_BodyOffset, value)
 
+class ImageLambdaExpression(ImageSyntaxTree):
+  def __init__(self, addr, params, body):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_params(params)
+    self.set_body(body)
+  def set_params(self, value):
+    HEAP.set_field(self, ImageLambdaExpression_ParamsOffset, value)
+  def set_body(self, value):
+    HEAP.set_field(self, ImageLambdaExpression_BodyOffset, value)
+
 class ImageGlobalExpression(ImageSyntaxTree):
   def __init__(self, addr, name):
     ImageSyntaxTree.__init__(self, addr)
     self.set_name(name)
   def set_name(self, value):
     HEAP.set_field(self, ImageGlobalExpression_NameOffset, value)
+
+class ImageThisExpression(ImageSyntaxTree):
+  def __init__(self, addr):
+    ImageSyntaxTree.__init__(self, addr)
+
+class ImageQuoteExpression(ImageSyntaxTree):
+  def __init__(self, addr, value):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_value(value)
+  def set_value(self, value):
+    HEAP.set_field(self, ImageQuoteExpression_ValueOffset, value)
 
 # -----------------------
 # --- C o m p i l e r ---

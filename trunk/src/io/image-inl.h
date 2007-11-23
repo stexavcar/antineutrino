@@ -225,11 +225,16 @@ DEFINE_GETTER(String, MethodExpression, name, Name)
 DEFINE_GETTER(Tuple, MethodExpression, params, Params)
 DEFINE_GETTER(SyntaxTree, MethodExpression, body, Body)
 
+DEFINE_GETTER(Tuple, LambdaExpression, params, Params)
+DEFINE_GETTER(SyntaxTree, LambdaExpression, body, Body)
+
 DEFINE_GETTER(Tuple, SequenceExpression, expressions, Expressions)
 
 DEFINE_GETTER(Tuple, TupleExpression, values, Values)
 
 DEFINE_GETTER(Value, Symbol, name, Name)
+
+DEFINE_GETTER(SyntaxTree, QuoteExpression, value, Value)
 
 DEFINE_GETTER(String, GlobalExpression, name, Name)
 

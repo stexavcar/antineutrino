@@ -289,6 +289,59 @@ public:
 
 DEFINE_REF_CLASS(Symbol);
 
+
+// ---------------------------------------
+// --- Q u o t e   E x p r e s s i o n ---
+// ---------------------------------------
+
+class QuoteExpression : public SyntaxTree {
+public:
+  DECLARE_FIELD(SyntaxTree*, value);
+  
+  static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kSize = kValueOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<QuoteExpression> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<SyntaxTree> value();
+};
+
+DEFINE_REF_CLASS(QuoteExpression);
+
+// -----------------------------------------
+// --- L a m b d a   E x p r e s s i o n ---
+// -----------------------------------------
+
+class LambdaExpression : public SyntaxTree {
+public:
+  DECLARE_FIELD(Tuple*, params);
+  DECLARE_FIELD(SyntaxTree*, body);
+  
+  static const uint32_t kParamsOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kBodyOffset = kParamsOffset + kPointerSize;
+  static const uint32_t kSize = kBodyOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<LambdaExpression> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<Tuple> params();
+  inline ref<SyntaxTree> body();
+};
+
+DEFINE_REF_CLASS(LambdaExpression);
+
+// -------------------------------------
+// --- T h i s   E x p r e s s i o n ---
+// -------------------------------------
+
+class ThisExpression : public SyntaxTree {
+public:
+  static const uint32_t kSize = SyntaxTree::kHeaderSize;
+};
+
 // ---------------------
 // --- V i s i t o r ---
 // ---------------------
@@ -306,6 +359,9 @@ public:
   virtual void visit_call_expression(ref<CallExpression> that);
   virtual void visit_conditional_expression(ref<ConditionalExpression> that);
   virtual void visit_symbol(ref<Symbol> that);
+  virtual void visit_this_expression(ref<ThisExpression> that);
+  virtual void visit_quote_expression(ref<QuoteExpression> that);
+  virtual void visit_lambda_expression(ref<LambdaExpression> that);
 };
 
 

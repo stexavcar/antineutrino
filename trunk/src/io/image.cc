@@ -94,7 +94,7 @@ void Image::copy_object_shallow(ImageObject *obj) {
     case LAMBDA_TYPE: {
       ImageLambda *img = image_cast<ImageLambda>(obj);
       uint32_t argc = img->argc();
-      Lambda *lambda = cast<Lambda>(heap.new_lambda(argc));
+      Lambda *lambda = cast<Lambda>(heap.allocate_lambda(argc));
       obj->point_forward(lambda);
       break;
     }
@@ -106,7 +106,7 @@ void Image::copy_object_shallow(ImageObject *obj) {
       break;
     }
     case METHOD_TYPE: {
-      Method *method = cast<Method>(heap.new_method());
+      Method *method = cast<Method>(heap.allocate_method());
       obj->point_forward(method);
       break;
     }
@@ -116,58 +116,73 @@ void Image::copy_object_shallow(ImageObject *obj) {
       break;
     }
     case LITERAL_EXPRESSION_TYPE: {
-      LiteralExpression *literal = cast<LiteralExpression>(heap.new_literal_expression());
+      LiteralExpression *literal = cast<LiteralExpression>(heap.allocate_literal_expression());
       obj->point_forward(literal);
       break;
     }
     case INVOKE_EXPRESSION_TYPE: {
-      InvokeExpression *expr = cast<InvokeExpression>(heap.new_invoke_expression());
+      InvokeExpression *expr = cast<InvokeExpression>(heap.allocate_invoke_expression());
       obj->point_forward(expr);
       break;
     }
     case CALL_EXPRESSION_TYPE: {
-      CallExpression *expr = cast<CallExpression>(heap.new_call_expression());
+      CallExpression *expr = cast<CallExpression>(heap.allocate_call_expression());
       obj->point_forward(expr);
       break;
     }
     case CONDITIONAL_EXPRESSION_TYPE: {
-      ConditionalExpression *expr = cast<ConditionalExpression>(heap.new_conditional_expression());
+      ConditionalExpression *expr = cast<ConditionalExpression>(heap.allocate_conditional_expression());
       obj->point_forward(expr);
       break;
     }
     case CLASS_EXPRESSION_TYPE: {
-      ClassExpression *expr = cast<ClassExpression>(heap.new_class_expression());
+      ClassExpression *expr = cast<ClassExpression>(heap.allocate_class_expression());
       obj->point_forward(expr);
       break;
     }
     case RETURN_EXPRESSION_TYPE: {
-      ReturnExpression *expr = cast<ReturnExpression>(heap.new_return_expression());
+      ReturnExpression *expr = cast<ReturnExpression>(heap.allocate_return_expression());
       obj->point_forward(expr);
       break;
     }
     case METHOD_EXPRESSION_TYPE: {
-      MethodExpression *expr = cast<MethodExpression>(heap.new_method_expression());
+      MethodExpression *expr = cast<MethodExpression>(heap.allocate_method_expression());
       obj->point_forward(expr);
       break;
     }
     case SEQUENCE_EXPRESSION_TYPE: {
-      SequenceExpression *expr = cast<SequenceExpression>(heap.new_sequence_expression());
+      SequenceExpression *expr = cast<SequenceExpression>(heap.allocate_sequence_expression());
       obj->point_forward(expr);
       break;
     }
     case TUPLE_EXPRESSION_TYPE: {
-      TupleExpression *expr = cast<TupleExpression>(heap.new_tuple_expression());
+      TupleExpression *expr = cast<TupleExpression>(heap.allocate_tuple_expression());
       obj->point_forward(expr);
       break;
     }
     case GLOBAL_EXPRESSION_TYPE: {
-      GlobalExpression *expr = cast<GlobalExpression>(heap.new_global_expression());
+      GlobalExpression *expr = cast<GlobalExpression>(heap.allocate_global_expression());
       obj->point_forward(expr);
       break;
     }
     case SYMBOL_TYPE: {
-      Symbol *sym = cast<Symbol>(heap.new_symbol());
+      Symbol *sym = cast<Symbol>(heap.allocate_symbol());
       obj->point_forward(sym);
+      break;
+    }
+    case THIS_EXPRESSION_TYPE: {
+      ThisExpression *expr = cast<ThisExpression>(heap.new_this_expression());
+      obj->point_forward(expr);
+      break;
+    }
+    case LAMBDA_EXPRESSION_TYPE: {
+      LambdaExpression *expr = cast<LambdaExpression>(heap.allocate_lambda_expression());
+      obj->point_forward(expr);
+      break;
+    }
+    case QUOTE_EXPRESSION_TYPE: {
+      QuoteExpression *expr = cast<QuoteExpression>(heap.allocate_quote_expression());
+      obj->point_forward(expr);
       break;
     }
     default:
@@ -270,6 +285,13 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       expr->set_body(cast<SyntaxTree>(img->body()->forward_pointer()));
       break;
     }
+    case LAMBDA_EXPRESSION_TYPE: {
+      ImageLambdaExpression *img = image_cast<ImageLambdaExpression>(obj);
+      LambdaExpression *expr = cast<LambdaExpression>(img->forward_pointer());
+      expr->set_params(cast<Tuple>(img->params()->forward_pointer()));
+      expr->set_body(cast<SyntaxTree>(img->body()->forward_pointer()));
+      break;
+    }
     case SEQUENCE_EXPRESSION_TYPE: {
       ImageSequenceExpression *img = image_cast<ImageSequenceExpression>(obj);
       SequenceExpression *expr = cast<SequenceExpression>(img->forward_pointer());
@@ -288,6 +310,12 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       sym->set_name(img->name()->forward_pointer());
       break;
     }
+    case QUOTE_EXPRESSION_TYPE: {
+      ImageQuoteExpression *img = image_cast<ImageQuoteExpression>(obj);
+      QuoteExpression *expr = cast<QuoteExpression>(img->forward_pointer());
+      expr->set_value(cast<SyntaxTree>(img->value()->forward_pointer()));
+      break;
+    }
     case GLOBAL_EXPRESSION_TYPE: {
       ImageGlobalExpression *img = image_cast<ImageGlobalExpression>(obj);
       GlobalExpression *expr = cast<GlobalExpression>(img->forward_pointer());
@@ -295,6 +323,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       break;
     }
     case STRING_TYPE: case CODE_TYPE: case SINGLETON_TYPE:
+    case THIS_EXPRESSION_TYPE:
       // Nothing to fix
       break;
     default:
@@ -365,6 +394,12 @@ uint32_t ImageObject::memory_size() {
       return ImageGlobalExpression_Size;
     case SYMBOL_TYPE:
       return ImageSymbol_Size;
+    case THIS_EXPRESSION_TYPE:
+      return ImageThisExpression_Size;
+    case QUOTE_EXPRESSION_TYPE:
+      return ImageQuoteExpression_Size;
+    case LAMBDA_EXPRESSION_TYPE:
+      return ImageLambdaExpression_Size;
     case SINGLETON_TYPE:
       return ImageRoot_Size;
     case STRING_TYPE:

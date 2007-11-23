@@ -172,6 +172,20 @@ public:
   inline ImageString *name();
 };
 
+class ImageQuoteExpression : public ImageSyntaxTree {
+public:
+  inline ImageSyntaxTree *value();
+};
+
+class ImageThisExpression : public ImageSyntaxTree {
+};
+
+class ImageLambdaExpression : public ImageSyntaxTree {
+public:
+  inline ImageTuple *params();
+  inline ImageSyntaxTree *body();
+};
+
 template <class C>
 static inline bool is(ImageData *val);
 

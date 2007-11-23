@@ -30,6 +30,9 @@ DEFINE_FIELD_ACCESSORS(String, MethodExpression, name, kNameOffset)
 DEFINE_FIELD_ACCESSORS(Tuple, MethodExpression, params, kParamsOffset)
 DEFINE_FIELD_ACCESSORS(SyntaxTree, MethodExpression, body, kBodyOffset)
 
+DEFINE_FIELD_ACCESSORS(Tuple, LambdaExpression, params, kParamsOffset)
+DEFINE_FIELD_ACCESSORS(SyntaxTree, LambdaExpression, body, kBodyOffset)
+
 DEFINE_FIELD_ACCESSORS(Tuple, SequenceExpression, expressions, kExpressionsOffset)
 
 DEFINE_FIELD_ACCESSORS(Tuple, TupleExpression, values, kValuesOffset)
@@ -37,6 +40,8 @@ DEFINE_FIELD_ACCESSORS(Tuple, TupleExpression, values, kValuesOffset)
 DEFINE_FIELD_ACCESSORS(Value, Symbol, name, kNameOffset)
 
 DEFINE_FIELD_ACCESSORS(String, GlobalExpression, name, kNameOffset)
+
+DEFINE_FIELD_ACCESSORS(SyntaxTree, QuoteExpression, value, kValueOffset)
 
 }
 

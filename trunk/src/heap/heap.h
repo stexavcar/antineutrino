@@ -46,29 +46,37 @@ public:
   
   Data *new_lambda(uint32_t argc, Code *code, Tuple *literals);
   
-  Data *new_lambda(uint32_t argc);
+  Data *allocate_lambda(uint32_t argc);
 
-  Data *new_literal_expression();
+  Data *allocate_literal_expression();
   
-  Data *new_invoke_expression();
+  Data *allocate_invoke_expression();
   
-  Data *new_call_expression();
+  Data *allocate_call_expression();
   
-  Data *new_conditional_expression();
+  Data *allocate_conditional_expression();
 
-  Data *new_class_expression();
+  Data *allocate_class_expression();
   
-  Data *new_return_expression();
+  Data *allocate_return_expression();
   
-  Data *new_method_expression();
+  Data *allocate_method_expression();
   
-  Data *new_sequence_expression();
+  Data *allocate_sequence_expression();
   
-  Data *new_tuple_expression();
+  Data *allocate_tuple_expression();
   
-  Data *new_global_expression();
+  Data *allocate_global_expression();
   
-  Data *new_symbol();
+  Data *new_this_expression();
+
+  Data *allocate_quote_expression();
+
+  Data *allocate_lambda_expression();
+
+  Data *allocate_symbol();
+  
+  Data *allocate_method();
   
   Data *new_abstract_buffer(uint32_t size, Class *chlass);
   
@@ -77,9 +85,7 @@ public:
   Data *new_code(uint32_t size);
   
   Data *new_method(String *name, Lambda *lambda);
-  
-  Data *new_method();
-  
+    
   Data *new_instance(Class *chlass);
 
   Space &space() { return space_; }

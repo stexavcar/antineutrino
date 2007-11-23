@@ -43,7 +43,7 @@ Data *Heap::new_lambda(uint32_t argc, Code *code, Tuple *literals) {
   return result;
 }
 
-Data *Heap::new_lambda(uint32_t argc) {
+Data *Heap::allocate_lambda(uint32_t argc) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_class());
   if (is<AllocationFailed>(val)) return val;
   Lambda *result = cast<Lambda>(val);
@@ -51,85 +51,63 @@ Data *Heap::new_lambda(uint32_t argc) {
   return result;
 }
 
-Data *Heap::new_literal_expression() {
-  Data *val = allocate_object(LiteralExpression::kSize, roots().literal_expression_class());
-  if (is<AllocationFailed>(val)) return val;
-  LiteralExpression *result = cast<LiteralExpression>(val);
-  return result;
+Data *Heap::allocate_literal_expression() {
+  return allocate_object(LiteralExpression::kSize, roots().literal_expression_class());
 }
 
-Data *Heap::new_invoke_expression() {
-  Data *val = allocate_object(InvokeExpression::kSize, roots().invoke_expression_class());
-  if (is<AllocationFailed>(val)) return val;
-  InvokeExpression *result = cast<InvokeExpression>(val);
-  return result;
+Data *Heap::allocate_invoke_expression() {
+  return allocate_object(InvokeExpression::kSize, roots().invoke_expression_class());
 }
 
-Data *Heap::new_call_expression() {
-  Data *val = allocate_object(CallExpression::kSize, roots().call_expression_class());
-  if (is<AllocationFailed>(val)) return val;
-  CallExpression *result = cast<CallExpression>(val);
-  return result;
+Data *Heap::allocate_call_expression() {
+  return allocate_object(CallExpression::kSize, roots().call_expression_class());
 }
 
-Data *Heap::new_conditional_expression() {
-  Data *val = allocate_object(ConditionalExpression::kSize, roots().conditional_expression_class());
-  if (is<AllocationFailed>(val)) return val;
-  ConditionalExpression *result = cast<ConditionalExpression>(val);
-  return result;
+Data *Heap::allocate_conditional_expression() {
+  return allocate_object(ConditionalExpression::kSize, roots().conditional_expression_class());
 }
 
-Data *Heap::new_class_expression() {
-  Data *val = allocate_object(ClassExpression::kSize, roots().class_expression_class());
-  if (is<AllocationFailed>(val)) return val;
-  ClassExpression *result = cast<ClassExpression>(val);
-  return result;
+Data *Heap::allocate_class_expression() {
+  return allocate_object(ClassExpression::kSize, roots().class_expression_class());
 }
 
 
-Data *Heap::new_return_expression() {
-  Data *val = allocate_object(ReturnExpression::kSize, roots().return_expression_class());
-  if (is<AllocationFailed>(val)) return val;
-  ReturnExpression *result = cast<ReturnExpression>(val);
-  return result;
+Data *Heap::allocate_return_expression() {
+  return allocate_object(ReturnExpression::kSize, roots().return_expression_class());
 }
 
 
-Data *Heap::new_method_expression() {
-  Data *val = allocate_object(MethodExpression::kSize, roots().method_expression_class());
-  if (is<AllocationFailed>(val)) return val;
-  MethodExpression *result = cast<MethodExpression>(val);
-  return result;
+Data *Heap::allocate_method_expression() {
+  return allocate_object(MethodExpression::kSize, roots().method_expression_class());
 }
 
 
-Data *Heap::new_sequence_expression() {
-  Data *val = allocate_object(SequenceExpression::kSize, roots().sequence_expression_class());
-  if (is<AllocationFailed>(val)) return val;
-  SequenceExpression *result = cast<SequenceExpression>(val);
-  return result;
+Data *Heap::allocate_sequence_expression() {
+  return allocate_object(SequenceExpression::kSize, roots().sequence_expression_class());
 }
 
-
-Data *Heap::new_tuple_expression() {
-  Data *val = allocate_object(TupleExpression::kSize, roots().tuple_expression_class());
-  if (is<AllocationFailed>(val)) return val;
-  TupleExpression *result = cast<TupleExpression>(val);
-  return result;
+Data *Heap::allocate_tuple_expression() {
+  return allocate_object(TupleExpression::kSize, roots().tuple_expression_class());
 }
 
-Data *Heap::new_global_expression() {
-  Data *val = allocate_object(GlobalExpression::kSize, roots().global_expression_class());
-  if (is<AllocationFailed>(val)) return val;
-  GlobalExpression *result = cast<GlobalExpression>(val);
-  return result;
+Data *Heap::allocate_global_expression() {
+  return allocate_object(GlobalExpression::kSize, roots().global_expression_class());
 }
 
-Data *Heap::new_symbol() {
-  Data *val = allocate_object(Symbol::kSize, roots().symbol_class());
-  if (is<AllocationFailed>(val)) return val;
-  Symbol *result = cast<Symbol>(val);
-  return result;  
+Data *Heap::allocate_symbol() {
+  return allocate_object(Symbol::kSize, roots().symbol_class());
+}
+
+Data *Heap::allocate_quote_expression() {
+  return allocate_object(QuoteExpression::kSize, roots().quote_expression_class());
+}
+
+Data *Heap::allocate_lambda_expression() {
+  return allocate_object(LambdaExpression::kSize, roots().lambda_expression_class());
+}
+
+Data *Heap::new_this_expression() {
+  return allocate_object(ThisExpression::kSize, roots().this_expression_class());
 }
 
 Data *Heap::new_empty_class(InstanceType instance_type) {
@@ -151,11 +129,8 @@ Data *Heap::new_method(String *name, Lambda *lambda) {
   return result;
 }
 
-Data *Heap::new_method() {
-  Data *val = allocate_object(Method::kSize, roots().method_class());
-  if (is<AllocationFailed>(val)) return val;
-  Method *result = cast<Method>(val);
-  return result;
+Data *Heap::allocate_method() {
+  return allocate_object(Method::kSize, roots().method_class());
 }
 
 Data *Heap::new_string(string value) {

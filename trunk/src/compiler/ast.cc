@@ -101,6 +101,9 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
   case RETURN_EXPRESSION_TYPE:
     unparse_return_expression(cast<ReturnExpression>(obj), buf);
     break;
+  case THIS_EXPRESSION_TYPE:
+    buf.append("this");
+    break;
   default:
     UNHANDLED(InstanceType, type);
   }
@@ -137,6 +140,12 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
     return visitor.visit_symbol(cast<Symbol>(self));
   case GLOBAL_EXPRESSION_TYPE:
     return visitor.visit_global_expression(cast<GlobalExpression>(self));
+  case THIS_EXPRESSION_TYPE:
+    return visitor.visit_this_expression(cast<ThisExpression>(self));
+  case QUOTE_EXPRESSION_TYPE:
+    return visitor.visit_quote_expression(cast<QuoteExpression>(self));
+  case LAMBDA_EXPRESSION_TYPE:
+    return visitor.visit_lambda_expression(cast<LambdaExpression>(self));
   default:
     UNHANDLED(InstanceType, type);
   }
@@ -185,6 +194,7 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
     break;
   }
   case LITERAL_EXPRESSION_TYPE: case GLOBAL_EXPRESSION_TYPE:
+  case THIS_EXPRESSION_TYPE:
     break;
   default:
     UNHANDLED(InstanceType, type);
@@ -227,6 +237,18 @@ void Visitor::visit_global_expression(ref<GlobalExpression> that) {
 }
 
 void Visitor::visit_symbol(ref<Symbol> that) {
+  visit_syntax_tree(that);
+}
+
+void Visitor::visit_this_expression(ref<ThisExpression> that) {
+  visit_syntax_tree(that);
+}
+
+void Visitor::visit_quote_expression(ref<QuoteExpression> that) {
+  visit_syntax_tree(that);
+}
+
+void Visitor::visit_lambda_expression(ref<LambdaExpression> that) {
   visit_syntax_tree(that);
 }
 

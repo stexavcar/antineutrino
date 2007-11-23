@@ -255,9 +255,9 @@ static void write_object_on(Object *obj, string_buffer &buf) {
   case LAMBDA_TYPE:
     write_lambda_on(cast<Lambda>(obj), buf);
     break;
-  case LITERAL_EXPRESSION_TYPE:
-  case INVOKE_EXPRESSION_TYPE:
-  case CLASS_EXPRESSION_TYPE:
+#define MAKE_CASE(n, NAME, Name) case NAME##_TYPE:
+FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
+#undef MAKE_CASE
     write_syntax_tree_on(cast<SyntaxTree>(obj), buf);
     break;
   case DICTIONARY_TYPE:

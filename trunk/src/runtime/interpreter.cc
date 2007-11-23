@@ -51,7 +51,10 @@ Class *Interpreter::get_class(Value *value) {
  */
 Data *Interpreter::lookup_method(Class *chlass, Value *name) {
   while (true) {
-    ASSERT(!chlass->is_empty());
+    if (chlass->is_empty()) {
+      scoped_string chlass_str(chlass->name()->to_string());
+      Conditions::get().error_occurred("Class %s is empty.", chlass_str.chars());
+    }
     Tuple *methods = chlass->methods();
     for (uint32_t i = 0; i < methods->length(); i++) {
       Method *method = cast<Method>(methods->at(i));

@@ -57,6 +57,7 @@ public:
   virtual void visit_call_expression(ref<CallExpression> that);
   virtual void visit_symbol(ref<Symbol> that);
   virtual void visit_conditional_expression(ref<ConditionalExpression> that);
+  virtual void visit_quote_expression(ref<QuoteExpression> that);
 
 private:
   Factory &factory() { return runtime().factory(); }
@@ -245,6 +246,10 @@ void Assembler::visit_return_expression(ref<ReturnExpression> that) {
 }
 
 void Assembler::visit_literal_expression(ref<LiteralExpression> that) {
+  __ push(that.value());
+}
+
+void Assembler::visit_quote_expression(ref<QuoteExpression> that) {
   __ push(that.value());
 }
 
