@@ -36,7 +36,7 @@ template <>
 static inline bool is<ImageSyntaxTree>(ImageData *data) {
   if (!is<ImageObject>(data)) return false;
   switch (image_cast<ImageObject>(data)->type()) {
-#define MAKE_CASE(n, NAME, Name) case NAME##_TYPE: return true;
+#define MAKE_CASE(n, NAME, Name, info) case NAME##_TYPE: return true;
 FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 #undef MAKE_CASE
       return true;
@@ -60,7 +60,7 @@ DEFINE_IMAGE_OBJECT_QUERY(Dictionary, DICTIONARY)
 DEFINE_IMAGE_OBJECT_QUERY(Class, CLASS)
 DEFINE_IMAGE_OBJECT_QUERY(Method, METHOD)
 DEFINE_IMAGE_OBJECT_QUERY(Root, SINGLETON)
-#define DEFINE_SYNTAX_TREE_QUERY(n, NAME, Name) DEFINE_IMAGE_OBJECT_QUERY(Name, NAME)
+#define DEFINE_SYNTAX_TREE_QUERY(n, NAME, Name, info) DEFINE_IMAGE_OBJECT_QUERY(Name, NAME)
 FOR_EACH_SYNTAX_TREE_TYPE(DEFINE_SYNTAX_TREE_QUERY)
 #undef DEFINE_SYNTAX_TREE_QUERY
 

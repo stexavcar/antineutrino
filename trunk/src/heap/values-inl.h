@@ -21,7 +21,7 @@ namespace neutrino {
  */
 template <class C> class ValueInfo { };
 
-#define SPECIALIZE_VALUE_INFO(n, NAME, Name)                         \
+#define SPECIALIZE_VALUE_INFO(n, NAME, Name, info)                   \
 template <> class ValueInfo<Name> {                                  \
 public:                                                              \
   static const int kTag = NAME##_TYPE;                               \
@@ -70,14 +70,14 @@ template <>
 inline bool is<SyntaxTree>(Data *val) {
   if (!is<Object>(val)) return false;
   switch (cast<Object>(val)->type()) {
-#define MAKE_CASE(n, NAME, Name) case NAME##_TYPE: return true;
+#define MAKE_CASE(n, NAME, Name, info) case NAME##_TYPE: return true;
 FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 #undef MAKE_CASE
     default: return false;
   }
 }
 
-#define DEFINE_QUERY(n, NAME, Name)                                  \
+#define DEFINE_QUERY(n, NAME, Name, info)                            \
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
     return is<Object>(val)                                           \
@@ -96,7 +96,7 @@ inline bool is<Signal>(Data *val) {
   return ValuePointer::has_signal_tag(val);
 }
 
-#define DEFINE_SIGNAL_QUERY(n, NAME, Name)                           \
+#define DEFINE_SIGNAL_QUERY(n, NAME, Name, info)                     \
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
     return is<Signal>(val)                                           \

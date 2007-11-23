@@ -1661,7 +1661,7 @@ def read_consts(file):
     defines.add(name, Macro(args, body))
   return defines
 
-def define_type_tag(n, TYPE, Type):
+def define_type_tag(n, TYPE, Type, info):
   globals()[TYPE + '_TYPE'] = int(n)
 
 def define_opcode(n, NAME, argc):
@@ -1674,7 +1674,7 @@ class BuiltinClassInfo:
     self.instance_type = instance_type
     self.class_name = class_name
 
-def define_root(n, Class, name, NAME, allocator):
+def define_root(n, Class, name, Name, NAME, allocator):
   globals()[NAME + '_ROOT'] = int(n)
 
 def define_image_object_const(n, Type, Name):

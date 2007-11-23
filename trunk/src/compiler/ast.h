@@ -350,20 +350,11 @@ class Visitor {
 public:
   virtual ~Visitor();
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
-  virtual void visit_literal_expression(ref<LiteralExpression> that);
-  virtual void visit_return_expression(ref<ReturnExpression> that);
-  virtual void visit_sequence_expression(ref<SequenceExpression> that);
-  virtual void visit_invoke_expression(ref<InvokeExpression> that);
-  virtual void visit_tuple_expression(ref<TupleExpression> that);
-  virtual void visit_global_expression(ref<GlobalExpression> that);
-  virtual void visit_call_expression(ref<CallExpression> that);
-  virtual void visit_conditional_expression(ref<ConditionalExpression> that);
-  virtual void visit_symbol(ref<Symbol> that);
-  virtual void visit_this_expression(ref<ThisExpression> that);
-  virtual void visit_quote_expression(ref<QuoteExpression> that);
-  virtual void visit_lambda_expression(ref<LambdaExpression> that);
+#define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
+  virtual void visit_##name(ref<Name> that);
+FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
+#undef MAKE_VISIT_METHOD
 };
-
 
 }
 

@@ -122,30 +122,11 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
   InstanceType type = this->type();
   ref<SyntaxTree> self = open(this);
   switch (type) {
-  case LITERAL_EXPRESSION_TYPE:
-    return visitor.visit_literal_expression(cast<LiteralExpression>(self));
-  case RETURN_EXPRESSION_TYPE:
-    return visitor.visit_return_expression(cast<ReturnExpression>(self));
-  case SEQUENCE_EXPRESSION_TYPE:
-    return visitor.visit_sequence_expression(cast<SequenceExpression>(self));
-  case INVOKE_EXPRESSION_TYPE:
-    return visitor.visit_invoke_expression(cast<InvokeExpression>(self));
-  case CALL_EXPRESSION_TYPE:
-    return visitor.visit_call_expression(cast<CallExpression>(self));
-  case CONDITIONAL_EXPRESSION_TYPE:
-    return visitor.visit_conditional_expression(cast<ConditionalExpression>(self));
-  case TUPLE_EXPRESSION_TYPE:
-    return visitor.visit_tuple_expression(cast<TupleExpression>(self));
-  case SYMBOL_TYPE:
-    return visitor.visit_symbol(cast<Symbol>(self));
-  case GLOBAL_EXPRESSION_TYPE:
-    return visitor.visit_global_expression(cast<GlobalExpression>(self));
-  case THIS_EXPRESSION_TYPE:
-    return visitor.visit_this_expression(cast<ThisExpression>(self));
-  case QUOTE_EXPRESSION_TYPE:
-    return visitor.visit_quote_expression(cast<QuoteExpression>(self));
-  case LAMBDA_EXPRESSION_TYPE:
-    return visitor.visit_lambda_expression(cast<LambdaExpression>(self));
+#define MAKE_VISIT(n, NAME, Name, name)                              \
+  case NAME##_TYPE:                                                  \
+    return visitor.visit_##name(cast<Name>(self));
+FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT)
+#undef MAKE_VISIT
   default:
     UNHANDLED(InstanceType, type);
   }
@@ -208,52 +189,11 @@ void Visitor::visit_syntax_tree(ref<SyntaxTree> that) {
   that.traverse(*this);
 }
 
-void Visitor::visit_literal_expression(ref<LiteralExpression> that) {
-  visit_syntax_tree(that);
-}
-
-void Visitor::visit_return_expression(ref<ReturnExpression> that) {
-  visit_syntax_tree(that);
-}
-
-void Visitor::visit_sequence_expression(ref<SequenceExpression> that) {
-  visit_syntax_tree(that);
-}
-
-void Visitor::visit_invoke_expression(ref<InvokeExpression> that) {
-  visit_syntax_tree(that);
-}
-
-void Visitor::visit_call_expression(ref<CallExpression> that) {
-  visit_syntax_tree(that);
-}
-
-void Visitor::visit_tuple_expression(ref<TupleExpression> that) {
-  visit_syntax_tree(that);
-}
-
-void Visitor::visit_global_expression(ref<GlobalExpression> that) {
-  visit_syntax_tree(that);
-}
-
-void Visitor::visit_symbol(ref<Symbol> that) {
-  visit_syntax_tree(that);
-}
-
-void Visitor::visit_this_expression(ref<ThisExpression> that) {
-  visit_syntax_tree(that);
-}
-
-void Visitor::visit_quote_expression(ref<QuoteExpression> that) {
-  visit_syntax_tree(that);
-}
-
-void Visitor::visit_lambda_expression(ref<LambdaExpression> that) {
-  visit_syntax_tree(that);
-}
-
-void Visitor::visit_conditional_expression(ref<ConditionalExpression> that) {
-  visit_syntax_tree(that);
-}
+#define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
+  void Visitor::visit_##name(ref<Name> that) {                       \
+    visit_syntax_tree(that);                                         \
+  }
+FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
+#undef MAKE_VISIT_METHOD
 
 }

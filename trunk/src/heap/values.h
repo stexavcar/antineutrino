@@ -11,7 +11,7 @@ namespace neutrino {
 
 enum InstanceType {
   __first_instance_type = 0
-#define DECLARE_INSTANCE_TYPE(n, NAME, Name) , NAME##_TYPE = n
+#define DECLARE_INSTANCE_TYPE(n, NAME, Name, info) , NAME##_TYPE = n
 FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
 #undef DECLARE_INSTANCE_TYPE
 };
@@ -420,7 +420,7 @@ public:
   inline uint32_t payload();
   enum Type {
     FIRST_SIGNAL_TYPE = -1
-#define DECLARE_SIGNAL_TYPE(n, NAME, Name) , NAME
+#define DECLARE_SIGNAL_TYPE(n, NAME, Name, info) , NAME
 FOR_EACH_SIGNAL_TYPE(DECLARE_SIGNAL_TYPE)
 #undef DECLARE_SIGNAL_TYPE
   };
