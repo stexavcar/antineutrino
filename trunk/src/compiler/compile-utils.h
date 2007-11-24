@@ -14,11 +14,13 @@ public:
   inline ref<Value> operator[](uint32_t index);
   inline Value *get(uint32_t index);
   void append(ref<Value> value);
+  void extend_capacity();
 private:
   Factory &factory() { return factory_; }
-  permanent<Tuple> data() { return data_; }
+  persistent<Tuple> data() { return data_; }
+  void set_data(persistent<Tuple> value) { data_ = value; }
   Factory &factory_;
-  permanent<Tuple> data_;
+  persistent<Tuple> data_;
   uint32_t length_;
 };
 

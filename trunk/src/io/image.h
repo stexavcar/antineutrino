@@ -47,6 +47,10 @@ public:
   uint32_t memory_size();
 };
 
+class ImageSyntaxTree : public ImageObject {
+  
+};
+
 class ImageClass : public ImageObject {
 public:
   inline uint32_t instance_type();
@@ -79,8 +83,9 @@ public:
 class ImageLambda : public ImageObject {
 public:
   inline uint32_t argc();
-  inline ImageCode *code();
-  inline ImageTuple *literals();
+  inline ImageValue *code();
+  inline ImageValue *literals();
+  inline ImageSyntaxTree *tree();
 };
 
 class ImageMethod : public ImageObject {
@@ -102,10 +107,6 @@ public:
 // -------------------------------
 // --- S y n t a x   T r e e s ---
 // -------------------------------
-
-class ImageSyntaxTree : public ImageObject {
-  
-};
 
 class ImageLiteralExpression : public ImageSyntaxTree {
 public:
@@ -183,6 +184,12 @@ public:
 };
 
 class ImageThisExpression : public ImageSyntaxTree {
+};
+
+class ImageBuiltinCall : public ImageSyntaxTree {
+public:
+  inline uint32_t argc();
+  inline uint32_t index();
 };
 
 template <class C>

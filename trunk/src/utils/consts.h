@@ -68,24 +68,8 @@
   VISIT(60, CONDITIONAL_EXPRESSION, ConditionalExpression, conditional_expression) \
   VISIT(61, QUOTE_EXPRESSION,       QuoteExpression,       quote_expression)       \
   VISIT(62, THIS_EXPRESSION,        ThisExpression,        this_expression)        \
-  VISIT(63, LAMBDA_EXPRESSION,      LambdaExpression,      lambda_expression)
-
-
-// ---------------------
-// --- O p c o d e s ---
-// ---------------------
-
-/**
- * This index defines all opcodes, their index and the number of
- * arguments they expect.
- */
-#define FOR_EACH_OPCODE(VISIT)                                       \
-  VISIT(0,  PUSH,  1)   VISIT(1,  RETURN, 0) VISIT(2,  GLOBAL,   1)  \
-  VISIT(3,  CALL,  1)   VISIT(4,  SLAP,   1) VISIT(5,  ARGUMENT, 1)  \
-  VISIT(6,  VOID,  0)   VISIT(7,  NULL,  0)  VISIT(8,  TRUE,     0)  \
-  VISIT(9,  FALSE, 0)   VISIT(10, POP,    1) VISIT(11, IF_TRUE,  1)  \
-  VISIT(12, GOTO,  1)   VISIT(13, INVOKE, 2) VISIT(14, INTERNAL, 2)  \
-  VISIT(15, TUPLE, 1)
+  VISIT(63, LAMBDA_EXPRESSION,      LambdaExpression,      lambda_expression)      \
+  VISIT(64, BUILTIN_CALL,           BuiltinCall,           builtin_call)
 
 
 // -------------------------------------
@@ -106,7 +90,8 @@
   VISIT(1, Lambda,                ArgcOffset)                        \
   VISIT(2, Lambda,                CodeOffset)                        \
   VISIT(3, Lambda,                LiteralsOffset)                    \
-  VISIT(4, Lambda,                Size)                              \
+  VISIT(4, Lambda,                TreeOffset)                        \
+  VISIT(5, Lambda,                Size)                              \
   VISIT(1, Class,                 InstanceTypeOffset)                \
   VISIT(2, Class,                 MethodsOffset)                     \
   VISIT(3, Class,                 SuperOffset)                       \
@@ -153,7 +138,10 @@
   VISIT(2, QuoteExpression,       Size)                              \
   VISIT(1, LambdaExpression,      ParamsOffset)                      \
   VISIT(2, LambdaExpression,      BodyOffset)                        \
-  VISIT(3, LambdaExpression,      Size)
+  VISIT(3, LambdaExpression,      Size)                              \
+  VISIT(1, BuiltinCall,           ArgcOffset)                        \
+  VISIT(2, BuiltinCall,           IndexOffset)                       \
+  VISIT(3, BuiltinCall,           Size)
 
 
 // -----------------
@@ -197,7 +185,8 @@
   VISIT(29, Class,      conditional_expression_class, ConditionalExpression, CONDITIONAL_EXPRESSION_CLASS, new_empty_class(CONDITIONAL_EXPRESSION_TYPE)) \
   VISIT(30, Class,      this_expression_class,        ThisExpression,        THIS_EXPRESSION_CLASS,        new_empty_class(THIS_EXPRESSION_TYPE))        \
   VISIT(31, Class,      quote_expression_class,       QuoteExpression,       QUOTE_EXPRESSION_CLASS,       new_empty_class(QUOTE_EXPRESSION_TYPE))       \
-  VISIT(32, Class,      lambda_expression_class,      LambdaExpression,      LAMBDA_EXPRESSION_CLASS,      new_empty_class(LAMBDA_EXPRESSION_TYPE))
+  VISIT(32, Class,      lambda_expression_class,      LambdaExpression,      LAMBDA_EXPRESSION_CLASS,      new_empty_class(LAMBDA_EXPRESSION_TYPE))      \
+  VISIT(33, Class,      builtin_call_class,           BuiltinCall,           BUILTIN_CALL_CLASS,           new_empty_class(BUILTIN_CALL_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \

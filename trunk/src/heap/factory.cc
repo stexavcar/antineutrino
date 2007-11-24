@@ -18,9 +18,9 @@ ref<Tuple> Factory::new_tuple(uint32_t size) {
   return new_ref(cast<Tuple>(result));
 }
 
-ref<Lambda> Factory::new_lambda(uint32_t argc, ref<Code> code,
-    ref<Tuple> literals) {
-  Data *result = runtime().heap().new_lambda(argc, *code, *literals);
+ref<Lambda> Factory::new_lambda(uint32_t argc, ref<Value> code,
+    ref<Value> literals, ref<LambdaExpression> tree) {
+  Data *result = runtime().heap().new_lambda(argc, *code, *literals, *tree);
   return new_ref(cast<Lambda>(result));
 }
 

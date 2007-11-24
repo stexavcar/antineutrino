@@ -20,8 +20,9 @@ class Label;
 
 class Assembler : public Visitor {
 public:
-  Assembler(Runtime &runtime)
-      : runtime_(runtime)
+  Assembler(ref<LambdaExpression> lambda, Runtime &runtime)
+      : lambda_(lambda)
+      , runtime_(runtime)
       , pool_(runtime.factory())
       , scope_(NULL) { }
   void initialize() { pool().initialize(); }
@@ -40,30 +41,27 @@ public:
   void rethurn();
   void invoke(ref<String> name, uint16_t argc);
   void call(uint16_t argc);
-  void tuple(uint32_t size);
+  void tuple(uint16_t size);
   void global(ref<Value> name);
   void argument(uint16_t index);
   void if_true(Label &label);
   void ghoto(Label &label);
   void bind(Label &label);
+  void builtin(uint16_t argc, uint16_t index);
   
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
-  virtual void visit_literal_expression(ref<LiteralExpression> that);
-  virtual void visit_return_expression(ref<ReturnExpression> that);
-  virtual void visit_sequence_expression(ref<SequenceExpression> that);
-  virtual void visit_invoke_expression(ref<InvokeExpression> that);
-  virtual void visit_tuple_expression(ref<TupleExpression> that);
-  virtual void visit_global_expression(ref<GlobalExpression> that);
-  virtual void visit_call_expression(ref<CallExpression> that);
-  virtual void visit_symbol(ref<Symbol> that);
-  virtual void visit_conditional_expression(ref<ConditionalExpression> that);
-  virtual void visit_quote_expression(ref<QuoteExpression> that);
+#define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
+  virtual void visit_##name(ref<Name> that);
+FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
+#undef MAKE_VISIT_METHOD
 
 private:
+  ref<LambdaExpression> lambda() { return lambda_; }
   Factory &factory() { return runtime().factory(); }
   Runtime &runtime() { return runtime_; }
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }
+  ref<LambdaExpression> lambda_;
   Runtime &runtime_;
   list_buffer<uint16_t> code_;
   heap_list pool_;
@@ -101,7 +99,7 @@ uint16_t Assembler::constant_pool_index(ref<Value> value) {
   for (uint16_t i = 0; i < pool.length(); i++) {
     RefScope scope;
     ref<Value> entry = pool[i];
-    if (entry->equals(*value)) return i;
+    if (entry->is_identical(*value)) return i;
   }
   uint16_t result = pool.length();
   pool.append(value);
@@ -159,10 +157,17 @@ void Assembler::rethurn() {
   code().append(OC_RETURN);
 }
 
-void Assembler::tuple(uint32_t size) {
+void Assembler::tuple(uint16_t size) {
   STATIC_CHECK(OpcodeInfo<OC_TUPLE>::kArgc == 1);
   code().append(OC_TUPLE);
   code().append(size);
+}
+
+void Assembler::builtin(uint16_t argc, uint16_t index) {
+  STATIC_CHECK(OpcodeInfo<OC_BUILTIN>::kArgc == 2);
+  code().append(OC_BUILTIN);
+  code().append(argc);
+  code().append(index);
 }
 
 void Assembler::if_true(Label &label) {
@@ -325,6 +330,25 @@ void Assembler::visit_conditional_expression(ref<ConditionalExpression> that) {
   __ bind(end);
 }
 
+void Assembler::visit_this_expression(ref<ThisExpression> that) {
+  __ argument(lambda()->params()->length() + 1);
+}
+
+void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
+  __ builtin(that->argc(), that->index());
+}
+
+void Assembler::visit_class_expression(ref<ClassExpression> that) {
+  visit_syntax_tree(that);
+}
+
+void Assembler::visit_lambda_expression(ref<LambdaExpression> that) {
+  visit_syntax_tree(that);
+}
+
+void Assembler::visit_method_expression(ref<MethodExpression> that) {
+  visit_syntax_tree(that);
+}
 
 // -----------------------
 // --- C o m p i l e r ---
@@ -333,7 +357,7 @@ void Assembler::visit_conditional_expression(ref<ConditionalExpression> that) {
 class CompileSession {
 public:
   CompileSession(Runtime &runtime);
-  ref<Lambda> compile(ref<MethodExpression> tree);
+  void compile(ref<Lambda> tree);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
@@ -343,20 +367,35 @@ CompileSession::CompileSession(Runtime &runtime)
     : runtime_(runtime) { }
 
 ref<Lambda> Compiler::compile(ref<MethodExpression> method) {
-  CompileSession session(Runtime::current());
-  return session.compile(method);
+  Runtime &runtime = Runtime::current();
+  CompileSession session(runtime);
+  ref<LambdaExpression> lambda_expr = method.lambda();
+  ref<Lambda> lambda = runtime.factory().new_lambda(
+    lambda_expr->params()->length(),
+    runtime.vhoid(),
+    runtime.vhoid(),
+    lambda_expr
+  );
+  return lambda;
 }
 
-ref<Lambda> CompileSession::compile(ref<MethodExpression> method) {
-  Assembler assembler(runtime());
-  ref<Tuple> params = method.lambda().params();
+void Compiler::compile(ref<Lambda> lambda) {
+  CompileSession session(Runtime::current());
+  session.compile(lambda);
+}
+
+void CompileSession::compile(ref<Lambda> lambda) {
+  ref<LambdaExpression> tree = lambda.tree();
+  Assembler assembler(tree, runtime());
+  ref<Tuple> params = tree.params();
   Scope scope(params, NULL);
   assembler.set_scope(scope);
   assembler.initialize();
-  method.lambda().body().accept(assembler);
+  tree.body().accept(assembler);
   ref<Code> code = assembler.flush_code();
   ref<Tuple> constant_pool = assembler.flush_constant_pool();
-  return runtime().factory().new_lambda(params.length(), code, constant_pool);
+  lambda->set_code(*code);
+  lambda->set_literals(*constant_pool);
 }
 
 } // neutrino

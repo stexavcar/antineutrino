@@ -107,15 +107,15 @@ public:
 };
 
 template <class C>
-class permanent : public ref<C> {
+class persistent : public ref<C> {
 public:
-  inline permanent(C **cell) : ref<C>(cell) { }
-  inline permanent() : ref<C>() { }
+  inline persistent(C **cell) : ref<C>(cell) { }
+  inline persistent() : ref<C>() { }
   inline void dispose() { delete this->cell_; }
 };
 
 template <class C> static inline ref<C> new_ref(C *obj);
-template <class C> static inline permanent<C> new_permanent(C *obj);
+template <class C> static inline persistent<C> new_persistent(C *obj);
 
 }
 

@@ -339,6 +339,31 @@ public:
   static const uint32_t kSize = SyntaxTree::kHeaderSize;
 };
 
+
+// -------------------------------
+// --- B u i l t i n   C a l l ---
+// -------------------------------
+
+class BuiltinCall : public SyntaxTree {
+public:
+  DECLARE_FIELD(uint32_t, argc);
+  DECLARE_FIELD(uint32_t, index);
+
+  static const uint32_t kArgcOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kIndexOffset = kArgcOffset + kPointerSize;
+  static const uint32_t kSize = kIndexOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<BuiltinCall> : public ref_traits<SyntaxTree> {
+public:
+  inline uint32_t argc();
+  inline uint32_t index();
+};
+
+DEFINE_REF_CLASS(BuiltinCall);
+
+
 // ---------------------
 // --- V i s i t o r ---
 // ---------------------

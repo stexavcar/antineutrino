@@ -191,8 +191,9 @@ uint32_t ImageCode::at(uint32_t index) {
 
 DEFINE_RAW_GETTER(uint32_t, Lambda, argc, Argc)
 
-DEFINE_GETTER(Code, Lambda, code, Code)
-DEFINE_GETTER(Tuple, Lambda, literals, Literals)
+DEFINE_GETTER(Value, Lambda, code, Code)
+DEFINE_GETTER(Value, Lambda, literals, Literals)
+DEFINE_GETTER(SyntaxTree, Lambda, tree, Tree)
 
 DEFINE_GETTER(String, Method, name, Name)
 DEFINE_GETTER(Lambda, Method, lambda, Lambda)
@@ -236,6 +237,10 @@ DEFINE_GETTER(Value, Symbol, name, Name)
 DEFINE_GETTER(SyntaxTree, QuoteExpression, value, Value)
 
 DEFINE_GETTER(String, GlobalExpression, name, Name)
+
+DEFINE_RAW_GETTER(uint32_t, BuiltinCall, argc, Argc)
+DEFINE_RAW_GETTER(uint32_t, BuiltinCall, index, Index)
+
 
 #undef DEFINE_RAW_GETTER
 #undef DEFINE_GETTER

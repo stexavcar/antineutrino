@@ -250,7 +250,7 @@ class Parser:
   def __init__(self, tokens):
     self.tokens = tokens
     self.cursor = 0
-    self.scope = GlobalScope2()
+    self.scope = GlobalScope()
 
   # Returns the current token, or <eof> when reaching the end of the
   # input
@@ -401,7 +401,7 @@ class Parser:
     self.scope = self.scope.parent
 
   def push_scope(self, symbols):
-    self.scope = LocalScope2(self.scope, symbols)
+    self.scope = LocalScope(self.scope, symbols)
 
   # <member_declaration>
   #   -> <modifiers> 'def' <method_header> <method_body>
@@ -411,19 +411,19 @@ class Parser:
     self.expect_keyword('def')
     name = self.parse_member_name()
     params = self.parse_params('(', ')')
-    symbols = [ Symbol(id) for id in params ]
     if 'internal' in modifiers:
       self.expect_delimiter(';')
       key = (class_name, name)
       if not key in BUILTIN_METHODS:
         raise "Unknown built-in method " + str(class_name) + " " + str(name)
       index = BUILTIN_METHODS[key]
-      body = InternalCall(index, len(params))
+      fun = Lambda(params, Return(BuiltinCall(len(params), index)))
     else:
-      self.push_scope(symbols)
+      self.push_scope(params)
       body = self.parse_function_body()
+      fun = Lambda(params, body)
       self.pop_scope()
-    return Method(name, symbols, body)
+    return Method(name, fun)
 
   # <definition>
   #   -> 'def' $ident ':=' <expression> ';'
@@ -440,11 +440,14 @@ class Parser:
       params = self.parse_params('(', ')')
       if 'internal' in modifiers:
         index = BUILTIN_FUNCTIONS[name]
-        body = InternalCall(index, len(params));
+        fun = Lambda(params, Return(BuiltinCall(len(params), index)))
         self.expect_delimiter(';')
       else:
+        self.push_scope(params)
         body = self.parse_function_body()
-      return Definition(name, Lambda(params, body))
+        fun = Lambda(params, body)
+        self.pop_scope()
+      return Definition(name, fun)
 
   # <function-body>
   #   -> '->' <expression>
@@ -471,10 +474,10 @@ class Parser:
     params = []
     self.expect_delimiter(start)
     if self.token().is_ident():
-      params.append(self.expect_ident())
+      params.append(Symbol(self.expect_ident()))
       while self.token().is_delimiter(','):
         self.expect_delimiter(',')
-        params.append(self.expect_ident())
+        params.append(Symbol(self.expect_ident()))
     self.expect_delimiter(end)
     return params
 
@@ -695,22 +698,18 @@ class Class(SyntaxTree):
     return HEAP.new_class_expression(HEAP.new_string(self.name), methods, super.image)
 
 class Method(SyntaxTree):
-  def __init__(self, name, params, body):
+  def __init__(self, name, fun):
     self.name = name
-    self.params = params
-    self.body = body
+    self.fun = fun
   def accept(self, visitor):
     visitor.visit_method(self)
   def traverse(self, visitor):
-    self.body.accept(visitor)
+    self.fun.accept(visitor)
   def compile(self):
-    body = compile_lambda(self.params, self.body)
+    body = self.fun.compile()
     return HEAP.new_method(HEAP.new_string(self.name), body)
   def quote(self):
-    body = self.body.quote()
-    params = [ HEAP.get_symbol(param) for param in self.params ]
-    tuple = HEAP.new_tuple(values = params)
-    fun = HEAP.new_lambda_expression(tuple, body)
+    fun = self.fun.quote()
     return HEAP.new_method_expression(HEAP.new_string(self.name), fun)
 
 class Expression(SyntaxTree):
@@ -718,7 +717,7 @@ class Expression(SyntaxTree):
 
 def quote_value(val):
   if type(val) is int: return val
-  else: raise val
+  else: return val
 
 class Literal(Expression):
   def __init__(self, value):
@@ -727,9 +726,6 @@ class Literal(Expression):
     visitor.visit_literal(self)
   def traverse(self, visitor):
     pass
-  def emit(self, state):
-    index = state.literal_index(self.value)
-    state.write(OC_PUSH, index)
   def quote(self):
     val = quote_value(self.value)
     return HEAP.new_literal_expression(val)
@@ -744,21 +740,11 @@ class Tuple(Expression):
   def quote(self):
     values = HEAP.new_tuple(values = [ value.quote() for value in self.values ])
     return HEAP.new_tuple_expression(values)
-  def emit(self, state):
-    for value in self.values:
-      value.emit(state)
-    state.write(OC_TUPLE, len(self.values))
 
 def compile_lambda(params, body):
-  state = CodeGeneratorState(len(params))
-  try:
-    state.scope = ArgumentScope(state.scope, params)
-    body.emit(state)
-  finally:
-    state.scope = state.scope.parent
-  code = HEAP.new_code(state.code)
-  literals = HEAP.new_tuple(values = state.literals)
-  return HEAP.new_lambda(len(params), code, literals)
+  syms = [ HEAP.get_symbol(param) for param in params ]
+  expr = HEAP.new_lambda_expression(HEAP.new_tuple(values = syms), body.quote())
+  return HEAP.new_lambda(len(params), expr)
 
 class Lambda(Expression):
   def __init__(self, params, body):
@@ -770,27 +756,28 @@ class Lambda(Expression):
     self.body.accept(visitor)
   def quote(self):
     body = self.body.quote()
-    params = [ HEAP.get_symbol(param) for param in self.params ]
-    tuple = HEAP.new_tuple(values = params)
-    return HEAP.new_lambda_expression(tuple, body)
+    syms = [ HEAP.get_symbol(param) for param in self.params ]
+    params = HEAP.new_tuple(values = syms)
+    return HEAP.new_lambda_expression(params, body)
   def compile(self):
     return compile_lambda(self.params, self.body)
+
+class BuiltinCall(Expression):
+  def __init__(self, argc, index):
+    self.argc = argc
+    self.index = index
+  def accept(self, visitor):
+    visitor.visit_builtin_lambda(self)
+  def traverse(self, visitor):
+    pass
+  def quote(self):
+    return HEAP.new_builtin_call(self.argc, self.index)
 
 class Identifier(Expression):
   def accept(self, visitor):
     visitor.visit_identifier(self)
   def traverse(self, visitor):
     pass
-  def emit(self, state):
-    ( type, data ) = state.scope.lookup(self.name)
-    if type == 'argument':
-      scope_index = state.argc - data - 1
-      state.write(OC_ARGUMENT, scope_index)
-    elif type == 'global':
-      index = state.literal_index(HEAP.new_string(self.name))
-      state.write(OC_GLOBAL, index)
-    else:
-      assert False
 
 class Global(Identifier):
   def __init__(self, name):
@@ -821,13 +808,6 @@ class Call(Expression):
     fun = self.fun.quote()
     args = HEAP.new_tuple(values = map(lambda x: x.quote(), self.args))
     return HEAP.new_call_expression(recv, fun, args)
-  def emit(self, state):
-    self.recv.emit(state)
-    self.fun.emit(state)
-    for arg in self.args:
-      arg.emit(state)
-    state.write(OC_CALL, len(self.args))
-    state.write(OC_SLAP, len(self.args) + 1)
 
 class Quote(Expression):
   def __init__(self, value):
@@ -838,10 +818,6 @@ class Quote(Expression):
     self.value.accept(visitor)
   def quote(self):
     return HEAP.new_quote_expression(self.value.quote())
-  def emit(self, state):
-    obj = self.value.quote()
-    index = state.literal_index(obj)
-    state.write(OC_PUSH, index)
 
 class Invoke(Expression):
   def __init__(self, recv, name, args):
@@ -853,31 +829,11 @@ class Invoke(Expression):
   def traverse(self, visitor):
     self.recv.accept(visitor)
     for arg in self.args: arg.accept(visitor)
-  def emit(self, state):
-    self.recv.emit(state)
-    state.write(OC_VOID)
-    for arg in self.args:
-      arg.emit(state)
-    name_index = state.literal_index(HEAP.new_string(self.name))
-    state.write(OC_INVOKE, name_index, len(self.args))
-    state.write(OC_SLAP, len(self.args) + 1)
   def quote(self):
     recv = self.recv.quote()
     name = HEAP.new_string(self.name)
     args = HEAP.new_tuple(values = map(lambda x: x.quote(), self.args))
     return HEAP.new_invoke_expression(recv, name, args)
-
-class InternalCall(Expression):
-  def __init__(self, index, argc):
-    self.index = index
-    self.argc = argc
-  def accept(self, visitor):
-    visitor.visit_internal_call(self)
-  def traverse(self, visitor):
-    pass
-  def emit(self, state):
-    state.write(OC_INTERNAL, self.index, self.argc)
-    state.write(OC_RETURN)
 
 class This(Expression):
   def accept(self, visitor):
@@ -886,8 +842,6 @@ class This(Expression):
     pass
   def quote(self):
     return HEAP.new_this_expression()
-  def emit(self, state):
-    state.write(OC_ARGUMENT, state.argc + 1)
 
 class Void(Expression):
   def accept(self, visitor):
@@ -896,8 +850,6 @@ class Void(Expression):
     pass
   def quote(self):
     return HEAP.new_literal_expression(HEAP.get_root(VOID_ROOT))  
-  def emit(self, state):
-    state.write(OC_VOID)
 
 class Null(Expression):
   def accept(self, visitor):
@@ -906,8 +858,6 @@ class Null(Expression):
     pass
   def quote(self):
     return HEAP.new_literal_expression(HEAP.get_root(NULL_ROOT))  
-  def emit(self, state):
-    state.write(OC_NULL)
 
 class Thrue(Expression):
   def accept(self, visitor):
@@ -916,8 +866,6 @@ class Thrue(Expression):
     pass
   def quote(self):
     return HEAP.new_literal_expression(HEAP.get_root(TRUE_ROOT))  
-  def emit(self, state):
-    state.write(OC_TRUE)
 
 class Fahlse(Expression):
   def accept(self, visitor):
@@ -926,8 +874,6 @@ class Fahlse(Expression):
     pass
   def quote(self):
     return HEAP.new_literal_expression(HEAP.get_root(FALSE_ROOT))  
-  def emit(self, state):
-    state.write(OC_FALSE)
 
 class Return(Expression):
   def __init__(self, value):
@@ -936,9 +882,6 @@ class Return(Expression):
     visitor.visit_return(self)
   def traverse(self, visitor):
     self.value.accept(visitor)
-  def emit(self, state):
-    self.value.emit(state)
-    state.write(OC_RETURN)
   def quote(self):
     return HEAP.new_return_expression(self.value.quote())
 
@@ -953,15 +896,6 @@ class Sequence(Expression):
   def quote(self):
     exprs = HEAP.new_tuple(values = [ expr.quote() for expr in self.exprs ])
     return HEAP.new_sequence_expression(exprs)
-  def emit(self, state):
-    if len(self.exprs) == 0:
-      state.write(OC_VOID)
-    else:
-      first = True
-      for expr in self.exprs:
-        if first: first = False
-        else: state.write(OC_POP, 1)
-        expr.emit(state)
 
 class Conditional(Expression):
   def __init__(self, cond, then_part, else_part):
@@ -976,14 +910,6 @@ class Conditional(Expression):
     self.else_part.accept(visitor)
   def quote(self):
     return HEAP.new_conditional(self.cond.quote(), self.then_part.quote(), self.else_part.quote())
-  def emit(self, state):
-    self.cond.emit(state)
-    if_true_jump = state.write(OC_IF_TRUE, PLACEHOLDER)
-    self.else_part.emit(state)
-    end_jump = state.write(OC_GOTO, PLACEHOLDER)
-    state.bind(if_true_jump)
-    self.then_part.emit(state)
-    state.bind(end_jump)
 
 class Symbol:
   def __init__(self, name):
@@ -1005,7 +931,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 33
+  kRootCount  = 34
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1065,8 +991,8 @@ class Heap:
     self.symbol_object_cache[symbol] = result
     return result
   
-  def new_lambda(self, argc, code, literals):
-    result = ImageLambda(self.allocate(ImageLambda_Size), argc, code, literals)
+  def new_lambda(self, argc, expr):
+    result = ImageLambda(self.allocate(ImageLambda_Size), argc, expr)
     result.set_class(LAMBDA_TYPE)
     return result
 
@@ -1078,6 +1004,11 @@ class Heap:
   def new_lambda_expression(self, params, body):
     result = ImageLambdaExpression(self.allocate(ImageLambdaExpression_Size), params, body);
     result.set_class(LAMBDA_EXPRESSION_TYPE)
+    return result
+
+  def new_builtin_call(self, argc, index):
+    result = ImageBuiltinCall(self.allocate(ImageBuiltinCall_Size), argc, index)
+    result.set_class(BUILTIN_CALL_TYPE)
     return result
 
   def new_quote_expression(self, value):
@@ -1232,17 +1163,30 @@ class ImageTuple(ImageObject):
     HEAP.set_field(self, ImageTuple_HeaderSize + index, value)
 
 class ImageLambda(ImageObject):
-  def __init__(self, addr, argc, code, literals):
+  def __init__(self, addr, argc, tree):
     ImageObject.__init__(self, addr)
     self.set_argc(argc)
-    self.set_code(code)
-    self.set_literals(literals)
+    self.set_code(0)
+    self.set_literals(0)
+    self.set_tree(tree)
   def set_argc(self, value):
     HEAP.set_raw_field(self, ImageLambda_ArgcOffset, value)
   def set_code(self, value):
     HEAP.set_field(self, ImageLambda_CodeOffset, value)
   def set_literals(self, value):
     HEAP.set_field(self, ImageLambda_LiteralsOffset, value)
+  def set_tree(self, value):
+    HEAP.set_field(self, ImageLambda_TreeOffset, value)
+
+class ImageBuiltinCall(ImageObject):
+  def __init__(self, addr, argc, index):
+    ImageObject.__init__(self, addr)
+    self.set_argc(argc)
+    self.set_index(index)
+  def set_argc(self, value):
+    HEAP.set_raw_field(self, ImageBuiltinCall_ArgcOffset, value)
+  def set_index(self, value):
+    HEAP.set_raw_field(self, ImageBuiltinCall_IndexOffset, value)
 
 class ImageMethod(ImageObject):
   def __init__(self, addr, name, body):
@@ -1434,11 +1378,11 @@ class ImageQuoteExpression(ImageSyntaxTree):
 
 PLACEHOLDER = 0xBADDEAD
 
-class GlobalScope2:
+class GlobalScope:
   def lookup(self, name):
     return Global(name)
 
-class LocalScope2:
+class LocalScope:
   def __init__(self, parent, symbols):
     self.symbols = symbols
     self.parent = parent
@@ -1447,37 +1391,6 @@ class LocalScope2:
       if symbol.name == name:
         return Local(symbol)
     return self.parent.lookup(name)
-
-class GlobalScope:
-  def lookup(self, name):
-    return ( 'global', name )
-
-class ArgumentScope:
-  def __init__(self, parent, vars):
-    self.vars = vars
-    self.parent = parent
-  def lookup(self, name):
-    if name in self.vars:
-      return ( 'argument', self.vars.index(name) )
-    else:
-      return self.parent.lookup(name)
-
-class CodeGeneratorState:
-  def __init__(self, argc):
-    self.code = []
-    self.literals = []
-    self.scope = GlobalScope()
-    self.argc = argc
-  def literal_index(self, value):
-    result = len(self.literals)
-    self.literals.append(value)
-    return result
-  def write(self, *args):
-    self.code += args
-    return len(self.code) - 1
-  def bind(self, offset):
-    assert self.code[offset] == PLACEHOLDER
-    self.code[offset] = len(self.code)
 
 def serialize_value(value):
   if type(value) is str:
@@ -1540,6 +1453,8 @@ class Visitor:
   def visit_quote(self, that):
     self.visit_node(that)
   def visit_tuple(self, that):
+    self.visit_node(that)
+  def visit_builtin_lambda(self, that):
     self.visit_node(that)
 
 class LoadVisitor(Visitor):
@@ -1667,9 +1582,6 @@ def read_consts(file):
 def define_type_tag(n, TYPE, Type, info):
   globals()[TYPE + '_TYPE'] = int(n)
 
-def define_opcode(n, NAME, argc):
-  globals()['OC_' + NAME] = int(n)
-
 class BuiltinClassInfo:
   def __init__(self, root_index, name, instance_type, class_name):
     self.root_index = root_index
@@ -1711,7 +1623,6 @@ def define_builtin_function(n, name, string):
 def import_constants(file):
   consts = read_consts(file)
   consts.apply('FOR_EACH_DECLARED_TYPE', define_type_tag)
-  consts.apply('FOR_EACH_OPCODE', define_opcode)
   consts.apply('FOR_EACH_ROOT', define_root)
   consts.apply('FOR_EACH_BUILTIN_CLASS', define_builtin_class)
   consts.apply('FOR_EACH_IMAGE_OBJECT_CONST', define_image_object_const)

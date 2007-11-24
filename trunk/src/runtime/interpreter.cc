@@ -29,6 +29,7 @@ private:
 // -----------------------------
 
 ref<Value> Interpreter::call(ref<Lambda> lambda) {
+  lambda.ensure_compiled();
   Stack stack;
   stack.push(runtime().roots().vhoid()); // initial 'this'
   stack.push(runtime().roots().vhoid()); // initial lambda
@@ -72,26 +73,26 @@ ref<Value> Interpreter::interpret(Stack &stack) {
   Frame current = stack.top();
   uint32_t pc = 0;
   while (true) {
-    uint16_t oc = current.lambda()->code()->at(pc);
+    uint16_t oc = cast<Code>(current.lambda()->code())->at(pc);
     Log::instruction(oc, stack);
     switch (oc) {
     case OC_PUSH: {
-      uint16_t index = current.lambda()->code()->at(pc + 1);
-      Value *value = current.lambda()->literals()->at(index);
+      uint16_t index = cast<Code>(current.lambda()->code())->at(pc + 1);
+      Value *value = cast<Tuple>(current.lambda()->literals())->at(index);
       stack.push(value);
       pc += OpcodeInfo<OC_PUSH>::kSize;
       break;
     }
     case OC_SLAP: {
-      uint16_t height = current.lambda()->code()->at(pc + 1);
+      uint16_t height = cast<Code>(current.lambda()->code())->at(pc + 1);
       stack[height] = stack[0];
       stack.pop(height);
       pc += OpcodeInfo<OC_SLAP>::kSize;
       break;
     }
     case OC_GLOBAL: {
-      uint16_t index = current.lambda()->code()->at(pc + 1);
-      Value *name = current.lambda()->literals()->at(index);
+      uint16_t index = cast<Code>(current.lambda()->code())->at(pc + 1);
+      Value *name = cast<Tuple>(current.lambda()->literals())->at(index);
       Data *value = runtime().toplevel()->get(name);
       if (is<Nothing>(value)) {
         stack.push(runtime().roots().vhoid());
@@ -102,7 +103,7 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       break;
     }
     case OC_ARGUMENT: {
-      uint16_t index = current.lambda()->code()->at(pc + 1);
+      uint16_t index = cast<Code>(current.lambda()->code())->at(pc + 1);
       Value *value = stack.argument(index);
       stack.push(value);
       pc += OpcodeInfo<OC_ARGUMENT>::kSize;
@@ -111,7 +112,7 @@ ref<Value> Interpreter::interpret(Stack &stack) {
     case OC_IF_TRUE: {
       Value *value = stack.pop();
       if (is<True>(value)) {
-        uint16_t index = current.lambda()->code()->at(pc + 1);
+        uint16_t index = cast<Code>(current.lambda()->code())->at(pc + 1);
         pc = index;
       } else {
         pc += OpcodeInfo<OC_IF_TRUE>::kSize;
@@ -119,14 +120,14 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       break;
     }
     case OC_GOTO: {
-      uint16_t address = current.lambda()->code()->at(pc + 1);
+      uint16_t address = cast<Code>(current.lambda()->code())->at(pc + 1);
       pc = address;
       break;
     }
     case OC_INVOKE: {
-      uint16_t name_index = current.lambda()->code()->at(pc + 1);
-      Value *name = current.lambda()->literals()->at(name_index);
-      uint16_t argc = current.lambda()->code()->at(pc + 2);
+      uint16_t name_index = cast<Code>(current.lambda()->code())->at(pc + 1);
+      Value *name = cast<Tuple>(current.lambda()->literals())->at(name_index);
+      uint16_t argc = cast<Code>(current.lambda()->code())->at(pc + 2);
       Value *recv = stack[argc + 1];
       Class *chlass = get_class(recv);
       Data *lookup_result = lookup_method(chlass, name);
@@ -140,14 +141,16 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       Frame next = stack.push_activation();
       next.prev_pc() = pc + OpcodeInfo<OC_INVOKE>::kSize;
       next.lambda() = method->lambda();
+      new_ref(method->lambda()).ensure_compiled();
       current = next;
       pc = 0;
       break;
     }
     case OC_CALL: {
-      uint16_t argc = current.lambda()->code()->at(pc + 1);
+      uint16_t argc = cast<Code>(current.lambda()->code())->at(pc + 1);
       Value *value = stack[argc];
       Lambda *fun = cast<Lambda>(value);
+      new_ref(fun).ensure_compiled();
       Frame next = stack.push_activation();
       next.prev_pc() = pc + OpcodeInfo<OC_CALL>::kSize;
       next.lambda() = fun;
@@ -155,14 +158,14 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       pc = 0;
       break;
     }
-    case OC_INTERNAL: {
-      uint16_t index = current.lambda()->code()->at(pc + 1);
-      uint16_t argc = current.lambda()->code()->at(pc + 2);
+    case OC_BUILTIN: {
+      uint16_t argc = cast<Code>(current.lambda()->code())->at(pc + 1);
+      uint16_t index = cast<Code>(current.lambda()->code())->at(pc + 2);
       Builtin *builtin = Builtins::get(index);
       Arguments args(runtime(), argc, stack);
       Value *value = builtin(args);
       stack.push(value);
-      pc += OpcodeInfo<OC_INTERNAL>::kSize;
+      pc += OpcodeInfo<OC_BUILTIN>::kSize;
       break;
     }
     case OC_RETURN: {
@@ -195,13 +198,13 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       break;
     }
     case OC_POP: {
-      uint16_t height = current.lambda()->code()->at(pc + 1);
+      uint16_t height = cast<Code>(current.lambda()->code())->at(pc + 1);
       stack.pop(height);
       pc += OpcodeInfo<OC_POP>::kSize;
       break;
     }
     case OC_TUPLE: {
-      uint16_t length = current.lambda()->code()->at(pc + 1);
+      uint16_t length = cast<Code>(current.lambda()->code())->at(pc + 1);
       Tuple *result = cast<Tuple>(runtime().heap().new_tuple(length));
       for (int32_t i = length - 1; i >= 0; i--)
         result->at(i) = stack.pop();

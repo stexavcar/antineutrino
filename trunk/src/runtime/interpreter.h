@@ -6,6 +6,22 @@
 
 namespace neutrino {
 
+// ---------------------
+// --- O p c o d e s ---
+// ---------------------
+
+/**
+ * This index defines all opcodes, their index and the number of
+ * arguments they expect.
+ */
+#define FOR_EACH_OPCODE(VISIT)                                       \
+  VISIT(0,  PUSH,  1)   VISIT(1,  RETURN, 0) VISIT(2,  GLOBAL,   1)  \
+  VISIT(3,  CALL,  1)   VISIT(4,  SLAP,   1) VISIT(5,  ARGUMENT, 1)  \
+  VISIT(6,  VOID,  0)   VISIT(7,  NULL,  0)  VISIT(8,  TRUE,     0)  \
+  VISIT(9,  FALSE, 0)   VISIT(10, POP,    1) VISIT(11, IF_TRUE,  1)  \
+  VISIT(12, GOTO,  1)   VISIT(13, INVOKE, 2) VISIT(14, BUILTIN,  2)  \
+  VISIT(15, TUPLE, 1)
+
 enum Opcode {
   __first__opcode = -1
 #define DECLARE_OPCODE(n, NAME, argc) , OC_##NAME = n

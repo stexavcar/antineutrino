@@ -33,13 +33,23 @@ Data *Heap::allocate_class(InstanceType instance_type) {
   return result;
 }
 
-Data *Heap::new_lambda(uint32_t argc, Code *code, Tuple *literals) {
+Data *Heap::new_lambda(uint32_t argc, Value *code, Value *literals, LambdaExpression *tree) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_class());
   if (is<AllocationFailed>(val)) return val;
   Lambda *result = cast<Lambda>(val);
   result->set_argc(argc);
   result->set_code(code);
   result->set_literals(literals);
+  result->set_tree(tree);
+  return result;
+}
+
+Data *Heap::new_builtin_call(uint32_t argc, uint32_t index) {
+  Data *val = allocate_object(BuiltinCall::kSize, roots().builtin_call_class());
+  if (is<AllocationFailed>(val)) return val;
+  BuiltinCall *result = cast<BuiltinCall>(val);
+  result->set_argc(argc);
+  result->set_index(index);
   return result;
 }
 

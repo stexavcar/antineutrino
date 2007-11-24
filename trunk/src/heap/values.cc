@@ -40,16 +40,6 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
   }
 }
 
-bool Value::is_key() {
-  switch (type()) {
-    case STRING_TYPE: case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE:
-    case FALSE_TYPE: case SMI_TYPE: case SYMBOL_TYPE:
-      return true;
-    default:
-      return false;
-  }
-}
-
 #endif // DEBUG
 
 MAKE_ENUM_INFO_HEADER(InstanceType)
@@ -63,7 +53,6 @@ MAKE_ENUM_INFO_HEADER(Signal::Type)
 FOR_EACH_SIGNAL_TYPE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
-
 
 // -----------------------
 // --- P r i n t i n g ---
@@ -362,10 +351,10 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
 }
 
 string Lambda::disassemble() {
-  uint32_t size = code()->length();
-  uint16_t *data = &code()->at(0);
+  uint32_t size = cast<Code>(code())->length();
+  uint16_t *data = &cast<Code>(code())->at(0);
   string_buffer buf;
-  disassemble_buffer(data, size, literals(), buf);
+  disassemble_buffer(data, size, cast<Tuple>(literals()), buf);
   return buf.to_string();
 }
 
@@ -493,13 +482,31 @@ ref<Value> ref_traits<Lambda>::call() {
 // --- E q u a l i t y ---
 // -----------------------
 
+bool Value::is_key() {
+  switch (type()) {
+    case STRING_TYPE: case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE:
+    case FALSE_TYPE: case SMI_TYPE: case SYMBOL_TYPE:
+      return true;
+    default:
+      return false;
+  }
+}
+
+bool Value::is_identical(Value *that) {
+  if (this == that) return true;
+  if (this->type() != that->type()) return false;
+  if (this->is_key()) return this->equals(that);
+  else return false;
+}
+
 bool Value::equals(Value *that) {
   ASSERT(this->is_key());
   ASSERT(that->is_key());
+  if (this == that) return true;
+  if (this->type() != that->type()) return false;
   InstanceType type = this->type();
   switch (type) {
   case STRING_TYPE:
-    if (!is<String>(that)) return false;
     return cast<String>(this)->string_equals(cast<String>(that));
   case SMI_TYPE: case SYMBOL_TYPE:
     return this == that;

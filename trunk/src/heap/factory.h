@@ -13,7 +13,7 @@ public:
   Factory(Runtime &heap);
   ref<String> new_string(string str);
   ref<Tuple> new_tuple(uint32_t size);
-  ref<Lambda> new_lambda(uint32_t argc, ref<Code> code, ref<Tuple> literals);
+  ref<Lambda> new_lambda(uint32_t argc, ref<Value> code, ref<Value> literals, ref<LambdaExpression> tree);
   ref<Method> new_method(ref<String> name, ref<Lambda> lambda);
   ref<Dictionary> new_dictionary();
   ref<Code> new_code(uint32_t size);

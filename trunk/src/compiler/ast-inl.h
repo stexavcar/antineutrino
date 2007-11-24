@@ -42,6 +42,9 @@ DEFINE_FIELD_ACCESSORS(String, GlobalExpression, name, kNameOffset)
 
 DEFINE_FIELD_ACCESSORS(SyntaxTree, QuoteExpression, value, kValueOffset)
 
+DEFINE_ACCESSORS(uint32_t, BuiltinCall, argc, kArgcOffset)
+DEFINE_ACCESSORS(uint32_t, BuiltinCall, index, kIndexOffset)
+
 }
 
 #endif // _IO_AST_INL

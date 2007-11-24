@@ -185,6 +185,14 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(expr);
       break;
     }
+    case BUILTIN_CALL_TYPE: {
+      ImageBuiltinCall *img = image_cast<ImageBuiltinCall>(obj);
+      uint32_t argc = img->argc();
+      uint32_t index = img->index();
+      BuiltinCall *expr = cast<BuiltinCall>(heap.new_builtin_call(argc, index));
+      obj->point_forward(expr);
+      break;
+    }
     default:
       UNHANDLED(InstanceType, type);
       break;
@@ -211,8 +219,9 @@ void Image::fixup_shallow_object(ImageObject *obj) {
     case LAMBDA_TYPE: {
       ImageLambda *img = image_cast<ImageLambda>(obj);
       Lambda *lambda = cast<Lambda>(img->forward_pointer());
-      lambda->set_code(cast<Code>(img->code()->forward_pointer()));
-      lambda->set_literals(cast<Tuple>(img->literals()->forward_pointer()));
+      lambda->set_code(img->code()->forward_pointer());
+      lambda->set_literals(img->literals()->forward_pointer());
+      lambda->set_tree(cast<LambdaExpression>(img->tree()->forward_pointer()));
       break;
     }
     case METHOD_TYPE: {
@@ -322,7 +331,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       break;
     }
     case STRING_TYPE: case CODE_TYPE: case SINGLETON_TYPE:
-    case THIS_EXPRESSION_TYPE:
+    case THIS_EXPRESSION_TYPE: case BUILTIN_CALL_TYPE:
       // Nothing to fix
       break;
     default:
@@ -401,6 +410,8 @@ uint32_t ImageObject::memory_size() {
       return ImageLambdaExpression_Size;
     case SINGLETON_TYPE:
       return ImageRoot_Size;
+    case BUILTIN_CALL_TYPE:
+      return ImageBuiltinCall_Size;
     case STRING_TYPE:
       return image_cast<ImageString>(this)->string_memory_size();
     case CODE_TYPE:

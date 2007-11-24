@@ -273,8 +273,9 @@ bool Dictionary::Iterator::next(Dictionary::Iterator::Entry *entry) {
 // -------------------
 
 DEFINE_ACCESSORS(uint32_t, Lambda, argc, kArgcOffset)
-DEFINE_FIELD_ACCESSORS(Code, Lambda, code, kCodeOffset)
-DEFINE_FIELD_ACCESSORS(Tuple, Lambda, literals, kLiteralsOffset)
+DEFINE_FIELD_ACCESSORS(Value, Lambda, code, kCodeOffset)
+DEFINE_FIELD_ACCESSORS(Value, Lambda, literals, kLiteralsOffset)
+DEFINE_FIELD_ACCESSORS(LambdaExpression, Lambda, tree, kTreeOffset)
 
 // -------------------
 // --- B u f f e r ---

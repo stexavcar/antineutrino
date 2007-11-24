@@ -25,10 +25,10 @@ static inline ref<C> new_ref(C *obj) {
 }
 
 template <class C>
-static inline permanent<C> new_permanent(C *obj) {
+static inline persistent<C> new_persistent(C *obj) {
   C **cell = new C*;
   *cell = obj;
-  return permanent<C>(cell);
+  return persistent<C>(cell);
 }
 
 template <class C>

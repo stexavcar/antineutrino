@@ -57,15 +57,22 @@ public:
    * Returns true if this object supports comparisons with other
    * objecs.
    */
-  IF_DEBUG(bool is_key());
+  bool is_key();
+
   IF_DEBUG(void validate());
   
   /**
-   * Built-in support for comparing certain objects.  This method
-   * aborts if the receiver or the argument does not support object
-   * comparison.
+   * Built-in support for comparing value objects.  This method
+   * aborts if the receiver or the argument does not support value
+   * comparison, that is, structural rather than identity comparison.
    */
   bool equals(Value *that);
+  
+  /**
+   * Identity comparison.  This is the same as value comparison for
+   * objects that support it and otherwise simple object identity.
+   */
+  bool is_identical(Value *that);
 
 };
 
@@ -304,21 +311,25 @@ DEFINE_REF_CLASS(Dictionary);
 class Lambda : public Object {
 public:
   DECLARE_FIELD(uint32_t, argc);
-  DECLARE_FIELD(Code*, code);
-  DECLARE_FIELD(Tuple*, literals);
+  DECLARE_FIELD(Value*, code);
+  DECLARE_FIELD(Value*, literals);
+  DECLARE_FIELD(LambdaExpression*, tree);
   
   string disassemble();
   
-  static const int kArgcOffset     = Object::kHeaderSize;
-  static const int kCodeOffset     = kArgcOffset + kPointerSize;
-  static const int kLiteralsOffset = kCodeOffset + kPointerSize;
-  static const int kSize           = kLiteralsOffset + kPointerSize;
+  static const uint32_t kArgcOffset     = Object::kHeaderSize;
+  static const uint32_t kCodeOffset     = kArgcOffset + kPointerSize;
+  static const uint32_t kLiteralsOffset = kCodeOffset + kPointerSize;
+  static const uint32_t kTreeOffset     = kLiteralsOffset + kPointerSize;
+  static const uint32_t kSize           = kTreeOffset + kPointerSize;
 };
 
 template <> class ref_traits<Lambda> : public ref_traits<Object> {
 public:
-  inline ref<Code> code();
-  inline ref<Tuple> literals();
+  inline ref<Value> code();
+  inline ref<Value> literals();
+  inline ref<LambdaExpression> tree();
+  void ensure_compiled();
   ref<Value> call();
 };
 

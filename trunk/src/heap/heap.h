@@ -44,7 +44,9 @@ public:
   
   Data *new_dictionary(Tuple *store);
   
-  Data *new_lambda(uint32_t argc, Code *code, Tuple *literals);
+  Data *new_lambda(uint32_t argc, Value *code, Value *literals, LambdaExpression *tree);
+  
+  Data *new_builtin_call(uint32_t argc, uint32_t index);
   
   Data *allocate_lambda(uint32_t argc);
 
