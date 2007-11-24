@@ -1,10 +1,16 @@
-#include "heap/pointer-inl.h"
-#include "heap/space.h"
+#include "heap/space-inl.h"
 #include "utils/checks.h"
 
-using namespace neutrino;
+namespace neutrino {
 
-address Space::allocate_raw(uint32_t size) {
-  ASSERT(ValuePointer::is_aligned(size));
-  return new int8_t[size];
+SemiSpace::SemiSpace(uint32_t capacity) {
+  cursor_ = 0;
+  capacity_ = capacity;
+  data_ = new int8_t[capacity];
 }
+
+SemiSpace::~SemiSpace() {
+  delete[] data_;
+}
+
+} // neutrino

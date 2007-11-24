@@ -64,7 +64,7 @@ public:
   word *&sp() { return sp_; }
   word *bottom() { return data_; }
 private:
-  static const uint32_t kLimit = 100;
+  static const uint32_t kLimit = 2048;
   word *sp_;
   word *fp_;
   word data_[kLimit];

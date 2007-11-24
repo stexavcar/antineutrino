@@ -5,9 +5,19 @@
 
 namespace neutrino {
 
-class Space {
+class SemiSpace {
 public:
-  address allocate_raw(uint32_t size);
+  SemiSpace(uint32_t capacity);
+  ~SemiSpace();
+  uint32_t capacity();
+  address start() { return data_; }
+  address end() { return data_ + capacity_; }
+  address cursor() { return data_ + cursor_; }
+  inline address allocate(uint32_t size);
+private:
+  address data_;
+  uint32_t cursor_;
+  uint32_t capacity_;
 };
 
 }

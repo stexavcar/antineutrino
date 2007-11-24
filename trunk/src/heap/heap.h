@@ -1,7 +1,7 @@
 #ifndef _HEAP
 #define _HEAP
 
-#include "heap/space.h"
+#include "heap/memory.h"
 #include "heap/values.h"
 #include "utils/string.h"
 
@@ -90,11 +90,11 @@ public:
     
   Data *new_instance(Class *chlass);
 
-  Space &space() { return space_; }
+  Memory &memory() { return memory_; }
   Roots &roots() { return roots_; }
 private:
   Roots &roots_;
-  Space space_;
+  Memory memory_;
 };
 
 }

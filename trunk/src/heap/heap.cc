@@ -1,5 +1,6 @@
 #include "compiler/ast-inl.h"
 #include "heap/heap-inl.h"
+#include "heap/memory-inl.h"
 #include "heap/pointer.h"
 #include "heap/roots.h"
 #include "heap/values-inl.h"
@@ -12,7 +13,8 @@ Heap::Heap(Roots &roots)
     : roots_(roots) { }
 
 Data *Heap::allocate_object(uint32_t size, Class *type) {
-  address addr = space().allocate_raw(size);
+  address addr = memory().allocate(size);
+  if (!addr) return AllocationFailed::make(size);
   Object *result = ValuePointer::tag_as_object(addr);
   result->set_chlass(type);
 #ifdef DEBUG

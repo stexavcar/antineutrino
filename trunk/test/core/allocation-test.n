@@ -1,0 +1,18 @@
+def make_tree(n) {
+  if (n = 0) return [];
+  else return [ make_tree(n - 1), make_tree(n - 1) ];
+}
+
+def allocate(n, k) {
+  if (n = 0) return make_tree(k);
+  allocate(n - 1, k);
+  allocate(n - 1, k);
+}
+
+def test_allocation() {
+  allocate(16, 8);
+}
+
+def main() {
+  test_allocation();
+}
