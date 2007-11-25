@@ -8,45 +8,49 @@ namespace neutrino {
 Factory::Factory(Runtime &runtime)
   : runtime_(runtime) { }
 
+#define ALLOCATE_CHECKED(Type, operation) do {                       \
+  Data *result = runtime().heap().operation;                         \
+  if (is<AllocationFailed>(result)) {                                \
+    runtime().heap().memory().collect_garbage();                     \
+    result = runtime().heap().operation;                             \
+    if (is<AllocationFailed>(result)) {                              \
+      UNREACHABLE();                                                 \
+    }                                                                \
+  }                                                                  \
+  return new_ref(cast<Type>(result));                                \
+} while (false)
+
 ref<String> Factory::new_string(string str) {
-  Data *result = runtime().heap().new_string(str);
-  return new_ref(cast<String>(result));
+  ALLOCATE_CHECKED(String, new_string(str));
 }
 
 ref<Tuple> Factory::new_tuple(uint32_t size) {
-  Data *result = runtime().heap().new_tuple(size);
-  return new_ref(cast<Tuple>(result));
+  ALLOCATE_CHECKED(Tuple, new_tuple(size));
 }
 
 ref<Lambda> Factory::new_lambda(uint32_t argc, ref<Value> code,
     ref<Value> literals, ref<LambdaExpression> tree) {
-  Data *result = runtime().heap().new_lambda(argc, *code, *literals, *tree);
-  return new_ref(cast<Lambda>(result));
+  ALLOCATE_CHECKED(Lambda, new_lambda(argc, *code, *literals, *tree));
 }
 
 ref<Dictionary> Factory::new_dictionary() {
-  Data *result = runtime().heap().new_dictionary();
-  return new_ref(cast<Dictionary>(result));
+  ALLOCATE_CHECKED(Dictionary, new_dictionary());
 }
 
 ref<Code> Factory::new_code(uint32_t size) {
-  Data *result = runtime().heap().new_code(size);
-  return new_ref(cast<Code>(result));
+  ALLOCATE_CHECKED(Code, new_code(size));
 }
 
 ref<Method> Factory::new_method(ref<String> name, ref<Lambda> lambda) {
-  Data *result = runtime().heap().new_method(*name, *lambda);
-  return new_ref(cast<Method>(result));
+  ALLOCATE_CHECKED(Method, new_method(*name, *lambda));
 }
 
 ref<Class> Factory::new_empty_class(InstanceType instance_type) {
-  Data *result = runtime().heap().new_empty_class(instance_type);
-  return new_ref(cast<Class>(result));
+  ALLOCATE_CHECKED(Class, new_empty_class(instance_type));
 }
 
 ref<Instance> Factory::new_instance(ref<Class> chlass) {
-  Data *result = runtime().heap().new_instance(*chlass);
-  return new_ref(cast<Instance>(result));
+  ALLOCATE_CHECKED(Instance, new_instance(*chlass));
 }
 
 }

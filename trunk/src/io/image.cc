@@ -1,4 +1,5 @@
 #include "compiler/ast-inl.h"
+#include "heap/memory-inl.h"
 #include "heap/roots.h"
 #include "heap/values-inl.h"
 #include "io/image-inl.h"
@@ -50,6 +51,7 @@ bool Image::initialize() {
 }
 
 Tuple *Image::load() {
+  DisallowGarbageCollection dgc;
   Image::Scope scope(*this);
   for_each_object(copy_object_shallow);
   for_each_object(fixup_shallow_object);

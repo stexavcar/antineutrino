@@ -204,11 +204,12 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       break;
     }
     case OC_TUPLE: {
+      RefScope scope;
       uint16_t length = cast<Code>(current.lambda()->code())->at(pc + 1);
-      Tuple *result = cast<Tuple>(runtime().heap().new_tuple(length));
+      ref<Tuple> result = Runtime::current().factory().new_tuple(length);
       for (int32_t i = length - 1; i >= 0; i--)
         result->at(i) = stack.pop();
-      stack.push(result);
+      stack.push(*result);
       pc += OpcodeInfo<OC_TUPLE>::kSize;
       break;
     }
