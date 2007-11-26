@@ -11,5 +11,7 @@ internal class String {
   
   internal def operator=(that);
   internal def operator+(that);
+  
+  def to_string() -> this;
 
 }

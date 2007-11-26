@@ -452,12 +452,6 @@ public:
   static inline Nothing *make();
 };
 
-class PendingRegister : public Signal {
-public:
-  inline uint32_t index();
-  static inline PendingRegister *make(uint32_t reg);
-};
-
 }
 
 #endif // _VALUES

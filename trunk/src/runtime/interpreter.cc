@@ -206,11 +206,30 @@ ref<Value> Interpreter::interpret(Stack &stack) {
     case OC_TUPLE: {
       RefScope scope;
       uint16_t length = cast<Code>(current.lambda()->code())->at(pc + 1);
-      ref<Tuple> result = Runtime::current().factory().new_tuple(length);
+      ref<Tuple> result = runtime().factory().new_tuple(length);
       for (int32_t i = length - 1; i >= 0; i--)
         result->at(i) = stack.pop();
       stack.push(*result);
       pc += OpcodeInfo<OC_TUPLE>::kSize;
+      break;
+    }
+    case OC_CONCAT: {
+      RefScope scope;
+      uint32_t terms = cast<Code>(current.lambda()->code())->at(pc + 1);
+      uint32_t length = 0;
+      for (uint32_t i = 0; i < terms; i++)
+        length += cast<String>(stack[i])->length();
+      ref<String> result = runtime().factory().new_string(length);
+      uint32_t cursor = 0;
+      for (int32_t i = terms - 1; i >= 0; i--) {
+        String *term = cast<String>(stack[i]);
+        for (uint32_t j = 0; j < term->length(); j++)
+          result->set(cursor + j, term->at(j));
+        cursor += term->length();
+      }
+      stack.pop(terms);
+      stack.push(*result);
+      pc += OpcodeInfo<OC_CONCAT>::kSize;
       break;
     }
     default:

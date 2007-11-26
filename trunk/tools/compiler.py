@@ -120,6 +120,10 @@ class Scanner:
     self.input = input
     self.cursor = 0
     self.skip_whitespace()
+    self.parser = None
+
+  def set_parser(self, parser):
+    self.parser = parser
 
   def current(self):
     if self.has_more(): return self.input[self.cursor]
@@ -172,8 +176,8 @@ class Scanner:
           terms.append(term)
           term = ''
         self.advance(2)
-        parser = Parser(self)
-        expr = parser.parse_expression(False)
+        self.parser.advance()
+        expr = self.parser.parse_expression(False)
         terms.append(expr)
       else:
         term += self.current()
@@ -1469,6 +1473,7 @@ def serialize_value(value):
 def compile(str):
   scanner = Scanner(str)
   parser = Parser(scanner)
+  scanner.set_parser(parser)
   return parser.parse_program()
 
 

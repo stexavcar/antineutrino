@@ -3,7 +3,7 @@ def fun(a, b, c, d, e) {
   assert_equals(6, b);
   assert_equals(10, c);
   assert_equals(1, d);
-  assert_equals(8, e);
+  assert_equals(7, e);
   return a + b + c + d + e;
 }
 

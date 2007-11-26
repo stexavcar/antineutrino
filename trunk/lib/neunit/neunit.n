@@ -9,5 +9,5 @@ def assert(value) {
 
 def assert_equals(expected, value) {
   if (expected = value) return null;
-  fail("Expected [${expected.to_string()}], found [${value.to_string()}]");
+  fail("Expected [${expected}], found [${value}]");
 }

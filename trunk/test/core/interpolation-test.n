@@ -1,0 +1,14 @@
+def interpolation_test() {
+  assert_equals("abc", "${"a"}${"b"}${"c"}");
+  assert_equals("aabb", "a${"a${"b${"b"}"}"}");
+  local_test(1, 2, 3);
+}
+
+def local_test(a, b, c) {
+  assert_equals("[1]", "[${a}]");
+  assert_equals("3-2-1", "${c}-${b}-${a}");
+}
+
+def main() {
+  interpolation_test();
+}

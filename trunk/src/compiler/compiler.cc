@@ -48,6 +48,7 @@ public:
   void ghoto(Label &label);
   void bind(Label &label);
   void builtin(uint16_t argc, uint16_t index);
+  void concat(uint16_t terms);
   
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
 #define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
@@ -161,6 +162,12 @@ void Assembler::tuple(uint16_t size) {
   STATIC_CHECK(OpcodeInfo<OC_TUPLE>::kArgc == 1);
   code().append(OC_TUPLE);
   code().append(size);
+}
+
+void Assembler::concat(uint16_t terms) {
+  STATIC_CHECK(OpcodeInfo<OC_CONCAT>::kArgc == 1);
+  code().append(OC_CONCAT);
+  code().append(terms);
 }
 
 void Assembler::builtin(uint16_t argc, uint16_t index) {
@@ -330,16 +337,29 @@ void Assembler::visit_conditional_expression(ref<ConditionalExpression> that) {
   __ bind(end);
 }
 
+void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
+  RefScope scope;
+  ref<Tuple> terms = that.terms();
+  for (uint32_t i = 0; i < terms.length(); i++) {
+    ref<Value> entry = terms.get(i);
+    if (is<String>(entry)) {
+      __ push(entry);
+    } else {
+      __ codegen(cast<SyntaxTree>(entry));
+      __ push(runtime().vhoid());
+      __ invoke(factory().new_string("to_string"), 0);
+      __ slap(1);
+    }
+  }
+  __ concat(terms.length());
+}
+
 void Assembler::visit_this_expression(ref<ThisExpression> that) {
   __ argument(lambda()->params()->length() + 1);
 }
 
 void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
   __ builtin(that->argc(), that->index());
-}
-
-void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
-  visit_syntax_tree(that);
 }
 
 void Assembler::visit_class_expression(ref<ClassExpression> that) {

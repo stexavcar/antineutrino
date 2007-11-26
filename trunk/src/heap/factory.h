@@ -12,7 +12,7 @@ class Factory {
 public:
   Factory(Runtime &heap);
   ref<String> new_string(string str);
-  ref<String> new_string2(string str);
+  ref<String> new_string(uint32_t length);
   ref<Tuple> new_tuple(uint32_t size);
   ref<Lambda> new_lambda(uint32_t argc, ref<Value> code, ref<Value> literals, ref<LambdaExpression> tree);
   ref<Method> new_method(ref<String> name, ref<Lambda> lambda);

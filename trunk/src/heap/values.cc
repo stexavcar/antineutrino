@@ -176,9 +176,6 @@ static void write_signal_short_on(Signal *obj, string_buffer &buf) {
   case Signal::NOTHING:
     buf.append("@<nothing>");
     break;
-  case Signal::PENDING_REGISTER:
-    buf.printf("@<pending register %>", cast<PendingRegister>(obj)->payload());
-    break;
   default:
     UNHANDLED(Signal::Type, obj->type());
   }
@@ -341,6 +338,10 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
       case OC_RETURN:
         buf.append("return");
         pc += OpcodeInfo<OC_RETURN>::kSize;
+        break;
+      case OC_CONCAT:
+        buf.printf("concat %", data[pc + 1]);
+        pc += OpcodeInfo<OC_CONCAT>::kSize;
         break;
       default:
         UNHANDLED(Opcode, data[pc]);

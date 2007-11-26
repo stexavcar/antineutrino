@@ -41,8 +41,7 @@
 #define FOR_EACH_SIGNAL_TYPE(VISIT)                                                \
   VISIT(30, ALLOCATION_FAILED,      AllocationFailed,      0)                      \
   VISIT(31, INTERNAL_ERROR,         InternalError,         0)                      \
-  VISIT(32, NOTHING,                Nothing,               0)                      \
-  VISIT(33, PENDING_REGISTER,       PendingRegister,       0)
+  VISIT(32, NOTHING,                Nothing,               0)
 
 #define FOR_EACH_VALUE_TYPE(VISIT)                                                 \
   VISIT(40, SMI,                    Smi,                   0)                      \
@@ -189,7 +188,8 @@
   VISIT(30, Class,      this_expression_class,        ThisExpression,        THIS_EXPRESSION_CLASS,        new_empty_class(THIS_EXPRESSION_TYPE))        \
   VISIT(31, Class,      quote_expression_class,       QuoteExpression,       QUOTE_EXPRESSION_CLASS,       new_empty_class(QUOTE_EXPRESSION_TYPE))       \
   VISIT(32, Class,      lambda_expression_class,      LambdaExpression,      LAMBDA_EXPRESSION_CLASS,      new_empty_class(LAMBDA_EXPRESSION_TYPE))      \
-  VISIT(33, Class,      builtin_call_class,           BuiltinCall,           BUILTIN_CALL_CLASS,           new_empty_class(BUILTIN_CALL_TYPE))
+  VISIT(33, Class,      builtin_call_class,           BuiltinCall,           BUILTIN_CALL_CLASS,           new_empty_class(BUILTIN_CALL_TYPE))           \
+  VISIT(34, Class,      interpolate_expression_class, InterpolateExpression, INTERPOLATE_EXPRESSION_CLASS, new_empty_class(INTERPOLATE_EXPRESSION_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \

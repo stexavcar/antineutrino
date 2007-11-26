@@ -31,7 +31,7 @@ public:
 
   template <typename D> void for_each(void (*)(Value**, D), D);
   
-  static const uint32_t kCount = 34;
+  static const uint32_t kCount = 35;
 
 // Declare root field accessors
 #define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, NAME, allocator) \

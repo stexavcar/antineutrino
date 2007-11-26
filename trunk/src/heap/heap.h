@@ -75,6 +75,8 @@ public:
   Data *allocate_quote_expression();
 
   Data *allocate_lambda_expression();
+  
+  Data *allocate_interpolate_expression();
 
   Data *allocate_symbol();
   

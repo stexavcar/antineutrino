@@ -187,6 +187,11 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(expr);
       break;
     }
+    case INTERPOLATE_EXPRESSION_TYPE: {
+      InterpolateExpression *expr = cast<InterpolateExpression>(heap.allocate_interpolate_expression());
+      obj->point_forward(expr);
+      break;
+    }
     case BUILTIN_CALL_TYPE: {
       ImageBuiltinCall *img = image_cast<ImageBuiltinCall>(obj);
       uint32_t argc = img->argc();
@@ -332,6 +337,12 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       expr->set_name(cast<String>(img->name()->forward_pointer()));
       break;
     }
+    case INTERPOLATE_EXPRESSION_TYPE: {
+      ImageInterpolateExpression *img = image_cast<ImageInterpolateExpression>(obj);
+      InterpolateExpression *expr = cast<InterpolateExpression>(img->forward_pointer());
+      expr->set_terms(cast<Tuple>(img->terms()->forward_pointer()));
+      break;
+    }
     case STRING_TYPE: case CODE_TYPE: case SINGLETON_TYPE:
     case THIS_EXPRESSION_TYPE: case BUILTIN_CALL_TYPE:
       // Nothing to fix
@@ -414,6 +425,8 @@ uint32_t ImageObject::memory_size() {
       return ImageRoot_Size;
     case BUILTIN_CALL_TYPE:
       return ImageBuiltinCall_Size;
+    case INTERPOLATE_EXPRESSION_TYPE:
+      return ImageInterpolateExpression_Size;
     case STRING_TYPE:
       return image_cast<ImageString>(this)->string_memory_size();
     case CODE_TYPE:

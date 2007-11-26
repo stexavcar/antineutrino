@@ -122,6 +122,10 @@ Data *Heap::new_this_expression() {
   return allocate_object(ThisExpression::kSize, roots().this_expression_class());
 }
 
+Data *Heap::allocate_interpolate_expression() {
+  return allocate_object(InterpolateExpression::kSize, roots().interpolate_expression_class());
+}
+
 Data *Heap::new_empty_class(InstanceType instance_type) {
   Data *val = allocate_class(instance_type);
   if (is<AllocationFailed>(val)) return val;

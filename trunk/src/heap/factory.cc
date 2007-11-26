@@ -24,6 +24,10 @@ ref<String> Factory::new_string(string str) {
   ALLOCATE_CHECKED(String, new_string(str));
 }
 
+ref<String> Factory::new_string(uint32_t length) {
+  ALLOCATE_CHECKED(String, new_string(length));
+}
+
 ref<Tuple> Factory::new_tuple(uint32_t size) {
   ALLOCATE_CHECKED(Tuple, new_tuple(size));
 }

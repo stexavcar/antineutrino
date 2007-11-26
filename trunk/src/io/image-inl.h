@@ -190,57 +190,39 @@ uint32_t ImageCode::at(uint32_t index) {
 }
 
 DEFINE_RAW_GETTER(uint32_t, Lambda, argc, Argc)
-
 DEFINE_GETTER(Value, Lambda, code, Code)
 DEFINE_GETTER(Value, Lambda, literals, Literals)
 DEFINE_GETTER(SyntaxTree, Lambda, tree, Tree)
-
 DEFINE_GETTER(String, Method, name, Name)
 DEFINE_GETTER(Lambda, Method, lambda, Lambda)
-
 DEFINE_GETTER(Tuple, Dictionary, table, Table)
-
 DEFINE_RAW_GETTER(uint32_t, Root, index, Index)
-
 DEFINE_GETTER(Value, LiteralExpression, value, Value)
-
 DEFINE_GETTER(SyntaxTree, InvokeExpression, receiver, Receiver)
 DEFINE_GETTER(String, InvokeExpression, name, Name)
 DEFINE_GETTER(Tuple, InvokeExpression, arguments, Arguments)
-
 DEFINE_GETTER(SyntaxTree, CallExpression, receiver, Receiver)
 DEFINE_GETTER(SyntaxTree, CallExpression, function, Function)
 DEFINE_GETTER(Tuple, CallExpression, arguments, Arguments)
-
 DEFINE_GETTER(SyntaxTree, ConditionalExpression, condition, Condition)
 DEFINE_GETTER(SyntaxTree, ConditionalExpression, then_part, ThenPart)
 DEFINE_GETTER(SyntaxTree, ConditionalExpression, else_part, ElsePart)
-
 DEFINE_GETTER(String, ClassExpression, name, Name)
 DEFINE_GETTER(Tuple, ClassExpression, methods, Methods)
 DEFINE_GETTER(Value, ClassExpression, super, Super)
-
 DEFINE_GETTER(SyntaxTree, ReturnExpression, value, Value)
-
 DEFINE_GETTER(String, MethodExpression, name, Name)
 DEFINE_GETTER(LambdaExpression, MethodExpression, lambda, Lambda)
-
 DEFINE_GETTER(Tuple, LambdaExpression, params, Params)
 DEFINE_GETTER(SyntaxTree, LambdaExpression, body, Body)
-
 DEFINE_GETTER(Tuple, SequenceExpression, expressions, Expressions)
-
 DEFINE_GETTER(Tuple, TupleExpression, values, Values)
-
 DEFINE_GETTER(Value, Symbol, name, Name)
-
 DEFINE_GETTER(SyntaxTree, QuoteExpression, value, Value)
-
 DEFINE_GETTER(String, GlobalExpression, name, Name)
-
 DEFINE_RAW_GETTER(uint32_t, BuiltinCall, argc, Argc)
 DEFINE_RAW_GETTER(uint32_t, BuiltinCall, index, Index)
-
+DEFINE_GETTER(Tuple, InterpolateExpression, terms, Terms)
 
 #undef DEFINE_RAW_GETTER
 #undef DEFINE_GETTER

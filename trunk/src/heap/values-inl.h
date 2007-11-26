@@ -371,15 +371,6 @@ Nothing *Nothing::make() {
   return cast<Nothing>(result);
 }
 
-PendingRegister *PendingRegister::make(uint32_t reg) {
-  Signal *result = ValuePointer::tag_as_signal(PENDING_REGISTER, reg);
-  return cast<PendingRegister>(result);
-}
-
-uint32_t PendingRegister::index() {
-  return payload();
-}
-
 } // namespace neutrino
 
 #endif // _HEAP_VALUES_INL

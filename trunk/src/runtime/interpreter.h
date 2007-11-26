@@ -20,10 +20,10 @@ namespace neutrino {
   VISIT(6,  VOID,  0)   VISIT(7,  NULL,  0)  VISIT(8,  TRUE,     0)  \
   VISIT(9,  FALSE, 0)   VISIT(10, POP,    1) VISIT(11, IF_TRUE,  1)  \
   VISIT(12, GOTO,  1)   VISIT(13, INVOKE, 2) VISIT(14, BUILTIN,  2)  \
-  VISIT(15, TUPLE, 1)
+  VISIT(15, TUPLE, 1)   VISIT(16, CONCAT, 1)
 
 enum Opcode {
-  __first__opcode = -1
+  __first_opcode = -1
 #define DECLARE_OPCODE(n, NAME, argc) , OC_##NAME = n
 FOR_EACH_OPCODE(DECLARE_OPCODE)
 #undef DECLARE_OPCODE
