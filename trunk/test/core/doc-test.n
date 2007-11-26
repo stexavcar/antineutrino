@@ -1,0 +1,12 @@
+# Foo *foo* _foo_
+def foo() {
+
+}
+
+def test_documentation() {
+  
+}
+
+def main() {
+  test_documentation();
+}

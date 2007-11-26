@@ -338,6 +338,10 @@ void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
   __ builtin(that->argc(), that->index());
 }
 
+void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
+  visit_syntax_tree(that);
+}
+
 void Assembler::visit_class_expression(ref<ClassExpression> that) {
   visit_syntax_tree(that);
 }

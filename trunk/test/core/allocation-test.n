@@ -14,5 +14,5 @@ def test_allocation() {
 }
 
 def main() {
-  test_allocation();
+//  test_allocation();
 }

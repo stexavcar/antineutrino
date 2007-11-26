@@ -340,6 +340,27 @@ public:
 };
 
 
+// ---------------------------------------------------
+// --- I n t e r p o l a t e   E x p r e s s i o n ---
+// ---------------------------------------------------
+
+class InterpolateExpression : public SyntaxTree {
+public:
+  DECLARE_FIELD(Tuple*, terms);
+  
+  static const uint32_t kTermsOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kSize = kTermsOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<InterpolateExpression> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<Tuple> terms();
+};
+
+DEFINE_REF_CLASS(InterpolateExpression);
+
+
 // -------------------------------
 // --- B u i l t i n   C a l l ---
 // -------------------------------

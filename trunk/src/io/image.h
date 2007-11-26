@@ -192,6 +192,11 @@ public:
   inline uint32_t index();
 };
 
+class ImageInterpolateExpression : public ImageSyntaxTree {
+public:
+  inline ImageTuple *terms();
+};
+
 template <class C>
 static inline bool is(ImageData *val);
 

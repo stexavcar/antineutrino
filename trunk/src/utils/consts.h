@@ -69,7 +69,8 @@
   VISIT(61, QUOTE_EXPRESSION,       QuoteExpression,       quote_expression)       \
   VISIT(62, THIS_EXPRESSION,        ThisExpression,        this_expression)        \
   VISIT(63, LAMBDA_EXPRESSION,      LambdaExpression,      lambda_expression)      \
-  VISIT(64, BUILTIN_CALL,           BuiltinCall,           builtin_call)
+  VISIT(64, BUILTIN_CALL,           BuiltinCall,           builtin_call)           \
+  VISIT(65, INTERPOLATE_EXPRESSION, InterpolateExpression, interpolate_expression)
 
 
 // -------------------------------------
@@ -141,7 +142,9 @@
   VISIT(3, LambdaExpression,      Size)                              \
   VISIT(1, BuiltinCall,           ArgcOffset)                        \
   VISIT(2, BuiltinCall,           IndexOffset)                       \
-  VISIT(3, BuiltinCall,           Size)
+  VISIT(3, BuiltinCall,           Size)                              \
+  VISIT(1, InterpolateExpression, TermsOffset)                       \
+  VISIT(2, InterpolateExpression, Size)
 
 
 // -----------------

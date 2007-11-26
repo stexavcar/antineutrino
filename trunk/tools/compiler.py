@@ -52,8 +52,8 @@ class NumberToken(Token):
     return True
 
 class StringToken(Token):
-  def __init__(self, value):
-    self.value = value
+  def __init__(self, terms):
+    self.terms = terms
   def is_string(self):
     return True
 
@@ -119,26 +119,25 @@ class Scanner:
   def __init__(self, input):
     self.input = input
     self.cursor = 0
+    self.skip_whitespace()
 
   def current(self):
     if self.has_more(): return self.input[self.cursor]
     else: return None
+  
+  def next(self):
+    if self.has_next(): return self.input[self.cursor + 1]
+    else: return None
 
-  def advance(self):
-    if self.has_more(): self.cursor += 1
+  def advance(self, dist = 1):
+    if self.has_more(): self.cursor += dist
     else: raise "OutOfBounds"
 
   def has_more(self):
     return self.cursor < len(self.input)
 
-  def tokenize(self):
-    self.skip_whitespace()
-    tokens = []
-    while self.has_more():
-      token = self.get_next_token()
-      tokens.append(token)
-      self.skip_whitespace()
-    return tokens
+  def has_next(self):
+    return self.cursor + 1 < len(self.input)
 
   def scan_ident(self):
     value = ''
@@ -164,13 +163,25 @@ class Scanner:
     return NumberToken(value)
 
   def scan_string(self):
-    value = ''
+    terms = []
     self.advance()
+    term = ''
     while self.has_more() and self.current() != '"':
-      value += self.current()
-      self.advance()
+      if self.current() =='$' and self.next() == '{':
+        if len(term) > 0:
+          terms.append(term)
+          term = ''
+        self.advance(2)
+        parser = Parser(self)
+        expr = parser.parse_expression(False)
+        terms.append(expr)
+      else:
+        term += self.current()
+        self.advance()
     if self.has_more(): self.advance()
-    return StringToken(value)
+    if len(term) > 0:
+      terms.append(term)
+    return StringToken(terms)
   
   def scan_documentation(self):
     value = ''
@@ -219,22 +230,37 @@ class Scanner:
   
   def get_next_token(self):
     if is_ident_start(self.current()):
-      return self.scan_ident()
+      result = self.scan_ident()
     elif is_digit(self.current()):
-      return self.scan_number()
+      result = self.scan_number()
     elif self.current() == '"':
-      return self.scan_string();
+      result = self.scan_string();
     elif is_operator(self.current()):
-      return self.scan_operator()
+      result = self.scan_operator()
     elif self.current() == '#':
-      return self.scan_documentation()
+      result = self.scan_documentation()
     else:
-      return self.scan_delimiter()
+      result = self.scan_delimiter()
+    self.skip_whitespace()
+    return result
 
   def skip_whitespace(self):
-    while self.has_more() and is_space(self.current()):
-      self.advance()
-
+    keep_going = True
+    while keep_going:
+      keep_going = False
+      while self.has_more() and is_space(self.current()):
+        self.advance()
+      if self.current() == '/' and self.next() == '/':
+        keep_going = True
+        while self.has_more() and self.current() != '\n':
+          self.advance()
+      elif self.current() == '(' and self.next() == '*':
+        keep_going = True
+        while self.has_more() and (self.current() != '*' or self.next() != ')'):
+          self.advance()
+        if self.has_more() and self.has_next():
+          self.advance()
+          self.advance()
 
 # -------------------
 # --- P a r s e r ---
@@ -247,16 +273,23 @@ def new_sequence(exprs):
 
 class Parser:
 
-  def __init__(self, tokens):
-    self.tokens = tokens
-    self.cursor = 0
+  def __init__(self, scanner):
+    self.scanner = scanner
     self.scope = GlobalScope()
+    self.current = None
+    self.advance()
+
+  # Advances the cursor one step
+  def advance(self):
+    if self.scanner.has_more():
+      self.current = self.scanner.get_next_token()
+    else:
+      self.current = EOS()
 
   # Returns the current token, or <eof> when reaching the end of the
   # input
   def token(self):
-    if self.cursor >= len(self.tokens): return EOS()
-    else: return self.tokens[self.cursor]
+    return self.current
 
   def parse_error(self):
     raise "SyntaxError: '" + str(self.token()) + "'"
@@ -313,10 +346,6 @@ class Parser:
     value = self.token().value
     self.advance()
     return value
-
-  # Advances the cursor one step
-  def advance(self):
-    self.cursor = self.cursor + 1
 
   # <program>
   #   -> <declaration>*
@@ -579,6 +608,16 @@ class Parser:
   def resolve_identifier(self, name):
     return self.scope.lookup(name)
 
+  def parse_string(self):
+    terms = self.token().terms
+    self.advance()
+    if len(terms) == 0:
+      return Literal(HEAP.new_string(""))
+    elif len(terms) == 1 and (not isinstance(terms[0], Expression)):
+      return Literal(HEAP.new_string(terms[0]))
+    else:
+      return Interpolated(terms)
+
   # <atomic_expression>
   #   -> $number
   #   -> $string
@@ -591,9 +630,7 @@ class Parser:
       self.advance()
       return Literal(HEAP.new_number(value))
     elif self.token().is_string():
-      value = self.token().value
-      self.advance()
-      return Literal(HEAP.new_string(value))
+      return self.parse_string()
     elif self.token().is_ident():
       name = self.token().name
       self.advance()
@@ -729,6 +766,25 @@ class Literal(Expression):
   def quote(self):
     val = quote_value(self.value)
     return HEAP.new_literal_expression(val)
+
+class Interpolated(Expression):
+  def __init__(self, terms):
+    assert len(terms) > 1
+    self.terms = terms
+  def accept(self, visitor):
+    visitor.visit_interpolated(self)
+  def traverse(self, visitor):
+    for term in self.terms:
+      if isinstance(term, Expression):
+        term.accept(visitor)
+  def quote(self):
+    exprs = []
+    for term in self.terms:
+      if isinstance(term, Expression):
+        exprs.append(term.quote())
+      else:
+        exprs.append(HEAP.new_string(term))
+    return HEAP.new_interpolate_expression(HEAP.new_tuple(values = exprs))
 
 class Tuple(Expression):
   def __init__(self, values):
@@ -931,7 +987,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 34
+  kRootCount  = 35
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1002,8 +1058,13 @@ class Heap:
     return result
 
   def new_lambda_expression(self, params, body):
-    result = ImageLambdaExpression(self.allocate(ImageLambdaExpression_Size), params, body);
+    result = ImageLambdaExpression(self.allocate(ImageLambdaExpression_Size), params, body)
     result.set_class(LAMBDA_EXPRESSION_TYPE)
+    return result
+
+  def new_interpolate_expression(self, terms):
+    result = ImageInterpolateExpression(self.allocate(ImageInterpolateExpression_Size), terms)
+    result.set_class(INTERPOLATE_EXPRESSION_TYPE)
     return result
 
   def new_builtin_call(self, argc, index):
@@ -1334,6 +1395,13 @@ class ImageTupleExpression(ImageSyntaxTree):
   def set_values(self, value):
     HEAP.set_field(self, ImageTupleExpression_ValuesOffset, value)
 
+class ImageInterpolateExpression(ImageSyntaxTree):
+  def __init__(self, addr, terms):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_terms(terms)
+  def set_terms(self, value):
+    HEAP.set_field(self, ImageInterpolateExpression_TermsOffset, value)
+
 class ImageMethodExpression(ImageSyntaxTree):
   def __init__(self, addr, name, fun):
     ImageSyntaxTree.__init__(self, addr)
@@ -1400,8 +1468,7 @@ def serialize_value(value):
 
 def compile(str):
   scanner = Scanner(str)
-  tokens = scanner.tokenize()
-  parser = Parser(tokens)
+  parser = Parser(scanner)
   return parser.parse_program()
 
 
@@ -1455,6 +1522,8 @@ class Visitor:
   def visit_tuple(self, that):
     self.visit_node(that)
   def visit_builtin_lambda(self, that):
+    self.visit_node(that)
+  def visit_interpolated(self, that):
     self.visit_node(that)
 
 class LoadVisitor(Visitor):

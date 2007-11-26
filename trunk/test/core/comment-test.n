@@ -1,0 +1,5 @@
+def main() {
+  (* foo *) (* bar *) (* baz *)
+  (* nirk // knirk *)
+  // (* foo
+}
