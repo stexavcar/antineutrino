@@ -192,6 +192,11 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(expr);
       break;
     }
+    case LOCAL_DEFINITION_TYPE: {
+      LocalDefinition *expr = cast<LocalDefinition>(heap.allocate_local_definition());
+      obj->point_forward(expr);
+      break;
+    }
     case BUILTIN_CALL_TYPE: {
       ImageBuiltinCall *img = image_cast<ImageBuiltinCall>(obj);
       uint32_t argc = img->argc();
@@ -343,6 +348,14 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       expr->set_terms(cast<Tuple>(img->terms()->forward_pointer()));
       break;
     }
+    case LOCAL_DEFINITION_TYPE: {
+      ImageLocalDefinition *img = image_cast<ImageLocalDefinition>(obj);
+      LocalDefinition *expr = cast<LocalDefinition>(img->forward_pointer());
+      expr->set_symbol(cast<Symbol>(img->symbol()->forward_pointer()));
+      expr->set_value(cast<SyntaxTree>(img->value()->forward_pointer()));
+      expr->set_body(cast<SyntaxTree>(img->body()->forward_pointer()));
+      break;
+    }
     case STRING_TYPE: case CODE_TYPE: case SINGLETON_TYPE:
     case THIS_EXPRESSION_TYPE: case BUILTIN_CALL_TYPE:
       // Nothing to fix
@@ -427,6 +440,8 @@ uint32_t ImageObject::memory_size() {
       return ImageBuiltinCall_Size;
     case INTERPOLATE_EXPRESSION_TYPE:
       return ImageInterpolateExpression_Size;
+    case LOCAL_DEFINITION_TYPE:
+      return ImageLocalDefinition_Size;
     case STRING_TYPE:
       return image_cast<ImageString>(this)->string_memory_size();
     case CODE_TYPE:

@@ -66,6 +66,8 @@ public:
   
   Data *allocate_sequence_expression();
   
+  Data *allocate_local_definition();
+  
   Data *allocate_tuple_expression();
   
   Data *allocate_global_expression();

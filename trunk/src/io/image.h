@@ -197,6 +197,13 @@ public:
   inline ImageTuple *terms();
 };
 
+class ImageLocalDefinition : public ImageSyntaxTree {
+public:
+  inline ImageSymbol *symbol();
+  inline ImageSyntaxTree *value();
+  inline ImageSyntaxTree *body();
+};
+
 template <class C>
 static inline bool is(ImageData *val);
 

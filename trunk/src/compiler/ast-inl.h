@@ -32,6 +32,9 @@ DEFINE_FIELD_ACCESSORS(SyntaxTree, QuoteExpression, value, kValueOffset)
 DEFINE_ACCESSORS(uint32_t, BuiltinCall, argc, kArgcOffset)
 DEFINE_ACCESSORS(uint32_t, BuiltinCall, index, kIndexOffset)
 DEFINE_FIELD_ACCESSORS(Tuple, InterpolateExpression, terms, kTermsOffset)
+DEFINE_FIELD_ACCESSORS(Symbol, LocalDefinition, symbol, kSymbolOffset)
+DEFINE_FIELD_ACCESSORS(SyntaxTree, LocalDefinition, value, kValueOffset)
+DEFINE_FIELD_ACCESSORS(SyntaxTree, LocalDefinition, body, kBodyOffset)
 
 }
 

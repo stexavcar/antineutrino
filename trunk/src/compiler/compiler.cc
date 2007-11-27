@@ -27,7 +27,6 @@ public:
       , scope_(NULL) { }
   void initialize() { pool().initialize(); }
   Scope &scope() { ASSERT(scope_ != NULL); return *scope_; }
-  void set_scope(Scope &that) { scope_ = &that; }
   
   ref<Code> flush_code();
   ref<Tuple> flush_constant_pool();
@@ -44,6 +43,7 @@ public:
   void tuple(uint16_t size);
   void global(ref<Value> name);
   void argument(uint16_t index);
+  void local(uint16_t height);
   void if_true(Label &label);
   void ghoto(Label &label);
   void bind(Label &label);
@@ -57,8 +57,11 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
 
 private:
+  friend class Scope;
   ref<LambdaExpression> lambda() { return lambda_; }
   Factory &factory() { return runtime().factory(); }
+  uint32_t stack_height() { return stack_height_; }
+  void adjust_stack_height(int32_t delta) { stack_height_ += delta; }
   Runtime &runtime() { return runtime_; }
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }
@@ -67,6 +70,7 @@ private:
   list_buffer<uint16_t> code_;
   heap_list pool_;
   Scope *scope_;
+  uint32_t stack_height_;
 };
 
 class Label {
@@ -141,6 +145,12 @@ void Assembler::argument(uint16_t index) {
   code().append(index);
 }
 
+void Assembler::local(uint16_t height) {
+  STATIC_CHECK(OpcodeInfo<OC_LOCAL>::kArgc == 1);
+  code().append(OC_LOCAL);
+  code().append(height);
+}
+
 void Assembler::pop(uint16_t height) {
   STATIC_CHECK(OpcodeInfo<OC_POP>::kArgc == 1);
   code().append(OC_POP);
@@ -209,7 +219,7 @@ void Assembler::bind(Label &label) {
 // -----------------
 
 enum Category {
-  MISSING, ARGUMENT
+  MISSING, ARGUMENT, LOCAL
 };
 
 struct Lookup {
@@ -217,22 +227,44 @@ struct Lookup {
   Category category;
   union {
     struct { uint16_t index; } argument_info;
+    struct { uint16_t height; } local_info;
   };  
 };
 
 class Scope {
 public:
-  Scope(ref<Tuple> symbols, Scope *parent)
-      : symbols_(symbols)
-      , parent_(parent) { }
-  void lookup(ref<Symbol> symbol, Lookup &result);
+  Scope(Assembler &assembler);
+  ~Scope();
+  virtual void lookup(ref<Symbol> symbol, Lookup &result) = 0;
+protected:
+  Scope *parent() { return parent_; }
 private:
-  ref<Tuple> symbols() { return symbols_; }
-  ref<Tuple> symbols_;
+  Assembler &assembler_;
   Scope *parent_;
 };
 
-void Scope::lookup(ref<Symbol> symbol, Lookup &result) {
+Scope::Scope(Assembler &assembler) 
+    : assembler_(assembler)
+    , parent_(assembler.scope_) {
+  assembler.scope_ = this;
+}
+
+Scope::~Scope() {
+  assembler_.scope_ = parent_;
+}
+
+class ArgumentScope : public Scope {
+public:
+  ArgumentScope(Assembler &assembler, ref<Tuple> symbols)
+      : Scope(assembler)
+      , symbols_(symbols) { }
+  virtual void lookup(ref<Symbol> symbol, Lookup &result);
+private:
+  ref<Tuple> symbols() { return symbols_; }
+  ref<Tuple> symbols_;
+};
+
+void ArgumentScope::lookup(ref<Symbol> symbol, Lookup &result) {
   for (uint32_t i = 0; i < symbols().length(); i++) {
     if (symbol->equals(symbols()->at(i))) {
       result.category = ARGUMENT;
@@ -240,9 +272,29 @@ void Scope::lookup(ref<Symbol> symbol, Lookup &result) {
       return;
     }
   }
-  if (parent_ != NULL) return parent_->lookup(symbol, result);
+  if (parent() != NULL) return parent()->lookup(symbol, result);
 }
 
+class LocalScope : public Scope {
+public:
+  LocalScope(Assembler &assembler, ref<Symbol> symbol, uint32_t height)
+      : Scope(assembler)
+      , symbol_(symbol)
+      , height_(height) { }
+  virtual void lookup(ref<Symbol> symbol, Lookup &result);
+private:
+  ref<Symbol> symbol_;
+  uint32_t height_;
+};
+
+void LocalScope::lookup(ref<Symbol> symbol, Lookup &result) {
+  if (symbol->equals(*symbol_)) {
+    result.category = LOCAL;
+    result.local_info.height = height_;
+  } else if (parent() != NULL) {
+    return parent()->lookup(symbol, result);
+  }
+}
 
 // -------------------------------------
 // --- C o d e   G e n e r a t i o n ---
@@ -322,7 +374,8 @@ void Assembler::visit_symbol(ref<Symbol> that) {
       __ argument(lookup.argument_info.index);
       break;
     default:
-      UNREACHABLE();
+      __ local(lookup.local_info.height);
+      break;
   }
 }
 
@@ -352,6 +405,14 @@ void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
     }
   }
   __ concat(terms.length());
+}
+
+void Assembler::visit_local_definition(ref<LocalDefinition> that) {
+  __ codegen(that.value());
+  uint32_t height = stack_height();
+  LocalScope scope(*this, that.symbol(), height);
+  __ codegen(that.body());
+  __ slap(1);
 }
 
 void Assembler::visit_this_expression(ref<ThisExpression> that) {
@@ -412,8 +473,7 @@ void CompileSession::compile(ref<Lambda> lambda) {
   ref<LambdaExpression> tree = lambda.tree();
   Assembler assembler(tree, runtime());
   ref<Tuple> params = tree.params();
-  Scope scope(params, NULL);
-  assembler.set_scope(scope);
+  ArgumentScope scope(assembler, params);
   assembler.initialize();
   tree.body().accept(assembler);
   ref<Code> code = assembler.flush_code();

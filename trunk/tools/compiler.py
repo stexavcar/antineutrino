@@ -77,7 +77,7 @@ class Delimiter(Token):
 
 KEYWORDS = [
   'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return',
-  'null', 'true', 'false', 'internal', 'operator', 'new'
+  'null', 'true', 'false', 'internal', 'operator', 'new', 'in'
 ]
 
 RESERVED = [
@@ -206,7 +206,11 @@ class Scanner:
     elif c == ';':
       return Delimiter(';')
     elif c == ':':
-      return Delimiter(':')
+      if self.current() == '=': 
+        self.advance()
+        return Delimiter(':=')
+      else:
+        return Delimiter(':')
     elif c == ',':
       return Delimiter(',')
     elif c == '.':
@@ -534,6 +538,20 @@ class Parser:
     self.expect_delimiter(end)
     return args
 
+  def parse_local_definition(self, is_toplevel):
+    self.expect_keyword('def')
+    name = Symbol(self.expect_ident())
+    self.expect_delimiter(':=')
+    value = self.parse_expression(False)
+    if self.token().is_keyword('in'):
+      self.expect_keyword('in')
+      self.push_scope([ name ])
+      body = self.parse_expression(is_toplevel)
+      self.pop_scope()
+      return LocalDefinition(name, value, body)
+    else:
+      assert False
+
   # <control_expression>
   #   -> 'return' <expression>
   #   -> <conditional-expression>
@@ -546,6 +564,8 @@ class Parser:
       return Return(value)
     elif self.token().is_keyword('if'):
       return self.parse_conditional_expression(is_toplevel)
+    elif self.token().is_keyword('def'):
+      return self.parse_local_definition(is_toplevel)
     else:
       value = self.parse_operator_expression(None)
       if (is_toplevel): self.expect_delimiter(';')
@@ -957,6 +977,22 @@ class Sequence(Expression):
     exprs = HEAP.new_tuple(values = [ expr.quote() for expr in self.exprs ])
     return HEAP.new_sequence_expression(exprs)
 
+class LocalDefinition(Expression):
+  def __init__(self, name, value, body):
+    self.name = name
+    self.value = value
+    self.body = body
+  def accept(self, visitor):
+    visitor.visit_local_definition(self)
+  def traverse(self, visitor):
+    self.value.accept(visitor)
+    self.body.accept(visitor)
+  def quote(self):
+    name = HEAP.get_symbol(self.name)
+    value = self.value.quote()
+    body = self.body.quote()
+    return HEAP.new_local_definition(name, value, body)
+
 class Conditional(Expression):
   def __init__(self, cond, then_part, else_part):
     self.cond = cond
@@ -991,7 +1027,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 35
+  kRootCount  = 36
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1069,6 +1105,11 @@ class Heap:
   def new_interpolate_expression(self, terms):
     result = ImageInterpolateExpression(self.allocate(ImageInterpolateExpression_Size), terms)
     result.set_class(INTERPOLATE_EXPRESSION_TYPE)
+    return result
+
+  def new_local_definition(self, symbol, value, body):
+    result = ImageLocalDefinition(self.allocate(ImageLocalDefinition_Size), symbol, value, body)
+    result.set_class(LOCAL_DEFINITION_TYPE)
     return result
 
   def new_builtin_call(self, argc, index):
@@ -1392,6 +1433,19 @@ class ImageSequenceExpression(ImageSyntaxTree):
   def set_expressions(self, value):
     HEAP.set_field(self, ImageSequenceExpression_ExpressionsOffset, value)
 
+class ImageLocalDefinition(ImageSyntaxTree):
+  def __init__(self, addr, symbol, value, body):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_symbol(symbol)
+    self.set_value(value)
+    self.set_body(body)
+  def set_symbol(self, value):
+    HEAP.set_field(self, ImageLocalDefinition_SymbolOffset, value)
+  def set_value(self, value):
+    HEAP.set_field(self, ImageLocalDefinition_ValueOffset, value)    
+  def set_body(self, value):
+    HEAP.set_field(self, ImageLocalDefinition_BodyOffset, value)
+
 class ImageTupleExpression(ImageSyntaxTree):
   def __init__(self, addr, exprs):
     ImageSyntaxTree.__init__(self, addr)
@@ -1529,6 +1583,8 @@ class Visitor:
   def visit_builtin_lambda(self, that):
     self.visit_node(that)
   def visit_interpolated(self, that):
+    self.visit_node(that)
+  def visit_local_definition(self, that):
     self.visit_node(that)
 
 class LoadVisitor(Visitor):

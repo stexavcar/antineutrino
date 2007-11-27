@@ -114,6 +114,10 @@ Data *Heap::allocate_quote_expression() {
   return allocate_object(QuoteExpression::kSize, roots().quote_expression_class());
 }
 
+Data *Heap::allocate_local_definition() {
+  return allocate_object(LocalDefinition::kSize, roots().local_definition_class());
+}
+
 Data *Heap::allocate_lambda_expression() {
   return allocate_object(LambdaExpression::kSize, roots().lambda_expression_class());
 }

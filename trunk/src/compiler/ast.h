@@ -385,6 +385,33 @@ public:
 DEFINE_REF_CLASS(BuiltinCall);
 
 
+// ---------------------------------------
+// --- L o c a l   D e f i n i t i o n ---
+// ---------------------------------------
+
+class LocalDefinition : public SyntaxTree {
+public:
+  DECLARE_FIELD(Symbol*, symbol);
+  DECLARE_FIELD(SyntaxTree*, value);
+  DECLARE_FIELD(SyntaxTree*, body);
+  
+  static const uint32_t kSymbolOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kValueOffset = kSymbolOffset + kPointerSize;
+  static const uint32_t kBodyOffset = kValueOffset + kPointerSize;
+  static const uint32_t kSize = kBodyOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<LocalDefinition> : public ref_traits<SyntaxTree> {
+public:
+  inline ref<Symbol> symbol();
+  inline ref<SyntaxTree> value();
+  inline ref<SyntaxTree> body();
+};
+
+DEFINE_REF_CLASS(LocalDefinition);
+
+
 // ---------------------
 // --- V i s i t o r ---
 // ---------------------

@@ -223,6 +223,9 @@ DEFINE_GETTER(String, GlobalExpression, name, Name)
 DEFINE_RAW_GETTER(uint32_t, BuiltinCall, argc, Argc)
 DEFINE_RAW_GETTER(uint32_t, BuiltinCall, index, Index)
 DEFINE_GETTER(Tuple, InterpolateExpression, terms, Terms)
+DEFINE_GETTER(Symbol, LocalDefinition, symbol, Symbol)
+DEFINE_GETTER(SyntaxTree, LocalDefinition, value, Value)
+DEFINE_GETTER(SyntaxTree, LocalDefinition, body, Body)
 
 #undef DEFINE_RAW_GETTER
 #undef DEFINE_GETTER
