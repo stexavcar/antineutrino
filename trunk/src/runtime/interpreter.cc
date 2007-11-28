@@ -21,7 +21,7 @@ class Log {
 public:
   static inline void instruction(uint16_t opcode, Stack &stack);
 private:
-  static const bool kTraceInstructions = true;
+  static const bool kTraceInstructions = false;
 };
 
 // -----------------------------

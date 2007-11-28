@@ -211,7 +211,6 @@ void Assembler::if_true(Label &label) {
   code().append(OC_IF_TRUE);
   code().append(label.value());
   if (!label.is_bound()) label.set_value(code().length() - 1);
-  adjust_stack_height(-1);
 }
 
 void Assembler::ghoto(Label &label) {
@@ -403,9 +402,13 @@ void Assembler::visit_conditional_expression(ref<ConditionalExpression> that) {
   Label then, end;
   __ codegen(that.condition());
   __ if_true(then);
+  adjust_stack_height(-1);
+  uint32_t height_before = stack_height();
   __ codegen(that.else_part());
   __ ghoto(end);
   __ bind(then);
+  adjust_stack_height(-1);
+  USE(height_before); ASSERT_EQ(height_before, stack_height());
   __ codegen(that.then_part());
   __ bind(end);
 }
