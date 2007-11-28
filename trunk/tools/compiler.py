@@ -496,11 +496,8 @@ class Parser:
       self.expect_delimiter(';')
       return Return(value)
     elif self.token().is_delimiter('{'):
-      exprs = []
       self.expect_delimiter('{')
-      while not self.token().is_delimiter('}'):
-        expr = self.parse_expression(True)
-        exprs.append(expr)
+      exprs = self.parse_statements('}')
       self.expect_delimiter('}')
       exprs.append(Return(Void()))
       return new_sequence(exprs)
@@ -517,6 +514,14 @@ class Parser:
         params.append(Symbol(self.expect_ident()))
     self.expect_delimiter(end)
     return params
+
+  def parse_statements(self, end):
+    assert end
+    stmts = []
+    while not self.token().is_delimiter(end):
+      stmt = self.parse_control_expression(True, end)
+      stmts.append(stmt)
+    return stmts
 
   # <expression>
   #   -> <control_expression>
@@ -538,7 +543,7 @@ class Parser:
     self.expect_delimiter(end)
     return args
 
-  def parse_local_definition(self, is_toplevel):
+  def parse_local_definition(self, is_toplevel, end):
     self.expect_keyword('def')
     name = Symbol(self.expect_ident())
     self.expect_delimiter(':=')
@@ -549,6 +554,12 @@ class Parser:
       body = self.parse_expression(is_toplevel)
       self.pop_scope()
       return LocalDefinition(name, value, body)
+    elif is_toplevel:
+      self.expect_delimiter(';')
+      self.push_scope([ name ])
+      stmts = self.parse_statements(end)
+      self.pop_scope()
+      return LocalDefinition(name, value, new_sequence(stmts))
     else:
       assert False
 
@@ -556,7 +567,7 @@ class Parser:
   #   -> 'return' <expression>
   #   -> <conditional-expression>
   #   -> <operator-expression> ';'
-  def parse_control_expression(self, is_toplevel):
+  def parse_control_expression(self, is_toplevel, end = None):
     if self.token().is_keyword('return'):
       self.expect_keyword('return')
       value = self.parse_expression(False)
@@ -565,7 +576,7 @@ class Parser:
     elif self.token().is_keyword('if'):
       return self.parse_conditional_expression(is_toplevel)
     elif self.token().is_keyword('def'):
-      return self.parse_local_definition(is_toplevel)
+      return self.parse_local_definition(is_toplevel, end)
     else:
       value = self.parse_operator_expression(None)
       if (is_toplevel): self.expect_delimiter(';')

@@ -60,6 +60,7 @@ public:
   inline Value *pop(uint32_t height = 1);
   inline Value *&operator[](uint32_t offset);
   inline Value *&argument(uint32_t index);
+  inline Value *&local(uint32_t index);
   inline Value *&self(uint32_t argc);
   inline void push(Value *value);
   word *&sp() { return sp_; }

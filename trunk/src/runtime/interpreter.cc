@@ -102,6 +102,13 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       pc += OpcodeInfo<OC_GLOBAL>::kSize;
       break;
     }
+    case OC_LOCAL: {
+      uint16_t index = cast<Code>(current.lambda()->code())->at(pc + 1);
+      Value *value = stack.local(index);
+      stack.push(value);
+      pc += OpcodeInfo<OC_LOCAL>::kSize;
+      break;
+    }
     case OC_ARGUMENT: {
       uint16_t index = cast<Code>(current.lambda()->code())->at(pc + 1);
       Value *value = stack.argument(index);

@@ -34,8 +34,10 @@ FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
 class Data {
 public:
   
-  void write_on(string_buffer &buf);
-  void write_short_on(string_buffer &buf);
+  enum WriteMode { DEFAULT, UNQUOTED };
+  
+  void write_on(string_buffer &buf, WriteMode mode = DEFAULT);
+  void write_short_on(string_buffer &buf, WriteMode mode = DEFAULT);
   
   string to_string();
   string to_short_string();
@@ -51,7 +53,6 @@ class Value : public Data {
 public:
   
   inline InstanceType type();
-  void write_chars_on(string_buffer &buf);
   
   /**
    * Returns true if this object supports comparisons with other

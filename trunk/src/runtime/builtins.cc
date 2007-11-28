@@ -174,6 +174,19 @@ Value *Builtins::tuple_eq(Arguments &args) {
 }
 
 
+// -------------------
+// --- L a m b d a ---
+// -------------------
+
+Value *Builtins::lambda_disassemble(Arguments &args) {
+  ref<Lambda> self = cast<Lambda>(args.self());
+  self.ensure_compiled();
+  scoped_string str(self->disassemble());
+  str->println();
+  return Runtime::current().roots().vhoid();
+}
+
+
 // -------------------------
 // --- F u n c t i o n s ---
 // -------------------------
@@ -182,7 +195,7 @@ Value *Builtins::fail(Arguments &args) {
   ASSERT_EQ(1, args.count());
   ref<String> arg = cast<String>(args[0]);
   string_buffer buf;
-  arg->write_chars_on(buf);
+  arg->write_on(buf, Data::UNQUOTED);
   fprintf(stderr, "Failure: %s\n", buf.raw_string().chars());
   exit(1);
 }

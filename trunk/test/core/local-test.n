@@ -1,9 +1,35 @@
 def get_four() {
-  def x := 4 in return x;
+  def x := 4;
+  return x;
 }
+
+def get_seven() {
+  def a := 3;
+  def b := 4;
+  return a + b;
+}
+
+def get_eight() {
+  def x := 8;
+  if (true) return x;
+  else return 6;
+}
+
+def get_nine() {
+  def x := 9;
+  if (false) return 6;
+  else return x;
+}
+
+def get_seventeen() -> def k := 17 in k;
 
 def local_test() {
   assert_equals(4, get_four());
+  assert_equals(7, get_seven());
+  assert_equals(8, get_eight());
+  assert_equals(9, get_nine());
+  assert_equals(17, get_seventeen());
+  get_seventeen.disassemble();
 }
 
 def main() {

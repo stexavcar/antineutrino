@@ -52,7 +52,7 @@ static void unparse_literal_expression_on(LiteralExpression *obj,
 static void unparse_invoke_expression_on(InvokeExpression *obj, string_buffer &buf) {
   obj->receiver()->unparse_on(buf);
   buf.append('.');
-  obj->name()->write_chars_on(buf);
+  obj->name()->write_on(buf, Data::UNQUOTED);
   buf.append('(');
   bool is_first = true;
   for (uint32_t i = 0; i < obj->arguments()->length(); i++) {
@@ -65,7 +65,7 @@ static void unparse_invoke_expression_on(InvokeExpression *obj, string_buffer &b
 
 static void unparse_class_expression(ClassExpression *obj, string_buffer &buf) {
   buf.append("class ");
-  obj->name()->write_chars_on(buf);
+  obj->name()->write_on(buf, Data::UNQUOTED);
   buf.append(" {");
   Tuple *methods = obj->methods();
   for (uint32_t i = 0; i < methods->length(); i++) {
@@ -83,9 +83,28 @@ static void unparse_return_expression(ReturnExpression *obj, string_buffer &buf)
 
 static void unparse_method_expression(MethodExpression *obj, string_buffer &buf) {
   buf.append("def ");
-  obj->name()->write_chars_on(buf);
+  obj->name()->write_on(buf, Data::UNQUOTED);
   obj->lambda()->unparse_on(buf);
   buf.append(";");
+}
+
+static void unparse_local_definition(LocalDefinition *obj, string_buffer &buf) {
+  buf.append("def ");
+  obj->symbol()->unparse_on(buf);
+  buf.append(" := ");
+  obj->value()->unparse_on(buf);
+  buf.append(" in ");
+  obj->body()->unparse_on(buf);
+}
+
+static void unparse_symbol(Symbol *obj, string_buffer &buf) {
+  Value *name = obj->name();
+  if (is<Void>(name)) {
+    buf.printf("&#%", reinterpret_cast<uint32_t>(obj));
+  } else {
+    buf.append("$");
+    name->write_on(buf, Data::UNQUOTED);
+  }
 }
 
 static void unparse_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
@@ -105,6 +124,12 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
     break;
   case RETURN_EXPRESSION_TYPE:
     unparse_return_expression(cast<ReturnExpression>(obj), buf);
+    break;
+  case LOCAL_DEFINITION_TYPE:
+    unparse_local_definition(cast<LocalDefinition>(obj), buf);
+    break;
+  case SYMBOL_TYPE:
+    unparse_symbol(cast<Symbol>(obj), buf);
     break;
   case THIS_EXPRESSION_TYPE:
     buf.append("this");

@@ -58,7 +58,7 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
 
 private:
-  static const bool kCheckStackHeight = true;
+  static const bool kCheckStackHeight = false;
   friend class Scope;
   ref<LambdaExpression> lambda() { return lambda_; }
   Factory &factory() { return runtime().factory(); }
@@ -431,8 +431,8 @@ void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
 }
 
 void Assembler::visit_local_definition(ref<LocalDefinition> that) {
-  __ codegen(that.value());
   uint32_t height = stack_height();
+  __ codegen(that.value());
   LocalScope scope(*this, that.symbol(), height);
   __ codegen(that.body());
   __ slap(1);

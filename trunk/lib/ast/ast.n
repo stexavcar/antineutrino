@@ -17,3 +17,7 @@ internal class ClassExpression : SyntaxTree {
 internal class ThisExpression : SyntaxTree {
 
 }
+
+internal class LocalDefinition : SyntaxTree {
+
+}

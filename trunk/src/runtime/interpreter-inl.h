@@ -46,6 +46,10 @@ Value *&Stack::argument(uint32_t index) {
   return *reinterpret_cast<Value**>(fp_ - index - 1);
 }
 
+Value *&Stack::local(uint32_t index) {
+  return *reinterpret_cast<Value**>(fp_ + Frame::kSize + index);
+}
+
 Value *&Stack::self(uint32_t argc) {
   return argument(argc + 1);
 }

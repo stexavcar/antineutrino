@@ -74,24 +74,16 @@ static void write_smi_short_on(Smi *obj, string_buffer &buf) {
   buf.printf("%", obj->value());
 }
 
-void Value::write_chars_on(string_buffer &buf) {
-  if (is<String>(this)) {
-    for (uint32_t i = 0; i < cast<String>(this)->length(); i++)
-      buf.append(cast<String>(this)->at(i));
-  } else {
-    write_short_on(buf);
-  }
-}
-
-static void write_string_short_on(String *obj, string_buffer &buf) {
-  buf.append('"');
-  obj->write_chars_on(buf);
-  buf.append('"');
+static void write_string_short_on(String *obj, Data::WriteMode mode, string_buffer &buf) {
+  if (mode != Data::UNQUOTED) buf.append('"');
+  for (uint32_t i = 0; i < obj->length(); i++)
+    buf.append(obj->at(i));
+  if (mode != Data::UNQUOTED) buf.append('"');
 }
 
 static void write_class_short_on(Class *obj, string_buffer &buf) {
   buf.append("#<class ");
-  obj->name()->write_chars_on(buf);
+  obj->name()->write_on(buf, Data::UNQUOTED);
   buf.append(">");
 }
 
@@ -111,18 +103,18 @@ static void write_instance_short_on(Instance *obj, string_buffer &buf) {
     } else {
       buf.append("a ");
     }
-    class_name->write_chars_on(buf);
+    class_name->write_on(buf, Data::UNQUOTED);
     buf.append(">");
   } else {
     buf.append("#<instance>");
   }
 }
 
-static void write_object_short_on(Object *obj, string_buffer &buf) {
+static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
   uint32_t instance_type = obj->chlass()->instance_type();
   switch (instance_type) {
   case STRING_TYPE:
-    write_string_short_on(cast<String>(obj), buf);
+    write_string_short_on(cast<String>(obj), mode, buf);
     break;
   case TUPLE_TYPE:
     buf.append("#<tuple>");
@@ -181,11 +173,11 @@ static void write_signal_short_on(Signal *obj, string_buffer &buf) {
   }
 }
 
-static void write_data_short_on(Data *obj, string_buffer &buf) {
+static void write_data_short_on(Data *obj, Data::WriteMode mode, string_buffer &buf) {
   if (is<Smi>(obj)) {
     write_smi_short_on(cast<Smi>(obj), buf);
   } else if (is<Object>(obj)) {
-    write_object_short_on(cast<Object>(obj), buf);
+    write_object_short_on(cast<Object>(obj), mode, buf);
   } else if (is<Signal>(obj)) {
     write_signal_short_on(cast<Signal>(obj), buf);
   } else {
@@ -233,7 +225,7 @@ static void write_method_on(Method *obj, string_buffer &buf) {
   obj->name()->write_short_on(buf);
 }
 
-static void write_object_on(Object *obj, string_buffer &buf) {
+static void write_object_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
   switch (obj->type()) {
   case TUPLE_TYPE:
     write_tuple_on(cast<Tuple>(obj), buf);
@@ -252,25 +244,25 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
   case METHOD_TYPE:
     write_method_on(cast<Method>(obj), buf);
   default:
-    write_object_short_on(obj, buf);
+    write_object_short_on(obj, mode, buf);
     break;
   }
 }
 
-static void write_data_on(Data *obj, string_buffer &buf) {
+static void write_data_on(Data *obj, Data::WriteMode mode, string_buffer &buf) {
   if (is<Object>(obj)) {
-    write_object_on(cast<Object>(obj), buf);
+    write_object_on(cast<Object>(obj), mode, buf);
   } else {
-    write_data_short_on(obj, buf);
+    write_data_short_on(obj, mode, buf);
   }
 }
 
-void Data::write_on(string_buffer &buf) {
-  write_data_on(this, buf);
+void Data::write_on(string_buffer &buf, Data::WriteMode mode) {
+  write_data_on(this, mode, buf);
 }
 
-void Data::write_short_on(string_buffer &buf) {
-  write_data_short_on(this, buf);
+void Data::write_short_on(string_buffer &buf, Data::WriteMode mode) {
+  write_data_short_on(this, mode, buf);
 }
 
 
@@ -288,10 +280,19 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
         buf.printf("argument %", data[pc + 1]);
         pc += OpcodeInfo<OC_ARGUMENT>::kSize;
         break;
+      case OC_LOCAL:
+        buf.printf("local %", data[pc + 1]);
+        pc += OpcodeInfo<OC_LOCAL>::kSize;
+        break;
       case OC_GLOBAL: {
         scoped_string name(literals->at(data[pc + 1])->to_string());
         buf.printf("global %", name.chars());
         pc += OpcodeInfo<OC_GLOBAL>::kSize;
+        break;
+      }
+      case OC_BUILTIN: {
+        buf.printf("built-in %", data[pc + 1]);
+        pc += OpcodeInfo<OC_BUILTIN>::kSize;
         break;
       }
       case OC_PUSH: {
@@ -342,6 +343,10 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
       case OC_CONCAT:
         buf.printf("concat %", data[pc + 1]);
         pc += OpcodeInfo<OC_CONCAT>::kSize;
+        break;
+      case OC_CHKHGT:
+        buf.printf("check height %", data[pc + 1]);
+        pc += OpcodeInfo<OC_CHKHGT>::kSize;
         break;
       default:
         UNHANDLED(Opcode, data[pc]);

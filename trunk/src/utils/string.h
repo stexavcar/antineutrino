@@ -39,6 +39,7 @@ public:
   scoped_string(string str) : value_(str) { }
   ~scoped_string() { value_.dispose(); }
   string &operator*() { return value_; }
+  string *operator->() { return &value_; }
   const char *chars() { return value_.chars(); }
 private:
   string value_;
