@@ -24,7 +24,8 @@ public:
       : lambda_(lambda)
       , runtime_(runtime)
       , pool_(runtime.factory())
-      , scope_(NULL) { }
+      , scope_(NULL)
+      , stack_height_(0) { }
   void initialize() { pool().initialize(); }
   Scope &scope() { ASSERT(scope_ != NULL); return *scope_; }
   
@@ -57,11 +58,12 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
 
 private:
+  static const bool kCheckStackHeight = true;
   friend class Scope;
   ref<LambdaExpression> lambda() { return lambda_; }
   Factory &factory() { return runtime().factory(); }
   uint32_t stack_height() { return stack_height_; }
-  void adjust_stack_height(int32_t delta) { stack_height_ += delta; }
+  void adjust_stack_height(int32_t delta);
   Runtime &runtime() { return runtime_; }
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }
@@ -111,6 +113,14 @@ uint16_t Assembler::constant_pool_index(ref<Value> value) {
   return result;
 }
 
+void Assembler::adjust_stack_height(int32_t delta) {
+  stack_height_ += delta;
+  if (kCheckStackHeight) {
+    code().append(OC_CHKHGT);
+    code().append(stack_height_);
+  }
+}
+
 void Assembler::invoke(ref<String> name, uint16_t argc) {
   STATIC_CHECK(OpcodeInfo<OC_INVOKE>::kArgc == 2);
   uint16_t name_index = constant_pool_index(name);
@@ -130,6 +140,7 @@ void Assembler::push(ref<Value> value) {
   uint16_t index = constant_pool_index(value);
   code().append(OC_PUSH);
   code().append(index);
+  adjust_stack_height(1);
 }
 
 void Assembler::global(ref<Value> value) {
@@ -137,30 +148,35 @@ void Assembler::global(ref<Value> value) {
   uint16_t index = constant_pool_index(value);
   code().append(OC_GLOBAL);
   code().append(index);
+  adjust_stack_height(1);
 }
 
 void Assembler::argument(uint16_t index) {
   STATIC_CHECK(OpcodeInfo<OC_ARGUMENT>::kArgc == 1);
   code().append(OC_ARGUMENT);
   code().append(index);
+  adjust_stack_height(1);
 }
 
 void Assembler::local(uint16_t height) {
   STATIC_CHECK(OpcodeInfo<OC_LOCAL>::kArgc == 1);
   code().append(OC_LOCAL);
   code().append(height);
+  adjust_stack_height(1);
 }
 
 void Assembler::pop(uint16_t height) {
   STATIC_CHECK(OpcodeInfo<OC_POP>::kArgc == 1);
   code().append(OC_POP);
   code().append(height);
+  adjust_stack_height(-height);
 }
 
 void Assembler::slap(uint16_t height) {
   STATIC_CHECK(OpcodeInfo<OC_SLAP>::kArgc == 1);
   code().append(OC_SLAP);
   code().append(height);
+  adjust_stack_height(-height);
 }
 
 void Assembler::rethurn() {
@@ -172,12 +188,14 @@ void Assembler::tuple(uint16_t size) {
   STATIC_CHECK(OpcodeInfo<OC_TUPLE>::kArgc == 1);
   code().append(OC_TUPLE);
   code().append(size);
+  adjust_stack_height(-(size - 1));
 }
 
 void Assembler::concat(uint16_t terms) {
   STATIC_CHECK(OpcodeInfo<OC_CONCAT>::kArgc == 1);
   code().append(OC_CONCAT);
   code().append(terms);
+  adjust_stack_height(-(terms - 1));
 }
 
 void Assembler::builtin(uint16_t argc, uint16_t index) {
@@ -185,6 +203,7 @@ void Assembler::builtin(uint16_t argc, uint16_t index) {
   code().append(OC_BUILTIN);
   code().append(argc);
   code().append(index);
+  adjust_stack_height(1);
 }
 
 void Assembler::if_true(Label &label) {
@@ -192,6 +211,7 @@ void Assembler::if_true(Label &label) {
   code().append(OC_IF_TRUE);
   code().append(label.value());
   if (!label.is_bound()) label.set_value(code().length() - 1);
+  adjust_stack_height(-1);
 }
 
 void Assembler::ghoto(Label &label) {

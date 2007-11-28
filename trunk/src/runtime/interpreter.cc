@@ -21,7 +21,7 @@ class Log {
 public:
   static inline void instruction(uint16_t opcode, Stack &stack);
 private:
-  static const bool kTraceInstructions = false;
+  static const bool kTraceInstructions = true;
 };
 
 // -----------------------------
@@ -213,6 +213,13 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       pc += OpcodeInfo<OC_TUPLE>::kSize;
       break;
     }
+    case OC_CHKHGT: {
+      uint16_t expected = cast<Code>(current.lambda()->code())->at(pc + 1);      
+      uint16_t height = (stack.sp() - stack.fp()) - Frame::kSize;
+      CHECK_EQ(expected, height);
+      pc += OpcodeInfo<OC_CHKHGT>::kSize;
+      break;
+    }
     case OC_CONCAT: {
       RefScope scope;
       uint32_t terms = cast<Code>(current.lambda()->code())->at(pc + 1);
@@ -244,7 +251,8 @@ void Log::instruction(uint16_t code, Stack &stack) {
   if (kTraceInstructions) {
     EnumInfo<Opcode> info;
     string name = info.get_name_for(code);
-    printf("%s (%i %i)\n", name.chars(), code, static_cast<int>(stack.sp() - stack.bottom()));
+    uint16_t height = (stack.sp() - stack.fp()) - Frame::kSize;
+    printf("%s (%i)\n", name.chars(), height);
   }
 #endif
 }
