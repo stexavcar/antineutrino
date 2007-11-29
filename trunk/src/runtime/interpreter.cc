@@ -246,6 +246,27 @@ ref<Value> Interpreter::interpret(Stack &stack) {
       pc += OpcodeInfo<OC_CONCAT>::kSize;
       break;
     }
+    case OC_CLOSURE: {
+      RefScope scope;
+      uint32_t index = cast<Code>(current.lambda()->code())->at(pc + 1);
+      ref<Lambda> lambda = new_ref(cast<Lambda>(cast<Tuple>(current.lambda()->literals())->at(index)));
+      uint32_t outer_count = cast<Code>(current.lambda()->code())->at(pc + 2);
+      ref<Tuple> outers = runtime().factory().new_tuple(outer_count);
+      for (uint32_t i = 0; i < outer_count; i++)
+        outers->set(outer_count - i - 1, stack.pop());
+      ref<Lambda> clone = lambda.clone(runtime().factory());
+      clone->set_outers(*outers);
+      stack.push(*clone);
+      pc += OpcodeInfo<OC_CLOSURE>::kSize;
+      break;
+    }
+    case OC_OUTER: {
+      uint32_t index = cast<Code>(current.lambda()->code())->at(pc + 1);
+      Value *value = current.lambda()->outers()->at(index);
+      stack.push(value);
+      pc += OpcodeInfo<OC_OUTER>::kSize;
+      break;
+    }
     default:
       UNHANDLED(Opcode, oc);
       return ref<Value>::empty();

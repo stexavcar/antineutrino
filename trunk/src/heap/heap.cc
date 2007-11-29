@@ -43,6 +43,7 @@ Data *Heap::new_lambda(uint32_t argc, Value *code, Value *literals, LambdaExpres
   result->set_code(code);
   result->set_literals(literals);
   result->set_tree(tree);
+  result->set_outers(roots().empty_tuple());
   return result;
 }
 

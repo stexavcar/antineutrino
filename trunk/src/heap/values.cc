@@ -87,13 +87,6 @@ static void write_class_short_on(Class *obj, string_buffer &buf) {
   buf.append(">");
 }
 
-static void write_literal_expression_short_on(LiteralExpression *obj,
-    string_buffer &buf) {
-  buf.append('<');
-  obj->value()->write_short_on(buf);
-  buf.append('>');
-}
-
 static void write_instance_short_on(Instance *obj, string_buffer &buf) {
   Value *class_name = obj->chlass()->name();
   if (is<String>(class_name)) {
@@ -108,6 +101,12 @@ static void write_instance_short_on(Instance *obj, string_buffer &buf) {
   } else {
     buf.append("#<instance>");
   }
+}
+
+static void write_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
+  buf.append('<');
+  obj->unparse_on(buf);
+  buf.append('>');
 }
 
 static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
@@ -134,15 +133,6 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
   case FALSE_TYPE:
     buf.append("false");
     break;
-  case LITERAL_EXPRESSION_TYPE:
-    write_literal_expression_short_on(cast<LiteralExpression>(obj), buf);
-    break;
-  case CLASS_EXPRESSION_TYPE:
-    buf.append("@<class>");
-    break;
-  case INVOKE_EXPRESSION_TYPE:
-    buf.append("@<invoke>");
-    break;
   case DICTIONARY_TYPE:
     buf.append("#<dictionary>");
     break;
@@ -157,6 +147,11 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
     break;
   case INSTANCE_TYPE:
     write_instance_short_on(cast<Instance>(obj), buf);
+    break;
+#define MAKE_CASE(n, NAME, Name, info) case NAME##_TYPE:
+FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
+#undef MAKE_CASE
+    write_syntax_tree_on(cast<SyntaxTree>(obj), buf);
     break;
   default:
     UNHANDLED(InstanceType, instance_type);
@@ -199,12 +194,6 @@ static void write_lambda_on(Lambda *obj, string_buffer &buf) {
   obj->code()->write_on(buf);
 }
 
-static void write_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
-  buf.append('<');
-  obj->unparse_on(buf);
-  buf.append('>');
-}
-
 static void write_dictionary_on(Dictionary *obj, string_buffer &buf) {
   buf.append('{');
   Dictionary::Iterator iter(obj);
@@ -232,11 +221,6 @@ static void write_object_on(Object *obj, Data::WriteMode mode, string_buffer &bu
     break;
   case LAMBDA_TYPE:
     write_lambda_on(cast<Lambda>(obj), buf);
-    break;
-#define MAKE_CASE(n, NAME, Name, info) case NAME##_TYPE:
-FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
-#undef MAKE_CASE
-    write_syntax_tree_on(cast<SyntaxTree>(obj), buf);
     break;
   case DICTIONARY_TYPE:
     write_dictionary_on(cast<Dictionary>(obj), buf);
@@ -320,6 +304,10 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
         pc += OpcodeInfo<OC_INVOKE>::kSize;
         break;
       }
+      case OC_CLOSURE:
+        buf.printf("closure % %", data[pc + 1], data[pc + 2]);
+        pc += OpcodeInfo<OC_CLOSURE>::kSize;
+        break;
       case OC_IF_TRUE:
         buf.printf("if_true %", data[pc + 1]);
         pc += OpcodeInfo<OC_IF_TRUE>::kSize;
@@ -481,6 +469,11 @@ void Value::validate() {
 ref<Value> ref_traits<Lambda>::call() {
   Interpreter &interpreter = Runtime::current().interpreter();
   return interpreter.call(open(this));
+}
+
+ref<Lambda> ref_traits<Lambda>::clone(Factory &factory) {
+  ref<Lambda> self = open(this);
+  return factory.new_lambda(self->argc(), self.code(), self.literals(), self.tree());
 }
 
 

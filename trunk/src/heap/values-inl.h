@@ -276,6 +276,7 @@ DEFINE_ACCESSORS(uint32_t, Lambda, argc, kArgcOffset)
 DEFINE_FIELD_ACCESSORS(Value, Lambda, code, kCodeOffset)
 DEFINE_FIELD_ACCESSORS(Value, Lambda, literals, kLiteralsOffset)
 DEFINE_FIELD_ACCESSORS(LambdaExpression, Lambda, tree, kTreeOffset)
+DEFINE_FIELD_ACCESSORS(Tuple, Lambda, outers, kOutersOffset)
 
 // -------------------
 // --- B u f f e r ---

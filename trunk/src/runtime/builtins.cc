@@ -1,3 +1,4 @@
+#include "compiler/ast-inl.h"
 #include "heap/values-inl.h"
 #include "runtime/builtins-inl.h"
 #include "runtime/runtime-inl.h"
@@ -184,6 +185,19 @@ Value *Builtins::lambda_disassemble(Arguments &args) {
   scoped_string str(self->disassemble());
   str->println();
   return Runtime::current().roots().vhoid();
+}
+
+
+// -----------------------------------------
+// --- L a m b d a   E x p r e s s i o n ---
+// -----------------------------------------
+
+Value *Builtins::lambda_expression_params(Arguments &args) {
+  return cast<LambdaExpression>(args.self())->params();
+}
+
+Value *Builtins::lambda_expression_body(Arguments &args) {
+  return cast<LambdaExpression>(args.self())->body();
 }
 
 

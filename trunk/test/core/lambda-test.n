@@ -3,6 +3,13 @@ def test_lambda() {
   assert_equals(4, f());
 }
 
+def test_closure() {
+  def a := 4;
+  def f := (fn (x) -> a);
+  assert_equals(4, f());
+}
+
 def main() {
   test_lambda();
+  test_closure();
 }

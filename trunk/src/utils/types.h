@@ -15,6 +15,7 @@ class Class;
 class Code;
 class Data;
 class Dictionary;
+class Factory;
 class Heap;
 class Image;
 class Lambda;

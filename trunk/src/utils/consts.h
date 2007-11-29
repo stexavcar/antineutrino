@@ -219,21 +219,23 @@
  * or has built in methods should be mentioned in this list.
  */
 #define FOR_EACH_BUILTIN_CLASS(VISIT)                                \
-  VISIT(SmallInteger, smi,  SMI)                                     \
-  VISIT(String, string, STRING)                                      \
-  VISIT(True, true, TRUE)                                            \
-  VISIT(False,  false,  FALSE)                                       \
-  VISIT(Void, void, VOID)                                            \
-  VISIT(Null,   null,   NULL)                                        \
-  VISIT(Object, object, OBJECT)                                      \
-  VISIT(Lambda, lambda, LAMBDA)                                      \
-  VISIT(Tuple, tuple, TUPLE)                                         \
-  VISIT(Class, class, CLASS)                                         \
+  VISIT(SmallInteger,      smi,                SMI)                  \
+  VISIT(String,            string,             STRING)               \
+  VISIT(True,              true,               TRUE)                 \
+  VISIT(False,             false,              FALSE)                \
+  VISIT(Void,              void,               VOID)                 \
+  VISIT(Null,              null,               NULL)                 \
+  VISIT(Object,            object,             OBJECT)               \
+  VISIT(Lambda,            lambda,             LAMBDA)               \
+  VISIT(Tuple,             tuple,              TUPLE)                \
+  VISIT(Class,             class,              CLASS)                \
   VISIT(LiteralExpression, literal_expression, LITERAL_EXPRESSION)   \
-  VISIT(InvokeExpression, invoke_expression, INVOKE_EXPRESSION)      \
-  VISIT(ClassExpression, class_expression, CLASS_EXPRESSION)         \
-  VISIT(ThisExpression, this_expression, THIS_EXPRESSION)            \
-  VISIT(LocalDefinition, local_definition, LOCAL_DEFINITION)
+  VISIT(InvokeExpression,  invoke_expression,  INVOKE_EXPRESSION)    \
+  VISIT(ClassExpression,   class_expression,   CLASS_EXPRESSION)     \
+  VISIT(ThisExpression,    this_expression,    THIS_EXPRESSION)      \
+  VISIT(LocalDefinition,   local_definition,   LOCAL_DEFINITION)     \
+  VISIT(LambdaExpression,  lambda_expression,  LAMBDA_EXPRESSION)    \
+  VISIT(ReturnExpression,  return_expression,  RETURN_EXPRESSION)
 
 
 // ---------------------------------------
@@ -246,20 +248,22 @@
  * implementation must be added in builtins.cc.
  */
 #define FOR_EACH_BUILTIN_METHOD(VISIT)                               \
-  VISIT(0,  string,           length,      "||")                     \
-  VISIT(1,  string,           eq,          "=")                      \
-  VISIT(2,  string,           plus,        "+")                      \
-  VISIT(10, smi,              plus,        "+")                      \
-  VISIT(11, smi,              minus,       "-")                      \
-  VISIT(12, smi,              times,       "*")                      \
-  VISIT(13, smi,              divide,      "/")                      \
-  VISIT(14, smi,              abs,         "||")                     \
-  VISIT(20, object,           eq,          "=")                      \
-  VISIT(21, object,           to_string,   "to_string")              \
-  VISIT(30, class_expression, evaluate,    "evaluate")               \
-  VISIT(40, class,            new,         "new")                    \
-  VISIT(50, tuple,            eq,          "=")                      \
-  VISIT(60, lambda,           disassemble, "disassemble")
+  VISIT(0,  string,            length,      "||")                    \
+  VISIT(1,  string,            eq,          "=")                     \
+  VISIT(2,  string,            plus,        "+")                     \
+  VISIT(10, smi,               plus,        "+")                     \
+  VISIT(11, smi,               minus,       "-")                     \
+  VISIT(12, smi,               times,       "*")                     \
+  VISIT(13, smi,               divide,      "/")                     \
+  VISIT(14, smi,               abs,         "||")                    \
+  VISIT(20, object,            eq,          "=")                     \
+  VISIT(21, object,            to_string,   "to_string")             \
+  VISIT(30, class_expression,  evaluate,    "evaluate")              \
+  VISIT(40, class,             new,         "new")                   \
+  VISIT(41, tuple,             eq,          "=")                     \
+  VISIT(42, lambda,            disassemble, "disassemble")           \
+  VISIT(43, lambda_expression, params,      "parameters")            \
+  VISIT(44, lambda_expression, body,        "body")
 
 
 // -------------------------------------------

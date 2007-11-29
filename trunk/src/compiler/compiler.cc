@@ -21,8 +21,8 @@ class Label;
 class CompileSession {
 public:
   CompileSession(Runtime &runtime);
-  ref<Lambda> compile(ref<LambdaExpression> that);
-  void compile(ref<Lambda> tree);
+  ref<Lambda> compile(ref<LambdaExpression> that, Scope *enclosing);
+  void compile(ref<Lambda> tree, Scope *enclosing);
   Runtime &runtime() { return runtime_; }
 private:
   Runtime &runtime_;
@@ -30,11 +30,12 @@ private:
 
 class Assembler : public Visitor {
 public:
-  Assembler(ref<LambdaExpression> lambda, CompileSession &session)
+  Assembler(ref<LambdaExpression> lambda, CompileSession &session,
+      Scope *scope)
       : lambda_(lambda)
       , session_(session)
       , pool_(session.runtime().factory())
-      , scope_(NULL)
+      , scope_(scope)
       , stack_height_(0) { }
   void initialize() { pool().initialize(); }
   Scope &scope() { ASSERT(scope_ != NULL); return *scope_; }
@@ -43,6 +44,7 @@ public:
   ref<Tuple> flush_constant_pool();
   
   uint16_t constant_pool_index(ref<Value> value);
+  void load_symbol(ref<Symbol> sym);
   
   void codegen(ref<SyntaxTree> that) { that.accept(*this); }
   void push(ref<Value> value);
@@ -55,6 +57,8 @@ public:
   void global(ref<Value> name);
   void argument(uint16_t index);
   void local(uint16_t height);
+  void outer(uint16_t index);
+  void closure(ref<Lambda> lambda, uint16_t outers);
   void if_true(Label &label);
   void ghoto(Label &label);
   void bind(Label &label);
@@ -67,11 +71,12 @@ public:
 FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
 
+  Factory &factory() { return runtime().factory(); }
+
 private:
   static const bool kCheckStackHeight = false;
   friend class Scope;
   ref<LambdaExpression> lambda() { return lambda_; }
-  Factory &factory() { return runtime().factory(); }
   Runtime &runtime() { return session().runtime(); }
   CompileSession &session() { return session_; }
   uint32_t stack_height() { return stack_height_; }
@@ -176,6 +181,21 @@ void Assembler::local(uint16_t height) {
   adjust_stack_height(1);
 }
 
+void Assembler::outer(uint16_t index) {
+  STATIC_CHECK(OpcodeInfo<OC_OUTER>::kArgc == 1);
+  code().append(OC_OUTER);
+  code().append(index);
+  adjust_stack_height(1);
+}
+
+void Assembler::closure(ref<Lambda> lambda, uint16_t outers) {
+  STATIC_CHECK(OpcodeInfo<OC_CLOSURE>::kArgc == 2);
+  uint16_t index = constant_pool_index(lambda);
+  code().append(OC_CLOSURE);
+  code().append(index);
+  code().append(outers);
+}
+
 void Assembler::pop(uint16_t height) {
   STATIC_CHECK(OpcodeInfo<OC_POP>::kArgc == 1);
   code().append(OC_POP);
@@ -249,7 +269,7 @@ void Assembler::bind(Label &label) {
 // -----------------
 
 enum Category {
-  MISSING, ARGUMENT, LOCAL
+  MISSING, ARGUMENT, LOCAL, OUTER
 };
 
 struct Lookup {
@@ -258,29 +278,34 @@ struct Lookup {
   union {
     struct { uint16_t index; } argument_info;
     struct { uint16_t height; } local_info;
+    struct { uint16_t index; } outer_info;
   };  
 };
 
 class Scope {
 public:
   Scope(Assembler &assembler);
+  Scope();
   ~Scope();
   virtual void lookup(ref<Symbol> symbol, Lookup &result) = 0;
 protected:
   Scope *parent() { return parent_; }
 private:
-  Assembler &assembler_;
+  Assembler *assembler_;
   Scope *parent_;
 };
 
 Scope::Scope(Assembler &assembler) 
-    : assembler_(assembler)
+    : assembler_(&assembler)
     , parent_(assembler.scope_) {
   assembler.scope_ = this;
 }
 
+Scope::Scope() : assembler_(NULL), parent_(NULL) { }
+
 Scope::~Scope() {
-  assembler_.scope_ = parent_;
+  if (assembler_ != NULL)
+    assembler_->scope_ = parent_;
 }
 
 class ArgumentScope : public Scope {
@@ -324,6 +349,31 @@ void LocalScope::lookup(ref<Symbol> symbol, Lookup &result) {
   } else if (parent() != NULL) {
     return parent()->lookup(symbol, result);
   }
+}
+
+class ClosureScope : public Scope {
+public:
+  ClosureScope(Factory &factory)
+      : outers_(factory) {
+    outers().initialize();
+  }
+  virtual void lookup(ref<Symbol> symbol, Lookup &result);
+  heap_list &outers() { return outers_; }
+private:
+  heap_list outers_;
+};
+
+void ClosureScope::lookup(ref<Symbol> symbol, Lookup &result) {
+  for (uint32_t i = 0; i < outers().length(); i++) {
+    if (outers().get(i)->equals(*symbol)) {
+      result.category = OUTER;
+      result.outer_info.index = i;
+      return;
+    }
+  }
+  result.category = OUTER;
+  result.outer_info.index = outers().length();
+  outers().append(symbol);
 }
 
 // -------------------------------------
@@ -396,17 +446,26 @@ void Assembler::visit_global_expression(ref<GlobalExpression> that) {
   __ global(that.name());
 }
 
-void Assembler::visit_symbol(ref<Symbol> that) {
+void Assembler::load_symbol(ref<Symbol> that) {
   Lookup lookup;
   scope().lookup(that, lookup);
   switch (lookup.category) {
     case ARGUMENT:
       __ argument(lookup.argument_info.index);
       break;
-    default:
+    case LOCAL:
       __ local(lookup.local_info.height);
       break;
+    case OUTER:
+      __ outer(lookup.outer_info.index);
+      break;
+    default:
+      UNREACHABLE();
   }
+}
+
+void Assembler::visit_symbol(ref<Symbol> that) {
+  load_symbol(that);
 }
 
 void Assembler::visit_conditional_expression(ref<ConditionalExpression> that) {
@@ -450,8 +509,17 @@ void Assembler::visit_local_definition(ref<LocalDefinition> that) {
 }
 
 void Assembler::visit_lambda_expression(ref<LambdaExpression> that) {
-  ref<Lambda> lambda = session().compile(that);
-  __ push(lambda);
+  ClosureScope scope(factory());
+  ref<Lambda> lambda = session().compile(that, &scope);
+  if (scope.outers().length() > 0) {
+    for (uint32_t i = 0; i < scope.outers().length(); i++) {
+      ref<Symbol> sym = cast<Symbol>(scope.outers()[i]);
+      load_symbol(sym);
+    }
+    __ closure(lambda, scope.outers().length());
+  } else {
+    __ push(lambda);
+  }
 }
 
 void Assembler::visit_this_expression(ref<ThisExpression> that) {
@@ -491,23 +559,23 @@ ref<Lambda> Compiler::compile(ref<MethodExpression> method) {
 
 void Compiler::compile(ref<Lambda> lambda) {
   CompileSession session(Runtime::current());
-  session.compile(lambda);
+  session.compile(lambda, NULL);
 }
 
-ref<Lambda> CompileSession::compile(ref<LambdaExpression> that) {
+ref<Lambda> CompileSession::compile(ref<LambdaExpression> that, Scope *enclosing) {
   ref<Lambda> lambda = runtime().factory().new_lambda(
     that->params()->length(),
     runtime().vhoid(),
     runtime().vhoid(),
     that
   );
-  compile(lambda);
+  compile(lambda, enclosing);
   return lambda;
 }
 
-void CompileSession::compile(ref<Lambda> lambda) {
+void CompileSession::compile(ref<Lambda> lambda, Scope *enclosing) {
   ref<LambdaExpression> tree = lambda.tree();
-  Assembler assembler(tree, *this);
+  Assembler assembler(tree, *this, enclosing);
   ref<Tuple> params = tree.params();
   ArgumentScope scope(assembler, params);
   assembler.initialize();

@@ -107,6 +107,18 @@ static void unparse_symbol(Symbol *obj, string_buffer &buf) {
   }
 }
 
+static void unparse_lambda_expression(LambdaExpression *obj, string_buffer &buf) {
+  buf.append("fn (");
+  bool is_first = true;
+  for (uint32_t i = 0; i < obj->params()->length(); i++) {
+    if (is_first) is_first = false;
+    else buf.append(", ");
+    cast<Symbol>(obj->params()->at(i))->unparse_on(buf);
+  }
+  buf.append(") ");
+  obj->body()->unparse_on(buf);
+}
+
 static void unparse_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
   InstanceType type = obj->type();
   switch (type) {
@@ -127,6 +139,9 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
     break;
   case LOCAL_DEFINITION_TYPE:
     unparse_local_definition(cast<LocalDefinition>(obj), buf);
+    break;
+  case LAMBDA_EXPRESSION_TYPE:
+    unparse_lambda_expression(cast<LambdaExpression>(obj), buf);
     break;
   case SYMBOL_TYPE:
     unparse_symbol(cast<Symbol>(obj), buf);

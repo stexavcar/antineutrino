@@ -315,6 +315,7 @@ public:
   DECLARE_FIELD(Value*, code);
   DECLARE_FIELD(Value*, literals);
   DECLARE_FIELD(LambdaExpression*, tree);
+  DECLARE_FIELD(Tuple*, outers);
   
   string disassemble();
   
@@ -322,7 +323,8 @@ public:
   static const uint32_t kCodeOffset     = kArgcOffset + kPointerSize;
   static const uint32_t kLiteralsOffset = kCodeOffset + kPointerSize;
   static const uint32_t kTreeOffset     = kLiteralsOffset + kPointerSize;
-  static const uint32_t kSize           = kTreeOffset + kPointerSize;
+  static const uint32_t kOutersOffset   = kTreeOffset + kPointerSize;
+  static const uint32_t kSize           = kOutersOffset + kPointerSize;
 };
 
 template <> class ref_traits<Lambda> : public ref_traits<Object> {
@@ -330,8 +332,10 @@ public:
   inline ref<Value> code();
   inline ref<Value> literals();
   inline ref<LambdaExpression> tree();
+  inline ref<Tuple> outers();
   void ensure_compiled();
   ref<Value> call();
+  ref<Lambda> clone(Factory &factory);
 };
 
 DEFINE_REF_CLASS(Lambda);

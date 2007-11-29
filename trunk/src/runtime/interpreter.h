@@ -21,7 +21,7 @@ namespace neutrino {
   VISIT(9,  FALSE,  0) VISIT(10, POP,    1)  VISIT(11, IF_TRUE,  1)  \
   VISIT(12, GOTO,   1) VISIT(13, INVOKE, 2)  VISIT(14, BUILTIN,  2)  \
   VISIT(15, TUPLE,  1) VISIT(16, CONCAT, 1)  VISIT(17, LOCAL,    1)  \
-  VISIT(18, CHKHGT, 1)
+  VISIT(18, CHKHGT, 1) VISIT(19, OUTER,  1)  VISIT(20, CLOSURE,  2)
 
 enum Opcode {
   __first_opcode = -1
