@@ -1,7 +1,6 @@
 #ifndef _IO_IMAGE
 #define _IO_IMAGE
 
-#include "heap/roots.h"
 #include "utils/consts.h"
 #include "utils/globals.h"
 #include "utils/types.h"

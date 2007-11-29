@@ -1,6 +1,7 @@
 #ifndef _UTILS_STRING
 #define _UTILS_STRING
 
+#include "utils/globals.h"
 #include "utils/types.h"
 
 namespace neutrino {

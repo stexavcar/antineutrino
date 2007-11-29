@@ -1,7 +1,6 @@
 #ifndef _POINTERS
 #define _POINTERS
 
-#include "heap/values.h"
 #include "utils/checks.h"
 #include "utils/types.h"
 

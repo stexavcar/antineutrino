@@ -7,6 +7,7 @@ def test_closure() {
   def a := 4;
   def f := (fn (x) -> a);
   assert_equals(4, f());
+  assert_equals(5, ((fn (x) -> fn (y) -> x + y)(2)(3)));
 }
 
 def main() {

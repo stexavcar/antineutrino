@@ -34,3 +34,7 @@ internal class LambdaExpression : SyntaxTree {
 internal class ReturnExpression : SyntaxTree {
 
 }
+
+internal class CallExpression : SyntaxTree {
+
+}

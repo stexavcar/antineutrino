@@ -1,3 +1,4 @@
+#include "heap/heap.h"
 #include "heap/roots-inl.h"
 #include "heap/values-inl.h"
 

@@ -1,7 +1,7 @@
 #ifndef _HEAP_MEMORY
 #define _HEAP_MEMORY
 
-#include "heap/space.h"
+#include "utils/types.h"
 
 namespace neutrino {
 

@@ -1,11 +1,9 @@
 #ifndef _HEAP_ROOTS
 #define _HEAP_ROOTS
 
-#include "compiler/ast.h"
-#include "heap/values.h"
-#include "heap/heap.h"
 #include "utils/consts.h"
 #include "utils/globals.h"
+#include "utils/types.h"
 
 namespace neutrino {
 

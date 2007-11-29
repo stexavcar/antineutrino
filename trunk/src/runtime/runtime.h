@@ -3,7 +3,7 @@
 
 #include "heap/factory.h"
 #include "heap/heap.h"
-#include "heap/ref-inl.h"
+#include "heap/ref.h"
 #include "heap/roots.h"
 #include "runtime/interpreter.h"
 

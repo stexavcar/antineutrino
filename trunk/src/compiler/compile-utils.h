@@ -1,7 +1,7 @@
 #ifndef COMPILER_COMPILE_UTILS
 #define COMPILER_COMPILE_UTILS
 
-#include "heap/factory.h"
+#include "heap/ref-inl.h"
 
 namespace neutrino {
 

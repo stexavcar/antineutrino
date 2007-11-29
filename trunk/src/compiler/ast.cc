@@ -107,16 +107,29 @@ static void unparse_symbol(Symbol *obj, string_buffer &buf) {
   }
 }
 
-static void unparse_lambda_expression(LambdaExpression *obj, string_buffer &buf) {
-  buf.append("fn (");
+static void unparse_list_on(Tuple *objs, string_buffer &buf) {
+  buf.append("(");
   bool is_first = true;
-  for (uint32_t i = 0; i < obj->params()->length(); i++) {
+  for (uint32_t i = 0; i < objs->length(); i++) {
     if (is_first) is_first = false;
     else buf.append(", ");
-    cast<Symbol>(obj->params()->at(i))->unparse_on(buf);
+    cast<SyntaxTree>(objs->at(i))->unparse_on(buf);
   }
-  buf.append(") ");
+  buf.append(")");
+}
+
+static void unparse_lambda_expression(LambdaExpression *obj, string_buffer &buf) {
+  buf.append("fn ");
+  unparse_list_on(obj->params(), buf);
+  buf.append(" ");
   obj->body()->unparse_on(buf);
+}
+
+static void unparse_call_expression(CallExpression *obj, string_buffer &buf) {
+  obj->receiver()->unparse_on(buf);
+  buf.append("·");
+  obj->function()->unparse_on(buf);
+  unparse_list_on(obj->arguments(), buf);
 }
 
 static void unparse_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
@@ -148,6 +161,9 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
     break;
   case THIS_EXPRESSION_TYPE:
     buf.append("this");
+    break;
+  case CALL_EXPRESSION_TYPE:
+    unparse_call_expression(cast<CallExpression>(obj), buf);
     break;
   default:
     UNHANDLED(InstanceType, type);

@@ -1,10 +1,9 @@
 #ifndef _HEAP_FACTORY
 #define _HEAP_FACTORY
 
-#include "compiler/ast.h"
 #include "heap/values.h"
 #include "utils/string.h"
-#include "utils/globals.h"
+#include "utils/types.h"
 
 namespace neutrino {
 

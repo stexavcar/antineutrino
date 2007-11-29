@@ -235,7 +235,8 @@
   VISIT(ThisExpression,    this_expression,    THIS_EXPRESSION)      \
   VISIT(LocalDefinition,   local_definition,   LOCAL_DEFINITION)     \
   VISIT(LambdaExpression,  lambda_expression,  LAMBDA_EXPRESSION)    \
-  VISIT(ReturnExpression,  return_expression,  RETURN_EXPRESSION)
+  VISIT(ReturnExpression,  return_expression,  RETURN_EXPRESSION)    \
+  VISIT(CallExpression,    call_expression,    CALL_EXPRESSION)
 
 
 // ---------------------------------------
