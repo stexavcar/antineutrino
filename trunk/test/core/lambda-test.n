@@ -1,0 +1,8 @@
+def test_lambda() {
+  def f := (fn (x) -> 4);
+  assert_equals(4, f());
+}
+
+def main() {
+  test_lambda();
+}

@@ -18,12 +18,22 @@ class Label;
 
 #define __ this->
 
+class CompileSession {
+public:
+  CompileSession(Runtime &runtime);
+  ref<Lambda> compile(ref<LambdaExpression> that);
+  void compile(ref<Lambda> tree);
+  Runtime &runtime() { return runtime_; }
+private:
+  Runtime &runtime_;
+};
+
 class Assembler : public Visitor {
 public:
-  Assembler(ref<LambdaExpression> lambda, Runtime &runtime)
+  Assembler(ref<LambdaExpression> lambda, CompileSession &session)
       : lambda_(lambda)
-      , runtime_(runtime)
-      , pool_(runtime.factory())
+      , session_(session)
+      , pool_(session.runtime().factory())
       , scope_(NULL)
       , stack_height_(0) { }
   void initialize() { pool().initialize(); }
@@ -62,13 +72,14 @@ private:
   friend class Scope;
   ref<LambdaExpression> lambda() { return lambda_; }
   Factory &factory() { return runtime().factory(); }
+  Runtime &runtime() { return session().runtime(); }
+  CompileSession &session() { return session_; }
   uint32_t stack_height() { return stack_height_; }
   void adjust_stack_height(int32_t delta);
-  Runtime &runtime() { return runtime_; }
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }
   ref<LambdaExpression> lambda_;
-  Runtime &runtime_;
+  CompileSession &session_;
   list_buffer<uint16_t> code_;
   heap_list pool_;
   Scope *scope_;
@@ -438,6 +449,11 @@ void Assembler::visit_local_definition(ref<LocalDefinition> that) {
   __ slap(1);
 }
 
+void Assembler::visit_lambda_expression(ref<LambdaExpression> that) {
+  ref<Lambda> lambda = session().compile(that);
+  __ push(lambda);
+}
+
 void Assembler::visit_this_expression(ref<ThisExpression> that) {
   __ argument(lambda()->params()->length() + 1);
 }
@@ -450,10 +466,6 @@ void Assembler::visit_class_expression(ref<ClassExpression> that) {
   visit_syntax_tree(that);
 }
 
-void Assembler::visit_lambda_expression(ref<LambdaExpression> that) {
-  visit_syntax_tree(that);
-}
-
 void Assembler::visit_method_expression(ref<MethodExpression> that) {
   visit_syntax_tree(that);
 }
@@ -462,21 +474,11 @@ void Assembler::visit_method_expression(ref<MethodExpression> that) {
 // --- C o m p i l e r ---
 // -----------------------
 
-class CompileSession {
-public:
-  CompileSession(Runtime &runtime);
-  void compile(ref<Lambda> tree);
-private:
-  Runtime &runtime() { return runtime_; }
-  Runtime &runtime_;
-};
-
 CompileSession::CompileSession(Runtime &runtime)
     : runtime_(runtime) { }
 
 ref<Lambda> Compiler::compile(ref<MethodExpression> method) {
   Runtime &runtime = Runtime::current();
-  CompileSession session(runtime);
   ref<LambdaExpression> lambda_expr = method.lambda();
   ref<Lambda> lambda = runtime.factory().new_lambda(
     lambda_expr->params()->length(),
@@ -492,9 +494,20 @@ void Compiler::compile(ref<Lambda> lambda) {
   session.compile(lambda);
 }
 
+ref<Lambda> CompileSession::compile(ref<LambdaExpression> that) {
+  ref<Lambda> lambda = runtime().factory().new_lambda(
+    that->params()->length(),
+    runtime().vhoid(),
+    runtime().vhoid(),
+    that
+  );
+  compile(lambda);
+  return lambda;
+}
+
 void CompileSession::compile(ref<Lambda> lambda) {
   ref<LambdaExpression> tree = lambda.tree();
-  Assembler assembler(tree, runtime());
+  Assembler assembler(tree, *this);
   ref<Tuple> params = tree.params();
   ArgumentScope scope(assembler, params);
   assembler.initialize();

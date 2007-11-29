@@ -21,6 +21,7 @@ public:
   ref<Class> new_empty_class(InstanceType instance_type);
   ref<Instance> new_instance(ref<Class> chlass);
 private:
+  template <typename T, class M> inline ref<T> allocate(M fun);
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
 };

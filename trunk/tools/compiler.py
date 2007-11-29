@@ -77,7 +77,7 @@ class Delimiter(Token):
 
 KEYWORDS = [
   'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return',
-  'null', 'true', 'false', 'internal', 'operator', 'new', 'in'
+  'null', 'true', 'false', 'internal', 'operator', 'new', 'in', 'fn'
 ]
 
 RESERVED = [
@@ -457,7 +457,7 @@ class Parser:
       fun = Lambda(params, Return(BuiltinCall(len(params), index)))
     else:
       self.push_scope(params)
-      body = self.parse_function_body()
+      body = self.parse_function_body(True)
       fun = Lambda(params, body)
       self.pop_scope()
     return Method(name, fun)
@@ -481,19 +481,19 @@ class Parser:
         self.expect_delimiter(';')
       else:
         self.push_scope(params)
-        body = self.parse_function_body()
+        body = self.parse_function_body(True)
         fun = Lambda(params, body)
         self.pop_scope()
       return Definition(name, fun)
 
   # <function-body>
-  #   -> '->' <expression>
+  #   -> '->' <expression> ';'?
   #   -> <block-expression>
-  def parse_function_body(self):
+  def parse_function_body(self, is_toplevel):
     if self.token().is_delimiter('->'):
       self.expect_delimiter('->')
       value = self.parse_expression(False)
-      self.expect_delimiter(';')
+      if is_toplevel: self.expect_delimiter(';')
       return Return(value)
     elif self.token().is_delimiter('{'):
       self.expect_delimiter('{')
@@ -578,9 +578,20 @@ class Parser:
     elif self.token().is_keyword('def'):
       return self.parse_local_definition(is_toplevel, end)
     else:
-      value = self.parse_operator_expression(None)
+      value = self.parse_prefix_expression()
       if (is_toplevel): self.expect_delimiter(';')
       return value
+  
+  def parse_prefix_expression(self):
+    if self.token().is_keyword('fn'):
+      self.expect_keyword('fn')
+      params = self.parse_params('(', ')')
+      self.push_scope(params)
+      expr = self.parse_function_body(False)
+      self.pop_scope()
+      return Lambda(params, expr)
+    else:
+      return self.parse_operator_expression(None)
   
   def parse_operator_expression(self, end):
     expr = self.parse_call_expression()
