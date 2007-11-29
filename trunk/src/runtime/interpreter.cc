@@ -19,7 +19,7 @@ MAKE_ENUM_INFO_FOOTER()
 
 class Log {
 public:
-  static inline void instruction(uint16_t opcode, Stack &stack);
+  static inline void instruction(uint16_t opcode, OldStack &stack);
 private:
   static const bool kTraceInstructions = false;
 };
@@ -30,7 +30,7 @@ private:
 
 ref<Value> Interpreter::call(ref<Lambda> lambda) {
   lambda.ensure_compiled();
-  Stack stack;
+  OldStack stack;
   stack.push(runtime().roots().vhoid()); // initial 'this'
   stack.push(runtime().roots().vhoid()); // initial lambda
   Frame top = stack.push_activation();
@@ -69,7 +69,7 @@ Data *Interpreter::lookup_method(Class *chlass, Value *name) {
   return Nothing::make();
 }
 
-ref<Value> Interpreter::interpret(Stack &stack) {
+ref<Value> Interpreter::interpret(OldStack &stack) {
   Frame current = stack.top();
   uint32_t pc = 0;
   while (true) {
@@ -274,7 +274,7 @@ ref<Value> Interpreter::interpret(Stack &stack) {
   }
 }
 
-void Log::instruction(uint16_t code, Stack &stack) {
+void Log::instruction(uint16_t code, OldStack &stack) {
 #ifdef DEBUG
   if (kTraceInstructions) {
     EnumInfo<Opcode> info;

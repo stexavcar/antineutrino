@@ -6,15 +6,18 @@
 
 namespace neutrino {
 
-template <typename D> void Roots::for_each(void (*callback)(Value**, D),
-    D data) {
-#define VISIT_FIELD(n, Type, name, Name, NAME, allocator)            \
-  callback(pointer_cast<Value*>(&entries_[n]), data);
-FOR_EACH_ROOT(VISIT_FIELD)
-#undef VISIT_FIELD
+RootIterator::RootIterator(Roots &roots)
+    : roots_(roots), index_(0) { }
+
+bool RootIterator::has_next() {
+  return index_ < Roots::kCount;
 }
 
-Object *&Roots::get(uint32_t n) {
+Value **RootIterator::next() {
+  return &roots_.get(index_++);
+}
+
+Value *&Roots::get(uint32_t n) {
   ASSERT(n < kCount);
   return entries_[n];
 }

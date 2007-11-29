@@ -27,8 +27,6 @@ public:
    */
   bool initialize(Heap& heap);
 
-  template <typename D> void for_each(void (*)(Value**, D), D);
-  
   static const uint32_t kCount = 36;
 
 // Declare root field accessors
@@ -37,12 +35,22 @@ public:
 FOR_EACH_ROOT(DECLARE_ROOT_ACCESSOR)
 #undef DECLARE_ROOT_ACCESSOR
 
-  inline Object *&get(uint32_t index);
+  inline Value *&get(uint32_t index);
 
 private:
+  friend class RootIterator;
+  Value *entries_[kCount];
   
-  Object *entries_[kCount];
-  
+};
+
+class RootIterator {
+public:
+  inline RootIterator(Roots &roots);
+  inline bool has_next();
+  inline Value **next();
+private:
+  Roots &roots_;
+  uint32_t index_;
 };
 
 }

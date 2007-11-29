@@ -10,7 +10,8 @@
 using namespace neutrino;
 
 Heap::Heap(Roots &roots)
-    : roots_(roots) { }
+    : roots_(roots)
+    , memory_(*this) { }
 
 Data *Heap::allocate_object(uint32_t size, Class *type) {
   address addr = memory().allocate(size);

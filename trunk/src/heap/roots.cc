@@ -10,12 +10,10 @@ FOR_EACH_ROOT(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
-static void clear_field(Value** field, void*) {
-  *field = Smi::from_int(0);
-}
-
 Roots::Roots() {
-  for_each<void*>(clear_field, 0);
+  RootIterator iter(*this);
+  while (iter.has_next())
+    *iter.next() = 0;
 }
 
 bool Roots::initialize(Heap& heap) {

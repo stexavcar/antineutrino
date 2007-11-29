@@ -13,6 +13,7 @@ public:
   address start() { return data_; }
   address end() { return data_ + capacity_; }
   address cursor() { return data_ + cursor_; }
+  bool contains(address addr);
   inline address allocate(uint32_t size);
 private:
   address data_;

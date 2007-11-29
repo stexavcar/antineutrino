@@ -7,14 +7,18 @@ namespace neutrino {
 
 class Memory {
 public:
-  Memory();
+  Memory(Heap &heap);
   ~Memory();
   inline address allocate(uint32_t size);
   void collect_garbage();
 private:
+  void migrate_object(Value **value_ptr, SemiSpace &from_space,
+      SemiSpace &to_space);
   friend class DisallowGarbageCollection;
+  Heap &heap() { return heap_; }
   SemiSpace &young_space() { return *young_space_; }
   bool allow_garbage_collection() { return allow_garbage_collection_; }
+  Heap &heap_;
   SemiSpace *young_space_;
   bool allow_garbage_collection_;
 };

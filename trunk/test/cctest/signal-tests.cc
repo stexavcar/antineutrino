@@ -1,3 +1,4 @@
+#include "cctest/tests-inl.h"
 #include "heap/values-inl.h"
 
 using namespace neutrino;
@@ -19,4 +20,14 @@ static void test_signals() {
   CHECK_EQ(25, cast<InternalError>(ie)->payload());
   Signal *no = Nothing::make();
   CHECK_IS(Nothing, no);
+}
+
+static void test_forward_pointers() {
+  LocalRuntime runtime;
+  Heap &heap = runtime.heap();
+  Code *code = cast<Code>(heap.new_code(4));
+  ForwardPointer *ptr = ForwardPointer::make(code);
+  CHECK(is<ForwardPointer>(ptr));
+  Object *target = ptr->target();
+  CHECK(code == target);
 }

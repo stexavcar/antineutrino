@@ -46,6 +46,7 @@
 #define FOR_EACH_VALUE_TYPE(VISIT)                                                 \
   VISIT(40, SMI,                    Smi,                   0)                      \
   VISIT(41, SIGNAL,                 Signal,                0)                      \
+  VISIT(42, FORWARD_POINTER,        ForwardPointer,        0)                      \
   FOR_EACH_SIGNAL_TYPE(VISIT)                                                      \
   FOR_EACH_OBJECT_TYPE(VISIT)
 

@@ -3,6 +3,7 @@
 
 #include "heap/heap-inl.h"
 #include "heap/roots-inl.h"
+#include "heap/values-inl.h"
 #include "runtime/runtime.h"
 #include "utils/checks.h"
 
@@ -14,7 +15,8 @@ Runtime &Runtime::current() {
 }
 
 ref<Object> Runtime::get_root(uint32_t n) {
-  return ref<Object>(&roots().get(n));
+  ASSERT(is<Object>(roots().get(n)));
+  return ref<Object>(reinterpret_cast<Object**>(&roots().get(n)));
 }
 
 Runtime::Scope::Scope(Runtime &runtime)

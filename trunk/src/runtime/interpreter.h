@@ -51,9 +51,9 @@ private:
  * The stack used by the interpreter.
  */
 
-class Stack {
+class OldStack {
 public:
-  inline Stack();
+  inline OldStack();
   Frame top() { return Frame(fp_); }
   inline Frame push_activation();
   inline Frame pop_activation();
@@ -81,7 +81,7 @@ public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
   ref<Value> call(ref<Lambda> lambda);
 private:
-  ref<Value> interpret(Stack &stack);
+  ref<Value> interpret(OldStack &stack);
   inline Class *get_class(Value *val);
   inline Data *lookup_method(Class *chlass, Value *name);
   Runtime &runtime() { return runtime_; }

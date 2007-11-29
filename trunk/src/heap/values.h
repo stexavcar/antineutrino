@@ -106,20 +106,47 @@ typedef void (*FieldCallback)(Data **, void*);
 
 class Object : public Value {
 public:
-  inline Class *&chlass();
-  inline void set_chlass(Class*);
+  DECLARE_FIELD(Class*, chlass);
   
-  void for_each_field(void (*)(Data**, void*), void*);
+  /**
+   * The header of an object is the first field which normally
+   * contains the class, but may during garbage collection contain a
+   * forward pointer to the migrated version of this object.  It
+   * should not be used outside of garbage collection.
+   */
+  DECLARE_FIELD(Data*, header);
+
+  uint32_t size_in_memory();
   
-  static const int kChlassOffset = 0;
-  static const int kHeaderSize   = kChlassOffset + kPointerSize;
+  static const int kHeaderOffset = 0;
+  static const int kHeaderSize   = kHeaderOffset + kPointerSize;
 };
 
 template <> class ref_traits<Object> : public ref_traits<Value> {
 public:
+  inline ref<Class> chlass();
 };
 
 DEFINE_REF_CLASS(Object);
+
+
+// -----------------
+// --- S t a c k ---
+// -----------------
+
+class Stack : public Object {
+public:
+  DECLARE_FIELD(uint32_t, length);
+
+  static const uint32_t kLengthOffset = Object::kHeaderSize;
+  static const uint32_t kHeaderSize = kLengthOffset + kPointerSize;
+};
+
+template <> class ref_traits<Stack> : public ref_traits<Object> {
+};
+
+DEFINE_REF_CLASS(Stack);
+
 
 // -----------------------
 // --- I n s t a n c e ---
@@ -127,7 +154,7 @@ DEFINE_REF_CLASS(Object);
 
 class Instance : public Object {
 public:
-  static const int kHeaderSize = Object::kHeaderSize;
+  static const uint32_t kHeaderSize = Object::kHeaderSize;
 };
 
 
@@ -457,6 +484,24 @@ public:
   static inline Nothing *make();
 };
 
-}
+/**
+ * A forward pointer is a value used by the garbage collector.  When
+ * an object has been moved to new space, a forward pointer value is
+ * written into the object's header field and can be used to find the
+ * new incarnation of the object.
+ *
+ * Forward pointers are tagged the same way as signals which can be
+ * confusing is you're not careful.  Signals are never stores in the
+ * heap and are not used by the garbage collector.  Forward pointers
+ * are only used in the heap and are never used outside the garbage
+ * collector.
+ */
+class ForwardPointer : public Data {
+ public:
+  static inline ForwardPointer *make(Object *target);
+  inline Object *target();
+};
+
+} // neutrino
 
 #endif // _VALUES

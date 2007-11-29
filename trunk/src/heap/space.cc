@@ -9,6 +9,10 @@ SemiSpace::SemiSpace(uint32_t capacity) {
   data_ = new int8_t[capacity];
 }
 
+bool SemiSpace::contains(address addr) {
+  return (start() <= addr) && (addr < end());
+}
+
 SemiSpace::~SemiSpace() {
   delete[] data_;
 }

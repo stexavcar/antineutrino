@@ -6,7 +6,7 @@
 
 namespace neutrino {
 
-Arguments::Arguments(Runtime &runtime, uint32_t count, Stack &stack)
+Arguments::Arguments(Runtime &runtime, uint32_t count, OldStack &stack)
     : runtime_(runtime)
     , count_(count)
     , stack_(stack) { }

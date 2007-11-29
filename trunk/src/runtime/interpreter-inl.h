@@ -26,41 +26,41 @@ Lambda *&Frame::lambda() {
 // --- S t a c k ---
 // -----------------
 
-Stack::Stack()
+OldStack::OldStack()
   : sp_(bottom())
   , fp_(0) { }
 
-Value *Stack::pop(uint32_t height) {
+Value *OldStack::pop(uint32_t height) {
   ASSERT(sp() > 0);
   Value *result = *reinterpret_cast<Value**>(sp_ - 1);
   sp_ -= height;
   return result;
 }
 
-Value *&Stack::operator[](uint32_t index) {
+Value *&OldStack::operator[](uint32_t index) {
   ASSERT(sp() > bottom() + index);
   return *reinterpret_cast<Value**>(sp_ - 1 - index);
 }
 
-Value *&Stack::argument(uint32_t index) {
+Value *&OldStack::argument(uint32_t index) {
   return *reinterpret_cast<Value**>(fp_ - index - 1);
 }
 
-Value *&Stack::local(uint32_t index) {
+Value *&OldStack::local(uint32_t index) {
   return *reinterpret_cast<Value**>(fp_ + Frame::kSize + index);
 }
 
-Value *&Stack::self(uint32_t argc) {
+Value *&OldStack::self(uint32_t argc) {
   return argument(argc + 1);
 }
 
 
-void Stack::push(Value *value) {
+void OldStack::push(Value *value) {
   ASSERT(sp() < bottom() + kLimit);
   *(sp_++) = reinterpret_cast<word>(value);
 }
 
-Frame Stack::push_activation() {
+Frame OldStack::push_activation() {
   Frame result(sp_);
   result.prev_fp() = fp_;
   fp_ = sp_;
@@ -68,7 +68,7 @@ Frame Stack::push_activation() {
   return result;
 }
 
-Frame Stack::pop_activation() {
+Frame OldStack::pop_activation() {
   Frame top = this->top();
   sp_ = top.fp();
   fp_ = top.prev_fp();

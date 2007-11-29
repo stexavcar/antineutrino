@@ -353,29 +353,25 @@ string Lambda::disassemble() {
 }
 
 
-// -------------------------
-// --- I t e r a t i o n ---
-// -------------------------
+// ---------------
+// --- S i z e ---
+// ---------------
 
-#define VISIT(field) callback(reinterpret_cast<Data**>(&field), data)
-
-void Object::for_each_field(FieldCallback callback, void *data) {
-  VISIT(chlass());
-  InstanceType type = chlass()->instance_type();
-  switch (type) {
-    case CLASS_TYPE:
-      cast<Class>(this)->for_each_class_field(callback, data);
-      break;
-    default:
-      UNHANDLED(InstanceType, type);
+uint32_t Object::size_in_memory() {
+  InstanceType instance_type = type();
+  switch (instance_type) {
+  case VOID_TYPE:
+    return Void::kSize;
+  case NULL_TYPE:
+    return Null::kSize;
+  case TRUE_TYPE:
+    return True::kSize;
+  case FALSE_TYPE:
+    return False::kSize;
+  default:
+    UNHANDLED(InstanceType, instance_type);
   }
 }
-
-void Class::for_each_class_field(FieldCallback callback, void *data) {
-  VISIT(methods());
-}
-
-#undef VISIT
 
 
 // ---------------------------

@@ -96,6 +96,11 @@ inline bool is<Signal>(Data *val) {
   return ValuePointer::has_signal_tag(val);
 }
 
+template <>
+inline bool is<ForwardPointer>(Data *val) {
+  return ValuePointer::has_signal_tag(val);
+}
+
 #define DEFINE_SIGNAL_QUERY(n, NAME, Name, info)                     \
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
@@ -173,7 +178,8 @@ int32_t Smi::value() {
 // --- O b j e c t ---
 // -------------------
 
-DEFINE_ACCESSORS(Class*, Object, chlass, kChlassOffset)
+DEFINE_FIELD_ACCESSORS(Class, Object, chlass, kHeaderOffset)
+DEFINE_ACCESSORS(Data*, Object, header, kHeaderOffset)
 
 
 // -------------------
@@ -370,6 +376,14 @@ InternalError *InternalError::make(int code) {
 Nothing *Nothing::make() {
   Signal *result = ValuePointer::tag_as_signal(NOTHING, 0);
   return cast<Nothing>(result);
+}
+
+ForwardPointer *ForwardPointer::make(Object *obj) {
+  return reinterpret_cast<ForwardPointer*>(ValuePointer::tag_as_signal(ValuePointer::address_of(obj)));
+}
+
+Object* ForwardPointer::target() {
+  return ValuePointer::tag_as_object(reinterpret_cast<address>(ValuePointer::un_signal_tag(this)));
 }
 
 } // namespace neutrino
