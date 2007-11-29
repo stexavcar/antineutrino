@@ -13,8 +13,8 @@ bool RootIterator::has_next() {
   return index_ < Roots::kCount;
 }
 
-Value **RootIterator::next() {
-  return &roots_.get(index_++);
+Value *&RootIterator::next() {
+  return roots_.get(index_++);
 }
 
 Value *&Roots::get(uint32_t n) {

@@ -368,8 +368,19 @@ uint32_t Object::size_in_memory() {
     return True::kSize;
   case FALSE_TYPE:
     return False::kSize;
+  case DICTIONARY_TYPE:
+    return Dictionary::kSize;
+  case CLASS_TYPE:
+    return Class::kSize;
+  case TUPLE_TYPE:
+    return Tuple::size_for(cast<Tuple>(this)->length());
+  case STRING_TYPE:
+    return String::size_for(cast<String>(this)->length());
+  case CODE_TYPE: case BUFFER_TYPE:
+    return AbstractBuffer::size_for(cast<AbstractBuffer>(this)->size<uint8_t>());
   default:
     UNHANDLED(InstanceType, instance_type);
+    return 0;
   }
 }
 

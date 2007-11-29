@@ -43,10 +43,21 @@ private:
   static RefScopeInfo current_;
   const RefScopeInfo previous_;
   
+  friend class RefIterator;
   static list_buffer<RefBlock*> &block_stack() { return block_stack_; }
   static list_buffer<RefBlock*> block_stack_;
   static RefBlock *spare_block() { return spare_block_; }
   static RefBlock *spare_block_;
+};
+
+class RefIterator {
+public:
+  inline RefIterator();
+  inline bool has_next();
+  inline Value *&next();
+private:
+  uint32_t current_block_;
+  Value **current_, **limit_;
 };
 
 

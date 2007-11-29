@@ -156,22 +156,24 @@ Data *Heap::allocate_method() {
 }
 
 Data *Heap::new_string(string value) {
-  int size = String::size_for(value.length());
+  uint32_t size = String::size_for(value.length());
   Data *val = allocate_object(size, roots().string_class());
   if (is<AllocationFailed>(val)) return val;
   String *result = cast<String>(val);
   result->set_length(value.length());
   for (uint32_t i = 0; i < value.length(); i++)
     result->set(i, value[i]);
+  ASSERT_EQ(size, result->size_in_memory());
   return result;
 }
 
 Data *Heap::new_string(uint32_t length) {
-  int size = String::size_for(length);
+  uint32_t size = String::size_for(length);
   Data *val = allocate_object(size, roots().string_class());
   if (is<AllocationFailed>(val)) return val;
   String *result = cast<String>(val);
   result->set_length(length);
+  ASSERT_EQ(size, result->size_in_memory());
   return result;
 }
 
@@ -180,22 +182,24 @@ Data *Heap::new_code(uint32_t size) {
 }
 
 Data *Heap::new_abstract_buffer(uint32_t byte_count, Class *type) {
-  int size = AbstractBuffer::size_for(byte_count);
+  uint32_t size = AbstractBuffer::size_for(byte_count);
   Data *val = allocate_object(size, type);
   if (is<AllocationFailed>(val)) return val;
   AbstractBuffer *result = cast<AbstractBuffer>(val);
   result->set_size<uint8_t>(byte_count);
+  ASSERT_EQ(size, result->size_in_memory());
   return result;
 }
 
 Data *Heap::new_tuple(uint32_t length) {
-  int size = Tuple::size_for(length);
+  uint32_t size = Tuple::size_for(length);
   Data *val = allocate_object(size, roots().tuple_class());
   if (is<AllocationFailed>(val)) return val;
   Tuple *result = cast<Tuple>(val);
   result->set_length(length);
   for (uint32_t i = 0; i < length; i++)
     result->set(i, roots().vhoid());
+  ASSERT_EQ(size, result->size_in_memory());
   return result;
 }
 

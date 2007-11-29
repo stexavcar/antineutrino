@@ -43,11 +43,14 @@ private:
   
 };
 
+/**
+ * Iterator for iterating through all root fields.
+ */
 class RootIterator {
 public:
   inline RootIterator(Roots &roots);
   inline bool has_next();
-  inline Value **next();
+  inline Value *&next();
 private:
   Roots &roots_;
   uint32_t index_;

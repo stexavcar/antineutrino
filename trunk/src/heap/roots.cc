@@ -13,7 +13,7 @@ MAKE_ENUM_INFO_FOOTER()
 Roots::Roots() {
   RootIterator iter(*this);
   while (iter.has_next())
-    *iter.next() = 0;
+    iter.next() = Smi::from_int(0);
 }
 
 bool Roots::initialize(Heap& heap) {

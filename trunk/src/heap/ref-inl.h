@@ -3,6 +3,7 @@
 
 #include "heap/ref.h"
 #include "utils/checks.h"
+#include "utils/list-inl.h"
 
 namespace neutrino {
 
@@ -59,6 +60,32 @@ RefScope::RefScope() : previous_(current_) {
 RefScope::~RefScope() {
   if (current().block_count > 0) shrink();
   current_ = previous_;
+}
+
+RefIterator::RefIterator() {
+  current_block_ = 0;
+  if (RefScope::block_stack().length() > 0) {
+    RefBlock *bottom = RefScope::block_stack()[0];
+    current_ = bottom->first_cell();
+    limit_ = bottom->limit();
+  } else {
+    current_ = RefScope::current().next_cell;
+    limit_ = current_;
+  }
+}
+
+bool RefIterator::has_next() {
+  return current_ != RefScope::current().next_cell;
+}
+
+Value *&RefIterator::next() {
+  if (current_ == limit_) {
+    RefBlock *next = RefScope::block_stack()[++current_block_];
+    current_ = next->first_cell();
+    limit_ = next->limit();
+    ASSERT(current_ < limit_);
+  }
+  return *(current_++);
 }
 
 }

@@ -12,7 +12,7 @@ public:
   inline address allocate(uint32_t size);
   void collect_garbage();
 private:
-  void migrate_object(Value **value_ptr, SemiSpace &from_space,
+  void migrate_field(Value **field, SemiSpace &from_space,
       SemiSpace &to_space);
   friend class DisallowGarbageCollection;
   Heap &heap() { return heap_; }
