@@ -364,7 +364,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       UNHANDLED(InstanceType, type);
       break;
   }
-  IF_DEBUG(if (obj->type() != SINGLETON_TYPE) obj->forward_pointer()->validate());
+  // IF_DEBUG(if (obj->type() != SINGLETON_TYPE) obj->forward_pointer()->validate());
 }
 
 void Image::for_each_object(ObjectCallback callback) {

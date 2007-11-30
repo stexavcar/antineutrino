@@ -432,6 +432,10 @@ static void validate_method(Method *obj) {
   CHECK_IS(Lambda, obj->lambda());
 }
 
+static void validate_literal_expression(LiteralExpression *obj) {
+  CHECK_IS(Value, obj->value());
+}
+
 static void validate_object(Object *obj) {
   CHECK_IS(Class, obj->chlass());
   InstanceType type = obj->gc_safe_type();
@@ -456,6 +460,9 @@ static void validate_object(Object *obj) {
       break;
     case METHOD_TYPE:
       validate_method(cast<Method>(obj));
+      break;
+    case LITERAL_EXPRESSION_TYPE:
+      validate_literal_expression(cast<LiteralExpression>(obj));
       break;
     case TRUE_TYPE: case FALSE_TYPE: case VOID_TYPE: case NULL_TYPE:
       break;

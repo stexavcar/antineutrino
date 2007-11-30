@@ -68,11 +68,8 @@ void Memory::collect_garbage() {
   FieldMigrator migrator(from_space, to_space);
   // Migrate all roots (shallow)
   RootIterator root_iter(heap().roots());
-  uint32_t count = 0;
-  while (root_iter.has_next()) {
-    printf("%i\n", count++);
+  while (root_iter.has_next())
     migrator.migrate_field(&root_iter.next());
-  }
   // Migrate local refs (shallow)
   RefIterator ref_iter;
   while (root_iter.has_next())
