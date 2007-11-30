@@ -1,9 +1,8 @@
 import types, re, sys
-from SCons.Script import Split, File
 
 # Reads a .list file into an array of strings
 def read_lines_from(name):
-  raw_source = File(name).get_contents()
+  raw_source = open(name).read()
   lines = raw_source.split("\n")
   list = []
   for line in raw_source.split("\n"):

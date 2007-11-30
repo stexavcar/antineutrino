@@ -63,7 +63,8 @@ config = {
  'os':         get_os_id(),
  'name':       'neutrino',
  'targets':    configurations,
- 'src':        abspath('.'),
+ 'base':       abspath('.'),
+ 'src':        abspath('src'),
  'test':       selected_test,
  'tests':      [],
  'check-deps': []

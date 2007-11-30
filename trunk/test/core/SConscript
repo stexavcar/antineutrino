@@ -1,5 +1,5 @@
 Import('env build config prefix')
-from os.path import join, walk, abspath
+from os.path import join, walk, abspath, exists
 from testutils import PyNeutrinoTestCase, is_selected
 
 executable = abspath(str(config[prefix + 'program']))
@@ -15,7 +15,7 @@ def add_test(arg, dir, fnames):
       short_name = fname[:-2]
       compiled_name = short_name + '.nc'
       compile = env.CompilePyNeutrinoTest(compiled_name, full_path)
-      env.Depends(compile, join(config['src'], compiler))
+      env.Depends(compile, join(config['base'], compiler))
       test_case = PyNeutrinoTestCase(executable, abspath(join(build, compiled_name)))
       config['tests'].append(test_case)
       config['check-deps'].append(compile)
@@ -24,5 +24,6 @@ def add_test(arg, dir, fnames):
 # We have to manually construct the absolute path because otherwise
 # scons screws us over by creating an empty clone of the core folder
 # in the build directory and automagically using that.
-root = join(config['src'], 'test', 'core')
+root = join(config['base'], 'test', 'core')
+assert exists(root)
 walk(root, add_test, None)

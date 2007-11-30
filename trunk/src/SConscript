@@ -1,9 +1,9 @@
-from os.path import join
+from os.path import join, abspath
 from buildutils import read_lines_from, apply_items
 Import('config target properties prefix')
 
-source_files = read_lines_from('library.list')
-program_files = read_lines_from(join('main', 'program.list'))
+source_files = read_lines_from(join(config['src'], 'library.list'))
+program_files = read_lines_from(join(config['src'], 'main', 'program.list'))
 
 # Creates a new environment and pre-configure it based on the set
 # of configuration items
