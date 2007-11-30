@@ -5,6 +5,8 @@ from os.path import join, abspath, walk, basename
 # utility scripts available
 sys.path.append(abspath('tools'))
 
+import buildutils
+
 # Determines the toolchain that is currently being used
 def get_toolchain_id():
   tools = Environment()['TOOLS']
@@ -26,10 +28,7 @@ def get_arch_id():
   
 # Reads a named configuration file
 def read_config(name):
-  import ConfigParser
-  result = ConfigParser.ConfigParser()
-  if result.read(name)[0] != name: return None
-  else: return result
+  return buildutils.read_config_file(name)
 
 targets_file = 'targets.' + get_toolchain_id() + '.cfg'
 
@@ -67,16 +66,13 @@ common['BUILDERS']['GenerateCoverageReport'] = Builder(action = generate_coverag
 # configuration file in src/
 def load_source_targets():
   targets = config['targets']
-  default_items = targets.items('default')
   # At this point we don't use the contents of the section, we
   # just delegate to the SConscript file in src/
-  for target in targets.sections():
-    if target == 'default': continue
-    items = targets.items(target)
+  for (target, properties) in targets.items():
     SConscript(
       join('src', 'SConscript'),
       build_dir = join('build', target),
-      exports = 'config target items default_items',
+      exports = 'config target properties',
       duplicate = False
     )
 
