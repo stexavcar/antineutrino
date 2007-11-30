@@ -8,18 +8,18 @@ env = common.Copy()
 env.Append(LIBS = [config[prefix + 'static-library']])
 apply_items(env, properties)
 
-build = abspath(join(build, 'cctest-build'))
+old_build = build
+
+build = abspath(join(old_build, 'cctest'))
 env.SConscript(
   join('cctest', 'SConscript'),
-  build_dir = build,
   exports = 'config env target prefix config build',
   duplicate = False
 )
 
-build = abspath(join(build, 'core-build'))
+build = abspath(join(old_build, 'core'))
 env.SConscript(
   join('core', 'SConscript'),
-  build_dir = build,
   exports = 'config env target prefix config build',
   duplicate = False
 )
