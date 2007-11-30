@@ -112,6 +112,7 @@ public:
 class Object : public Value {
 public:
   DECLARE_FIELD(Class*, chlass);
+  IF_DEBUG(inline Class *gc_safe_chlass());
   
   /**
    * The header of an object is the first field which normally

@@ -1,40 +1,24 @@
-class SyntaxTree {
-
-}
-
-internal class LiteralExpression : SyntaxTree {
-
-}
-
-internal class InvokeExpression : SyntaxTree {
-
-}
-
+class SyntaxTree { }
+internal class LiteralExpression : SyntaxTree { }
+internal class InvokeExpression : SyntaxTree { }
 internal class ClassExpression : SyntaxTree {
-
   internal def evaluate();
-
 }
-
-internal class ThisExpression : SyntaxTree {
-
-}
-
-internal class LocalDefinition : SyntaxTree {
-
-}
-
+internal class ThisExpression : SyntaxTree { }
+internal class LocalDefinition : SyntaxTree { }
 internal class LambdaExpression : SyntaxTree {
-
   internal def parameters();
   internal def body();
-
 }
-
-internal class ReturnExpression : SyntaxTree {
-
-}
-
-internal class CallExpression : SyntaxTree {
-
-}
+internal class ReturnExpression : SyntaxTree { }
+internal class CallExpression : SyntaxTree { }
+internal class MethodExpression : SyntaxTree { }
+internal class SequenceExpression : SyntaxTree { }
+internal class TupleExpression : SyntaxTree { }
+internal class GlobalExpression : SyntaxTree { }
+internal class Symbol : SyntaxTree { }
+internal class ConditionalExpression : SyntaxTree { }
+internal class QuoteExpression : SyntaxTree { }
+internal class BuiltinCall : SyntaxTree { }
+internal class InterpolateExpression : SyntaxTree { }
+internal class LocalDefinition : SyntaxTree { }

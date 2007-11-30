@@ -45,6 +45,7 @@ void FieldMigrator::migrate_field(Value **field) {
   }
   // Otherwise we haven't seen this object before and we clone it in
   // to-space
+  obj->to_string().println();
   IF_DEBUG(obj->validate());
   uint32_t size = obj->size_in_memory();
   address new_addr = to_space().allocate(size);

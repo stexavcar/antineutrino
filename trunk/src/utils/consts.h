@@ -219,25 +219,39 @@
  * names and associated enumeration values.  Any class that is a root
  * or has built in methods should be mentioned in this list.
  */
-#define FOR_EACH_BUILTIN_CLASS(VISIT)                                \
-  VISIT(SmallInteger,      smi,                SMI)                  \
-  VISIT(String,            string,             STRING)               \
-  VISIT(True,              true,               TRUE)                 \
-  VISIT(False,             false,              FALSE)                \
-  VISIT(Void,              void,               VOID)                 \
-  VISIT(Null,              null,               NULL)                 \
-  VISIT(Object,            object,             OBJECT)               \
-  VISIT(Lambda,            lambda,             LAMBDA)               \
-  VISIT(Tuple,             tuple,              TUPLE)                \
-  VISIT(Class,             class,              CLASS)                \
-  VISIT(LiteralExpression, literal_expression, LITERAL_EXPRESSION)   \
-  VISIT(InvokeExpression,  invoke_expression,  INVOKE_EXPRESSION)    \
-  VISIT(ClassExpression,   class_expression,   CLASS_EXPRESSION)     \
-  VISIT(ThisExpression,    this_expression,    THIS_EXPRESSION)      \
-  VISIT(LocalDefinition,   local_definition,   LOCAL_DEFINITION)     \
-  VISIT(LambdaExpression,  lambda_expression,  LAMBDA_EXPRESSION)    \
-  VISIT(ReturnExpression,  return_expression,  RETURN_EXPRESSION)    \
-  VISIT(CallExpression,    call_expression,    CALL_EXPRESSION)
+#define FOR_EACH_BUILTIN_CLASS(VISIT)                                          \
+  VISIT(SmallInteger,          smi,                    SMI)                    \
+  VISIT(String,                string,                 STRING)                 \
+  VISIT(True,                  true,                   TRUE)                   \
+  VISIT(False,                 false,                  FALSE)                  \
+  VISIT(Void,                  void,                   VOID)                   \
+  VISIT(Null,                  null,                   NULL)                   \
+  VISIT(Object,                object,                 OBJECT)                 \
+  VISIT(Lambda,                lambda,                 LAMBDA)                 \
+  VISIT(Tuple,                 tuple,                  TUPLE)                  \
+  VISIT(Class,                 class,                  CLASS)                  \
+  VISIT(Dictionary,            dictionary,             DICTIONARY)             \
+  VISIT(Buffer,                buffer,                 BUFFER)                 \
+  VISIT(Code,                  code,                   CODE)                   \
+  VISIT(Method,                method,                 METHOD)                 \
+  VISIT(LiteralExpression,     literal_expression,     LITERAL_EXPRESSION)     \
+  VISIT(InvokeExpression,      invoke_expression,      INVOKE_EXPRESSION)      \
+  VISIT(ClassExpression,       class_expression,       CLASS_EXPRESSION)       \
+  VISIT(ThisExpression,        this_expression,        THIS_EXPRESSION)        \
+  VISIT(LocalDefinition,       local_definition,       LOCAL_DEFINITION)       \
+  VISIT(LambdaExpression,      lambda_expression,      LAMBDA_EXPRESSION)      \
+  VISIT(ReturnExpression,      return_expression,      RETURN_EXPRESSION)      \
+  VISIT(CallExpression,        call_expression,        CALL_EXPRESSION)        \
+  VISIT(MethodExpression,      method_expression,      METHOD_EXPRESSION)      \
+  VISIT(SequenceExpression,    sequence_expression,    SEQUENCE_EXPRESSION)    \
+  VISIT(TupleExpression,       tuple_expression,       TUPLE_EXPRESSION)       \
+  VISIT(GlobalExpression,      global_expression,      GLOBAL_EXPRESSION)      \
+  VISIT(Symbol,                symbol,                 SYMBOL)                 \
+  VISIT(ConditionalExpression, conditional_expression, CONDITIONAL_EXPRESSION) \
+  VISIT(QuoteExpression,       quote_expression,       QUOTE_EXPRESSION)       \
+  VISIT(BuiltinCall,           builtin_call,           BUILTIN_CALL)           \
+  VISIT(InterpolateExpression, interpolate_expression, INTERPOLATE_EXPRESSION) \
+  VISIT(LocalDefinition,       local_definition,       LOCAL_DEFINITION)       \
 
 
 // ---------------------------------------

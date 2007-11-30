@@ -44,7 +44,8 @@ options.Add(EnumOption(
 options.Add(PathOption(
   'test',
   'run only selected test',
-  '.'
+  '.',
+  PathOption.PathAccept
 ))
 common = Environment(
   options = options,

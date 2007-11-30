@@ -84,6 +84,10 @@ public:
 
 #ifdef DEBUG
 
+#define GC_SAFE_CHECK_IS(Type, value)                                \
+    neutrino::Checks::check_is(__FILE__, __LINE__, #Type,            \
+        ValueInfo<Type>::kTag, value, #value, gc_safe_is<Type>(value))
+
 #define UNHANDLED(Enum, value) do {                                  \
     neutrino::EnumInfo<Enum> enum_info;                              \
     neutrino::Conditions::get().unhandled(__FILE__, __LINE__, #Enum, \

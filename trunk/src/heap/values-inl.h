@@ -40,6 +40,14 @@ inline To *cast(From *from) {
   return static_cast<To*>(from);
 }
 
+#ifdef DEBUG
+template <class To, class From>
+inline To *gc_safe_cast(From *from) {
+  GC_SAFE_CHECK_IS(To, from);
+  return static_cast<To*>(from);
+}
+#endif
+
 template <class To, class From>
 inline ref<To> cast(ref<From> from) {
   ASSERT_IS_C(CAST_ERROR, To, *from);
@@ -86,6 +94,18 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
 #undef DEFINE_QUERY
 
+#ifdef DEBUG
+#define DEFINE_QUERY(n, NAME, Name, info)                            \
+  template <>                                                        \
+  inline bool gc_safe_is<Name>(Data *val) {                          \
+    return is<Object>(val)                                           \
+        && cast<Object>(val)->gc_safe_chlass()->instance_type() == NAME##_TYPE; \
+  }
+FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
+#undef DEFINE_QUERY
+#endif
+
+
 template <>
 inline bool is<AbstractBuffer>(Data *val) {
   return is<Object>(val) && (is<Code>(val) || is<Buffer>(val));
@@ -127,8 +147,11 @@ InstanceType Value::type() {
 InstanceType Data::gc_safe_type() {
   if (is<ForwardPointer>(this)) {
     return cast<ForwardPointer>(this)->target()->type();
+  } else if (is<Smi>(this)) {
+    return SMI_TYPE;
   } else {
-    return cast<Value>(this)->type();
+    uint32_t result = cast<Object>(this)->gc_safe_chlass()->instance_type();
+    return static_cast<InstanceType>(result);
   }
 }
 
@@ -185,6 +208,17 @@ int32_t Smi::value() {
 // -------------------
 // --- O b j e c t ---
 // -------------------
+
+#ifdef DEBUG
+Class *Object::gc_safe_chlass() {
+  Data *header = this->header();
+  if (is<ForwardPointer>(header)) {
+    return cast<ForwardPointer>(header)->target()->chlass();
+  } else {
+    return reinterpret_cast<Class*>(header);
+  }
+}
+#endif
 
 DEFINE_FIELD_ACCESSORS(Class, Object, chlass, kHeaderOffset)
 DEFINE_ACCESSORS(Data*, Object, header, kHeaderOffset)

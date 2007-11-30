@@ -18,7 +18,7 @@ FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
       default: UNREACHABLE(); return SIGNAL_TYPE;
     }
   } else {
-    return cast<Value>(value)->type();
+    return cast<Value>(value)->gc_safe_type();
   }
 }
 
@@ -418,26 +418,30 @@ static void validate_tuple(Tuple *obj) {
 }
 
 static void validate_lambda(Lambda *obj) {
-  CHECK_IS(Code, obj->code());
-  CHECK_IS(Tuple, obj->literals());
+  if (!is<Smi>(obj->code())) {
+    GC_SAFE_CHECK_IS(Code, obj->code());
+    GC_SAFE_CHECK_IS(Tuple, obj->literals());
+  }
+  GC_SAFE_CHECK_IS(LambdaExpression, obj->tree());
+  GC_SAFE_CHECK_IS(Tuple, obj->outers());
 }
 
 static void validate_dictionary(Dictionary *obj) {
-  CHECK_IS(Tuple, obj->table());
+  GC_SAFE_CHECK_IS(Tuple, obj->table());
   obj->table()->validate();
 }
 
 static void validate_method(Method *obj) {
-  CHECK_IS(String, obj->name());
-  CHECK_IS(Lambda, obj->lambda());
+  GC_SAFE_CHECK_IS(String, obj->name());
+  GC_SAFE_CHECK_IS(Lambda, obj->lambda());
 }
 
 static void validate_literal_expression(LiteralExpression *obj) {
-  CHECK_IS(Value, obj->value());
+  GC_SAFE_CHECK_IS(Value, obj->value());
 }
 
 static void validate_object(Object *obj) {
-  CHECK_IS(Class, obj->chlass());
+  GC_SAFE_CHECK_IS(Class, obj->chlass());
   InstanceType type = obj->gc_safe_type();
   switch (type) {
     case CLASS_TYPE:
@@ -490,6 +494,24 @@ void Object::for_each_field(FieldVisitor &visitor) {
   switch (type) {
     case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE: case FALSE_TYPE:
       return;
+    case DICTIONARY_TYPE:
+      VISIT(cast<Dictionary>(this)->table());
+      break;
+    case CLASS_TYPE:
+      VISIT(cast<Class>(this)->methods());
+      VISIT(cast<Class>(this)->super());
+      VISIT(cast<Class>(this)->name());
+      break;
+    case LAMBDA_TYPE:
+      VISIT(cast<Lambda>(this)->code());
+      VISIT(cast<Lambda>(this)->literals());
+      VISIT(cast<Lambda>(this)->tree());
+      VISIT(cast<Lambda>(this)->outers());
+      break;
+    case TUPLE_TYPE:
+      for (uint32_t i = 0; i < cast<Tuple>(this)->length(); i++)
+        VISIT(cast<Tuple>(this)->at(i));
+      break;
     default:
       UNHANDLED(InstanceType, type);
   }
