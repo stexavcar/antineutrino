@@ -1,6 +1,6 @@
 from os.path import join
 from buildutils import read_lines_from, apply_items
-Import('config target properties')
+Import('config target properties prefix')
 
 source_files = read_lines_from('library.list')
 program_files = read_lines_from(join('main', 'program.list'))
@@ -16,6 +16,6 @@ env = create_environment()
 
 static_library = env.StaticLibrary(config['name'], source_files)
 program = env.Program(config['name'], source_files + program_files)
-config[target + '_static_library'] = static_library[0]
-config[target + '_program'] = program[0]
+config[prefix + 'static-library'] = static_library[0]
+config[prefix + 'program'] = program[0]
 env.Alias(target, [static_library, program])

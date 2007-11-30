@@ -5,7 +5,7 @@ from os.path import join, abspath, walk, basename
 # utility scripts available
 sys.path.append(abspath('tools'))
 
-import buildutils
+import buildutils, testutils
 
 # Determines the toolchain that is currently being used
 def get_toolchain_id():
@@ -32,35 +32,42 @@ def read_config(name):
 
 targets_file = 'targets.' + get_toolchain_id() + '.cfg'
 
+configurations = read_config(join('src', targets_file))
+
+options = Options()
+options.Add(EnumOption(
+  'mode',
+  'select build mode',
+  'all',
+  allowed_values = configurations.keys() + ['all']
+))
+options.Add(PathOption(
+  'test',
+  'run only selected test',
+  None,
+  PathOption.PathAccept
+))
+common = Environment(
+  options = options,
+  CPPPATH=[abspath('src'), abspath('test')]
+)
+
+if 'test' in common.Dictionary(): selected_test = common['test']
+else: selected_test = None
+
 # Set up a configuration object that contains all settings that may
 # be used by this or other parts of the build system
 config = {
- 'toolchain': get_toolchain_id(),
- 'arch':      get_arch_id(),
- 'os':        get_os_id(),
- 'name':      'neutrino',
- 'targets':   read_config(join('src', targets_file)),
- 'src':       abspath('.')
+ 'toolchain':  get_toolchain_id(),
+ 'arch':       get_arch_id(),
+ 'os':         get_os_id(),
+ 'name':       'neutrino',
+ 'targets':    configurations,
+ 'src':        abspath('.'),
+ 'test':       selected_test,
+ 'tests':      [],
+ 'check-deps': []
 }
-
-def generate_coverage_report(source, target, env):
-  covered = []
-  def add_report_file(arg, dirname, fnames):
-    for file in fnames:
-      if file.endswith('.gcda'):
-        file = file.replace('.gcda', '.cc')
-        covered.append([join(arg, basename(dirname)), file])
-  walk(abspath(join('build', 'debug-coverage')), add_report_file, join('build', 'debug-coverage'))
-  walk(abspath(join('build', 'test', 'cctest-debug-coverage')), add_report_file, join('build', 'test'))
-  command = 'gcov'
-  for [dir, file] in covered:
-    command += ' -o ' + dir + ' ' + file
-  command += ' > coverage.info'
-  print command
-  os.system(command)
-
-common = Environment(CPPPATH=[abspath('src'), abspath('test')])
-common['BUILDERS']['GenerateCoverageReport'] = Builder(action = generate_coverage_report)
 
 # Sets up the build for the various targets defined in the target
 # configuration file in src/
@@ -69,25 +76,27 @@ def load_source_targets():
   # At this point we don't use the contents of the section, we
   # just delegate to the SConscript file in src/
   for (target, properties) in targets.items():
-    SConscript(
-      join('src', 'SConscript'),
-      build_dir = join('build', target),
-      exports = 'config target properties',
-      duplicate = False
-    )
+    if (common['mode'] == 'all') or (common['mode'] == target):
+      if common['mode'] == 'all': prefix = target + '-'
+      else: prefix = ''
+      SConscript(
+        join('src', 'SConscript'),
+        build_dir = join('build', target),
+        exports = 'config target properties prefix',
+        duplicate = False
+      )
+      build = abspath(join('build', target + '-test'))
+      SConscript(
+        join('test', 'SConscript'),
+        build_dir = build,
+        exports = 'config target properties common prefix build',
+        duplicate = False
+      )
+
+def run_tests(target, source, env):
+  testutils.run_neutrino_tests(config['tests'])
 
 load_source_targets()
 
-# Load tests
-SConscript(
-  join('test', 'SConscript'),
-  build_dir = join('build', 'test'),
-  exports = 'config common',
-  duplicate = False
-)
-
-report_coverage_target = common.GenerateCoverageReport('coverage', ['debug-coverage-check', 'check-scheduled-tests'])
-common.Alias('coverage', [report_coverage_target])
-common.AlwaysBuild(report_coverage_target)
-
+Command('check', config['check-deps'], Action(run_tests, None))
 Default('check')

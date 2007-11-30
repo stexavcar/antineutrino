@@ -1,29 +1,25 @@
-Import('scheduled_tests env target config')
-from os.path import join, walk
-from testutils import PyNeutrinoTestCase
+Import('env build config prefix')
+from os.path import join, walk, abspath
+from testutils import PyNeutrinoTestCase, is_selected
 
-executable = config[target + '_program']
-def schedule_test(source, target, env):
-  scheduled_tests.append(PyNeutrinoTestCase(str(executable), str(source[0])))
+executable = abspath(str(config[prefix + 'program']))
 
-env['BUILDERS']['SchedulePyNeutrinoTest'] = Builder(action = schedule_test)
 compiler = join('tools', 'compiler.py')
 env['BUILDERS']['CompilePyNeutrinoTest'] = Builder(action = "python " + compiler + " -c " + join('src', 'utils', 'consts.h') + " lib $SOURCE -o $TARGET")
 
 def add_test(arg, dir, fnames):
   tests = []
   for fname in fnames:
-    if fname.endswith('.n'):
+    if fname.endswith('.n') and is_selected(config, fname):
       full_path = join(dir, fname)
-      short_name = target + '-' + fname[:-2]
-      compile = env.CompilePyNeutrinoTest(short_name + '.nc', full_path)
-      schedule = env.SchedulePyNeutrinoTest(short_name + '-schedule', compile)
-      env.Depends(schedule, executable)
+      short_name = fname[:-2]
+      compiled_name = short_name + '.nc'
+      compile = env.CompilePyNeutrinoTest(compiled_name, full_path)
       env.Depends(compile, join(config['src'], compiler))
-      env.AlwaysBuild(schedule)
-      env.Alias(short_name, schedule)
-      tests.append(short_name)
-  env.Depends(target + '-check', tests)
+      test_case = PyNeutrinoTestCase(executable, abspath(join(build, compiled_name)))
+      config['tests'].append(test_case)
+      config['check-deps'].append(compile)
+      config['check-deps'].append(executable)
 
 # We have to manually construct the absolute path because otherwise
 # scons screws us over by creating an empty clone of the core folder

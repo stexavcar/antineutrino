@@ -14,6 +14,14 @@ def execute(executable, args):
   errors = process.stderr.read()
   return (exit_code, output, errors)
 
+def is_selected(config, test):
+  if not config['test']: return True
+  selected = config['test']
+  base = basename(test)
+  if selected == base: return True
+  if selected == base[:base.index('.')]: return True
+  return False
+
 class CCTestCase:
   def __init__(self, executable, test_case):
     self.test_case = test_case
@@ -26,7 +34,7 @@ class CCTestCase:
     if exit_code == 0: return ('passed', output, errors)
     else: return ('failed', output, errors)
   def command(self):
-    list = [ str(self.executable), self.test_case ]
+    list = [ self.executable, self.test_case ]
     return ' '.join(list)
 
 class PyNeutrinoTestCase:
