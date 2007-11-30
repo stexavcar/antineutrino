@@ -25,7 +25,7 @@ def get_os_id():
 # Determines which processor architecture is being used
 def get_arch_id():
   return 'ia32'
-  
+
 # Reads a named configuration file
 def read_config(name):
   return buildutils.read_config_file(name)
@@ -44,16 +44,15 @@ options.Add(EnumOption(
 options.Add(PathOption(
   'test',
   'run only selected test',
-  None,
-  PathOption.PathAccept
+  '.'
 ))
 common = Environment(
   options = options,
   CPPPATH=[abspath('src'), abspath('test')]
 )
 
-if 'test' in common.Dictionary(): selected_test = common['test']
-else: selected_test = None
+selected_test = common['test']
+if selected_test == '.': selected_test = None
 
 # Set up a configuration object that contains all settings that may
 # be used by this or other parts of the build system
