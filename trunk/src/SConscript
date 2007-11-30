@@ -17,5 +17,6 @@ env = create_environment()
 static_library = env.StaticLibrary(config['name'], source_files)
 program = env.Program(config['name'], source_files + program_files)
 config[prefix + 'static-library'] = static_library[0]
+Alias(prefix + 'program', program)
 config[prefix + 'program'] = program[0]
 env.Alias(target, [static_library, program])
