@@ -16,9 +16,20 @@ public:
   bool contains(address addr);
   inline address allocate(uint32_t size);
 private:
+  friend class SemiSpaceIterator;
   address data_;
   uint32_t cursor_;
   uint32_t capacity_;
+};
+
+class SemiSpaceIterator {
+public:
+  inline SemiSpaceIterator(SemiSpace &space);
+  inline bool has_next();
+  inline Object *next();
+private:
+  SemiSpace &space_;
+  uint32_t offset_;
 };
 
 }

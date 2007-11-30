@@ -14,6 +14,20 @@ address SemiSpace::allocate(uint32_t size) {
   return result;
 }
 
+SemiSpaceIterator::SemiSpaceIterator(SemiSpace &space)
+    : space_(space), offset_(0) {
+}
+
+bool SemiSpaceIterator::has_next() {
+  return offset_ < space_.cursor_;
+}
+
+Object *SemiSpaceIterator::next() {
+  Object* result = ValuePointer::tag_as_object(space_.data_ + offset_);
+  offset_ += result->size_in_memory();
+  return result;
+}
+
 }
 
 #endif // _HEAP_SPACE_INL

@@ -17,21 +17,37 @@ Memory::~Memory() {
   delete young_space_;
 }
 
-void Memory::migrate_field(Value **field, SemiSpace &from_space,
-    SemiSpace &to_space) {
+class FieldMigrator : public FieldVisitor {
+public:
+  FieldMigrator(SemiSpace &from_space, SemiSpace &to_space)
+      : from_space_(from_space)
+      , to_space_(to_space) { }
+  void migrate_field(Value **field);
+  virtual void visit_field(Value **field);
+private:
+  SemiSpace &from_space() { return from_space_; }
+  SemiSpace &to_space() { return to_space_; }
+  SemiSpace &from_space_;
+  SemiSpace &to_space_;
+};
+
+void FieldMigrator::migrate_field(Value **field) {
   // If the field doesn't hold a heap object then there's nothing to do
   if (!is<Object>(*field)) return;
   Object *obj = cast<Object>(*field);
-  ASSERT(from_space.contains(ValuePointer::address_of(obj)));
+  ASSERT(from_space().contains(ValuePointer::address_of(obj)));
   Data *header = obj->header();
   // If the object referenced by this field has already been moved we
   // can just update the pointer
   if (is<ForwardPointer>(header)) {
     *field = cast<ForwardPointer>(header)->target();
+    return;
   }
-  // Otherwise we clone the object in to-space
+  // Otherwise we haven't seen this object before and we clone it in
+  // to-space
+  IF_DEBUG(obj->validate());
   uint32_t size = obj->size_in_memory();
-  address new_addr = to_space.allocate(size);
+  address new_addr = to_space().allocate(size);
   memcpy(new_addr, ValuePointer::address_of(obj), size);
   Object *new_obj = ValuePointer::tag_as_object(new_addr);
   ASSERT(new_obj->chlass() == obj->chlass());
@@ -41,18 +57,32 @@ void Memory::migrate_field(Value **field, SemiSpace &from_space,
   *field = new_obj;
 }
 
+void FieldMigrator::visit_field(Value **field) {
+  migrate_field(field);
+}
+
 void Memory::collect_garbage() {
   ASSERT(allow_garbage_collection());
   SemiSpace &from_space = young_space();
   SemiSpace &to_space = *(new SemiSpace(kSize));
-  // Migrate all roots
+  FieldMigrator migrator(from_space, to_space);
+  // Migrate all roots (shallow)
   RootIterator root_iter(heap().roots());
-  while (root_iter.has_next())
-    migrate_field(&root_iter.next(), from_space, to_space);
-  // Migrate local refs
+  uint32_t count = 0;
+  while (root_iter.has_next()) {
+    printf("%i\n", count++);
+    migrator.migrate_field(&root_iter.next());
+  }
+  // Migrate local refs (shallow)
   RefIterator ref_iter;
   while (root_iter.has_next())
-    migrate_field(&ref_iter.next(), from_space, to_space);
+    migrator.migrate_field(&ref_iter.next());
+  // Do deep migration of shallowly migrated objects
+  SemiSpaceIterator to_space_iter(to_space);
+  while (to_space_iter.has_next()) {
+    Object *obj = to_space_iter.next();
+    obj->for_each_field(migrator);
+  }
 }
 
 } // neutrino

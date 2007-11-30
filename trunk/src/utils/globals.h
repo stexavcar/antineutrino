@@ -18,8 +18,18 @@
 
 #ifdef DEBUG
 #define IF_DEBUG(arg) arg
+#define IF_ELSE_DEBUG(t, e) t
 #else
 #define IF_DEBUG(arg) typedef void SEMI_STATIC_JOIN(__IfDebug__, __LINE__)
+#define IF_ELSE_DEBUG(t, e) e
+#endif
+
+#ifdef PARANOID
+#define IF_PARANOID(arg) arg
+#define IF_ELSE_PARANOID(t, e) t
+#else
+#define IF_PARANOID(arg) typedef void SEMI_STATIC_JOIN(__IfParanoid__, __LINE__)
+#define IF_ELSE_PARANOID(t, e) e
 #endif
 
 template <typename T>
@@ -27,6 +37,8 @@ static inline void USE(T t) { }
 
 static const uint32_t kPointerSize = sizeof(void*);
 static const uint32_t kWordSize = sizeof(word);
+
+static const bool kDebugMode = IF_ELSE_DEBUG(true, false);
 
 /**
  * Returns the new extended capacity given that the current capacity

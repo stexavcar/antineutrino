@@ -434,7 +434,7 @@ static void validate_method(Method *obj) {
 
 static void validate_object(Object *obj) {
   CHECK_IS(Class, obj->chlass());
-  InstanceType type = obj->chlass()->instance_type();
+  InstanceType type = obj->gc_safe_type();
   switch (type) {
     case CLASS_TYPE:
       validate_class(cast<Class>(obj));
@@ -457,6 +457,8 @@ static void validate_object(Object *obj) {
     case METHOD_TYPE:
       validate_method(cast<Method>(obj));
       break;
+    case TRUE_TYPE: case FALSE_TYPE: case VOID_TYPE: case NULL_TYPE:
+      break;
     default:
       UNHANDLED(InstanceType, type);
   }
@@ -468,6 +470,25 @@ void Value::validate() {
 
 #endif
 
+
+// -------------------------
+// --- I t e r a t i o n ---
+// -------------------------
+
+#define VISIT(field) visitor.visit_field(pointer_cast<Value*>(&field))
+
+void Object::for_each_field(FieldVisitor &visitor) {
+  InstanceType type = this->type();
+  visitor.visit_field(reinterpret_cast<Value**>(&header()));
+  switch (type) {
+    case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE: case FALSE_TYPE:
+      return;
+    default:
+      UNHANDLED(InstanceType, type);
+  }
+}
+
+#undef VISIT
 
 // -------------------
 // --- L a m b d a ---

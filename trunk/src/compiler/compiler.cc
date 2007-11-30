@@ -74,7 +74,6 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
   Factory &factory() { return runtime().factory(); }
 
 private:
-  static const bool kCheckStackHeight = false;
   friend class Scope;
   ref<LambdaExpression> lambda() { return lambda_; }
   Runtime &runtime() { return session().runtime(); }
@@ -131,10 +130,8 @@ uint16_t Assembler::constant_pool_index(ref<Value> value) {
 
 void Assembler::adjust_stack_height(int32_t delta) {
   stack_height_ += delta;
-  if (kCheckStackHeight) {
-    code().append(OC_CHKHGT);
-    code().append(stack_height_);
-  }
+  IF_PARANOID(code().append(OC_CHKHGT));
+  IF_PARANOID(code().append(stack_height_));
 }
 
 void Assembler::invoke(ref<String> name, uint16_t argc) {

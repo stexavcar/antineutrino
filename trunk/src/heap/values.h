@@ -36,6 +36,8 @@ public:
   
   enum WriteMode { DEFAULT, UNQUOTED };
   
+  inline InstanceType gc_safe_type();
+  
   void write_on(string_buffer &buf, WriteMode mode = DEFAULT);
   void write_short_on(string_buffer &buf, WriteMode mode = DEFAULT);
   
@@ -102,7 +104,10 @@ public:
 // --- O b j e c t ---
 // -------------------
 
-typedef void (*FieldCallback)(Data **, void*);
+class FieldVisitor {
+public:
+  virtual void visit_field(Value **field) = 0;
+};
 
 class Object : public Value {
 public:
@@ -115,7 +120,8 @@ public:
    * should not be used outside of garbage collection.
    */
   DECLARE_FIELD(Data*, header);
-
+  
+  void for_each_field(FieldVisitor &visitor);
   uint32_t size_in_memory();
   
   static const int kHeaderOffset = 0;
@@ -426,7 +432,6 @@ public:
   DECLARE_FIELD(Value*, name);
   
   bool is_empty();
-  void for_each_class_field(FieldCallback callback, void *data);
 
   IF_DEBUG(static uint32_t tag_of(Data *value));
   IF_DEBUG(static const char *tag_name(uint32_t tag));

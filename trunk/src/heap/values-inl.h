@@ -124,6 +124,14 @@ InstanceType Value::type() {
   }
 }
 
+InstanceType Data::gc_safe_type() {
+  if (is<ForwardPointer>(this)) {
+    return cast<ForwardPointer>(this)->target()->type();
+  } else {
+    return cast<Value>(this)->type();
+  }
+}
+
 string ref_traits<Value>::to_string() {
   return open(this)->to_string();
 }

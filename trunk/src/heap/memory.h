@@ -12,8 +12,6 @@ public:
   inline address allocate(uint32_t size);
   void collect_garbage();
 private:
-  void migrate_field(Value **field, SemiSpace &from_space,
-      SemiSpace &to_space);
   friend class DisallowGarbageCollection;
   Heap &heap() { return heap_; }
   SemiSpace &young_space() { return *young_space_; }
