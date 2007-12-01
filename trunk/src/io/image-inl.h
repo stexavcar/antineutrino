@@ -130,6 +130,26 @@ Image::Scope::~Scope() {
   current_ = previous_;
 }
 
+ImageIterator::ImageIterator(Image &image)
+    : cursor_(0)
+    , limit_(image.heap_size()) {
+}
+
+bool ImageIterator::has_next() {
+  return cursor() < limit();
+}
+
+void ImageIterator::reset() {
+  cursor_ = 0;
+}
+
+ImageObject *ImageIterator::next() {
+  uint32_t object_ptr = ValuePointer::tag_offset_as_object(cursor());
+  ImageObject *obj = image_cast<ImageObject>(ImageData::from(object_ptr));
+  cursor_ += obj->size_in_image();
+  return obj;
+}
+
 ImageData *ImageData::from(uint32_t addr) {
   return reinterpret_cast<ImageData*>(addr);
 }

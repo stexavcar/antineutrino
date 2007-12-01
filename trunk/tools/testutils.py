@@ -82,10 +82,10 @@ def run_neutrino_tests(all_tests):
     elif len(stdout) > 0 or len(stderr) > 0:
       clear_line()
       print "--- " + str(test) + " ---"
-    if len(stderr) > 0:
-      print "\033[31m" + stderr + "\033[0m"
     if len(stdout) > 0:
       print "\033[1m" + stdout + "\033[0m"
+    if len(stderr) > 0:
+      print "\033[31m" + stderr + "\033[0m"
     if status == 'failed':
       failed = failed + 1
     else:

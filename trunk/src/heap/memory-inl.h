@@ -19,7 +19,7 @@ DisallowGarbageCollection::DisallowGarbageCollection()
 }
 
 DisallowGarbageCollection::~DisallowGarbageCollection() {
-  memory().allow_garbage_collection_ = previous_;
+  memory().allow_garbage_collection_ = previous();
 }
 
 }

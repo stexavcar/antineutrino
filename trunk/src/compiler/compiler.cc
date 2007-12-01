@@ -131,7 +131,7 @@ uint16_t Assembler::constant_pool_index(ref<Value> value) {
 void Assembler::adjust_stack_height(int32_t delta) {
   stack_height_ += delta;
   IF_PARANOID(code().append(OC_CHKHGT));
-  IF_PARANOID(code().append(stack_height_));
+  IF_PARANOID(code().append(stack_height()));
 }
 
 void Assembler::invoke(ref<String> name, uint16_t argc) {
@@ -288,6 +288,7 @@ public:
 protected:
   Scope *parent() { return parent_; }
 private:
+  Assembler *assembler() { return assembler_; }
   Assembler *assembler_;
   Scope *parent_;
 };
@@ -301,8 +302,8 @@ Scope::Scope(Assembler &assembler)
 Scope::Scope() : assembler_(NULL), parent_(NULL) { }
 
 Scope::~Scope() {
-  if (assembler_ != NULL)
-    assembler_->scope_ = parent_;
+  if (assembler() != NULL)
+    assembler()->scope_ = parent();
 }
 
 class ArgumentScope : public Scope {
@@ -333,18 +334,20 @@ public:
       : Scope(assembler)
       , symbol_(symbol)
       , height_(height) { }
-  virtual void lookup(ref<Symbol> symbol, Lookup &result);
+  virtual void lookup(ref<Symbol> name, Lookup &result);
 private:
+  ref<Symbol> symbol() { return symbol_; }
+  uint32_t height() { return height_; }
   ref<Symbol> symbol_;
   uint32_t height_;
 };
 
-void LocalScope::lookup(ref<Symbol> symbol, Lookup &result) {
-  if (symbol->equals(*symbol_)) {
+void LocalScope::lookup(ref<Symbol> name, Lookup &result) {
+  if (name->equals(*symbol())) {
     result.category = LOCAL;
-    result.local_info.height = height_;
+    result.local_info.height = height();
   } else if (parent() != NULL) {
-    return parent()->lookup(symbol, result);
+    return parent()->lookup(name, result);
   }
 }
 

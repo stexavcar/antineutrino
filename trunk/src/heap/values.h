@@ -36,7 +36,7 @@ public:
   
   enum WriteMode { DEFAULT, UNQUOTED };
   
-  inline InstanceType gc_safe_type();
+  IF_DEBUG(inline InstanceType gc_safe_type());
   
   void write_on(string_buffer &buf, WriteMode mode = DEFAULT);
   void write_short_on(string_buffer &buf, WriteMode mode = DEFAULT);
@@ -396,17 +396,21 @@ class False : public Singleton { };
 
 class Method : public Object {
 public:
-  inline String *&name();
-  inline void set_name(String *name);
-  
-  inline Lambda *&lambda();
-  inline void set_lambda(Lambda *lambda);
+  DECLARE_FIELD(String*, name);
+  DECLARE_FIELD(Lambda*, lambda);
   
   static const int kNameOffset   = Object::kHeaderSize;
   static const int kLambdaOffset = kNameOffset + kPointerSize;
   static const int kSize         = kLambdaOffset + kPointerSize;
 };
 
+template <> class ref_traits<Method> : public ref_traits<Object> {
+public:
+  inline ref<String> name();
+  inline ref<Lambda> lambda();
+};
+
+DEFINE_REF_CLASS(Method);
 
 // -----------------------
 // --- P r o t o c o l ---

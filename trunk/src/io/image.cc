@@ -1,6 +1,6 @@
 #include "compiler/ast-inl.h"
 #include "heap/memory-inl.h"
-#include "heap/roots.h"
+#include "heap/roots-inl.h"
 #include "heap/values-inl.h"
 #include "io/image-inl.h"
 #include "runtime/runtime-inl.h"
@@ -53,8 +53,14 @@ bool Image::initialize() {
 Tuple *Image::load() {
   DisallowGarbageCollection dgc;
   Image::Scope scope(*this);
-  for_each_object(copy_object_shallow);
-  for_each_object(fixup_shallow_object);
+  // Make shallow copies in heap
+  ImageIterator iter(*this);
+  while (iter.has_next())
+    copy_object_shallow(iter.next());
+  // Fixup the copies
+  iter.reset();
+  while (iter.has_next())
+    fixup_shallow_object(iter.next());
   ImageTuple *roots_img = image_cast<ImageTuple>(ImageValue::from(data_[kRootsOffset]));
   return cast<Tuple>(roots_img->forward_pointer());
 }
@@ -234,6 +240,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       lambda->set_code(img->code()->forward_pointer());
       lambda->set_literals(img->literals()->forward_pointer());
       lambda->set_tree(cast<LambdaExpression>(img->tree()->forward_pointer()));
+      lambda->set_outers(Runtime::current().heap().roots().empty_tuple());
       break;
     }
     case METHOD_TYPE: {
@@ -367,16 +374,6 @@ void Image::fixup_shallow_object(ImageObject *obj) {
   // IF_DEBUG(if (obj->type() != SINGLETON_TYPE) obj->forward_pointer()->validate());
 }
 
-void Image::for_each_object(ObjectCallback callback) {
-  uint32_t cursor = 0;
-  while (cursor < heap_size()) {
-    uint32_t object_ptr = ValuePointer::tag_offset_as_object(cursor);
-    ImageObject *obj = image_cast<ImageObject>(ImageData::from(object_ptr));
-    callback(obj);
-    cursor += obj->memory_size();
-  }
-}
-
 uint32_t ImageObject::type() {
   uint32_t offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
   uint32_t value = Image::current().heap()[offset];
@@ -396,7 +393,7 @@ uint32_t ImageObject::type() {
 // --- O b j e c t   s i z e ---
 // -----------------------------
 
-uint32_t ImageObject::memory_size() {
+uint32_t ImageObject::size_in_image() {
   uint32_t type = this->type();
   switch (type) {
     case DICTIONARY_TYPE:
@@ -444,26 +441,26 @@ uint32_t ImageObject::memory_size() {
     case LOCAL_DEFINITION_TYPE:
       return ImageLocalDefinition_Size;
     case STRING_TYPE:
-      return image_cast<ImageString>(this)->string_memory_size();
+      return image_cast<ImageString>(this)->string_size_in_image();
     case CODE_TYPE:
-      return image_cast<ImageCode>(this)->code_memory_size();
+      return image_cast<ImageCode>(this)->code_size_in_image();
     case TUPLE_TYPE:
-      return image_cast<ImageTuple>(this)->tuple_memory_size();
+      return image_cast<ImageTuple>(this)->tuple_size_in_image();
     default:
       UNHANDLED(InstanceType, type);
       return 0;
   }
 }
 
-uint32_t ImageString::string_memory_size() {
+uint32_t ImageString::string_size_in_image() {
   return ImageString_HeaderSize + length();
 }
 
-uint32_t ImageCode::code_memory_size() {
+uint32_t ImageCode::code_size_in_image() {
   return ImageCode_HeaderSize + length();
 }
 
-uint32_t ImageTuple::tuple_memory_size() {
+uint32_t ImageTuple::tuple_size_in_image() {
   return ImageTuple_HeaderSize + length();
 }
 

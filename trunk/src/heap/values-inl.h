@@ -144,6 +144,7 @@ InstanceType Value::type() {
   }
 }
 
+#ifdef DEBUG
 InstanceType Data::gc_safe_type() {
   if (is<ForwardPointer>(this)) {
     return cast<ForwardPointer>(this)->target()->type();
@@ -154,6 +155,7 @@ InstanceType Data::gc_safe_type() {
     return static_cast<InstanceType>(result);
   }
 }
+#endif
 
 string ref_traits<Value>::to_string() {
   return open(this)->to_string();
@@ -379,8 +381,8 @@ uint32_t ref_traits<Code>::length() {
 // --- M e t h o d ---
 // -------------------
 
-DEFINE_ACCESSORS(String*, Method, name, kNameOffset)
-DEFINE_ACCESSORS(Lambda*, Method, lambda, kLambdaOffset)
+DEFINE_FIELD_ACCESSORS(String, Method, name, kNameOffset)
+DEFINE_FIELD_ACCESSORS(Lambda, Method, lambda, kLambdaOffset)
 
 
 // -----------------

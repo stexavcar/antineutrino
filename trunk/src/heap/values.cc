@@ -372,6 +372,13 @@ uint32_t Object::size_in_memory() {
     return Dictionary::kSize;
   case CLASS_TYPE:
     return Class::kSize;
+  case LAMBDA_TYPE:
+    return Lambda::kSize;
+  case METHOD_TYPE:
+    return Method::kSize;
+#define MAKE_CASE(n, NAME, Name, name) case NAME##_TYPE: return Name::kSize;
+FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
+#undef MAKE_CASE
   case TUPLE_TYPE:
     return Tuple::size_for(cast<Tuple>(this)->length());
   case STRING_TYPE:
@@ -400,18 +407,6 @@ static void validate_pointer(Value *ptr) {
   CHECK(is<Object>(ptr) || is<Smi>(ptr));
 }
 
-static void validate_class(Class *obj) {
-  validate_pointer(obj->methods());
-}
-
-static void validate_string(String *obj) {
-  // nothing to do
-}
-
-static void validate_code(Code *obj) {
-  // nothing to do
-}
-
 static void validate_tuple(Tuple *obj) {
   for (uint32_t i = 0; i < obj->length(); i++)
     validate_pointer(obj->at(i));
@@ -426,32 +421,12 @@ static void validate_lambda(Lambda *obj) {
   GC_SAFE_CHECK_IS(Tuple, obj->outers());
 }
 
-static void validate_dictionary(Dictionary *obj) {
-  GC_SAFE_CHECK_IS(Tuple, obj->table());
-  obj->table()->validate();
-}
-
-static void validate_method(Method *obj) {
-  GC_SAFE_CHECK_IS(String, obj->name());
-  GC_SAFE_CHECK_IS(Lambda, obj->lambda());
-}
-
-static void validate_literal_expression(LiteralExpression *obj) {
-  GC_SAFE_CHECK_IS(Value, obj->value());
-}
-
 static void validate_object(Object *obj) {
   GC_SAFE_CHECK_IS(Class, obj->chlass());
   InstanceType type = obj->gc_safe_type();
   switch (type) {
     case CLASS_TYPE:
-      validate_class(cast<Class>(obj));
-      break;
-    case STRING_TYPE:
-      validate_string(cast<String>(obj));
-      break;
-    case CODE_TYPE:
-      validate_code(cast<Code>(obj));
+      validate_pointer(cast<Class>(obj)->methods());
       break;
     case TUPLE_TYPE:
       validate_tuple(cast<Tuple>(obj));
@@ -460,15 +435,22 @@ static void validate_object(Object *obj) {
       validate_lambda(cast<Lambda>(obj));
       break;
     case DICTIONARY_TYPE:
-      validate_dictionary(cast<Dictionary>(obj));
+      GC_SAFE_CHECK_IS(Tuple, cast<Dictionary>(obj)->table());
+      cast<Dictionary>(obj)->table()->validate();
       break;
     case METHOD_TYPE:
-      validate_method(cast<Method>(obj));
+      GC_SAFE_CHECK_IS(String, cast<Method>(obj)->name());
+      GC_SAFE_CHECK_IS(Lambda, cast<Method>(obj)->lambda());
       break;
     case LITERAL_EXPRESSION_TYPE:
-      validate_literal_expression(cast<LiteralExpression>(obj));
+      GC_SAFE_CHECK_IS(Value, cast<LiteralExpression>(obj)->value());
+      break;
+    case LAMBDA_EXPRESSION_TYPE:
+      GC_SAFE_CHECK_IS(Tuple, cast<LambdaExpression>(obj)->params());
+      GC_SAFE_CHECK_IS(SyntaxTree, cast<LambdaExpression>(obj)->body());
       break;
     case TRUE_TYPE: case FALSE_TYPE: case VOID_TYPE: case NULL_TYPE:
+    case CODE_TYPE: case STRING_TYPE:
       break;
     default:
       UNHANDLED(InstanceType, type);
@@ -493,6 +475,7 @@ void Object::for_each_field(FieldVisitor &visitor) {
   visitor.visit_field(reinterpret_cast<Value**>(&header()));
   switch (type) {
     case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE: case FALSE_TYPE:
+    case STRING_TYPE: case CODE_TYPE:
       return;
     case DICTIONARY_TYPE:
       VISIT(cast<Dictionary>(this)->table());
@@ -507,6 +490,10 @@ void Object::for_each_field(FieldVisitor &visitor) {
       VISIT(cast<Lambda>(this)->literals());
       VISIT(cast<Lambda>(this)->tree());
       VISIT(cast<Lambda>(this)->outers());
+      break;
+    case METHOD_TYPE:
+      VISIT(cast<Method>(this)->name());
+      VISIT(cast<Method>(this)->lambda());
       break;
     case TUPLE_TYPE:
       for (uint32_t i = 0; i < cast<Tuple>(this)->length(); i++)

@@ -27,6 +27,7 @@ public:
   inline ~DisallowGarbageCollection();
 private:
   Memory &memory() { return memory_; }
+  bool previous() { return previous_; }
   Memory &memory_;
   bool previous_;
 };

@@ -122,7 +122,7 @@ class persistent : public ref<C> {
 public:
   inline persistent(C **cell) : ref<C>(cell) { }
   inline persistent() : ref<C>() { }
-  inline void dispose() { delete this->cell_; }
+  inline void dispose() { delete this->cell(); }
 };
 
 template <class C> static inline ref<C> new_ref(C *obj);

@@ -43,7 +43,7 @@ public:
   uint32_t type();
   void point_forward(Object *target);
   inline Object *forward_pointer();
-  uint32_t memory_size();
+  uint32_t size_in_image();
 };
 
 class ImageSyntaxTree : public ImageObject {
@@ -62,21 +62,21 @@ class ImageString : public ImageObject {
 public:
   inline uint32_t length();
   inline uint32_t at(uint32_t offset);
-  uint32_t string_memory_size();
+  uint32_t string_size_in_image();
 };
 
 class ImageTuple : public ImageObject {
 public:
   inline uint32_t length();
   inline ImageValue *at(uint32_t offset);
-  uint32_t tuple_memory_size();
+  uint32_t tuple_size_in_image();
 };
 
 class ImageCode : public ImageObject {
 public:
   inline uint32_t length();
   inline uint32_t at(uint32_t offset);
-  uint32_t code_memory_size();
+  uint32_t code_size_in_image();
 };
 
 class ImageLambda : public ImageObject {
@@ -226,8 +226,8 @@ public:
   };
 
 private:
+  friend class ImageIterator;
   typedef void (ObjectCallback)(ImageObject *obj);
-  void for_each_object(ObjectCallback callback);
   static void copy_object_shallow(ImageObject *obj);
   static void fixup_shallow_object(ImageObject *obj);
   uint32_t heap_size() { return heap_size_; }
@@ -242,6 +242,19 @@ private:
   static const uint32_t kRootsOffset       = kHeapSizeOffset + 1;
   static const uint32_t kHeaderSize        = kRootsOffset + 1;
 
+};
+
+class ImageIterator {
+public:
+  inline ImageIterator(Image &image);
+  inline bool has_next();
+  inline ImageObject *next();
+  inline void reset();
+private:
+  uint32_t cursor() { return cursor_; }
+  uint32_t limit() { return limit_; }
+  uint32_t cursor_;
+  uint32_t limit_;
 };
 
 }
