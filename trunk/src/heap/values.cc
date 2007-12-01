@@ -360,31 +360,17 @@ string Lambda::disassemble() {
 uint32_t Object::size_in_memory() {
   InstanceType instance_type = type();
   switch (instance_type) {
-  case VOID_TYPE:
-    return Void::kSize;
-  case NULL_TYPE:
-    return Null::kSize;
-  case TRUE_TYPE:
-    return True::kSize;
-  case FALSE_TYPE:
-    return False::kSize;
-  case DICTIONARY_TYPE:
-    return Dictionary::kSize;
-  case CLASS_TYPE:
-    return Class::kSize;
   case LAMBDA_TYPE:
     return Lambda::kSize;
-  case METHOD_TYPE:
-    return Method::kSize;
-#define MAKE_CASE(n, NAME, Name, name) case NAME##_TYPE: return Name::kSize;
-FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
-#undef MAKE_CASE
   case TUPLE_TYPE:
     return Tuple::size_for(cast<Tuple>(this)->length());
   case STRING_TYPE:
     return String::size_for(cast<String>(this)->length());
   case CODE_TYPE: case BUFFER_TYPE:
     return AbstractBuffer::size_for(cast<AbstractBuffer>(this)->size<uint8_t>());
+#define MAKE_CASE(n, NAME, Name, name) case NAME##_TYPE: return Name::kSize;
+FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
+#undef MAKE_CASE
   default:
     UNHANDLED(InstanceType, instance_type);
     return 0;
@@ -415,9 +401,6 @@ static void validate_object(Object *obj) {
   GC_SAFE_CHECK_IS_C(VALIDATION, Class, obj->chlass());
   InstanceType type = obj->gc_safe_type();
   switch (type) {
-    case CLASS_TYPE:
-      FOR_EACH_CLASS_FIELD(VALIDATE_FIELD, Class)
-      break;
     case TUPLE_TYPE:
       validate_tuple(cast<Tuple>(obj));
       break;
@@ -428,49 +411,17 @@ static void validate_object(Object *obj) {
         GC_SAFE_CHECK_IS_C(VALIDATION, Tuple, cast<Lambda>(obj)->literals());
       }
       break;
-    case DICTIONARY_TYPE:
-      FOR_EACH_DICTIONARY_FIELD(VALIDATE_FIELD, Dictionary)
+    case CLASS_TYPE:
+      FOR_EACH_CLASS_FIELD(VALIDATE_FIELD, Class)
       break;
-    case METHOD_TYPE:
-      FOR_EACH_METHOD_FIELD(VALIDATE_FIELD, Method)
+    case CODE_TYPE: case STRING_TYPE:
       break;
-    case RETURN_EXPRESSION_TYPE:
-      FOR_EACH_RETURN_EXPRESSION_FIELD(VALIDATE_FIELD, ReturnExpression)
+#define MAKE_CASE(n, NAME, Name, name)                               \
+    case NAME##_TYPE:                                                \
+      FOR_EACH_##NAME##_FIELD(VALIDATE_FIELD, Name);                 \
       break;
-    case LITERAL_EXPRESSION_TYPE:
-      FOR_EACH_LITERAL_EXPRESSION_FIELD(VALIDATE_FIELD, LiteralExpression)
-      break;
-    case LAMBDA_EXPRESSION_TYPE:
-      FOR_EACH_LAMBDA_EXPRESSION_FIELD(VALIDATE_FIELD, LambdaExpression)
-      break;
-    case SEQUENCE_EXPRESSION_TYPE:
-      FOR_EACH_SEQUENCE_EXPRESSION_FIELD(VALIDATE_FIELD, SequenceExpression)
-      break;
-    case SYMBOL_TYPE:
-      FOR_EACH_SYMBOL_FIELD(VALIDATE_FIELD, Symbol)
-      break;
-    case CALL_EXPRESSION_TYPE:
-      FOR_EACH_CALL_EXPRESSION_FIELD(VALIDATE_FIELD, CallExpression)
-      break;
-    case CONDITIONAL_EXPRESSION_TYPE:
-      FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(VALIDATE_FIELD, ConditionalExpression)
-      break;
-    case GLOBAL_EXPRESSION_TYPE:
-      FOR_EACH_GLOBAL_EXPRESSION_FIELD(VALIDATE_FIELD, GlobalExpression)
-      break;
-    case INVOKE_EXPRESSION_TYPE:
-      FOR_EACH_INVOKE_EXPRESSION_FIELD(VALIDATE_FIELD, InvokeExpression)
-      break;
-    case INTERPOLATE_EXPRESSION_TYPE:
-      FOR_EACH_INTERPOLATE_EXPRESSION_FIELD(VALIDATE_FIELD, InterpolateExpression)
-      break;
-    case TUPLE_EXPRESSION_TYPE:
-      FOR_EACH_TUPLE_EXPRESSION_FIELD(VALIDATE_FIELD, TupleExpression)
-      break;
-    case TRUE_TYPE: case FALSE_TYPE: case VOID_TYPE: case NULL_TYPE:
-    case CODE_TYPE: case STRING_TYPE: case BUILTIN_CALL_TYPE:
-    case THIS_EXPRESSION_TYPE:
-      break;
+FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
+#undef MAKE_CASE
     default:
       UNHANDLED(InstanceType, type);
   }
@@ -496,59 +447,21 @@ void Object::for_each_field(FieldVisitor &visitor) {
   InstanceType type = this->type();
   visitor.visit_field(reinterpret_cast<Value**>(&header()));
   switch (type) {
-    case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE: case FALSE_TYPE:
-    case STRING_TYPE: case CODE_TYPE: case BUILTIN_CALL_TYPE:
-    case THIS_EXPRESSION_TYPE:
+    case STRING_TYPE: case CODE_TYPE:
       return;
-    case LAMBDA_TYPE:
-      FOR_EACH_LAMBDA_FIELD(VISIT_FIELD, Lambda)
-      break;
-    case METHOD_TYPE:
-      FOR_EACH_METHOD_FIELD(VISIT_FIELD, Method)
-      break;
-    case DICTIONARY_TYPE:
-      FOR_EACH_DICTIONARY_FIELD(VISIT_FIELD, Dictionary)
-      break;
-    case CLASS_TYPE:
-      FOR_EACH_CLASS_FIELD(VISIT_FIELD, Class)
-      break;
-    case LAMBDA_EXPRESSION_TYPE:
-      FOR_EACH_LAMBDA_EXPRESSION_FIELD(VISIT_FIELD, LambdaExpression)
-      break;
-    case RETURN_EXPRESSION_TYPE:
-      FOR_EACH_RETURN_EXPRESSION_FIELD(VISIT_FIELD, ReturnExpression)
-      break;
-    case SEQUENCE_EXPRESSION_TYPE:
-      FOR_EACH_SEQUENCE_EXPRESSION_FIELD(VISIT_FIELD, SequenceExpression)
-      break;
-    case SYMBOL_TYPE:
-      FOR_EACH_SYMBOL_FIELD(VISIT_FIELD, Symbol)
-      break;
-    case CALL_EXPRESSION_TYPE:
-      FOR_EACH_CALL_EXPRESSION_FIELD(VISIT_FIELD, CallExpression)
-      break;
-    case GLOBAL_EXPRESSION_TYPE:
-      FOR_EACH_GLOBAL_EXPRESSION_FIELD(VISIT_FIELD, GlobalExpression)
-      break;
-    case CONDITIONAL_EXPRESSION_TYPE:
-      FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(VISIT_FIELD, ConditionalExpression)
-      break;
-    case LITERAL_EXPRESSION_TYPE:
-      FOR_EACH_LITERAL_EXPRESSION_FIELD(VISIT_FIELD, LiteralExpression)
-      break;
-    case INVOKE_EXPRESSION_TYPE:
-      FOR_EACH_INVOKE_EXPRESSION_FIELD(VISIT_FIELD, InvokeExpression)
-      break;
-    case INTERPOLATE_EXPRESSION_TYPE:
-      FOR_EACH_INTERPOLATE_EXPRESSION_FIELD(VISIT_FIELD, InterpolateExpression)
-      break;
-    case TUPLE_EXPRESSION_TYPE:
-      FOR_EACH_TUPLE_EXPRESSION_FIELD(VISIT_FIELD, TupleExpression)
-      break;
     case TUPLE_TYPE:
       for (uint32_t i = 0; i < cast<Tuple>(this)->length(); i++)
         VISIT(cast<Tuple>(this)->at(i));
       break;
+    case CLASS_TYPE:
+      FOR_EACH_CLASS_FIELD(VISIT_FIELD, Class)
+      break;
+#define MAKE_CASE(n, NAME, Name, name)                               \
+    case NAME##_TYPE:                                                \
+      FOR_EACH_##NAME##_FIELD(VISIT_FIELD, Name);                    \
+      break;
+FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
+#undef MAKE_CASE
     default:
       UNHANDLED(InstanceType, type);
   }

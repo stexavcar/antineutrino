@@ -139,11 +139,14 @@ DEFINE_REF_CLASS(ConditionalExpression);
 // --- C l a s s   E x p r e s s i o n ---
 // ---------------------------------------
 
+#define FOR_EACH_CLASS_EXPRESSION_FIELD(VISIT, arg)                  \
+  VISIT(String, name,    Name,    arg)                               \
+  VISIT(Tuple,  methods, Methods, arg)                               \
+  VISIT(Value,  super,   Super,   arg)
+
 class ClassExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(String*, name);
-  DECLARE_FIELD(Tuple*, methods);
-  DECLARE_FIELD(Value*, super);
+  FOR_EACH_CLASS_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kMethodsOffset = kNameOffset + kPointerSize;
@@ -154,9 +157,7 @@ public:
 template <>
 class ref_traits<ClassExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<String> name();
-  inline ref<Tuple> methods();
-  inline ref<Value> super();
+  FOR_EACH_CLASS_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
   ref<Class> compile();
 };
 
@@ -191,10 +192,13 @@ DEFINE_REF_CLASS(ReturnExpression);
 // --- M e t h o d   E x p r e s s i o n ---
 // -----------------------------------------
 
+#define FOR_EACH_METHOD_EXPRESSION_FIELD(VISIT, arg)                 \
+  VISIT(String,           name,   Name,   arg)                       \
+  VISIT(LambdaExpression, lambda, Lambda, arg)
+
 class MethodExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(String*, name);
-  DECLARE_FIELD(LambdaExpression*, lambda);
+  FOR_EACH_METHOD_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kLambdaOffset = kNameOffset + kPointerSize;
@@ -204,8 +208,7 @@ public:
 template <>
 class ref_traits<MethodExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<String> name();
-  inline ref<LambdaExpression> lambda();
+  FOR_EACH_METHOD_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
   ref<Method> compile();
 };
 
@@ -312,9 +315,12 @@ DEFINE_REF_CLASS(Symbol);
 // --- Q u o t e   E x p r e s s i o n ---
 // ---------------------------------------
 
+#define FOR_EACH_QUOTE_EXPRESSION_FIELD(VISIT, arg)                  \
+  VISIT(SyntaxTree, value, Value, arg)
+
 class QuoteExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(SyntaxTree*, value);
+  FOR_EACH_QUOTE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kValueOffset + kPointerSize;
@@ -323,7 +329,7 @@ public:
 template <>
 class ref_traits<QuoteExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<SyntaxTree> value();
+  FOR_EACH_QUOTE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(QuoteExpression);
@@ -356,6 +362,8 @@ DEFINE_REF_CLASS(LambdaExpression);
 // -------------------------------------
 // --- T h i s   E x p r e s s i o n ---
 // -------------------------------------
+
+#define FOR_EACH_THIS_EXPRESSION_FIELD(VISIT, arg)
 
 class ThisExpression : public SyntaxTree {
 public:
@@ -391,6 +399,8 @@ DEFINE_REF_CLASS(InterpolateExpression);
 // --- B u i l t i n   C a l l ---
 // -------------------------------
 
+#define FOR_EACH_BUILTIN_CALL_FIELD(VISIT, arg)
+
 class BuiltinCall : public SyntaxTree {
 public:
   DECLARE_FIELD(uint32_t, argc);
@@ -415,11 +425,14 @@ DEFINE_REF_CLASS(BuiltinCall);
 // --- L o c a l   D e f i n i t i o n ---
 // ---------------------------------------
 
+#define FOR_EACH_LOCAL_DEFINITION_FIELD(VISIT, arg)                  \
+  VISIT(Symbol,     symbol, Symbol, arg)                             \
+  VISIT(SyntaxTree, value,  Value,  arg)                             \
+  VISIT(SyntaxTree, body,   Body,   arg)
+
 class LocalDefinition : public SyntaxTree {
 public:
-  DECLARE_FIELD(Symbol*, symbol);
-  DECLARE_FIELD(SyntaxTree*, value);
-  DECLARE_FIELD(SyntaxTree*, body);
+  FOR_EACH_LOCAL_DEFINITION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kSymbolOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kValueOffset = kSymbolOffset + kPointerSize;
@@ -430,9 +443,7 @@ public:
 template <>
 class ref_traits<LocalDefinition> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<Symbol> symbol();
-  inline ref<SyntaxTree> value();
-  inline ref<SyntaxTree> body();
+  FOR_EACH_LOCAL_DEFINITION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(LocalDefinition);

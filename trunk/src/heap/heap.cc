@@ -48,15 +48,6 @@ Data *Heap::new_lambda(uint32_t argc, Value *code, Value *literals, LambdaExpres
   return result;
 }
 
-Data *Heap::new_builtin_call(uint32_t argc, uint32_t index) {
-  Data *val = allocate_object(BuiltinCall::kSize, roots().builtin_call_class());
-  if (is<AllocationFailed>(val)) return val;
-  BuiltinCall *result = cast<BuiltinCall>(val);
-  result->set_argc(argc);
-  result->set_index(index);
-  return result;
-}
-
 Data *Heap::allocate_lambda(uint32_t argc) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_class());
   if (is<AllocationFailed>(val)) return val;
@@ -65,72 +56,12 @@ Data *Heap::allocate_lambda(uint32_t argc) {
   return result;
 }
 
-Data *Heap::allocate_literal_expression() {
-  return allocate_object(LiteralExpression::kSize, roots().literal_expression_class());
+#define MAKE_ALLOCATOR(n, NAME, Name, name)                          \
+Data* Heap::allocate_##name() {                                      \
+  return allocate_object(Name::kSize, roots().name##_class());       \
 }
-
-Data *Heap::allocate_invoke_expression() {
-  return allocate_object(InvokeExpression::kSize, roots().invoke_expression_class());
-}
-
-Data *Heap::allocate_call_expression() {
-  return allocate_object(CallExpression::kSize, roots().call_expression_class());
-}
-
-Data *Heap::allocate_conditional_expression() {
-  return allocate_object(ConditionalExpression::kSize, roots().conditional_expression_class());
-}
-
-Data *Heap::allocate_class_expression() {
-  return allocate_object(ClassExpression::kSize, roots().class_expression_class());
-}
-
-
-Data *Heap::allocate_return_expression() {
-  return allocate_object(ReturnExpression::kSize, roots().return_expression_class());
-}
-
-
-Data *Heap::allocate_method_expression() {
-  return allocate_object(MethodExpression::kSize, roots().method_expression_class());
-}
-
-
-Data *Heap::allocate_sequence_expression() {
-  return allocate_object(SequenceExpression::kSize, roots().sequence_expression_class());
-}
-
-Data *Heap::allocate_tuple_expression() {
-  return allocate_object(TupleExpression::kSize, roots().tuple_expression_class());
-}
-
-Data *Heap::allocate_global_expression() {
-  return allocate_object(GlobalExpression::kSize, roots().global_expression_class());
-}
-
-Data *Heap::allocate_symbol() {
-  return allocate_object(Symbol::kSize, roots().symbol_class());
-}
-
-Data *Heap::allocate_quote_expression() {
-  return allocate_object(QuoteExpression::kSize, roots().quote_expression_class());
-}
-
-Data *Heap::allocate_local_definition() {
-  return allocate_object(LocalDefinition::kSize, roots().local_definition_class());
-}
-
-Data *Heap::allocate_lambda_expression() {
-  return allocate_object(LambdaExpression::kSize, roots().lambda_expression_class());
-}
-
-Data *Heap::new_this_expression() {
-  return allocate_object(ThisExpression::kSize, roots().this_expression_class());
-}
-
-Data *Heap::allocate_interpolate_expression() {
-  return allocate_object(InterpolateExpression::kSize, roots().interpolate_expression_class());
-}
+FOR_EACH_GENERATABLE_TYPE(MAKE_ALLOCATOR)
+#undef MAKE_ALLOCATOR
 
 Data *Heap::new_empty_class(InstanceType instance_type) {
   Data *val = allocate_class(instance_type);
@@ -149,10 +80,6 @@ Data *Heap::new_method(String *name, Lambda *lambda) {
   result->set_name(name);
   result->set_lambda(lambda);
   return result;
-}
-
-Data *Heap::allocate_method() {
-  return allocate_object(Method::kSize, roots().method_class());
 }
 
 Data *Heap::new_string(string value) {

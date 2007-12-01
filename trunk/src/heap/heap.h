@@ -46,43 +46,12 @@ public:
   
   Data *new_lambda(uint32_t argc, Value *code, Value *literals, LambdaExpression *tree);
   
-  Data *new_builtin_call(uint32_t argc, uint32_t index);
-  
   Data *allocate_lambda(uint32_t argc);
-
-  Data *allocate_literal_expression();
   
-  Data *allocate_invoke_expression();
-  
-  Data *allocate_call_expression();
-  
-  Data *allocate_conditional_expression();
-
-  Data *allocate_class_expression();
-  
-  Data *allocate_return_expression();
-  
-  Data *allocate_method_expression();
-  
-  Data *allocate_sequence_expression();
-  
-  Data *allocate_local_definition();
-  
-  Data *allocate_tuple_expression();
-  
-  Data *allocate_global_expression();
-  
-  Data *new_this_expression();
-
-  Data *allocate_quote_expression();
-
-  Data *allocate_lambda_expression();
-  
-  Data *allocate_interpolate_expression();
-
-  Data *allocate_symbol();
-  
-  Data *allocate_method();
+#define DECLARE_ALLOCATOR(n, NAME, Name, name)                       \
+  Data *allocate_##name();
+FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
+#undef MAKE_ALLOCATOR
   
   Data *new_abstract_buffer(uint32_t size, Class *chlass);
   

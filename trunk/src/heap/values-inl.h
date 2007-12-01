@@ -180,9 +180,9 @@ InstanceType ref_traits<Value>::type() {
 // --- A c c e s s o r   M a c r o s ---
 // -------------------------------------
 
-#define DEFINE_ACCESSOR(T, Class, name, kOffset)                     \
+#define DEFINE_ACCESSOR(T, Class, name, Name)                        \
 T &Class::name() {                                                   \
-  return ValuePointer::access_field<T>(this, Class::kOffset);        \
+  return ValuePointer::access_field<T>(this, Class::k##Name##Offset);\
 }
 
 #define DEFINE_REF_GETTER(T, Class, name)                            \
@@ -190,20 +190,27 @@ ref<T> ref_traits<Class>::name() {                                   \
   return new_ref(open(this)->name());                                \
 }
 
-#define DEFINE_SETTER(T, Class, name, kOffset)                       \
+#define DEFINE_SETTER(T, Class, name, Name)                          \
 void Class::set_##name(T value) {                                    \
-  ValuePointer::set_field<T>(this, Class::kOffset, value);           \
+  ValuePointer::set_field<T>(this, Class::k##Name##Offset, value);   \
 }
 
-#define DEFINE_ACCESSORS(T, Class, name, kOffset)                    \
-  DEFINE_ACCESSOR(T, Class, name, kOffset)                           \
-  DEFINE_SETTER(T, Class, name, kOffset)
+#define DEFINE_ACCESSORS(T, Class, name, Name)                       \
+  DEFINE_ACCESSOR(T, Class, name, Name)                              \
+  DEFINE_SETTER(T, Class, name, Name)
 
-#define DEFINE_FIELD_ACCESSORS(T, Class, name, kOffset)              \
-  DEFINE_ACCESSOR(T*, Class, name, kOffset)                          \
-  DEFINE_SETTER(T*, Class, name, kOffset)                            \
+#define DEFINE_FIELD_ACCESSORS(T, name, Name, Class)                 \
+  DEFINE_ACCESSOR(T*, Class, name, Name)                             \
+  DEFINE_SETTER(T*, Class, name, Name)                               \
   DEFINE_REF_GETTER(T, Class, name)
 
+#define DEFINE_ALL_ACCESSORS(n, NAME, Name, name)                    \
+  FOR_EACH_##NAME##_FIELD(DEFINE_FIELD_ACCESSORS, Name)
+FOR_EACH_GENERATABLE_TYPE(DEFINE_ALL_ACCESSORS)
+#undef DEFINE_ALL_ACCESSORS
+
+FOR_EACH_CLASS_FIELD(DEFINE_FIELD_ACCESSORS, Class)
+FOR_EACH_LAMBDA_FIELD(DEFINE_FIELD_ACCESSORS, Lambda)
 
 // ---------------------------------
 // --- S m a l l   I n t e g e r ---
@@ -233,15 +240,15 @@ Class *Object::gc_safe_chlass() {
 }
 #endif
 
-DEFINE_FIELD_ACCESSORS(Class, Object, chlass, kHeaderOffset)
-DEFINE_ACCESSORS(Data*, Object, header, kHeaderOffset)
+DEFINE_FIELD_ACCESSORS(Class, chlass, Header, Object)
+DEFINE_ACCESSORS(Data*, Object, header, Header)
 
 
 // -------------------
 // --- S t r i n g ---
 // -------------------
 
-DEFINE_ACCESSORS(uint32_t, String, length, kLengthOffset)
+DEFINE_ACCESSORS(uint32_t, String, length, Length)
 
 char &String::at(uint32_t index) {
   ASSERT_C(OUT_OF_BOUNDS, index < length());
@@ -263,7 +270,7 @@ uint32_t String::size_for(uint32_t chars) {
 // --- T u p l e ---
 // -----------------
 
-DEFINE_ACCESSORS(uint32_t, Tuple, length, kLengthOffset)
+DEFINE_ACCESSORS(uint32_t, Tuple, length, Length)
 
 Value *&Tuple::at(uint32_t index) {
   ASSERT_C(OUT_OF_BOUNDS, index < length());
@@ -295,8 +302,6 @@ void ref_traits<Tuple>::set(uint32_t index, ref<Value> value) {
 // ---------------------------
 // --- D i c t i o n a r y ---
 // ---------------------------
-
-DEFINE_ACCESSORS(Tuple*, Dictionary, table, kTableOffset)
 
 ref<Value> ref_traits<Dictionary>::get(ref<Value> value) {
   Data *result = open(this)->get(*value);
@@ -333,11 +338,7 @@ bool Dictionary::Iterator::next(Dictionary::Iterator::Entry *entry) {
 // --- L a m b d a ---
 // -------------------
 
-DEFINE_ACCESSORS(uint32_t, Lambda, argc, kArgcOffset)
-DEFINE_FIELD_ACCESSORS(Value, Lambda, code, kCodeOffset)
-DEFINE_FIELD_ACCESSORS(Value, Lambda, literals, kLiteralsOffset)
-DEFINE_FIELD_ACCESSORS(LambdaExpression, Lambda, tree, kTreeOffset)
-DEFINE_FIELD_ACCESSORS(Tuple, Lambda, outers, kOutersOffset)
+DEFINE_ACCESSORS(uint32_t, Lambda, argc, Argc)
 
 // -------------------
 // --- B u f f e r ---
@@ -388,22 +389,11 @@ uint32_t ref_traits<Code>::length() {
 }
 
 
-// -------------------
-// --- M e t h o d ---
-// -------------------
-
-DEFINE_FIELD_ACCESSORS(String, Method, name, kNameOffset)
-DEFINE_FIELD_ACCESSORS(Lambda, Method, lambda, kLambdaOffset)
-
-
 // -----------------
 // --- C l a s s ---
 // -----------------
 
-DEFINE_ACCESSORS(InstanceType, Class, instance_type, kInstanceTypeOffset)
-DEFINE_FIELD_ACCESSORS(Value, Class, super, kSuperOffset)
-DEFINE_FIELD_ACCESSORS(Value, Class, name, kNameOffset)
-DEFINE_FIELD_ACCESSORS(Tuple, Class, methods, kMethodsOffset)
+DEFINE_ACCESSORS(InstanceType, Class, instance_type, InstanceType)
 
 
 // ---------------------

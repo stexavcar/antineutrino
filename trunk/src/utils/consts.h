@@ -14,11 +14,14 @@
 // --- C l a s s   T a g s ---
 // ---------------------------
 
+#define FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                    \
+  VISIT(4,  DICTIONARY,             Dictionary,            dictionary)             \
+  VISIT(12, METHOD,                 Method,                method)                 \
+
 #define FOR_EACH_OBJECT_TYPE(VISIT)                                                \
   VISIT(1,  CLASS,                  Class,                 0)                      \
   VISIT(2,  STRING,                 String,                0)                      \
   VISIT(3,  TUPLE,                  Tuple,                 0)                      \
-  VISIT(4,  DICTIONARY,             Dictionary,            0)                      \
   VISIT(5,  VOID,                   Void,                  0)                      \
   VISIT(6,  NULL,                   Null,                  0)                      \
   VISIT(7,  TRUE,                   True,                  0)                      \
@@ -26,9 +29,9 @@
   VISIT(9,  LAMBDA,                 Lambda,                0)                      \
   VISIT(10, BUFFER,                 Buffer,                0)                      \
   VISIT(11, CODE,                   Code,                  0)                      \
-  VISIT(12, METHOD,                 Method,                0)                      \
   VISIT(13, PROTOCOL,               Protocol,              0)                      \
   VISIT(14, INSTANCE,               Instance,              0)                      \
+  FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
   FOR_EACH_SYNTAX_TREE_TYPE(VISIT)
 
 #define FOR_EACH_VIRTUAL_TYPE(VISIT)                                               \
@@ -73,6 +76,9 @@
   VISIT(65, INTERPOLATE_EXPRESSION, InterpolateExpression, interpolate_expression) \
   VISIT(66, LOCAL_DEFINITION,       LocalDefinition,       local_definition)
 
+#define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
+  FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
+  FOR_EACH_SYNTAX_TREE_TYPE(VISIT)
 
 // -------------------------------------
 // --- I m a g e   C o n s t a n t s ---

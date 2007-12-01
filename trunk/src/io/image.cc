@@ -69,11 +69,6 @@ void Image::copy_object_shallow(ImageObject *obj) {
   uint32_t type = obj->type();
   Heap &heap = Runtime::current().heap();
   switch (type) {
-    case DICTIONARY_TYPE: {
-      Dictionary *dict = cast<Dictionary>(heap.new_dictionary());
-      obj->point_forward(dict);
-      break;
-    }
     case STRING_TYPE: {
       ImageString *img = image_cast<ImageString>(obj);
       uint32_t length = img->length();
@@ -113,104 +108,19 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(chlass);
       break;
     }
-    case METHOD_TYPE: {
-      Method *method = cast<Method>(heap.allocate_method());
-      obj->point_forward(method);
-      break;
-    }
     case SINGLETON_TYPE: {
       // Roots (which are singleton tagged) are handled specially in
       // the Value::forward_pointer method.
       break;
     }
-    case LITERAL_EXPRESSION_TYPE: {
-      LiteralExpression *literal = cast<LiteralExpression>(heap.allocate_literal_expression());
-      obj->point_forward(literal);
-      break;
+#define MAKE_CASE(n, NAME, Name, name)                               \
+    case NAME##_TYPE: {                                              \
+      Name *heap_obj = cast<Name>(heap.allocate_##name());           \
+      obj->point_forward(heap_obj);                                  \
+      break;                                                         \
     }
-    case INVOKE_EXPRESSION_TYPE: {
-      InvokeExpression *expr = cast<InvokeExpression>(heap.allocate_invoke_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case CALL_EXPRESSION_TYPE: {
-      CallExpression *expr = cast<CallExpression>(heap.allocate_call_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case CONDITIONAL_EXPRESSION_TYPE: {
-      ConditionalExpression *expr = cast<ConditionalExpression>(heap.allocate_conditional_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case CLASS_EXPRESSION_TYPE: {
-      ClassExpression *expr = cast<ClassExpression>(heap.allocate_class_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case RETURN_EXPRESSION_TYPE: {
-      ReturnExpression *expr = cast<ReturnExpression>(heap.allocate_return_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case METHOD_EXPRESSION_TYPE: {
-      MethodExpression *expr = cast<MethodExpression>(heap.allocate_method_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case SEQUENCE_EXPRESSION_TYPE: {
-      SequenceExpression *expr = cast<SequenceExpression>(heap.allocate_sequence_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case TUPLE_EXPRESSION_TYPE: {
-      TupleExpression *expr = cast<TupleExpression>(heap.allocate_tuple_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case GLOBAL_EXPRESSION_TYPE: {
-      GlobalExpression *expr = cast<GlobalExpression>(heap.allocate_global_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case SYMBOL_TYPE: {
-      Symbol *sym = cast<Symbol>(heap.allocate_symbol());
-      obj->point_forward(sym);
-      break;
-    }
-    case THIS_EXPRESSION_TYPE: {
-      ThisExpression *expr = cast<ThisExpression>(heap.new_this_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case LAMBDA_EXPRESSION_TYPE: {
-      LambdaExpression *expr = cast<LambdaExpression>(heap.allocate_lambda_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case QUOTE_EXPRESSION_TYPE: {
-      QuoteExpression *expr = cast<QuoteExpression>(heap.allocate_quote_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case INTERPOLATE_EXPRESSION_TYPE: {
-      InterpolateExpression *expr = cast<InterpolateExpression>(heap.allocate_interpolate_expression());
-      obj->point_forward(expr);
-      break;
-    }
-    case LOCAL_DEFINITION_TYPE: {
-      LocalDefinition *expr = cast<LocalDefinition>(heap.allocate_local_definition());
-      obj->point_forward(expr);
-      break;
-    }
-    case BUILTIN_CALL_TYPE: {
-      ImageBuiltinCall *img = image_cast<ImageBuiltinCall>(obj);
-      uint32_t argc = img->argc();
-      uint32_t index = img->index();
-      BuiltinCall *expr = cast<BuiltinCall>(heap.new_builtin_call(argc, index));
-      obj->point_forward(expr);
-      break;
-    }
+FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
+#undef MAKE_CASE
     default:
       UNHANDLED(InstanceType, type);
       break;
@@ -363,8 +273,15 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       expr->set_body(cast<SyntaxTree>(img->body()->forward_pointer()));
       break;
     }
+    case BUILTIN_CALL_TYPE: {
+      ImageBuiltinCall *img = image_cast<ImageBuiltinCall>(obj);
+      BuiltinCall *expr = cast<BuiltinCall>(img->forward_pointer());
+      expr->set_argc(img->argc());
+      expr->set_index(img->index());
+      break;
+    }
     case STRING_TYPE: case CODE_TYPE: case SINGLETON_TYPE:
-    case THIS_EXPRESSION_TYPE: case BUILTIN_CALL_TYPE:
+    case THIS_EXPRESSION_TYPE:
       // Nothing to fix
       break;
     default:

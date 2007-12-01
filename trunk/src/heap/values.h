@@ -390,9 +390,16 @@ public:
   static const int kSize = Object::kHeaderSize;
 };
 
+#define FOR_EACH_VOID_FIELD(VISIT, arg)
 class Void : public Singleton { };
+
+#define FOR_EACH_NULL_FIELD(VISIT, arg)
 class Null : public Singleton { };
+
+#define FOR_EACH_TRUE_FIELD(VISIT, arg)
 class True : public Singleton { };
+
+#define FOR_EACH_FALSE_FIELD(VISIT, arg)
 class False : public Singleton { };
 
 
