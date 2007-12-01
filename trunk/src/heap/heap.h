@@ -48,6 +48,8 @@ public:
   
   Data *allocate_lambda(uint32_t argc);
   
+  Data *allocate_builtin_call();
+  
 #define DECLARE_ALLOCATOR(n, NAME, Name, name)                       \
   Data *allocate_##name();
 FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)

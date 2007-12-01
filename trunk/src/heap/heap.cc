@@ -56,8 +56,12 @@ Data *Heap::allocate_lambda(uint32_t argc) {
   return result;
 }
 
+Data *Heap::allocate_builtin_call() {
+  return allocate_object(BuiltinCall::kSize, roots().builtin_call_class());
+}
+
 #define MAKE_ALLOCATOR(n, NAME, Name, name)                          \
-Data* Heap::allocate_##name() {                                      \
+Data *Heap::allocate_##name() {                                      \
   return allocate_object(Name::kSize, roots().name##_class());       \
 }
 FOR_EACH_GENERATABLE_TYPE(MAKE_ALLOCATOR)

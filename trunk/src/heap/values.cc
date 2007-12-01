@@ -414,6 +414,9 @@ static void validate_object(Object *obj) {
     case CLASS_TYPE:
       FOR_EACH_CLASS_FIELD(VALIDATE_FIELD, Class)
       break;
+    case BUILTIN_CALL_TYPE:
+      FOR_EACH_BUILTIN_CALL_FIELD(VALIDATE_FIELD, BuiltinCall)
+      break;
     case CODE_TYPE: case STRING_TYPE:
       break;
 #define MAKE_CASE(n, NAME, Name, name)                               \

@@ -58,6 +58,10 @@
   FOR_EACH_VIRTUAL_TYPE(VISIT)
 
 #define FOR_EACH_SYNTAX_TREE_TYPE(VISIT)                                           \
+  VISIT(64, BUILTIN_CALL,           BuiltinCall,           builtin_call)           \
+  FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)
+
+#define FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)                               \
   VISIT(50, LITERAL_EXPRESSION,     LiteralExpression,     literal_expression)     \
   VISIT(51, INVOKE_EXPRESSION,      InvokeExpression,      invoke_expression)      \
   VISIT(52, CLASS_EXPRESSION,       ClassExpression,       class_expression)       \
@@ -72,13 +76,12 @@
   VISIT(61, QUOTE_EXPRESSION,       QuoteExpression,       quote_expression)       \
   VISIT(62, THIS_EXPRESSION,        ThisExpression,        this_expression)        \
   VISIT(63, LAMBDA_EXPRESSION,      LambdaExpression,      lambda_expression)      \
-  VISIT(64, BUILTIN_CALL,           BuiltinCall,           builtin_call)           \
   VISIT(65, INTERPOLATE_EXPRESSION, InterpolateExpression, interpolate_expression) \
   VISIT(66, LOCAL_DEFINITION,       LocalDefinition,       local_definition)
 
 #define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
   FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
-  FOR_EACH_SYNTAX_TREE_TYPE(VISIT)
+  FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)
 
 // -------------------------------------
 // --- I m a g e   C o n s t a n t s ---
