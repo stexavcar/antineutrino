@@ -13,7 +13,8 @@ public:
   address start() { return data_; }
   address end() { return data_ + capacity_; }
   address cursor() { return data_ + cursor_; }
-  bool contains(address addr);
+  uint32_t bytes_allocated() { return cursor() - start(); }
+  bool contains(Object *obj);
   inline address allocate(uint32_t size);
 private:
   friend class SemiSpaceIterator;

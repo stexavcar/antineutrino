@@ -4,7 +4,7 @@
 
 using namespace neutrino;
 
-static void test_tuples() {
+void Test::tuples() {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   Tuple *tuple0 = cast<Tuple>(heap.new_tuple(0));
@@ -26,7 +26,7 @@ static void test_tuples() {
   }
 }
 
-static void test_bounds_check() {
+void Test::bounds_check() {
 #ifdef DEBUG
   LocalRuntime runtime;
   Tuple *tuple = cast<Tuple>(runtime.heap().new_tuple(10));

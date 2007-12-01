@@ -5,7 +5,7 @@
 
 using namespace neutrino;
 
-static void test_memory() {
+void Test::memory() {
   LocalRuntime runtime;
   int kSize = 256;
   Buffer *buffer = cast<Buffer>(runtime.heap().new_buffer<uint8_t>(kSize));
@@ -19,7 +19,7 @@ static void test_memory() {
     ASSERT_EQ(i, buffer->at<uint8_t>(i));
 }
 
-static void test_bounds_check() {
+void Test::bounds_check() {
 #ifdef DEBUG
   LocalRuntime runtime;
   Buffer *buffer = cast<Buffer>(runtime.heap().new_buffer<uint8_t>(128));
@@ -27,7 +27,7 @@ static void test_bounds_check() {
 #endif
 }
 
-static void test_bounds_check_partial() {
+void Test::bounds_check_partial() {
 #ifdef DEBUG
   LocalRuntime runtime;
   Buffer *buffer = cast<Buffer>(runtime.heap().new_buffer<uint8_t>(129));

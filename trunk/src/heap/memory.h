@@ -11,10 +11,10 @@ public:
   ~Memory();
   inline address allocate(uint32_t size);
   void collect_garbage();
+  SemiSpace &young_space() { return *young_space_; }
 private:
   friend class DisallowGarbageCollection;
   Heap &heap() { return heap_; }
-  SemiSpace &young_space() { return *young_space_; }
   bool allow_garbage_collection() { return allow_garbage_collection_; }
   Heap &heap_;
   SemiSpace *young_space_;

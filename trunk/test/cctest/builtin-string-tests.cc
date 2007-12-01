@@ -4,7 +4,7 @@
 
 using namespace neutrino;
 
-static void test_builtin_string_length() {
+void Test::builtin_string_length() {
   CHECK_EQ(0, string("").length());
   CHECK_EQ(1, string("f").length());
   CHECK_EQ(2, string("fo").length());
@@ -12,7 +12,7 @@ static void test_builtin_string_length() {
   CHECK_EQ(3, string("foo\0bar").length());
 }
 
-static void test_builtin_string_equality() {
+void Test::builtin_string_equality() {
   CHECK(string::equals("", ""));
   CHECK(!string::equals("", "ab"));
   CHECK(!string::equals("ab", ""));
@@ -23,7 +23,7 @@ static void test_builtin_string_equality() {
 
 // Tests that the extended_size computation stays within 1% of the
 // golden ratio for a range of large values
-static void test_grow_factor() {
+void Test::grow_factor() {
   static const float kGoldenRatio = 1.6180339887;
   static const float kDeviation = 0.01;
   static const float kLowerRatio = kGoldenRatio * (1 - kDeviation);
@@ -37,7 +37,7 @@ static void test_grow_factor() {
   }
 }
 
-static void test_string_buffer_basic() {
+void Test::string_buffer_basic() {
   string str;
   {
     string_buffer buf(1);
@@ -60,7 +60,7 @@ static void test_string_buffer_basic() {
   str.dispose();
 }
 
-static void test_printf() {
+void Test::printf() {
   string_buffer buf;
   buf.printf("[$0 $1 $2]", "foo", "bar", "baz");
   CHECK(buf.to_string() == "[foo bar baz]");

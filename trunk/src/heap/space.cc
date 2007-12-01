@@ -9,7 +9,8 @@ SemiSpace::SemiSpace(uint32_t capacity) {
   data_ = new int8_t[capacity];
 }
 
-bool SemiSpace::contains(address addr) {
+bool SemiSpace::contains(Object *obj) {
+  address addr = ValuePointer::address_of(obj);
   return (start() <= addr) && (addr < end());
 }
 

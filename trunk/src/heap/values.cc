@@ -360,8 +360,12 @@ string Lambda::disassemble() {
 uint32_t Object::size_in_memory() {
   InstanceType instance_type = type();
   switch (instance_type) {
+  case TRUE_TYPE: case FALSE_TYPE: case VOID_TYPE: case NULL_TYPE:
+    return Singleton::kSize;
   case LAMBDA_TYPE:
     return Lambda::kSize;
+  case CLASS_TYPE:
+    return Class::kSize;
   case TUPLE_TYPE:
     return Tuple::size_for(cast<Tuple>(this)->length());
   case STRING_TYPE:
@@ -417,7 +421,8 @@ static void validate_object(Object *obj) {
     case BUILTIN_CALL_TYPE:
       FOR_EACH_BUILTIN_CALL_FIELD(VALIDATE_FIELD, BuiltinCall)
       break;
-    case CODE_TYPE: case STRING_TYPE:
+    case CODE_TYPE: case STRING_TYPE: case VOID_TYPE: case TRUE_TYPE:
+    case FALSE_TYPE: case NULL_TYPE:
       break;
 #define MAKE_CASE(n, NAME, Name, name)                               \
     case NAME##_TYPE:                                                \
@@ -450,7 +455,8 @@ void Object::for_each_field(FieldVisitor &visitor) {
   InstanceType type = this->type();
   visitor.visit_field(reinterpret_cast<Value**>(&header()));
   switch (type) {
-    case STRING_TYPE: case CODE_TYPE:
+    case STRING_TYPE: case CODE_TYPE: case TRUE_TYPE: case FALSE_TYPE:
+    case VOID_TYPE: case NULL_TYPE:
       return;
     case TUPLE_TYPE:
       for (uint32_t i = 0; i < cast<Tuple>(this)->length(); i++)

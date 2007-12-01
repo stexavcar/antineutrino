@@ -6,7 +6,7 @@
 
 using namespace neutrino;
 
-static void test_handles() {
+void Test::handles() {
   RefScope scope;
   Runtime runtime;
   runtime.initialize();
@@ -22,7 +22,7 @@ static void test_handles() {
   ref<Value> one_tuple_value = one_tuple;
 }
 
-static void test_unscoped() {
+void Test::unscoped() {
 #ifdef DEBUG
   Value *value = Smi::from_int(0);
   CHECK_ABORTS(NO_REF_SCOPE, new_ref(value));
@@ -42,7 +42,7 @@ static void test_deep(uint32_t n) {
   }
 }
 
-static void test_deep() {
+void Test::deep() {
   test_deep(1234);
 }
 
@@ -59,7 +59,7 @@ static void count_refs(uint32_t expected) {
   CHECK_EQ(count, expected);
 }
 
-static void test_ref_iteration() {
+void Test::ref_iteration() {
   RefScope scope;
   const uint32_t kRefCount = 1024;
   for (uint32_t i = 0; i < kRefCount; i++) {

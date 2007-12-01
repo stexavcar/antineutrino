@@ -3,7 +3,7 @@
 
 using namespace neutrino;
 
-static void test_equality() {
+void Test::equality() {
   Runtime runtime;
   runtime.initialize();
   Heap &heap = runtime.heap();

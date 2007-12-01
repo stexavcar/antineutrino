@@ -3,9 +3,10 @@ builtin-string-tests.cc
 dictionary-tests.cc
 equality-tests.cc
 heap-tests.cc
+memory-tests.cc
 ref-tests.cc
 runtime-tests.cc
 signal-tests.cc
 singleton-tests.cc
 tuple-tests.cc
-validation-test.cc
+validation-tests.cc

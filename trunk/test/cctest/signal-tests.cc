@@ -3,7 +3,7 @@
 
 using namespace neutrino;
 
-static void test_signals() {
+void Test::signals() {
   Signal *val = AllocationFailed::make(100);
   CHECK(!is<Smi>(val));
   CHECK(!is<Object>(val));
@@ -22,7 +22,7 @@ static void test_signals() {
   CHECK_IS(Nothing, no);
 }
 
-static void test_forward_pointers() {
+void Test::forward_pointers() {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   Code *code = cast<Code>(heap.new_code(4));

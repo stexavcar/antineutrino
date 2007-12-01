@@ -34,13 +34,21 @@ FOR_EACH_SIMPLE_ROOT(ALLOCATE_ROOT)
 #undef ALLOCATE_ROOT
 
   Data *class_name;
-#define SET_CLASS_NAME(n, Type, name, Name, NAME, allocator)         \
+#define FIXUP_CLASS(n, Type, name, Name, NAME, allocator)            \
   class_name = heap.new_string(#Name);                               \
   if (is<AllocationFailed>(class_name)) return false;                \
-  name()->set_name(cast<String>(class_name));
-FOR_EACH_ROOT_CLASS(SET_CLASS_NAME)
+  name()->set_name(cast<String>(class_name));                        \
+  name()->set_methods(empty_tuple());
+FOR_EACH_ROOT_CLASS(FIXUP_CLASS)
 #undef SET_CLASS_NAME
   return true;
+
+#ifdef PARANOID
+#define VALIDATE(n, Type, name, Name, NAME, allocator) name()->validate();
+FOR_EACH_ROOT(VALIDATE)
+#undef VALIDATE
+#endif
+
 }
 
 } // neutrino

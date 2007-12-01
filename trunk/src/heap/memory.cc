@@ -35,7 +35,7 @@ void FieldMigrator::migrate_field(Value **field) {
   // If the field doesn't hold a heap object then there's nothing to do
   if (!is<Object>(*field)) return;
   Object *obj = cast<Object>(*field);
-  ASSERT(from_space().contains(ValuePointer::address_of(obj)));
+  ASSERT(from_space().contains(obj));
   Data *header = obj->header();
   // If the object referenced by this field has already been moved we
   // can just update the pointer
@@ -72,7 +72,7 @@ void Memory::collect_garbage() {
     migrator.migrate_field(&root_iter.next());
   // Migrate local refs (shallow)
   RefIterator ref_iter;
-  while (root_iter.has_next())
+  while (ref_iter.has_next())
     migrator.migrate_field(&ref_iter.next());
   // Do deep migration of shallowly migrated objects
   SemiSpaceIterator to_space_iter(*to_space);

@@ -3,7 +3,7 @@
 
 using namespace neutrino;
 
-static void test_tuples() {
+void Test::singletons() {
   Runtime runtime;
   runtime.initialize();
   Roots &roots = runtime.roots();

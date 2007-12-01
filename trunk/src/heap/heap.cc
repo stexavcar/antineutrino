@@ -73,6 +73,7 @@ Data *Heap::new_empty_class(InstanceType instance_type) {
   ASSERT_IS(Class, val);
   Class *result = cast<Class>(val);
   result->set_super(Smi::from_int(0));
+  result->set_methods(roots().empty_tuple());
   ASSERT(result->is_empty());
   return result;
 }

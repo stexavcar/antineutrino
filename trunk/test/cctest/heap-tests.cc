@@ -4,14 +4,14 @@
 
 using namespace neutrino;
 
-static void test_integers() {
+void Test::integers() {
   for (int i = -100; i < 100; i++) {
     Smi *value = Smi::from_int(i);
     CHECK_EQ(i, value->value());
   }
 }
 
-static void test_simple_string_operations() {
+void Test::simple_string_operations() {
   Runtime runtime;
   runtime.initialize();
   Heap &heap = runtime.heap();
@@ -23,7 +23,7 @@ static void test_simple_string_operations() {
   CHECK_EQ('p', str->at(2));
 }
 
-static void test_to_string() {
+void Test::to_string() {
   Runtime runtime;
   runtime.initialize();
   Heap &heap = runtime.heap();
@@ -41,7 +41,7 @@ static void test_to_string() {
   CHECK(tuple->to_string() == "[123, #<tuple>, 789]");
 }
 
-static void test_cast_failure() {
+void Test::cast_failure() {
 #ifdef DEBUG
   Value *value = Smi::from_int(0);
   CHECK_ABORTS(CAST_ERROR, cast<Tuple>(value));

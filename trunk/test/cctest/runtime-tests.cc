@@ -3,7 +3,7 @@
 
 using namespace neutrino;
 
-static void test_runtime_creation() {
+void Test::runtime_creation() {
   Runtime runtime;
   CHECK(runtime.initialize());
   CHECK_IS(Class, runtime.roots().class_class());

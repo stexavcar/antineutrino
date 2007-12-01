@@ -3,7 +3,7 @@
 
 using namespace neutrino;
 
-static void test_dictionary_simple() {
+void Test::dictionary_simple() {
   Runtime runtime;
   runtime.initialize();
   Runtime::Scope scope(runtime);
@@ -40,7 +40,7 @@ static void test_dictionary_simple() {
   CHECK(cast<Value>(heap.new_string("flab"))->equals(cast<Value>(dict->get(cast<Value>(heap.new_string("by"))))));
 }
 
-static void test_dictionary_iterator() {
+void Test::dictionary_iterator() {
   Runtime runtime;
   runtime.initialize();
   Runtime::Scope scope(runtime);

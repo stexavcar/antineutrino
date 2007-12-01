@@ -4,7 +4,7 @@
 
 using namespace neutrino;
 
-static void test_bounds_check() {
+void Test::validation() {
 #ifdef DEBUG
   LocalRuntime runtime;
   String *name = cast<String>(runtime.heap().new_string(0));
