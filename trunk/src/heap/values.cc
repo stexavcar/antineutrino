@@ -455,8 +455,21 @@ static void validate_object(Object *obj) {
     case CONDITIONAL_EXPRESSION_TYPE:
       FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(VALIDATE_FIELD, ConditionalExpression)
       break;
+    case GLOBAL_EXPRESSION_TYPE:
+      FOR_EACH_GLOBAL_EXPRESSION_FIELD(VALIDATE_FIELD, GlobalExpression)
+      break;
+    case INVOKE_EXPRESSION_TYPE:
+      FOR_EACH_INVOKE_EXPRESSION_FIELD(VALIDATE_FIELD, InvokeExpression)
+      break;
+    case INTERPOLATE_EXPRESSION_TYPE:
+      FOR_EACH_INTERPOLATE_EXPRESSION_FIELD(VALIDATE_FIELD, InterpolateExpression)
+      break;
+    case TUPLE_EXPRESSION_TYPE:
+      FOR_EACH_TUPLE_EXPRESSION_FIELD(VALIDATE_FIELD, TupleExpression)
+      break;
     case TRUE_TYPE: case FALSE_TYPE: case VOID_TYPE: case NULL_TYPE:
     case CODE_TYPE: case STRING_TYPE: case BUILTIN_CALL_TYPE:
+    case THIS_EXPRESSION_TYPE:
       break;
     default:
       UNHANDLED(InstanceType, type);
@@ -485,6 +498,7 @@ void Object::for_each_field(FieldVisitor &visitor) {
   switch (type) {
     case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE: case FALSE_TYPE:
     case STRING_TYPE: case CODE_TYPE: case BUILTIN_CALL_TYPE:
+    case THIS_EXPRESSION_TYPE:
       return;
     case LAMBDA_TYPE:
       FOR_EACH_LAMBDA_FIELD(VISIT_FIELD, Lambda)
@@ -509,6 +523,27 @@ void Object::for_each_field(FieldVisitor &visitor) {
       break;
     case SYMBOL_TYPE:
       FOR_EACH_SYMBOL_FIELD(VISIT_FIELD, Symbol)
+      break;
+    case CALL_EXPRESSION_TYPE:
+      FOR_EACH_CALL_EXPRESSION_FIELD(VISIT_FIELD, CallExpression)
+      break;
+    case GLOBAL_EXPRESSION_TYPE:
+      FOR_EACH_GLOBAL_EXPRESSION_FIELD(VISIT_FIELD, GlobalExpression)
+      break;
+    case CONDITIONAL_EXPRESSION_TYPE:
+      FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(VISIT_FIELD, ConditionalExpression)
+      break;
+    case LITERAL_EXPRESSION_TYPE:
+      FOR_EACH_LITERAL_EXPRESSION_FIELD(VISIT_FIELD, LiteralExpression)
+      break;
+    case INVOKE_EXPRESSION_TYPE:
+      FOR_EACH_INVOKE_EXPRESSION_FIELD(VISIT_FIELD, InvokeExpression)
+      break;
+    case INTERPOLATE_EXPRESSION_TYPE:
+      FOR_EACH_INTERPOLATE_EXPRESSION_FIELD(VISIT_FIELD, InterpolateExpression)
+      break;
+    case TUPLE_EXPRESSION_TYPE:
+      FOR_EACH_TUPLE_EXPRESSION_FIELD(VISIT_FIELD, TupleExpression)
       break;
     case TUPLE_TYPE:
       for (uint32_t i = 0; i < cast<Tuple>(this)->length(); i++)

@@ -56,11 +56,14 @@ DEFINE_REF_CLASS(LiteralExpression);
 // --- I n v o k e   E x p r e s s i o n ---
 // -----------------------------------------
 
+#define FOR_EACH_INVOKE_EXPRESSION_FIELD(VISIT, arg)                 \
+  VISIT(SyntaxTree, receiver,  Receiver,  arg)                       \
+  VISIT(String,     name,      Name,      arg)                       \
+  VISIT(Tuple,      arguments, Arguments, arg)
+
 class InvokeExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(SyntaxTree*, receiver);
-  DECLARE_FIELD(String*, name);
-  DECLARE_FIELD(Tuple*, arguments);
+  FOR_EACH_INVOKE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kReceiverOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kNameOffset = kReceiverOffset + kPointerSize;
@@ -71,9 +74,7 @@ public:
 template <>
 class ref_traits<InvokeExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<SyntaxTree> receiver();
-  inline ref<String> name();
-  inline ref<Tuple> arguments();
+  FOR_EACH_INVOKE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(InvokeExpression);
@@ -239,10 +240,13 @@ DEFINE_REF_CLASS(SequenceExpression);
 // --- T u p l e   E x p r e s s i o n ---
 // ---------------------------------------
 
+#define FOR_EACH_TUPLE_EXPRESSION_FIELD(VISIT, arg)                  \
+  VISIT(Tuple, values, Values, arg)
+
 class TupleExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(Tuple*, values);
-  
+  FOR_EACH_TUPLE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+
   static const uint32_t kValuesOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kValuesOffset + kPointerSize;
 };
@@ -250,7 +254,7 @@ public:
 template <>
 class ref_traits<TupleExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<Tuple> values();
+  FOR_EACH_TUPLE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(TupleExpression);
@@ -260,9 +264,12 @@ DEFINE_REF_CLASS(TupleExpression);
 // --- G l o b a l   E x p r e s s i o n ---
 // -----------------------------------------
 
+#define FOR_EACH_GLOBAL_EXPRESSION_FIELD(VISIT, arg)                 \
+  VISIT(String, name, Name, arg)
+
 class GlobalExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(String*, name);
+  FOR_EACH_GLOBAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kNameOffset + kPointerSize;
@@ -271,7 +278,7 @@ public:
 template <>
 class ref_traits<GlobalExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<String> name();
+  FOR_EACH_GLOBAL_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(GlobalExpression);
@@ -360,10 +367,13 @@ public:
 // --- I n t e r p o l a t e   E x p r e s s i o n ---
 // ---------------------------------------------------
 
+#define FOR_EACH_INTERPOLATE_EXPRESSION_FIELD(VISIT, arg)            \
+  VISIT(Tuple, terms, Terms, arg)
+
 class InterpolateExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(Tuple*, terms);
-  
+  FOR_EACH_INTERPOLATE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+
   static const uint32_t kTermsOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kTermsOffset + kPointerSize;
 };
@@ -371,7 +381,7 @@ public:
 template <>
 class ref_traits<InterpolateExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<Tuple> terms();
+  FOR_EACH_INTERPOLATE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(InterpolateExpression);

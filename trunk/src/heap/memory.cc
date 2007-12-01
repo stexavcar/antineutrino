@@ -64,8 +64,8 @@ void FieldMigrator::visit_field(Value **field) {
 void Memory::collect_garbage() {
   ASSERT(allow_garbage_collection());
   SemiSpace &from_space = young_space();
-  SemiSpace &to_space = *(new SemiSpace(kSize));
-  FieldMigrator migrator(from_space, to_space);
+  SemiSpace *to_space = new SemiSpace(kSize);
+  FieldMigrator migrator(from_space, *to_space);
   // Migrate all roots (shallow)
   RootIterator root_iter(heap().roots());
   while (root_iter.has_next())
@@ -75,11 +75,13 @@ void Memory::collect_garbage() {
   while (root_iter.has_next())
     migrator.migrate_field(&ref_iter.next());
   // Do deep migration of shallowly migrated objects
-  SemiSpaceIterator to_space_iter(to_space);
+  SemiSpaceIterator to_space_iter(*to_space);
   while (to_space_iter.has_next()) {
     Object *obj = to_space_iter.next();
     obj->for_each_field(migrator);
   }
+  young_space_ = to_space;
+  delete &from_space;
 }
 
 } // neutrino
