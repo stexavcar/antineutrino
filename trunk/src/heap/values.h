@@ -109,6 +109,9 @@ public:
   virtual void visit_field(Value **field) = 0;
 };
 
+#define DECLARE_OBJECT_FIELD(Type, name, Name, arg) DECLARE_FIELD(Type*, name);
+#define DECLARE_REF_FIELD(Type, name, Name, arg) inline ref<Type> name();
+
 class Object : public Value {
 public:
   DECLARE_FIELD(Class*, chlass);
@@ -299,10 +302,12 @@ DEFINE_REF_CLASS(Tuple);
 // --- D i c t i o n a r y ---
 // ---------------------------
 
+#define FOR_EACH_DICTIONARY_FIELD(VISIT, arg)                        \
+  VISIT(Tuple, table, Table, arg)
+
 class Dictionary : public Object {
 public:
-  inline Tuple *&table();
-  inline void set_table(Tuple *value);
+  FOR_EACH_DICTIONARY_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   uint32_t size();
   
@@ -331,6 +336,7 @@ public:
 
 template <> class ref_traits<Dictionary> : public ref_traits<Object> {
 public:
+  FOR_EACH_DICTIONARY_FIELD(DECLARE_REF_FIELD, 0)
   inline ref<Value> get(ref<Value> key);
   inline void set(ref<Value> key, ref<Value> value);
   inline uint32_t size();
@@ -343,13 +349,16 @@ DEFINE_REF_CLASS(Dictionary);
 // --- L a m b d a ---
 // -------------------
 
+#define FOR_EACH_LAMBDA_FIELD(VISIT, arg)                            \
+  VISIT(Value,            code,     Code,     arg)                   \
+  VISIT(Value,            literals, Literals, arg)                   \
+  VISIT(LambdaExpression, tree,     Tree,     arg)                   \
+  VISIT(Tuple,            outers,   Outers,   arg)
+
 class Lambda : public Object {
 public:
   DECLARE_FIELD(uint32_t, argc);
-  DECLARE_FIELD(Value*, code);
-  DECLARE_FIELD(Value*, literals);
-  DECLARE_FIELD(LambdaExpression*, tree);
-  DECLARE_FIELD(Tuple*, outers);
+  FOR_EACH_LAMBDA_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   string disassemble();
   
@@ -363,10 +372,7 @@ public:
 
 template <> class ref_traits<Lambda> : public ref_traits<Object> {
 public:
-  inline ref<Value> code();
-  inline ref<Value> literals();
-  inline ref<LambdaExpression> tree();
-  inline ref<Tuple> outers();
+  FOR_EACH_LAMBDA_FIELD(DECLARE_REF_FIELD, 0)
   void ensure_compiled();
   ref<Value> call();
   ref<Lambda> clone(Factory &factory);
@@ -394,10 +400,13 @@ class False : public Singleton { };
 // --- M e t h o d ---
 // -------------------
 
+#define FOR_EACH_METHOD_FIELD(VISIT, arg)                            \
+  VISIT(String, name,   Name,   arg)                                 \
+  VISIT(Lambda, lambda, Lambda, arg)
+
 class Method : public Object {
 public:
-  DECLARE_FIELD(String*, name);
-  DECLARE_FIELD(Lambda*, lambda);
+  FOR_EACH_METHOD_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const int kNameOffset   = Object::kHeaderSize;
   static const int kLambdaOffset = kNameOffset + kPointerSize;
@@ -406,8 +415,7 @@ public:
 
 template <> class ref_traits<Method> : public ref_traits<Object> {
 public:
-  inline ref<String> name();
-  inline ref<Lambda> lambda();
+  FOR_EACH_METHOD_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(Method);
@@ -429,12 +437,15 @@ public:
 // --- C l a s s ---
 // -----------------
 
+#define FOR_EACH_CLASS_FIELD(VISIT, arg)                             \
+  VISIT(Tuple, methods, Methods, arg)                                \
+  VISIT(Value, super,   Super,   arg)                                \
+  VISIT(Value, name,    Name,    arg)
+
 class Class : public Object {
 public:
   DECLARE_FIELD(InstanceType, instance_type);
-  DECLARE_FIELD(Tuple*, methods);
-  DECLARE_FIELD(Value*, super);
-  DECLARE_FIELD(Value*, name);
+  FOR_EACH_CLASS_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   bool is_empty();
 
@@ -451,9 +462,7 @@ public:
 
 template <> class ref_traits<Class> {
 public:
-  inline ref<Tuple> methods();
-  inline ref<Value> super();
-  inline ref<Value> name();
+  FOR_EACH_CLASS_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(Class);

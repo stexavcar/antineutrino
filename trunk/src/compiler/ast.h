@@ -32,9 +32,12 @@ DEFINE_REF_CLASS(SyntaxTree);
 // --- L i t e r a l   E x p r e s s i o n ---
 // -------------------------------------------
 
+#define FOR_EACH_LITERAL_EXPRESSION_FIELD(VISIT, arg)                \
+  VISIT(Value, value, Value, arg)
+
 class LiteralExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(Value*, value);
+  FOR_EACH_LITERAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kValueOffset + kPointerSize;
@@ -43,7 +46,7 @@ public:
 template <>
 class ref_traits<LiteralExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<Value> value();
+  FOR_EACH_LITERAL_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(LiteralExpression);
@@ -79,11 +82,14 @@ DEFINE_REF_CLASS(InvokeExpression);
 // --- C a l l   E x p r e s s i o n ---
 // -------------------------------------
 
+#define FOR_EACH_CALL_EXPRESSION_FIELD(VISIT, arg)                   \
+  VISIT(SyntaxTree, receiver,  Receiver,  arg)                       \
+  VISIT(SyntaxTree, function,  Function,  arg)                       \
+  VISIT(Tuple,      arguments, Arguments, arg)
+
 class CallExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(SyntaxTree*, receiver);
-  DECLARE_FIELD(SyntaxTree*, function);
-  DECLARE_FIELD(Tuple*, arguments);
+  FOR_EACH_CALL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kReceiverOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kFunctionOffset = kReceiverOffset + kPointerSize;
@@ -94,9 +100,7 @@ public:
 template <>
 class ref_traits<CallExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<SyntaxTree> receiver();
-  inline ref<SyntaxTree> function();
-  inline ref<Tuple> arguments();
+  FOR_EACH_CALL_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(CallExpression);
@@ -106,11 +110,14 @@ DEFINE_REF_CLASS(CallExpression);
 // --- C o n d i t i o n a l   E x p r e s s i o n ---
 // ---------------------------------------------------
 
+#define FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(VISIT, arg)            \
+  VISIT(SyntaxTree, condition, Condition, arg)                       \
+  VISIT(SyntaxTree, then_part, ThenPart,  arg)                       \
+  VISIT(SyntaxTree, else_part, ElsePart,  arg)
+
 class ConditionalExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(SyntaxTree*, condition);
-  DECLARE_FIELD(SyntaxTree*, then_part);
-  DECLARE_FIELD(SyntaxTree*, else_part);
+  FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kConditionOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kThenPartOffset = kConditionOffset + kPointerSize;
@@ -121,9 +128,7 @@ public:
 template <>
 class ref_traits<ConditionalExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<SyntaxTree> condition();
-  inline ref<SyntaxTree> then_part();
-  inline ref<SyntaxTree> else_part();
+  FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(ConditionalExpression);
@@ -161,9 +166,12 @@ DEFINE_REF_CLASS(ClassExpression);
 // --- R e t u r n   E x p r e s s i o n ---
 // -----------------------------------------
 
+#define FOR_EACH_RETURN_EXPRESSION_FIELD(VISIT, arg)                 \
+  VISIT(SyntaxTree, value, Value, arg)
+
 class ReturnExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(SyntaxTree*, value);
+  FOR_EACH_RETURN_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kValueOffset + kPointerSize;
@@ -172,7 +180,7 @@ public:
 template <>
 class ref_traits<ReturnExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<SyntaxTree> value();
+  FOR_EACH_RETURN_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(ReturnExpression);
@@ -207,9 +215,12 @@ DEFINE_REF_CLASS(MethodExpression);
 // --- S e q u e n c e   E x p r e s s i o n ---
 // ---------------------------------------------
 
+#define FOR_EACH_SEQUENCE_EXPRESSION_FIELD(VISIT, arg)               \
+  VISIT(Tuple, expressions, Expressions, arg)
+
 class SequenceExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(Tuple*, expressions);
+  FOR_EACH_SEQUENCE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kExpressionsOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kExpressionsOffset + kPointerSize;
@@ -218,7 +229,7 @@ public:
 template <>
 class ref_traits<SequenceExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<Tuple> expressions();
+  FOR_EACH_SEQUENCE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(SequenceExpression);
@@ -270,9 +281,12 @@ DEFINE_REF_CLASS(GlobalExpression);
 // --- S y m b o l ---
 // -------------------
 
+#define FOR_EACH_SYMBOL_FIELD(VISIT, arg)                            \
+  VISIT(Value, name, Name, arg)
+
 class Symbol : public SyntaxTree {
 public:
-  DECLARE_FIELD(Value*, name);
+  FOR_EACH_SYMBOL_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kSize = kNameOffset + kPointerSize;
@@ -281,7 +295,7 @@ public:
 template <>
 class ref_traits<Symbol> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<Value> name();
+  FOR_EACH_SYMBOL_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(Symbol);
@@ -311,10 +325,13 @@ DEFINE_REF_CLASS(QuoteExpression);
 // --- L a m b d a   E x p r e s s i o n ---
 // -----------------------------------------
 
+#define FOR_EACH_LAMBDA_EXPRESSION_FIELD(VISIT, arg)                 \
+  VISIT(Tuple,      params, Params, arg)                             \
+  VISIT(SyntaxTree, body,   Body,   arg)
+
 class LambdaExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(Tuple*, params);
-  DECLARE_FIELD(SyntaxTree*, body);
+  FOR_EACH_LAMBDA_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kParamsOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kBodyOffset = kParamsOffset + kPointerSize;
@@ -324,8 +341,7 @@ public:
 template <>
 class ref_traits<LambdaExpression> : public ref_traits<SyntaxTree> {
 public:
-  inline ref<Tuple> params();
-  inline ref<SyntaxTree> body();
+  FOR_EACH_LAMBDA_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(LambdaExpression);

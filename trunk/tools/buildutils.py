@@ -48,7 +48,12 @@ def read_config_file(name):
       if is_extension:
         if name in properties:
           (old_value, is_extension) = properties[name]
-          value = old_value + ' ' + value
+          if type(old_value) is str:
+            value = old_value + ' ' + value
+          elif type(old_value) is list:
+            value = old_value + value
+          else:
+            assert False
         properties[name] = (value, True)
       else:
         properties[name] = (value, False)

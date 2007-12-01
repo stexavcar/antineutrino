@@ -403,59 +403,66 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 // required by those fields.  All fields whose value may change during
 // execution must hold valid non-signal pointers.
 
-static void validate_pointer(Value *ptr) {
-  CHECK(is<Object>(ptr) || is<Smi>(ptr));
-}
-
 static void validate_tuple(Tuple *obj) {
   for (uint32_t i = 0; i < obj->length(); i++)
-    validate_pointer(obj->at(i));
+    GC_SAFE_CHECK_IS(Value, obj->at(i));
 }
 
-static void validate_lambda(Lambda *obj) {
-  if (!is<Smi>(obj->code())) {
-    GC_SAFE_CHECK_IS(Code, obj->code());
-    GC_SAFE_CHECK_IS(Tuple, obj->literals());
-  }
-  GC_SAFE_CHECK_IS(LambdaExpression, obj->tree());
-  GC_SAFE_CHECK_IS(Tuple, obj->outers());
-}
+#define VALIDATE_FIELD(Type, name, Name, Class) GC_SAFE_CHECK_IS(Type, cast<Class>(obj)->name());
 
 static void validate_object(Object *obj) {
   GC_SAFE_CHECK_IS(Class, obj->chlass());
   InstanceType type = obj->gc_safe_type();
   switch (type) {
     case CLASS_TYPE:
-      validate_pointer(cast<Class>(obj)->methods());
+      FOR_EACH_CLASS_FIELD(VALIDATE_FIELD, Class)
       break;
     case TUPLE_TYPE:
       validate_tuple(cast<Tuple>(obj));
       break;
     case LAMBDA_TYPE:
-      validate_lambda(cast<Lambda>(obj));
+      FOR_EACH_LAMBDA_FIELD(VALIDATE_FIELD, Lambda)
+      if (!is<Smi>(cast<Lambda>(obj)->code())) {
+        GC_SAFE_CHECK_IS(Code, cast<Lambda>(obj)->code());
+        GC_SAFE_CHECK_IS(Tuple, cast<Lambda>(obj)->literals());
+      }
       break;
     case DICTIONARY_TYPE:
-      GC_SAFE_CHECK_IS(Tuple, cast<Dictionary>(obj)->table());
-      cast<Dictionary>(obj)->table()->validate();
+      FOR_EACH_DICTIONARY_FIELD(VALIDATE_FIELD, Dictionary)
       break;
     case METHOD_TYPE:
-      GC_SAFE_CHECK_IS(String, cast<Method>(obj)->name());
-      GC_SAFE_CHECK_IS(Lambda, cast<Method>(obj)->lambda());
+      FOR_EACH_METHOD_FIELD(VALIDATE_FIELD, Method)
+      break;
+    case RETURN_EXPRESSION_TYPE:
+      FOR_EACH_RETURN_EXPRESSION_FIELD(VALIDATE_FIELD, ReturnExpression)
       break;
     case LITERAL_EXPRESSION_TYPE:
-      GC_SAFE_CHECK_IS(Value, cast<LiteralExpression>(obj)->value());
+      FOR_EACH_LITERAL_EXPRESSION_FIELD(VALIDATE_FIELD, LiteralExpression)
       break;
     case LAMBDA_EXPRESSION_TYPE:
-      GC_SAFE_CHECK_IS(Tuple, cast<LambdaExpression>(obj)->params());
-      GC_SAFE_CHECK_IS(SyntaxTree, cast<LambdaExpression>(obj)->body());
+      FOR_EACH_LAMBDA_EXPRESSION_FIELD(VALIDATE_FIELD, LambdaExpression)
+      break;
+    case SEQUENCE_EXPRESSION_TYPE:
+      FOR_EACH_SEQUENCE_EXPRESSION_FIELD(VALIDATE_FIELD, SequenceExpression)
+      break;
+    case SYMBOL_TYPE:
+      FOR_EACH_SYMBOL_FIELD(VALIDATE_FIELD, Symbol)
+      break;
+    case CALL_EXPRESSION_TYPE:
+      FOR_EACH_CALL_EXPRESSION_FIELD(VALIDATE_FIELD, CallExpression)
+      break;
+    case CONDITIONAL_EXPRESSION_TYPE:
+      FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(VALIDATE_FIELD, ConditionalExpression)
       break;
     case TRUE_TYPE: case FALSE_TYPE: case VOID_TYPE: case NULL_TYPE:
-    case CODE_TYPE: case STRING_TYPE:
+    case CODE_TYPE: case STRING_TYPE: case BUILTIN_CALL_TYPE:
       break;
     default:
       UNHANDLED(InstanceType, type);
   }
 }
+
+#undef VALIDATE_FIELD
 
 void Value::validate() {
   if (is<Object>(this)) validate_object(cast<Object>(this));
@@ -469,31 +476,38 @@ void Value::validate() {
 // -------------------------
 
 #define VISIT(field) visitor.visit_field(pointer_cast<Value*>(&field))
+#define VISIT_FIELD(Type, name, Name, Class) visitor.visit_field(pointer_cast<Value*>(&cast<Class>(this)->name()));
 
 void Object::for_each_field(FieldVisitor &visitor) {
   InstanceType type = this->type();
   visitor.visit_field(reinterpret_cast<Value**>(&header()));
   switch (type) {
     case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE: case FALSE_TYPE:
-    case STRING_TYPE: case CODE_TYPE:
+    case STRING_TYPE: case CODE_TYPE: case BUILTIN_CALL_TYPE:
       return;
-    case DICTIONARY_TYPE:
-      VISIT(cast<Dictionary>(this)->table());
-      break;
-    case CLASS_TYPE:
-      VISIT(cast<Class>(this)->methods());
-      VISIT(cast<Class>(this)->super());
-      VISIT(cast<Class>(this)->name());
-      break;
     case LAMBDA_TYPE:
-      VISIT(cast<Lambda>(this)->code());
-      VISIT(cast<Lambda>(this)->literals());
-      VISIT(cast<Lambda>(this)->tree());
-      VISIT(cast<Lambda>(this)->outers());
+      FOR_EACH_LAMBDA_FIELD(VISIT_FIELD, Lambda)
       break;
     case METHOD_TYPE:
-      VISIT(cast<Method>(this)->name());
-      VISIT(cast<Method>(this)->lambda());
+      FOR_EACH_METHOD_FIELD(VISIT_FIELD, Method)
+      break;
+    case DICTIONARY_TYPE:
+      FOR_EACH_DICTIONARY_FIELD(VISIT_FIELD, Dictionary)
+      break;
+    case CLASS_TYPE:
+      FOR_EACH_CLASS_FIELD(VISIT_FIELD, Class)
+      break;
+    case LAMBDA_EXPRESSION_TYPE:
+      FOR_EACH_LAMBDA_EXPRESSION_FIELD(VISIT_FIELD, LambdaExpression)
+      break;
+    case RETURN_EXPRESSION_TYPE:
+      FOR_EACH_RETURN_EXPRESSION_FIELD(VISIT_FIELD, ReturnExpression)
+      break;
+    case SEQUENCE_EXPRESSION_TYPE:
+      FOR_EACH_SEQUENCE_EXPRESSION_FIELD(VISIT_FIELD, SequenceExpression)
+      break;
+    case SYMBOL_TYPE:
+      FOR_EACH_SYMBOL_FIELD(VISIT_FIELD, Symbol)
       break;
     case TUPLE_TYPE:
       for (uint32_t i = 0; i < cast<Tuple>(this)->length(); i++)

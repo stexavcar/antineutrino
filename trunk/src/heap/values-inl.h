@@ -95,6 +95,17 @@ FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
 #undef DEFINE_QUERY
 
 #ifdef DEBUG
+template <>
+inline bool gc_safe_is<SyntaxTree>(Data *val) {
+  if (!gc_safe_is<Object>(val)) return false;
+  switch (gc_safe_cast<Object>(val)->gc_safe_type()) {
+#define MAKE_CASE(n, NAME, Name, info) case NAME##_TYPE: return true;
+FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
+#undef MAKE_CASE
+    default: return false;
+  }
+}
+
 #define DEFINE_QUERY(n, NAME, Name, info)                            \
   template <>                                                        \
   inline bool gc_safe_is<Name>(Data *val) {                          \
