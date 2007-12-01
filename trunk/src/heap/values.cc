@@ -405,13 +405,14 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 
 static void validate_tuple(Tuple *obj) {
   for (uint32_t i = 0; i < obj->length(); i++)
-    GC_SAFE_CHECK_IS(Value, obj->at(i));
+    GC_SAFE_CHECK_IS_C(VALIDATION, Value, obj->at(i));
 }
 
-#define VALIDATE_FIELD(Type, name, Name, Class) GC_SAFE_CHECK_IS(Type, cast<Class>(obj)->name());
+#define VALIDATE_FIELD(Type, name, Name, Class)                      \
+  GC_SAFE_CHECK_IS_C(VALIDATION, Type, cast<Class>(obj)->name());
 
 static void validate_object(Object *obj) {
-  GC_SAFE_CHECK_IS(Class, obj->chlass());
+  GC_SAFE_CHECK_IS_C(VALIDATION, Class, obj->chlass());
   InstanceType type = obj->gc_safe_type();
   switch (type) {
     case CLASS_TYPE:
@@ -423,8 +424,8 @@ static void validate_object(Object *obj) {
     case LAMBDA_TYPE:
       FOR_EACH_LAMBDA_FIELD(VALIDATE_FIELD, Lambda)
       if (!is<Smi>(cast<Lambda>(obj)->code())) {
-        GC_SAFE_CHECK_IS(Code, cast<Lambda>(obj)->code());
-        GC_SAFE_CHECK_IS(Tuple, cast<Lambda>(obj)->literals());
+        GC_SAFE_CHECK_IS_C(VALIDATION, Code, cast<Lambda>(obj)->code());
+        GC_SAFE_CHECK_IS_C(VALIDATION, Tuple, cast<Lambda>(obj)->literals());
       }
       break;
     case DICTIONARY_TYPE:

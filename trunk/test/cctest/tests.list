@@ -8,3 +8,4 @@ runtime-tests.cc
 signal-tests.cc
 singleton-tests.cc
 tuple-tests.cc
+validation-test.cc

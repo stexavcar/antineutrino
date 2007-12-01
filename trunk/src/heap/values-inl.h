@@ -43,7 +43,7 @@ inline To *cast(From *from) {
 #ifdef DEBUG
 template <class To, class From>
 inline To *gc_safe_cast(From *from) {
-  GC_SAFE_CHECK_IS(To, from);
+  GC_SAFE_CHECK_IS_C(CAST_ERROR, To, from);
   return static_cast<To*>(from);
 }
 #endif
