@@ -1,9 +1,11 @@
 import platform, sys, os
-from os.path import join, abspath, walk, basename
+from os.path import join, abspath, walk, basename, dirname
+root = dirname(File('SConstruct').rfile().abspath)
+src = join(root, 'src')
 
 # Append the tools directory to the python load path to make the
 # utility scripts available
-sys.path.append(abspath('tools'))
+sys.path.append(join(root, 'tools'))
 
 import buildutils, testutils
 
@@ -32,7 +34,7 @@ def read_config(name):
 
 targets_file = 'targets.' + get_toolchain_id() + '.cfg'
 
-configurations = read_config(join('src', targets_file))
+configurations = read_config(join(src, targets_file))
 
 options = Options()
 options.Add(EnumOption(
@@ -49,7 +51,7 @@ options.Add(PathOption(
 ))
 common = Environment(
   options = options,
-  CPPPATH=[abspath('src'), abspath('test')]
+  CPPPATH=[abspath(src), abspath(join(root, 'test'))]
 )
 
 selected_test = common['test']
@@ -63,8 +65,9 @@ config = {
  'os':         get_os_id(),
  'name':       'neutrino',
  'targets':    configurations,
- 'base':       abspath('.'),
- 'src':        abspath('src'),
+ 'bin':        abspath('.'),
+ 'root':       abspath(root),
+ 'src':        abspath(src),
  'test':       selected_test,
  'tests':      [],
  'check-deps': []

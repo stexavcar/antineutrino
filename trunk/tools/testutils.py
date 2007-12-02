@@ -55,7 +55,7 @@ def truncate(str, length):
   if len(str) > (length - 3): return str[:length] + "..."
   else: return str
 
-status_line = "[\033[32mP%(passed) 3d\033[0m|\033[31mF%(failed) 3d\033[0m|\033[34mR%(remaining) 3d\033[0m]: %(test)s"
+status_line = "[\033[32mP%(passed) 4d\033[0m|\033[31mF%(failed) 4d\033[0m|\033[34mR%(remaining) 4d\033[0m]: %(test)s"
 
 def run_neutrino_tests(all_tests):
   remaining = len(all_tests)

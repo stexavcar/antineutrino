@@ -4,8 +4,8 @@ from testutils import PyNeutrinoTestCase, is_selected
 
 executable = abspath(str(config[prefix + 'program']))
 
-compiler = join('tools', 'compiler.py')
-env['BUILDERS']['CompilePyNeutrinoTest'] = Builder(action = "python " + compiler + " -c " + join('src', 'utils', 'consts.h') + " lib $SOURCE -o $TARGET")
+compiler = join(config['root'], 'tools', 'compiler.py')
+env['BUILDERS']['CompilePyNeutrinoTest'] = Builder(action = "python " + compiler + " -c " + join(config['src'], 'utils', 'consts.h') + ' ' + join(config['root'], 'lib') + " $SOURCE -o $TARGET")
 
 def add_test(arg, dir, fnames):
   tests = []
@@ -15,7 +15,7 @@ def add_test(arg, dir, fnames):
       short_name = fname[:-2]
       compiled_name = short_name + '.nc'
       compile = env.CompilePyNeutrinoTest(compiled_name, full_path)
-      env.Depends(compile, join(config['base'], compiler))
+      env.Depends(compile, compiler)
       test_case = PyNeutrinoTestCase(executable, abspath(join(build, compiled_name)))
       config['tests'].append(test_case)
       config['check-deps'].append(compile)
@@ -24,6 +24,6 @@ def add_test(arg, dir, fnames):
 # We have to manually construct the absolute path because otherwise
 # scons screws us over by creating an empty clone of the core folder
 # in the build directory and automagically using that.
-root = join(config['base'], 'test', 'core')
+root = join(config['root'], 'test', 'core')
 assert exists(root)
 walk(root, add_test, None)
