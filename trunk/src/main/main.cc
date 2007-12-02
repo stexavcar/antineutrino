@@ -22,6 +22,7 @@ void Main::main(list<char*> &args) {
     Image *image = read_image(arg);
     bool loaded = runtime.load_image(*image);
     USE(loaded); ASSERT(loaded);
+    delete image;
   }
   runtime.start();
 }

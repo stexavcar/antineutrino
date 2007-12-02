@@ -28,6 +28,10 @@ Image::Image(uint32_t size, uint32_t *data)
     , data_(data)
     , heap_(0) { }
 
+Image::~Image() {
+  delete[] data_;
+}
+
 // ---------------------
 // --- L o a d i n g ---
 // ---------------------

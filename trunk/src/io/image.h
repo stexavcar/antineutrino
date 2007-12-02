@@ -224,6 +224,7 @@ static inline C *image_cast(ImageData *val);
 class Image {
 public:
   Image(uint32_t size, uint32_t *data);
+  ~Image();
   bool initialize();
   Tuple *load();
   static inline Image &current();
