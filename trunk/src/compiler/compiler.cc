@@ -545,16 +545,32 @@ void Assembler::visit_method_expression(ref<MethodExpression> that) {
 CompileSession::CompileSession(Runtime &runtime)
     : runtime_(runtime) { }
 
-ref<Lambda> Compiler::compile(ref<MethodExpression> method) {
+ref<Lambda> Compiler::compile(ref<LambdaExpression> expr) {
   Runtime &runtime = Runtime::current();
-  ref<LambdaExpression> lambda_expr = method.lambda();
   ref<Lambda> lambda = runtime.factory().new_lambda(
-    lambda_expr->params()->length(),
+    expr->params()->length(),
     runtime.vhoid(),
     runtime.vhoid(),
-    lambda_expr
+    expr
   );
   return lambda;
+}
+
+ref<Lambda> Compiler::compile(ref<SyntaxTree> tree) {
+  // TODO(2): Fix this once handles can be returned from scopes
+  Lambda *result;
+  Runtime &runtime = Runtime::current();
+  {
+    RefScope scope;
+    ref<ReturnExpression> ret = runtime.factory().new_return_expression(tree);
+    ref<LambdaExpression> expr = runtime.factory().new_lambda_expression(
+      runtime.empty_tuple(),
+      ret
+    );
+    ref<Lambda> ref_result = compile(expr);
+    result = *ref_result;
+  }
+  return new_ref(result);
 }
 
 void Compiler::compile(ref<Lambda> lambda) {

@@ -15,6 +15,7 @@ def test_expressions() {
   assert_equals(9, new (<class Foo { def x(a, b, c) -> a; }>.evaluate())().x(9, 8, 7));
   assert_equals(5, new (<class Foo { def x(x) -> if (x) 9 else 5; }>.evaluate())().x(false));
   assert_equals("<this>", new (<class Foo { def x() -> <this>; }>.evaluate())().x().to_string());
+  assert_equals(7, <3 + 4>.evaluate());
 }
 
 def get_this() -> this;

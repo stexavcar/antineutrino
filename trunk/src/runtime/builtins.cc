@@ -1,4 +1,5 @@
 #include "compiler/ast-inl.h"
+#include "compiler/compiler.h"
 #include "heap/values-inl.h"
 #include "runtime/builtins-inl.h"
 #include "runtime/runtime-inl.h"
@@ -222,5 +223,12 @@ Value *Builtins::raw_print(Arguments &args) {
   putc('\n', stdout);
   return Runtime::current().roots().vhoid();
 }
+
+Value *Builtins::compile_expression(Arguments &args) {
+  ref<SyntaxTree> self = cast<SyntaxTree>(args.self());
+  ref<Lambda> code = Compiler::compile(self);
+  return *code;
+}
+
 
 } // namespace neutrino

@@ -13,7 +13,11 @@ public:
   ref<String> new_string(string str);
   ref<String> new_string(uint32_t length);
   ref<Tuple> new_tuple(uint32_t size);
-  ref<Lambda> new_lambda(uint32_t argc, ref<Value> code, ref<Value> literals, ref<LambdaExpression> tree);
+  ref<Lambda> new_lambda(uint32_t argc, ref<Value> code,
+      ref<Value> literals, ref<LambdaExpression> tree);
+  ref<LambdaExpression> new_lambda_expression(ref<Tuple> params,
+      ref<SyntaxTree> body);
+  ref<ReturnExpression> new_return_expression(ref<SyntaxTree> value);
   ref<Method> new_method(ref<String> name, ref<Lambda> lambda);
   ref<Dictionary> new_dictionary();
   ref<Code> new_code(uint32_t size);

@@ -236,6 +236,7 @@
   VISIT(Void,                  void,                   VOID)                   \
   VISIT(Null,                  null,                   NULL)                   \
   VISIT(Object,                object,                 OBJECT)                 \
+  VISIT(Expression,            expression,             EXPRESSION)             \
   VISIT(Lambda,                lambda,                 LAMBDA)                 \
   VISIT(Tuple,                 tuple,                  TUPLE)                  \
   VISIT(Class,                 class,                  CLASS)                  \
@@ -301,8 +302,9 @@
  * implementation must be added in builtins.cc.
  */
 #define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
-  VISIT(100, fail,      "fail")                                      \
-  VISIT(101, raw_print, "raw_print")
+  VISIT(100, fail,               "fail")                             \
+  VISIT(101, raw_print,          "raw_print")                        \
+  VISIT(102, compile_expression, "compile_expression")
 
 
 #endif // _UTILS_CONSTS

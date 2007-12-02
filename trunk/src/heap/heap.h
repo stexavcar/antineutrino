@@ -46,6 +46,10 @@ public:
   
   Data *new_lambda(uint32_t argc, Value *code, Value *literals, LambdaExpression *tree);
   
+  Data *new_lambda_expression(Tuple *params, SyntaxTree *body);
+  
+  Data *new_return_expression(SyntaxTree *value);
+  
   Data *allocate_lambda(uint32_t argc);
   
   Data *allocate_builtin_call();

@@ -48,6 +48,25 @@ Data *Heap::new_lambda(uint32_t argc, Value *code, Value *literals, LambdaExpres
   return result;
 }
 
+Data *Heap::new_lambda_expression(Tuple *params, SyntaxTree *body) {
+  Data *val = allocate_object(LambdaExpression::kSize, roots().lambda_expression_class());
+  if (is<AllocationFailed>(val)) return val;
+  LambdaExpression *result = cast<LambdaExpression>(val);
+  result->set_params(params);
+  result->set_body(body);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
+Data *Heap::new_return_expression(SyntaxTree *value) {
+  Data *val = allocate_object(ReturnExpression::kSize, roots().return_expression_class());
+  if (is<AllocationFailed>(val)) return val;
+  ReturnExpression *result = cast<ReturnExpression>(val);
+  result->set_value(value);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
 Data *Heap::allocate_lambda(uint32_t argc) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_class());
   if (is<AllocationFailed>(val)) return val;

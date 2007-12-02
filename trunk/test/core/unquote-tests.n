@@ -1,0 +1,7 @@
+def simple_unquote_test() {
+  
+}
+
+def main() {
+  simple_unquote_test();
+}

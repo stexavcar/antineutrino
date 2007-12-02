@@ -190,8 +190,7 @@ static void write_tuple_on(Tuple *obj, string_buffer &buf) {
 }
 
 static void write_lambda_on(Lambda *obj, string_buffer &buf) {
-  buf.printf("fn #% -> ", static_cast<int32_t>(obj->argc()));
-  obj->code()->write_on(buf);
+  obj->tree()->unparse_on(buf);
 }
 
 static void write_dictionary_on(Dictionary *obj, string_buffer &buf) {

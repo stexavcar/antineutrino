@@ -37,6 +37,15 @@ ref<Lambda> Factory::new_lambda(uint32_t argc, ref<Value> code,
   ALLOCATE_CHECKED(Lambda, new_lambda(argc, *code, *literals, *tree));
 }
 
+ref<LambdaExpression> Factory::new_lambda_expression(ref<Tuple> params,
+    ref<SyntaxTree> body) {
+  ALLOCATE_CHECKED(LambdaExpression, new_lambda_expression(*params, *body));
+}
+
+ref<ReturnExpression> Factory::new_return_expression(ref<SyntaxTree> value) {
+  ALLOCATE_CHECKED(ReturnExpression, new_return_expression(*value));
+}
+
 ref<Dictionary> Factory::new_dictionary() {
   ALLOCATE_CHECKED(Dictionary, new_dictionary());
 }

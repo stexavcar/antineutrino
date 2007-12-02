@@ -1,24 +1,31 @@
 class SyntaxTree { }
-internal class LiteralExpression : SyntaxTree { }
-internal class InvokeExpression : SyntaxTree { }
-internal class ClassExpression : SyntaxTree {
+
+internal def compile_expression();
+
+class Expression {
+  def evaluate() -> (this·compile_expression())();
+}
+
+internal class LiteralExpression : Expression { }
+internal class InvokeExpression : Expression { }
+internal class ClassExpression : Expression {
   internal def evaluate();
 }
-internal class ThisExpression : SyntaxTree { }
-internal class LocalDefinition : SyntaxTree { }
-internal class LambdaExpression : SyntaxTree {
+internal class ThisExpression : Expression { }
+internal class LocalDefinition : Expression { }
+internal class LambdaExpression : Expression {
   internal def parameters();
   internal def body();
 }
-internal class ReturnExpression : SyntaxTree { }
-internal class CallExpression : SyntaxTree { }
-internal class MethodExpression : SyntaxTree { }
-internal class SequenceExpression : SyntaxTree { }
-internal class TupleExpression : SyntaxTree { }
-internal class GlobalExpression : SyntaxTree { }
-internal class Symbol : SyntaxTree { }
-internal class ConditionalExpression : SyntaxTree { }
-internal class QuoteExpression : SyntaxTree { }
-internal class BuiltinCall : SyntaxTree { }
-internal class InterpolateExpression : SyntaxTree { }
-internal class LocalDefinition : SyntaxTree { }
+internal class ReturnExpression : Expression { }
+internal class CallExpression : Expression { }
+internal class MethodExpression : Expression { }
+internal class SequenceExpression : Expression { }
+internal class TupleExpression : Expression { }
+internal class GlobalExpression : Expression { }
+internal class Symbol : Expression { }
+internal class ConditionalExpression : Expression { }
+internal class QuoteExpression : Expression { }
+internal class BuiltinCall : Expression { }
+internal class InterpolateExpression : Expression { }
+internal class LocalDefinition : Expression { }
