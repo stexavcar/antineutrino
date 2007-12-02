@@ -149,9 +149,22 @@ Value *Builtins::class_expression_evaluate(Arguments &args) {
 Value *Builtins::class_new(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
+  Runtime &runtime = Runtime::current();
   ref<Class> chlass = cast<Class>(args.self());
-  ref<Instance> result = Runtime::current().factory().new_instance(chlass);
-  return *result;
+  InstanceType type = chlass->instance_type();
+  switch (type) {
+    case INSTANCE_TYPE: {
+      ref<Instance> result = runtime.factory().new_instance(chlass);
+      return *result;
+    }
+    case SYMBOL_TYPE: {
+      ref<Symbol> result = runtime.factory().new_symbol(runtime.vhoid());
+      return *result;
+    }
+    default:
+      UNHANDLED(InstanceType, type);
+      return 0;
+  }
 }
 
 

@@ -32,6 +32,10 @@ ref<Tuple> Factory::new_tuple(uint32_t size) {
   ALLOCATE_CHECKED(Tuple, new_tuple(size));
 }
 
+ref<Symbol> Factory::new_symbol(ref<Value> name) {
+  ALLOCATE_CHECKED(Symbol, new_symbol(*name));
+}
+
 ref<Lambda> Factory::new_lambda(uint32_t argc, ref<Value> code,
     ref<Value> literals, ref<LambdaExpression> tree) {
   ALLOCATE_CHECKED(Lambda, new_lambda(argc, *code, *literals, *tree));

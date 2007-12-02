@@ -21,6 +21,7 @@ public:
   ref<QuoteTemplate> new_quote_template(ref<SyntaxTree> body, ref<Tuple> unquotes);
   ref<LiteralExpression> new_literal_expression(ref<Value> value);
   ref<Method> new_method(ref<String> name, ref<Lambda> lambda);
+  ref<Symbol> new_symbol(ref<Value> value);
   ref<Dictionary> new_dictionary();
   ref<Code> new_code(uint32_t size);
   ref<Class> new_empty_class(InstanceType instance_type);

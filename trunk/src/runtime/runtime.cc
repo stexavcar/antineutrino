@@ -76,8 +76,8 @@ bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) 
   for (uint32_t i = 0; i < length; i++) {
     bool next_result = iter.next(&entry);
     USE(next_result); ASSERT(next_result);
-    keys->at(i) = entry.key;
-    values->at(i) = entry.value;
+    keys->set(i, entry.key);
+    values->set(i, entry.value);
   }
   // Check that we've reached the end
   ASSERT(!iter.next(&entry));

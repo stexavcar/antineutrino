@@ -40,6 +40,8 @@ public:
   
   Data *new_singleton(Class *chlass);
   
+  Data *new_symbol(Value *name);
+  
   Data *new_dictionary();
   
   Data *new_dictionary(Tuple *store);

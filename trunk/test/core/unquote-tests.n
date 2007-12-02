@@ -13,7 +13,21 @@ def lift_test() {
   assert_equals(720, code.evaluate());
 }
 
+def make_power(s, n) {
+  if (n = 0) return <1>;
+  else return <(~s * ~(make_power(s, n - 1)))>;
+}
+
+def make_power_test() {
+  def s := new Symbol();
+  def body := make_power(s, 8);
+  def fun := <(fn (~s) -> ~body)>;
+  def power := fun.evaluate();
+  print(fun);
+}
+
 def main() {
   simple_unquote_test();
   lift_test();
+  make_power_test();
 }

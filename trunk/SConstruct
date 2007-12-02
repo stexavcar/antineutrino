@@ -52,7 +52,7 @@ options.Add(PathOption(
 options.Add(EnumOption(
   'progress',
   'format of test progress status',
-  'dots',
+  'color',
   allowed_values = ['dots', 'color']
 ))
 common = Environment(

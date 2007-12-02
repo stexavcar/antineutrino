@@ -16,6 +16,7 @@ internal class LambdaExpression : Expression {
   internal def body();
 }
 
+internal class Symbol : Expression { }
 internal class ThisExpression : Expression { }
 internal class LocalDefinition : Expression { }
 internal class LiteralExpression : Expression { }
@@ -26,7 +27,6 @@ internal class MethodExpression : Expression { }
 internal class SequenceExpression : Expression { }
 internal class TupleExpression : Expression { }
 internal class GlobalExpression : Expression { }
-internal class Symbol : Expression { }
 internal class ConditionalExpression : Expression { }
 internal class QuoteExpression : Expression { }
 internal class BuiltinCall : Expression { }

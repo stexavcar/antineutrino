@@ -513,16 +513,22 @@ class Parser:
       exprs.append(Return(Void()))
       return new_sequence(exprs)
 
+  def parse_param(self):
+    if self.token().is_delimiter('~'):
+      return self.parse_unquote_expression()
+    else:
+      return Symbol(self.expect_ident())
+
   # <params>
   #   -> $ident *: ','
   def parse_params(self, start, end):
     params = []
     self.expect_delimiter(start)
-    if self.token().is_ident():
-      params.append(Symbol(self.expect_ident()))
+    if not self.token().is_delimiter(end):
+      params.append(self.parse_param())
       while self.token().is_delimiter(','):
         self.expect_delimiter(',')
-        params.append(Symbol(self.expect_ident()))
+        params.append(self.parse_param())
     self.expect_delimiter(end)
     return params
 
@@ -790,8 +796,6 @@ class BuiltinClass(SyntaxTree):
   def traverse(self, visitor):
     for member in self.members:
       member.accept(visitor)
-  def resolve(self):
-    pass
 
 class Class(SyntaxTree):
   def __init__(self, name, members, super):
@@ -881,6 +885,15 @@ def compile_lambda(params, body):
   expr = HEAP.new_lambda_expression(HEAP.new_tuple(values = syms), body.quote())
   return HEAP.new_lambda(len(params), expr)
 
+def compile_params(params):
+  result = []
+  for param in params:
+    if isinstance(param, Symbol):
+      result.append(HEAP.get_symbol(param))
+    else:
+      result.append(param.quote())
+  return HEAP.new_tuple(values = result)
+
 class Lambda(Expression):
   def __init__(self, params, body):
     self.params = params
@@ -891,8 +904,7 @@ class Lambda(Expression):
     self.body.accept(visitor)
   def quote(self):
     body = self.body.quote()
-    syms = [ HEAP.get_symbol(param) for param in self.params ]
-    params = HEAP.new_tuple(values = syms)
+    params = compile_params(self.params)
     return HEAP.new_lambda_expression(params, body)
   def compile(self):
     return compile_lambda(self.params, self.body)
@@ -961,6 +973,7 @@ class Quote(Expression):
 class Unquote(Expression):
   def __init__(self, value):
     self.value = value
+    self.name = None
   def accept(self, visitor):
     visitor.visit_unquote(self)
   def traverse(self, visitor):
@@ -1691,7 +1704,9 @@ class LoadVisitor(Visitor):
     instance_type_name = that.info.instance_type
     instance_type_index = globals()[instance_type_name + '_TYPE']
     chlass = HEAP.new_class(instance_type_index)
-    chlass.set_name(HEAP.new_string(that.info.name))
+    name_str = HEAP.new_string(that.info.class_name)
+    chlass.set_name(name_str)
+    HEAP.toplevel[name_str] = chlass
     HEAP.set_root(that.info.root_index, chlass)
     that.image = chlass
     if self.is_toplevel:

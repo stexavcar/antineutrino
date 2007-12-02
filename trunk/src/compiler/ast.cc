@@ -179,6 +179,10 @@ static void unparse_quote_template(QuoteTemplate *obj, UnparseData &data) {
   data.set_quote_scope(scope.parent());
 }
 
+static void unparse_builtin_call(BuiltinCall *obj, UnparseData &data) {
+  data->printf("bc[%]", obj->index());
+}
+
 static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
   InstanceType type = obj->type();
   switch (type) {
@@ -217,6 +221,9 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
     break;
   case QUOTE_TEMPLATE_TYPE:
     unparse_quote_template(cast<QuoteTemplate>(obj), data);
+    break;
+  case BUILTIN_CALL_TYPE:
+    unparse_builtin_call(cast<BuiltinCall>(obj), data);
     break;
   default:
     UNHANDLED(InstanceType, type);

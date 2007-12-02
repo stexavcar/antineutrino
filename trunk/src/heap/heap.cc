@@ -176,6 +176,14 @@ Data *Heap::new_tuple(uint32_t length) {
   return result;
 }
 
+Data *Heap::new_symbol(Value *name) {
+  Data *val = allocate_object(Symbol::kSize, roots().symbol_class());
+  if (is<AllocationFailed>(val)) return val;
+  Symbol *result = cast<Symbol>(val);
+  result->set_name(name);
+  return result;
+}
+
 Data *Heap::new_singleton(Class *type) {
   return allocate_object(Singleton::kSize, type);
 }

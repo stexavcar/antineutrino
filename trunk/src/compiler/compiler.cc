@@ -556,13 +556,13 @@ void Assembler::visit_method_expression(ref<MethodExpression> that) {
 }
 
 void Assembler::visit_unquote_expression(ref<UnquoteExpression> that) {
-  // This is handled specially by the visitor and should neven be
+  // This is handled specially by the visitor and should never be
   // visited explicitly
   UNREACHABLE();
 }
 
 void Assembler::visit_quote_template(ref<QuoteTemplate> that) {
-  // This is handled specially by the visitor and should neven be
+  // This is handled specially by the visitor and should never be
   // visited explicitly
   UNREACHABLE();
 }
