@@ -22,6 +22,7 @@ class Image;
 class Instance;
 class Lambda;
 class LambdaExpression;
+class LiteralExpression;
 class Method;
 class Null;
 class Object;

@@ -67,6 +67,15 @@ Data *Heap::new_lambda_expression(Tuple *params, SyntaxTree *body) {
   return result;
 }
 
+Data *Heap::new_literal_expression(Value *value) {
+  Data *val = allocate_object(LiteralExpression::kSize, roots().literal_expression_class());
+  if (is<AllocationFailed>(val)) return val;
+  LiteralExpression *result = cast<LiteralExpression>(val);
+  result->set_value(value);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
 Data *Heap::new_return_expression(SyntaxTree *value) {
   Data *val = allocate_object(ReturnExpression::kSize, roots().return_expression_class());
   if (is<AllocationFailed>(val)) return val;

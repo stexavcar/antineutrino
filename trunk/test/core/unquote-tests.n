@@ -1,8 +1,19 @@
+def factorial_code(n) {
+  if (n = 0) return <1>;
+  else return <(~(factorial_code(n - 1)) * ~(lift(n)))>;
+}
+
 def simple_unquote_test() {
   def x := <3>;
   assert_equals(5, <2 + ~x>.evaluate());
 }
 
+def lift_test() {
+  def code := factorial_code(6);
+  assert_equals(720, code.evaluate());
+}
+
 def main() {
   simple_unquote_test();
+  lift_test();
 }

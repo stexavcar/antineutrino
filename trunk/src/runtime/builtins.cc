@@ -230,5 +230,11 @@ Value *Builtins::compile_expression(Arguments &args) {
   return *code;
 }
 
+Value *Builtins::lift(Arguments &args) {
+  ref<Value> value = args[0];
+  Factory &factory = Runtime::current().factory();
+  ref<LiteralExpression> result = factory.new_literal_expression(value);
+  return *result;
+}
 
 } // namespace neutrino

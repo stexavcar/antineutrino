@@ -19,6 +19,7 @@ public:
       ref<SyntaxTree> body);
   ref<ReturnExpression> new_return_expression(ref<SyntaxTree> value);
   ref<QuoteTemplate> new_quote_template(ref<SyntaxTree> body, ref<Tuple> unquotes);
+  ref<LiteralExpression> new_literal_expression(ref<Value> value);
   ref<Method> new_method(ref<String> name, ref<Lambda> lambda);
   ref<Dictionary> new_dictionary();
   ref<Code> new_code(uint32_t size);

@@ -1,22 +1,25 @@
-class SyntaxTree { }
-
 internal def compile_expression();
+internal def lift(x);
+
+class SyntaxTree { }
 
 class Expression {
   def evaluate() -> (this·compile_expression())();
 }
 
-internal class LiteralExpression : Expression { }
-internal class InvokeExpression : Expression { }
 internal class ClassExpression : Expression {
   internal def evaluate();
 }
-internal class ThisExpression : Expression { }
-internal class LocalDefinition : Expression { }
+
 internal class LambdaExpression : Expression {
   internal def parameters();
   internal def body();
 }
+
+internal class ThisExpression : Expression { }
+internal class LocalDefinition : Expression { }
+internal class LiteralExpression : Expression { }
+internal class InvokeExpression : Expression { }
 internal class ReturnExpression : Expression { }
 internal class CallExpression : Expression { }
 internal class MethodExpression : Expression { }

@@ -52,6 +52,8 @@ public:
   
   Data *new_return_expression(SyntaxTree *value);
   
+  Data *new_literal_expression(Value *value);
+  
   Data *allocate_lambda(uint32_t argc);
   
   Data *allocate_builtin_call();

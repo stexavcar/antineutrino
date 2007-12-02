@@ -315,7 +315,8 @@
 #define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
   VISIT(100, fail,               "fail")                             \
   VISIT(101, raw_print,          "raw_print")                        \
-  VISIT(102, compile_expression, "compile_expression")
+  VISIT(102, compile_expression, "compile_expression")               \
+  VISIT(103, lift,               "lift")
 
 
 #endif // _UTILS_CONSTS

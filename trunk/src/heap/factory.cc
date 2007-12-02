@@ -50,6 +50,10 @@ ref<ReturnExpression> Factory::new_return_expression(ref<SyntaxTree> value) {
   ALLOCATE_CHECKED(ReturnExpression, new_return_expression(*value));
 }
 
+ref<LiteralExpression> Factory::new_literal_expression(ref<Value> value) {
+  ALLOCATE_CHECKED(LiteralExpression, new_literal_expression(*value));
+}
+
 ref<Dictionary> Factory::new_dictionary() {
   ALLOCATE_CHECKED(Dictionary, new_dictionary());
 }
