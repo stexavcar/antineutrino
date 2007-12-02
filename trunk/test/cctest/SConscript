@@ -1,7 +1,7 @@
 import re
 from buildutils import read_lines_from
 from os.path import abspath, join, basename
-from testutils import CCTestCase, is_selected
+from testutils import CCTestCase, is_selected, escape_string
 Import('config env config build')
 
 cctest_files = read_lines_from(join(config['root'], 'test', 'cctest', 'tests.list'))
@@ -59,7 +59,7 @@ def generate_runner(source, target, env):
     cases += (test_case_template % { 'name': match })
     decls += (test_decl_template % { 'name': match })
   text = generated_file_template % {
-    'file': source_file_name,
+    'file': escape_string(source_file_name),
     'contents': contents,
     'cases': cases,
     'test_decls': decls

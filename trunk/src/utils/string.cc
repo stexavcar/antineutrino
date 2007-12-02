@@ -2,6 +2,10 @@
 
 using namespace neutrino;
 
+#ifdef MSVC
+#define snprintf sprintf_s
+#endif
+
 // --- S t r i n g ---
 
 uint32_t string::length(const char* chars) {

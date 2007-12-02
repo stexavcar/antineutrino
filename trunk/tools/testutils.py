@@ -57,6 +57,10 @@ def truncate(str, length):
 
 status_line = "[\033[32mP%(passed) 4d\033[0m|\033[31mF%(failed) 4d\033[0m|\033[34mR%(remaining) 4d\033[0m]: %(test)s"
 
+def escape_string(s):
+  s = s.replace('\\', '\\\\')
+  return s
+
 def run_neutrino_tests(all_tests):
   remaining = len(all_tests)
   passed = 0

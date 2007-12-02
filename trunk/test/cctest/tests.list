@@ -1,3 +1,4 @@
+platform-tests.cc
 buffer-tests.cc
 builtin-string-tests.cc
 dictionary-tests.cc
