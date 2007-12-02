@@ -49,9 +49,16 @@ options.Add(PathOption(
   '.',
   PathOption.PathAccept
 ))
+options.Add(EnumOption(
+  'progress',
+  'format of test progress status',
+  'dots',
+  allowed_values = ['dots', 'color']
+))
 common = Environment(
   options = options,
-  CPPPATH=[abspath(src), abspath(join(root, 'test'))]
+  CPPPATH = [abspath(src), abspath(join(root, 'test'))],
+  ENV     = {'PATH': os.environ['PATH']}
 )
 
 selected_test = common['test']
@@ -98,7 +105,7 @@ def load_source_targets():
       )
 
 def run_tests(target, source, env):
-  testutils.run_neutrino_tests(config['tests'])
+  testutils.run_neutrino_tests(config['tests'], common['progress'])
 
 load_source_targets()
 

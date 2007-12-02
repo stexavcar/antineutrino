@@ -1,6 +1,5 @@
 from os.path import abspath, basename, join
-import subprocess
-import os
+import subprocess, os, sys
 
 def execute(executable, args):
   process = subprocess.Popen(
@@ -61,41 +60,88 @@ def escape_string(s):
   s = s.replace('\\', '\\\\')
   return s
 
-def run_neutrino_tests(all_tests):
-  remaining = len(all_tests)
-  passed = 0
-  failed = 0
-  def clear_line():
+class ProgressIndicator:
+  def __init__(self, count):
+    self.remaining = count
+    self.passed = 0
+    self.failed = 0
+
+class DotsProgressIndicator(ProgressIndicator):
+  def __init__(self, count):
+    ProgressIndicator.__init__(self, count)
+  def start_test(self, test):
+    pass
+  def test_failed(self, test):
+    sys.stdout.write('F')
+    self.failed = self.failed + 1
+  def test_passed(self, test):
+    sys.stdout.write('.')
+    self.passed = self.passed + 1
+  def test_had_output(self, test):
+    self.test_passed(test)
+  def show_output(self, stdout, stderr):
+    pass
+  def tests_done(self):
+    print
+    if self.failed > 0:
+      print "Ran", self.remaining, "tests, failed", self.failed
+    else:
+      print "Ran", self.remaining, "tests, all passed"
+
+class ColorProgressIndicator(ProgressIndicator):
+  def __init__(self, count):
+    ProgressIndicator.__init__(self, count)
+  def clear_line(self):
     print "\033[1K\r",
-  def print_progress():
+  def start_test(self, test):
+    self.print_progress(truncate(str(test), 40))
+  def print_progress(self, name):
+    self.clear_line()
     print status_line % {
-      'passed':    passed,
-      'remaining': remaining,
-      'failed': failed,
-      'test': truncate(str(test), 40)
-    }, 
-  for test in all_tests:
-    print_progress();
-    (status, stdout, stderr) = test.run()
-    stdout = stdout.strip()
-    stderr = stderr.strip()
-    if status == 'failed':
-      clear_line()
-      print "--- Failed: " + str(test) + " ---"
-      print "Command: " + test.command()
-    elif len(stdout) > 0 or len(stderr) > 0:
-      clear_line()
-      print "--- " + str(test) + " ---"
+      'passed':    self.passed,
+      'remaining': self.remaining,
+      'failed':    self.failed,
+      'test':      name
+    },
+  def test_failed(self, test):
+    self.clear_line()
+    print "--- Failed: " + str(test) + " ---"
+    print "Command: " + test.command()
+    self.failed = self.failed + 1
+    self.remaining = self.remaining - 1
+  def test_passed(self, test):
+    self.passed = self.passed + 1
+    self.remaining = self.remaining - 1
+  def test_had_output(self, test):
+    self.clear_line()
+    print "--- " + str(test) + " ---"
+  def show_output(self, stdout, stderr):
     if len(stdout) > 0:
       print "\033[1m" + stdout + "\033[0m"
     if len(stderr) > 0:
       print "\033[31m" + stderr + "\033[0m"
+  def tests_done(self):
+    self.print_progress('Done')
+
+def run_neutrino_tests(all_tests, output):
+  if output == 'color':
+    progress = ColorProgressIndicator(len(all_tests))
+  elif output == 'dots':
+    progress = DotsProgressIndicator(len(all_tests))
+  else:
+    assert False
+  for test in all_tests:
+    progress.start_test(test)
+    (status, stdout, stderr) = test.run()
+    stdout = stdout.strip()
+    stderr = stderr.strip()
     if status == 'failed':
-      failed = failed + 1
-    else:
-      passed = passed + 1
-    remaining = remaining - 1
-    clear_line()
+      progress.test_failed(test)
+    elif len(stdout) > 0 or len(stderr) > 0:
+      progress.test_had_output(test)
+    if status == 'passed':
+      progress.test_passed(test)
+    progress.show_output(stdout, stderr)
   test = "Done"
-  print_progress()
+  progress.tests_done()
   print
