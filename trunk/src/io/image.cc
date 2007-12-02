@@ -113,6 +113,11 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(heap_obj);
       break;
     }
+    case UNQUOTE_EXPRESSION_TYPE: {
+      UnquoteExpression *heap_obj = cast<UnquoteExpression>(heap.allocate_unquote_expression());
+      obj->point_forward(heap_obj);
+      break;
+    }
     case SINGLETON_TYPE: {
       // Roots (which are singleton tagged) are handled specially in
       // the Value::forward_pointer method.
@@ -163,6 +168,22 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       chlass->set_name(img->name()->forward_pointer());
       break;
     }
+    case BUILTIN_CALL_TYPE: {
+      ImageBuiltinCall *img = image_cast<ImageBuiltinCall>(obj);
+      BuiltinCall *expr = cast<BuiltinCall>(img->forward_pointer());
+      expr->set_argc(img->argc());
+      expr->set_index(img->index());
+      break;
+    }
+    case UNQUOTE_EXPRESSION_TYPE: {
+      ImageUnquoteExpression *img = image_cast<ImageUnquoteExpression>(obj);
+      UnquoteExpression *expr = cast<UnquoteExpression>(img->forward_pointer());
+      expr->set_index(img->index());
+      break;
+    }
+    case STRING_TYPE: case CODE_TYPE: case SINGLETON_TYPE:
+      // Nothing to fix
+      break;
 #define TRANSFER_FIELD(Type, field, Field, arg)                      \
   heap_obj->set_##field(cast<Type>(img->field()->forward_pointer()));
 #define MAKE_CASE(n, NAME, Name, name)                               \
@@ -176,16 +197,6 @@ void Image::fixup_shallow_object(ImageObject *obj) {
 FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 #undef MAKE_CASE
 #undef TRANSFER_FIELD
-    case BUILTIN_CALL_TYPE: {
-      ImageBuiltinCall *img = image_cast<ImageBuiltinCall>(obj);
-      BuiltinCall *expr = cast<BuiltinCall>(img->forward_pointer());
-      expr->set_argc(img->argc());
-      expr->set_index(img->index());
-      break;
-    }
-    case STRING_TYPE: case CODE_TYPE: case SINGLETON_TYPE:
-      // Nothing to fix
-      break;
     default:
       UNHANDLED(InstanceType, type);
       break;
@@ -259,6 +270,8 @@ uint32_t ImageObject::size_in_image() {
       return ImageInterpolateExpression_Size;
     case LOCAL_DEFINITION_TYPE:
       return ImageLocalDefinition_Size;
+    case UNQUOTE_EXPRESSION_TYPE:
+      return ImageUnquoteExpression_Size;
     case STRING_TYPE:
       return image_cast<ImageString>(this)->string_size_in_image();
     case CODE_TYPE:

@@ -51,6 +51,31 @@ public:
 
 DEFINE_REF_CLASS(LiteralExpression);
 
+// -----------------
+// --- Q u o t e ---
+// -----------------
+
+#define FOR_EACH_QUOTE_TEMPLATE_FIELD(VISIT, arg)                    \
+  VISIT(SyntaxTree, value,    Value,    arg)                         \
+  VISIT(Tuple,      unquotes, Unquotes, arg)
+
+class QuoteTemplate : public SyntaxTree {
+public:
+  FOR_EACH_QUOTE_TEMPLATE_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kUnquotesOffset = kValueOffset + kPointerSize;
+  static const uint32_t kSize = kUnquotesOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<QuoteTemplate> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_QUOTE_TEMPLATE_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(QuoteTemplate);
+
 
 // -----------------------------------------
 // --- I n v o k e   E x p r e s s i o n ---
@@ -316,14 +341,16 @@ DEFINE_REF_CLASS(Symbol);
 // ---------------------------------------
 
 #define FOR_EACH_QUOTE_EXPRESSION_FIELD(VISIT, arg)                  \
-  VISIT(SyntaxTree, value, Value, arg)
+  VISIT(SyntaxTree, value,    Value,    arg)                         \
+  VISIT(Tuple,      unquotes, Unquotes, arg)
 
 class QuoteExpression : public SyntaxTree {
 public:
   FOR_EACH_QUOTE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kSize = kValueOffset + kPointerSize;
+  static const uint32_t kUnquotesOffset = kValueOffset + kPointerSize;
+  static const uint32_t kSize = kUnquotesOffset + kPointerSize;
 };
 
 template <>
@@ -333,6 +360,25 @@ public:
 };
 
 DEFINE_REF_CLASS(QuoteExpression);
+
+
+// -------------------------------------------
+// --- U n q u o t e   E x p r e s s i o n ---
+// -------------------------------------------
+
+class UnquoteExpression : public SyntaxTree {
+public:
+  DECLARE_FIELD(uint32_t, index);
+  
+  static const uint32_t kIndexOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kSize        = kIndexOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<UnquoteExpression> : public ref_traits<SyntaxTree> {
+};
+
+DEFINE_REF_CLASS(UnquoteExpression);
 
 // -----------------------------------------
 // --- L a m b d a   E x p r e s s i o n ---
@@ -453,14 +499,31 @@ DEFINE_REF_CLASS(LocalDefinition);
 // --- V i s i t o r ---
 // ---------------------
 
+class QuoteTemplateScope {
+public:
+  inline QuoteTemplateScope(Visitor &visitor, ref<QuoteTemplate> value);
+  inline ~QuoteTemplateScope();
+  ref<QuoteTemplate> value() { return value_; }
+private:
+  Visitor &visitor_;
+  ref<QuoteTemplate> value_;
+  QuoteTemplateScope *previous_;
+};
+
 class Visitor {
 public:
-  virtual ~Visitor();
+  Visitor() : quote_scope_(NULL) { }
+  ~Visitor();
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
 #define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
   virtual void visit_##name(ref<Name> that);
 FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
+  ref<QuoteTemplate> current_quote() { return quote_scope_->value(); }
+private:
+  friend class QuoteTemplateScope;
+  QuoteTemplateScope *quote_scope() { return quote_scope_; }
+  QuoteTemplateScope *quote_scope_;
 };
 
 }

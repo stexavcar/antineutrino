@@ -180,6 +180,18 @@ public:
 class ImageQuoteExpression : public ImageSyntaxTree {
 public:
   inline ImageSyntaxTree *value();
+  inline ImageTuple *unquotes();
+};
+
+class ImageQuoteTemplate : public ImageSyntaxTree {
+public:
+  inline ImageSyntaxTree *value();
+  inline ImageTuple *unquotes();
+};
+
+class ImageUnquoteExpression : public ImageSyntaxTree {
+public:
+  inline uint32_t index();
 };
 
 class ImageThisExpression : public ImageSyntaxTree {

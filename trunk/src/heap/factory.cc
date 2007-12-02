@@ -37,6 +37,10 @@ ref<Lambda> Factory::new_lambda(uint32_t argc, ref<Value> code,
   ALLOCATE_CHECKED(Lambda, new_lambda(argc, *code, *literals, *tree));
 }
 
+ref<QuoteTemplate> Factory::new_quote_template(ref<SyntaxTree> body, ref<Tuple> unquotes) {
+  ALLOCATE_CHECKED(QuoteTemplate, new_quote_template(*body, *unquotes));
+}
+
 ref<LambdaExpression> Factory::new_lambda_expression(ref<Tuple> params,
     ref<SyntaxTree> body) {
   ALLOCATE_CHECKED(LambdaExpression, new_lambda_expression(*params, *body));

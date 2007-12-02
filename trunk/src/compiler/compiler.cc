@@ -64,6 +64,7 @@ public:
   void bind(Label &label);
   void builtin(uint16_t argc, uint16_t index);
   void concat(uint16_t terms);
+  void quote(uint16_t unquotes);
   
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
 #define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
@@ -224,6 +225,14 @@ void Assembler::concat(uint16_t terms) {
   code().append(OC_CONCAT);
   code().append(terms);
   adjust_stack_height(-(terms - 1));
+}
+
+void Assembler::quote(uint16_t unquotes) {
+  STATIC_CHECK(OpcodeInfo<OC_QUOTE>::kArgc == 1);
+  ASSERT(unquotes > 0);
+  code().append(OC_QUOTE);
+  code().append(unquotes);
+  adjust_stack_height(-unquotes);
 }
 
 void Assembler::builtin(uint16_t argc, uint16_t index) {
@@ -395,6 +404,14 @@ void Assembler::visit_literal_expression(ref<LiteralExpression> that) {
 
 void Assembler::visit_quote_expression(ref<QuoteExpression> that) {
   __ push(that.value());
+  if (that->unquotes()->length() > 0) {
+    RefScope scope;
+    ref<Tuple> unquotes = that.unquotes();
+    for (uint32_t i = 0; i < unquotes->length(); i++) {
+      __ codegen(cast<SyntaxTree>(unquotes.get(i)));
+    }
+    __ quote(unquotes->length());
+  }
 }
 
 void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
@@ -536,6 +553,18 @@ void Assembler::visit_class_expression(ref<ClassExpression> that) {
 
 void Assembler::visit_method_expression(ref<MethodExpression> that) {
   visit_syntax_tree(that);
+}
+
+void Assembler::visit_unquote_expression(ref<UnquoteExpression> that) {
+  // This is handled specially by the visitor and should neven be
+  // visited explicitly
+  UNREACHABLE();
+}
+
+void Assembler::visit_quote_template(ref<QuoteTemplate> that) {
+  // This is handled specially by the visitor and should neven be
+  // visited explicitly
+  UNREACHABLE();
 }
 
 // -----------------------

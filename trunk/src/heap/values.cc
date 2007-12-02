@@ -417,9 +417,11 @@ static void validate_object(Object *obj) {
     case CLASS_TYPE:
       FOR_EACH_CLASS_FIELD(VALIDATE_FIELD, Class)
       break;
-    case BUILTIN_CALL_TYPE:
-      FOR_EACH_BUILTIN_CALL_FIELD(VALIDATE_FIELD, BuiltinCall)
+    case QUOTE_TEMPLATE_TYPE:
+      FOR_EACH_QUOTE_TEMPLATE_FIELD(VALIDATE_FIELD, QuoteTemplate)
       break;
+    case BUILTIN_CALL_TYPE:
+    case UNQUOTE_EXPRESSION_TYPE:
     case CODE_TYPE: case STRING_TYPE: case VOID_TYPE: case TRUE_TYPE:
     case FALSE_TYPE: case NULL_TYPE:
       break;

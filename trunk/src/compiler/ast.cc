@@ -44,126 +44,179 @@ void ref_traits<Lambda>::ensure_compiled() {
 // --- U n p a r s i n g ---
 // -------------------------
 
-static void unparse_literal_expression_on(LiteralExpression *obj,
-    string_buffer &buf) {
-  obj->value()->write_on(buf);
+class QuoteScope {
+public:
+  QuoteScope(QuoteTemplate *obj, QuoteScope *parent)
+      : obj_(obj)
+      , parent_(parent) { }
+  QuoteScope *parent() { return parent_; }
+  QuoteTemplate *obj() { return obj_; }
+private:
+  QuoteTemplate *obj_;
+  QuoteScope *parent_;
+};
+
+class UnparseData {
+public:
+  UnparseData(string_buffer &buf)
+      : buf_(buf)
+      , quote_scope_(NULL) { }
+  string_buffer *operator->() { return &buf_; }
+  string_buffer &out() { return buf_; }
+  QuoteTemplate *current_quote_template();
+  QuoteScope *quote_scope() { return quote_scope_; }
+  void set_quote_scope(QuoteScope *scope) { quote_scope_ = scope; }
+private:
+  string_buffer &buf_;
+  QuoteScope *quote_scope_;
+};
+
+QuoteTemplate *UnparseData::current_quote_template() {
+  ASSERT(quote_scope() != NULL);
+  return quote_scope()->obj();
 }
 
-static void unparse_invoke_expression_on(InvokeExpression *obj, string_buffer &buf) {
-  obj->receiver()->unparse_on(buf);
-  buf.append('.');
-  obj->name()->write_on(buf, Data::UNQUOTED);
-  buf.append('(');
+static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &buf);
+
+static void unparse_literal_expression_on(LiteralExpression *obj,
+    UnparseData &data) {
+  obj->value()->write_on(data.out());
+}
+
+static void unparse_invoke_expression_on(InvokeExpression *obj, UnparseData &data) {
+  unparse_syntax_tree_on(obj->receiver(), data);
+  data->append('.');
+  obj->name()->write_on(data.out(), Data::UNQUOTED);
+  data->append('(');
   bool is_first = true;
   for (uint32_t i = 0; i < obj->arguments()->length(); i++) {
     if (is_first) is_first = false;
-    else buf.append(", ");
-    cast<SyntaxTree>(obj->arguments()->at(i))->unparse_on(buf);
+    else data->append(", ");
+    unparse_syntax_tree_on(cast<SyntaxTree>(obj->arguments()->at(i)), data);
   }
-  buf.append(')');
+  data->append(')');
 }
 
-static void unparse_class_expression(ClassExpression *obj, string_buffer &buf) {
-  buf.append("class ");
-  obj->name()->write_on(buf, Data::UNQUOTED);
-  buf.append(" {");
+static void unparse_class_expression(ClassExpression *obj, UnparseData &data) {
+  data->append("class ");
+  obj->name()->write_on(data.out(), Data::UNQUOTED);
+  data->append(" {");
   Tuple *methods = obj->methods();
   for (uint32_t i = 0; i < methods->length(); i++) {
     MethodExpression *method = cast<MethodExpression>(methods->at(i));
-    buf.append(" ");
-    method->unparse_on(buf);
+    data->append(" ");
+    unparse_syntax_tree_on(method, data);
   }
-  buf.append(" }");
+  data->append(" }");
 }
 
-static void unparse_return_expression(ReturnExpression *obj, string_buffer &buf) {
-  buf.append("return ");
-  obj->value()->unparse_on(buf);
+static void unparse_return_expression(ReturnExpression *obj, UnparseData &data) {
+  data->append("return ");
+  unparse_syntax_tree_on(obj->value(), data);
 }
 
-static void unparse_method_expression(MethodExpression *obj, string_buffer &buf) {
-  buf.append("def ");
-  obj->name()->write_on(buf, Data::UNQUOTED);
-  obj->lambda()->unparse_on(buf);
-  buf.append(";");
+static void unparse_method_expression(MethodExpression *obj, UnparseData &data) {
+  data->append("def ");
+  obj->name()->write_on(data.out(), Data::UNQUOTED);
+  unparse_syntax_tree_on(obj->lambda(), data);
+  data->append(";");
 }
 
-static void unparse_local_definition(LocalDefinition *obj, string_buffer &buf) {
-  buf.append("def ");
-  obj->symbol()->unparse_on(buf);
-  buf.append(" := ");
-  obj->value()->unparse_on(buf);
-  buf.append(" in ");
-  obj->body()->unparse_on(buf);
+static void unparse_local_definition(LocalDefinition *obj, UnparseData &data) {
+  data->append("def ");
+  unparse_syntax_tree_on(obj->symbol(), data);
+  data->append(" := ");
+  unparse_syntax_tree_on(obj->value(), data);
+  data->append(" in ");
+  unparse_syntax_tree_on(obj->body(), data);
 }
 
-static void unparse_symbol(Symbol *obj, string_buffer &buf) {
+static void unparse_symbol(Symbol *obj, UnparseData &data) {
   Value *name = obj->name();
   if (is<Void>(name)) {
-    buf.printf("&#%", reinterpret_cast<uint32_t>(obj));
+    data->printf("&#%", reinterpret_cast<uint32_t>(obj));
   } else {
-    buf.append("$");
-    name->write_on(buf, Data::UNQUOTED);
+    data->append("$");
+    name->write_on(data.out(), Data::UNQUOTED);
   }
 }
 
-static void unparse_list_on(Tuple *objs, string_buffer &buf) {
-  buf.append("(");
+static void unparse_list_on(Tuple *objs, UnparseData &data) {
+  data->append("(");
   bool is_first = true;
   for (uint32_t i = 0; i < objs->length(); i++) {
     if (is_first) is_first = false;
-    else buf.append(", ");
-    cast<SyntaxTree>(objs->at(i))->unparse_on(buf);
+    else data->append(", ");
+    unparse_syntax_tree_on(cast<SyntaxTree>(objs->at(i)), data);
   }
-  buf.append(")");
+  data->append(")");
 }
 
-static void unparse_lambda_expression(LambdaExpression *obj, string_buffer &buf) {
-  buf.append("fn ");
-  unparse_list_on(obj->params(), buf);
-  buf.append(" ");
-  obj->body()->unparse_on(buf);
+static void unparse_lambda_expression(LambdaExpression *obj, UnparseData &data) {
+  data->append("fn ");
+  unparse_list_on(obj->params(), data);
+  data->append(" ");
+  unparse_syntax_tree_on(obj->body(), data);
 }
 
-static void unparse_call_expression(CallExpression *obj, string_buffer &buf) {
-  obj->receiver()->unparse_on(buf);
-  buf.append("·");
-  obj->function()->unparse_on(buf);
-  unparse_list_on(obj->arguments(), buf);
+static void unparse_call_expression(CallExpression *obj, UnparseData &data) {
+  unparse_syntax_tree_on(obj->receiver(), data);
+  data->append("·");
+  unparse_syntax_tree_on(obj->function(), data);
+  unparse_list_on(obj->arguments(), data);
 }
 
-static void unparse_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
+static void unparse_unquote_expression(UnquoteExpression *obj, UnparseData &data) {
+  QuoteTemplate *templ = data.current_quote_template();
+  SyntaxTree *tree = cast<SyntaxTree>(templ->unquotes()->at(obj->index()));
+  unparse_syntax_tree_on(tree, data);
+}
+
+static void unparse_quote_template(QuoteTemplate *obj, UnparseData &data) {
+  QuoteScope scope(obj, data.quote_scope());
+  data.set_quote_scope(&scope);
+  unparse_syntax_tree_on(obj->value(), data);
+  data.set_quote_scope(scope.parent());
+}
+
+static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
   InstanceType type = obj->type();
   switch (type) {
   case LITERAL_EXPRESSION_TYPE:
-    unparse_literal_expression_on(cast<LiteralExpression>(obj), buf);
+    unparse_literal_expression_on(cast<LiteralExpression>(obj), data);
     break;
   case INVOKE_EXPRESSION_TYPE:
-    unparse_invoke_expression_on(cast<InvokeExpression>(obj), buf);
+    unparse_invoke_expression_on(cast<InvokeExpression>(obj), data);
     break;
   case CLASS_EXPRESSION_TYPE:
-    unparse_class_expression(cast<ClassExpression>(obj), buf);
+    unparse_class_expression(cast<ClassExpression>(obj), data);
     break;
   case METHOD_EXPRESSION_TYPE:
-    unparse_method_expression(cast<MethodExpression>(obj), buf);
+    unparse_method_expression(cast<MethodExpression>(obj), data);
     break;
   case RETURN_EXPRESSION_TYPE:
-    unparse_return_expression(cast<ReturnExpression>(obj), buf);
+    unparse_return_expression(cast<ReturnExpression>(obj), data);
+    break;
+  case UNQUOTE_EXPRESSION_TYPE:
+    unparse_unquote_expression(cast<UnquoteExpression>(obj), data);
     break;
   case LOCAL_DEFINITION_TYPE:
-    unparse_local_definition(cast<LocalDefinition>(obj), buf);
+    unparse_local_definition(cast<LocalDefinition>(obj), data);
     break;
   case LAMBDA_EXPRESSION_TYPE:
-    unparse_lambda_expression(cast<LambdaExpression>(obj), buf);
+    unparse_lambda_expression(cast<LambdaExpression>(obj), data);
     break;
   case SYMBOL_TYPE:
-    unparse_symbol(cast<Symbol>(obj), buf);
+    unparse_symbol(cast<Symbol>(obj), data);
     break;
   case THIS_EXPRESSION_TYPE:
-    buf.append("this");
+    data->append("this");
     break;
   case CALL_EXPRESSION_TYPE:
-    unparse_call_expression(cast<CallExpression>(obj), buf);
+    unparse_call_expression(cast<CallExpression>(obj), data);
+    break;
+  case QUOTE_TEMPLATE_TYPE:
+    unparse_quote_template(cast<QuoteTemplate>(obj), data);
     break;
   default:
     UNHANDLED(InstanceType, type);
@@ -171,7 +224,8 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
 }
 
 void SyntaxTree::unparse_on(string_buffer &buf) {
-  unparse_syntax_tree_on(this, buf);
+  UnparseData data(buf);
+  unparse_syntax_tree_on(this, data);
 }
 
 
@@ -183,10 +237,23 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
   InstanceType type = this->type();
   ref<SyntaxTree> self = open(this);
   switch (type) {
+  case QUOTE_TEMPLATE_TYPE: {
+    QuoteTemplateScope scope(visitor, cast<QuoteTemplate>(self));
+    return cast<QuoteTemplate>(self).value().accept(visitor);
+  }
+  case UNQUOTE_EXPRESSION_TYPE: {
+    ref<QuoteTemplate> templ = visitor.current_quote();
+    uint32_t index = cast<UnquoteExpression>(self)->index();
+    Value *term = templ->unquotes()->at(index);
+    ref<SyntaxTree> value = new_ref(cast<SyntaxTree>(term));
+    return value.accept(visitor);
+  }
+  case BUILTIN_CALL_TYPE:
+    return visitor.visit_builtin_call(cast<BuiltinCall>(self));
 #define MAKE_VISIT(n, NAME, Name, name)                              \
   case NAME##_TYPE:                                                  \
     return visitor.visit_##name(cast<Name>(self));
-FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT)
+FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(MAKE_VISIT)
 #undef MAKE_VISIT
   default:
     UNHANDLED(InstanceType, type);

@@ -59,6 +59,8 @@
 
 #define FOR_EACH_SYNTAX_TREE_TYPE(VISIT)                                           \
   VISIT(64, BUILTIN_CALL,           BuiltinCall,           builtin_call)           \
+  VISIT(67, UNQUOTE_EXPRESSION,     UnquoteExpression,     unquote_expression)     \
+  VISIT(68, QUOTE_TEMPLATE,         QuoteTemplate,         quote_template)         \
   FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)
 
 #define FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)                               \
@@ -146,7 +148,8 @@
   VISIT(4, ConditionalExpression, Size)                              \
   VISIT(1, ThisExpression,        Size)                              \
   VISIT(1, QuoteExpression,       ValueOffset)                       \
-  VISIT(2, QuoteExpression,       Size)                              \
+  VISIT(2, QuoteExpression,       UnquotesOffset)                    \
+  VISIT(3, QuoteExpression,       Size)                              \
   VISIT(1, LambdaExpression,      ParamsOffset)                      \
   VISIT(2, LambdaExpression,      BodyOffset)                        \
   VISIT(3, LambdaExpression,      Size)                              \
@@ -158,7 +161,12 @@
   VISIT(1, LocalDefinition,       SymbolOffset)                      \
   VISIT(2, LocalDefinition,       ValueOffset)                       \
   VISIT(3, LocalDefinition,       BodyOffset)                        \
-  VISIT(4, LocalDefinition,       Size)
+  VISIT(4, LocalDefinition,       Size)                              \
+  VISIT(1, UnquoteExpression,     IndexOffset)                       \
+  VISIT(2, UnquoteExpression,     Size)                              \
+  VISIT(1, QuoteTemplate,         ValueOffset)                       \
+  VISIT(2, QuoteTemplate,         UnquotesOffset)                    \
+  VISIT(3, QuoteTemplate,         Size)
 
 
 // -----------------
@@ -205,7 +213,9 @@
   VISIT(32, Class,      lambda_expression_class,      LambdaExpression,      LAMBDA_EXPRESSION_CLASS,      new_empty_class(LAMBDA_EXPRESSION_TYPE))      \
   VISIT(33, Class,      builtin_call_class,           BuiltinCall,           BUILTIN_CALL_CLASS,           new_empty_class(BUILTIN_CALL_TYPE))           \
   VISIT(34, Class,      interpolate_expression_class, InterpolateExpression, INTERPOLATE_EXPRESSION_CLASS, new_empty_class(INTERPOLATE_EXPRESSION_TYPE)) \
-  VISIT(35, Class,      local_definition_class,       LocalDefinition,       LOCAL_DEFINITION_CLASS,       new_empty_class(LOCAL_DEFINITION_TYPE))
+  VISIT(35, Class,      local_definition_class,       LocalDefinition,       LOCAL_DEFINITION_CLASS,       new_empty_class(LOCAL_DEFINITION_TYPE))       \
+  VISIT(36, Class,      unquote_expression_class,     UnquoteExpression,     UNQUOTE_EXPRESSION_CLASS,     new_empty_class(UNQUOTE_EXPRESSION_TYPE))     \
+  VISIT(37, Class,      quote_template_class,         QuoteTemplate,         QUOTE_TEMPLATE_CLASS,         new_empty_class(QUOTE_TEMPLATE_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \
@@ -262,6 +272,7 @@
   VISIT(BuiltinCall,           builtin_call,           BUILTIN_CALL)           \
   VISIT(InterpolateExpression, interpolate_expression, INTERPOLATE_EXPRESSION) \
   VISIT(LocalDefinition,       local_definition,       LOCAL_DEFINITION)       \
+  VISIT(QuoteTemplate,         quote_template,         QUOTE_TEMPLATE)
 
 
 // ---------------------------------------

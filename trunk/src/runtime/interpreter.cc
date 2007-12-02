@@ -267,6 +267,17 @@ ref<Value> Interpreter::interpret(OldStack &stack) {
       pc += OpcodeInfo<OC_OUTER>::kSize;
       break;
     }
+    case OC_QUOTE: {
+      uint32_t unquote_count = cast<Code>(current.lambda()->code())->at(pc + 1);
+      ref<Tuple> unquotes = runtime().factory().new_tuple(unquote_count);
+      for (uint32_t i = 0; i < unquote_count; i++)
+        unquotes->set(unquote_count - i - 1, stack.pop());
+      ref<SyntaxTree> tree = new_ref(cast<SyntaxTree>(stack.pop()));
+      ref<QuoteTemplate> result = runtime().factory().new_quote_template(tree, unquotes);
+      stack.push(*result);
+      pc += OpcodeInfo<OC_QUOTE>::kSize;
+      break;
+    }
     default:
       UNHANDLED(Opcode, oc);
       return ref<Value>::empty();

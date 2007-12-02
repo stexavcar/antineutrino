@@ -48,13 +48,22 @@ Data *Heap::new_lambda(uint32_t argc, Value *code, Value *literals, LambdaExpres
   return result;
 }
 
+Data *Heap::new_quote_template(SyntaxTree *value, Tuple *unquotes) {
+  Data *val = allocate_object(QuoteTemplate::kSize, roots().quote_template_class());
+  if (is<AllocationFailed>(val)) return val;
+  QuoteTemplate *result = cast<QuoteTemplate>(val);
+  result->set_value(value);
+  result->set_unquotes(unquotes);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
 Data *Heap::new_lambda_expression(Tuple *params, SyntaxTree *body) {
   Data *val = allocate_object(LambdaExpression::kSize, roots().lambda_expression_class());
   if (is<AllocationFailed>(val)) return val;
   LambdaExpression *result = cast<LambdaExpression>(val);
   result->set_params(params);
   result->set_body(body);
-  IF_PARANOID(result->validate());
   return result;
 }
 
@@ -77,6 +86,10 @@ Data *Heap::allocate_lambda(uint32_t argc) {
 
 Data *Heap::allocate_builtin_call() {
   return allocate_object(BuiltinCall::kSize, roots().builtin_call_class());
+}
+
+Data *Heap::allocate_unquote_expression() {
+  return allocate_object(UnquoteExpression::kSize, roots().unquote_expression_class());
 }
 
 #define MAKE_ALLOCATOR(n, NAME, Name, name)                          \

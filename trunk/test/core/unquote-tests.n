@@ -1,5 +1,6 @@
 def simple_unquote_test() {
-  
+  def x := <3>;
+  assert_equals(5, <2 + ~x>.evaluate());
 }
 
 def main() {

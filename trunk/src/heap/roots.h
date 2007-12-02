@@ -27,7 +27,7 @@ public:
    */
   bool initialize(Heap& heap);
 
-  static const uint32_t kCount = 36;
+  static const uint32_t kCount = 38;
 
 // Declare root field accessors
 #define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, NAME, allocator) \

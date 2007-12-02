@@ -46,6 +46,8 @@ public:
   
   Data *new_lambda(uint32_t argc, Value *code, Value *literals, LambdaExpression *tree);
   
+  Data *new_quote_template(SyntaxTree *body, Tuple *unquotes);
+  
   Data *new_lambda_expression(Tuple *params, SyntaxTree *body);
   
   Data *new_return_expression(SyntaxTree *value);
@@ -53,6 +55,8 @@ public:
   Data *allocate_lambda(uint32_t argc);
   
   Data *allocate_builtin_call();
+  
+  Data *allocate_unquote_expression();
   
 #define DECLARE_ALLOCATOR(n, NAME, Name, name)                       \
   Data *allocate_##name();

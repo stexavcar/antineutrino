@@ -29,3 +29,4 @@ internal class QuoteExpression : Expression { }
 internal class BuiltinCall : Expression { }
 internal class InterpolateExpression : Expression { }
 internal class LocalDefinition : Expression { }
+internal class QuoteTemplate : Expression { }

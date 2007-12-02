@@ -26,6 +26,7 @@ class Method;
 class Null;
 class Object;
 template <class T> class persistent;
+class QuoteTemplate;
 template <class T> class ref;
 class ReturnExpression;
 class Roots;

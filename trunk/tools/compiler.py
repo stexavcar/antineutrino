@@ -81,7 +81,7 @@ KEYWORDS = [
 ]
 
 RESERVED = [
-  '->'
+  '->', '~'
 ]
 
 
@@ -104,6 +104,7 @@ def is_ident_part(char):
 def is_operator(char):
   return char == '+' or char == '-' or char == '>' or char == '*'    \
       or char == '/' or char == '%' or char == '=' or char == '<'    \
+      or char == '~'                                                 \
       or is_circumfix_operator(char)
 
 def is_circumfix_operator(char):
@@ -274,6 +275,15 @@ class Scanner:
 # --- P a r s e r ---
 # -------------------
 
+class QuoteLevel:
+  def __init__(self, parent):
+    self.parent = parent
+    self.unquotes = []
+  def register_unquoted(self, expr):
+    index = len(self.unquotes)
+    self.unquotes.append(expr)
+    return index
+
 def new_sequence(exprs):
   if len(exprs) == 0: return Void()
   elif len(exprs) == 1: return exprs[0]
@@ -284,6 +294,7 @@ class Parser:
   def __init__(self, scanner):
     self.scanner = scanner
     self.scope = GlobalScope()
+    self.quote_level = None
     self.current = None
     self.advance()
 
@@ -626,7 +637,7 @@ class Parser:
   #   -> <atomic_expression> '·' <atomic expression> <arguments>
   #   -> <atomic_expression> '.' $name <arguments>
   def parse_call_expression(self):
-    expr = self.parse_atomic_expression()
+    expr = self.parse_unary_expression()
     while self.at_call_prefix_start():
       if self.token().is_delimiter('.'):
         self.expect_delimiter('.')
@@ -637,13 +648,19 @@ class Parser:
         if self.token().is_delimiter(u'·'):
           self.expect_delimiter(u'·')
           recv = expr
-          expr = self.parse_atomic_expression()
+          expr = self.parse_unary_expression()
           args = self.parse_arguments('(', ')')
           expr = Call(recv, expr, args)
         else:
           args = self.parse_arguments('(', ')')
           expr = Call(This(), expr, args)
     return expr
+
+  def parse_unary_expression(self):
+    if self.token().is_delimiter('~'):
+      return self.parse_unquote_expression()
+    else:
+      return self.parse_atomic_expression()
 
   def parse_new_expression(self):
     self.expect_keyword('new')
@@ -663,6 +680,25 @@ class Parser:
       return Literal(HEAP.new_string(terms[0]))
     else:
       return Interpolated(terms)
+
+  def parse_unquote_expression(self):
+    self.expect_delimiter('~')
+    current_quote_level = self.quote_level
+    self.quote_level = current_quote_level.parent
+    expr = self.parse_unary_expression()
+    self.quote_level = current_quote_level
+    index = current_quote_level.register_unquoted(expr)
+    return Unquote(index)
+
+  def parse_quote_expression(self):
+    self.expect_operator('<')
+    my_quote_level = QuoteLevel(self.quote_level)
+    self.quote_level = my_quote_level
+    value = self.parse_operator_expression('>')
+    self.quote_level = self.quote_level.parent
+    self.expect_operator('>')
+    unquotes = my_quote_level.unquotes
+    return Quote(value, unquotes)
 
   # <atomic_expression>
   #   -> $number
@@ -706,10 +742,7 @@ class Parser:
       self.expect_delimiter(')')
       return value
     elif self.token().is_operator('<'):
-      self.expect_operator('<')
-      value = self.parse_operator_expression('>')
-      self.expect_operator('>')
-      return Quote(value)
+      return self.parse_quote_expression()
     elif self.token().is_operator():
       op = self.expect_circumfix_operator()
       match = circumfix_match(op)
@@ -908,18 +941,32 @@ class Call(Expression):
   def quote(self):
     recv = self.recv.quote()
     fun = self.fun.quote()
-    args = HEAP.new_tuple(values = map(lambda x: x.quote(), self.args))
+    args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
     return HEAP.new_call_expression(recv, fun, args)
 
 class Quote(Expression):
-  def __init__(self, value):
+  def __init__(self, value, unquotes):
     self.value = value
+    self.unquotes = unquotes
   def accept(self, visitor):
     visitor.visit_quote(self)
   def traverse(self, visitor):
     self.value.accept(visitor)
+    for unquote in self.unquotes:
+      unquote.accept(visitor)
   def quote(self):
-    return HEAP.new_quote_expression(self.value.quote())
+    unquotes = HEAP.new_tuple(values = [ unq.quote() for unq in self.unquotes ])
+    return HEAP.new_quote_expression(self.value.quote(), unquotes)
+
+class Unquote(Expression):
+  def __init__(self, value):
+    self.value = value
+  def accept(self, visitor):
+    visitor.visit_unquote(self)
+  def traverse(self, visitor):
+    pass
+  def quote(self):
+    return HEAP.new_unquote_expression(self.value)
 
 class Invoke(Expression):
   def __init__(self, recv, name, args):
@@ -1049,7 +1096,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 36
+  kRootCount  = 38
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1139,9 +1186,14 @@ class Heap:
     result.set_class(BUILTIN_CALL_TYPE)
     return result
 
-  def new_quote_expression(self, value):
-    result = ImageQuoteExpression(self.allocate(ImageQuoteExpression_Size), value)
+  def new_quote_expression(self, value, unquotes):
+    result = ImageQuoteExpression(self.allocate(ImageQuoteExpression_Size), value, unquotes)
     result.set_class(QUOTE_EXPRESSION_TYPE)
+    return result
+
+  def new_unquote_expression(self, value):
+    result = ImageUnquoteExpression(self.allocate(ImageUnquoteExpression_Size), value)
+    result.set_class(UNQUOTE_EXPRESSION_TYPE)
     return result
 
   def new_this_expression(self):
@@ -1514,11 +1566,21 @@ class ImageThisExpression(ImageSyntaxTree):
     ImageSyntaxTree.__init__(self, addr)
 
 class ImageQuoteExpression(ImageSyntaxTree):
-  def __init__(self, addr, value):
+  def __init__(self, addr, value, unquotes):
     ImageSyntaxTree.__init__(self, addr)
     self.set_value(value)
+    self.set_unquotes(unquotes)
   def set_value(self, value):
     HEAP.set_field(self, ImageQuoteExpression_ValueOffset, value)
+  def set_unquotes(self, value):
+    HEAP.set_field(self, ImageQuoteExpression_UnquotesOffset, value)
+
+class ImageUnquoteExpression(ImageSyntaxTree):
+  def __init__(self, addr, index):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_index(index)
+  def set_index(self, value):
+    HEAP.set_raw_field(self, ImageUnquoteExpression_IndexOffset, value)
 
 # -----------------------
 # --- C o m p i l e r ---
@@ -1599,6 +1661,8 @@ class Visitor:
   def visit_conditional(self, that):
     self.visit_node(that)
   def visit_quote(self, that):
+    self.visit_node(that)
+  def visit_unquote(self, that):
     self.visit_node(that)
   def visit_tuple(self, that):
     self.visit_node(that)
