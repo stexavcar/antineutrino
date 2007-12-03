@@ -22,6 +22,7 @@ typedef int8_t* address;
 // Forward declarations
 namespace neutrino {
 
+class Assembler;
 class Class;
 class Code;
 class Data;

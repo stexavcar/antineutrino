@@ -846,6 +846,8 @@ class Literal(Expression):
     visitor.visit_literal(self)
   def traverse(self, visitor):
     pass
+  def __repr__(self):
+    return str(self.value)
   def quote(self):
     val = quote_value(self.value)
     return HEAP.new_literal_expression(val)
@@ -906,6 +908,8 @@ class Lambda(Expression):
     body = self.body.quote()
     params = compile_params(self.params)
     return HEAP.new_lambda_expression(params, body)
+  def __repr__(self):
+    return str(self.params) + ' -> ' + str(self.body)
   def compile(self):
     return compile_lambda(self.params, self.body)
 
@@ -929,6 +933,8 @@ class Identifier(Expression):
 class Global(Identifier):
   def __init__(self, name):
     self.name = name
+  def __repr__(self):
+    return "$" + self.name
   def quote(self):
     return HEAP.new_global(HEAP.new_string(self.name))
 
@@ -936,6 +942,8 @@ class Local(Identifier):
   def __init__(self, symbol):
     self.symbol = symbol
     self.name = symbol.name
+  def __repr__(self):
+    return "%" + str(self.symbol)
   def quote(self):
     return self.symbol.quote()
 
@@ -950,6 +958,8 @@ class Call(Expression):
     self.recv.accept(visitor)
     self.fun.accept(visitor)
     for arg in self.args: arg.accept(visitor)
+  def __repr__(self):
+    return str(self.recv) + "·" + str(self.fun) + exprs_repr(self.args)
   def quote(self):
     recv = self.recv.quote()
     fun = self.fun.quote()
@@ -966,6 +976,8 @@ class Quote(Expression):
     self.value.accept(visitor)
     for unquote in self.unquotes:
       unquote.accept(visitor)
+  def __repr__(self):
+    return "'" + str(self.unquotes) + ":(" + str(self.value) + ')'
   def quote(self):
     unquotes = HEAP.new_tuple(values = [ unq.quote() for unq in self.unquotes ])
     return HEAP.new_quote_expression(self.value.quote(), unquotes)
@@ -978,8 +990,13 @@ class Unquote(Expression):
     visitor.visit_unquote(self)
   def traverse(self, visitor):
     pass
+  def __repr__(self):
+    return "," + str(self.value)
   def quote(self):
     return HEAP.new_unquote_expression(self.value)
+
+def exprs_repr(args):
+  return '(' + ', '.join([str(arg) for arg in args]) + ')'
 
 class Invoke(Expression):
   def __init__(self, recv, name, args):
@@ -991,6 +1008,8 @@ class Invoke(Expression):
   def traverse(self, visitor):
     self.recv.accept(visitor)
     for arg in self.args: arg.accept(visitor)
+  def __repr__(self):
+    return str(self.recv) + '.' + self.name + exprs_repr(self.args)
   def quote(self):
     recv = self.recv.quote()
     name = HEAP.new_string(self.name)
@@ -1002,6 +1021,8 @@ class This(Expression):
     visitor.visit_this(self)
   def traverse(self, visitor):
     pass
+  def __repr__(self):
+    return "this"
   def quote(self):
     return HEAP.new_this_expression()
 
@@ -1044,6 +1065,8 @@ class Return(Expression):
     visitor.visit_return(self)
   def traverse(self, visitor):
     self.value.accept(visitor)
+  def __repr__(self):
+    return "^" + str(self.value)
   def quote(self):
     return HEAP.new_return_expression(self.value.quote())
 
@@ -1089,9 +1112,11 @@ class Conditional(Expression):
   def quote(self):
     return HEAP.new_conditional(self.cond.quote(), self.then_part.quote(), self.else_part.quote())
 
-class Symbol:
+class Symbol(object):
   def __init__(self, name):
     self.name = name
+  def __repr__(self):
+    return "[" + self.name + " " + str(self.__hash__()) + "]"
   def quote(self):
     return HEAP.get_symbol(self)
 

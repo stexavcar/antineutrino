@@ -1,8 +1,8 @@
 Import('env build config prefix')
 from os.path import join, walk, abspath, exists
-from testutils import PyNeutrinoTestCase, is_selected
+from testutils import PyNeutrinoTestCase, is_selected, relative
 
-executable = abspath(str(config[prefix + 'program']))
+executable = relative(config['bin'], str(config[prefix + 'program']))
 
 compiler = join(config['root'], 'tools', 'compiler.py')
 env['BUILDERS']['CompilePyNeutrinoTest'] = Builder(action = "python " + compiler + " -c " + join(config['src'], 'utils', 'consts.h') + ' ' + join(config['root'], 'lib') + " $SOURCE -o $TARGET")
@@ -16,7 +16,8 @@ def add_test(arg, dir, fnames):
       compiled_name = short_name + '.nc'
       compile = env.CompilePyNeutrinoTest(compiled_name, full_path)
       env.Depends(compile, compiler)
-      test_case = PyNeutrinoTestCase(executable, abspath(join(build, compiled_name)))
+      test_file = relative(config['bin'], join(build, compiled_name))
+      test_case = PyNeutrinoTestCase(executable, test_file)
       config['tests'].append(test_case)
       config['check-deps'].append(compile)
       config['check-deps'].append(executable)

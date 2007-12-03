@@ -17,11 +17,16 @@ QuoteTemplateScope::QuoteTemplateScope(Visitor &visitor,
     : visitor_(visitor)
     , value_(value)
     , previous_(visitor.quote_scope()) {
-  visitor.quote_scope_ = this;
+  visitor.set_quote_scope(this);
 }
 
 QuoteTemplateScope::~QuoteTemplateScope() {
-  visitor_.quote_scope_ = previous_;
+  visitor_.set_quote_scope(previous_);
+}
+
+ref<QuoteTemplate> Visitor::current_quote() {
+  ASSERT(quote_scope() != NULL);
+  return quote_scope()->value();
 }
 
 }

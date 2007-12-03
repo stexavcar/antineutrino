@@ -1,4 +1,4 @@
-from os.path import abspath, basename, join
+from os.path import abspath, basename, join, commonprefix
 import subprocess, os, sys
 
 def execute(executable, args):
@@ -12,6 +12,10 @@ def execute(executable, args):
   output = process.stdout.read()
   errors = process.stderr.read()
   return (exit_code, output, errors)
+
+def relative(base, str):
+  prefix = commonprefix([base, str])
+  return str[len(prefix)+1:]
 
 def is_selected(config, test):
   if not config['test']: return True

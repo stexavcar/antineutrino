@@ -519,10 +519,10 @@ public:
   virtual void visit_##name(ref<Name> that);
 FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
-  ref<QuoteTemplate> current_quote() { return quote_scope_->value(); }
-private:
-  friend class QuoteTemplateScope;
+  inline ref<QuoteTemplate> current_quote();
+  void set_quote_scope(QuoteTemplateScope *scope) { quote_scope_ = scope; }
   QuoteTemplateScope *quote_scope() { return quote_scope_; }
+private:
   QuoteTemplateScope *quote_scope_;
 };
 

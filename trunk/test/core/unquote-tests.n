@@ -23,7 +23,7 @@ def make_power_test() {
   def body := make_power(s, 8);
   def fun := <(fn (~s) -> ~body)>;
   def power := fun.evaluate();
-  print(fun);
+  assert_equals(256, power(2));
 }
 
 def main() {

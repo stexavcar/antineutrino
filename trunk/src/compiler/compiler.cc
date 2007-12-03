@@ -21,8 +21,8 @@ class Label;
 class CompileSession {
 public:
   CompileSession(Runtime &runtime);
-  ref<Lambda> compile(ref<LambdaExpression> that, Scope *enclosing);
-  void compile(ref<Lambda> tree, Scope *enclosing);
+  ref<Lambda> compile(ref<LambdaExpression> that, Assembler *enclosing);
+  void compile(ref<Lambda> tree, Assembler *enclosing);
   Runtime &runtime() { return runtime_; }
 private:
   Runtime &runtime_;
@@ -31,14 +31,18 @@ private:
 class Assembler : public Visitor {
 public:
   Assembler(ref<LambdaExpression> lambda, CompileSession &session,
-      Scope *scope)
+      Assembler *enclosing)
       : lambda_(lambda)
       , session_(session)
       , pool_(session.runtime().factory())
-      , scope_(scope)
-      , stack_height_(0) { }
+      , stack_height_(0) {
+    if (enclosing == NULL) return;
+    scope_ = enclosing->scope_;
+    set_quote_scope(enclosing->quote_scope());
+  }
   void initialize() { pool().initialize(); }
   Scope &scope() { ASSERT(scope_ != NULL); return *scope_; }
+  SyntaxTree *resolve_unquote(UnquoteExpression *that);
   
   ref<Code> flush_code();
   ref<Tuple> flush_constant_pool();
@@ -102,6 +106,13 @@ private:
   bool is_bound_;
   uint32_t value_;
 };
+
+SyntaxTree *Assembler::resolve_unquote(UnquoteExpression *expr) {
+  ref<QuoteTemplate> templ = current_quote();
+  uint32_t index = expr->index();
+  Value *term = templ->unquotes()->at(index);
+  return cast<SyntaxTree>(term);
+}
 
 ref<Code> Assembler::flush_code() {
   ref<Code> result = factory().new_code(code().length());
@@ -279,8 +290,11 @@ enum Category {
 };
 
 struct Lookup {
-  Lookup() : category(MISSING) { }
+  Lookup(Assembler &assm)
+      : category(MISSING)
+      , assembler(assm) { }
   Category category;
+  Assembler &assembler;
   union {
     struct { uint16_t index; } argument_info;
     struct { uint16_t height; } local_info;
@@ -328,7 +342,10 @@ private:
 
 void ArgumentScope::lookup(ref<Symbol> symbol, Lookup &result) {
   for (uint32_t i = 0; i < symbols().length(); i++) {
-    if (symbol->equals(symbols()->at(i))) {
+    Value *entry = symbols()->at(i);
+    if (is<UnquoteExpression>(entry))
+      entry = result.assembler.resolve_unquote(cast<UnquoteExpression>(entry));
+    if (symbol->equals(cast<Symbol>(entry))) {
       result.category = ARGUMENT;
       result.argument_info.index = symbols().length() - i - 1;
       return;
@@ -464,7 +481,7 @@ void Assembler::visit_global_expression(ref<GlobalExpression> that) {
 }
 
 void Assembler::load_symbol(ref<Symbol> that) {
-  Lookup lookup;
+  Lookup lookup(*this);
   scope().lookup(that, lookup);
   switch (lookup.category) {
     case ARGUMENT:
@@ -527,7 +544,7 @@ void Assembler::visit_local_definition(ref<LocalDefinition> that) {
 
 void Assembler::visit_lambda_expression(ref<LambdaExpression> that) {
   ClosureScope scope(factory());
-  ref<Lambda> lambda = session().compile(that, &scope);
+  ref<Lambda> lambda = session().compile(that, this);
   if (scope.outers().length() > 0) {
     for (uint32_t i = 0; i < scope.outers().length(); i++) {
       ref<Symbol> sym = cast<Symbol>(scope.outers()[i]);
@@ -607,7 +624,7 @@ void Compiler::compile(ref<Lambda> lambda) {
   session.compile(lambda, NULL);
 }
 
-ref<Lambda> CompileSession::compile(ref<LambdaExpression> that, Scope *enclosing) {
+ref<Lambda> CompileSession::compile(ref<LambdaExpression> that, Assembler *enclosing) {
   ref<Lambda> lambda = runtime().factory().new_lambda(
     that->params()->length(),
     runtime().vhoid(),
@@ -618,7 +635,7 @@ ref<Lambda> CompileSession::compile(ref<LambdaExpression> that, Scope *enclosing
   return lambda;
 }
 
-void CompileSession::compile(ref<Lambda> lambda, Scope *enclosing) {
+void CompileSession::compile(ref<Lambda> lambda, Assembler *enclosing) {
   ref<LambdaExpression> tree = lambda.tree();
   Assembler assembler(tree, *this, enclosing);
   ref<Tuple> params = tree.params();
