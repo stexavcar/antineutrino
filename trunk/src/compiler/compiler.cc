@@ -308,6 +308,7 @@ public:
   Scope();
   ~Scope();
   virtual void lookup(ref<Symbol> symbol, Lookup &result) = 0;
+  void unlink();
 protected:
   Scope *parent() { return parent_; }
 private:
@@ -325,8 +326,14 @@ Scope::Scope(Assembler &assembler)
 Scope::Scope() : assembler_(NULL), parent_(NULL) { }
 
 Scope::~Scope() {
-  if (assembler() != NULL)
+  unlink();
+}
+
+void Scope::unlink() {
+  if (assembler() != NULL) {
     assembler()->scope_ = parent();
+    assembler_ = NULL;
+  }
 }
 
 class ArgumentScope : public Scope {
@@ -379,8 +386,9 @@ void LocalScope::lookup(ref<Symbol> name, Lookup &result) {
 
 class ClosureScope : public Scope {
 public:
-  ClosureScope(Factory &factory)
-      : outers_(factory) {
+  ClosureScope(Assembler &assembler, Factory &factory)
+      : Scope(assembler)
+      , outers_(factory) {
     outers().initialize();
   }
   virtual void lookup(ref<Symbol> symbol, Lookup &result);
@@ -543,8 +551,9 @@ void Assembler::visit_local_definition(ref<LocalDefinition> that) {
 }
 
 void Assembler::visit_lambda_expression(ref<LambdaExpression> that) {
-  ClosureScope scope(factory());
+  ClosureScope scope(*this, factory());
   ref<Lambda> lambda = session().compile(that, this);
+  scope.unlink();
   if (scope.outers().length() > 0) {
     for (uint32_t i = 0; i < scope.outers().length(); i++) {
       ref<Symbol> sym = cast<Symbol>(scope.outers()[i]);
