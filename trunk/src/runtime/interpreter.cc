@@ -28,14 +28,25 @@ private:
 // --- I n t e r p r e t e r ---
 // -----------------------------
 
-ref<Value> Interpreter::call(ref<Lambda> lambda) {
-  lambda.ensure_compiled();
+Value *Interpreter::call(Lambda *lambda) {
+  new_ref(lambda).ensure_compiled();
   OldStack stack;
   stack.push(runtime().roots().vhoid()); // initial 'this'
   stack.push(runtime().roots().vhoid()); // initial lambda
   Frame top = stack.push_activation();
-  top.lambda() = *lambda;
-  return interpret(stack);
+  top.lambda() = lambda;
+  while (true) {
+    Data *value = interpret(stack);
+    if (is<Signal>(value)) {
+      if (is<AllocationFailed>(value)) {
+        Runtime::current().heap().memory().collect_garbage();
+      } else {
+        UNREACHABLE();
+      }
+    } else {
+      return cast<Value>(value);
+    }
+  }
 }
 
 /**
@@ -69,7 +80,7 @@ Data *Interpreter::lookup_method(Class *chlass, Value *name) {
   return Nothing::make();
 }
 
-ref<Value> Interpreter::interpret(OldStack &stack) {
+Data *Interpreter::interpret(OldStack &stack) {
   Frame current = stack.top();
   uint32_t pc = 0;
   while (true) {
@@ -178,7 +189,7 @@ ref<Value> Interpreter::interpret(OldStack &stack) {
     case OC_RETURN: {
       Value *value = stack.pop();
       if (current.prev_fp() == 0)
-        return new_ref(value);
+        return value;
       pc = current.prev_pc();
       current = stack.pop_activation();
       stack[0] = value;
@@ -211,12 +222,13 @@ ref<Value> Interpreter::interpret(OldStack &stack) {
       break;
     }
     case OC_TUPLE: {
-      RefScope scope;
       uint16_t length = cast<Code>(current.lambda()->code())->at(pc + 1);
-      ref<Tuple> result = runtime().factory().new_tuple(length);
+      Data *val = runtime().heap().new_tuple(length);
+      if (is<Signal>(val)) return val;
+      Tuple *result = cast<Tuple>(val);
       for (int32_t i = length - 1; i >= 0; i--)
-        result->at(i) = stack.pop();
-      stack.push(*result);
+        result->set(i, stack.pop());
+      stack.push(result);
       pc += OpcodeInfo<OC_TUPLE>::kSize;
       break;
     }
@@ -228,12 +240,13 @@ ref<Value> Interpreter::interpret(OldStack &stack) {
       break;
     }
     case OC_CONCAT: {
-      RefScope scope;
       uint32_t terms = cast<Code>(current.lambda()->code())->at(pc + 1);
       uint32_t length = 0;
       for (uint32_t i = 0; i < terms; i++)
         length += cast<String>(stack[i])->length();
-      ref<String> result = runtime().factory().new_string(length);
+      Data *val = runtime().heap().new_string(length);
+      if (is<Signal>(val)) return val;
+      String *result = cast<String>(val);
       uint32_t cursor = 0;
       for (int32_t i = terms - 1; i >= 0; i--) {
         String *term = cast<String>(stack[i]);
@@ -242,21 +255,24 @@ ref<Value> Interpreter::interpret(OldStack &stack) {
         cursor += term->length();
       }
       stack.pop(terms);
-      stack.push(*result);
+      stack.push(result);
       pc += OpcodeInfo<OC_CONCAT>::kSize;
       break;
     }
     case OC_CLOSURE: {
-      RefScope scope;
       uint32_t index = cast<Code>(current.lambda()->code())->at(pc + 1);
-      ref<Lambda> lambda = new_ref(cast<Lambda>(cast<Tuple>(current.lambda()->literals())->at(index)));
+      Lambda *lambda = cast<Lambda>(cast<Tuple>(current.lambda()->literals())->at(index));
       uint32_t outer_count = cast<Code>(current.lambda()->code())->at(pc + 2);
-      ref<Tuple> outers = runtime().factory().new_tuple(outer_count);
+      Data *outers_val = runtime().heap().new_tuple(outer_count);
+      if (is<Signal>(outers_val)) return outers_val;
+      Tuple *outers = cast<Tuple>(outers_val);
       for (uint32_t i = 0; i < outer_count; i++)
         outers->set(outer_count - i - 1, stack.pop());
-      ref<Lambda> clone = lambda.clone(runtime().factory());
-      clone->set_outers(*outers);
-      stack.push(*clone);
+      Data *clone_val = lambda->clone(runtime().heap());
+      if (is<Signal>(clone_val)) return clone_val;
+      Lambda *clone = cast<Lambda>(clone_val);
+      clone->set_outers(outers);
+      stack.push(clone);
       pc += OpcodeInfo<OC_CLOSURE>::kSize;
       break;
     }
@@ -269,18 +285,22 @@ ref<Value> Interpreter::interpret(OldStack &stack) {
     }
     case OC_QUOTE: {
       uint32_t unquote_count = cast<Code>(current.lambda()->code())->at(pc + 1);
-      ref<Tuple> unquotes = runtime().factory().new_tuple(unquote_count);
+      Data *unquotes_val = runtime().heap().new_tuple(unquote_count);
+      if (is<Signal>(unquotes_val)) return unquotes_val;
+      Tuple *unquotes = cast<Tuple>(unquotes_val);
       for (uint32_t i = 0; i < unquote_count; i++)
         unquotes->set(unquote_count - i - 1, stack.pop());
-      ref<SyntaxTree> tree = new_ref(cast<SyntaxTree>(stack.pop()));
-      ref<QuoteTemplate> result = runtime().factory().new_quote_template(tree, unquotes);
-      stack.push(*result);
+      SyntaxTree *tree = cast<SyntaxTree>(stack.pop());
+      Data *result_val = runtime().heap().new_quote_template(tree, unquotes);
+      if (is<Signal>(result_val)) return result_val;
+      QuoteTemplate *result = cast<QuoteTemplate>(result_val);
+      stack.push(result);
       pc += OpcodeInfo<OC_QUOTE>::kSize;
       break;
     }
     default:
       UNHANDLED(Opcode, oc);
-      return ref<Value>::empty();
+      return Nothing::make();
     }
   }
 }

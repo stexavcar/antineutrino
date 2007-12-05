@@ -240,10 +240,8 @@ Data *Builtins::compile_expression(Arguments &args) {
 }
 
 Data *Builtins::lift(Arguments &args) {
-  ref<Value> value = new_ref(args[0]);
-  Factory &factory = Runtime::current().factory();
-  ref<LiteralExpression> result = factory.new_literal_expression(value);
-  return *result;
+  Value *value = args[0];
+  return Runtime::current().heap().new_literal_expression(value);
 }
 
 } // namespace neutrino

@@ -80,9 +80,9 @@ private:
 class Interpreter {
 public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
-  ref<Value> call(ref<Lambda> lambda);
+  Value *call(Lambda *lambda);
 private:
-  ref<Value> interpret(OldStack &stack);
+  Data *interpret(OldStack &stack);
   inline Class *get_class(Value *val);
   inline Data *lookup_method(Class *chlass, Value *name);
   Runtime &runtime() { return runtime_; }

@@ -483,14 +483,13 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 // --- L a m b d a ---
 // -------------------
 
-ref<Value> ref_traits<Lambda>::call() {
+Value *Lambda::call() {
   Interpreter &interpreter = Runtime::current().interpreter();
-  return interpreter.call(open(this));
+  return interpreter.call(this);
 }
 
-ref<Lambda> ref_traits<Lambda>::clone(Factory &factory) {
-  ref<Lambda> self = open(this);
-  return factory.new_lambda(self->argc(), self.code(), self.literals(), self.tree());
+Data *Lambda::clone(Heap &heap) {
+  return heap.new_lambda(argc(), code(), literals(), tree());
 }
 
 

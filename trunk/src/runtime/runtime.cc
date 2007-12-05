@@ -21,14 +21,13 @@ bool Runtime::initialize() {
 void Runtime::start() {
   Runtime::Scope runtime_scope(*this);
   RefScope ref_scope;
-  ref<Value> value = toplevel().get(factory().new_string("main"));
-  if (value.is_empty()) {
+  Data *value = roots().toplevel()->get(cast<String>(heap().new_string("main")));
+  if (is<Nothing>(value)) {
     Conditions::get().error_occurred("Error: no function 'main' was defined.");
   } else if (!is<Lambda>(value)) {
     Conditions::get().error_occurred("Value 'main' is not a function.");
   }
-  ref<Lambda> main = cast<Lambda>(value);
-  main.call();
+  cast<Lambda>(value)->call();
 }
 
 bool Runtime::load_image(Image &image) {

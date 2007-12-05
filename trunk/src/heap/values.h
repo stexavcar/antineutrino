@@ -360,6 +360,9 @@ public:
   DECLARE_FIELD(uint32_t, argc);
   FOR_EACH_LAMBDA_FIELD(DECLARE_OBJECT_FIELD, 0)
   
+  Value *call();
+  Data *clone(Heap &heap);
+
   string disassemble();
   
   static const uint32_t kArgcOffset     = Object::kHeaderSize;
@@ -374,8 +377,6 @@ template <> class ref_traits<Lambda> : public ref_traits<Object> {
 public:
   FOR_EACH_LAMBDA_FIELD(DECLARE_REF_FIELD, 0)
   void ensure_compiled();
-  ref<Value> call();
-  ref<Lambda> clone(Factory &factory);
 };
 
 DEFINE_REF_CLASS(Lambda);
