@@ -13,7 +13,7 @@ namespace neutrino {
 // --- I n f r a s t r u c t u r e ---
 // -----------------------------------
 
-Builtin *Builtins::get(uint32_t index) {
+builtin *Builtins::get(uint32_t index) {
   switch (index) {
 
 #define MAKE_CASE(n, type, name, str) case n: return &Builtins::type##_##name;
@@ -35,17 +35,17 @@ FOR_EACH_BUILTIN_FUNCTION(MAKE_CASE)
 // --- S t r i n g ---
 // -------------------
 
-Value *Builtins::string_length(Arguments &args) {
+Data *Builtins::string_length(Arguments &args) {
   ASSERT_EQ(0, args.count());
-  ref<String> self = cast<String>(args.self());
+  String *self = cast<String>(args.self());
   return Smi::from_int(self->length());
 }
 
-Value *Builtins::string_eq(Arguments &args) {
+Data *Builtins::string_eq(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  ref<String> self = cast<String>(args.self());
+  String *self = cast<String>(args.self());
   if (!is<String>(args[0])) return Runtime::current().roots().fahlse();
-  ref<String> that = cast<String>(args[0]);
+  String *that = cast<String>(args[0]);
   uint32_t length = self->length();
   if (length != that->length())
     return Runtime::current().roots().fahlse();
@@ -56,10 +56,10 @@ Value *Builtins::string_eq(Arguments &args) {
   return Runtime::current().roots().thrue();
 }
 
-Value *Builtins::string_plus(Arguments &args) {
+Data *Builtins::string_plus(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  ref<String> self = cast<String>(args.self());
-  ref<String> that = cast<String>(args[0]);
+  String *self = cast<String>(args.self());
+  String *that = cast<String>(args[0]);
   uint32_t length = self->length() + that->length();
   String *result = cast<String>(Runtime::current().heap().new_string(length));
   for (uint32_t i = 0; i < self->length(); i++)
@@ -74,39 +74,39 @@ Value *Builtins::string_plus(Arguments &args) {
 // --- S m a l l   I n t e g e r ---
 // ---------------------------------
 
-Value *Builtins::smi_plus(Arguments &args) {
+Data *Builtins::smi_plus(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  ref<Smi> self = cast<Smi>(args.self());
-  ref<Smi> that = cast<Smi>(args[0]);
+  Smi *self = cast<Smi>(args.self());
+  Smi *that = cast<Smi>(args[0]);
   return Smi::from_int(self->value() + that->value());
 }
 
-Value *Builtins::smi_minus(Arguments &args) {
+Data *Builtins::smi_minus(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  ref<Smi> self = cast<Smi>(args.self());
-  ref<Smi> that = cast<Smi>(args[0]);
+  Smi *self = cast<Smi>(args.self());
+  Smi *that = cast<Smi>(args[0]);
   return Smi::from_int(self->value() - that->value());
 }
 
-Value *Builtins::smi_times(Arguments &args) {
+Data *Builtins::smi_times(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  ref<Smi> self = cast<Smi>(args.self());
-  ref<Smi> that = cast<Smi>(args[0]);
+  Smi *self = cast<Smi>(args.self());
+  Smi *that = cast<Smi>(args[0]);
   return Smi::from_int(self->value() * that->value());
 }
 
-Value *Builtins::smi_divide(Arguments &args) {
+Data *Builtins::smi_divide(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  ref<Smi> self = cast<Smi>(args.self());
-  ref<Smi> that = cast<Smi>(args[0]);
+  Smi *self = cast<Smi>(args.self());
+  Smi *that = cast<Smi>(args[0]);
   return Smi::from_int(self->value() / that->value());
 }
 
-Value *Builtins::smi_abs(Arguments &args) {
+Data *Builtins::smi_abs(Arguments &args) {
   ASSERT_EQ(0, args.count());
-  ref<Smi> self = cast<Smi>(args.self());
+  Smi *self = cast<Smi>(args.self());
   int32_t value = self->value();
-  if (value >= 0) return *self;
+  if (value >= 0) return self;
   else return Smi::from_int(-value);
 }
 
@@ -115,14 +115,14 @@ Value *Builtins::smi_abs(Arguments &args) {
 // --- O b j e c t ---
 // -------------------
 
-Value *Builtins::object_eq(Arguments &args) {
+Data *Builtins::object_eq(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  return (*args.self() == *args[0])
+  return (args.self() == args[0])
        ? static_cast<Value*>(Runtime::current().roots().thrue())
        : static_cast<Value*>(Runtime::current().roots().fahlse());
 }
 
-Value *Builtins::object_to_string(Arguments &args) {
+Data *Builtins::object_to_string(Arguments &args) {
   ASSERT_EQ(0, args.count());
   scoped_string str(args.self()->to_string());
   return cast<Value>(Runtime::current().heap().new_string(*str));
@@ -133,10 +133,10 @@ Value *Builtins::object_to_string(Arguments &args) {
 // --- C l a s s   E x p r e s s i o n ---
 // ---------------------------------------
 
-Value *Builtins::class_expression_evaluate(Arguments &args) {
+Data *Builtins::class_expression_evaluate(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
-  ref<ClassExpression> expr = cast<ClassExpression>(args.self());
+  ref<ClassExpression> expr = new_ref(cast<ClassExpression>(args.self()));
   ref<Class> result = expr.compile();
   return *result;
 }
@@ -146,21 +146,17 @@ Value *Builtins::class_expression_evaluate(Arguments &args) {
 // --- C l a s s ---
 // -----------------
 
-Value *Builtins::class_new(Arguments &args) {
+Data *Builtins::class_new(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
   Runtime &runtime = Runtime::current();
-  ref<Class> chlass = cast<Class>(args.self());
+  Class *chlass = cast<Class>(args.self());
   InstanceType type = chlass->instance_type();
   switch (type) {
-    case INSTANCE_TYPE: {
-      ref<Instance> result = runtime.factory().new_instance(chlass);
-      return *result;
-    }
-    case SYMBOL_TYPE: {
-      ref<Symbol> result = runtime.factory().new_symbol(runtime.vhoid());
-      return *result;
-    }
+    case INSTANCE_TYPE:
+      return runtime.heap().new_instance(chlass);
+    case SYMBOL_TYPE:
+      return runtime.heap().new_symbol(runtime.roots().vhoid());
     default:
       UNHANDLED(InstanceType, type);
       return 0;
@@ -172,16 +168,16 @@ Value *Builtins::class_new(Arguments &args) {
 // --- T u p l e ---
 // -----------------
 
-Value *Builtins::tuple_eq(Arguments &args) {
+Data *Builtins::tuple_eq(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  ref<Tuple> self = cast<Tuple>(args.self());
-  ref<Value> other = args[0];
+  Tuple *self = cast<Tuple>(args.self());
+  Value *other = args[0];
   if (!is<Tuple>(other))
     return Runtime::current().roots().fahlse();
-  ref<Tuple> that = cast<Tuple>(other);
-  if (self.length() != that.length())
+  Tuple *that = cast<Tuple>(other);
+  if (self->length() != that->length())
     return Runtime::current().roots().fahlse();
-  for (uint32_t i = 0; i < self.length(); i++) {
+  for (uint32_t i = 0; i < self->length(); i++) {
     if (!self->at(i)->equals(that->at(i)))
       return Runtime::current().roots().fahlse();
   }
@@ -193,8 +189,8 @@ Value *Builtins::tuple_eq(Arguments &args) {
 // --- L a m b d a ---
 // -------------------
 
-Value *Builtins::lambda_disassemble(Arguments &args) {
-  ref<Lambda> self = cast<Lambda>(args.self());
+Data *Builtins::lambda_disassemble(Arguments &args) {
+  ref<Lambda> self = new_ref(cast<Lambda>(args.self()));
   self.ensure_compiled();
   scoped_string str(self->disassemble());
   str->println();
@@ -206,11 +202,11 @@ Value *Builtins::lambda_disassemble(Arguments &args) {
 // --- L a m b d a   E x p r e s s i o n ---
 // -----------------------------------------
 
-Value *Builtins::lambda_expression_params(Arguments &args) {
+Data *Builtins::lambda_expression_params(Arguments &args) {
   return cast<LambdaExpression>(args.self())->params();
 }
 
-Value *Builtins::lambda_expression_body(Arguments &args) {
+Data *Builtins::lambda_expression_body(Arguments &args) {
   return cast<LambdaExpression>(args.self())->body();
 }
 
@@ -219,32 +215,32 @@ Value *Builtins::lambda_expression_body(Arguments &args) {
 // --- F u n c t i o n s ---
 // -------------------------
 
-Value *Builtins::fail(Arguments &args) {
+Data *Builtins::fail(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  ref<String> arg = cast<String>(args[0]);
+  String *arg = cast<String>(args[0]);
   string_buffer buf;
   arg->write_on(buf, Data::UNQUOTED);
   fprintf(stderr, "Failure: %s\n", buf.raw_string().chars());
   exit(1);
 }
 
-Value *Builtins::raw_print(Arguments &args) {
+Data *Builtins::raw_print(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  ref<String> str_obj = cast<String>(args[0]);
+  String *str_obj = cast<String>(args[0]);
   for (uint32_t i = 0; i < str_obj->length(); i++)
     putc(str_obj->at(i), stdout);
   putc('\n', stdout);
   return Runtime::current().roots().vhoid();
 }
 
-Value *Builtins::compile_expression(Arguments &args) {
-  ref<SyntaxTree> self = cast<SyntaxTree>(args.self());
+Data *Builtins::compile_expression(Arguments &args) {
+  ref<SyntaxTree> self = new_ref(cast<SyntaxTree>(args.self()));
   ref<Lambda> code = Compiler::compile(self);
   return *code;
 }
 
-Value *Builtins::lift(Arguments &args) {
-  ref<Value> value = args[0];
+Data *Builtins::lift(Arguments &args) {
+  ref<Value> value = new_ref(args[0]);
   Factory &factory = Runtime::current().factory();
   ref<LiteralExpression> result = factory.new_literal_expression(value);
   return *result;

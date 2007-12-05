@@ -168,9 +168,9 @@ ref<Value> Interpreter::interpret(OldStack &stack) {
     case OC_BUILTIN: {
       uint16_t argc = cast<Code>(current.lambda()->code())->at(pc + 1);
       uint16_t index = cast<Code>(current.lambda()->code())->at(pc + 2);
-      Builtin *builtin = Builtins::get(index);
+      builtin *builtin = Builtins::get(index);
       Arguments args(runtime(), argc, stack);
-      Value *value = builtin(args);
+      Value *value = cast<Value>(builtin(args));
       stack.push(value);
       pc += OpcodeInfo<OC_BUILTIN>::kSize;
       break;
