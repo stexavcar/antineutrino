@@ -74,6 +74,21 @@ void Conditions::check_eq_failed(const char* file_name, int line_number,
   abort();
 }
 
+void Conditions::check_lt_failed(const char* file_name, int line_number,
+    int value, const char *value_source, int limit,
+    const char *limit_source, Condition cause) {
+  notify(cause);
+  static const char *kErrorMessage =
+    "#\n"
+    "# %s:%i: CHECK_LT(%s, %s) failed\n"
+    "#   value: %i\n"
+    "#   limit: %i\n"
+    "#\n";
+  fprintf(stderr, kErrorMessage, file_name, line_number, value_source,
+      limit_source, value, limit);
+  abort();  
+}
+
 void Conditions::check_eq_failed(const char* file_name, int line_number,
     Value *expected, const char *expected_source, Value *value,
     const char *value_source, Condition cause) {

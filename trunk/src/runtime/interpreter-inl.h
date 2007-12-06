@@ -26,8 +26,10 @@ Lambda *&Frame::lambda() {
 // --- S t a c k ---
 // -----------------
 
-OldStack::OldStack()
-  : sp_(bottom())
+OldStack::OldStack(Stack *stack)
+  : height_(stack->height())
+  , data_(stack->bottom())
+  , sp_(data_)
   , fp_(0) { }
 
 Value *OldStack::pop(uint32_t height) {
@@ -56,7 +58,7 @@ Value *&OldStack::self(uint32_t argc) {
 
 
 void OldStack::push(Value *value) {
-  ASSERT(sp() < bottom() + kLimit);
+  ASSERT(sp() < limit());
   *(sp_++) = reinterpret_cast<word>(value);
 }
 

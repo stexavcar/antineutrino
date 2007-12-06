@@ -423,7 +423,7 @@ static void validate_object(Object *obj) {
     case BUILTIN_CALL_TYPE:
     case UNQUOTE_EXPRESSION_TYPE:
     case CODE_TYPE: case STRING_TYPE: case VOID_TYPE: case TRUE_TYPE:
-    case FALSE_TYPE: case NULL_TYPE:
+    case FALSE_TYPE: case NULL_TYPE: case STACK_TYPE:
       break;
 #define MAKE_CASE(n, NAME, Name, name)                               \
     case NAME##_TYPE:                                                \
@@ -483,9 +483,9 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 // --- L a m b d a ---
 // -------------------
 
-Value *Lambda::call() {
+Value *Lambda::call(Stack *stack) {
   Interpreter &interpreter = Runtime::current().interpreter();
-  return interpreter.call(this);
+  return interpreter.call(this, stack);
 }
 
 Data *Lambda::clone(Heap &heap) {

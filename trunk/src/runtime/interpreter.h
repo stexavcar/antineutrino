@@ -54,7 +54,7 @@ private:
 
 class OldStack {
 public:
-  inline OldStack();
+  inline OldStack(Stack *stack);
   Frame top() { return Frame(fp_); }
   inline Frame push_activation();
   inline Frame pop_activation();
@@ -67,11 +67,12 @@ public:
   word *&sp() { return sp_; }
   word *&fp() { return fp_; }
   word *bottom() { return data_; }
+  word *limit() { return data_ + height_; }
 private:
-  static const uint32_t kLimit = 2048;
+  uint32_t height_;
+  word *data_;
   word *sp_;
   word *fp_;
-  word data_[kLimit];
 };
 
 /**
@@ -80,7 +81,7 @@ private:
 class Interpreter {
 public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
-  Value *call(Lambda *lambda);
+  Value *call(Lambda *lambda, Stack *stack);
 private:
   Data *interpret(OldStack &stack);
   inline Class *get_class(Value *val);

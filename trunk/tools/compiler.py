@@ -1032,7 +1032,7 @@ class Void(Expression):
   def traverse(self, visitor):
     pass
   def quote(self):
-    return HEAP.new_literal_expression(HEAP.get_root(VOID_ROOT))  
+    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['VoidValue']))  
 
 class Null(Expression):
   def accept(self, visitor):
@@ -1040,7 +1040,7 @@ class Null(Expression):
   def traverse(self, visitor):
     pass
   def quote(self):
-    return HEAP.new_literal_expression(HEAP.get_root(NULL_ROOT))  
+    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['NullValue']))  
 
 class Thrue(Expression):
   def accept(self, visitor):
@@ -1048,7 +1048,7 @@ class Thrue(Expression):
   def traverse(self, visitor):
     pass
   def quote(self):
-    return HEAP.new_literal_expression(HEAP.get_root(TRUE_ROOT))  
+    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['TrueValue']))  
 
 class Fahlse(Expression):
   def accept(self, visitor):
@@ -1056,7 +1056,7 @@ class Fahlse(Expression):
   def traverse(self, visitor):
     pass
   def quote(self):
-    return HEAP.new_literal_expression(HEAP.get_root(FALSE_ROOT))  
+    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['FalseValue']))  
 
 class Return(Expression):
   def __init__(self, value):
@@ -1134,7 +1134,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 38
+  kRootCount  = 39
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1145,7 +1145,7 @@ class Heap:
   def initialize(self):
     self.roots = self.new_tuple(Heap.kRootCount)
     self.toplevel = self.new_dictionary()
-    self.set_root(TOPLEVEL_ROOT, self.toplevel)
+    self.set_root(ROOT_INDEX['Toplevel'], self.toplevel)
   def set_raw(self, offset, value):
     self.memory[offset] = value
   def set_root(self, index, value):
@@ -1746,7 +1746,7 @@ class ResolveVisitor(Visitor):
       value = NAMESPACE[that.super]
       that.image.set_parent(value.image)
     else:
-      that.image.set_parent(HEAP.get_root(VOID_ROOT))
+      that.image.set_parent(HEAP.get_root(ROOT_INDEX['VoidValue']))
   def visit_class(self, that):
     self.resolve_class(that)
     Visitor.visit_class(self, that)
@@ -1845,8 +1845,10 @@ class BuiltinClassInfo:
     self.instance_type = instance_type
     self.class_name = class_name
 
-def define_root(n, Class, name, Name, NAME, allocator):
-  globals()[NAME + '_ROOT'] = int(n)
+ROOT_INDEX = { }
+def define_root(n, Class, name, Name, allocator):
+  assert Name not in ROOT_INDEX
+  ROOT_INDEX[Name] = int(n)
 
 def define_image_object_const(n, Type, Name):
   name = 'Image' + Type + '_' + Name
@@ -1855,8 +1857,8 @@ def define_image_object_const(n, Type, Name):
 BUILTIN_CLASSES = { }
 CLASSES_BY_ROOT_NAME = { }
 def define_builtin_class(Class, name, NAME):
-  root_name = NAME + '_CLASS_ROOT'
-  if root_name in globals(): root_index = globals()[root_name]
+  root_name = Class
+  if root_name in ROOT_INDEX: root_index = ROOT_INDEX[root_name]
   else: root_index = -1
   info = BuiltinClassInfo(root_index, name, NAME, Class)
   BUILTIN_CLASSES[Class] = info

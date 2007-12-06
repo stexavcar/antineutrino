@@ -140,6 +140,16 @@ Data *Heap::new_string(string value) {
   return result;
 }
 
+Data *Heap::new_stack(uint32_t height) {
+  uint32_t size = Stack::size_for(height);
+  Data *val = allocate_object(size, roots().stack_class());
+  if (is<AllocationFailed>(val)) return val;
+  Stack *result = cast<Stack>(val);
+  result->set_height(height);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
 Data *Heap::new_string(uint32_t length) {
   uint32_t size = String::size_for(length);
   Data *val = allocate_object(size, roots().string_class());

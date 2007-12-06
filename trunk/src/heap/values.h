@@ -146,10 +146,14 @@ DEFINE_REF_CLASS(Object);
 
 class Stack : public Object {
 public:
-  DECLARE_FIELD(uint32_t, length);
+  DECLARE_FIELD(uint32_t, height);
+  inline word *bottom();
 
-  static const uint32_t kLengthOffset = Object::kHeaderSize;
-  static const uint32_t kHeaderSize = kLengthOffset + kPointerSize;
+  static inline uint32_t size_for(uint32_t height);
+  static const uint32_t kInitialHeight = 2048;
+  
+  static const uint32_t kHeightOffset = Object::kHeaderSize;
+  static const uint32_t kHeaderSize = kHeightOffset + kPointerSize;
 };
 
 template <> class ref_traits<Stack> : public ref_traits<Object> {
@@ -259,6 +263,7 @@ class Buffer : public AbstractBuffer {
 class Code : public AbstractBuffer {
 public:
   inline uint16_t &at(uint32_t index);
+  inline uint16_t *start();
   inline uint32_t length();
 };
 
@@ -279,6 +284,7 @@ DEFINE_REF_CLASS(Code);
 class Tuple : public Object {
 public:
   DECLARE_FIELD(uint32_t, length);
+  inline Value **start();
   inline Value *&at(uint32_t index);
   inline void set(uint32_t index, Value *value);
   
@@ -360,7 +366,7 @@ public:
   DECLARE_FIELD(uint32_t, argc);
   FOR_EACH_LAMBDA_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  Value *call();
+  Value *call(Stack *stack);
   Data *clone(Heap &heap);
 
   string disassemble();

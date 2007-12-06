@@ -267,6 +267,21 @@ uint32_t String::size_for(uint32_t chars) {
 
 
 // -----------------
+// --- S t a c k ---
+// -----------------
+
+DEFINE_ACCESSORS(uint32_t, Stack, height, Height)
+
+uint32_t Stack::size_for(uint32_t height) {
+  return kHeaderSize + height;
+}
+
+word *Stack::bottom() {
+  return &ValuePointer::access_direct<word>(this, Stack::kHeaderSize);
+}
+
+
+// -----------------
 // --- T u p l e ---
 // -----------------
 
@@ -275,6 +290,10 @@ DEFINE_ACCESSORS(uint32_t, Tuple, length, Length)
 Value *&Tuple::at(uint32_t index) {
   ASSERT_C(OUT_OF_BOUNDS, index < length());
   return ValuePointer::access_field<Value*>(this, Tuple::kHeaderSize + kPointerSize * index);
+}
+
+Value **Tuple::start() {
+  return &ValuePointer::access_field<Value*>(this, Tuple::kHeaderSize);
 }
 
 void Tuple::set(uint32_t index, Value *value) {
@@ -374,6 +393,10 @@ uint32_t AbstractBuffer::size_for(uint32_t byte_count) {
 
 uint16_t &Code::at(uint32_t index) {
   return AbstractBuffer::at<uint16_t>(index);
+}
+
+uint16_t *Code::start() {
+  return &AbstractBuffer::at<uint16_t>(0);
 }
 
 uint32_t Code::length() {

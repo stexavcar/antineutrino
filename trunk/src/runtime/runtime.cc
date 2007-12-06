@@ -20,14 +20,14 @@ bool Runtime::initialize() {
 
 void Runtime::start() {
   Runtime::Scope runtime_scope(*this);
-  RefScope ref_scope;
   Data *value = roots().toplevel()->get(cast<String>(heap().new_string("main")));
   if (is<Nothing>(value)) {
     Conditions::get().error_occurred("Error: no function 'main' was defined.");
   } else if (!is<Lambda>(value)) {
     Conditions::get().error_occurred("Value 'main' is not a function.");
   }
-  cast<Lambda>(value)->call();
+  Stack *stack = cast<Stack>(heap().new_stack());
+  cast<Lambda>(value)->call(stack);
 }
 
 bool Runtime::load_image(Image &image) {

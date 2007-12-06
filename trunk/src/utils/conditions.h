@@ -32,6 +32,10 @@ public:
       int expected, const char *expected_source, int value,
       const char *value_source, Condition cause);
 
+  void check_lt_failed(const char* file_name, int line_number,
+      int value, const char *value_source, int limit,
+      const char *limit_source, Condition cause);
+
   void check_eq_failed(const char* file_name, int line_number,
       Value *expected, const char *expected_source,
       Value *value, const char *value_source, Condition cause);

@@ -5,7 +5,7 @@
 namespace neutrino {
 
 MAKE_ENUM_INFO_HEADER(RootName)
-#define MAKE_ENTRY(n, Type, name, Name, NAME, allocator) MAKE_ENUM_INFO_ENTRY(NAME##_ROOT)
+#define MAKE_ENTRY(n, Type, name, Name, allocator) MAKE_ENUM_INFO_ENTRY(Name##_ROOT)
 FOR_EACH_ROOT(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
@@ -26,7 +26,7 @@ bool Roots::initialize(Heap& heap) {
   
   // All the simple roots get allocated the same way, which is what
   // makes them simple.
-#define ALLOCATE_ROOT(n, Type, name, Name, NAME, allocator)          \
+#define ALLOCATE_ROOT(n, Type, name, Name, allocator)          \
   Data *name##_val = heap.allocator;                                 \
   if (is<AllocationFailed>(name##_val)) return false;                \
   name() = cast<Type>(name##_val);
@@ -34,7 +34,7 @@ FOR_EACH_SIMPLE_ROOT(ALLOCATE_ROOT)
 #undef ALLOCATE_ROOT
 
   Data *class_name;
-#define FIXUP_CLASS(n, Type, name, Name, NAME, allocator)            \
+#define FIXUP_CLASS(n, Type, name, Name, allocator)            \
   class_name = heap.new_string(#Name);                               \
   if (is<AllocationFailed>(class_name)) return false;                \
   name()->set_name(cast<String>(class_name));                        \
@@ -44,7 +44,7 @@ FOR_EACH_ROOT_CLASS(FIXUP_CLASS)
   return true;
 
 #ifdef PARANOID
-#define VALIDATE(n, Type, name, Name, NAME, allocator) name()->validate();
+#define VALIDATE(n, Type, name, Name, allocator) name()->validate();
 FOR_EACH_ROOT(VALIDATE)
 #undef VALIDATE
 #endif
