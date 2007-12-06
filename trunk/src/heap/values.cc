@@ -363,12 +363,16 @@ uint32_t Object::size_in_memory() {
     return Singleton::kSize;
   case LAMBDA_TYPE:
     return Lambda::kSize;
+  case BUILTIN_CALL_TYPE:
+    return BuiltinCall::kSize;
   case CLASS_TYPE:
     return Class::kSize;
   case TUPLE_TYPE:
     return Tuple::size_for(cast<Tuple>(this)->length());
   case STRING_TYPE:
     return String::size_for(cast<String>(this)->length());
+  case STACK_TYPE:
+    return Stack::size_for(cast<Stack>(this)->height());
   case CODE_TYPE: case BUFFER_TYPE:
     return AbstractBuffer::size_for(cast<AbstractBuffer>(this)->size<uint8_t>());
 #define MAKE_CASE(n, NAME, Name, name) case NAME##_TYPE: return Name::kSize;
@@ -463,8 +467,17 @@ void Object::for_each_field(FieldVisitor &visitor) {
       for (uint32_t i = 0; i < cast<Tuple>(this)->length(); i++)
         VISIT(cast<Tuple>(this)->at(i));
       break;
+    case BUILTIN_CALL_TYPE:
+      FOR_EACH_BUILTIN_CALL_FIELD(VISIT_FIELD, BuiltinCall);
+      break;
+    case LAMBDA_TYPE:
+      FOR_EACH_LAMBDA_FIELD(VISIT_FIELD, Lambda)
+      break;
     case CLASS_TYPE:
       FOR_EACH_CLASS_FIELD(VISIT_FIELD, Class)
+      break;
+    case STACK_TYPE:
+      cast<Stack>(this)->for_each_stack_field(visitor);
       break;
 #define MAKE_CASE(n, NAME, Name, name)                               \
     case NAME##_TYPE:                                                \

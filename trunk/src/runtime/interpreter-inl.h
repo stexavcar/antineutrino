@@ -26,43 +26,52 @@ Lambda *&Frame::lambda() {
 // --- S t a c k ---
 // -----------------
 
-OldStack::OldStack(Stack *stack)
+StackBuffer::StackBuffer(Stack *stack)
   : height_(stack->height())
   , data_(stack->bottom())
   , sp_(data_)
   , fp_(0) { }
 
-Value *OldStack::pop(uint32_t height) {
+void StackBuffer::reset(Stack *stack) {
+  uint32_t neutral_fp = fp_ - data_;
+  uint32_t neutral_sp = sp_ - data_;
+  height_ = stack->height();
+  data_ = stack->bottom();
+  fp_ = data_ + neutral_fp;
+  sp_ = data_ + neutral_sp;
+}
+
+Value *StackBuffer::pop(uint32_t height) {
   ASSERT(sp() > 0);
   Value *result = *reinterpret_cast<Value**>(sp_ - 1);
   sp_ -= height;
   return result;
 }
 
-Value *&OldStack::operator[](uint32_t index) {
+Value *&StackBuffer::operator[](uint32_t index) {
   ASSERT(sp() > bottom() + index);
   return *reinterpret_cast<Value**>(sp_ - 1 - index);
 }
 
-Value *&OldStack::argument(uint32_t index) {
+Value *&StackBuffer::argument(uint32_t index) {
   return *reinterpret_cast<Value**>(fp_ - index - 1);
 }
 
-Value *&OldStack::local(uint32_t index) {
+Value *&StackBuffer::local(uint32_t index) {
   return *reinterpret_cast<Value**>(fp_ + Frame::kSize + index);
 }
 
-Value *&OldStack::self(uint32_t argc) {
+Value *&StackBuffer::self(uint32_t argc) {
   return argument(argc + 1);
 }
 
 
-void OldStack::push(Value *value) {
+void StackBuffer::push(Value *value) {
   ASSERT(sp() < limit());
   *(sp_++) = reinterpret_cast<word>(value);
 }
 
-Frame OldStack::push_activation() {
+Frame StackBuffer::push_activation() {
   Frame result(sp_);
   result.prev_fp() = fp_;
   fp_ = sp_;
@@ -70,7 +79,7 @@ Frame OldStack::push_activation() {
   return result;
 }
 
-Frame OldStack::pop_activation() {
+Frame StackBuffer::pop_activation() {
   Frame top = this->top();
   sp_ = top.fp();
   fp_ = top.prev_fp();

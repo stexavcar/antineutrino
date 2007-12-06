@@ -19,7 +19,7 @@ MAKE_ENUM_INFO_FOOTER()
 
 class Log {
 public:
-  static inline void instruction(uint16_t opcode, OldStack &stack);
+  static inline void instruction(uint16_t opcode, StackBuffer &stack);
 private:
   static const bool kTraceInstructions = false;
 };
@@ -31,7 +31,7 @@ private:
 Value *Interpreter::call(Lambda *lambda, Stack *stack_obj) {
   RefScope scope;
   new_ref(lambda).ensure_compiled();
-  OldStack stack(stack_obj);
+  StackBuffer stack(stack_obj);
   stack.push(runtime().roots().vhoid()); // initial 'this'
   stack.push(runtime().roots().vhoid()); // initial lambda
   Frame top = stack.push_activation();
@@ -40,7 +40,10 @@ Value *Interpreter::call(Lambda *lambda, Stack *stack_obj) {
     Data *value = interpret(stack);
     if (is<Signal>(value)) {
       if (is<AllocationFailed>(value)) {
+        RefScope subscope;
+        ref<Stack> stack_ref = new_ref(stack_obj);
         Runtime::current().heap().memory().collect_garbage();
+        stack.reset(*stack_ref);
       } else {
         UNREACHABLE();
       }
@@ -81,7 +84,7 @@ Data *Interpreter::lookup_method(Class *chlass, Value *name) {
   return Nothing::make();
 }
 
-Data *Interpreter::interpret(OldStack &stack) {
+Data *Interpreter::interpret(StackBuffer &stack) {
   Frame current = stack.top();
   uint32_t pc = 0;
   uint16_t *code = cast<Code>(current.lambda()->code())->start();
@@ -315,7 +318,7 @@ Data *Interpreter::interpret(OldStack &stack) {
   }
 }
 
-void Log::instruction(uint16_t code, OldStack &stack) {
+void Log::instruction(uint16_t code, StackBuffer &stack) {
 #ifdef DEBUG
   if (kTraceInstructions) {
     EnumInfo<Opcode> info;
