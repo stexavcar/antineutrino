@@ -32,7 +32,9 @@ public:
    */
   Data *new_empty_class(InstanceType instance_type);
   
-  Data *new_stack(uint32_t height = Stack::kInitialHeight);
+  Data *new_task();
+  
+  Data *new_stack(uint32_t height);
   
   Data *new_string(string value);
 

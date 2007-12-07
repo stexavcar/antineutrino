@@ -148,6 +148,7 @@ class Stack : public Object {
 public:
   DECLARE_FIELD(uint32_t, height);
   inline word *bottom();
+  void for_each_stack_field(FieldVisitor &visitor);
 
   static inline uint32_t size_for(uint32_t height);
   static const uint32_t kInitialHeight = 2048;
@@ -160,6 +161,29 @@ template <> class ref_traits<Stack> : public ref_traits<Object> {
 };
 
 DEFINE_REF_CLASS(Stack);
+
+
+// ---------------
+// --- T a s k ---
+// ---------------
+
+#define FOR_EACH_TASK_FIELD(VISIT, arg)                              \
+  VISIT(Stack, stack, Stack, arg)
+
+class Task : public Object {
+public:
+  FOR_EACH_TASK_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uint32_t kStackOffset = Object::kHeaderSize;
+  static const uint32_t kSize = kStackOffset + kPointerSize;
+};
+
+template <> class ref_traits<Task> : public ref_traits<Object> {
+public:
+  FOR_EACH_TASK_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(Task);
 
 
 // -----------------------
@@ -366,7 +390,7 @@ public:
   DECLARE_FIELD(uint32_t, argc);
   FOR_EACH_LAMBDA_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  Value *call(Stack *stack);
+  Value *call(Task *task);
   Data *clone(Heap &heap);
 
   string disassemble();

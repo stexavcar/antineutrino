@@ -496,9 +496,9 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 // --- L a m b d a ---
 // -------------------
 
-Value *Lambda::call(Stack *stack) {
+Value *Lambda::call(Task *task) {
   Interpreter &interpreter = Runtime::current().interpreter();
-  return interpreter.call(this, stack);
+  return interpreter.call(this, task);
 }
 
 Data *Lambda::clone(Heap &heap) {

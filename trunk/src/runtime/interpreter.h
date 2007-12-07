@@ -82,7 +82,7 @@ private:
 class Interpreter {
 public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
-  Value *call(Lambda *lambda, Stack *stack);
+  Value *call(Lambda *lambda, Task *task);
 private:
   Data *interpret(StackBuffer &stack);
   inline Class *get_class(Value *val);

@@ -98,6 +98,15 @@ public:
   inline ImageTuple *table();
 };
 
+class ImageStack : public ImageObject {
+public:
+};
+
+class ImageTask : public ImageObject {
+public:
+  inline ImageStack *stack();
+};
+
 class ImageRoot : public ImageObject {
 public:
   inline uint32_t index();

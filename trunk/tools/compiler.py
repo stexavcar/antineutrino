@@ -1134,7 +1134,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 39
+  kRootCount  = 40
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0

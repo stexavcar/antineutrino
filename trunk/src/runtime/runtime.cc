@@ -26,8 +26,8 @@ void Runtime::start() {
   } else if (!is<Lambda>(value)) {
     Conditions::get().error_occurred("Value 'main' is not a function.");
   }
-  Stack *stack = cast<Stack>(heap().new_stack());
-  cast<Lambda>(value)->call(stack);
+  Task *task = cast<Task>(heap().new_task());
+  cast<Lambda>(value)->call(task);
 }
 
 bool Runtime::load_image(Image &image) {

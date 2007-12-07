@@ -17,6 +17,7 @@
 #define FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                    \
   VISIT(4,  DICTIONARY,             Dictionary,            dictionary)             \
   VISIT(12, METHOD,                 Method,                method)                 \
+  VISIT(16, TASK,                   Task,                  task)
 
 #define FOR_EACH_OBJECT_TYPE(VISIT)                                                \
   VISIT(1,  CLASS,                  Class,                 0)                      \
@@ -167,7 +168,9 @@
   VISIT(2, UnquoteExpression,     Size)                              \
   VISIT(1, QuoteTemplate,         ValueOffset)                       \
   VISIT(2, QuoteTemplate,         UnquotesOffset)                    \
-  VISIT(3, QuoteTemplate,         Size)
+  VISIT(3, QuoteTemplate,         Size)                              \
+  VISIT(1, Task,                  StackOffset)                       \
+  VISIT(2, Task,                  Size)
 
 
 // -----------------
@@ -217,7 +220,8 @@
   VISIT(35, Class,      local_definition_class,       LocalDefinition,       new_empty_class(LOCAL_DEFINITION_TYPE))       \
   VISIT(36, Class,      unquote_expression_class,     UnquoteExpression,     new_empty_class(UNQUOTE_EXPRESSION_TYPE))     \
   VISIT(37, Class,      quote_template_class,         QuoteTemplate,         new_empty_class(QUOTE_TEMPLATE_TYPE))         \
-  VISIT(38, Class,      stack_class,                  Stack,                 new_empty_class(STACK_TYPE))
+  VISIT(38, Class,      stack_class,                  Stack,                 new_empty_class(STACK_TYPE))                  \
+  VISIT(39, Class,      task_class,                   Task,                  new_empty_class(TASK_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \

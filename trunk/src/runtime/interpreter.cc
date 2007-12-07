@@ -28,10 +28,11 @@ private:
 // --- I n t e r p r e t e r ---
 // -----------------------------
 
-Value *Interpreter::call(Lambda *lambda, Stack *stack_obj) {
+Value *Interpreter::call(Lambda *lambda, Task *task) {
   RefScope scope;
+  ref<Task> task_ref = new_ref(task);
   new_ref(lambda).ensure_compiled();
-  StackBuffer stack(stack_obj);
+  StackBuffer stack(task->stack());
   stack.push(runtime().roots().vhoid()); // initial 'this'
   stack.push(runtime().roots().vhoid()); // initial lambda
   Frame top = stack.push_activation();
@@ -40,10 +41,8 @@ Value *Interpreter::call(Lambda *lambda, Stack *stack_obj) {
     Data *value = interpret(stack);
     if (is<Signal>(value)) {
       if (is<AllocationFailed>(value)) {
-        RefScope subscope;
-        ref<Stack> stack_ref = new_ref(stack_obj);
         Runtime::current().heap().memory().collect_garbage();
-        stack.reset(*stack_ref);
+        stack.reset(task_ref->stack());
       } else {
         UNREACHABLE();
       }
@@ -316,6 +315,10 @@ Data *Interpreter::interpret(StackBuffer &stack) {
       return Nothing::make();
     }
   }
+}
+
+void Stack::for_each_stack_field(FieldVisitor &visitor) {
+  
 }
 
 void Log::instruction(uint16_t code, StackBuffer &stack) {
