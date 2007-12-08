@@ -173,9 +173,13 @@ DEFINE_REF_CLASS(Stack);
 class Task : public Object {
 public:
   FOR_EACH_TASK_FIELD(DECLARE_OBJECT_FIELD, 0)
+  DECLARE_FIELD(uint32_t, sp);
+  DECLARE_FIELD(uint32_t, fp);
   
   static const uint32_t kStackOffset = Object::kHeaderSize;
-  static const uint32_t kSize = kStackOffset + kPointerSize;
+  static const uint32_t kSpOffset = kStackOffset + kPointerSize;
+  static const uint32_t kFpOffset = kSpOffset + kPointerSize;
+  static const uint32_t kSize = kFpOffset + kPointerSize;
 };
 
 template <> class ref_traits<Task> : public ref_traits<Object> {

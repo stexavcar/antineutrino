@@ -53,15 +53,15 @@ Value *&StackBuffer::operator[](uint32_t index) {
   return *reinterpret_cast<Value**>(sp_ - 1 - index);
 }
 
-Value *&StackBuffer::argument(uint32_t index) {
+Value *&Frame::argument(uint32_t index) {
   return *reinterpret_cast<Value**>(fp_ - index - 1);
 }
 
-Value *&StackBuffer::local(uint32_t index) {
+Value *&Frame::local(uint32_t index) {
   return *reinterpret_cast<Value**>(fp_ + Frame::kSize + index);
 }
 
-Value *&StackBuffer::self(uint32_t argc) {
+Value *&Frame::self(uint32_t argc) {
   return argument(argc + 1);
 }
 

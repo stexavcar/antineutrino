@@ -37,6 +37,9 @@ public:
   inline uint32_t &prev_pc();
   inline word *&prev_fp();
   inline Lambda *&lambda();
+  inline Value *&local(uint32_t index);
+  inline Value *&argument(uint32_t index);
+  inline Value *&self(uint32_t argc);
   word *fp() { return fp_; }
 
   static const uint32_t kPrevPcOffset = 0;
@@ -61,9 +64,6 @@ public:
   inline Frame pop_activation();
   inline Value *pop(uint32_t height = 1);
   inline Value *&operator[](uint32_t offset);
-  inline Value *&argument(uint32_t index);
-  inline Value *&local(uint32_t index);
-  inline Value *&self(uint32_t argc);
   inline void push(Value *value);
   word *&sp() { return sp_; }
   word *&fp() { return fp_; }

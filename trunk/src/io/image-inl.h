@@ -66,7 +66,6 @@ DEFINE_IMAGE_OBJECT_QUERY(Root, SINGLETON)
 FOR_EACH_SYNTAX_TREE_TYPE(DEFINE_SYNTAX_TREE_QUERY)
 #undef DEFINE_SYNTAX_TREE_QUERY
 
-
 template <class C>
 static inline C *image_cast(ImageData *val) {
   ASSERT(is<C>(val));

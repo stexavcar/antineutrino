@@ -121,14 +121,14 @@ Data *Interpreter::interpret(StackBuffer &stack) {
     }
     case OC_LOCAL: {
       uint16_t index = code[pc + 1];
-      Value *value = stack.local(index);
+      Value *value = current.local(index);
       stack.push(value);
       pc += OpcodeInfo<OC_LOCAL>::kSize;
       break;
     }
     case OC_ARGUMENT: {
       uint16_t index = code[pc + 1];
-      Value *value = stack.argument(index);
+      Value *value = current.argument(index);
       stack.push(value);
       pc += OpcodeInfo<OC_ARGUMENT>::kSize;
       break;
@@ -190,7 +190,7 @@ Data *Interpreter::interpret(StackBuffer &stack) {
       uint16_t argc = code[pc + 1];
       uint16_t index = code[pc + 2];
       builtin *builtin = Builtins::get(index);
-      Arguments args(runtime(), argc, stack);
+      Arguments args(runtime(), argc, current);
       Value *value = cast<Value>(builtin(args));
       stack.push(value);
       pc += OpcodeInfo<OC_BUILTIN>::kSize;

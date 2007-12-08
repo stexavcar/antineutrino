@@ -8,16 +8,16 @@ namespace neutrino {
 
 class Arguments {
 public:
-  inline Arguments(Runtime &runtime, uint32_t argc, StackBuffer &stack);
+  inline Arguments(Runtime &runtime, uint32_t argc, Frame &stack);
   inline Value *self();
   inline Value *operator[](uint32_t index);
   Runtime &runtime() { return runtime_; }
   uint32_t count() { return count_; }
 private:
-  StackBuffer &stack() { return stack_; }
+  Frame &frame() { return frame_; }
   Runtime &runtime_;
   uint32_t count_;
-  StackBuffer &stack_;
+  Frame &frame_;
 };
 
 typedef Data *(builtin)(Arguments&);
