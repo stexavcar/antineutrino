@@ -19,7 +19,7 @@ MAKE_ENUM_INFO_FOOTER()
 
 class Log {
 public:
-  static inline void instruction(uint16_t opcode, StackBuffer &stack);
+  static inline void instruction(uint16_t opcode, Frame &frame);
 private:
   static const bool kTraceInstructions = false;
 };
@@ -32,17 +32,17 @@ Value *Interpreter::call(Lambda *lambda, Task *task) {
   RefScope scope;
   ref<Task> task_ref = new_ref(task);
   new_ref(lambda).ensure_compiled();
-  StackBuffer stack(task->stack());
-  stack.push(runtime().roots().vhoid()); // initial 'this'
-  stack.push(runtime().roots().vhoid()); // initial lambda
-  Frame top = stack.push_activation();
-  top.lambda() = lambda;
+  word *bottom = task->stack()->bottom() + Frame::accessible_below_fp(0);
+  Frame frame(bottom, bottom + Frame::kSize);
+  frame.self(0) = runtime().roots().vhoid();
+  frame.lambda() = lambda;
+  frame.prev_fp() = 0;
   while (true) {
-    Data *value = interpret(stack);
+    Data *value = interpret(frame);
     if (is<Signal>(value)) {
       if (is<AllocationFailed>(value)) {
         Runtime::current().heap().memory().collect_garbage();
-        stack.reset(task_ref->stack());
+        UNREACHABLE();
       } else {
         UNREACHABLE();
       }
@@ -83,27 +83,26 @@ Data *Interpreter::lookup_method(Class *chlass, Value *name) {
   return Nothing::make();
 }
 
-Data *Interpreter::interpret(StackBuffer &stack) {
-  Frame current = stack.top();
+Data *Interpreter::interpret(Frame current) {
   uint32_t pc = 0;
   uint16_t *code = cast<Code>(current.lambda()->code())->start();
   Value **constant_pool = cast<Tuple>(current.lambda()->literals())->start();
   while (true) {
     ASSERT_LT(pc, cast<Code>(current.lambda()->code())->length());
     uint16_t oc = code[pc];
-    Log::instruction(oc, stack);
+    Log::instruction(oc, current);
     switch (oc) {
     case OC_PUSH: {
       uint16_t index = code[pc + 1];
       Value *value = constant_pool[index];
-      stack.push(value);
+      current.push(value);
       pc += OpcodeInfo<OC_PUSH>::kSize;
       break;
     }
     case OC_SLAP: {
       uint16_t height = code[pc + 1];
-      stack[height] = stack[0];
-      stack.pop(height);
+      current[height] = current[0];
+      current.pop(height);
       pc += OpcodeInfo<OC_SLAP>::kSize;
       break;
     }
@@ -112,9 +111,9 @@ Data *Interpreter::interpret(StackBuffer &stack) {
       Value *name = cast<Tuple>(current.lambda()->literals())->at(index);
       Data *value = runtime().toplevel()->get(name);
       if (is<Nothing>(value)) {
-        stack.push(runtime().roots().vhoid());
+        current.push(runtime().roots().vhoid());
       } else {
-        stack.push(cast<Value>(value));
+        current.push(cast<Value>(value));
       }
       pc += OpcodeInfo<OC_GLOBAL>::kSize;
       break;
@@ -122,19 +121,19 @@ Data *Interpreter::interpret(StackBuffer &stack) {
     case OC_LOCAL: {
       uint16_t index = code[pc + 1];
       Value *value = current.local(index);
-      stack.push(value);
+      current.push(value);
       pc += OpcodeInfo<OC_LOCAL>::kSize;
       break;
     }
     case OC_ARGUMENT: {
       uint16_t index = code[pc + 1];
       Value *value = current.argument(index);
-      stack.push(value);
+      current.push(value);
       pc += OpcodeInfo<OC_ARGUMENT>::kSize;
       break;
     }
     case OC_IF_TRUE: {
-      Value *value = stack.pop();
+      Value *value = current.pop();
       if (is<True>(value)) {
         uint16_t index = code[pc + 1];
         pc = index;
@@ -152,7 +151,7 @@ Data *Interpreter::interpret(StackBuffer &stack) {
       uint16_t name_index = code[pc + 1];
       Value *name = cast<Tuple>(current.lambda()->literals())->at(name_index);
       uint16_t argc = code[pc + 2];
-      Value *recv = stack[argc + 1];
+      Value *recv = current[argc + 1];
       Class *chlass = get_class(recv);
       Data *lookup_result = lookup_method(chlass, name);
       if (is<Nothing>(lookup_result)) {
@@ -162,7 +161,7 @@ Data *Interpreter::interpret(StackBuffer &stack) {
             recv_str.chars(), name_str.chars());
       }
       Method *method = cast<Method>(lookup_result);
-      Frame next = stack.push_activation();
+      Frame next = current.push_activation();
       next.prev_pc() = pc + OpcodeInfo<OC_INVOKE>::kSize;
       next.lambda() = method->lambda();
       new_ref(method->lambda()).ensure_compiled();
@@ -174,10 +173,10 @@ Data *Interpreter::interpret(StackBuffer &stack) {
     }
     case OC_CALL: {
       uint16_t argc = code[pc + 1];
-      Value *value = stack[argc];
+      Value *value = current[argc];
       Lambda *fun = cast<Lambda>(value);
       new_ref(fun).ensure_compiled();
-      Frame next = stack.push_activation();
+      Frame next = current.push_activation();
       next.prev_pc() = pc + OpcodeInfo<OC_CALL>::kSize;
       next.lambda() = fun;
       code = cast<Code>(fun->code())->start();
@@ -192,44 +191,44 @@ Data *Interpreter::interpret(StackBuffer &stack) {
       builtin *builtin = Builtins::get(index);
       Arguments args(runtime(), argc, current);
       Value *value = cast<Value>(builtin(args));
-      stack.push(value);
+      current.push(value);
       pc += OpcodeInfo<OC_BUILTIN>::kSize;
       break;
     }
     case OC_RETURN: {
-      Value *value = stack.pop();
+      Value *value = current.pop();
       if (current.prev_fp() == 0)
         return value;
       pc = current.prev_pc();
-      current = stack.pop_activation();
+      current = current.pop_activation();
       code = cast<Code>(current.lambda()->code())->start();
       constant_pool = cast<Tuple>(current.lambda()->literals())->start();
-      stack[0] = value;
+      current[0] = value;
       break;
     }
     case OC_VOID: {
-      stack.push(runtime().roots().vhoid());
+      current.push(runtime().roots().vhoid());
       pc += OpcodeInfo<OC_VOID>::kSize;
       break;
     }
     case OC_NULL: {
-      stack.push(runtime().roots().nuhll());
+      current.push(runtime().roots().nuhll());
       pc += OpcodeInfo<OC_NULL>::kSize;
       break;
     }
     case OC_TRUE: {
-      stack.push(runtime().roots().thrue());
+      current.push(runtime().roots().thrue());
       pc += OpcodeInfo<OC_TRUE>::kSize;
       break;
     }
     case OC_FALSE: {
-      stack.push(runtime().roots().fahlse());
+      current.push(runtime().roots().fahlse());
       pc += OpcodeInfo<OC_FALSE>::kSize;
       break;
     }
     case OC_POP: {
       uint16_t height = code[pc + 1];
-      stack.pop(height);
+      current.pop(height);
       pc += OpcodeInfo<OC_POP>::kSize;
       break;
     }
@@ -239,14 +238,14 @@ Data *Interpreter::interpret(StackBuffer &stack) {
       if (is<Signal>(val)) return val;
       Tuple *result = cast<Tuple>(val);
       for (int32_t i = length - 1; i >= 0; i--)
-        result->set(i, stack.pop());
-      stack.push(result);
+        result->set(i, current.pop());
+      current.push(result);
       pc += OpcodeInfo<OC_TUPLE>::kSize;
       break;
     }
     case OC_CHKHGT: {
       uint16_t expected = code[pc + 1];
-      uint16_t height = (stack.sp() - stack.fp()) - Frame::kSize;
+      uint16_t height = (current.sp() - current.fp()) - Frame::kSize;
       CHECK_EQ(expected, height);
       pc += OpcodeInfo<OC_CHKHGT>::kSize;
       break;
@@ -255,19 +254,19 @@ Data *Interpreter::interpret(StackBuffer &stack) {
       uint32_t terms = code[pc + 1];
       uint32_t length = 0;
       for (uint32_t i = 0; i < terms; i++)
-        length += cast<String>(stack[i])->length();
+        length += cast<String>(current[i])->length();
       Data *val = runtime().heap().new_string(length);
       if (is<Signal>(val)) return val;
       String *result = cast<String>(val);
       uint32_t cursor = 0;
       for (int32_t i = terms - 1; i >= 0; i--) {
-        String *term = cast<String>(stack[i]);
+        String *term = cast<String>(current[i]);
         for (uint32_t j = 0; j < term->length(); j++)
           result->set(cursor + j, term->at(j));
         cursor += term->length();
       }
-      stack.pop(terms);
-      stack.push(result);
+      current.pop(terms);
+      current.push(result);
       pc += OpcodeInfo<OC_CONCAT>::kSize;
       break;
     }
@@ -279,19 +278,19 @@ Data *Interpreter::interpret(StackBuffer &stack) {
       if (is<Signal>(outers_val)) return outers_val;
       Tuple *outers = cast<Tuple>(outers_val);
       for (uint32_t i = 0; i < outer_count; i++)
-        outers->set(outer_count - i - 1, stack.pop());
+        outers->set(outer_count - i - 1, current.pop());
       Data *clone_val = lambda->clone(runtime().heap());
       if (is<Signal>(clone_val)) return clone_val;
       Lambda *clone = cast<Lambda>(clone_val);
       clone->set_outers(outers);
-      stack.push(clone);
+      current.push(clone);
       pc += OpcodeInfo<OC_CLOSURE>::kSize;
       break;
     }
     case OC_OUTER: {
       uint32_t index = code[pc + 1];
       Value *value = current.lambda()->outers()->at(index);
-      stack.push(value);
+      current.push(value);
       pc += OpcodeInfo<OC_OUTER>::kSize;
       break;
     }
@@ -301,12 +300,12 @@ Data *Interpreter::interpret(StackBuffer &stack) {
       if (is<Signal>(unquotes_val)) return unquotes_val;
       Tuple *unquotes = cast<Tuple>(unquotes_val);
       for (uint32_t i = 0; i < unquote_count; i++)
-        unquotes->set(unquote_count - i - 1, stack.pop());
-      SyntaxTree *tree = cast<SyntaxTree>(stack.pop());
+        unquotes->set(unquote_count - i - 1, current.pop());
+      SyntaxTree *tree = cast<SyntaxTree>(current.pop());
       Data *result_val = runtime().heap().new_quote_template(tree, unquotes);
       if (is<Signal>(result_val)) return result_val;
       QuoteTemplate *result = cast<QuoteTemplate>(result_val);
-      stack.push(result);
+      current.push(result);
       pc += OpcodeInfo<OC_QUOTE>::kSize;
       break;
     }
@@ -321,12 +320,12 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
   
 }
 
-void Log::instruction(uint16_t code, StackBuffer &stack) {
+void Log::instruction(uint16_t code, Frame &frame) {
 #ifdef DEBUG
   if (kTraceInstructions) {
     EnumInfo<Opcode> info;
     string name = info.get_name_for(code);
-    uint16_t height = (stack.sp() - stack.fp()) - Frame::kSize;
+    uint16_t height = (frame.sp() - frame.fp()) - Frame::kSize;
     printf("%s (%i)\n", name.chars(), height);
   }
 #endif

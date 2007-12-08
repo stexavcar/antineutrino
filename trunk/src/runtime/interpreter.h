@@ -33,14 +33,26 @@ FOR_EACH_OPCODE(DECLARE_OPCODE)
 
 class Frame {
 public:
-  Frame(word *fp) : fp_(fp) { }
+  Frame(word *fp, word *sp) : fp_(fp), sp_(sp) { }
   inline uint32_t &prev_pc();
   inline word *&prev_fp();
   inline Lambda *&lambda();
   inline Value *&local(uint32_t index);
   inline Value *&argument(uint32_t index);
   inline Value *&self(uint32_t argc);
+  inline Value *pop(uint32_t height = 1);
+  inline Value *&operator[](uint32_t offset);
+  inline Frame push_activation();
+  inline Frame pop_activation();
+  inline void push(Value *value);
   word *fp() { return fp_; }
+  word *sp() { return sp_; }
+  
+  /**
+   * Returns the number of stack entries below the current fp that may
+   * be accessed through this stack frame.
+   */
+  static inline uint32_t accessible_below_fp(uint32_t argc) { return argc + 2; }
 
   static const uint32_t kPrevPcOffset = 0;
   static const uint32_t kPrevFpOffset = kPrevPcOffset + 1;
@@ -49,32 +61,9 @@ public:
 
 private:
   word *fp_;
-};
-
-/**
- * The stack used by the interpreter.
- */
-
-class StackBuffer {
-public:
-  inline StackBuffer(Stack *stack);
-  inline void reset(Stack *stack);
-  Frame top() { return Frame(fp_); }
-  inline Frame push_activation();
-  inline Frame pop_activation();
-  inline Value *pop(uint32_t height = 1);
-  inline Value *&operator[](uint32_t offset);
-  inline void push(Value *value);
-  word *&sp() { return sp_; }
-  word *&fp() { return fp_; }
-  word *bottom() { return data_; }
-  word *limit() { return data_ + height_; }
-private:
-  uint32_t height_;
-  word *data_;
   word *sp_;
-  word *fp_;
 };
+
 
 /**
  * The bytecode interpreter.
@@ -84,7 +73,7 @@ public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
   Value *call(Lambda *lambda, Task *task);
 private:
-  Data *interpret(StackBuffer &stack);
+  Data *interpret(Frame frame);
   inline Class *get_class(Value *val);
   inline Data *lookup_method(Class *chlass, Value *name);
   Runtime &runtime() { return runtime_; }
