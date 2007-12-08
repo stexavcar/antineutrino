@@ -3,6 +3,7 @@
 #include "runtime/builtins-inl.h"
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
+#include "utils/vector-inl.h"
 #include "utils/checks.h"
 
 namespace neutrino {
@@ -37,19 +38,31 @@ Value *Interpreter::call(Lambda *lambda, Task *task) {
   frame.self(0) = runtime().roots().vhoid();
   frame.lambda() = lambda;
   frame.prev_fp() = 0;
+  uint32_t pc = 0;
   while (true) {
-    Data *value = interpret(frame);
+    Data *value = interpret(task, frame, &pc);
     if (is<Signal>(value)) {
+      frame.push_activation();
+      task->stack()->set_fp(frame.fp() - task->stack()->bottom());
       if (is<AllocationFailed>(value)) {
+        Stack *old_stack = task_ref->stack();
         Runtime::current().heap().memory().collect_garbage();
+        frame.reset(old_stack, task_ref->stack());
         UNREACHABLE();
       } else {
         UNREACHABLE();
       }
+      frame.pop_activation();
     } else {
       return cast<Value>(value);
     }
   }
+}
+
+void Frame::reset(Stack *old_stack, Stack *new_stack) {
+  uint32_t delta = new_stack->bottom() - old_stack->bottom();
+  fp_ += delta;
+  sp_ += delta;
 }
 
 /**
@@ -83,12 +96,31 @@ Data *Interpreter::lookup_method(Class *chlass, Value *name) {
   return Nothing::make();
 }
 
-Data *Interpreter::interpret(Frame current) {
-  uint32_t pc = 0;
-  uint16_t *code = cast<Code>(current.lambda()->code())->start();
-  Value **constant_pool = cast<Tuple>(current.lambda()->literals())->start();
+/**
+ * A stack-allocated instance of this class ensures that execution
+ * taking place on the specified stack is wrapped up correctly and
+ * that the current execution status is stored in the task so
+ * execution can continue afterwards.
+ */
+class ExecutionWrapUp {
+public:
+  inline ExecutionWrapUp(uint32_t *pc_from, uint32_t *pc_to) {
+    pc_from_ = pc_from;
+    pc_to_ = pc_to;
+  }
+  inline ~ExecutionWrapUp() {
+    *pc_to_ = *pc_from_;
+  }
+private:
+  uint32_t *pc_from_, *pc_to_;
+};
+
+Data *Interpreter::interpret(Task *task, Frame &current, uint32_t *pc_ptr) {
+  uint32_t pc = *pc_ptr;
+  ExecutionWrapUp wrap_up(&pc, pc_ptr);
+  vector<uint16_t> code = cast<Code>(current.lambda()->code())->buffer();
+  vector<Value*> constant_pool = cast<Tuple>(current.lambda()->literals())->buffer();
   while (true) {
-    ASSERT_LT(pc, cast<Code>(current.lambda()->code())->length());
     uint16_t oc = code[pc];
     Log::instruction(oc, current);
     switch (oc) {
@@ -165,8 +197,8 @@ Data *Interpreter::interpret(Frame current) {
       next.prev_pc() = pc + OpcodeInfo<OC_INVOKE>::kSize;
       next.lambda() = method->lambda();
       new_ref(method->lambda()).ensure_compiled();
-      code = cast<Code>(method->lambda()->code())->start();
-      constant_pool = cast<Tuple>(method->lambda()->literals())->start();
+      code = cast<Code>(method->lambda()->code())->buffer();
+      constant_pool = cast<Tuple>(method->lambda()->literals())->buffer();
       current = next;
       pc = 0;
       break;
@@ -179,8 +211,8 @@ Data *Interpreter::interpret(Frame current) {
       Frame next = current.push_activation();
       next.prev_pc() = pc + OpcodeInfo<OC_CALL>::kSize;
       next.lambda() = fun;
-      code = cast<Code>(fun->code())->start();
-      constant_pool = cast<Tuple>(fun->literals())->start();
+      code = cast<Code>(fun->code())->buffer();
+      constant_pool = cast<Tuple>(fun->literals())->buffer();
       current = next;
       pc = 0;
       break;
@@ -197,12 +229,12 @@ Data *Interpreter::interpret(Frame current) {
     }
     case OC_RETURN: {
       Value *value = current.pop();
-      if (current.prev_fp() == 0)
+      if (current.is_bottom())
         return value;
       pc = current.prev_pc();
       current = current.pop_activation();
-      code = cast<Code>(current.lambda()->code())->start();
-      constant_pool = cast<Tuple>(current.lambda()->literals())->start();
+      code = cast<Code>(current.lambda()->code())->buffer();
+      constant_pool = cast<Tuple>(current.lambda()->literals())->buffer();
       current[0] = value;
       break;
     }
@@ -317,7 +349,12 @@ Data *Interpreter::interpret(Frame current) {
 }
 
 void Stack::for_each_stack_field(FieldVisitor &visitor) {
-  
+  /*
+  Frame current(bottom() + this->fp());
+  while (!current.is_bottom()) {
+    current = current.pop_activation();
+  }
+  */
 }
 
 void Log::instruction(uint16_t code, Frame &frame) {

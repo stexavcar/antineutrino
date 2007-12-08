@@ -491,6 +491,7 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 }
 
 #undef VISIT
+#undef VISIT_FIELD
 
 // -------------------
 // --- L a m b d a ---

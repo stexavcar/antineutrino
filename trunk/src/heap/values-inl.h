@@ -5,6 +5,7 @@
 #include "heap/pointer-inl.h"
 #include "heap/ref-inl.h"
 #include "heap/values.h"
+#include "utils/vector-inl.h"
 #include "utils/checks.h"
 #include "utils/types-inl.h"
 
@@ -271,6 +272,7 @@ uint32_t String::size_for(uint32_t chars) {
 // -----------------
 
 DEFINE_ACCESSORS(uint32_t, Stack, height, Height)
+DEFINE_ACCESSORS(uint32_t, Stack, fp, Fp)
 
 uint32_t Stack::size_for(uint32_t height) {
   return kHeaderSize + height;
@@ -292,8 +294,8 @@ Value *&Tuple::at(uint32_t index) {
   return ValuePointer::access_field<Value*>(this, Tuple::kHeaderSize + kPointerSize * index);
 }
 
-Value **Tuple::start() {
-  return &ValuePointer::access_field<Value*>(this, Tuple::kHeaderSize);
+vector<Value*> Tuple::buffer() {
+  return NEW_VECTOR(Value*, &ValuePointer::access_direct<Value*>(this, Tuple::kHeaderSize), length());
 }
 
 void Tuple::set(uint32_t index, Value *value) {
@@ -381,6 +383,11 @@ T &AbstractBuffer::at(uint32_t index) {
   return ValuePointer::access_direct<T>(this, kHeaderSize + index * sizeof(T));
 }
 
+template <typename T>
+vector<T> AbstractBuffer::buffer() {
+  return NEW_VECTOR(T, &ValuePointer::access_direct<T>(this, kHeaderSize), size<T>());
+}
+
 uint32_t AbstractBuffer::size_for(uint32_t byte_count) {
   uint32_t raw_size = kHeaderSize + byte_count;
   return ValuePointer::align(raw_size);
@@ -395,8 +402,8 @@ uint16_t &Code::at(uint32_t index) {
   return AbstractBuffer::at<uint16_t>(index);
 }
 
-uint16_t *Code::start() {
-  return &AbstractBuffer::at<uint16_t>(0);
+vector<uint16_t> Code::buffer() {
+  return AbstractBuffer::buffer<uint16_t>();
 }
 
 uint32_t Code::length() {

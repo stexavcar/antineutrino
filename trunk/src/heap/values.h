@@ -2,6 +2,7 @@
 #define _VALUES
 
 #include "heap/ref.h"
+#include "utils/vector.h"
 #include "utils/consts.h"
 #include "utils/globals.h"
 #include "utils/string.h"
@@ -127,6 +128,8 @@ public:
   
   void for_each_field(FieldVisitor &visitor);
   uint32_t size_in_memory();
+  void preprocess();
+  void postprocess();
   
   static const int kHeaderOffset = 0;
   static const int kHeaderSize   = kHeaderOffset + kPointerSize;
@@ -147,6 +150,7 @@ DEFINE_REF_CLASS(Object);
 class Stack : public Object {
 public:
   DECLARE_FIELD(uint32_t, height);
+  DECLARE_FIELD(uint32_t, fp);
   inline word *bottom();
   void for_each_stack_field(FieldVisitor &visitor);
 
@@ -154,7 +158,8 @@ public:
   static const uint32_t kInitialHeight = 2048;
   
   static const uint32_t kHeightOffset = Object::kHeaderSize;
-  static const uint32_t kHeaderSize = kHeightOffset + kPointerSize;
+  static const uint32_t kFpOffset = kHeightOffset + kPointerSize;
+  static const uint32_t kHeaderSize = kFpOffset + kPointerSize;
 };
 
 template <> class ref_traits<Stack> : public ref_traits<Object> {
@@ -173,13 +178,9 @@ DEFINE_REF_CLASS(Stack);
 class Task : public Object {
 public:
   FOR_EACH_TASK_FIELD(DECLARE_OBJECT_FIELD, 0)
-  DECLARE_FIELD(uint32_t, sp);
-  DECLARE_FIELD(uint32_t, fp);
   
   static const uint32_t kStackOffset = Object::kHeaderSize;
-  static const uint32_t kSpOffset = kStackOffset + kPointerSize;
-  static const uint32_t kFpOffset = kSpOffset + kPointerSize;
-  static const uint32_t kSize = kFpOffset + kPointerSize;
+  static const uint32_t kSize = kStackOffset + kPointerSize;
 };
 
 template <> class ref_traits<Task> : public ref_traits<Object> {
@@ -236,6 +237,8 @@ public:
    */
   template <typename T> inline T &at(uint32_t index);
   
+  template <typename T> inline vector<T> buffer();
+  
   static inline uint32_t size_for(uint32_t byte_count);
   
   static const int kSizeOffset = Object::kHeaderSize;
@@ -291,7 +294,7 @@ class Buffer : public AbstractBuffer {
 class Code : public AbstractBuffer {
 public:
   inline uint16_t &at(uint32_t index);
-  inline uint16_t *start();
+  inline vector<uint16_t> buffer();
   inline uint32_t length();
 };
 
@@ -312,7 +315,7 @@ DEFINE_REF_CLASS(Code);
 class Tuple : public Object {
 public:
   DECLARE_FIELD(uint32_t, length);
-  inline Value **start();
+  inline vector<Value*> buffer();
   inline Value *&at(uint32_t index);
   inline void set(uint32_t index, Value *value);
   

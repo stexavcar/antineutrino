@@ -22,6 +22,10 @@ Lambda *&Frame::lambda() {
   return reinterpret_cast<Lambda**>(fp_)[kLambdaOffset];
 }
 
+bool Frame::is_bottom() {
+  return prev_fp() == 0;
+}
+
 // -----------------
 // --- S t a c k ---
 // -----------------

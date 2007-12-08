@@ -157,6 +157,7 @@ Data *Heap::new_stack(uint32_t height) {
   if (is<AllocationFailed>(val)) return val;
   Stack *result = cast<Stack>(val);
   result->set_height(height);
+  result->set_fp(0);
   IF_PARANOID(result->validate());
   return result;
 }

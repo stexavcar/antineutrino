@@ -34,6 +34,7 @@ FOR_EACH_OPCODE(DECLARE_OPCODE)
 class Frame {
 public:
   Frame(word *fp, word *sp) : fp_(fp), sp_(sp) { }
+  Frame(word *fp) : fp_(fp), sp_(fp + kSize) { }
   inline uint32_t &prev_pc();
   inline word *&prev_fp();
   inline Lambda *&lambda();
@@ -45,8 +46,10 @@ public:
   inline Frame push_activation();
   inline Frame pop_activation();
   inline void push(Value *value);
+  inline bool is_bottom();
   word *fp() { return fp_; }
   word *sp() { return sp_; }
+  void reset(Stack *old_stack, Stack *new_stack);
   
   /**
    * Returns the number of stack entries below the current fp that may
@@ -73,7 +76,7 @@ public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
   Value *call(Lambda *lambda, Task *task);
 private:
-  Data *interpret(Frame frame);
+  Data *interpret(Task *task, Frame &frame, uint32_t *pc_ptr);
   inline Class *get_class(Value *val);
   inline Data *lookup_method(Class *chlass, Value *name);
   Runtime &runtime() { return runtime_; }
