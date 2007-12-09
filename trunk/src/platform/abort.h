@@ -5,6 +5,7 @@ namespace neutrino {
 
 class Abort {
 public:
+  static bool setup_signal_handler();
   static void abort();
 };
 

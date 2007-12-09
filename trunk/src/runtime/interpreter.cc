@@ -345,6 +345,7 @@ Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
   }
 }
 
+/*
 static void print_stack(Stack *stack, word* offset = 0) {
   printf("--- stack ---\n");
   Frame current(stack->bottom() + stack->fp());
@@ -366,9 +367,12 @@ static void print_stack(Stack *stack, word* offset = 0) {
     else current.unwind(offset);
   }
 }
+*/
 
+#ifdef DEBUG
 void Stack::validate_stack() {
 }
+#endif
 
 void Stack::recook_stack() {
   word *bot = bottom();

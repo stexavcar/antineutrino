@@ -1,10 +1,11 @@
 #include <stdio.h>
 
 #include "io/image.h"
+#include "platform/abort.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
 
-using namespace neutrino;
+namespace neutrino {
 
 class Main {
 public:
@@ -13,6 +14,7 @@ public:
 };
 
 void Main::main(list<char*> &args) {
+  if (!Abort::setup_signal_handler()) return;
   Runtime runtime;
   runtime.initialize();
   Runtime::Scope runtime_scope(runtime);
@@ -61,11 +63,13 @@ Image *Main::read_image(char *name) {
   return new Image(size, buffer);
 }
 
+}
+
 /**
  * Entry point.
  */
 int main(int argc, char *argv[]) {
-  list<char*> args(argv, argc);
-  Main::main(args);
+  neutrino::list<char*> args(argv, argc);
+  neutrino::Main::main(args);
   return 0;
 }

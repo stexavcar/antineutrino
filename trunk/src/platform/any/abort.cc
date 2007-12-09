@@ -4,7 +4,11 @@
 
 namespace neutrino {
 
-void PlatformAbort::abort() {
+void Abort::setup_signal_handler() {
+  
+}
+
+void Abort::abort() {
   ::abort();
 }
 
