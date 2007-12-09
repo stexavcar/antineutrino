@@ -155,6 +155,7 @@ public:
   
   IF_DEBUG(void validate_stack());
   void for_each_stack_field(FieldVisitor &visitor);
+  void create_bottom_activation();
   
   /**
    * Converts all derived pointers in this object into neutral

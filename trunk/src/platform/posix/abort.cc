@@ -86,6 +86,7 @@ bool Abort::setup_signal_handler() {
   bool success = true;
   success = success && install_handler(SIGSEGV, print_error_report);
   success = success && install_handler(SIGFPE, print_error_report);
+  success = success && install_handler(SIGBUS, print_error_report);
   if (!success) {
     Conditions::get().error_occurred("Error setting up signal handlers.");
     return false;

@@ -158,6 +158,7 @@ Data *Heap::new_stack(uint32_t height) {
   Stack *result = cast<Stack>(val);
   result->set_height(height);
   result->set_fp(0);
+  result->create_bottom_activation();
   IF_PARANOID(result->validate());
   return result;
 }

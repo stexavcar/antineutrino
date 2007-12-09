@@ -29,29 +29,33 @@ private:
 // --- I n t e r p r e t e r ---
 // -----------------------------
 
-Value *Interpreter::call(Lambda *lambda, Task *task) {
+Value *Interpreter::call(Lambda *lambda, Task *initial_task) {
   RefScope scope;
-  ref<Task> task_ref = new_ref(task);
+  ref<Task> task = new_ref(initial_task);
   new_ref(lambda).ensure_compiled();
-  word *bottom = task->stack()->bottom() + Frame::accessible_below_fp(0);
-  Frame frame(bottom, bottom + Frame::kSize);
+  Frame frame(task->stack()->bottom() + task->stack()->fp());
   frame.self(0) = runtime().roots().vhoid();
   frame.lambda() = lambda;
   frame.prev_fp() = 0;
+  IF_PARANOID(task->stack()->validate());
   uint32_t pc = 0;
   while (true) {
     Data *value = interpret(frame, &pc);
     if (is<Signal>(value)) {
       frame.push_activation();
       task->stack()->set_fp(frame.fp() - task->stack()->bottom());
+      frame.prev_pc() = pc;
+      frame.lambda() = lambda;
+      IF_PARANOID(task->stack()->validate());
       if (is<AllocationFailed>(value)) {
-        Stack *old_stack = task_ref->stack();
+        Stack *old_stack = task->stack();
         Runtime::current().heap().memory().collect_garbage();
-        frame.reset(old_stack, task_ref->stack());
+        frame.reset(old_stack, task->stack());
       } else {
         UNREACHABLE();
       }
       frame.unwind();
+      IF_PARANOID(task->stack()->validate());
     } else {
       return cast<Value>(value);
     }
@@ -371,8 +375,24 @@ static void print_stack(Stack *stack, word* offset = 0) {
 
 #ifdef DEBUG
 void Stack::validate_stack() {
+  Frame frame(bottom() + fp());
+  while (!frame.is_bottom()) {
+    GC_SAFE_CHECK_IS_C(VALIDATION, Lambda, frame.lambda());
+    uint32_t local_count = frame.sp() - (frame.fp() + Frame::kSize);
+    for (uint32_t i = 0; i < local_count; i++)
+      GC_SAFE_CHECK_IS_C(VALIDATION, Value, frame[i]);
+    frame.unwind();
+  }
 }
 #endif
+
+void Stack::create_bottom_activation() {
+  set_fp(Frame::accessible_below_fp(0));
+  Frame frame(bottom() + fp());
+  frame.self(0) = 0;
+  frame.lambda() = 0;
+  frame.prev_fp() = 0;
+}
 
 void Stack::recook_stack() {
   word *bot = bottom();
@@ -381,9 +401,11 @@ void Stack::recook_stack() {
     frame.prev_fp() = bot + reinterpret_cast<uint32_t>(frame.prev_fp());
     frame.unwind();
   }
+  IF_PARANOID(validate());
 }
 
 void Stack::uncook_stack() {
+  IF_PARANOID(validate());
   UncookedStackIterator iter(this);
   word *bot = bottom();
   while (!iter.at_end()) {
