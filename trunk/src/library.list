@@ -11,6 +11,7 @@ heap/roots.cc
 heap/space.cc
 heap/values.cc
 io/image.cc
+platform/<os>/abort.cc
 runtime/builtins.cc
 runtime/interpreter.cc
 runtime/runtime.cc

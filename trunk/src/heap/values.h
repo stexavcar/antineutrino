@@ -152,7 +152,20 @@ public:
   DECLARE_FIELD(uint32_t, height);
   DECLARE_FIELD(uint32_t, fp);
   inline word *bottom();
+  
+  IF_DEBUG(void validate_stack());
   void for_each_stack_field(FieldVisitor &visitor);
+  
+  /**
+   * Converts all derived pointers in this object into neutral
+   * integers.
+   */
+  void uncook_stack();
+  
+  /**
+   * Converts all un-cooked derived pointers back into real ones.
+   */
+  void recook_stack();
 
   static inline uint32_t size_for(uint32_t height);
   static const uint32_t kInitialHeight = 2048;

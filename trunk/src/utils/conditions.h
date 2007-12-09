@@ -55,6 +55,8 @@ public:
   
   virtual void notify(Condition cause);
   
+  void abort();
+  
   static Conditions &get();
   static void set(Conditions *that) { current_ = that; }
 

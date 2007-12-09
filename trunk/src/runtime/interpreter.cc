@@ -40,7 +40,7 @@ Value *Interpreter::call(Lambda *lambda, Task *task) {
   frame.prev_fp() = 0;
   uint32_t pc = 0;
   while (true) {
-    Data *value = interpret(task, frame, &pc);
+    Data *value = interpret(frame, &pc);
     if (is<Signal>(value)) {
       frame.push_activation();
       task->stack()->set_fp(frame.fp() - task->stack()->bottom());
@@ -48,11 +48,10 @@ Value *Interpreter::call(Lambda *lambda, Task *task) {
         Stack *old_stack = task_ref->stack();
         Runtime::current().heap().memory().collect_garbage();
         frame.reset(old_stack, task_ref->stack());
-        UNREACHABLE();
       } else {
         UNREACHABLE();
       }
-      frame.pop_activation();
+      frame.unwind();
     } else {
       return cast<Value>(value);
     }
@@ -115,57 +114,57 @@ private:
   uint32_t *pc_from_, *pc_to_;
 };
 
-Data *Interpreter::interpret(Task *task, Frame &current, uint32_t *pc_ptr) {
+Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
   uint32_t pc = *pc_ptr;
   ExecutionWrapUp wrap_up(&pc, pc_ptr);
-  vector<uint16_t> code = cast<Code>(current.lambda()->code())->buffer();
-  vector<Value*> constant_pool = cast<Tuple>(current.lambda()->literals())->buffer();
+  vector<uint16_t> code = cast<Code>(frame.lambda()->code())->buffer();
+  vector<Value*> constant_pool = cast<Tuple>(frame.lambda()->literals())->buffer();
   while (true) {
     uint16_t oc = code[pc];
-    Log::instruction(oc, current);
+    Log::instruction(oc, frame);
     switch (oc) {
     case OC_PUSH: {
       uint16_t index = code[pc + 1];
       Value *value = constant_pool[index];
-      current.push(value);
+      frame.push(value);
       pc += OpcodeInfo<OC_PUSH>::kSize;
       break;
     }
     case OC_SLAP: {
       uint16_t height = code[pc + 1];
-      current[height] = current[0];
-      current.pop(height);
+      frame[height] = frame[0];
+      frame.pop(height);
       pc += OpcodeInfo<OC_SLAP>::kSize;
       break;
     }
     case OC_GLOBAL: {
       uint16_t index = code[pc + 1];
-      Value *name = cast<Tuple>(current.lambda()->literals())->at(index);
+      Value *name = cast<Tuple>(frame.lambda()->literals())->at(index);
       Data *value = runtime().toplevel()->get(name);
       if (is<Nothing>(value)) {
-        current.push(runtime().roots().vhoid());
+        frame.push(runtime().roots().vhoid());
       } else {
-        current.push(cast<Value>(value));
+        frame.push(cast<Value>(value));
       }
       pc += OpcodeInfo<OC_GLOBAL>::kSize;
       break;
     }
     case OC_LOCAL: {
       uint16_t index = code[pc + 1];
-      Value *value = current.local(index);
-      current.push(value);
+      Value *value = frame.local(index);
+      frame.push(value);
       pc += OpcodeInfo<OC_LOCAL>::kSize;
       break;
     }
     case OC_ARGUMENT: {
       uint16_t index = code[pc + 1];
-      Value *value = current.argument(index);
-      current.push(value);
+      Value *value = frame.argument(index);
+      frame.push(value);
       pc += OpcodeInfo<OC_ARGUMENT>::kSize;
       break;
     }
     case OC_IF_TRUE: {
-      Value *value = current.pop();
+      Value *value = frame.pop();
       if (is<True>(value)) {
         uint16_t index = code[pc + 1];
         pc = index;
@@ -181,9 +180,9 @@ Data *Interpreter::interpret(Task *task, Frame &current, uint32_t *pc_ptr) {
     }
     case OC_INVOKE: {
       uint16_t name_index = code[pc + 1];
-      Value *name = cast<Tuple>(current.lambda()->literals())->at(name_index);
+      Value *name = cast<Tuple>(frame.lambda()->literals())->at(name_index);
       uint16_t argc = code[pc + 2];
-      Value *recv = current[argc + 1];
+      Value *recv = frame[argc + 1];
       Class *chlass = get_class(recv);
       Data *lookup_result = lookup_method(chlass, name);
       if (is<Nothing>(lookup_result)) {
@@ -193,27 +192,25 @@ Data *Interpreter::interpret(Task *task, Frame &current, uint32_t *pc_ptr) {
             recv_str.chars(), name_str.chars());
       }
       Method *method = cast<Method>(lookup_result);
-      Frame next = current.push_activation();
-      next.prev_pc() = pc + OpcodeInfo<OC_INVOKE>::kSize;
-      next.lambda() = method->lambda();
+      frame.push_activation();
+      frame.prev_pc() = pc + OpcodeInfo<OC_INVOKE>::kSize;
+      frame.lambda() = method->lambda();
       new_ref(method->lambda()).ensure_compiled();
       code = cast<Code>(method->lambda()->code())->buffer();
       constant_pool = cast<Tuple>(method->lambda()->literals())->buffer();
-      current = next;
       pc = 0;
       break;
     }
     case OC_CALL: {
       uint16_t argc = code[pc + 1];
-      Value *value = current[argc];
+      Value *value = frame[argc];
       Lambda *fun = cast<Lambda>(value);
       new_ref(fun).ensure_compiled();
-      Frame next = current.push_activation();
-      next.prev_pc() = pc + OpcodeInfo<OC_CALL>::kSize;
-      next.lambda() = fun;
+      frame.push_activation();
+      frame.prev_pc() = pc + OpcodeInfo<OC_CALL>::kSize;
+      frame.lambda() = fun;
       code = cast<Code>(fun->code())->buffer();
       constant_pool = cast<Tuple>(fun->literals())->buffer();
-      current = next;
       pc = 0;
       break;
     }
@@ -221,46 +218,46 @@ Data *Interpreter::interpret(Task *task, Frame &current, uint32_t *pc_ptr) {
       uint16_t argc = code[pc + 1];
       uint16_t index = code[pc + 2];
       builtin *builtin = Builtins::get(index);
-      Arguments args(runtime(), argc, current);
+      Arguments args(runtime(), argc, frame);
       Value *value = cast<Value>(builtin(args));
-      current.push(value);
+      frame.push(value);
       pc += OpcodeInfo<OC_BUILTIN>::kSize;
       break;
     }
     case OC_RETURN: {
-      Value *value = current.pop();
-      if (current.is_bottom())
+      Value *value = frame.pop();
+      if (frame.is_bottom())
         return value;
-      pc = current.prev_pc();
-      current = current.pop_activation();
-      code = cast<Code>(current.lambda()->code())->buffer();
-      constant_pool = cast<Tuple>(current.lambda()->literals())->buffer();
-      current[0] = value;
+      pc = frame.prev_pc();
+      frame.unwind();
+      code = cast<Code>(frame.lambda()->code())->buffer();
+      constant_pool = cast<Tuple>(frame.lambda()->literals())->buffer();
+      frame[0] = value;
       break;
     }
     case OC_VOID: {
-      current.push(runtime().roots().vhoid());
+      frame.push(runtime().roots().vhoid());
       pc += OpcodeInfo<OC_VOID>::kSize;
       break;
     }
     case OC_NULL: {
-      current.push(runtime().roots().nuhll());
+      frame.push(runtime().roots().nuhll());
       pc += OpcodeInfo<OC_NULL>::kSize;
       break;
     }
     case OC_TRUE: {
-      current.push(runtime().roots().thrue());
+      frame.push(runtime().roots().thrue());
       pc += OpcodeInfo<OC_TRUE>::kSize;
       break;
     }
     case OC_FALSE: {
-      current.push(runtime().roots().fahlse());
+      frame.push(runtime().roots().fahlse());
       pc += OpcodeInfo<OC_FALSE>::kSize;
       break;
     }
     case OC_POP: {
       uint16_t height = code[pc + 1];
-      current.pop(height);
+      frame.pop(height);
       pc += OpcodeInfo<OC_POP>::kSize;
       break;
     }
@@ -270,14 +267,14 @@ Data *Interpreter::interpret(Task *task, Frame &current, uint32_t *pc_ptr) {
       if (is<Signal>(val)) return val;
       Tuple *result = cast<Tuple>(val);
       for (int32_t i = length - 1; i >= 0; i--)
-        result->set(i, current.pop());
-      current.push(result);
+        result->set(i, frame.pop());
+      frame.push(result);
       pc += OpcodeInfo<OC_TUPLE>::kSize;
       break;
     }
     case OC_CHKHGT: {
       uint16_t expected = code[pc + 1];
-      uint16_t height = (current.sp() - current.fp()) - Frame::kSize;
+      uint16_t height = (frame.sp() - frame.fp()) - Frame::kSize;
       CHECK_EQ(expected, height);
       pc += OpcodeInfo<OC_CHKHGT>::kSize;
       break;
@@ -286,43 +283,43 @@ Data *Interpreter::interpret(Task *task, Frame &current, uint32_t *pc_ptr) {
       uint32_t terms = code[pc + 1];
       uint32_t length = 0;
       for (uint32_t i = 0; i < terms; i++)
-        length += cast<String>(current[i])->length();
+        length += cast<String>(frame[i])->length();
       Data *val = runtime().heap().new_string(length);
       if (is<Signal>(val)) return val;
       String *result = cast<String>(val);
       uint32_t cursor = 0;
       for (int32_t i = terms - 1; i >= 0; i--) {
-        String *term = cast<String>(current[i]);
+        String *term = cast<String>(frame[i]);
         for (uint32_t j = 0; j < term->length(); j++)
           result->set(cursor + j, term->at(j));
         cursor += term->length();
       }
-      current.pop(terms);
-      current.push(result);
+      frame.pop(terms);
+      frame.push(result);
       pc += OpcodeInfo<OC_CONCAT>::kSize;
       break;
     }
     case OC_CLOSURE: {
       uint32_t index = code[pc + 1];
-      Lambda *lambda = cast<Lambda>(cast<Tuple>(current.lambda()->literals())->at(index));
-      uint32_t outer_count = cast<Code>(current.lambda()->code())->at(pc + 2);
+      Lambda *lambda = cast<Lambda>(cast<Tuple>(frame.lambda()->literals())->at(index));
+      uint32_t outer_count = cast<Code>(frame.lambda()->code())->at(pc + 2);
       Data *outers_val = runtime().heap().new_tuple(outer_count);
       if (is<Signal>(outers_val)) return outers_val;
       Tuple *outers = cast<Tuple>(outers_val);
       for (uint32_t i = 0; i < outer_count; i++)
-        outers->set(outer_count - i - 1, current.pop());
+        outers->set(outer_count - i - 1, frame.pop());
       Data *clone_val = lambda->clone(runtime().heap());
       if (is<Signal>(clone_val)) return clone_val;
       Lambda *clone = cast<Lambda>(clone_val);
       clone->set_outers(outers);
-      current.push(clone);
+      frame.push(clone);
       pc += OpcodeInfo<OC_CLOSURE>::kSize;
       break;
     }
     case OC_OUTER: {
       uint32_t index = code[pc + 1];
-      Value *value = current.lambda()->outers()->at(index);
-      current.push(value);
+      Value *value = frame.lambda()->outers()->at(index);
+      frame.push(value);
       pc += OpcodeInfo<OC_OUTER>::kSize;
       break;
     }
@@ -332,12 +329,12 @@ Data *Interpreter::interpret(Task *task, Frame &current, uint32_t *pc_ptr) {
       if (is<Signal>(unquotes_val)) return unquotes_val;
       Tuple *unquotes = cast<Tuple>(unquotes_val);
       for (uint32_t i = 0; i < unquote_count; i++)
-        unquotes->set(unquote_count - i - 1, current.pop());
-      SyntaxTree *tree = cast<SyntaxTree>(current.pop());
+        unquotes->set(unquote_count - i - 1, frame.pop());
+      SyntaxTree *tree = cast<SyntaxTree>(frame.pop());
       Data *result_val = runtime().heap().new_quote_template(tree, unquotes);
       if (is<Signal>(result_val)) return result_val;
       QuoteTemplate *result = cast<QuoteTemplate>(result_val);
-      current.push(result);
+      frame.push(result);
       pc += OpcodeInfo<OC_QUOTE>::kSize;
       break;
     }
@@ -348,13 +345,64 @@ Data *Interpreter::interpret(Task *task, Frame &current, uint32_t *pc_ptr) {
   }
 }
 
-void Stack::for_each_stack_field(FieldVisitor &visitor) {
-  /*
-  Frame current(bottom() + this->fp());
+static void print_stack(Stack *stack, word* offset = 0) {
+  printf("--- stack ---\n");
+  Frame current(stack->bottom() + stack->fp());
   while (!current.is_bottom()) {
-    current = current.pop_activation();
+    printf("--- frame ---\n");
+    printf("sp:      %x\n", (int) current.sp());
+    uint32_t stack_height = current.sp() - (current.fp() + Frame::kSize);
+    printf("locals:\n");
+#ifdef DEBUG
+    EnumInfo<InstanceType> info;
+    for (int32_t i = stack_height - 1; i >= 0; i--) {
+      InstanceType type = current[i]->gc_safe_type();
+      printf(" % i:  %s\n", stack_height - i, info.get_name_for(type).chars());
+    }
+#endif
+    printf("fp:      %x\n", (int) current.fp());
+    printf("prev fp: %x\n", (int) current.prev_fp());
+    if (offset == 0) current.unwind();
+    else current.unwind(offset);
   }
-  */
+}
+
+void Stack::validate_stack() {
+}
+
+void Stack::recook_stack() {
+  word *bot = bottom();
+  Frame frame(bot + fp());
+  while (!frame.is_bottom()) {
+    frame.prev_fp() = bot + reinterpret_cast<uint32_t>(frame.prev_fp());
+    frame.unwind();
+  }
+}
+
+void Stack::uncook_stack() {
+  UncookedStackIterator iter(this);
+  word *bot = bottom();
+  while (!iter.at_end()) {
+    // Create a copy of the frame so that we can unwind the original
+    // frame and then do the uncooking
+    IF_DEBUG(word *prev_fp = iter.frame().prev_fp());
+    iter.frame().prev_fp() = reinterpret_cast<word*>(iter.frame().prev_fp() - bot);
+    iter.advance();
+    ASSERT(prev_fp == iter.frame().fp());
+  }
+}
+
+void Stack::for_each_stack_field(FieldVisitor &visitor) {
+  word *bot = bottom();
+  Frame frame(bottom() + fp());
+  while (!frame.is_bottom()) {
+    uint32_t stack_height = frame.sp() - (frame.fp() + Frame::kSize);
+    for (uint32_t i = 0; i < stack_height; i++) {
+      // Visit the i'th local variable
+      visitor.visit_field(&frame[i]);
+    }
+    frame.unwind(bot);
+  }
 }
 
 void Log::instruction(uint16_t code, Frame &frame) {

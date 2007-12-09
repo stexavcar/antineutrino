@@ -411,6 +411,9 @@ static void validate_object(Object *obj) {
     case TUPLE_TYPE:
       validate_tuple(cast<Tuple>(obj));
       break;
+    case STACK_TYPE:
+      cast<Stack>(obj)->validate_stack();
+      break;
     case LAMBDA_TYPE:
       FOR_EACH_LAMBDA_FIELD(VALIDATE_FIELD, Lambda)
       if (!is<Smi>(cast<Lambda>(obj)->code())) {
@@ -427,7 +430,7 @@ static void validate_object(Object *obj) {
     case BUILTIN_CALL_TYPE:
     case UNQUOTE_EXPRESSION_TYPE:
     case CODE_TYPE: case STRING_TYPE: case VOID_TYPE: case TRUE_TYPE:
-    case FALSE_TYPE: case NULL_TYPE: case STACK_TYPE:
+    case FALSE_TYPE: case NULL_TYPE:
       break;
 #define MAKE_CASE(n, NAME, Name, name)                               \
     case NAME##_TYPE:                                                \

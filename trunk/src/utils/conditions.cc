@@ -1,6 +1,7 @@
 #include <stdarg.h>
 
 #include "heap/values-inl.h"
+#include "platform/abort.h"
 #include "utils/checks.h"
 
 namespace neutrino {
@@ -136,6 +137,10 @@ void Conditions::error_occurred(const char *format, ...) {
   fprintf(stderr, "\n");
   va_end(ap);
   exit(1);
+}
+
+void Conditions::abort() {
+  Abort::abort();
 }
 
 } // namespace neutrino

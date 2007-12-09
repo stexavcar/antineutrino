@@ -52,25 +52,39 @@ Value *&Frame::self(uint32_t argc) {
   return argument(argc + 1);
 }
 
-
 void Frame::push(Value *value) {
   *(sp_++) = reinterpret_cast<word>(value);
 }
 
-Frame Frame::push_activation() {
-  Frame result(sp_, sp_ + Frame::kSize);
-  result.prev_fp() = fp_;
+void Frame::push_activation() {
+  word *prev_fp = fp_;
   fp_ = sp_;
-  sp_ += Frame::kSize;
-  return result;
+  sp_ = fp_ + Frame::kSize;
+  this->prev_fp() = prev_fp;
 }
 
-Frame Frame::pop_activation() {
-  Frame top = *this;
-  sp_ = top.fp();
-  fp_ = top.prev_fp();
-  return Frame(fp_, sp_);
+void Frame::unwind() {
+  sp_ = fp();
+  fp_ = prev_fp();
 }
+
+void Frame::unwind(word *bottom) {
+  sp_ = fp();
+  fp_ = reinterpret_cast<uint32_t>(prev_fp()) + bottom;
+}
+
+UncookedStackIterator::UncookedStackIterator(Stack *stack)
+  : bottom_(stack->bottom())
+  , frame_(bottom_ + stack->fp()) { }
+
+void UncookedStackIterator::advance() {
+  frame_.unwind(bottom_);
+}
+
+bool UncookedStackIterator::at_end() {
+  return frame_.is_bottom();
+}
+
 
 // -----------------------------
 // --- O p c o d e   I n f o ---

@@ -23,6 +23,8 @@ public:
       : from_space_(from_space)
       , to_space_(to_space) { }
   void migrate_field(Value **field);
+  static void uncook(Object *obj);
+  static void recook(Object *obj);
   virtual void visit_field(Value **field);
 private:
   SemiSpace &from_space() { return from_space_; }
@@ -30,6 +32,18 @@ private:
   SemiSpace &from_space_;
   SemiSpace &to_space_;
 };
+
+void FieldMigrator::uncook(Object *obj) {
+  if (is<Stack>(obj)) {
+    cast<Stack>(obj)->uncook_stack();
+  }
+}
+
+void FieldMigrator::recook(Object *obj) {
+  if (is<Stack>(obj)) {
+    cast<Stack>(obj)->recook_stack();
+  }
+}
 
 void FieldMigrator::migrate_field(Value **field) {
   // If the field doesn't hold a heap object then there's nothing to do
@@ -46,6 +60,7 @@ void FieldMigrator::migrate_field(Value **field) {
   // Otherwise we haven't seen this object before and we clone it in
   // to-space
   IF_PARANOID(obj->validate());
+  uncook(obj);
   uint32_t size = obj->size_in_memory();
   address new_addr = to_space().allocate(size);
   memcpy(new_addr, ValuePointer::address_of(obj), size);
@@ -79,6 +94,7 @@ void Memory::collect_garbage() {
   while (to_space_iter.has_next()) {
     Object *obj = to_space_iter.next();
     obj->for_each_field(migrator);
+    FieldMigrator::recook(obj);
   }
   young_space_ = to_space;
   delete &from_space;

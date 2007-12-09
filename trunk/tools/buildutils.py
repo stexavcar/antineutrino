@@ -1,4 +1,5 @@
 import types, re, sys
+from os.path import exists, join
 
 # Reads a .list file into an array of strings
 def read_lines_from(name):
@@ -11,6 +12,33 @@ def read_lines_from(name):
   	if trimmed[0] == '#': continue
   	list.append(trimmed)
   return list
+
+# Read a list of files from a file and expand wildcards according to
+# the current plaform, as specified by the configuration
+def read_files_from(config, root, file):
+  cooked_lines = []
+  for line in read_lines_from(file):
+    if exists(join(root, line)):
+      # If the file exists we just add it to the list
+      cooked_lines.append(line)
+    else:
+      # If the file doesn't exist we try expanding parameters
+      template = re.sub('<([a-z]+)>', '%(\\1)s', line)
+      specific = template % config
+      if exists(join(root, specific)):
+        # A file exists for this particular platform; add it
+        cooked_lines.append(specific)
+      else:
+        generic = re.sub('<[a-z]+>', 'any', line)
+        if exists(join(root, generic)):
+          # No file exists for this platform but a generic one does;
+          # add it
+          cooked_lines.append(generic)
+        else:
+          # No matching file was found.  We add the specific file
+          # to get the most informative error message later on
+          cooked_lines.append(specific)
+  return cooked_lines
 
 HEADER_PATTERN = re.compile('^(\w+)\s*(\*?)\s*(?:\:\s*([\w\s]+))?{$')
 PROPERTY_PATTERN = re.compile('^(\w+)\s*(\:\=|\+\=)(.*)$')

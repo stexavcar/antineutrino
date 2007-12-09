@@ -43,8 +43,19 @@ public:
   inline Value *&self(uint32_t argc);
   inline Value *pop(uint32_t height = 1);
   inline Value *&operator[](uint32_t offset);
-  inline Frame push_activation();
-  inline Frame pop_activation();
+  inline void push_activation();
+  
+  /**
+   * Unwinds a stack frame in a cooked stack.
+   */
+  inline void unwind();
+  
+  /**
+   * Unwinds a stack frame in an uncooked stack, where the given value
+   * is the address of the bottom of the stack.
+   */
+  inline void unwind(word *bottom);
+  
   inline void push(Value *value);
   inline bool is_bottom();
   word *fp() { return fp_; }
@@ -67,6 +78,16 @@ private:
   word *sp_;
 };
 
+class UncookedStackIterator {
+public:
+  inline UncookedStackIterator(Stack *stack);
+  Frame &frame() { return frame_; }
+  inline void advance();
+  inline bool at_end();
+private:
+  word *bottom_;
+  Frame frame_;
+};
 
 /**
  * The bytecode interpreter.
@@ -76,7 +97,7 @@ public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
   Value *call(Lambda *lambda, Task *task);
 private:
-  Data *interpret(Task *task, Frame &frame, uint32_t *pc_ptr);
+  Data *interpret(Frame &frame, uint32_t *pc_ptr);
   inline Class *get_class(Value *val);
   inline Data *lookup_method(Class *chlass, Value *name);
   Runtime &runtime() { return runtime_; }
