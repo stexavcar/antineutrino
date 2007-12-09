@@ -13,15 +13,15 @@ void Abort::abort() {
 
 static void print_stack_trace(void *ptr, const char *prefix) {
   fprintf(stderr, "--- Stack ---\n");
-  void **fp = reinterpret_cast<void**>(__builtin_frame_address(0));
-  do {
-    void *pc = fp[1];
+  void *pc = reinterpret_cast<void*>(__builtin_return_address(0));
+  void **fp = reinterpret_cast<void**>(__builtin_frame_address(1));
+  while (fp && pc) {
     Dl_info info;
     if (dladdr(pc, &info)) {
       const char *mangled = info.dli_sname;
       int status = 0;
       char *demangled = abi::__cxa_demangle(mangled, 0, 0, &status);
-      if (demangled) {
+      if (status == 0 && demangled) {
         remove_substring(demangled, prefix);
         fprintf(stderr, "%s\n", demangled);
         free(demangled);
@@ -31,8 +31,9 @@ static void print_stack_trace(void *ptr, const char *prefix) {
           break;
       }
     }
+    pc = fp[1];
     fp = static_cast<void**>(fp[0]);
-  } while (fp && fp[1]);
+  }
 }
 
 } // neutrino
