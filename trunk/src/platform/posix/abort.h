@@ -16,7 +16,6 @@ namespace neutrino {
   VISIT(SIGILL,    "illegal instruction")                            \
   VISIT(SIGTRAP,   "trace trap")                                     \
   VISIT(SIGABRT,   "abort program (formerly SIGIOT)")                \
-  VISIT(SIGEMT,    "emulate instruction executed")                   \
   VISIT(SIGFPE,    "floating-point exception")                       \
   VISIT(SIGKILL,   "kill program")                                   \
   VISIT(SIGBUS,    "bus error")                                      \
@@ -38,7 +37,6 @@ namespace neutrino {
   VISIT(SIGVTALRM, "virtual time alarm (see setitimer(2))")          \
   VISIT(SIGPROF,   "profiling timer alarm (see setitimer(2))")       \
   VISIT(SIGWINCH,  "Window size change")                             \
-  VISIT(SIGINFO,   "status request from keyboard")                   \
   VISIT(SIGUSR1,   "User defined signal 1")                          \
   VISIT(SIGUSR2,   "User defined signal 2")
 

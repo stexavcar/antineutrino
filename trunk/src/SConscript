@@ -15,8 +15,10 @@ def create_environment():
 env = create_environment()
 
 static_library = env.StaticLibrary(config['name'], source_files)
-program = env.Program(config['name'], source_files + program_files)
+shared_library = env.SharedLibrary(config['name'], source_files)
+program = env.Program(config['name'], [ shared_library ] + program_files)
 config[prefix + 'static-library'] = static_library[0]
+config[prefix + 'shared-library'] = shared_library[0]
 Alias(prefix + 'program', program)
 config[prefix + 'program'] = program[0]
-env.Alias(target, [static_library, program])
+env.Alias(target, [shared_library, program])

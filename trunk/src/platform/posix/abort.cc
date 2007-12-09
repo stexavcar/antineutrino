@@ -35,6 +35,26 @@ FOR_EACH_SIGNAL_CODE(MAKE_CASE)
   return false;
 }
 
+/**
+ * Removes all occurrences of the given substring from the string.
+ */
+static void remove_substring(char *str, const char *substr) {
+  uint32_t p = 0;
+  uint32_t i = 0;
+  while (str[p]) {
+    uint32_t j;
+    for (j = 0; str[p + j] == substr[j] && substr[j]; j++);
+    if (substr[j]) {
+      str[i] = str[p];
+      p++;
+      i++;
+    } else {
+      p += j;
+    }
+  }
+  str[i] = '\0';
+}
+
 static void print_error_report(int signum, siginfo_t *info, void *ptr) {
   fprintf(stderr, "--- Crash ---\n");
   EnumValueInfo enum_info;
@@ -50,7 +70,7 @@ static void print_error_report(int signum, siginfo_t *info, void *ptr) {
   fprintf(stderr, "status: %i\n", info->si_status);
   if (info->si_errno)
     fprintf(stderr, "errno:  %s\n", strerror(errno));
-  print_stack_trace(0, "neutrino::");
+  print_stack_trace(ptr, "neutrino::");
   exit(signum);
 }
 

@@ -5,8 +5,8 @@ Import('config common prefix properties target build')
 
 # Instantiate the test builders for each configuration
 env = common.Copy()
-env.Append(LIBS = [config[prefix + 'static-library']])
 apply_items(env, properties)
+env.Append(LIBS = [config[prefix + 'shared-library']])
 
 old_build = build
 

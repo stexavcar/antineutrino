@@ -11,27 +11,7 @@ void Abort::abort() {
   ::abort();
 }
 
-/**
- * Removes all occurrences of the given substring from the string.
- */
-static void remove_substring(char *str, const char *substr) {
-  uint32_t p = 0;
-  uint32_t i = 0;
-  while (str[p]) {
-    uint32_t j;
-    for (j = 0; str[p + j] == substr[j] && substr[j]; j++);
-    if (substr[j]) {
-      str[i] = str[p];
-      p++;
-      i++;
-    } else {
-      p += j;
-    }
-  }
-  str[i] = '\0';
-}
-
-static void print_stack_trace(void *start, const char *prefix) {
+static void print_stack_trace(void *ptr, const char *prefix) {
   fprintf(stderr, "--- Stack ---\n");
   void **fp = reinterpret_cast<void**>(__builtin_frame_address(0));
   do {

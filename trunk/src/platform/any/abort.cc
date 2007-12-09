@@ -4,8 +4,8 @@
 
 namespace neutrino {
 
-void Abort::setup_signal_handler() {
-  
+bool Abort::setup_signal_handler() {
+  return true;
 }
 
 void Abort::abort() {
