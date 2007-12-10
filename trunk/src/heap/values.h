@@ -36,7 +36,7 @@ public:
   enum WriteMode { DEFAULT, UNQUOTED };
   
   IF_DEBUG(inline InstanceType gc_safe_type());
-  IF_DEBUG(DataMirror &mirror());
+  IF_DEBUG(Mirror &mirror());
   
   void write_on(string_buffer &buf, WriteMode mode = DEFAULT);
   void write_short_on(string_buffer &buf, WriteMode mode = DEFAULT);
@@ -116,7 +116,6 @@ class Object : public Value {
 public:
   DECLARE_FIELD(Class*, chlass);
   IF_DEBUG(inline Class *gc_safe_chlass());
-  IF_DEBUG(ObjectMirror &mirror());
   
   /**
    * The header of an object is the first field which normally
@@ -173,7 +172,6 @@ public:
   inline word *bottom();
   
   IF_DEBUG(void validate_stack());
-  IF_DEBUG(StackMirror &mirror());
   void for_each_stack_field(FieldVisitor &visitor);
   void create_bottom_activation();
   
@@ -529,7 +527,6 @@ public:
   
   bool is_empty();
 
-  IF_DEBUG(ClassMirror &mirror());
   IF_DEBUG(static uint32_t tag_of(Data *value));
   IF_DEBUG(static const char *tag_name(uint32_t tag));
   IF_DEBUG(static const char *class_name(uint32_t tag));

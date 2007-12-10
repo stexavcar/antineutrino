@@ -10,7 +10,7 @@ def allocate(n, k) {
 }
 
 def test_allocation() {
-  allocate(16, 8);
+  allocate(8, 8);
 }
 
 def main() {

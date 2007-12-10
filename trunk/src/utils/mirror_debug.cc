@@ -4,20 +4,19 @@
 
 namespace neutrino {
 
-DataMirror &Data::mirror() {
-  return *(new DataMirror(gc_safe_type()));
-}
-
-ClassMirror &Class::mirror() {
-  return *(new ClassMirror(instance_type()));
-}
-
-ObjectMirror &Object::mirror() {
-  return *(new ObjectMirror(gc_safe_type(), chlass()));
-}
-
-StackMirror &Stack::mirror() {
-  return *(new StackMirror(height(), fp(), flags()));
+Mirror &Data::mirror() {
+  Mirror &result = *(new Mirror());
+  InstanceType type = gc_safe_type();
+  result.type_ = type;
+  switch (type) {
+    case SMI_TYPE:
+      result.number_ = cast<Smi>(this)->value();
+      break;
+    default:
+      // do nuttin'
+      break;
+  }
+  return result;
 }
 
 } // neutrino

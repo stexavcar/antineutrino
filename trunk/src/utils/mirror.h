@@ -5,33 +5,12 @@
 
 namespace neutrino {
 
-struct DataMirror {
-  DataMirror(InstanceType type)
-      : type_(type) { }
+class Mirror {
+public:
+  Mirror() : type_(__first_instance_type), string_(0) { }
   InstanceType type_;
-};
-
-struct ClassMirror {
-  ClassMirror(InstanceType instance_type)
-      : instance_type_(instance_type) { }
-  InstanceType instance_type_;
-};
-
-struct ObjectMirror {
-  ObjectMirror(InstanceType type, Class *chlass)
-    : type_(type)
-    , chlass_(chlass) { }
-  InstanceType type_;
-  Class *chlass_;
-};
-
-struct StackMirror {
-  StackMirror(uint32_t height, uint32_t fp, StackFlags flags)
-      : height_(height)
-      , fp_(fp)
-      , flags_(flags) { }
-  uint32_t height_, fp_;
-  StackFlags flags_;
+  char *string_;
+  double number_;
 };
 
 } // neutrino

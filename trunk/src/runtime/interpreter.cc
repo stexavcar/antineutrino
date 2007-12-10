@@ -29,23 +29,25 @@ private:
 // --- I n t e r p r e t e r ---
 // -----------------------------
 
-Value *Interpreter::call(Lambda *lambda, Task *initial_task) {
+Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
   RefScope scope;
   ref<Task> task = new_ref(initial_task);
-  new_ref(lambda).ensure_compiled();
+  ref<Lambda> lambda = new_ref(initial_lambda);
+  lambda.ensure_compiled();
   Frame frame(task->stack()->bottom() + task->stack()->fp());
   frame.self(0) = runtime().roots().vhoid();
-  frame.lambda() = lambda;
+  frame.lambda() = *lambda;
   frame.prev_fp() = 0;
   IF_PARANOID(task->stack()->validate());
   uint32_t pc = 0;
   while (true) {
     Data *value = interpret(frame, &pc);
+    printf("Evaluated: %s\n", value->to_string().chars());
     if (is<Signal>(value)) {
       frame.push_activation();
       task->stack()->set_fp(frame.fp() - task->stack()->bottom());
       frame.prev_pc() = pc;
-      frame.lambda() = lambda;
+      frame.lambda() = *lambda;
       IF_PARANOID(task->stack()->validate());
       if (is<AllocationFailed>(value)) {
         Stack *old_stack = task->stack();
@@ -429,6 +431,7 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
   word *bot = bottom();
   Frame frame(bottom() + fp());
   while (!frame.is_bottom()) {
+    visitor.visit_field(pointer_cast<Value*>(&frame.lambda()));
     uint32_t stack_height = frame.sp() - (frame.fp() + Frame::kSize);
     for (uint32_t i = 0; i < stack_height; i++) {
       // Visit the i'th local variable
