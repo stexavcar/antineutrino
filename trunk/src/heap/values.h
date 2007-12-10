@@ -9,14 +9,12 @@
 
 namespace neutrino {
 
-
 enum InstanceType {
   __first_instance_type = 0
 #define DECLARE_INSTANCE_TYPE(n, NAME, Name, info) , NAME##_TYPE = n
 FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
 #undef DECLARE_INSTANCE_TYPE
 };
-
 
 #define DECLARE_FIELD(Type, name)                                    \
   inline Type &name();                                               \
@@ -38,6 +36,7 @@ public:
   enum WriteMode { DEFAULT, UNQUOTED };
   
   IF_DEBUG(inline InstanceType gc_safe_type());
+  IF_DEBUG(DataMirror &mirror());
   
   void write_on(string_buffer &buf, WriteMode mode = DEFAULT);
   void write_short_on(string_buffer &buf, WriteMode mode = DEFAULT);
@@ -117,6 +116,7 @@ class Object : public Value {
 public:
   DECLARE_FIELD(Class*, chlass);
   IF_DEBUG(inline Class *gc_safe_chlass());
+  IF_DEBUG(ObjectMirror &mirror());
   
   /**
    * The header of an object is the first field which normally
@@ -147,13 +147,33 @@ DEFINE_REF_CLASS(Object);
 // --- S t a c k ---
 // -----------------
 
+struct StackFlags {
+  /**
+   * This constructor specifies the state of the stack flags when
+   * a stack is first created
+   */
+  StackFlags() : is_cooked(true) { }
+  
+  bool is_cooked : 1;
+};
+
 class Stack : public Object {
 public:
+
+  /**
+   * Make StackFlags seem like a nested class, Stack::Flags.  The
+   * reason it is not a true nested class is that it has to be forward
+   * declared.
+   */
+  typedef StackFlags Flags;
+  
   DECLARE_FIELD(uint32_t, height);
   DECLARE_FIELD(uint32_t, fp);
+  DECLARE_FIELD(Flags, flags);
   inline word *bottom();
   
   IF_DEBUG(void validate_stack());
+  IF_DEBUG(StackMirror &mirror());
   void for_each_stack_field(FieldVisitor &visitor);
   void create_bottom_activation();
   
@@ -172,8 +192,9 @@ public:
   static const uint32_t kInitialHeight = 2048;
   
   static const uint32_t kHeightOffset = Object::kHeaderSize;
-  static const uint32_t kFpOffset = kHeightOffset + kPointerSize;
-  static const uint32_t kHeaderSize = kFpOffset + kPointerSize;
+  static const uint32_t kFpOffset     = kHeightOffset + kPointerSize;
+  static const uint32_t kFlagsOffset  = kFpOffset + kPointerSize;
+  static const uint32_t kHeaderSize   = kFlagsOffset + kPointerSize;
 };
 
 template <> class ref_traits<Stack> : public ref_traits<Object> {
@@ -508,6 +529,7 @@ public:
   
   bool is_empty();
 
+  IF_DEBUG(ClassMirror &mirror());
   IF_DEBUG(static uint32_t tag_of(Data *value));
   IF_DEBUG(static const char *tag_name(uint32_t tag));
   IF_DEBUG(static const char *class_name(uint32_t tag));

@@ -24,8 +24,10 @@ namespace neutrino {
 
 class Assembler;
 class Class;
+class ClassMirror;
 class Code;
 class Data;
+class DataMirror;
 class Dictionary;
 class Factory;
 class False;
@@ -38,6 +40,7 @@ class LiteralExpression;
 class Method;
 class Null;
 class Object;
+class ObjectMirror;
 template <class T> class persistent;
 class QuoteTemplate;
 template <class T> class ref;
@@ -46,6 +49,9 @@ class Roots;
 class Runtime;
 class SemiSpace;
 class Smi;
+class Stack;
+class StackFlags;
+class StackMirror;
 class string_buffer;
 class True;
 class Value;

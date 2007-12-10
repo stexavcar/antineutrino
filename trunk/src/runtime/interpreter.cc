@@ -54,6 +54,7 @@ Value *Interpreter::call(Lambda *lambda, Task *initial_task) {
       } else {
         UNREACHABLE();
       }
+      IF_PARANOID(task->stack()->validate());
       frame.unwind();
       IF_PARANOID(task->stack()->validate());
     } else {
@@ -375,6 +376,7 @@ static void print_stack(Stack *stack, word* offset = 0) {
 
 #ifdef DEBUG
 void Stack::validate_stack() {
+  ASSERT(flags().is_cooked);
   Frame frame(bottom() + fp());
   while (!frame.is_bottom()) {
     GC_SAFE_CHECK_IS_C(VALIDATION, Lambda, frame.lambda());
@@ -395,17 +397,20 @@ void Stack::create_bottom_activation() {
 }
 
 void Stack::recook_stack() {
+  ASSERT(!flags().is_cooked);
   word *bot = bottom();
   Frame frame(bot + fp());
   while (!frame.is_bottom()) {
     frame.prev_fp() = bot + reinterpret_cast<uint32_t>(frame.prev_fp());
     frame.unwind();
   }
+  IF_DEBUG(flags().is_cooked = true);
   IF_PARANOID(validate());
 }
 
 void Stack::uncook_stack() {
   IF_PARANOID(validate());
+  ASSERT(flags().is_cooked);
   UncookedStackIterator iter(this);
   word *bot = bottom();
   while (!iter.at_end()) {
@@ -416,9 +421,11 @@ void Stack::uncook_stack() {
     iter.advance();
     ASSERT(prev_fp == iter.frame().fp());
   }
+  IF_DEBUG(flags().is_cooked = false);
 }
 
 void Stack::for_each_stack_field(FieldVisitor &visitor) {
+  ASSERT(!flags().is_cooked);
   word *bot = bottom();
   Frame frame(bottom() + fp());
   while (!frame.is_bottom()) {

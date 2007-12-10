@@ -140,17 +140,6 @@ Data *Heap::new_string(string value) {
   return result;
 }
 
-Data *Heap::new_task() {
-  Data *stack_val = new_stack(Stack::kInitialHeight);
-  if (is<AllocationFailed>(stack_val)) return stack_val;
-  Data *task_val = allocate_object(Task::kSize, roots().task_class());
-  if (is<AllocationFailed>(task_val)) return task_val;
-  Task *result = cast<Task>(task_val);
-  result->set_stack(cast<Stack>(stack_val));
-  IF_PARANOID(result->validate());
-  return result;
-}
-
 Data *Heap::new_stack(uint32_t height) {
   uint32_t size = Stack::size_for(height);
   Data *val = allocate_object(size, roots().stack_class());
@@ -159,6 +148,18 @@ Data *Heap::new_stack(uint32_t height) {
   result->set_height(height);
   result->set_fp(0);
   result->create_bottom_activation();
+  result->set_flags(Stack::Flags());
+  IF_PARANOID(result->validate());
+  return result;
+}
+
+Data *Heap::new_task() {
+  Data *stack_val = new_stack(Stack::kInitialHeight);
+  if (is<AllocationFailed>(stack_val)) return stack_val;
+  Data *task_val = allocate_object(Task::kSize, roots().task_class());
+  if (is<AllocationFailed>(task_val)) return task_val;
+  Task *result = cast<Task>(task_val);
+  result->set_stack(cast<Stack>(stack_val));
   IF_PARANOID(result->validate());
   return result;
 }
