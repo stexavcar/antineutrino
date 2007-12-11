@@ -1,6 +1,6 @@
 #summary Operator Precedence Hierarchy
 
-= Neutrino Operators =
+This is how the operator precedence hierarchy _should_ look, not how it does look.
 
 || `return`, `if`, `def` ||
 || `fn` ||
