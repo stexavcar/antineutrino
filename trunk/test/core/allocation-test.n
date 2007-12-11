@@ -10,11 +10,9 @@ def allocate(n, k) {
 }
 
 def test_allocation() {
-  allocate(8, 8);
-  print("Returning to main");
+  allocate(7, 8);
 }
 
 def main() {
   test_allocation();
-  print("Done!");
 }

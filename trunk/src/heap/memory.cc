@@ -95,6 +95,7 @@ void Memory::collect_garbage() {
     Object *obj = to_space_iter.next();
     obj->for_each_field(migrator);
     FieldMigrator::recook(obj);
+    IF_PARANOID(obj->validate());
   }
   young_space_ = to_space;
   delete &from_space;

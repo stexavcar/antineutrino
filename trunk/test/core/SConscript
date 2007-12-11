@@ -1,4 +1,4 @@
-Import('env build config prefix')
+Import('env build config prefix target')
 from os.path import join, walk, abspath, exists
 from testutils import PyNeutrinoTestCase, is_selected, relative
 
@@ -17,7 +17,7 @@ def add_test(arg, dir, fnames):
       compile = env.CompilePyNeutrinoTest(compiled_name, full_path)
       env.Depends(compile, compiler)
       test_file = relative(config['bin'], join(build, compiled_name))
-      test_case = PyNeutrinoTestCase(executable, test_file)
+      test_case = PyNeutrinoTestCase(executable, test_file, target)
       config['tests'].append(test_case)
       config['check-deps'].append(compile)
       config['check-deps'].append(executable)

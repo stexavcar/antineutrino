@@ -46,14 +46,12 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
   Data *value;
   while (true) {
     value = interpret(frame, &pc);
-    printf("Evaluated: %s\n", value->to_string().chars());
     if (is<Signal>(value)) {
       frame.push_activation();
       task->stack()->set_fp(frame.fp() - task->stack()->bottom());
       frame.prev_pc() = pc;
       frame.lambda() = *lambda;
-      task->stack()->status().is_parked = true;
-      IF_PARANOID(task->stack()->validate());
+      IF_DEBUG(task->stack()->status().is_parked = true);
       if (is<AllocationFailed>(value)) {
         Stack *old_stack = task->stack();
         Runtime::current().heap().memory().collect_garbage();
@@ -61,8 +59,7 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
       } else {
         UNREACHABLE();
       }
-      IF_PARANOID(task->stack()->validate());
-      task->stack()->status().is_parked = false;
+      IF_DEBUG(task->stack()->status().is_parked = false);
       frame.unwind();
     } else {
       break;
@@ -129,7 +126,6 @@ private:
 };
 
 Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
-  printf("--- interpreting ---\n");
   uint32_t pc = *pc_ptr;
   ExecutionWrapUp wrap_up(&pc, pc_ptr);
   vector<uint16_t> code = cast<Code>(frame.lambda()->code())->buffer();
@@ -359,37 +355,14 @@ Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
   }
 }
 
-/*
-static void print_stack(Stack *stack, word* offset = 0) {
-  printf("--- stack ---\n");
-  Frame current(stack->bottom() + stack->fp());
-  while (!current.is_bottom()) {
-    printf("--- frame ---\n");
-    printf("sp:      %x\n", (int) current.sp());
-    uint32_t stack_height = current.sp() - (current.fp() + Frame::kSize);
-    printf("locals:\n");
-#ifdef DEBUG
-    EnumInfo<InstanceType> info;
-    for (int32_t i = stack_height - 1; i >= 0; i--) {
-      InstanceType type = current[i]->gc_safe_type();
-      printf(" % i:  %s\n", stack_height - i, info.get_name_for(type).chars());
-    }
-#endif
-    printf("fp:      %x\n", (int) current.fp());
-    printf("prev fp: %x\n", (int) current.prev_fp());
-    if (offset == 0) current.unwind();
-    else current.unwind(offset);
-  }
-}
-*/
-
 #ifdef DEBUG
 void Stack::validate_stack() {
   if (status().is_empty) return;
   ASSERT(status().is_cooked);
   Frame frame(bottom() + fp());
-  while (!frame.is_bottom()) {
+  while (true) {
     GC_SAFE_CHECK_IS_C(VALIDATION, Lambda, frame.lambda());
+    if (frame.is_bottom()) break;
     uint32_t local_count = frame.locals();
     for (uint32_t i = 0; i < local_count; i++)
       GC_SAFE_CHECK_IS_C(VALIDATION, Value, frame[i]);
@@ -404,22 +377,20 @@ void Stack::recook_stack() {
   ASSERT(status().is_parked);
   word *bot = bottom();
   Frame frame(bot + fp());
-  while (frame.prev_fp() != 0) {
+  while (!frame.is_bottom()) {
     frame.prev_fp() = bot + reinterpret_cast<uint32_t>(frame.prev_fp());
     frame.unwind();
   }
   IF_DEBUG(status().is_cooked = true);
-  IF_PARANOID(validate());
 }
 
 void Stack::uncook_stack() {
   if (status().is_empty) return;
-  IF_PARANOID(validate());
   ASSERT(status().is_cooked);
   ASSERT(status().is_parked);
   Frame frame(bottom() + fp());
   word *bot = bottom();
-  while (frame.prev_fp() != 0) {
+  while (!frame.is_bottom()) {
     // Create a copy of the frame so that we can unwind the original
     // frame and then do the uncooking
     IF_DEBUG(word *prev_fp = frame.prev_fp());
@@ -436,10 +407,10 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
   ASSERT(status().is_parked);
   word *bot = bottom();
   Frame frame(bottom() + fp());
-  while (!frame.is_bottom()) {
-    ASSERT(frame.sp() >= frame.fp() + Frame::kSize);
-    uint32_t stack_height = frame.locals();
+  while (true) {
     visitor.visit_field(pointer_cast<Value*>(&frame.lambda()));
+    if (frame.is_bottom()) break;
+    uint32_t stack_height = frame.locals();
     for (uint32_t i = 0; i < stack_height; i++) {
       // Visit the i'th local variable
       visitor.visit_field(&frame[i]);

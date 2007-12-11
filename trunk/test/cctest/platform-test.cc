@@ -12,5 +12,5 @@ void Test::basic_data_types() {
 }
 
 void Test::data_structures() {
-  CHECK_LT(sizeof(Stack::Flags), 4);
+  CHECK_LT(sizeof(Stack::Status), 4);
 }

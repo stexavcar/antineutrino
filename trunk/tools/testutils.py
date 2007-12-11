@@ -1,5 +1,5 @@
 from os.path import abspath, basename, join, commonprefix
-import subprocess, os, sys
+import subprocess, os, sys, time
 
 def execute(executable, args):
   process = subprocess.Popen(
@@ -26,11 +26,12 @@ def is_selected(config, test):
   return False
 
 class CCTestCase:
-  def __init__(self, executable, test_case):
+  def __init__(self, executable, test_case, target):
     self.test_case = test_case
     self.executable = executable
+    self.target = target
   def __str__(self):
-    return self.test_case + " (" + basename(str(self.executable)) + ")"
+    return self.target + ' ' + self.test_case + " (" + basename(str(self.executable)) + ")"
   def run(self):
     (exit_code, output, errors) = execute(self.executable, [ '', self.test_case ])
     status = None
@@ -41,11 +42,12 @@ class CCTestCase:
     return ' '.join(list)
 
 class PyNeutrinoTestCase:
-  def __init__(self, executable, test_case):
+  def __init__(self, executable, test_case, target):
     self.executable = executable
     self.test_case = test_case
+    self.target = target
   def __str__(self):
-    return basename(self.test_case)[:-3]
+    return self.target + ' ' + basename(self.test_case)[:-3]
   def command(self):
     list = [ self.executable, self.test_case ]
     return ' '.join(list)
@@ -58,7 +60,7 @@ def truncate(str, length):
   if len(str) > (length - 3): return str[:length] + "..."
   else: return str
 
-status_line = "[\033[32mP%(passed) 4d\033[0m|\033[31mF%(failed) 4d\033[0m|\033[34mR%(remaining) 4d\033[0m]: %(test)s"
+status_line = "[%(mins)02i:%(secs)02i|\033[34m%%%(remaining) 4d\033[0m|\033[32m+%(passed) 4d\033[0m|\033[31m-%(failed) 4d\033[0m]: %(test)s"
 
 def escape_string(s):
   s = s.replace('\\', '\\\\')
@@ -67,8 +69,10 @@ def escape_string(s):
 class ProgressIndicator:
   def __init__(self, count):
     self.remaining = count
+    self.total = count
     self.passed = 0
     self.failed = 0
+    self.start_time = time.time()
 
 class DotsProgressIndicator(ProgressIndicator):
   def __init__(self, count):
@@ -101,11 +105,15 @@ class ColorProgressIndicator(ProgressIndicator):
     self.print_progress(truncate(str(test), 40))
   def print_progress(self, name):
     self.clear_line()
+    elapsed = time.time() - self.start_time
+    
     print status_line % {
       'passed':    self.passed,
-      'remaining': self.remaining,
+      'remaining': (((self.total - self.remaining) * 100) // self.total),
       'failed':    self.failed,
-      'test':      name
+      'test':      name,
+      'mins':      int(elapsed) / 60,
+      'secs':      int(elapsed) % 60
     },
   def test_failed(self, test):
     self.clear_line()

@@ -23,7 +23,7 @@ Lambda *&Frame::lambda() {
 }
 
 bool Frame::is_bottom() {
-  return fp() == 0;
+  return prev_fp() == 0;
 }
 
 // -----------------
@@ -67,13 +67,11 @@ void Frame::push_activation() {
 void Frame::unwind() {
   sp_ = fp();
   fp_ = prev_fp();
-  ASSERT(sp_ >= fp_ + kSize);
 }
 
 void Frame::unwind(word *bottom) {
   sp_ = fp();
   fp_ = reinterpret_cast<uint32_t>(prev_fp()) + bottom;
-  ASSERT(sp_ >= fp_ + kSize);
 }
 
 UncookedStackIterator::UncookedStackIterator(Stack *stack)

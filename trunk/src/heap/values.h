@@ -152,13 +152,16 @@ struct StackStatus {
    * a stack is first created
    */
   StackStatus()
-      : is_cooked(true)
-      , is_empty(true)
-      , is_parked(false) { }
-  
-  bool is_cooked : 1;
+      : is_empty(true)
+#ifdef DEBUG
+      , is_cooked(true)
+      , is_parked(false)
+#endif
+      { }
+
   bool is_empty : 1;
-  bool is_parked : 1;
+  IF_DEBUG(bool is_cooked : 1);
+  IF_DEBUG(bool is_parked : 1);
 };
 
 class Stack : public Object {

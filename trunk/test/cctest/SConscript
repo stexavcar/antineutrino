@@ -2,7 +2,7 @@ import re
 from buildutils import read_lines_from
 from os.path import abspath, join, basename
 from testutils import CCTestCase, is_selected, escape_string
-Import('config env config build')
+Import('config env config build target')
 
 cctest_files = read_lines_from(join(config['root'], 'test', 'cctest', 'tests.list'))
 
@@ -88,7 +88,7 @@ def add_test_cases():
     # this worthless junk into shape!
     executable = abspath(join(build, str(program[0])))
     for function in functions:
-      test_case = CCTestCase(executable, function)
+      test_case = CCTestCase(executable, function, target)
       config['tests'].append(test_case)
 
 add_test_cases()
