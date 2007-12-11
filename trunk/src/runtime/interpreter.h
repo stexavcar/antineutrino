@@ -62,6 +62,7 @@ class Frame {
 public:
   Frame(word *fp, word *sp) : fp_(fp), sp_(sp) { }
   Frame(word *fp) : fp_(fp), sp_(fp + kSize) { }
+  uint32_t locals() { return sp() - (fp() + kSize); }
   inline uint32_t &prev_pc();
   inline word *&prev_fp();
   inline Lambda *&lambda();

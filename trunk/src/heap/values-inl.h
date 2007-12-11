@@ -271,9 +271,9 @@ uint32_t String::size_for(uint32_t chars) {
 // --- S t a c k ---
 // -----------------
 
-DEFINE_ACCESSORS(uint32_t,     Stack, height, Height)
-DEFINE_ACCESSORS(uint32_t,     Stack, fp,     Fp)
-DEFINE_ACCESSORS(Stack::Flags, Stack, flags,  Flags)
+DEFINE_ACCESSORS(uint32_t,      Stack, height,  Height)
+DEFINE_ACCESSORS(uint32_t,      Stack, fp,      Fp)
+DEFINE_ACCESSORS(Stack::Status, Stack, status,  Status)
 
 uint32_t Stack::size_for(uint32_t height) {
   return kHeaderSize + height;

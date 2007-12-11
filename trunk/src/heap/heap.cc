@@ -147,8 +147,7 @@ Data *Heap::new_stack(uint32_t height) {
   Stack *result = cast<Stack>(val);
   result->set_height(height);
   result->set_fp(0);
-  result->create_bottom_activation();
-  result->set_flags(Stack::Flags());
+  result->set_status(Stack::Status());
   IF_PARANOID(result->validate());
   return result;
 }

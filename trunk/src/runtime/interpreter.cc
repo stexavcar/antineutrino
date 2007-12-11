@@ -34,20 +34,25 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
   ref<Task> task = new_ref(initial_task);
   ref<Lambda> lambda = new_ref(initial_lambda);
   lambda.ensure_compiled();
-  Frame frame(task->stack()->bottom() + task->stack()->fp());
-  frame.self(0) = runtime().roots().vhoid();
+  ASSERT(task->stack()->status().is_empty);
+  task->stack()->status().is_empty = false;
+  uint32_t argc = 0;
+  Frame frame(task->stack()->bottom() + Frame::accessible_below_fp(argc));
+  frame.self(argc) = runtime().roots().vhoid();
   frame.lambda() = *lambda;
   frame.prev_fp() = 0;
-  IF_PARANOID(task->stack()->validate());
+  ASSERT(frame.sp() >= frame.fp() + Frame::kSize);
   uint32_t pc = 0;
+  Data *value;
   while (true) {
-    Data *value = interpret(frame, &pc);
+    value = interpret(frame, &pc);
     printf("Evaluated: %s\n", value->to_string().chars());
     if (is<Signal>(value)) {
       frame.push_activation();
       task->stack()->set_fp(frame.fp() - task->stack()->bottom());
       frame.prev_pc() = pc;
       frame.lambda() = *lambda;
+      task->stack()->status().is_parked = true;
       IF_PARANOID(task->stack()->validate());
       if (is<AllocationFailed>(value)) {
         Stack *old_stack = task->stack();
@@ -57,12 +62,14 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
         UNREACHABLE();
       }
       IF_PARANOID(task->stack()->validate());
+      task->stack()->status().is_parked = false;
       frame.unwind();
-      IF_PARANOID(task->stack()->validate());
     } else {
-      return cast<Value>(value);
+      break;
     }
   }
+  task->stack()->status().is_empty = true;
+  return cast<Value>(value);
 }
 
 void Frame::reset(Stack *old_stack, Stack *new_stack) {
@@ -122,6 +129,7 @@ private:
 };
 
 Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
+  printf("--- interpreting ---\n");
   uint32_t pc = *pc_ptr;
   ExecutionWrapUp wrap_up(&pc, pc_ptr);
   vector<uint16_t> code = cast<Code>(frame.lambda()->code())->buffer();
@@ -281,8 +289,7 @@ Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
     }
     case OC_CHKHGT: {
       uint16_t expected = code[pc + 1];
-      uint16_t height = (frame.sp() - frame.fp()) - Frame::kSize;
-      CHECK_EQ(expected, height);
+      CHECK_EQ(expected, frame.locals());
       pc += OpcodeInfo<OC_CHKHGT>::kSize;
       break;
     }
@@ -378,11 +385,12 @@ static void print_stack(Stack *stack, word* offset = 0) {
 
 #ifdef DEBUG
 void Stack::validate_stack() {
-  ASSERT(flags().is_cooked);
+  if (status().is_empty) return;
+  ASSERT(status().is_cooked);
   Frame frame(bottom() + fp());
   while (!frame.is_bottom()) {
     GC_SAFE_CHECK_IS_C(VALIDATION, Lambda, frame.lambda());
-    uint32_t local_count = frame.sp() - (frame.fp() + Frame::kSize);
+    uint32_t local_count = frame.locals();
     for (uint32_t i = 0; i < local_count; i++)
       GC_SAFE_CHECK_IS_C(VALIDATION, Value, frame[i]);
     frame.unwind();
@@ -390,49 +398,48 @@ void Stack::validate_stack() {
 }
 #endif
 
-void Stack::create_bottom_activation() {
-  set_fp(Frame::accessible_below_fp(0));
-  Frame frame(bottom() + fp());
-  frame.self(0) = 0;
-  frame.lambda() = 0;
-  frame.prev_fp() = 0;
-}
-
 void Stack::recook_stack() {
-  ASSERT(!flags().is_cooked);
+  if (status().is_empty) return;
+  ASSERT(!status().is_cooked);
+  ASSERT(status().is_parked);
   word *bot = bottom();
   Frame frame(bot + fp());
-  while (!frame.is_bottom()) {
+  while (frame.prev_fp() != 0) {
     frame.prev_fp() = bot + reinterpret_cast<uint32_t>(frame.prev_fp());
     frame.unwind();
   }
-  IF_DEBUG(flags().is_cooked = true);
+  IF_DEBUG(status().is_cooked = true);
   IF_PARANOID(validate());
 }
 
 void Stack::uncook_stack() {
+  if (status().is_empty) return;
   IF_PARANOID(validate());
-  ASSERT(flags().is_cooked);
-  UncookedStackIterator iter(this);
+  ASSERT(status().is_cooked);
+  ASSERT(status().is_parked);
+  Frame frame(bottom() + fp());
   word *bot = bottom();
-  while (!iter.at_end()) {
+  while (frame.prev_fp() != 0) {
     // Create a copy of the frame so that we can unwind the original
     // frame and then do the uncooking
-    IF_DEBUG(word *prev_fp = iter.frame().prev_fp());
-    iter.frame().prev_fp() = reinterpret_cast<word*>(iter.frame().prev_fp() - bot);
-    iter.advance();
-    ASSERT(prev_fp == iter.frame().fp());
+    IF_DEBUG(word *prev_fp = frame.prev_fp());
+    frame.prev_fp() = reinterpret_cast<word*>(frame.prev_fp() - bot);
+    frame.unwind(bot);
+    ASSERT(prev_fp == frame.fp());
   }
-  IF_DEBUG(flags().is_cooked = false);
+  IF_DEBUG(status().is_cooked = false);
 }
 
 void Stack::for_each_stack_field(FieldVisitor &visitor) {
-  ASSERT(!flags().is_cooked);
+  if (status().is_empty) return;
+  ASSERT(!status().is_cooked);
+  ASSERT(status().is_parked);
   word *bot = bottom();
   Frame frame(bottom() + fp());
   while (!frame.is_bottom()) {
+    ASSERT(frame.sp() >= frame.fp() + Frame::kSize);
+    uint32_t stack_height = frame.locals();
     visitor.visit_field(pointer_cast<Value*>(&frame.lambda()));
-    uint32_t stack_height = frame.sp() - (frame.fp() + Frame::kSize);
     for (uint32_t i = 0; i < stack_height; i++) {
       // Visit the i'th local variable
       visitor.visit_field(&frame[i]);

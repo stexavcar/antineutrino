@@ -146,14 +146,19 @@ DEFINE_REF_CLASS(Object);
 // --- S t a c k ---
 // -----------------
 
-struct StackFlags {
+struct StackStatus {
   /**
    * This constructor specifies the state of the stack flags when
    * a stack is first created
    */
-  StackFlags() : is_cooked(true) { }
+  StackStatus()
+      : is_cooked(true)
+      , is_empty(true)
+      , is_parked(false) { }
   
   bool is_cooked : 1;
+  bool is_empty : 1;
+  bool is_parked : 1;
 };
 
 class Stack : public Object {
@@ -164,16 +169,15 @@ public:
    * reason it is not a true nested class is that it has to be forward
    * declared.
    */
-  typedef StackFlags Flags;
+  typedef StackStatus Status;
   
   DECLARE_FIELD(uint32_t, height);
   DECLARE_FIELD(uint32_t, fp);
-  DECLARE_FIELD(Flags, flags);
+  DECLARE_FIELD(Status, status);
   inline word *bottom();
   
   IF_DEBUG(void validate_stack());
   void for_each_stack_field(FieldVisitor &visitor);
-  void create_bottom_activation();
   
   /**
    * Converts all derived pointers in this object into neutral
@@ -191,8 +195,8 @@ public:
   
   static const uint32_t kHeightOffset = Object::kHeaderSize;
   static const uint32_t kFpOffset     = kHeightOffset + kPointerSize;
-  static const uint32_t kFlagsOffset  = kFpOffset + kPointerSize;
-  static const uint32_t kHeaderSize   = kFlagsOffset + kPointerSize;
+  static const uint32_t kStatusOffset  = kFpOffset + kPointerSize;
+  static const uint32_t kHeaderSize   = kStatusOffset + kPointerSize;
 };
 
 template <> class ref_traits<Stack> : public ref_traits<Object> {

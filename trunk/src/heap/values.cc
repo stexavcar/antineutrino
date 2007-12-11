@@ -166,6 +166,9 @@ static void write_signal_short_on(Signal *obj, string_buffer &buf) {
   case Signal::ALLOCATION_FAILED:
     buf.append("@<allocation failed>");
     break;
+  case Signal::INTERNAL_ERROR:
+    buf.append("@<internal error>");
+    break;
   default:
     UNHANDLED(Signal::Type, obj->type());
   }
