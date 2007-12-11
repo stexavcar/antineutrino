@@ -1,0 +1,11 @@
+#summary Operator Precedence Hierarchy
+
+= Neutrino Operators =
+
+|| `return`, `if`, `def` ||
+|| `fn` ||
+|| `or` ||
+|| `and` ||
+|| `not` ||
+|| _binary operators_ ||
+|| _function, method calls_ ||
