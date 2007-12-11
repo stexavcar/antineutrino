@@ -1,6 +1,6 @@
 #summary Operator Precedence Hierarchy
 
-This is how the operator precedence hierarchy _should_ look, not how it does look.
+This is how the operator precedence hierarchy _should_ look, not how it does look.  See issue 4.
 
 || `return`, `if`, `def` ||
 || `fn` ||
