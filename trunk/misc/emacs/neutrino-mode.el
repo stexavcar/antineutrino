@@ -1,5 +1,10 @@
 ;; Neutrino mode.  Plenty of inspiration taken from scala-mode.
 
+;; To enable this mode for all .n files add this line to your .emacs
+;; file (or local equivalent):
+;; 
+;; (setq auto-mode-alist (cons '("\\.n$" . neutrino-mode) auto-mode-alist))
+
 (require 'regexp-opt)
 
 ;; Customization
@@ -63,7 +68,7 @@
 
 (defconst neutrino-keywords-regexp
   (regexp-opt
-   '("def" "class" "new")
+   '("def" "class" "new" "internal" "and" "or" "not")
    'words))
 
 (defconst neutrino-constants-regexp
@@ -72,8 +77,10 @@
    'words))
 
 (defvar neutrino-font-lock-keywords
-  `((,neutrino-keywords-regexp 0 font-lock-keyword-face nil)
-    (,neutrino-constants-regexp 0 font-lock-constant-face nil)))
+  `(("\\<def\\>\\ +\\<\\(\\w+\\)\\>" 1 font-lock-function-name-face nil)
+    (,neutrino-keywords-regexp 0 font-lock-keyword-face nil)
+    (,neutrino-constants-regexp 0 font-lock-constant-face nil)
+    ("[A-Z]\\w+" 0 font-lock-type-face nil)))
 
 (define-derived-mode neutrino-mode fundamental-mode "Neutrino"
   "Major mode for editing Neutrino code"
@@ -88,5 +95,21 @@
 
   (make-local-variable 'indent-line-function)
   (setq indent-line-function #'neutrino-indent-line))
+
+;; End-of-line comments.  Pretty convoluted eh.  Here's how it works.
+;; the first entry specifies that '/' is the first (1) character and
+;; also the second (2) character that starts b-style comments.  The
+;; second line specifies that \n ends b-style comments.
+(modify-syntax-entry ?\/ ". 12b" neutrino-mode-syntax-table)
+(modify-syntax-entry ?\n "> b"   neutrino-mode-syntax-table)
+
+;; Multi-line comments.  The first line specifies that '(' is the
+;; first character of a-style comments.  The second line says that
+;; '*' is the second character (2) of a-style comments and also the
+;; first character that ends them (3).  Finally, the last line
+;; says that ')' is the second character that ends a-style comments.
+(modify-syntax-entry ?\( ". 1"   neutrino-mode-syntax-table)
+(modify-syntax-entry ?*  ". 23"  neutrino-mode-syntax-table)
+(modify-syntax-entry ?\) ". 4"   neutrino-mode-syntax-table)
 
 (provide 'neutrino-mode)

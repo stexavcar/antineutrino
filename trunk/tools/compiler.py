@@ -34,6 +34,7 @@ class Keyword(Token):
 class Ident(Token):
   def __init__(self, name):
     self.name = name
+    self.value = name
   def is_ident(self):
     return True
 
@@ -77,7 +78,8 @@ class Delimiter(Token):
 
 KEYWORDS = [
   'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return',
-  'null', 'true', 'false', 'internal', 'operator', 'new', 'in', 'fn'
+  'null', 'true', 'false', 'internal', 'operator', 'new', 'in', 'fn',
+  'and', 'or', 'not'
 ]
 
 RESERVED = [
@@ -595,9 +597,31 @@ class Parser:
     elif self.token().is_keyword('def'):
       return self.parse_local_definition(is_toplevel, end)
     else:
-      value = self.parse_prefix_expression()
+      value = self.parse_logical_expression()
       if (is_toplevel): self.expect_delimiter(';')
       return value
+  
+  def parse_logical_expression(self):
+    exprs = [ self.parse_and_expression() ]
+    while self.token().is_keyword('or'):
+      self.expect_keyword('or')
+      exprs.append(self.parse_and_expression())
+    result = exprs[-1]
+    for i in xrange(2, len(exprs) + 1):
+      result = Conditional(exprs[-i], Thrue(), result)
+    return result
+
+  def parse_and_expression(self):
+    exprs = [ self.parse_prefix_expression() ]
+    while self.token().is_keyword('and'):
+      self.expect_keyword('and')
+      exprs.append(self.parse_prefix_expression())
+    # We construct the resulting conditional expression backwards
+    # To make the conditionals simple
+    result = exprs[-1];
+    for i in xrange(2, len(exprs) + 1):
+      result = Conditional(exprs[-i], result, Fahlse())
+    return result
   
   def parse_prefix_expression(self):
     if self.token().is_keyword('fn'):
@@ -1045,6 +1069,8 @@ class Null(Expression):
 class Thrue(Expression):
   def accept(self, visitor):
     visitor.visit_true(self)
+  def __repr__(self):
+    return "true"
   def traverse(self, visitor):
     pass
   def quote(self):
@@ -1053,6 +1079,8 @@ class Thrue(Expression):
 class Fahlse(Expression):
   def accept(self, visitor):
     visitor.visit_false(self)
+  def __repr__(self):
+    return "false"
   def traverse(self, visitor):
     pass
   def quote(self):
@@ -1103,6 +1131,8 @@ class Conditional(Expression):
     self.cond = cond
     self.then_part = then_part
     self.else_part = else_part
+  def __repr__(self):
+    return 'if ' + str(self.cond) + ' then ' + str(self.then_part) + ' else ' + str(self.else_part)
   def accept(self, visitor):
     visitor.visit_conditional(self)
   def traverse(self, visitor):
