@@ -27,7 +27,7 @@ env.SConscript(
 # Checks that the files listed in misc/keyword-checks.list contain
 # all keywords between the specified markers
 def check_keywords():
-  list = join(config['root'], 'misc', 'keyword-checks.list')
+  list = join(config['root'], 'misc', 'etc', 'keyword-checks.list')
   for name in read_lines_from(list):
     lines = [ ]
     # Read the contents between the begin and end markers into the
