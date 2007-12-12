@@ -62,12 +62,14 @@
 					<string>entity.name.type.neutrino</string>
 				</dict>
 			</dict>
+			<key>marker</key>
+			<string>--- begin keywords ---</string>
 			<key>match</key>
 			<string>(class)\s+(\w+)</string>
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(def|class|return|operator|if|else|while|new|case|match|as)\b</string>
+			<string>\b(def|class|return|operator|if|else|while|new|case|match|as|do|fn|and|or|not)\b</string>
 			<key>name</key>
 			<string>keyword.control.neutrino</string>
 		</dict>
@@ -92,6 +94,8 @@
 					<string>markup.underline.neutrino</string>
 				</dict>
 			</dict>
+			<key>marker</key>
+			<string>--- end keywords ---</string>
 			<key>match</key>
 			<string>(\w+):</string>
 		</dict>

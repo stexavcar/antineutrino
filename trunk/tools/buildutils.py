@@ -119,3 +119,9 @@ def read_config_file(name):
 def apply_items(env, properties):
   for (key, value) in properties.items():
     env.Replace(**{key.upper(): value})
+
+KEYWORDS = [
+  'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return',
+  'null', 'true', 'false', 'internal', 'operator', 'new', 'in', 'fn',
+  'and', 'or', 'not'
+]

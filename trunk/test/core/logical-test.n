@@ -40,8 +40,14 @@ def truth_table_test_and_or() {
   assert_equals(true,  true  and true  or true);
 }
 
+def lazy_evaluation_test () {
+  assert_equals(true,  true  or  fail("1"));
+  assert_equals(false, false and fail("2"));
+}
+
 def main() {
   truth_table_test_and();
   truth_table_test_or();
   truth_table_test_and_or();
+  lazy_evaluation_test();
 }

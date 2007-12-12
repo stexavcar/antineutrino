@@ -2,6 +2,7 @@ import platform, sys, os
 from os.path import join, abspath, walk, basename, dirname
 root = dirname(File('SConstruct').rfile().abspath)
 src = join(root, 'src')
+etc = join(root, 'etc')
 
 # Append the tools directory to the python load path to make the
 # utility scripts available
@@ -34,7 +35,7 @@ def read_config(name):
 
 targets_file = get_toolchain_id() + '.cfg'
 
-configurations = read_config(join(src, targets_file))
+configurations = read_config(join(etc, targets_file))
 
 options = Options()
 options.Add(EnumOption(
@@ -75,6 +76,7 @@ config = {
  'bin':        abspath('.'),
  'root':       abspath(root),
  'src':        abspath(src),
+ 'etc':        abspath(etc),
  'test':       selected_test,
  'tests':      [],
  'check-deps': []

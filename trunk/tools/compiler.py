@@ -7,6 +7,7 @@
 
 from optparse import OptionParser, Option
 from os import path
+from buildutils import KEYWORDS
 import re, string, struct, codecs
 
 # -------------------
@@ -75,12 +76,6 @@ class Delimiter(Token):
     return name == self.value
   def __str__(self):
     return self.value
-
-KEYWORDS = [
-  'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return',
-  'null', 'true', 'false', 'internal', 'operator', 'new', 'in', 'fn',
-  'and', 'or', 'not'
-]
 
 RESERVED = [
   '->', '~'

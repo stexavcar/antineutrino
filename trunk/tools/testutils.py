@@ -25,6 +25,14 @@ def is_selected(config, test):
   if selected == base[:base.index('.')]: return True
   return False
 
+class Result:
+  PASSED = 'passed'
+  FAILED = 'failed'
+  def __init__(self, status, output="", error=""):
+    self.status = status
+    self.output = output
+    self.error = error
+
 class CCTestCase:
   def __init__(self, executable, test_case, target):
     self.test_case = test_case
@@ -35,8 +43,8 @@ class CCTestCase:
   def run(self):
     (exit_code, output, errors) = execute(self.executable, [ '', self.test_case ])
     status = None
-    if exit_code == 0: return ('passed', output, errors)
-    else: return ('failed', output, errors)
+    if exit_code == 0: return Result(Result.PASSED, output=output, error=errors)
+    else: return Result(Result.FAILED, output=output, error=errors)
   def command(self):
     list = [ self.executable, self.test_case ]
     return ' '.join(list)
@@ -53,8 +61,19 @@ class PyNeutrinoTestCase:
     return ' '.join(list)
   def run(self):
     (exit_code, output, errors) = execute(self.executable, [ '', self.test_case ])
-    if exit_code == 0: return ('passed', output, errors)
-    else: return ('failed', output, errors)
+    if exit_code == 0: return Result(Result.PASSED, output=output, error=errors)
+    else: return Result(Result.FAILED, output=output, error=errors)
+
+class CustomTestCase:
+  def __init__(self, name, fun):
+    self.name = name
+    self.fun = fun
+  def __str__(self):
+    return self.name
+  def command(self):
+    return None
+  def run(self):
+    return self.fun();
 
 def truncate(str, length):
   if len(str) > (length - 3): return str[:length] + "..."
@@ -118,7 +137,8 @@ class ColorProgressIndicator(ProgressIndicator):
   def test_failed(self, test):
     self.clear_line()
     print "--- Failed: " + str(test) + " ---"
-    print "Command: " + test.command()
+    command = test.command()
+    if command: print "Command: " + command
     self.failed = self.failed + 1
     self.remaining = self.remaining - 1
   def test_passed(self, test):
@@ -144,14 +164,14 @@ def run_neutrino_tests(all_tests, output):
     assert False
   for test in all_tests:
     progress.start_test(test)
-    (status, stdout, stderr) = test.run()
-    stdout = stdout.strip()
-    stderr = stderr.strip()
-    if status == 'failed':
+    result = test.run()
+    stdout = result.output.strip()
+    stderr = result.error.strip()
+    if result.status == Result.FAILED:
       progress.test_failed(test)
     elif len(stdout) > 0 or len(stderr) > 0:
       progress.test_had_output(test)
-    if status == 'passed':
+    if result.status == Result.PASSED:
       progress.test_passed(test)
     progress.show_output(stdout, stderr)
   test = "Done"

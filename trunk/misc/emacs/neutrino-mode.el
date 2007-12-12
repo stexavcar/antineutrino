@@ -66,9 +66,15 @@
 
 ;; Syntax coloring
 
+;; All the language's keywords have to occur between the begin and
+;; end markers or a build check will fail.
+
+;; --- begin keywords ---
+
 (defconst neutrino-keywords-regexp
   (regexp-opt
-   '("def" "class" "new" "internal" "and" "or" "not")
+   '("def" "class" "new" "internal" "and" "or" "not" "if" "else"
+     "return" "fn" "in" "while" "do" "operator")
    'words))
 
 (defconst neutrino-constants-regexp
@@ -76,8 +82,11 @@
    '("this" "true" "false" "null")
    'words))
 
+;; --- end keywords ---
+
 (defvar neutrino-font-lock-keywords
-  `(("\\<def\\>\\ +\\<\\(\\w+\\)\\>" 1 font-lock-function-name-face nil)
+  `(("\\<def\\>\\ +\\<\\(\\w+\\)\\>\\ *(" 1 font-lock-function-name-face nil)
+    ("\\<def\\>\\ +\\<\\(\\w+\\)\\>" 1 font-lock-variable-name-face nil)
     (,neutrino-keywords-regexp 0 font-lock-keyword-face nil)
     (,neutrino-constants-regexp 0 font-lock-constant-face nil)
     ("[A-Z]\\w+" 0 font-lock-type-face nil)))
