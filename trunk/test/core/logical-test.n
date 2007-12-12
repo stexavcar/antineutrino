@@ -20,7 +20,28 @@ def truth_table_test_or() {
   assert_equals(true,  true  or true  or true);
 }
 
+def truth_table_test_and_or() {
+  assert_equals(false, false or false and false);
+  assert_equals(false, false or false and true);
+  assert_equals(false, false or true  and false);
+  assert_equals(true,  false or true  and true);
+  assert_equals(true,  true  or false and false);
+  assert_equals(true,  true  or false and true);
+  assert_equals(true,  true  or true  and false);
+  assert_equals(true,  true  or true  and true);
+  
+  assert_equals(false, false and false or false);
+  assert_equals(true,  false and false or true);
+  assert_equals(false, false and true  or false);
+  assert_equals(true,  false and true  or true);
+  assert_equals(false, true  and false or false);
+  assert_equals(true,  true  and false or true);
+  assert_equals(true,  true  and true  or false);
+  assert_equals(true,  true  and true  or true);
+}
+
 def main() {
   truth_table_test_and();
   truth_table_test_or();
+  truth_table_test_and_or();
 }
