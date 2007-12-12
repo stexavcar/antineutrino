@@ -104,6 +104,85 @@ public:
 
 DEFINE_REF_CLASS(InvokeExpression);
 
+
+// ---------------------------------------
+// --- R a i s e   E x p r e s s i o n ---
+// ---------------------------------------
+
+#define FOR_EACH_RAISE_EXPRESSION_FIELD(VISIT, arg)                  \
+  VISIT(String,     name,      Name,      arg)                       \
+  VISIT(Tuple,      arguments, Arguments, arg)
+
+class RaiseExpression : public SyntaxTree {
+public:
+  FOR_EACH_RAISE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kArgumentsOffset = kNameOffset + kPointerSize;
+  static const uint32_t kSize = kArgumentsOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<RaiseExpression> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_RAISE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(RaiseExpression);
+
+
+// -------------------------
+// --- O n   C l a u s e ---
+// -------------------------
+
+#define FOR_EACH_ON_CLAUSE_FIELD(VISIT, arg)                         \
+  VISIT(String,           name,   Name,   arg)                       \
+  VISIT(LambdaExpression, lambda, Lambda, arg)
+
+class OnClause : public SyntaxTree {
+public:
+  FOR_EACH_ON_CLAUSE_FIELD(DECLARE_OBJECT_FIELD, 0)
+
+  static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kLambdaOffset = kNameOffset + kPointerSize;
+  static const uint32_t kSize = kLambdaOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<OnClause> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_ON_CLAUSE_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(OnClause);
+
+
+// ---------------------------------------
+// --- D o   O n   E x p r e s s i o n ---
+// ---------------------------------------
+
+#define FOR_EACH_DO_ON_EXPRESSION_FIELD(VISIT, arg)                  \
+  VISIT(SyntaxTree, value,   Value,   arg)                           \
+  VISIT(Tuple,      clauses, Clauses, arg)
+
+class DoOnExpression : public SyntaxTree {
+public:
+  FOR_EACH_DO_ON_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kClausesOffset = kValueOffset + kPointerSize;
+  static const uint32_t kSize = kClausesOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<DoOnExpression> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_DO_ON_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(DoOnExpression);
+
+
 // -------------------------------------
 // --- C a l l   E x p r e s s i o n ---
 // -------------------------------------

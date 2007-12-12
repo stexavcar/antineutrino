@@ -27,6 +27,8 @@ class Class;
 class Code;
 class Data;
 class Dictionary;
+class DoClause;
+class DoOnExpression;
 class Factory;
 class False;
 class Heap;

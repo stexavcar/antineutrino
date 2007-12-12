@@ -584,11 +584,11 @@ class Parser:
     while self.token().is_keyword('on'):
       self.expect_keyword('on')
       name = self.expect_ident()
-      args = self.parse_arguments('(', ')')
+      params = self.parse_params('(', ')')
       self.expect_delimiter('->')
       body = self.parse_expression(is_toplevel)
-      clauses.append(OnClause(name, args, body))
-    return value
+      clauses.append(OnClause(name, Lambda(params, Return(body))))
+    return DoOnExpression(value, clauses)
 
   # <control_expression>
   #   -> 'return' <expression> ';'?
@@ -1015,11 +1015,38 @@ class Raise(Expression):
   def accept(self, visitor):
     visitor.visit_raise(self)
   def traverse(self, visitor):
-    for arg in aself.args: arg.accept(visitor)
+    for arg in self.args: arg.accept(visitor)
   def quote(self):
     name = HEAP.new_string(self.name)
     args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
     return HEAP.new_raise_expression(name, args)
+
+class DoOnExpression(Expression):
+  def __init__(self, value, clauses):
+    self.value = value
+    self.clauses = clauses
+  def accept(self, visitor):
+    visitor.visit_do_on_expression(self)
+  def traverse(self, visitor):
+    self.value.accept(visitor)
+    for clause in self.clauses: clause.accept(visitor)
+  def quote(self):
+    value = self.value.quote()
+    clauses = HEAP.new_tuple(values = [ clause.quote() for clause in self.clauses ])
+    return HEAP.new_do_on_expression(value, clauses)
+
+class OnClause(Expression):
+  def __init__(self, name, fun):
+    self.name = name
+    self.fun = fun
+  def accept(self, visitor):
+    visitor.visit_on_clause(self)
+  def traverse(self, visitor):
+    self.fun.accept(visitor)
+  def quote(self):
+    name = HEAP.new_string(self.name)
+    fun = self.fun.quote()
+    return HEAP.new_on_clause(name, fun)
 
 class Quote(Expression):
   def __init__(self, value, unquotes):
@@ -1195,7 +1222,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 40
+  kRootCount  = 43
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1221,7 +1248,7 @@ class Heap:
 
   # --- A l l o c a t i o n ---      
 
-  def allocate(self, size):
+  def allocate(self, type, size):
     if self.cursor + size > self.capacity:
       new_capacity = self.capacity * 2
       new_memory = new_capacity * [ tag_as_smi(0) ]
@@ -1231,18 +1258,17 @@ class Heap:
       self.memory = new_memory
     addr = self.cursor * POINTER_SIZE
     self.cursor += size
+    ImageObject(addr).set_class(type)
     return addr
   
   def new_class(self, instance_type):
-    result = ImageClass(self.allocate(ImageClass_Size), instance_type)
-    result.set_class(CLASS_TYPE)
+    result = ImageClass(self.allocate(CLASS_TYPE, ImageClass_Size), instance_type)
     return result
 
   def get_root(self, index):
     if index in self.root_object_cache:
       return self.root_object_cache[index]
-    result = ImageRoot(self.allocate(ImageRoot_Size), index)
-    result.set_class(SINGLETON_TYPE)
+    result = ImageRoot(self.allocate(SINGLETON_TYPE, ImageRoot_Size), index)
     self.root_object_cache[index] = result
     return result
 
@@ -1250,69 +1276,48 @@ class Heap:
     if symbol in self.symbol_object_cache:
       return self.symbol_object_cache[symbol]
     name = HEAP.new_string(symbol.name)
-    result = ImageSymbol(self.allocate(ImageSymbol_Size), name)
-    result.set_class(SYMBOL_TYPE)
+    result = ImageSymbol(self.allocate(SYMBOL_TYPE, ImageSymbol_Size), name)
     self.symbol_object_cache[symbol] = result
     return result
   
   def new_lambda(self, argc, expr):
-    result = ImageLambda(self.allocate(ImageLambda_Size), argc, expr)
-    result.set_class(LAMBDA_TYPE)
-    return result
+    return ImageLambda(self.allocate(LAMBDA_TYPE, ImageLambda_Size), argc, expr)
 
   def new_method(self, name, body):
-    result = ImageMethod(self.allocate(ImageMethod_Size), name, body)
-    result.set_class(METHOD_TYPE)
-    return result
+    return ImageMethod(self.allocate(METHOD_TYPE, ImageMethod_Size), name, body)
 
   def new_lambda_expression(self, params, body):
-    result = ImageLambdaExpression(self.allocate(ImageLambdaExpression_Size), params, body)
-    result.set_class(LAMBDA_EXPRESSION_TYPE)
-    return result
+    return ImageLambdaExpression(self.allocate(LAMBDA_EXPRESSION_TYPE, ImageLambdaExpression_Size), params, body)
 
   def new_interpolate_expression(self, terms):
-    result = ImageInterpolateExpression(self.allocate(ImageInterpolateExpression_Size), terms)
-    result.set_class(INTERPOLATE_EXPRESSION_TYPE)
-    return result
+    return ImageInterpolateExpression(self.allocate(INTERPOLATE_EXPRESSION_TYPE, ImageInterpolateExpression_Size), terms)
 
   def new_local_definition(self, symbol, value, body):
-    result = ImageLocalDefinition(self.allocate(ImageLocalDefinition_Size), symbol, value, body)
-    result.set_class(LOCAL_DEFINITION_TYPE)
-    return result
+    return ImageLocalDefinition(self.allocate(LOCAL_DEFINITION_TYPE, ImageLocalDefinition_Size), symbol, value, body)
 
   def new_builtin_call(self, argc, index):
-    result = ImageBuiltinCall(self.allocate(ImageBuiltinCall_Size), argc, index)
-    result.set_class(BUILTIN_CALL_TYPE)
-    return result
+    return ImageBuiltinCall(self.allocate(BUILTIN_CALL_TYPE, ImageBuiltinCall_Size), argc, index)
 
   def new_quote_expression(self, value, unquotes):
-    result = ImageQuoteExpression(self.allocate(ImageQuoteExpression_Size), value, unquotes)
-    result.set_class(QUOTE_EXPRESSION_TYPE)
-    return result
+    return ImageQuoteExpression(self.allocate(QUOTE_EXPRESSION_TYPE, ImageQuoteExpression_Size), value, unquotes)
 
   def new_unquote_expression(self, value):
-    result = ImageUnquoteExpression(self.allocate(ImageUnquoteExpression_Size), value)
-    result.set_class(UNQUOTE_EXPRESSION_TYPE)
-    return result
+    return ImageUnquoteExpression(self.allocate(UNQUOTE_EXPRESSION_TYPE, ImageUnquoteExpression_Size), value)
 
   def new_this_expression(self):
-    result = ImageThisExpression(self.allocate(ImageThisExpression_Size))
-    result.set_class(THIS_EXPRESSION_TYPE)
-    return result
+    return ImageThisExpression(self.allocate(THIS_EXPRESSION_TYPE, ImageThisExpression_Size))
 
   def new_number(self, value):
     return value
 
   def new_dictionary(self):
-    result = ImageDictionary(self.allocate(ImageDictionary_Size))
-    result.set_class(DICTIONARY_TYPE)
+    result = ImageDictionary(self.allocate(DICTIONARY_TYPE, ImageDictionary_Size))
     self.dicts.append(result)
     return result
   
   def new_tuple(self, length = None, values = None):
     if length is None: length = len(values)
-    result = ImageTuple(self.allocate(ImageTuple_HeaderSize + length), length)
-    result.set_class(TUPLE_TYPE)
+    result = ImageTuple(self.allocate(TUPLE_TYPE, ImageTuple_HeaderSize + length), length)
     if not values is None:
       for i in xrange(length):
         result[i] = values[i]
@@ -1320,69 +1325,56 @@ class Heap:
   
   def new_string(self, contents):
     length = len(contents)
-    result = ImageString(self.allocate(ImageString_HeaderSize + length), length)
-    result.set_class(STRING_TYPE)
+    result = ImageString(self.allocate(STRING_TYPE, ImageString_HeaderSize + length), length)
     for i in xrange(length):
       result[i] = ord(contents[i])
     return result
 
   def new_code(self, contents):
     length = len(contents)
-    result = ImageCode(self.allocate(ImageCode_HeaderSize + length), length)
-    result.set_class(CODE_TYPE)
+    result = ImageCode(self.allocate(CODE_TYPE, ImageCode_HeaderSize + length), length)
     for i in xrange(length):
       result[i] = contents[i]
     return result
 
   def new_literal_expression(self, value):
-    result = ImageLiteralExpression(self.allocate(ImageLiteralExpression_Size), value)
-    result.set_class(LITERAL_EXPRESSION_TYPE)
-    return result
+    return ImageLiteralExpression(self.allocate(LITERAL_EXPRESSION_TYPE, ImageLiteralExpression_Size), value)
 
   def new_invoke_expression(self, recv, name, args):
-    result = ImageInvokeExpression(self.allocate(ImageInvokeExpression_Size), recv, name, args)
-    result.set_class(INVOKE_EXPRESSION_TYPE)
-    return result
+    return ImageInvokeExpression(self.allocate(INVOKE_EXPRESSION_TYPE, ImageInvokeExpression_Size), recv, name, args)
 
   def new_call_expression(self, recv, fun, args):
-    result = ImageCallExpression(self.allocate(ImageCallExpression_Size), recv, fun, args)
-    result.set_class(CALL_EXPRESSION_TYPE)
-    return result
+    return ImageCallExpression(self.allocate(CALL_EXPRESSION_TYPE, ImageCallExpression_Size), recv, fun, args)
+
+  def new_raise_expression(self, name, args):
+    return ImageRaiseExpression(self.allocate(RAISE_EXPRESSION_TYPE, ImageRaiseExpression_Size), name, args)
+
+  def new_on_clause(self, name, fun):
+    return ImageOnClause(self.allocate(ON_CLAUSE_TYPE, ImageOnClause_Size), name, fun)
+
+  def new_do_on_expression(self, value, clauses):
+    return ImageDoOnExpression(self.allocate(DO_ON_EXPRESSION_TYPE, ImageDoOnExpression_Size), value, clauses)
 
   def new_conditional(self, cond, then_part, else_part):
-    result = ImageConditionalExpression(self.allocate(ImageConditionalExpression_Size), cond, then_part, else_part)
-    result.set_class(CONDITIONAL_EXPRESSION_TYPE)
-    return result
+    return ImageConditionalExpression(self.allocate(CONDITIONAL_EXPRESSION_TYPE, ImageConditionalExpression_Size), cond, then_part, else_part)
 
   def new_class_expression(self, name, methods, super):
-    result = ImageClassExpression(self.allocate(ImageClassExpression_Size), name, methods, super)
-    result.set_class(CLASS_EXPRESSION_TYPE)
-    return result
+    return ImageClassExpression(self.allocate(CLASS_EXPRESSION_TYPE, ImageClassExpression_Size), name, methods, super)
 
   def new_return_expression(self, value):
-    result = ImageReturnExpression(self.allocate(ImageReturnExpression_Size), value)
-    result.set_class(RETURN_EXPRESSION_TYPE)
-    return result
+    return ImageReturnExpression(self.allocate(RETURN_EXPRESSION_TYPE, ImageReturnExpression_Size), value)
 
   def new_sequence_expression(self, exprs):
-    result = ImageSequenceExpression(self.allocate(ImageSequenceExpression_Size), exprs)
-    result.set_class(SEQUENCE_EXPRESSION_TYPE)
-    return result
+    return ImageSequenceExpression(self.allocate(SEQUENCE_EXPRESSION_TYPE, ImageSequenceExpression_Size), exprs)
 
   def new_method_expression(self, name, fun):
-    result = ImageMethodExpression(self.allocate(ImageMethodExpression_Size), name, fun)
-    result.set_class(METHOD_EXPRESSION_TYPE)
-    return result;
+    return ImageMethodExpression(self.allocate(METHOD_EXPRESSION_TYPE, ImageMethodExpression_Size), name, fun)
 
   def new_tuple_expression(self, exprs):
-    result = ImageTupleExpression(self.allocate(ImageTupleExpression_Size), exprs)
-    result.set_class(TUPLE_EXPRESSION_TYPE)
-    return result
+    return ImageTupleExpression(self.allocate(TUPLE_EXPRESSION_TYPE, ImageTupleExpression_Size), exprs)
 
   def new_global(self, name):
-    result = ImageGlobalExpression(self.allocate(ImageGlobalExpression_Size), name)
-    result.set_class(GLOBAL_EXPRESSION_TYPE)
-    return result
+    return ImageGlobalExpression(self.allocate(GLOBAL_EXPRESSION_TYPE, ImageGlobalExpression_Size), name)
 
   # --- A c c e s s ---
 
@@ -1564,6 +1556,36 @@ class ImageCallExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageCallExpression_FunctionOffset, value)
   def set_args(self, value):
     HEAP.set_field(self, ImageCallExpression_ArgumentsOffset, value)
+
+class ImageRaiseExpression(ImageSyntaxTree):
+  def __init__(self, addr, name, args):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_name(name)
+    self.set_args(args)
+  def set_name(self, value):
+    HEAP.set_field(self, ImageRaiseExpression_NameOffset, value)
+  def set_args(self, value):
+    HEAP.set_field(self, ImageRaiseExpression_ArgumentsOffset, value)
+
+class ImageOnClause(ImageSyntaxTree):
+  def __init__(self, addr, name, fun):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_name(name)
+    self.set_fun(fun)
+  def set_name(self, value):
+    HEAP.set_field(self, ImageOnClause_NameOffset, value)
+  def set_fun(self, value):
+    HEAP.set_field(self, ImageOnClause_LambdaOffset, value)
+
+class ImageDoOnExpression(ImageSyntaxTree):
+  def __init__(self, addr, value, clauses):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_value(value)
+    self.set_clauses(clauses)
+  def set_value(self, value):
+    HEAP.set_field(self, ImageDoOnExpression_ValueOffset, value)
+  def set_clauses(self, value):
+    HEAP.set_field(self, ImageDoOnExpression_ClausesOffset, value)
 
 class ImageConditionalExpression(ImageSyntaxTree):
   def __init__(self, addr, cond, then_part, else_part):
@@ -1770,6 +1792,12 @@ class Visitor:
   def visit_interpolated(self, that):
     self.visit_node(that)
   def visit_local_definition(self, that):
+    self.visit_node(that)
+  def visit_raise(self, that):
+    self.visit_node(that)
+  def visit_do_on_expression(self, that):
+    self.visit_node(that)
+  def visit_on_clause(self, that):
     self.visit_node(that)
 
 class LoadVisitor(Visitor):

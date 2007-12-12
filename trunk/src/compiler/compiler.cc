@@ -581,6 +581,18 @@ void Assembler::visit_method_expression(ref<MethodExpression> that) {
   visit_syntax_tree(that);
 }
 
+void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
+  visit_syntax_tree(that);
+}
+
+void Assembler::visit_on_clause(ref<OnClause> that) {
+  visit_syntax_tree(that);
+}
+
+void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {
+  visit_syntax_tree(that);
+}
+
 void Assembler::visit_unquote_expression(ref<UnquoteExpression> that) {
   // This is handled specially by the visitor and should never be
   // visited explicitly

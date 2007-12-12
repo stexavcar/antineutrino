@@ -230,52 +230,20 @@ uint32_t ImageObject::type() {
 uint32_t ImageObject::size_in_image() {
   uint32_t type = this->type();
   switch (type) {
-    case DICTIONARY_TYPE:
-      return ImageDictionary_Size;
     case LAMBDA_TYPE:
       return ImageLambda_Size;
     case CLASS_TYPE:
       return ImageClass_Size;
-    case METHOD_TYPE:
-      return ImageMethod_Size;
-    case LITERAL_EXPRESSION_TYPE:
-      return ImageLiteralExpression_Size;
-    case INVOKE_EXPRESSION_TYPE:
-      return ImageInvokeExpression_Size;
-    case CALL_EXPRESSION_TYPE:
-      return ImageCallExpression_Size;
-    case CONDITIONAL_EXPRESSION_TYPE:
-      return ImageConditionalExpression_Size;
-    case CLASS_EXPRESSION_TYPE:
-      return ImageClassExpression_Size;
-    case RETURN_EXPRESSION_TYPE:
-      return ImageReturnExpression_Size;
-    case METHOD_EXPRESSION_TYPE:
-      return ImageMethodExpression_Size;
-    case SEQUENCE_EXPRESSION_TYPE:
-      return ImageSequenceExpression_Size;
-    case TUPLE_EXPRESSION_TYPE:
-      return ImageTupleExpression_Size;
-    case GLOBAL_EXPRESSION_TYPE:
-      return ImageGlobalExpression_Size;
-    case SYMBOL_TYPE:
-      return ImageSymbol_Size;
-    case THIS_EXPRESSION_TYPE:
-      return ImageThisExpression_Size;
-    case QUOTE_EXPRESSION_TYPE:
-      return ImageQuoteExpression_Size;
-    case LAMBDA_EXPRESSION_TYPE:
-      return ImageLambdaExpression_Size;
     case SINGLETON_TYPE:
       return ImageRoot_Size;
     case BUILTIN_CALL_TYPE:
       return ImageBuiltinCall_Size;
-    case INTERPOLATE_EXPRESSION_TYPE:
-      return ImageInterpolateExpression_Size;
-    case LOCAL_DEFINITION_TYPE:
-      return ImageLocalDefinition_Size;
     case UNQUOTE_EXPRESSION_TYPE:
       return ImageUnquoteExpression_Size;
+#define MAKE_CASE(n, NAME, Name, name)                               \
+    case NAME##_TYPE: return Image##Name##_Size;
+FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
+#undef MAKE_CASE
     case STRING_TYPE:
       return image_cast<ImageString>(this)->string_size_in_image();
     case CODE_TYPE:

@@ -128,6 +128,30 @@ public:
   inline ImageTuple *arguments();
 };
 
+class ImageRaiseExpression : public ImageSyntaxTree {
+public:
+  inline ImageString *name();
+  inline ImageTuple *arguments();
+};
+
+class ImageLambdaExpression : public ImageSyntaxTree {
+public:
+  inline ImageTuple *params();
+  inline ImageSyntaxTree *body();
+};
+
+class ImageDoOnExpression : public ImageSyntaxTree {
+public:
+  inline ImageSyntaxTree *value();
+  inline ImageTuple *clauses();
+};
+
+class ImageOnClause : public ImageSyntaxTree {
+public:
+  inline ImageString *name();
+  inline ImageLambdaExpression *lambda();
+};
+
 class ImageCallExpression : public ImageSyntaxTree {
 public:
   inline ImageSyntaxTree *receiver();
@@ -152,12 +176,6 @@ public:
 class ImageReturnExpression : public ImageSyntaxTree {
 public:
   inline ImageSyntaxTree *value();
-};
-
-class ImageLambdaExpression : public ImageSyntaxTree {
-public:
-  inline ImageTuple *params();
-  inline ImageSyntaxTree *body();
 };
 
 class ImageMethodExpression : public ImageSyntaxTree {

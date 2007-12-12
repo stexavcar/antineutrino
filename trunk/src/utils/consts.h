@@ -81,7 +81,10 @@
   VISIT(62, THIS_EXPRESSION,        ThisExpression,        this_expression)        \
   VISIT(63, LAMBDA_EXPRESSION,      LambdaExpression,      lambda_expression)      \
   VISIT(65, INTERPOLATE_EXPRESSION, InterpolateExpression, interpolate_expression) \
-  VISIT(66, LOCAL_DEFINITION,       LocalDefinition,       local_definition)
+  VISIT(66, LOCAL_DEFINITION,       LocalDefinition,       local_definition)       \
+  VISIT(69, RAISE_EXPRESSION,       RaiseExpression,       raise_expression)       \
+  VISIT(70, ON_CLAUSE,              OnClause,              on_clause)              \
+  VISIT(71, DO_ON_EXPRESSION,       DoOnExpression,        do_on_expression)
 
 #define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
   FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
@@ -170,7 +173,16 @@
   VISIT(2, QuoteTemplate,         UnquotesOffset)                    \
   VISIT(3, QuoteTemplate,         Size)                              \
   VISIT(1, Task,                  StackOffset)                       \
-  VISIT(2, Task,                  Size)
+  VISIT(2, Task,                  Size)                              \
+  VISIT(1, RaiseExpression,       NameOffset)                        \
+  VISIT(2, RaiseExpression,       ArgumentsOffset)                   \
+  VISIT(3, RaiseExpression,       Size)                              \
+  VISIT(1, OnClause,              NameOffset)                        \
+  VISIT(2, OnClause,              LambdaOffset)                      \
+  VISIT(3, OnClause,              Size)                              \
+  VISIT(1, DoOnExpression,        ValueOffset)                       \
+  VISIT(2, DoOnExpression,        ClausesOffset)                     \
+  VISIT(3, DoOnExpression,        Size)
 
 
 // -----------------
@@ -221,7 +233,10 @@
   VISIT(36, Class,      unquote_expression_class,     UnquoteExpression,     new_empty_class(UNQUOTE_EXPRESSION_TYPE))     \
   VISIT(37, Class,      quote_template_class,         QuoteTemplate,         new_empty_class(QUOTE_TEMPLATE_TYPE))         \
   VISIT(38, Class,      stack_class,                  Stack,                 new_empty_class(STACK_TYPE))                  \
-  VISIT(39, Class,      task_class,                   Task,                  new_empty_class(TASK_TYPE))
+  VISIT(39, Class,      task_class,                   Task,                  new_empty_class(TASK_TYPE))                   \
+  VISIT(40, Class,      raise_expression_class,       RaiseExpression,       new_empty_class(RAISE_EXPRESSION_TYPE))       \
+  VISIT(41, Class,      on_clause_class,              OnClause,              new_empty_class(ON_CLAUSE_TYPE))              \
+  VISIT(42, Class,      do_on_expression_class,       DoOnExpression,        new_empty_class(DO_ON_EXPRESSION_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \
