@@ -1,0 +1,17 @@
+(*
+def raise_possibly(do_raise, value) {
+  if (do_raise) raise problem();
+  else return value;
+}
+
+def simple_condition_test() {
+  def x1 := (do raise_possibly(false, 10) on problem() -> 11);
+  assert_equals(10, x1);
+  def x2 := (do raise_possibly(true, 12) on problem() -> 13);
+  assert_equals(13, x2);
+}
+*)
+
+def main() {
+//  simple_condition_test();
+}

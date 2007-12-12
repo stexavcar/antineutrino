@@ -123,5 +123,5 @@ def apply_items(env, properties):
 KEYWORDS = [
   'def', 'this', 'is', 'class', 'if', 'else', 'while', 'do', 'return',
   'null', 'true', 'false', 'internal', 'operator', 'new', 'in', 'fn',
-  'and', 'or', 'not'
+  'and', 'or', 'not', 'on', 'raise'
 ]

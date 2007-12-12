@@ -1,4 +1,4 @@
-;; Neutrino mode.  Plenty of inspiration taken from scala-mode.
+;; Neutrino mode.  Inspiration taken from scala-, sml- and java-mode.
 
 ;; To enable this mode for all .n files add this line to your .emacs
 ;; file (or local equivalent):
@@ -74,7 +74,7 @@
 (defconst neutrino-keywords-regexp
   (regexp-opt
    '("def" "class" "new" "internal" "and" "or" "not" "if" "else"
-     "return" "fn" "in" "while" "do" "operator")
+     "return" "fn" "in" "while" "do" "operator" "on" "raise")
    'words))
 
 (defconst neutrino-constants-regexp
@@ -117,8 +117,8 @@
 ;; '*' is the second character (2) of a-style comments and also the
 ;; first character that ends them (3).  Finally, the last line
 ;; says that ')' is the second character that ends a-style comments.
-(modify-syntax-entry ?\( ". 1"   neutrino-mode-syntax-table)
+(modify-syntax-entry ?\( "()1"   neutrino-mode-syntax-table)
 (modify-syntax-entry ?*  ". 23"  neutrino-mode-syntax-table)
-(modify-syntax-entry ?\) ". 4"   neutrino-mode-syntax-table)
+(modify-syntax-entry ?\) ")(4"   neutrino-mode-syntax-table)
 
 (provide 'neutrino-mode)

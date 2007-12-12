@@ -22,7 +22,7 @@ def is_selected(config, test):
   selected = config['test']
   base = basename(test)
   if selected == base: return True
-  if selected == base[:base.index('.')]: return True
+  if selected == base[:base.find('.')]: return True
   return False
 
 class Result:

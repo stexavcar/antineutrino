@@ -577,20 +577,43 @@ class Parser:
     else:
       assert False
 
+  def parse_do_expression(self, is_toplevel, end):
+    self.expect_keyword('do')
+    value = self.parse_expression(is_toplevel)
+    clauses = [ ]
+    while self.token().is_keyword('on'):
+      self.expect_keyword('on')
+      name = self.expect_ident()
+      args = self.parse_arguments('(', ')')
+      self.expect_delimiter('->')
+      body = self.parse_expression(is_toplevel)
+      clauses.append(OnClause(name, args, body))
+    return value
+
   # <control_expression>
-  #   -> 'return' <expression>
+  #   -> 'return' <expression> ';'?
+  #   -> 'raise' $name <arguments> ';'?
+  #   -> <do-expression>
   #   -> <conditional-expression>
-  #   -> <operator-expression> ';'
+  #   -> <operator-expression> ';'?
   def parse_control_expression(self, is_toplevel, end = None):
     if self.token().is_keyword('return'):
       self.expect_keyword('return')
       value = self.parse_expression(False)
       if is_toplevel: self.expect_delimiter(';')
       return Return(value)
+    elif self.token().is_keyword('raise'):
+      self.expect_keyword('raise')
+      name = self.expect_ident()
+      args = self.parse_arguments('(', ')')
+      if is_toplevel: self.expect_delimiter(';')
+      return Raise(name, args)
     elif self.token().is_keyword('if'):
       return self.parse_conditional_expression(is_toplevel)
     elif self.token().is_keyword('def'):
       return self.parse_local_definition(is_toplevel, end)
+    elif self.token().is_keyword('do'):
+      return self.parse_do_expression(is_toplevel, end)
     else:
       value = self.parse_logical_expression()
       if (is_toplevel): self.expect_delimiter(';')
@@ -984,6 +1007,19 @@ class Call(Expression):
     fun = self.fun.quote()
     args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
     return HEAP.new_call_expression(recv, fun, args)
+
+class Raise(Expression):
+  def __init__(self, name, args):
+    self.name = name
+    self.args = args
+  def accept(self, visitor):
+    visitor.visit_raise(self)
+  def traverse(self, visitor):
+    for arg in aself.args: arg.accept(visitor)
+  def quote(self):
+    name = HEAP.new_string(self.name)
+    args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
+    return HEAP.new_raise_expression(name, args)
 
 class Quote(Expression):
   def __init__(self, value, unquotes):
