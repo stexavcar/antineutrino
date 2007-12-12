@@ -25,6 +25,6 @@ def add_test(arg, dir, fnames):
 # We have to manually construct the absolute path because otherwise
 # scons screws us over by creating an empty clone of the core folder
 # in the build directory and automagically using that.
-root = join(config['root'], 'test', 'core')
+root = join(config['root'], 'test', 'language')
 assert exists(root)
 walk(root, add_test, None)

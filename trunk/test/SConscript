@@ -17,9 +17,9 @@ env.SConscript(
   duplicate = False
 )
 
-build = abspath(join(old_build, 'core'))
+build = abspath(join(old_build, 'language'))
 env.SConscript(
-  join('core', 'SConscript'),
+  join('language', 'SConscript'),
   exports = 'config env target prefix config build',
   duplicate = False
 )
