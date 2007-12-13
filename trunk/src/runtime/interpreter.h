@@ -22,13 +22,41 @@ namespace neutrino {
   VISIT(12, GOTO,   1) VISIT(13, INVOKE, 2)   VISIT(14, BUILTIN,  2) \
   VISIT(15, TUPLE,  1) VISIT(16, CONCAT, 1)   VISIT(17, LOCAL,    1) \
   VISIT(18, CHKHGT, 1) VISIT(19, OUTER,  1)   VISIT(20, CLOSURE,  2) \
-  VISIT(21, QUOTE,  1) VISIT(22, UNQUOTE, 1)  VISIT(23, RAISE,    2)
+  VISIT(21, QUOTE,  1) VISIT(22, UNQUOTE, 1)  VISIT(23, RAISE,    2) \
+  VISIT(24, MARK,   0) VISIT(25, UNMARK, 0)
 
 enum Opcode {
   __first_opcode = -1
 #define DECLARE_OPCODE(n, NAME, argc) , OC_##NAME = n
 FOR_EACH_OPCODE(DECLARE_OPCODE)
 #undef DECLARE_OPCODE
+};
+
+/**
+ *
+ *             |     . . .     |
+ *             +---------------+
+ *             |     data      |
+ *             +---------------+
+ *       mp -> |    prev mp    |
+ *             +---------------+
+ *             |     . . .     |
+ *
+ */
+class Marker {
+public:
+  Marker(word *mp) : mp_(mp) { }
+  word *mp() { return mp_; }
+  inline void set_prev_mp(word *mp);
+  inline word *prev_mp();
+  inline bool is_bottom();
+  inline void unwind();
+  
+  static const uint32_t kPrevMpOffset = 0;
+  static const uint32_t kDataOffset   = kPrevMpOffset + 1;
+  static const uint32_t kSize         = kDataOffset + 1;
+private:
+  word *mp_;
 };
 
 /**
@@ -72,6 +100,8 @@ public:
   inline Value *pop(uint32_t height = 1);
   inline Value *&operator[](uint32_t offset);
   inline void push_activation();
+  inline Marker push_marker();
+  inline Marker pop_marker();
   
   /**
    * Unwinds a stack frame in a cooked stack.
@@ -104,17 +134,6 @@ public:
 private:
   word *fp_;
   word *sp_;
-};
-
-class UncookedStackIterator {
-public:
-  inline UncookedStackIterator(Stack *stack);
-  Frame &frame() { return frame_; }
-  inline void advance();
-  inline bool at_end();
-private:
-  word *bottom_;
-  Frame frame_;
 };
 
 /**

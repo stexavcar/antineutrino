@@ -232,13 +232,31 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       uint16_t name_index = code[pc + 1];
       Value *name = constant_pool[name_index];
       uint16_t argc = code[pc + 2];
-      uint32_t current_marker = stack->top_marker();
-      while (current_marker != 0) {
-        UNREACHABLE();
+      Marker marker(stack->top_marker());
+      while (!marker.is_bottom()) {
+        marker.unwind();
       }
       Arguments args(runtime(), argc, frame);
       unhandled_condition(name, args);
       pc += OpcodeInfo<OC_INVOKE>::kSize;
+      break;
+    }
+    case OC_MARK: {
+      Marker mark = frame.push_marker();
+      word *current_marker = stack->top_marker();
+      mark.set_prev_mp(current_marker);
+      stack->set_top_marker(mark.mp());
+      pc += OpcodeInfo<OC_MARK>::kSize;
+      break;
+    }
+    case OC_UNMARK: {
+      Value *value = frame.pop();
+      Marker mark = frame.pop_marker();
+      word *marker_value = mark.prev_mp();
+      ASSERT(ValuePointer::has_smi_tag(marker_value));
+      stack->set_top_marker(marker_value);
+      frame.push(value);
+      pc += OpcodeInfo<OC_UNMARK>::kSize;
       break;
     }
     case OC_CALL: {

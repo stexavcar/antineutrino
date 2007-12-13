@@ -6,6 +6,31 @@
 
 namespace neutrino {
 
+
+// -------------------
+// --- M a r k e r ---
+// -------------------
+
+void Marker::set_prev_mp(word *value) {
+  // the value must be smi tagged so it doesn't get mistaken for a
+  // real object by the gc
+  ASSERT(ValuePointer::has_smi_tag(value));
+  mp()[kPrevMpOffset] = reinterpret_cast<word>(value);
+}
+
+word *Marker::prev_mp() {
+  return reinterpret_cast<word*>(mp()[kPrevMpOffset]);
+}
+
+bool Marker::is_bottom() {
+  return mp() == NULL;
+}
+
+void Marker::unwind() {
+  mp_ = prev_mp();
+}
+
+
 // -----------------
 // --- F r a m e ---
 // -----------------
@@ -25,10 +50,6 @@ Lambda *&Frame::lambda() {
 bool Frame::is_bottom() {
   return prev_fp() == 0;
 }
-
-// -----------------
-// --- S t a c k ---
-// -----------------
 
 Value *Frame::pop(uint32_t height) {
   Value *result = *reinterpret_cast<Value**>(sp_ - 1);
@@ -56,6 +77,16 @@ void Frame::push(Value *value) {
   *(sp_++) = reinterpret_cast<word>(value);
 }
 
+Marker Frame::push_marker() {
+  word *mp = sp_;
+  sp_ += Marker::kSize;
+  return Marker(mp);
+}
+
+Marker Frame::pop_marker() {
+  return Marker(sp_ -= Marker::kSize);
+}
+
 void Frame::push_activation() {
   word *prev_fp = fp_;
   fp_ = sp_;
@@ -72,18 +103,6 @@ void Frame::unwind() {
 void Frame::unwind(word *bottom) {
   sp_ = fp();
   fp_ = reinterpret_cast<uint32_t>(prev_fp()) + bottom;
-}
-
-UncookedStackIterator::UncookedStackIterator(Stack *stack)
-  : bottom_(stack->bottom())
-  , frame_(bottom_ + stack->fp()) { }
-
-void UncookedStackIterator::advance() {
-  frame_.unwind(bottom_);
-}
-
-bool UncookedStackIterator::at_end() {
-  return frame_.is_bottom();
 }
 
 

@@ -182,7 +182,7 @@ public:
   
   DECLARE_FIELD(uint32_t, height);
   DECLARE_FIELD(uint32_t, fp);
-  DECLARE_FIELD(uint32_t, top_marker);
+  DECLARE_FIELD(word*,    top_marker);
   DECLARE_FIELD(Status, status);
   inline word *bottom();
   

@@ -70,6 +70,8 @@ public:
   void builtin(uint16_t argc, uint16_t index);
   void concat(uint16_t terms);
   void quote(uint16_t unquotes);
+  void mark();
+  void unmark();
   
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
 #define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
@@ -287,6 +289,18 @@ void Assembler::bind(Label &label) {
     code()[current] = value;
     current = next;
   }
+}
+
+void Assembler::mark() {
+  STATIC_CHECK(OpcodeInfo<OC_MARK>::kArgc == 0);
+  code().append(OC_MARK);
+  adjust_stack_height(Marker::kSize);
+}
+
+void Assembler::unmark() {
+  STATIC_CHECK(OpcodeInfo<OC_UNMARK>::kArgc == 0);
+  code().append(OC_UNMARK);  
+  adjust_stack_height(-Marker::kSize);
 }
 
 
@@ -591,7 +605,9 @@ void Assembler::visit_method_expression(ref<MethodExpression> that) {
 }
 
 void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {
+  __ mark();
   __ codegen(that.value());
+  __ unmark();
 }
 
 void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
