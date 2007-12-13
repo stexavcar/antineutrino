@@ -56,7 +56,7 @@ public:
   void slap(uint16_t height);
   void rethurn();
   void invoke(ref<String> name, uint16_t argc);
-  void raise(ref<String> name, uint16_t argc);
+  void advise(ref<String> name, uint16_t argc);
   void call(uint16_t argc);
   void tuple(uint16_t size);
   void global(ref<Value> name);
@@ -157,10 +157,10 @@ void Assembler::invoke(ref<String> name, uint16_t argc) {
   code().append(argc);
 }
 
-void Assembler::raise(ref<String> name, uint16_t argc) {
-  STATIC_CHECK(OpcodeInfo<OC_RAISE>::kArgc == 2);
+void Assembler::advise(ref<String> name, uint16_t argc) {
+  STATIC_CHECK(OpcodeInfo<OC_ADVISE>::kArgc == 2);
   uint16_t name_index = constant_pool_index(name);
-  code().append(OC_RAISE);
+  code().append(OC_ADVISE);
   code().append(name_index);
   code().append(argc);
 }
@@ -596,28 +596,28 @@ void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
   __ builtin(that->argc(), that->index());
 }
 
-void Assembler::visit_class_expression(ref<ClassExpression> that) {
-  visit_syntax_tree(that);
-}
-
-void Assembler::visit_method_expression(ref<MethodExpression> that) {
-  visit_syntax_tree(that);
-}
-
 void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {
   __ mark();
   __ codegen(that.value());
   __ unmark();
 }
 
-void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
+void Assembler::visit_advise_expression(ref<AdviseExpression> that) {
   RefScope scope;
   ref<Tuple> args = that.arguments();
   for (uint32_t i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
-  __ raise(that.name(), args.length());
+  __ advise(that.name(), args.length());
   if (args.length() > 0)
     __ slap(args.length());
+}
+
+void Assembler::visit_class_expression(ref<ClassExpression> that) {
+  visit_syntax_tree(that);
+}
+
+void Assembler::visit_method_expression(ref<MethodExpression> that) {
+  visit_syntax_tree(that);
 }
 
 void Assembler::visit_on_clause(ref<OnClause> that) {

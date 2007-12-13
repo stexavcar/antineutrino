@@ -592,7 +592,7 @@ class Parser:
 
   # <control_expression>
   #   -> 'return' <expression> ';'?
-  #   -> 'raise' $name <arguments> ';'?
+  #   -> 'advise' $name <arguments> ';'?
   #   -> <do-expression>
   #   -> <conditional-expression>
   #   -> <operator-expression> ';'?
@@ -602,12 +602,12 @@ class Parser:
       value = self.parse_expression(False)
       if is_toplevel: self.expect_delimiter(';')
       return Return(value)
-    elif self.token().is_keyword('raise'):
-      self.expect_keyword('raise')
+    elif self.token().is_keyword('advise'):
+      self.expect_keyword('advise')
       name = self.expect_ident()
       args = self.parse_arguments('(', ')')
       if is_toplevel: self.expect_delimiter(';')
-      return Raise(name, args)
+      return Advise(name, args)
     elif self.token().is_keyword('if'):
       return self.parse_conditional_expression(is_toplevel)
     elif self.token().is_keyword('def'):
@@ -1008,7 +1008,7 @@ class Call(Expression):
     args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
     return HEAP.new_call_expression(recv, fun, args)
 
-class Raise(Expression):
+class Advise(Expression):
   def __init__(self, name, args):
     self.name = name
     self.args = args
@@ -1019,7 +1019,7 @@ class Raise(Expression):
   def quote(self):
     name = HEAP.new_string(self.name)
     args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
-    return HEAP.new_raise_expression(name, args)
+    return HEAP.new_advise_expression(name, args)
 
 class DoOnExpression(Expression):
   def __init__(self, value, clauses):
@@ -1346,8 +1346,8 @@ class Heap:
   def new_call_expression(self, recv, fun, args):
     return ImageCallExpression(self.allocate(CALL_EXPRESSION_TYPE, ImageCallExpression_Size), recv, fun, args)
 
-  def new_raise_expression(self, name, args):
-    return ImageRaiseExpression(self.allocate(RAISE_EXPRESSION_TYPE, ImageRaiseExpression_Size), name, args)
+  def new_advise_expression(self, name, args):
+    return ImageAdviseExpression(self.allocate(ADVISE_EXPRESSION_TYPE, ImageAdviseExpression_Size), name, args)
 
   def new_on_clause(self, name, fun):
     return ImageOnClause(self.allocate(ON_CLAUSE_TYPE, ImageOnClause_Size), name, fun)
@@ -1557,15 +1557,15 @@ class ImageCallExpression(ImageSyntaxTree):
   def set_args(self, value):
     HEAP.set_field(self, ImageCallExpression_ArgumentsOffset, value)
 
-class ImageRaiseExpression(ImageSyntaxTree):
+class ImageAdviseExpression(ImageSyntaxTree):
   def __init__(self, addr, name, args):
     ImageSyntaxTree.__init__(self, addr)
     self.set_name(name)
     self.set_args(args)
   def set_name(self, value):
-    HEAP.set_field(self, ImageRaiseExpression_NameOffset, value)
+    HEAP.set_field(self, ImageAdviseExpression_NameOffset, value)
   def set_args(self, value):
-    HEAP.set_field(self, ImageRaiseExpression_ArgumentsOffset, value)
+    HEAP.set_field(self, ImageAdviseExpression_ArgumentsOffset, value)
 
 class ImageOnClause(ImageSyntaxTree):
   def __init__(self, addr, name, fun):

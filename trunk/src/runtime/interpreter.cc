@@ -228,7 +228,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       pc = 0;
       break;
     }
-    case OC_RAISE: {
+    case OC_ADVISE: {
       uint16_t name_index = code[pc + 1];
       Value *name = constant_pool[name_index];
       uint16_t argc = code[pc + 2];

@@ -2,7 +2,7 @@ internal def raw_print(value);
 def print(obj) -> raw_print(obj.to_string());
 
 def fail(message) {
-  raise failure(message);
+  advise failure(message);
 }
 
 def assert(value) {
