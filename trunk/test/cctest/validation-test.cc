@@ -5,13 +5,11 @@
 using namespace neutrino;
 
 void Test::validation() {
-#ifdef DEBUG
   LocalRuntime runtime;
   String *name = cast<String>(runtime.heap().new_string(0));
   Lambda *lambda = cast<Lambda>(runtime.heap().allocate_lambda(0));
   Method *method = cast<Method>(runtime.heap().new_method(name, lambda));
-  method->validate();
+  ASSERT(method->validate());
   method->set_lambda(reinterpret_cast<Lambda*>(name));
-  CHECK_ABORTS(VALIDATION, method->validate());
-#endif
+  ASSERT_ABORTS(VALIDATION, method->validate());
 }

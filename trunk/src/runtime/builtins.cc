@@ -215,15 +215,6 @@ Data *Builtins::lambda_expression_body(Arguments &args) {
 // --- F u n c t i o n s ---
 // -------------------------
 
-Data *Builtins::fail(Arguments &args) {
-  ASSERT_EQ(1, args.count());
-  String *arg = cast<String>(args[0]);
-  string_buffer buf;
-  arg->write_on(buf, Data::UNQUOTED);
-  fprintf(stderr, "Failure: %s\n", buf.raw_string().chars());
-  exit(1);
-}
-
 Data *Builtins::raw_print(Arguments &args) {
   ASSERT_EQ(1, args.count());
   String *str_obj = cast<String>(args[0]);

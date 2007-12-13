@@ -53,6 +53,8 @@ public:
     CHECK(__has_aborted__);                                          \
   } while (false)
 
+#define ASSERT_ABORTS(TYPE, operation) IF_DEBUG(CHECK_ABORTS(TYPE, operation))
+
 } // namespace neutrino
 
 #endif // _TEST_CCTEST_TESTS_INL

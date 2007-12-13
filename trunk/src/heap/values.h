@@ -41,7 +41,7 @@ public:
   void write_on(string_buffer &buf, WriteMode mode = DEFAULT);
   void write_short_on(string_buffer &buf, WriteMode mode = DEFAULT);
   
-  string to_string();
+  string to_string(WriteMode mode = DEFAULT);
   string to_short_string();
   
 };
@@ -62,7 +62,13 @@ public:
    */
   bool is_key();
 
-  IF_DEBUG(void validate());
+  /**
+   * Checks that this object is consistent; that all fields are legal
+   * and hold objects of the expected type.  It always returns false,
+   * since it fails by aborting execution, but has a boolean return
+   * type to allow it to be used in ASSERTs.
+   */
+  IF_DEBUG(bool validate());
   
   /**
    * Built-in support for comparing value objects.  This method
@@ -176,6 +182,7 @@ public:
   
   DECLARE_FIELD(uint32_t, height);
   DECLARE_FIELD(uint32_t, fp);
+  DECLARE_FIELD(uint32_t, top_marker);
   DECLARE_FIELD(Status, status);
   inline word *bottom();
   
@@ -196,10 +203,11 @@ public:
   static inline uint32_t size_for(uint32_t height);
   static const uint32_t kInitialHeight = 2048;
   
-  static const uint32_t kHeightOffset = Object::kHeaderSize;
-  static const uint32_t kFpOffset     = kHeightOffset + kPointerSize;
-  static const uint32_t kStatusOffset  = kFpOffset + kPointerSize;
-  static const uint32_t kHeaderSize   = kStatusOffset + kPointerSize;
+  static const uint32_t kHeightOffset    = Object::kHeaderSize;
+  static const uint32_t kFpOffset        = kHeightOffset + kPointerSize;
+  static const uint32_t kTopMarkerOffset = kFpOffset + kPointerSize;
+  static const uint32_t kStatusOffset    = kTopMarkerOffset + kPointerSize;
+  static const uint32_t kHeaderSize      = kStatusOffset + kPointerSize;
 };
 
 template <> class ref_traits<Stack> : public ref_traits<Object> {
@@ -427,10 +435,10 @@ DEFINE_REF_CLASS(Dictionary);
 // -------------------
 
 #define FOR_EACH_LAMBDA_FIELD(VISIT, arg)                            \
-  VISIT(Value,            code,     Code,     arg)                   \
-  VISIT(Value,            literals, Literals, arg)                   \
-  VISIT(LambdaExpression, tree,     Tree,     arg)                   \
-  VISIT(Tuple,            outers,   Outers,   arg)
+  VISIT(Value,            code,          Code,     arg)              \
+  VISIT(Value,            constant_pool, ConstantPool, arg)          \
+  VISIT(LambdaExpression, tree,          Tree,     arg)              \
+  VISIT(Tuple,            outers,        Outers,   arg)
 
 class Lambda : public Object {
 public:
@@ -442,12 +450,12 @@ public:
 
   string disassemble();
   
-  static const uint32_t kArgcOffset     = Object::kHeaderSize;
-  static const uint32_t kCodeOffset     = kArgcOffset + kPointerSize;
-  static const uint32_t kLiteralsOffset = kCodeOffset + kPointerSize;
-  static const uint32_t kTreeOffset     = kLiteralsOffset + kPointerSize;
-  static const uint32_t kOutersOffset   = kTreeOffset + kPointerSize;
-  static const uint32_t kSize           = kOutersOffset + kPointerSize;
+  static const uint32_t kArgcOffset         = Object::kHeaderSize;
+  static const uint32_t kCodeOffset         = kArgcOffset + kPointerSize;
+  static const uint32_t kConstantPoolOffset = kCodeOffset + kPointerSize;
+  static const uint32_t kTreeOffset         = kConstantPoolOffset + kPointerSize;
+  static const uint32_t kOutersOffset       = kTreeOffset + kPointerSize;
+  static const uint32_t kSize               = kOutersOffset + kPointerSize;
 };
 
 template <> class ref_traits<Lambda> : public ref_traits<Object> {

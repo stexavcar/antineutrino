@@ -11,3 +11,4 @@ signal-test.cc
 singleton-test.cc
 tuple-test.cc
 validation-test.cc
+vector-test.cc

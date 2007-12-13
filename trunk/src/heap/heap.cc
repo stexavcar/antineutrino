@@ -36,13 +36,13 @@ Data *Heap::allocate_class(InstanceType instance_type) {
   return result;
 }
 
-Data *Heap::new_lambda(uint32_t argc, Value *code, Value *literals, LambdaExpression *tree) {
+Data *Heap::new_lambda(uint32_t argc, Value *code, Value *constant_pool, LambdaExpression *tree) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_class());
   if (is<AllocationFailed>(val)) return val;
   Lambda *result = cast<Lambda>(val);
   result->set_argc(argc);
   result->set_code(code);
-  result->set_literals(literals);
+  result->set_constant_pool(constant_pool);
   result->set_tree(tree);
   result->set_outers(roots().empty_tuple());
   return result;
@@ -147,6 +147,7 @@ Data *Heap::new_stack(uint32_t height) {
   Stack *result = cast<Stack>(val);
   result->set_height(height);
   result->set_fp(0);
+  result->set_top_marker(0);
   result->set_status(Stack::Status());
   IF_PARANOID(result->validate());
   return result;

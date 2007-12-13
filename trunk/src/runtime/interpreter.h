@@ -22,7 +22,7 @@ namespace neutrino {
   VISIT(12, GOTO,   1) VISIT(13, INVOKE, 2)   VISIT(14, BUILTIN,  2) \
   VISIT(15, TUPLE,  1) VISIT(16, CONCAT, 1)   VISIT(17, LOCAL,    1) \
   VISIT(18, CHKHGT, 1) VISIT(19, OUTER,  1)   VISIT(20, CLOSURE,  2) \
-  VISIT(21, QUOTE,  1) VISIT(22, UNQUOTE, 1)
+  VISIT(21, QUOTE,  1) VISIT(22, UNQUOTE, 1)  VISIT(23, RAISE,    2)
 
 enum Opcode {
   __first_opcode = -1
@@ -125,9 +125,9 @@ public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
   Value *call(Lambda *lambda, Task *task);
 private:
-  Data *interpret(Frame &frame, uint32_t *pc_ptr);
-  inline Class *get_class(Value *val);
-  inline Data *lookup_method(Class *chlass, Value *name);
+  Data *interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr);
+  Class *get_class(Value *val);
+  Data *lookup_method(Class *chlass, Value *name);
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
 };

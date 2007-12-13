@@ -78,8 +78,11 @@ public:
 #define CHECK_EQ(expected, value) neutrino::Checks::check_eq(        \
     __FILE__, __LINE__, expected, #expected, value, #value)
 
-#define CHECK_LT(value, limit) neutrino::Checks::check_lt(        \
+#define CHECK_LT(value, limit) neutrino::Checks::check_lt(           \
     __FILE__, __LINE__, value, #value, limit, #limit)
+
+#define CHECK_LT_C(COND, value, limit) neutrino::Checks::check_lt(   \
+    __FILE__, __LINE__, value, #value, limit, #limit, COND)
 
 #define CHECK_IS(Type, value)                                        \
     neutrino::Checks::check_is(__FILE__, __LINE__, #Type,            \
@@ -146,12 +149,13 @@ public:
 // --- D y n a m i c   A s s e r t i o n s ---
 // -------------------------------------------
 
-#define ASSERT(value)                  IF_DEBUG(CHECK(value))
-#define ASSERT_C(cond, value)          IF_DEBUG(CHECK_C(cond, value))
-#define ASSERT_EQ(expected, value)     IF_DEBUG(CHECK_EQ(expected, value))
-#define ASSERT_LT(expected, value)     IF_DEBUG(CHECK_LT(expected, value))
-#define ASSERT_IS(Type, value)         IF_DEBUG(CHECK_IS(Type, value))
-#define ASSERT_IS_C(cond, Type, value) IF_DEBUG(CHECK_IS_C(cond, Type, value))
+#define ASSERT(value)                      IF_DEBUG(CHECK(value))
+#define ASSERT_C(cond, value)              IF_DEBUG(CHECK_C(cond, value))
+#define ASSERT_EQ(expected, value)         IF_DEBUG(CHECK_EQ(expected, value))
+#define ASSERT_LT(expected, value)         IF_DEBUG(CHECK_LT(expected, value))
+#define ASSERT_LT_C(cond, expected, value) IF_DEBUG(CHECK_LT_C(cond, expected, value))
+#define ASSERT_IS(Type, value)             IF_DEBUG(CHECK_IS(Type, value))
+#define ASSERT_IS_C(cond, Type, value)     IF_DEBUG(CHECK_IS_C(cond, Type, value))
 
 
 // -----------------------------------------

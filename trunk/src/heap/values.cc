@@ -58,9 +58,9 @@ MAKE_ENUM_INFO_FOOTER()
 // --- P r i n t i n g ---
 // -----------------------
 
-string Data::to_string() {
+string Data::to_string(Data::WriteMode mode) {
   string_buffer buf;
-  write_on(buf);
+  write_on(buf, mode);
   return buf.to_string();
 }
 
@@ -353,7 +353,7 @@ string Lambda::disassemble() {
   uint32_t size = cast<Code>(code())->length();
   uint16_t *data = &cast<Code>(code())->at(0);
   string_buffer buf;
-  disassemble_buffer(data, size, cast<Tuple>(literals()), buf);
+  disassemble_buffer(data, size, cast<Tuple>(constant_pool()), buf);
   return buf.to_string();
 }
 
@@ -424,7 +424,7 @@ static void validate_object(Object *obj) {
       FOR_EACH_LAMBDA_FIELD(VALIDATE_FIELD, Lambda)
       if (!is<Smi>(cast<Lambda>(obj)->code())) {
         GC_SAFE_CHECK_IS_C(VALIDATION, Code, cast<Lambda>(obj)->code());
-        GC_SAFE_CHECK_IS_C(VALIDATION, Tuple, cast<Lambda>(obj)->literals());
+        GC_SAFE_CHECK_IS_C(VALIDATION, Tuple, cast<Lambda>(obj)->constant_pool());
       }
       break;
     case CLASS_TYPE:
@@ -451,8 +451,9 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 
 #undef VALIDATE_FIELD
 
-void Value::validate() {
+bool Value::validate() {
   if (is<Object>(this)) validate_object(cast<Object>(this));
+  return true;
 }
 
 #endif
@@ -512,7 +513,7 @@ Value *Lambda::call(Task *task) {
 }
 
 Data *Lambda::clone(Heap &heap) {
-  return heap.new_lambda(argc(), code(), literals(), tree());
+  return heap.new_lambda(argc(), code(), constant_pool(), tree());
 }
 
 

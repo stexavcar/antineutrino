@@ -16,7 +16,7 @@ vector<T>::vector(T *data) : data_(data) { }
 
 template <typename T>
 T &vector<T>::operator[](uint32_t index) {
-  ASSERT_LT(index, length_);
+  ASSERT_LT_C(OUT_OF_BOUNDS, index, length_);
   return data_[index];
 }
 

@@ -56,6 +56,7 @@ public:
   void slap(uint16_t height);
   void rethurn();
   void invoke(ref<String> name, uint16_t argc);
+  void raise(ref<String> name, uint16_t argc);
   void call(uint16_t argc);
   void tuple(uint16_t size);
   void global(ref<Value> name);
@@ -150,6 +151,14 @@ void Assembler::invoke(ref<String> name, uint16_t argc) {
   STATIC_CHECK(OpcodeInfo<OC_INVOKE>::kArgc == 2);
   uint16_t name_index = constant_pool_index(name);
   code().append(OC_INVOKE);
+  code().append(name_index);
+  code().append(argc);
+}
+
+void Assembler::raise(ref<String> name, uint16_t argc) {
+  STATIC_CHECK(OpcodeInfo<OC_RAISE>::kArgc == 2);
+  uint16_t name_index = constant_pool_index(name);
+  code().append(OC_RAISE);
   code().append(name_index);
   code().append(argc);
 }
@@ -581,16 +590,23 @@ void Assembler::visit_method_expression(ref<MethodExpression> that) {
   visit_syntax_tree(that);
 }
 
+void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {
+  __ codegen(that.value());
+}
+
 void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
-  visit_syntax_tree(that);
+  RefScope scope;
+  ref<Tuple> args = that.arguments();
+  for (uint32_t i = 0; i < args.length(); i++)
+    __ codegen(cast<SyntaxTree>(args.get(i)));
+  __ raise(that.name(), args.length());
+  if (args.length() > 0)
+    __ slap(args.length());
 }
 
 void Assembler::visit_on_clause(ref<OnClause> that) {
-  visit_syntax_tree(that);
-}
-
-void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {
-  visit_syntax_tree(that);
+  // This type of node is handled by the enclosing do-on expression.
+  UNREACHABLE();
 }
 
 void Assembler::visit_unquote_expression(ref<UnquoteExpression> that) {
@@ -666,7 +682,7 @@ void CompileSession::compile(ref<Lambda> lambda, Assembler *enclosing) {
   ref<Code> code = assembler.flush_code();
   ref<Tuple> constant_pool = assembler.flush_constant_pool();
   lambda->set_code(*code);
-  lambda->set_literals(*constant_pool);
+  lambda->set_constant_pool(*constant_pool);
 }
 
 } // neutrino

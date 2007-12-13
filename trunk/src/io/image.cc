@@ -156,7 +156,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       ImageLambda *img = image_cast<ImageLambda>(obj);
       Lambda *lambda = cast<Lambda>(img->forward_pointer());
       lambda->set_code(img->code()->forward_pointer());
-      lambda->set_literals(img->literals()->forward_pointer());
+      lambda->set_constant_pool(img->literals()->forward_pointer());
       lambda->set_tree(cast<LambdaExpression>(img->tree()->forward_pointer()));
       lambda->set_outers(Runtime::current().heap().roots().empty_tuple());
       break;

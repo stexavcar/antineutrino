@@ -45,7 +45,7 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
   uint32_t pc = 0;
   Data *value;
   while (true) {
-    value = interpret(frame, &pc);
+    value = interpret(task->stack(), frame, &pc);
     if (is<Signal>(value)) {
       frame.push_activation();
       task->stack()->set_fp(frame.fp() - task->stack()->bottom());
@@ -106,6 +106,22 @@ Data *Interpreter::lookup_method(Class *chlass, Value *name) {
   return Nothing::make();
 }
 
+static void unhandled_condition(Value *name, Arguments &args) {
+  string_buffer buf;
+  buf.append("Unhandled condition: ");
+  name->write_on(buf, Data::UNQUOTED);
+  buf.append("(");
+  bool is_first = true;
+  for (uint32_t i = 0; i < args.count(); i++) {
+    if (is_first) is_first = false;
+    else buf.append(", ");
+    args[i]->write_on(buf);
+  }
+  buf.append(")");
+  fprintf(stderr, "%s\n", buf.raw_string().chars());
+  exit(1);
+}
+
 /**
  * A stack-allocated instance of this class ensures that execution
  * taking place on the specified stack is wrapped up correctly and
@@ -125,11 +141,11 @@ private:
   uint32_t *pc_from_, *pc_to_;
 };
 
-Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
+Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
   uint32_t pc = *pc_ptr;
   ExecutionWrapUp wrap_up(&pc, pc_ptr);
   vector<uint16_t> code = cast<Code>(frame.lambda()->code())->buffer();
-  vector<Value*> constant_pool = cast<Tuple>(frame.lambda()->literals())->buffer();
+  vector<Value*> constant_pool = cast<Tuple>(frame.lambda()->constant_pool())->buffer();
   while (true) {
     uint16_t oc = code[pc];
     Log::instruction(oc, frame);
@@ -150,7 +166,7 @@ Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
     }
     case OC_GLOBAL: {
       uint16_t index = code[pc + 1];
-      Value *name = cast<Tuple>(frame.lambda()->literals())->at(index);
+      Value *name = constant_pool[index];
       Data *value = runtime().toplevel()->get(name);
       if (is<Nothing>(value)) {
         frame.push(runtime().roots().vhoid());
@@ -191,7 +207,7 @@ Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
     }
     case OC_INVOKE: {
       uint16_t name_index = code[pc + 1];
-      Value *name = cast<Tuple>(frame.lambda()->literals())->at(name_index);
+      Value *name = constant_pool[name_index];
       uint16_t argc = code[pc + 2];
       Value *recv = frame[argc + 1];
       Class *chlass = get_class(recv);
@@ -208,8 +224,21 @@ Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
       frame.lambda() = method->lambda();
       new_ref(method->lambda()).ensure_compiled();
       code = cast<Code>(method->lambda()->code())->buffer();
-      constant_pool = cast<Tuple>(method->lambda()->literals())->buffer();
+      constant_pool = cast<Tuple>(method->lambda()->constant_pool())->buffer();
       pc = 0;
+      break;
+    }
+    case OC_RAISE: {
+      uint16_t name_index = code[pc + 1];
+      Value *name = constant_pool[name_index];
+      uint16_t argc = code[pc + 2];
+      uint32_t current_marker = stack->top_marker();
+      while (current_marker != 0) {
+        UNREACHABLE();
+      }
+      Arguments args(runtime(), argc, frame);
+      unhandled_condition(name, args);
+      pc += OpcodeInfo<OC_INVOKE>::kSize;
       break;
     }
     case OC_CALL: {
@@ -221,7 +250,7 @@ Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
       frame.prev_pc() = pc + OpcodeInfo<OC_CALL>::kSize;
       frame.lambda() = fun;
       code = cast<Code>(fun->code())->buffer();
-      constant_pool = cast<Tuple>(fun->literals())->buffer();
+      constant_pool = cast<Tuple>(fun->constant_pool())->buffer();
       pc = 0;
       break;
     }
@@ -242,7 +271,7 @@ Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
       pc = frame.prev_pc();
       frame.unwind();
       code = cast<Code>(frame.lambda()->code())->buffer();
-      constant_pool = cast<Tuple>(frame.lambda()->literals())->buffer();
+      constant_pool = cast<Tuple>(frame.lambda()->constant_pool())->buffer();
       frame[0] = value;
       break;
     }
@@ -311,7 +340,7 @@ Data *Interpreter::interpret(Frame &frame, uint32_t *pc_ptr) {
     }
     case OC_CLOSURE: {
       uint32_t index = code[pc + 1];
-      Lambda *lambda = cast<Lambda>(cast<Tuple>(frame.lambda()->literals())->at(index));
+      Lambda *lambda = cast<Lambda>(constant_pool[index]);
       uint32_t outer_count = cast<Code>(frame.lambda()->code())->at(pc + 2);
       Data *outers_val = runtime().heap().new_tuple(outer_count);
       if (is<Signal>(outers_val)) return outers_val;
