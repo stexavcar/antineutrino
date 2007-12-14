@@ -30,11 +30,13 @@ class NonLocal {
 #define TRY(non_local) do {                                          \
   int __exception__ = setjmp((non_local).jump_buffer());             \
   if (__exception__ == NonLocal::kNoException) {
-    
+
 #define CATCH(cases) } else {                                        \
       switch (__exception__) { cases }                               \
     }                                                                \
   } while (false);  
+
+#define TRY_CATCH_EXCEPTION() __exception__
 
 }
 

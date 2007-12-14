@@ -22,6 +22,14 @@ word *Marker::prev_mp() {
   return reinterpret_cast<word*>(mp()[kPrevMpOffset]);
 }
 
+void Marker::set_data(Value *data) {
+  mp()[kDataOffset] = reinterpret_cast<word>(data);
+}
+
+Value *Marker::data() {
+  return reinterpret_cast<Value*>(mp()[kDataOffset]);
+}
+
 bool Marker::is_bottom() {
   return mp() == NULL;
 }

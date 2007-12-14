@@ -35,22 +35,20 @@ public:
 #define CHECK_ABORTS(TYPE, operation)                                \
   do {                                                               \
     bool __has_aborted__ = false;                                    \
-    bool __wrong_type__ = false;                                     \
+    uint32_t __type__;                                               \
     {                                                                \
       ConditionCatcher __catcher__;                                  \
       TRY (__catcher__) {                                            \
         (void) (operation);                                          \
       } CATCH (                                                      \
-          case TYPE:                                                 \
-            __has_aborted__ = true;                                  \
-            break;                                                   \
           default:                                                   \
-            __wrong_type__ = true;                                   \
+            __has_aborted__ = true;                                  \
+            __type__ = TRY_CATCH_EXCEPTION();                        \
             break;                                                   \
       );                                                             \
     }                                                                \
-    CHECK(!__wrong_type__);                                          \
     CHECK(__has_aborted__);                                          \
+    CHECK_EQ(TYPE, __type__);                                        \
   } while (false)
 
 #define ASSERT_ABORTS(TYPE, operation) IF_DEBUG(CHECK_ABORTS(TYPE, operation))

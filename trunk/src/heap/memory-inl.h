@@ -12,14 +12,25 @@ address Memory::allocate(uint32_t size) {
   return young_space().allocate(size);
 }
 
-DisallowGarbageCollection::DisallowGarbageCollection()
-    : memory_(Runtime::current().heap().memory()) {
-  previous_ = memory().allow_garbage_collection();
-  memory().allow_garbage_collection_ = false;
+DisallowGarbageCollection::DisallowGarbageCollection(Memory &memory)
+    : memory_(memory) {
+  previous_ = memory.allow_garbage_collection();
+  memory.allow_garbage_collection_ = false;
 }
 
 DisallowGarbageCollection::~DisallowGarbageCollection() {
   memory().allow_garbage_collection_ = previous();
+}
+
+GarbageCollectionMonitor::GarbageCollectionMonitor(Memory &memory)
+  : previous_(memory.monitor_chain())
+  , memory_(memory)
+  , has_collected_garbage_(false) {
+  memory.monitor_chain_ = this;
+}
+
+GarbageCollectionMonitor::~GarbageCollectionMonitor() {
+  memory().monitor_chain_ = previous_;
 }
 
 }

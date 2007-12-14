@@ -1,4 +1,4 @@
-def raise_possibly(do_advise, value) {
+def advise_possibly(do_advise, value) {
   if (do_advise) advise problem();
   else return value;
 }

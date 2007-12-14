@@ -55,7 +55,7 @@ bool Image::initialize() {
 }
 
 Tuple *Image::load() {
-  DisallowGarbageCollection dgc;
+  DisallowGarbageCollection disallow(Runtime::current().heap().memory());
   Image::Scope scope(*this);
   // Make shallow copies in heap
   ImageIterator iter(*this);
@@ -149,7 +149,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       Tuple *tuple = cast<Tuple>(img->forward_pointer());
       uint32_t length = tuple->length();
       for (uint32_t i = 0; i < length; i++)
-        tuple->at(i) = img->at(i)->forward_pointer();
+        tuple->set(i, img->at(i)->forward_pointer());
       break;
     }
     case LAMBDA_TYPE: {

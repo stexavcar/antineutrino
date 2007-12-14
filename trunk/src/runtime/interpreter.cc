@@ -95,7 +95,7 @@ Data *Interpreter::lookup_method(Class *chlass, Value *name) {
     }
     Tuple *methods = chlass->methods();
     for (uint32_t i = 0; i < methods->length(); i++) {
-      Method *method = cast<Method>(methods->at(i));
+      Method *method = cast<Method>(methods->get(i));
       if (method->name()->equals(name))
         return method;
     }
@@ -234,15 +234,27 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       uint16_t argc = code[pc + 2];
       Marker marker(stack->top_marker());
       while (!marker.is_bottom()) {
+        Tuple *data = cast<Tuple>(marker.data());
+        for (uint32_t i = 0; i < data->length(); i += 2) {
+          String *handler = cast<String>(data->get(i));
+          if (name->equals(handler)) {
+            printf("Found handler\n");
+            goto end;
+          }
+        }
         marker.unwind();
       }
+     end:
       Arguments args(runtime(), argc, frame);
       unhandled_condition(name, args);
       pc += OpcodeInfo<OC_INVOKE>::kSize;
       break;
     }
     case OC_MARK: {
+      uint16_t data_index = code[pc + 1];
+      Value *data = constant_pool[data_index];
       Marker mark = frame.push_marker();
+      mark.set_data(data);
       word *current_marker = stack->top_marker();
       mark.set_prev_mp(current_marker);
       stack->set_top_marker(mark.mp());
@@ -375,7 +387,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
     }
     case OC_OUTER: {
       uint32_t index = code[pc + 1];
-      Value *value = frame.lambda()->outers()->at(index);
+      Value *value = frame.lambda()->outers()->get(index);
       frame.push(value);
       pc += OpcodeInfo<OC_OUTER>::kSize;
       break;

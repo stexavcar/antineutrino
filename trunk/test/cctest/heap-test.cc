@@ -33,11 +33,11 @@ void Test::to_string() {
   CHECK(heap.new_string("knallert")->to_short_string() == "\"knallert\"");
   CHECK(Nothing::make()->to_string() == "@<nothing>");
   Tuple *tuple = cast<Tuple>(heap.new_tuple(3));
-  tuple->at(0) = Smi::from_int(123);
-  tuple->at(1) = Smi::from_int(456);
-  tuple->at(2) = Smi::from_int(789);
+  tuple->set(0, Smi::from_int(123));
+  tuple->set(1, Smi::from_int(456));
+  tuple->set(2, Smi::from_int(789));
   CHECK(tuple->to_string() == "[123, 456, 789]");
-  tuple->at(1) = tuple;
+  tuple->set(1, tuple);
   CHECK(tuple->to_string() == "[123, #<tuple>, 789]");
 }
 

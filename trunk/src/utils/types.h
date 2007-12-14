@@ -31,6 +31,7 @@ class DoClause;
 class DoOnExpression;
 class Factory;
 class False;
+class GarbageCollectionMonitor;
 class Heap;
 class Image;
 class Instance;

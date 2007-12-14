@@ -364,7 +364,7 @@ class Tuple : public Object {
 public:
   DECLARE_FIELD(uint32_t, length);
   inline vector<Value*> buffer();
-  inline Value *&at(uint32_t index);
+  inline Value *&get(uint32_t index);
   inline void set(uint32_t index, Value *value);
   
   static inline uint32_t size_for(uint32_t elms);

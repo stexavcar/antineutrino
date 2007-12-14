@@ -13,7 +13,7 @@ heap_list::heap_list(Factory &factory)
 
 Value *heap_list::get(uint32_t index) {
   ASSERT(index < length());
-  return data()->at(index);
+  return data()->get(index);
 }
 
 ref<Value> heap_list::operator[](uint32_t index) {

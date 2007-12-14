@@ -1,6 +1,7 @@
 #include "compiler/ast-inl.h"
 #include "compiler/compiler.h"
 #include "compiler/compile-utils-inl.h"
+#include "heap/memory-inl.h"
 #include "heap/ref-inl.h"
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
@@ -70,7 +71,7 @@ public:
   void builtin(uint16_t argc, uint16_t index);
   void concat(uint16_t terms);
   void quote(uint16_t unquotes);
-  void mark();
+  void mark(ref<Value> data);
   void unmark();
   
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
@@ -113,7 +114,7 @@ private:
 SyntaxTree *Assembler::resolve_unquote(UnquoteExpression *expr) {
   ref<QuoteTemplate> templ = current_quote();
   uint32_t index = expr->index();
-  Value *term = templ->unquotes()->at(index);
+  Value *term = templ->unquotes()->get(index);
   return cast<SyntaxTree>(term);
 }
 
@@ -291,9 +292,11 @@ void Assembler::bind(Label &label) {
   }
 }
 
-void Assembler::mark() {
-  STATIC_CHECK(OpcodeInfo<OC_MARK>::kArgc == 0);
+void Assembler::mark(ref<Value> data) {
+  STATIC_CHECK(OpcodeInfo<OC_MARK>::kArgc == 1);
+  uint16_t index = constant_pool_index(data);
   code().append(OC_MARK);
+  code().append(index);
   adjust_stack_height(Marker::kSize);
 }
 
@@ -372,7 +375,7 @@ private:
 
 void ArgumentScope::lookup(ref<Symbol> symbol, Lookup &result) {
   for (uint32_t i = 0; i < symbols().length(); i++) {
-    Value *entry = symbols()->at(i);
+    Value *entry = symbols()->get(i);
     if (is<UnquoteExpression>(entry))
       entry = result.assembler.resolve_unquote(cast<UnquoteExpression>(entry));
     if (symbol->equals(cast<Symbol>(entry))) {
@@ -597,7 +600,15 @@ void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
 }
 
 void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {
-  __ mark();
+  RefScope scope;
+  ref<Tuple> clauses = that.clauses();
+  ref<Tuple> data = factory().new_tuple(2 * clauses.length());
+  for (uint32_t i = 0; i < clauses.length(); i++) {
+    ref<OnClause> clause = cast<OnClause>(clauses.get(i));
+    ref<String> name = clause.name();
+    data.set(2 * i, name);
+  }
+  __ mark(data);
   __ codegen(that.value());
   __ unmark();
 }
@@ -689,6 +700,7 @@ ref<Lambda> CompileSession::compile(ref<LambdaExpression> that, Assembler *enclo
 }
 
 void CompileSession::compile(ref<Lambda> lambda, Assembler *enclosing) {
+  GarbageCollectionMonitor monitor(Runtime::current().heap().memory());
   ref<LambdaExpression> tree = lambda.tree();
   Assembler assembler(tree, *this, enclosing);
   ref<Tuple> params = tree.params();
@@ -699,6 +711,7 @@ void CompileSession::compile(ref<Lambda> lambda, Assembler *enclosing) {
   ref<Tuple> constant_pool = assembler.flush_constant_pool();
   lambda->set_code(*code);
   lambda->set_constant_pool(*constant_pool);
+  ASSERT(!monitor.has_collected_garbage());
 }
 
 } // neutrino

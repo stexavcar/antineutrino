@@ -178,7 +178,7 @@ Data *Builtins::tuple_eq(Arguments &args) {
   if (self->length() != that->length())
     return Runtime::current().roots().fahlse();
   for (uint32_t i = 0; i < self->length(); i++) {
-    if (!self->at(i)->equals(that->at(i)))
+    if (!self->get(i)->equals(that->get(i)))
       return Runtime::current().roots().fahlse();
   }
   return Runtime::current().roots().thrue();

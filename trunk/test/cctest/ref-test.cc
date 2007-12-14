@@ -16,7 +16,7 @@ void Test::handles() {
   CHECK_EQ(10, tuple_ref->length());
   ref<Value> zero = tuple_ref.get(0);
   CHECK(is<Void>(zero));
-  tuple_ref->at(1) = *tuple_ref;
+  tuple_ref->set(1, *tuple_ref);
   ref<Value> one = tuple_ref.get(1);
   ref<Tuple> one_tuple = cast<Tuple>(one);
   ref<Value> one_tuple_value = one_tuple;

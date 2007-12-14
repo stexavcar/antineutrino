@@ -190,7 +190,7 @@ static void write_tuple_on(Tuple *obj, string_buffer &buf) {
   buf.append('[');
   for (uint32_t i = 0; i < obj->length(); i++) {
     if (i > 0) buf.append(", ");
-    obj->at(i)->write_short_on(buf);
+    obj->get(i)->write_short_on(buf);
   }
   buf.append(']');
 }
@@ -274,7 +274,7 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
         pc += OpcodeInfo<OC_LOCAL>::kSize;
         break;
       case OC_GLOBAL: {
-        scoped_string name(literals->at(data[pc + 1])->to_string());
+        scoped_string name(literals->get(data[pc + 1])->to_string());
         buf.printf("global %", name.chars());
         pc += OpcodeInfo<OC_GLOBAL>::kSize;
         break;
@@ -285,7 +285,7 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
         break;
       }
       case OC_PUSH: {
-        scoped_string value(literals->at(data[pc + 1])->to_string());
+        scoped_string value(literals->get(data[pc + 1])->to_string());
         buf.printf("push %", value.chars());
         pc += OpcodeInfo<OC_PUSH>::kSize;
         break;
@@ -304,7 +304,7 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
         break;
       }
       case OC_INVOKE: {
-        scoped_string name(literals->at(data[pc + 1])->to_string());
+        scoped_string name(literals->get(data[pc + 1])->to_string());
         buf.printf("invoke %", name.chars());
         pc += OpcodeInfo<OC_INVOKE>::kSize;
         break;
@@ -404,7 +404,7 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 
 static void validate_tuple(Tuple *obj) {
   for (uint32_t i = 0; i < obj->length(); i++)
-    GC_SAFE_CHECK_IS_C(VALIDATION, Value, obj->at(i));
+    GC_SAFE_CHECK_IS_C(VALIDATION, Value, obj->get(i));
 }
 
 #define VALIDATE_FIELD(Type, name, Name, Class)                      \
@@ -475,7 +475,7 @@ void Object::for_each_field(FieldVisitor &visitor) {
       return;
     case TUPLE_TYPE:
       for (uint32_t i = 0; i < cast<Tuple>(this)->length(); i++)
-        VISIT(cast<Tuple>(this)->at(i));
+        VISIT(cast<Tuple>(this)->get(i));
       break;
     case BUILTIN_CALL_TYPE:
       FOR_EACH_BUILTIN_CALL_FIELD(VISIT_FIELD, BuiltinCall);
@@ -604,8 +604,8 @@ static bool lookup_key(Tuple *table, Value *key,
     DictionaryLookup &result) {
   ASSERT(key->is_key());
   for (uint32_t i = 0; i < table->length(); i += 2) {
-    if (key->equals(table->at(i))) {
-      result.value = &table->at(i + 1);
+    if (key->equals(table->get(i))) {
+      result.value = &table->get(i + 1);
       return true;
     }
   }
@@ -630,9 +630,9 @@ bool Dictionary::set(Value *key, Value *value) {
     if (is<AllocationFailed>(new_table_val)) return false;
     Tuple *new_table = cast<Tuple>(new_table_val);
     for (uint32_t i = 0; i < length; i++)
-      new_table->at(i) = table->at(i);
-    new_table->at(length) = key;
-    new_table->at(length + 1) = value;
+      new_table->set(i, table->get(i));
+    new_table->set(length, key);
+    new_table->set(length + 1, value);
     this->set_table(new_table);
   }
   return true;

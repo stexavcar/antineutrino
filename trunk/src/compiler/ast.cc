@@ -92,7 +92,7 @@ static void unparse_invoke_expression_on(InvokeExpression *obj, UnparseData &dat
   for (uint32_t i = 0; i < obj->arguments()->length(); i++) {
     if (is_first) is_first = false;
     else data->append(", ");
-    unparse_syntax_tree_on(cast<SyntaxTree>(obj->arguments()->at(i)), data);
+    unparse_syntax_tree_on(cast<SyntaxTree>(obj->arguments()->get(i)), data);
   }
   data->append(')');
 }
@@ -103,7 +103,7 @@ static void unparse_class_expression(ClassExpression *obj, UnparseData &data) {
   data->append(" {");
   Tuple *methods = obj->methods();
   for (uint32_t i = 0; i < methods->length(); i++) {
-    MethodExpression *method = cast<MethodExpression>(methods->at(i));
+    MethodExpression *method = cast<MethodExpression>(methods->get(i));
     data->append(" ");
     unparse_syntax_tree_on(method, data);
   }
@@ -147,7 +147,7 @@ static void unparse_list_on(Tuple *objs, UnparseData &data) {
   for (uint32_t i = 0; i < objs->length(); i++) {
     if (is_first) is_first = false;
     else data->append(", ");
-    unparse_syntax_tree_on(cast<SyntaxTree>(objs->at(i)), data);
+    unparse_syntax_tree_on(cast<SyntaxTree>(objs->get(i)), data);
   }
   data->append(")");
 }
@@ -168,7 +168,7 @@ static void unparse_call_expression(CallExpression *obj, UnparseData &data) {
 
 static void unparse_unquote_expression(UnquoteExpression *obj, UnparseData &data) {
   QuoteTemplate *templ = data.current_quote_template();
-  SyntaxTree *tree = cast<SyntaxTree>(templ->unquotes()->at(obj->index()));
+  SyntaxTree *tree = cast<SyntaxTree>(templ->unquotes()->get(obj->index()));
   unparse_syntax_tree_on(tree, data);
 }
 
@@ -251,7 +251,7 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
   case UNQUOTE_EXPRESSION_TYPE: {
     ref<QuoteTemplate> templ = visitor.current_quote();
     uint32_t index = cast<UnquoteExpression>(self)->index();
-    Value *term = templ->unquotes()->at(index);
+    Value *term = templ->unquotes()->get(index);
     ref<SyntaxTree> value = new_ref(cast<SyntaxTree>(term));
     return value.accept(visitor);
   }

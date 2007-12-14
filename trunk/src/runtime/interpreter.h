@@ -23,7 +23,7 @@ namespace neutrino {
   VISIT(15, TUPLE,  1) VISIT(16, CONCAT, 1)   VISIT(17, LOCAL,    1) \
   VISIT(18, CHKHGT, 1) VISIT(19, OUTER,  1)   VISIT(20, CLOSURE,  2) \
   VISIT(21, QUOTE,  1) VISIT(22, UNQUOTE, 1)  VISIT(23, ADVISE,   2) \
-  VISIT(24, MARK,   0) VISIT(25, UNMARK, 0)
+  VISIT(24, MARK,   1) VISIT(25, UNMARK, 0)
 
 enum Opcode {
   __first_opcode = -1
@@ -47,8 +47,10 @@ class Marker {
 public:
   Marker(word *mp) : mp_(mp) { }
   word *mp() { return mp_; }
-  inline void set_prev_mp(word *mp);
+  inline void set_prev_mp(word *value);
   inline word *prev_mp();
+  inline Value *data();
+  inline void set_data(Value *value);
   inline bool is_bottom();
   inline void unwind();
   

@@ -1,4 +1,5 @@
 #include "cctest/tests-inl.h"
+#include "heap/memory-inl.h"
 #include "heap/ref-inl.h"
 #include "heap/space.h"
 #include "heap/values-inl.h"
@@ -61,7 +62,41 @@ void Test::migrate_cycle() {
   CHECK(old_space.contains(*value));
   memory.collect_garbage();
   CHECK_IS(Tuple, *value);
-  CHECK(value->at(0) == *value);
-  CHECK(value->at(1) == *value);
-  CHECK(value->at(2) == *value);
+  CHECK(value->get(0) == *value);
+  CHECK(value->get(1) == *value);
+  CHECK(value->get(2) == *value);
+}
+
+void Test::garbage_collector_monitor() {
+  LocalRuntime runtime;
+  Memory &memory = runtime.heap().memory();
+  GarbageCollectionMonitor monitor(memory);
+  CHECK(!monitor.has_collected_garbage());
+  {
+    GarbageCollectionMonitor nested_monitor(memory);
+    CHECK(!monitor.has_collected_garbage());
+    CHECK(!nested_monitor.has_collected_garbage());
+    {
+      GarbageCollectionMonitor double_nested_monitor(memory);
+      CHECK(!monitor.has_collected_garbage());
+      CHECK(!nested_monitor.has_collected_garbage());
+      CHECK(!double_nested_monitor.has_collected_garbage());
+    }
+  }
+  CHECK(!monitor.has_collected_garbage());
+  memory.collect_garbage();
+  CHECK(monitor.has_collected_garbage());
+}
+
+void Test::disallow_garbage_collection() {
+  LocalRuntime runtime;
+  Memory &memory = runtime.heap().memory();
+  DisallowGarbageCollection disallow(memory);
+  {
+    DisallowGarbageCollection nested_disallow(memory);
+    {
+      DisallowGarbageCollection double_nested_disallow(memory);
+    }
+  }
+  ASSERT_ABORTS(DISALLOWED, memory.collect_garbage());
 }

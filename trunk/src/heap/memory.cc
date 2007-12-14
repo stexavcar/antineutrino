@@ -8,7 +8,8 @@ namespace neutrino {
 static const uint32_t kSize = 1024 * 256;
 
 Memory::Memory(Heap &heap) 
-    : heap_(heap) {
+    : heap_(heap)
+    , monitor_chain_(NULL) {
   young_space_ = new SemiSpace(kSize);
   allow_garbage_collection_ = true;
 }
@@ -77,7 +78,7 @@ void FieldMigrator::visit_field(Value **field) {
 }
 
 void Memory::collect_garbage() {
-  ASSERT(allow_garbage_collection());
+  ASSERT_C(DISALLOWED, allow_garbage_collection());
   SemiSpace &from_space = young_space();
   SemiSpace *to_space = new SemiSpace(kSize);
   FieldMigrator migrator(from_space, *to_space);
@@ -99,6 +100,15 @@ void Memory::collect_garbage() {
   }
   young_space_ = to_space;
   delete &from_space;
+  notify_monitors();
+}
+
+void Memory::notify_monitors() {
+  GarbageCollectionMonitor *current = monitor_chain();
+  while (current != NULL) {
+    current->notify();
+    current = current->previous();
+  }
 }
 
 } // neutrino

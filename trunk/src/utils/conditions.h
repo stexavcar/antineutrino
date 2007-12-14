@@ -7,7 +7,7 @@ namespace neutrino {
 
 #define FOR_EACH_CONDITION(VISIT)                                    \
   VISIT(UNKNOWN)         VISIT(OUT_OF_BOUNDS)   VISIT(NO_REF_SCOPE)  \
-  VISIT(CAST_ERROR)      VISIT(VALIDATION)
+  VISIT(CAST_ERROR)      VISIT(VALIDATION)      VISIT(DISALLOWED)
 
 enum Condition {
   NO_PROBLEM = 0

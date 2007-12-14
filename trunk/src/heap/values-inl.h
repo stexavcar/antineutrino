@@ -291,7 +291,7 @@ word *Stack::bottom() {
 
 DEFINE_ACCESSORS(uint32_t, Tuple, length, Length)
 
-Value *&Tuple::at(uint32_t index) {
+Value *&Tuple::get(uint32_t index) {
   ASSERT_C(OUT_OF_BOUNDS, index < length());
   return ValuePointer::access_field<Value*>(this, Tuple::kHeaderSize + kPointerSize * index);
 }
@@ -314,11 +314,11 @@ uint32_t ref_traits<Tuple>::length() {
 }
 
 ref<Value> ref_traits<Tuple>::get(uint32_t index) {
-  return new_ref(open(this)->at(index));
+  return new_ref(open(this)->get(index));
 }
 
 void ref_traits<Tuple>::set(uint32_t index, ref<Value> value) {
-  open(this)->at(index) = *value;
+  open(this)->set(index, *value);
 }
 
 
@@ -347,8 +347,8 @@ Dictionary::Iterator::Iterator(Dictionary *dict)
 
 bool Dictionary::Iterator::next(Dictionary::Iterator::Entry *entry) {
   if (index() < table()->length()) {
-    entry->key = table()->at(index());
-    entry->value = table()->at(index() + 1);
+    entry->key = table()->get(index());
+    entry->value = table()->get(index() + 1);
     index_ += 2;
     return true;
   } else {
