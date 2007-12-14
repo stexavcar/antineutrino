@@ -4,6 +4,7 @@
 #include "platform/abort.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
+#include "web/web.h"
 
 namespace neutrino {
 
@@ -15,6 +16,7 @@ public:
 
 void Main::main(list<char*> &args) {
   if (!Abort::setup_signal_handler()) return;
+  WebServer::start();
   Runtime runtime;
   runtime.initialize();
   Runtime::Scope runtime_scope(runtime);
