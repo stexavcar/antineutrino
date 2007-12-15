@@ -1,10 +1,10 @@
 #include <stdio.h>
 
 #include "io/image.h"
+#include "monitor/http.h"
 #include "platform/abort.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
-#include "web/web.h"
 
 namespace neutrino {
 
@@ -16,7 +16,7 @@ public:
 
 void Main::main(list<char*> &args) {
   if (!Abort::setup_signal_handler()) return;
-  WebServer::start();
+  // WebServer::start();
   Runtime runtime;
   runtime.initialize();
   Runtime::Scope runtime_scope(runtime);

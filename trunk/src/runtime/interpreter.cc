@@ -118,7 +118,8 @@ static void unhandled_condition(Value *name, Arguments &args) {
     args[i]->write_on(buf);
   }
   buf.append(")");
-  fprintf(stderr, "%s\n", buf.raw_string().chars());
+  scoped_string str(buf.to_string());
+  fprintf(stderr, "%s\n", str.chars());
   exit(1);
 }
 

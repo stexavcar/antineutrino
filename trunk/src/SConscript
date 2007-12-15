@@ -4,10 +4,8 @@ Import('config target properties prefix')
 
 def get_wildcard_mapping():
   result = { }
-  for (key, value) in config.items():
-    result[key.lower()] = str(value).lower()
-  for (key, value) in properties.items():
-    result[key.lower()] = str(value).lower()
+  for (key, value) in config.items(): result[key.lower()] = value
+  for (key, value) in properties.items(): result[key.lower()] = value
   return result
 
 source_files = read_files_from(get_wildcard_mapping(), config['src'], join(config['src'], 'library.list'))

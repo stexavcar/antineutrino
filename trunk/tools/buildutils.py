@@ -13,6 +13,61 @@ def read_lines_from(name):
   	list.append(trimmed)
   return list
 
+def generate_possibilities(params, config):
+  options = [ ]
+  count = 1
+  # Create the list of possible values for each position.  Also, count
+  # the number of combinations
+  for param in params:
+    value = config[param]
+    if not type(value) is list: value = [ value ]
+    options.append(value)
+    count *= len(value)
+  # If this assert fails you're either being too stupid or too clever
+  # with the build files.  Don't do that.
+  assert count < 100
+  # Generate all combination by encoding the index of each combination
+  # as a mixed-radix decimal representation
+  current = [ 0 ] * len(params)
+  combinations = [ ]
+  for i in xrange(0, count):
+    combination = [ ]
+    for j in xrange(0, len(options)):
+      combination.append(i % len(options[j]))
+      i = i / len(options[j])
+    combinations.append(combination)
+  # Compute the distance from the given configuration to being a
+  # perfect match
+  def dist(value):
+    result = 0
+    for elm in value:
+      result += (elm * elm)
+    return result
+  # Sort the vectors the the better matches come first (as determined
+  # by their distance as computed by dist) and elements at the same
+  # distance are lexicographically sorted
+  def compare_vectors(a, b):
+    a_dist = dist(a)
+    b_dist = dist(b)
+    if (a_dist == b_dist):
+      for i in xrange(0, len(options)):
+        if a[i] == b[i]: continue
+        elif a[i] > b[i]: return 1
+        else: return -1
+      return 0
+    elif a_dist > b_dist: return 1
+    else: return -1
+  combinations.sort(cmp=compare_vectors)
+  # Create a map for each combination that gives the mapping to be
+  # performed on the template string
+  result = [ ]
+  for combination in combinations:
+    map = { }
+    for i in xrange(0, len(params)):
+      map[params[i]] = options[i][combination[i]].lower()
+    result.append(map)
+  return result
+
 # Read a list of files from a file and expand wildcards according to
 # the current plaform, as specified by the configuration
 def read_files_from(config, root, file):
@@ -23,33 +78,68 @@ def read_files_from(config, root, file):
       cooked_lines.append(line)
     else:
       # If the file doesn't exist we try expanding parameters
+      params = re.findall('<([a-z]+)>', line)
+      params.sort()
+      possibilities = generate_possibilities(params, config)
       template = re.sub('<([a-z]+)>', '%(\\1)s', line)
-      specific = template % config
-      if exists(join(root, specific)):
-        # A file exists for this particular platform; add it
-        cooked_lines.append(specific)
-      else:
-        generic = re.sub('<[a-z]+>', 'any', line)
-        if exists(join(root, generic)):
-          # No file exists for this platform but a generic one does;
-          # add it
-          cooked_lines.append(generic)
-        else:
-          # No matching file was found.  We add the specific file
-          # to get the most informative error message later on
+      found_match = False
+      for map in possibilities:
+        specific = template % map
+        if exists(join(root, specific)):
+          # A file exists for this particular platform; add it
           cooked_lines.append(specific)
+          found_match = True
+          break
+      if not found_match:
+        cooked_lines.append(line)
   return cooked_lines
 
 HEADER_PATTERN = re.compile('^(\w+)\s*(\*?)\s*(?:\:\s*([\w\s]+))?{$')
 PROPERTY_PATTERN = re.compile('^(\w+)\s*(\:\=|\+\=)(.*)$')
 
-def read_config_file(name):
+class Configuration:
+  def __init__(self, sections, targets):
+    self.sections = sections
+    self.targets = targets
+  def __repr__(self):
+    return 'config ' + str(self.sections)
+  def get_properties(self, name):
+    properties = { }
+    self.load_section_into(name, properties)
+    return properties
+  def load_section_into(self, name, properties):
+    section = self.sections[name]
+    for super in section.supers:
+      self.load_section_into(super, properties)
+    for (key, (value, is_extension)) in section.properties.items():
+      if (key in properties) and is_extension:
+        old_value = properties[key]
+        if type(old_value) is str:
+          value = old_value + ' ' + value
+        elif type(old_value) is list:
+          value = old_value + value
+        else:
+          assert False
+      properties[key] = value
+
+class Section:
+  def __init__(self, name, supers, properties):
+    self.name = name
+    self.supers = supers
+    self.properties = properties
+  def __repr__(self):
+    return 'section ' + str(self.properties)
+
+def read_config_file(name, parent=None):
   lines = read_lines_from(name)
   # Mapping from section names to a mapping from property name to a
   # pair of the value plus whether or not it is an extension
   sections = { }
   # A list of names of targets
   targets = [ ]
+  if parent:
+    sections.update(**parent.sections)
+    targets += parent.targets
   index = 0
   # Function used to signal when an unexpected line occurs
   def unexpected_line():
@@ -64,34 +154,21 @@ def read_config_file(name):
   while index < len(lines):
     header_match = HEADER_PATTERN.match(lines[index])
     if not header_match: unexpected_line()
+    index = index + 1
     section = header_match.group(1)
     is_target = (header_match.group(2) == '*')
     if is_target: targets.append(section)
-    supers = header_match.group(3)
+    supers_str = header_match.group(3)
+    if supers_str: supers = supers_str.split()
+    else: supers = []
     # Read the lines following the section header and load them into
     # the properties mapping
     properties = { }
+    if section in sections:
+      previous = sections[section]
+      properties.update(**previous.properties)
+      supers = previous.supers + supers
     # Sets a name to a value using the specified mode
-    def apply_property(name, value, is_extension):
-      if is_extension:
-        if name in properties:
-          (old_value, is_extension) = properties[name]
-          if type(old_value) is str:
-            value = old_value + ' ' + value
-          elif type(old_value) is list:
-            value = old_value + value
-          else:
-            assert False
-        properties[name] = (value, True)
-      else:
-        properties[name] = (value, False)
-    # If there are super sections we run through them and add them
-    # to the mapping for this section
-    if supers:
-      for super in supers.split():
-        for (name, (value, is_extension)) in sections[super].items():
-          apply_property(name, value, is_extension)
-    index = index + 1
     # Then add the lines read from this section
     while lines[index] != '}':
       property_match = PROPERTY_PATTERN.match(lines[index])
@@ -99,20 +176,11 @@ def read_config_file(name):
       name = property_match.group(1)
       operator = property_match.group(2)
       value = parse_value(property_match.group(3).strip())
-      apply_property(name, value, operator == '+=')
+      properties[name] = (value, operator == '+=')
       index = index + 1
-    sections[section] = properties
+    sections[section] = Section(section, supers, properties)
     index = index + 1
-  # Finally, we reduce the information to a mapping just containing
-  # the targets and with not information about whether or not 
-  # properties were extensions or not
-  result = { }
-  for target in targets:
-    properties = { }
-    for (name, (value, is_extension)) in sections[target].items():
-      properties[name] = value
-    result[target] = properties
-  return result
+  return Configuration(sections, targets)
 
 # Apply a set of items read from a configuration file to an
 # environment

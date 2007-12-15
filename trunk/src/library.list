@@ -11,6 +11,7 @@ heap/roots.cc
 heap/space.cc
 heap/values.cc
 io/image.cc
+monitor/http_<platform>.cc
 platform/<os>/abort.cc
 runtime/builtins.cc
 runtime/interpreter.cc
@@ -18,4 +19,3 @@ runtime/runtime.cc
 utils/conditions.cc
 utils/nonlocal.cc
 utils/string.cc
-web/web_<os>.cc

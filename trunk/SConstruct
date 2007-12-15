@@ -1,5 +1,5 @@
 import platform, sys, os
-from os.path import join, abspath, walk, basename, dirname
+from os.path import join, abspath, walk, basename, dirname, exists
 root = dirname(File('SConstruct').rfile().abspath)
 src = join(root, 'src')
 etc = join(root, 'etc')
@@ -30,19 +30,24 @@ def get_arch_id():
   return 'ia32'
 
 # Reads a named configuration file
-def read_config(name):
-  return buildutils.read_config_file(name)
+def read_config(files):
+  config = None
+  for file in files:
+    if not exists(file): continue
+    config = buildutils.read_config_file(file, config)
+  return config
 
-targets_file = get_toolchain_id() + '.cfg'
+toolchain_config = join(etc, get_toolchain_id() + '.cfg')
+os_config = join(etc, get_os_id() + '.cfg')
 
-configurations = read_config(join(etc, targets_file))
+configurations = read_config([toolchain_config, os_config])
 
 options = Options()
 options.Add(EnumOption(
   'mode',
   'select build mode',
   'all',
-  allowed_values = configurations.keys() + ['all']
+  allowed_values = configurations.targets + ['all']
 ))
 options.Add(PathOption(
   'test',
@@ -85,10 +90,10 @@ config = {
 # Sets up the build for the various targets defined in the target
 # configuration file in src/
 def load_source_targets():
-  targets = config['targets']
   # At this point we don't use the contents of the section, we
   # just delegate to the SConscript file in src/
-  for (target, properties) in targets.items():
+  for target in config['targets'].targets:
+    properties = config['targets'].get_properties(target)
     if (common['mode'] == 'all') or (common['mode'] == target):
       if common['mode'] == 'all': prefix = target + '-'
       else: prefix = ''
