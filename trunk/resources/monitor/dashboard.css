@@ -1,0 +1,24 @@
+body {
+  font-family: sans-serif;
+}
+
+table.vars {
+  border: 1px solid #d0dbed;
+  background: #e1ecfe;
+}
+
+th {
+  text-align: left;
+  background: #c3d9ff;
+}
+
+td.variableName {
+  font-style: italic;
+  width: 300px;
+}
+
+td.variableValue {
+  background: #e5f4fe;
+  width: 100px;
+  text-align: right;
+}

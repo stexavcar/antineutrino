@@ -51,7 +51,7 @@ static const byte k%(name)s[k%(name)sLength] = { %(data)s };
 """
 
 single_compare_template = """\
-  if (path[path.length() - 1] == "%(file)s") return new HttpReply(200, k%(name)s, k%(name)sLength);
+  if (path[path.length() - 1] == "%(file)s") return new HttpReply(200, k%(name)s, k%(name)sLength, false);
 """
 
 def process_name(str):

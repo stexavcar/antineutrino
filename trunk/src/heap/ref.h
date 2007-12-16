@@ -3,6 +3,7 @@
 
 #include "utils/list.h"
 #include "utils/types.h"
+#include "monitor/monitor.h"
 
 namespace neutrino {
 
@@ -38,6 +39,9 @@ public:
 private:
   static void shrink();
   static Value **grow();
+  
+  DECLARE_MONITOR_VARIABLE(count);
+  DECLARE_MONITOR_VARIABLE(high_water_mark);
 
   static RefScopeInfo &current() { return current_; }
   static RefScopeInfo current_;

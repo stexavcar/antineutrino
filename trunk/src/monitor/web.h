@@ -9,7 +9,10 @@ namespace neutrino {
 
 class HttpReply {
 public:
-  HttpReply(uint32_t status, const byte *contents, uint32_t size);
+  HttpReply(uint32_t status, const byte *contents, uint32_t size,
+      bool owns_contents);
+  HttpReply(string str);
+  ~HttpReply();
   uint32_t status() { return status_; }
   void override_status(uint32_t value) { status_ = value; }
   const byte *contents() { return contents_; }
@@ -18,6 +21,7 @@ private:
   uint32_t status_;
   const byte *contents_;
   uint32_t size_;
+  bool owns_contents_;
 };
 
 class FileProvider {

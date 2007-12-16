@@ -78,9 +78,9 @@ void PosixWebServer::cleanup() {
 }
 
 void PosixWebServer::stop() {
-  // uninstall();
-  // keep_going_ = false;
-  // cleanup();
+  //uninstall();
+  //keep_going_ = false;
+  //cleanup();
   pthread_join(thread_, NULL);  
 }
 
@@ -95,7 +95,7 @@ bool PosixWebServer::set_up_listener() {
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
-  addr.sin_port = htons(8080);
+  addr.sin_port = htons(8008);
   listener_ = socket(AF_INET, SOCK_STREAM, 0);
   if (listener_ < 0) {
     Conditions::get().error_occurred(strerror(errno));
