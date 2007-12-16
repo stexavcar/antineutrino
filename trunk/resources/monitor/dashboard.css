@@ -2,23 +2,25 @@ body {
   font-family: sans-serif;
 }
 
-table.vars {
+td {
   border: 1px solid #d0dbed;
-  background: #e1ecfe;
+  width: 400px;
 }
 
-th {
-  text-align: left;
+td.tableHeader {
+  font-weight: bold;
+  text-align: center;
   background: #c3d9ff;
 }
 
 td.variableName {
+  background: #e1ecfe;
   font-style: italic;
   width: 300px;
 }
 
 td.variableValue {
-  background: #e5f4fe;
+  background: #e1ecfe;
   width: 100px;
-  text-align: right;
+  text-align: center;
 }

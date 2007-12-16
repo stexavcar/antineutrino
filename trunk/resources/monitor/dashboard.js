@@ -19,30 +19,26 @@ function createTable(mapping) {
   for (var key in mapping) {
     keys.push(key);
   }
-  var table = document.createElement("table");
-  table.className = "vars";
-  table.id = "vars";
+  var table = document.getElementById("vars");
   document.body.appendChild(table);
-  table.innerHTML = "<tr><th>Variable</th><th>Value</th></tr>";
   for (var index in keys.sort()) {
     var key = keys[index];
-    var value_tuple = mapping[key];
-    var chlass = value_tuple[0];
     var row = table.insertRow(-1);
     var key_col = row.insertCell(0);
     key_col.className = "variableName";
-    key_col.innerHTML = chlass + "::" + key;
+    key_col.innerHTML = key;
     var value_col = row.insertCell(1);
     value_col.className = "variableValue";
     value_col.id = key + "_var_value";
   }
+  hasCreatedTable = true;
 }
 
+var hasCreatedTable = false;
 function updateUi(mapping) {
-  var table = document.getElementById("vars");
-  if (!table) createTable(mapping);
+  if (!hasCreatedTable) createTable(mapping);
   for (var key in mapping) {
-    document.getElementById(key + "_var_value").innerHTML = mapping[key][1];
+    document.getElementById(key + "_var_value").innerHTML = mapping[key];
   }
 }
 

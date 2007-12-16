@@ -21,7 +21,7 @@ string Handlers::get_variable_value(string name) {
     while (current != NULL) {
       if (is_first) is_first = false;
       else buf.append(", ");
-      buf.printf("'%': ['%', %]", current->name().chars(), current->chlass().chars(), current->get());
+      buf.printf("'%': %", current->name().chars(), current->value());
       current = current->next();
     }
     buf.append("})");
@@ -31,7 +31,7 @@ string Handlers::get_variable_value(string name) {
     while (current != NULL) {
       if (current->name() == name) {
         string_buffer buf;
-        buf.printf("%", current->get());
+        buf.printf("%", current->value());
         return buf.to_string();
       }
       current = current->next();

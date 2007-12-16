@@ -52,5 +52,9 @@ static inline uint32_t grow_value(uint32_t n) {
   return ((n << 3) + (n << 2) + n) >> 3;
 }
 
+template <typename T>
+static inline T max(T a, T b) {
+  return (a < b) ? b : a;
+}
 
 #endif // _GLOBALS

@@ -78,9 +78,9 @@ void PosixWebServer::cleanup() {
 }
 
 void PosixWebServer::stop() {
-  //uninstall();
-  //keep_going_ = false;
-  //cleanup();
+  uninstall();
+  keep_going_ = false;
+  cleanup();
   pthread_join(thread_, NULL);  
 }
 

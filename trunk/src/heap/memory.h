@@ -12,6 +12,7 @@ public:
   inline address allocate(uint32_t size);
   void collect_garbage();
   SemiSpace &young_space() { return *young_space_; }
+  static int32_t garbage_collection_count_;
 private:
   void notify_monitors();
   friend class DisallowGarbageCollection;

@@ -20,6 +20,8 @@ def generate_possibilities(params, config):
   # Create the list of possible values for each position.  Also, count
   # the number of combinations
   for param in params:
+    if not param in config:
+      raise "The current configuration does not define parameter '" + param + "'"
     value = config[param]
     if not type(value) is list: value = [ value ]
     options.append(value)

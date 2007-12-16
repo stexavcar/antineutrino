@@ -7,25 +7,17 @@ namespace neutrino {
 
 class MonitoredVariable {
 public:
-  explicit MonitoredVariable(string chlass, string name);
-  int32_t get() { return value_; }
-  void set(int32_t value) { value_ = value; }
+  explicit MonitoredVariable(string name, int32_t *variable);
   static MonitoredVariable *first() { return first_; }
   MonitoredVariable *next() { return next_; }
-  string chlass() { return chlass_; }
   string name() { return name_; }
+  int32_t value() { return *variable_; }
 private:
-  string chlass_;
   string name_;
-  int32_t value_;
+  int32_t *variable_;
   MonitoredVariable *next_;
   static MonitoredVariable *first_;
 };
-
-#define DECLARE_MONITOR_VARIABLE(name) static MonitoredVariable &name
-#define DEFINE_MONITOR_VARIABLE(chlass, name)                        \
-  MonitoredVariable __##name##__(#chlass, #name);                    \
-  MonitoredVariable &chlass::name = __##name##__
 
 } // neutrino
  

@@ -7,6 +7,9 @@ namespace neutrino {
 
 static const uint32_t kSize = 1024 * 256;
 
+int32_t Memory::garbage_collection_count_ = 0;
+static MonitoredVariable gcc_monitor("garbage_collection_count", &Memory::garbage_collection_count_);
+
 Memory::Memory(Heap &heap) 
     : heap_(heap)
     , monitor_chain_(NULL) {
@@ -101,6 +104,7 @@ void Memory::collect_garbage() {
   young_space_ = to_space;
   delete &from_space;
   notify_monitors();
+  garbage_collection_count_++;
 }
 
 void Memory::notify_monitors() {

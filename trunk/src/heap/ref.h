@@ -36,12 +36,12 @@ public:
   
   template <class C>
   static inline C **new_cell(C *value);
+
+  static int32_t ref_scope_count_;
+  static int32_t ref_scope_high_water_mark_;
 private:
   static void shrink();
   static Value **grow();
-  
-  DECLARE_MONITOR_VARIABLE(count);
-  DECLARE_MONITOR_VARIABLE(high_water_mark);
 
   static RefScopeInfo &current() { return current_; }
   static RefScopeInfo current_;
