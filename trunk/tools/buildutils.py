@@ -3,15 +3,16 @@ from os.path import exists, join
 
 # Reads a .list file into an array of strings
 def read_lines_from(name):
-  raw_source = open(name).read()
-  lines = raw_source.split("\n")
   list = []
-  for line in raw_source.split("\n"):
-  	trimmed = line.strip()
-  	if len(trimmed) == 0: continue
-  	if trimmed[0] == '#': continue
-  	list.append(trimmed)
+  for line in open(name):
+    trimmed = line[:line.find('#')].strip()
+    if len(trimmed) == 0: continue
+    list.append(trimmed)
   return list
+
+def escape_string(s):
+  s = s.replace('\\', '\\\\')
+  return s
 
 def generate_possibilities(params, config):
   options = [ ]

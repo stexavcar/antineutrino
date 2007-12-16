@@ -1,5 +1,7 @@
 #include "utils/string-inl.h"
 
+#include <string.h>
+
 using namespace neutrino;
 
 #ifdef MSVC
@@ -13,6 +15,12 @@ uint32_t string::length(const char* chars) {
   while (chars[result] != '\0')
     result++;
   return result;
+}
+
+string string::dup(string arg) {
+  char *result = new char[arg.length() + 1];
+  memcpy(result, arg.chars(), arg.length() + 1);
+  return string(result, arg.length());
 }
 
 bool string::equals(const char* a, const char* b) {

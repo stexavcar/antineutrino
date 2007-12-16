@@ -16,7 +16,11 @@ public:
 
 void Main::main(list<char*> &args) {
   if (!Abort::setup_signal_handler()) return;
-  // WebServer::start();
+  WebServer *server = WebServer::make();
+  if (server) server->start();
+  server->stop();
+  delete server;
+  return;
   Runtime runtime;
   runtime.initialize();
   Runtime::Scope runtime_scope(runtime);

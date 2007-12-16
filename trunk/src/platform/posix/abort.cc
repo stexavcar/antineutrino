@@ -8,6 +8,9 @@ namespace neutrino {
 
 static void print_stack_trace(void *addr, const char *prefix);
 
+Resource *Abort::first_ = NULL;
+Resource *Abort::last_ = NULL;
+
 struct EnumValueInfo {
   char *name;
   char *desc;
@@ -55,6 +58,36 @@ static void remove_substring(char *str, const char *substr) {
   str[i] = '\0';
 }
 
+static bool cleaned_up = false;
+void Abort::cleanup_resources() {
+  if (cleaned_up) return;
+  cleaned_up = true;
+  Resource *current = Abort::first_;
+  while (current != NULL) {
+    current->cleanup();
+    current = current->next_;
+  }
+}
+
+void Resource::install() {
+  prev_ = Abort::last_;
+  next_ = NULL;
+  if (Abort::first_ == NULL) Abort::first_ = this;
+  if (Abort::last_ != NULL) Abort::last_->next_ = this;
+  Abort::last_ = this;
+}
+
+void Resource::uninstall() {
+  if (prev_ == NULL) Abort::first_ = next_;
+  else prev_->next_ = next_;
+  if (next_ == NULL) Abort::last_ = prev_;
+  else next_->prev_ = prev_;
+}
+
+static void signal_cleanup_resources(int signum, siginfo_t *info, void *ptr) {
+  Abort::cleanup_resources();
+}
+
 static void print_error_report(int signum, siginfo_t *info, void *ptr) {
   fprintf(stderr, "--- Crash ---\n");
   EnumValueInfo enum_info;
@@ -87,6 +120,9 @@ bool Abort::setup_signal_handler() {
   success = success && install_handler(SIGSEGV, print_error_report);
   success = success && install_handler(SIGFPE, print_error_report);
   success = success && install_handler(SIGBUS, print_error_report);
+  success = success && install_handler(SIGINT, signal_cleanup_resources);
+  success = success && install_handler(SIGTERM, signal_cleanup_resources);
+  atexit(cleanup_resources);
   if (!success) {
     Conditions::get().error_occurred("Error setting up signal handlers.");
     return false;

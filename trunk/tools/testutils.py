@@ -81,10 +81,6 @@ def truncate(str, length):
 
 status_line = "[%(mins)02i:%(secs)02i|\033[34m%%%(remaining) 4d\033[0m|\033[32m+%(passed) 4d\033[0m|\033[31m-%(failed) 4d\033[0m]: %(test)s"
 
-def escape_string(s):
-  s = s.replace('\\', '\\\\')
-  return s
-
 class ProgressIndicator:
   def __init__(self, count):
     self.remaining = count

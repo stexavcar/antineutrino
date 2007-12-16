@@ -29,6 +29,7 @@ public:
   void println();
   bool is_empty() { return chars_ == NULL; }
   static uint32_t length(const char* chars);
+  static string dup(string arg);
   static bool equals(const char* a, const char* b);
 private:
   const char *chars_;
@@ -53,6 +54,7 @@ class string_buffer {
 public:
   string_buffer(uint32_t capacity = 16);
   ~string_buffer();
+  bool is_empty() { return cursor_ == 0; }
   void append(string str);
   void append(char c);
   void clear();

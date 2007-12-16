@@ -14,8 +14,9 @@ typedef unsigned char uint8_t;
 typedef signed char int8_t;
 #endif
 
+typedef int8_t byte;
 typedef int32_t word;
-typedef int8_t* address;
+typedef byte* address;
 
 #define TYPE_CHECK(S, T) while (false) { *(static_cast<S*>(0)) = static_cast<T>(0); }
 

@@ -12,6 +12,8 @@ heap/space.cc
 heap/values.cc
 io/image.cc
 monitor/http_<platform>.cc
+monitor/resources.cc       # generated
+monitor/web.cc
 platform/<os>/abort.cc
 runtime/builtins.cc
 runtime/interpreter.cc

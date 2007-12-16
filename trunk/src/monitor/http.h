@@ -5,9 +5,10 @@ namespace neutrino {
 
 class WebServer {
 public:
-  static void start();
-private:
-  static void *run_server(void *);
+  static WebServer *make();
+  
+  virtual void start() = 0;
+  virtual void stop() = 0;
 };
 
 }

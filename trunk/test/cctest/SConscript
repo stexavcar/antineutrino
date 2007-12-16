@@ -1,7 +1,7 @@
 import re
-from buildutils import read_lines_from
+from buildutils import read_lines_from, escape_string
 from os.path import abspath, join, basename
-from testutils import CCTestCase, is_selected, escape_string
+from testutils import CCTestCase, is_selected
 Import('config env config build target')
 
 cctest_files = read_lines_from(join(config['root'], 'test', 'cctest', 'tests.list'))
