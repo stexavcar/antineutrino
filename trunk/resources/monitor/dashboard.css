@@ -2,6 +2,18 @@ body {
   font-family: sans-serif;
 }
 
+div.vars {
+  display: block;
+  float: left;
+  width: 50%;
+}
+
+div.connection {
+  display: block;
+  float: right;
+  width: 50%
+}
+
 td {
   border: 1px solid #d0dbed;
   width: 400px;
@@ -16,11 +28,11 @@ td.tableHeader {
 td.variableName {
   background: #e1ecfe;
   font-style: italic;
-  width: 300px;
+  width: 75%;
 }
 
 td.variableValue {
   background: #e1ecfe;
-  width: 100px;
+  width: 25%;
   text-align: center;
 }
