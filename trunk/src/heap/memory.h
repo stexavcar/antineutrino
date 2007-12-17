@@ -1,6 +1,7 @@
 #ifndef _HEAP_MEMORY
 #define _HEAP_MEMORY
 
+#include "utils/globals.h"
 #include "utils/types.h"
 
 namespace neutrino {
@@ -12,7 +13,10 @@ public:
   inline address allocate(uint32_t size);
   void collect_garbage();
   SemiSpace &young_space() { return *young_space_; }
-  static int32_t bytes_allocated_;
+  IF_MONITOR(static int32_t bytes_allocated_);
+  IF_MONITOR(static int32_t objects_allocated_);
+  IF_MONITOR(static int32_t live_objects_);
+  IF_MONITOR(static int32_t live_bytes_);
 private:
   void notify_monitors();
   friend class DisallowGarbageCollection;

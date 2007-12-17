@@ -9,7 +9,10 @@
 namespace neutrino {
 
 address Memory::allocate(uint32_t size) {
-  bytes_allocated_ += size;
+  IF_MONITOR(bytes_allocated_ += size);
+  IF_MONITOR(live_bytes_ += size);
+  IF_MONITOR(objects_allocated_ += 1);
+  IF_MONITOR(live_objects_ += 1);
   return young_space().allocate(size);
 }
 

@@ -7,11 +7,18 @@ namespace neutrino {
 
 static const uint32_t kSize = 1024 * 256;
 
+#ifdef MONITOR
 static int32_t garbage_collection_count = 0;
 static MonitoredVariable gcc_monitor("garbage_collection_count", &garbage_collection_count);
-
 int32_t Memory::bytes_allocated_ = 0;
 static MonitoredVariable ba_monitor("bytes_allocated", &Memory::bytes_allocated_);
+int32_t Memory::objects_allocated_ = 0;
+static MonitoredVariable oa_monitor("objects_allocated", &Memory::objects_allocated_);
+int32_t Memory::live_objects_ = 0;
+static MonitoredVariable lo_monitor("live_objects", &Memory::live_objects_);
+int32_t Memory::live_bytes_ = 0;
+static MonitoredVariable lm_monitor("live_bytes", &Memory::live_bytes_);
+#endif // MONITOR
 
 Memory::Memory(Heap &heap) 
     : heap_(heap)
@@ -85,6 +92,8 @@ void FieldMigrator::visit_field(Value **field) {
 
 void Memory::collect_garbage() {
   ASSERT_C(DISALLOWED, allow_garbage_collection());
+  IF_MONITOR(live_bytes_ = 0);
+  IF_MONITOR(live_objects_ = 0);
   SemiSpace &from_space = young_space();
   SemiSpace *to_space = new SemiSpace(kSize);
   FieldMigrator migrator(from_space, *to_space);
@@ -107,7 +116,7 @@ void Memory::collect_garbage() {
   young_space_ = to_space;
   delete &from_space;
   notify_monitors();
-  garbage_collection_count++;
+  IF_MONITOR(garbage_collection_count++);
 }
 
 void Memory::notify_monitors() {

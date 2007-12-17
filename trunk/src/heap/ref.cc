@@ -3,11 +3,12 @@
 
 namespace neutrino {
 
+#ifdef MONITOR
 static int32_t scope_count = 0;
 static MonitoredVariable rsc_monitor("ref_scope_count", &scope_count);
-
 static int32_t high_water_mark = 0;
 static MonitoredVariable hwm_monitor("ref_scope_high_water_mark", &high_water_mark);
+#endif // MONITOR
 
 RefScopeInfo RefScope::current_;
 RefBlock *RefScope::spare_block_ = NULL;
@@ -18,8 +19,8 @@ Value **RefScope::grow() {
   RefBlock *extension;
   if (spare_block() == NULL) {
     extension = new RefBlock();
-    scope_count++;
-    high_water_mark = max(scope_count, high_water_mark);
+    IF_MONITOR(scope_count++);
+    IF_MONITOR(high_water_mark = max(scope_count, high_water_mark));
   } else {
     extension = spare_block();
     spare_block_ = NULL;
@@ -40,7 +41,7 @@ void RefScope::shrink() {
     blocks_to_delete--;
   }
   for (uint32_t i = 0; i < blocks_to_delete; i++) {
-    scope_count--;
+    IF_MONITOR(scope_count--);
     delete block_stack().pop();
   }
 }

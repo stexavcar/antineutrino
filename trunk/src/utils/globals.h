@@ -34,6 +34,14 @@
 #define IF_ELSE_PARANOID(t, e) e
 #endif
 
+#define MONITOR
+
+#ifdef MONITOR
+#define IF_MONITOR(expr) expr
+#else
+#define IF_MONITOR(expr) typedef void SEMI_STATIC_JOIN(__IfMonitor__, __LINE__)
+#endif
+
 template <typename T>
 static inline void USE(T t) { }
 
