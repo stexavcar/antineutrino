@@ -447,6 +447,7 @@ public:
   
   Value *call(Task *task);
   Data *clone(Heap &heap);
+  void ensure_compiled();
 
   string disassemble();
   

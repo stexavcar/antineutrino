@@ -3,11 +3,11 @@
 
 namespace neutrino {
 
-int32_t RefScope::ref_scope_count_ = 0;
-static MonitoredVariable rsc_monitor("ref_scope_count", &RefScope::ref_scope_count_);
+static int32_t scope_count = 0;
+static MonitoredVariable rsc_monitor("ref_scope_count", &scope_count);
 
-int32_t RefScope::ref_scope_high_water_mark_ = 0;
-static MonitoredVariable rshwm_monitor("ref_scope_high_water_mark", &RefScope::ref_scope_high_water_mark_);
+static int32_t high_water_mark = 0;
+static MonitoredVariable hwm_monitor("ref_scope_high_water_mark", &high_water_mark);
 
 RefScopeInfo RefScope::current_;
 RefBlock *RefScope::spare_block_ = NULL;
@@ -18,8 +18,8 @@ Value **RefScope::grow() {
   RefBlock *extension;
   if (spare_block() == NULL) {
     extension = new RefBlock();
-    ref_scope_count_++;
-    ref_scope_high_water_mark_ = max(ref_scope_count_, ref_scope_high_water_mark_);
+    scope_count++;
+    high_water_mark = max(scope_count, high_water_mark);
   } else {
     extension = spare_block();
     spare_block_ = NULL;
@@ -40,7 +40,7 @@ void RefScope::shrink() {
     blocks_to_delete--;
   }
   for (uint32_t i = 0; i < blocks_to_delete; i++) {
-    ref_scope_count_--;
+    scope_count--;
     delete block_stack().pop();
   }
 }

@@ -37,8 +37,6 @@ public:
   template <class C>
   static inline C **new_cell(C *value);
 
-  static int32_t ref_scope_count_;
-  static int32_t ref_scope_high_water_mark_;
 private:
   static void shrink();
   static Value **grow();

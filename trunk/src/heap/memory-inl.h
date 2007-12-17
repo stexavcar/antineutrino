@@ -9,6 +9,7 @@
 namespace neutrino {
 
 address Memory::allocate(uint32_t size) {
+  bytes_allocated_ += size;
   return young_space().allocate(size);
 }
 

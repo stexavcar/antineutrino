@@ -33,6 +33,12 @@ ref<Method> ref_traits<MethodExpression>::compile() {
   return result;
 }
 
+void Lambda::ensure_compiled() {
+  if (is<Code>(code())) return;
+  RefScope scope;
+  new_ref(this).ensure_compiled();
+}
+
 void ref_traits<Lambda>::ensure_compiled() {
   ref<Lambda> self = open(this);
   if (is<Code>(self->code())) return;

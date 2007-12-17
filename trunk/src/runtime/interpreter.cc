@@ -223,7 +223,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       frame.push_activation();
       frame.prev_pc() = pc + OpcodeInfo<OC_INVOKE>::kSize;
       frame.lambda() = method->lambda();
-      new_ref(method->lambda()).ensure_compiled();
+      method->lambda()->ensure_compiled();
       code = cast<Code>(method->lambda()->code())->buffer();
       constant_pool = cast<Tuple>(method->lambda()->constant_pool())->buffer();
       pc = 0;
@@ -276,7 +276,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       uint16_t argc = code[pc + 1];
       Value *value = frame[argc];
       Lambda *fun = cast<Lambda>(value);
-      new_ref(fun).ensure_compiled();
+      fun->ensure_compiled();
       frame.push_activation();
       frame.prev_pc() = pc + OpcodeInfo<OC_CALL>::kSize;
       frame.lambda() = fun;
