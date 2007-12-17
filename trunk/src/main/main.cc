@@ -6,8 +6,6 @@
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
 
-#include <unistd.h>
-
 namespace neutrino {
 
 class Main {
@@ -32,7 +30,6 @@ void Main::main(list<char*> &args) {
     delete image;
   }
   runtime.start();
-  sleep(60);
   server->stop();
   delete server;
 }
