@@ -1,17 +1,27 @@
-function sendRequest(name, callback) {
+function sendRequest(name, onReply, onError) {
   var request = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject("MSXML2.XMLHTTP.3.0");
   request.open("GET", name, true);
   request.onreadystatechange = function () {
-    if (request.readyState == 4 && request.status == 200) {
-      if (request.responseText)
-        callback(eval(request.responseText));
+    if (request.readyState == 4) {
+      if (request.status == 200) {
+        if (onReply && request.responseText)
+          onReply(eval(request.responseText));
+      } else if (request.status == 0) {
+        if (onError) onError();
+      }
     }
   };
   request.send('');  
 }
 
-function requestVariable(name, callback) {
-  sendRequest("vars/" + name, callback);
+function requestVariable(name, onReply, onError) {
+  sendRequest("vars/" + name, onReply, onError);
+}
+
+function setConnected(value) {
+  var status = document.getElementById("status");
+  status.innerHTML = value ? "Connected" : "Disconnected";
+  status.className = value ? "statusConnected" : "statusDisconnected";
 }
 
 function createTable(mapping) {
@@ -20,7 +30,6 @@ function createTable(mapping) {
     keys.push(key);
   }
   var table = document.getElementById("vars");
-  document.body.appendChild(table);
   for (var index in keys.sort()) {
     var key = keys[index];
     var row = table.insertRow(-1);
@@ -37,9 +46,14 @@ function createTable(mapping) {
 var hasCreatedTable = false;
 function updateUi(mapping) {
   if (!hasCreatedTable) createTable(mapping);
+  setConnected(true);
   for (var key in mapping) {
     document.getElementById(key + "_var_value").innerHTML = mapping[key];
   }
+}
+
+function disconnectStatus() {
+  setConnected(false);
 }
 
 function pageLoaded() {
@@ -47,6 +61,6 @@ function pageLoaded() {
 }
 
 function refreshVariables() {
-  requestVariable("all", updateUi);
+  requestVariable("all", updateUi, disconnectStatus);
   window.setTimeout(refreshVariables, 250);
 }

@@ -17,6 +17,7 @@ div.connection {
 td {
   border: 1px solid #d0dbed;
   width: 400px;
+  font-size: 12px;
 }
 
 td.tableHeader {
@@ -35,4 +36,16 @@ td.variableValue {
   background: #e1ecfe;
   width: 25%;
   text-align: center;
+}
+
+td.statusConnected {
+  color: white;
+  text-align: center;
+  background: #007700;
+}
+
+td.statusDisconnected {
+  color: white;
+  text-align: center;
+  background: #770000;
 }
