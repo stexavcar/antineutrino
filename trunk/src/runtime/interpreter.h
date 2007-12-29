@@ -23,7 +23,8 @@ namespace neutrino {
   VISIT(15, TUPLE,  1) VISIT(16, CONCAT, 1)   VISIT(17, LOCAL,    1) \
   VISIT(18, CHKHGT, 1) VISIT(19, OUTER,  1)   VISIT(20, CLOSURE,  2) \
   VISIT(21, QUOTE,  1) VISIT(22, UNQUOTE, 1)  VISIT(23, RAISE,    2) \
-  VISIT(24, MARK,   1) VISIT(25, UNMARK, 0)
+  VISIT(24, MARK,   1) VISIT(25, UNMARK, 0)   VISIT(26, NEW,      1) \
+  VISIT(27, FIELD,  2)
 
 enum Opcode {
   __first_opcode = -1

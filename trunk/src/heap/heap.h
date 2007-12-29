@@ -27,10 +27,10 @@ public:
    */
   Data *allocate_class(InstanceType instance_type);
   
-  /**
-   * Creates and validates a new type object.
-   */
   Data *new_empty_class(InstanceType instance_type);
+  
+  Data *new_class(InstanceType instance_type, uint32_t instance_field_count,
+      Tuple *methods, Value *super, Value *name);
   
   Data *new_task();
   
@@ -50,7 +50,7 @@ public:
   
   Data *new_dictionary(Tuple *store);
   
-  Data *new_lambda(uint32_t argc, Value *code, Value *literals, LambdaExpression *tree);
+  Data *new_lambda(uint32_t argc, Value *code, Value *literals, Value *tree);
   
   Data *new_quote_template(SyntaxTree *body, Tuple *unquotes);
   

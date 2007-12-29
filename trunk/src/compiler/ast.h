@@ -343,6 +343,30 @@ public:
 DEFINE_REF_CLASS(SequenceExpression);
 
 
+// ---------------------------------------------------
+// --- I n s t a n t i a t e   E x p r e s s i o n ---
+// ---------------------------------------------------
+
+#define FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(VISIT, arg)            \
+  VISIT(Tuple, terms, Terms, arg)
+
+class InstantiateExpression : public SyntaxTree {
+public:
+  FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uint32_t kTermsOffset = SyntaxTree::kHeaderSize;
+  static const uint32_t kSize = kTermsOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<InstantiateExpression> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(InstantiateExpression);
+
+
 // ---------------------------------------
 // --- T u p l e   E x p r e s s i o n ---
 // ---------------------------------------

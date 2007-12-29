@@ -37,7 +37,7 @@ ref<Symbol> Factory::new_symbol(ref<Value> name) {
 }
 
 ref<Lambda> Factory::new_lambda(uint32_t argc, ref<Value> code,
-    ref<Value> literals, ref<LambdaExpression> tree) {
+    ref<Value> literals, ref<Value> tree) {
   ALLOCATE_CHECKED(Lambda, new_lambda(argc, *code, *literals, *tree));
 }
 
@@ -72,6 +72,12 @@ ref<Method> Factory::new_method(ref<String> name, ref<Lambda> lambda) {
 
 ref<Class> Factory::new_empty_class(InstanceType instance_type) {
   ALLOCATE_CHECKED(Class, new_empty_class(instance_type));
+}
+
+ref<Class> Factory::new_class(InstanceType instance_type,
+    uint32_t instance_field_count, ref<Tuple> methods, ref<Value> super,
+    ref<Value> name) {
+  ALLOCATE_CHECKED(Class, new_class(instance_type, instance_field_count, *methods, *super, *name));
 }
 
 ref<Instance> Factory::new_instance(ref<Class> chlass) {

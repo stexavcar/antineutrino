@@ -196,7 +196,10 @@ static void write_tuple_on(Tuple *obj, string_buffer &buf) {
 }
 
 static void write_lambda_on(Lambda *obj, string_buffer &buf) {
-  obj->tree()->unparse_on(buf);
+  if (is<SyntaxTree>(obj->tree()))
+    cast<SyntaxTree>(obj->tree())->unparse_on(buf);
+  else
+    buf.append("#<lambda>");
 }
 
 static void write_dictionary_on(Dictionary *obj, string_buffer &buf) {
@@ -313,6 +316,11 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
         scoped_string name(literals->get(data[pc + 1])->to_string());
         buf.printf("raise %", name.chars());
         pc += OpcodeInfo<OC_RAISE>::kSize;
+        break;
+      }
+      case OC_NEW: {
+        buf.append("new");
+        pc += OpcodeInfo<OC_NEW>::kSize;
         break;
       }
       case OC_CLOSURE:

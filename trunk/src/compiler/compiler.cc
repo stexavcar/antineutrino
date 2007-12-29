@@ -57,6 +57,7 @@ public:
   void slap(uint16_t height);
   void rethurn();
   void invoke(ref<String> name, uint16_t argc);
+  void instantiate(ref<Class> chlass);
   void raise(ref<String> name, uint16_t argc);
   void call(uint16_t argc);
   void tuple(uint16_t size);
@@ -157,6 +158,14 @@ void Assembler::invoke(ref<String> name, uint16_t argc) {
   code().append(OC_INVOKE);
   code().append(name_index);
   code().append(argc);
+}
+
+void Assembler::instantiate(ref<Class> chlass) {
+  STATIC_CHECK(OpcodeInfo<OC_NEW>::kArgc == 1);
+  uint16_t chlass_index = constant_pool_index(chlass);
+  code().append(OC_NEW);
+  code().append(chlass_index);
+  adjust_stack_height(1 - chlass->instance_field_count());
 }
 
 void Assembler::raise(ref<String> name, uint16_t argc) {
@@ -634,6 +643,29 @@ void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
   __ slap(args.length() + 1);
 }
 
+void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
+  RefScope scope;
+  ref<Tuple> terms = that.terms();
+  uint32_t term_count = terms.length() / 2;
+  ref<Tuple> methods = factory().new_tuple(term_count);
+  for (uint32_t i = 0; i < term_count; i++) {
+    ref<String> keyword = cast<String>(terms.get(2 * i));
+    ref<Code> code = factory().new_code(4);
+    STATIC_CHECK(OpcodeInfo<OC_FIELD>::kArgc == 2);
+    code->at(0) = OC_FIELD;
+    code->at(1) = i;
+    code->at(2) = 0;
+    code->at(3) = OC_RETURN;
+    ref<Lambda> lambda = factory().new_lambda(0, code, runtime().empty_tuple(), runtime().nuhll());
+    methods.set(i, factory().new_method(keyword, lambda));
+    ref<SyntaxTree> value = cast<SyntaxTree>(terms.get(2 * i + 1));
+    __ codegen(value);
+  }
+  ref<Class> chlass = factory().new_class(INSTANCE_TYPE, term_count,
+      methods, runtime().vhoid(), runtime().vhoid());
+  __ instantiate(chlass);
+}
+
 void Assembler::visit_class_expression(ref<ClassExpression> that) {
   visit_syntax_tree(that);
 }
@@ -712,7 +744,7 @@ ref<Lambda> CompileSession::compile(ref<LambdaExpression> that, Assembler *enclo
 
 void CompileSession::compile(ref<Lambda> lambda, Assembler *enclosing) {
   GarbageCollectionMonitor monitor(Runtime::current().heap().memory());
-  ref<LambdaExpression> tree = lambda.tree();
+  ref<LambdaExpression> tree = cast<LambdaExpression>(lambda.tree());
   Assembler assembler(tree, *this, enclosing);
   ref<Tuple> params = tree.params();
   ArgumentScope scope(assembler, params);

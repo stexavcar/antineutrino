@@ -36,7 +36,7 @@ Data *Heap::allocate_class(InstanceType instance_type) {
   return result;
 }
 
-Data *Heap::new_lambda(uint32_t argc, Value *code, Value *constant_pool, LambdaExpression *tree) {
+Data *Heap::new_lambda(uint32_t argc, Value *code, Value *constant_pool, Value *tree) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_class());
   if (is<AllocationFailed>(val)) return val;
   Lambda *result = cast<Lambda>(val);
@@ -113,10 +113,27 @@ Data *Heap::new_empty_class(InstanceType instance_type) {
   if (is<AllocationFailed>(val)) return val;
   ASSERT_IS(Class, val);
   Class *result = cast<Class>(val);
+  result->set_instance_field_count(0);
   result->set_super(Smi::from_int(0));
+  result->set_name(Smi::from_int(0));
   result->set_methods(roots().empty_tuple());
   ASSERT(result->is_empty());
   return result;
+}
+
+Data *Heap::new_class(InstanceType instance_type, 
+    uint32_t instance_field_count, Tuple *methods, Value *super,
+    Value *name) {
+  Data *val = allocate_class(instance_type);
+  if (is<AllocationFailed>(val)) return val;
+  ASSERT_IS(Class, val);
+  Class *result = cast<Class>(val);
+  result->set_instance_field_count(instance_field_count);
+  result->set_super(super);
+  result->set_methods(methods);
+  result->set_name(name);
+  IF_PARANOID(result->validate());
+  return result;  
 }
 
 Data *Heap::new_method(String *name, Lambda *lambda) {
@@ -228,9 +245,12 @@ Data *Heap::new_dictionary(Tuple *table) {
 
 Data *Heap::new_instance(Class *chlass) {
   ASSERT_EQ(INSTANCE_TYPE, chlass->instance_type());
-  uint32_t size = Instance::kHeaderSize;
+  uint32_t field_count = chlass->instance_field_count();
+  uint32_t size = Instance::size_for(field_count);
   Data *val = allocate_object(size, chlass);
   if (is<AllocationFailed>(val)) return val;
   Instance *result = cast<Instance>(val);
+  for (uint32_t i = 0; i < field_count; i++)
+    result->set_field(i, roots().vhoid());
   return result;
 }

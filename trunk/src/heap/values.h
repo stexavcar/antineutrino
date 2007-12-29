@@ -245,6 +245,11 @@ DEFINE_REF_CLASS(Task);
 
 class Instance : public Object {
 public:
+  inline Value *&get_field(uint32_t index);
+  inline void set_field(uint32_t index, Value *value);
+  
+  static inline uint32_t size_for(uint32_t elms);
+  
   static const uint32_t kHeaderSize = Object::kHeaderSize;
 };
 
@@ -435,10 +440,10 @@ DEFINE_REF_CLASS(Dictionary);
 // -------------------
 
 #define FOR_EACH_LAMBDA_FIELD(VISIT, arg)                            \
-  VISIT(Value,            code,          Code,     arg)              \
-  VISIT(Value,            constant_pool, ConstantPool, arg)          \
-  VISIT(LambdaExpression, tree,          Tree,     arg)              \
-  VISIT(Tuple,            outers,        Outers,   arg)
+  VISIT(Value, code,          Code,         arg)                     \
+  VISIT(Value, constant_pool, ConstantPool, arg)                     \
+  VISIT(Value, tree,          Tree,         arg)                     \
+  VISIT(Tuple, outers,        Outers,       arg)
 
 class Lambda : public Object {
 public:
@@ -539,6 +544,7 @@ public:
 class Class : public Object {
 public:
   DECLARE_FIELD(InstanceType, instance_type);
+  DECLARE_FIELD(uint32_t, instance_field_count);
   FOR_EACH_CLASS_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   bool is_empty();
@@ -547,11 +553,12 @@ public:
   IF_DEBUG(static const char *tag_name(uint32_t tag));
   IF_DEBUG(static const char *class_name(uint32_t tag));
 
-  static const uint32_t kInstanceTypeOffset = Object::kHeaderSize;
-  static const uint32_t kMethodsOffset      = kInstanceTypeOffset + kPointerSize;
-  static const uint32_t kSuperOffset        = kMethodsOffset + kPointerSize;
-  static const uint32_t kNameOffset         = kSuperOffset + kPointerSize;
-  static const uint32_t kSize               = kNameOffset + kPointerSize;
+  static const uint32_t kInstanceTypeOffset       = Object::kHeaderSize;
+  static const uint32_t kInstanceFieldCountOffset = kInstanceTypeOffset + kPointerSize;
+  static const uint32_t kMethodsOffset            = kInstanceFieldCountOffset + kPointerSize;
+  static const uint32_t kSuperOffset              = kMethodsOffset + kPointerSize;
+  static const uint32_t kNameOffset               = kSuperOffset + kPointerSize;
+  static const uint32_t kSize                     = kNameOffset + kPointerSize;
 };
 
 template <> class ref_traits<Class> {

@@ -285,6 +285,25 @@ word *Stack::bottom() {
 }
 
 
+// -----------------------
+// --- I n s t a n c e ---
+// -----------------------
+
+Value *&Instance::get_field(uint32_t index) {
+  ASSERT(index < gc_safe_chlass()->instance_field_count());
+  return ValuePointer::access_field<Value*>(this, Instance::kHeaderSize + kPointerSize * index);
+}
+
+void Instance::set_field(uint32_t index, Value *value) {
+  ASSERT(index < gc_safe_chlass()->instance_field_count());
+  return ValuePointer::set_field<Value*>(this, Instance::kHeaderSize + kPointerSize * index, value);
+}
+
+uint32_t Instance::size_for(uint32_t fields) {
+  return Instance::kHeaderSize + fields * kPointerSize;
+}
+
+
 // -----------------
 // --- T u p l e ---
 // -----------------
@@ -426,6 +445,7 @@ uint32_t ref_traits<Code>::length() {
 // -----------------
 
 DEFINE_ACCESSORS(InstanceType, Class, instance_type, InstanceType)
+DEFINE_ACCESSORS(uint32_t, Class, instance_field_count, InstanceFieldCount)
 
 
 // ---------------------

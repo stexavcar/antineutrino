@@ -14,7 +14,7 @@ public:
   ref<String> new_string(uint32_t length);
   ref<Tuple> new_tuple(uint32_t size);
   ref<Lambda> new_lambda(uint32_t argc, ref<Value> code,
-      ref<Value> literals, ref<LambdaExpression> tree);
+      ref<Value> literals, ref<Value> tree);
   ref<LambdaExpression> new_lambda_expression(ref<Tuple> params,
       ref<SyntaxTree> body);
   ref<ReturnExpression> new_return_expression(ref<SyntaxTree> value);
@@ -25,6 +25,9 @@ public:
   ref<Dictionary> new_dictionary();
   ref<Code> new_code(uint32_t size);
   ref<Class> new_empty_class(InstanceType instance_type);
+  ref<Class> new_class(InstanceType instance_type, 
+      uint32_t instance_field_count, ref<Tuple> methods,
+      ref<Value> super, ref<Value> name);
   ref<Instance> new_instance(ref<Class> chlass);
 private:
   template <typename T, class M> inline ref<T> allocate(M fun);

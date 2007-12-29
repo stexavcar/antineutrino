@@ -19,11 +19,7 @@ ref<Class> ref_traits<ClassExpression>::compile() {
     ref<Method> method = method_ast.compile();
     methods.set(i, method);
   }
-  ref<Class> result = factory.new_empty_class(INSTANCE_TYPE);
-  result->set_name(self->name());
-  result->set_methods(*methods);
-  result->set_super(self->super());
-  return result;
+  return factory.new_class(INSTANCE_TYPE, 0, methods, super(), name());
 }
 
 ref<Method> ref_traits<MethodExpression>::compile() {

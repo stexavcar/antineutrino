@@ -1,5 +1,5 @@
 from os.path import abspath, basename, join, commonprefix
-import subprocess, os, sys, time
+import subprocess, os, sys, time, re
 
 def execute(executable, args):
   process = subprocess.Popen(
@@ -151,6 +151,9 @@ class ColorProgressIndicator(ProgressIndicator):
   def tests_done(self):
     self.print_progress('Done')
 
+def strip_newlines(str):
+  return str.rstrip()
+
 def run_neutrino_tests(all_tests, output):
   if output == 'color':
     progress = ColorProgressIndicator(len(all_tests))
@@ -161,8 +164,8 @@ def run_neutrino_tests(all_tests, output):
   for test in all_tests:
     progress.start_test(test)
     result = test.run()
-    stdout = result.output.strip()
-    stderr = result.error.strip()
+    stdout = strip_newlines(result.output)
+    stderr = strip_newlines(result.error)
     if result.status == Result.FAILED:
       progress.test_failed(test)
     elif len(stdout) > 0 or len(stderr) > 0:

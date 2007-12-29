@@ -189,6 +189,11 @@ public:
   inline ImageTuple *expressions();
 };
 
+class ImageInstantiateExpression : public ImageSyntaxTree {
+public:
+  inline ImageTuple *terms();
+};
+
 class ImageTupleExpression : public ImageSyntaxTree {
 public:
   inline ImageTuple *values();

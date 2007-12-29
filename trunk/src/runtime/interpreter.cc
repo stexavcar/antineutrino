@@ -273,6 +273,26 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       pc = 0;
       break;
     }
+    case OC_NEW: {
+      uint16_t chlass_index = code[pc + 1];
+      Class *chlass = cast<Class>(constant_pool[chlass_index]);
+      Data *val = runtime().heap().new_instance(chlass);
+      if (is<Signal>(val)) return val;
+      Instance *instance = cast<Instance>(val);
+      for (int32_t i = chlass->instance_field_count() - 1; i >= 0; i--)
+        instance->set_field(i, frame.pop());
+      frame.push(instance);
+      pc += OpcodeInfo<OC_NEW>::kSize;
+      break;
+    }
+    case OC_FIELD: {
+      uint16_t index = code[pc + 1];
+      uint16_t argc = code[pc + 2];
+      Value *value = cast<Instance>(frame.self(argc))->get_field(index);
+      frame.push(value);
+      pc += OpcodeInfo<OC_FIELD>::kSize;
+      break;
+    }
     case OC_MARK: {
       uint16_t data_index = code[pc + 1];
       Value *data = constant_pool[data_index];

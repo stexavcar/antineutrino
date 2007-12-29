@@ -712,9 +712,22 @@ class Parser:
 
   def parse_new_expression(self):
     self.expect_keyword('new')
-    constr = self.parse_atomic_expression()
-    args = self.parse_arguments('(', ')')
-    return Invoke(constr, 'new', args)
+    if self.token().is_delimiter('{'):
+      self.expect_delimiter('{')
+      terms = [ ]
+      while not self.token().is_delimiter('}'):
+        name = self.expect_ident()
+        self.expect_delimiter(':')
+        value = self.parse_expression(False)
+        terms.append((name, value))
+        if not self.token().is_delimiter(','): break
+        else: self.expect_delimiter(',')
+      self.expect_delimiter('}')
+      return Instantiate(terms)
+    else:
+      constr = self.parse_atomic_expression()
+      args = self.parse_arguments('(', ')')
+      return Invoke(constr, 'new', args)
 
   def resolve_identifier(self, name):
     return self.scope.lookup(name)
@@ -1098,6 +1111,22 @@ class Invoke(Expression):
     args = HEAP.new_tuple(values = map(lambda x: x.quote(), self.args))
     return HEAP.new_invoke_expression(recv, name, args)
 
+class Instantiate(Expression):
+  def __init__(self, terms):
+    self.terms = terms
+  def accept(self, visitor):
+    visitor.visit_instantiate(self)
+  def traverse(self, visitor):
+    for (name, value) in self.terms:
+      value.accept(visitor)
+  def quote(self):
+    term_list = [ ]
+    for (name, value) in self.terms:
+      term_list.append(HEAP.new_string(name))
+      term_list.append(value.quote())
+    terms = HEAP.new_tuple(values = term_list)
+    return HEAP.new_instantiate_expression(terms)
+
 class This(Expression):
   def accept(self, visitor):
     visitor.visit_this(self)
@@ -1373,6 +1402,9 @@ class Heap:
   def new_tuple_expression(self, exprs):
     return ImageTupleExpression(self.allocate(TUPLE_EXPRESSION_TYPE, ImageTupleExpression_Size), exprs)
 
+  def new_instantiate_expression(self, terms):
+    return ImageInstantiateExpression(self.allocate(INSTANTIATE_EXPRESSION_TYPE, ImageInstantiateExpression_Size), terms)
+
   def new_global(self, name):
     return ImageGlobalExpression(self.allocate(GLOBAL_EXPRESSION_TYPE, ImageGlobalExpression_Size), name)
 
@@ -1628,6 +1660,13 @@ class ImageSequenceExpression(ImageSyntaxTree):
   def set_expressions(self, value):
     HEAP.set_field(self, ImageSequenceExpression_ExpressionsOffset, value)
 
+class ImageInstantiateExpression(ImageSyntaxTree):
+  def __init__(self, addr, terms):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_terms(terms)
+  def set_terms(self, value):
+    HEAP.set_field(self, ImageInstantiateExpression_TermsOffset, value)
+
 class ImageLocalDefinition(ImageSyntaxTree):
   def __init__(self, addr, symbol, value, body):
     ImageSyntaxTree.__init__(self, addr)
@@ -1798,6 +1837,8 @@ class Visitor:
   def visit_do_on_expression(self, that):
     self.visit_node(that)
   def visit_on_clause(self, that):
+    self.visit_node(that)
+  def visit_instantiate(self, that):
     self.visit_node(that)
 
 class LoadVisitor(Visitor):

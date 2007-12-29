@@ -84,7 +84,8 @@
   VISIT(66, LOCAL_DEFINITION,       LocalDefinition,       local_definition)       \
   VISIT(69, RAISE_EXPRESSION,       RaiseExpression,       raise_expression)       \
   VISIT(70, ON_CLAUSE,              OnClause,              on_clause)              \
-  VISIT(71, DO_ON_EXPRESSION,       DoOnExpression,        do_on_expression)
+  VISIT(71, DO_ON_EXPRESSION,       DoOnExpression,        do_on_expression)       \
+  VISIT(72, INSTANTIATE_EXPRESSION, InstantiateExpression, instantiate_expression)
 
 #define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
   FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
@@ -180,6 +181,8 @@
   VISIT(1, OnClause,              NameOffset)                        \
   VISIT(2, OnClause,              LambdaOffset)                      \
   VISIT(3, OnClause,              Size)                              \
+  VISIT(1, InstantiateExpression, TermsOffset)                       \
+  VISIT(2, InstantiateExpression, Size)                              \
   VISIT(1, DoOnExpression,        ValueOffset)                       \
   VISIT(2, DoOnExpression,        ClausesOffset)                     \
   VISIT(3, DoOnExpression,        Size)
@@ -236,7 +239,8 @@
   VISIT(39, Class,      task_class,                   Task,                  new_empty_class(TASK_TYPE))                   \
   VISIT(40, Class,      raise_expression_class,       RaiseExpression,       new_empty_class(RAISE_EXPRESSION_TYPE))       \
   VISIT(41, Class,      on_clause_class,              OnClause,              new_empty_class(ON_CLAUSE_TYPE))              \
-  VISIT(42, Class,      do_on_expression_class,       DoOnExpression,        new_empty_class(DO_ON_EXPRESSION_TYPE))
+  VISIT(42, Class,      do_on_expression_class,       DoOnExpression,        new_empty_class(DO_ON_EXPRESSION_TYPE))       \
+  VISIT(43, Class,      instantiate_expression_class, InstantiateExpression, new_empty_class(INSTANTIATE_EXPRESSION_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \
