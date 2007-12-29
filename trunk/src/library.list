@@ -14,9 +14,9 @@ io/image.cc
 monitor/handlers.cc
 monitor/http_<platform>.cc
 monitor/monitor.cc
-monitor/resources.cc       # generated
+monitor/resources.cc         # generated
 monitor/web.cc
-platform/<os>/abort.cc
+platform/<platform>/abort.cc
 runtime/builtins.cc
 runtime/interpreter.cc
 runtime/runtime.cc

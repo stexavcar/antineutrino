@@ -6,7 +6,7 @@ Import('config common prefix properties target build')
 # Instantiate the test builders for each configuration
 env = common.Copy()
 apply_items(env, properties)
-env.Append(LIBS = [config[prefix + 'shared-library']])
+env.Append(LIBS = [ config[prefix + 'shared-library'] ])
 
 old_build = build
 
@@ -33,7 +33,7 @@ def check_keywords():
     # Read the contents between the begin and end markers into the
     # lines list
     seen_begin_marker = False
-    for line in open(name):
+    for line in open(join(config['root'], name)):
       if seen_begin_marker:
         if "--- end keywords ---" in line:
           seen_begin_marker = False

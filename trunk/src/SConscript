@@ -59,12 +59,12 @@ def process_name(str):
   return ''.join([ p[0].upper() + p[1:].lower() for p in parts ])
 
 def generate_resources_file(source, target, env):
-  prefix = join('resources', 'monitor')
+  prefix = abspath(join(config['root'], 'resources', 'monitor'))
   filenames = [ str(name) for name in source ]
   chunks = [ ]
   compares = [ ]
   for name in filenames:
-    short_name = name[len(prefix)+1:]
+    short_name = abspath(name)[len(prefix)+1:]
     file_obj = open(str(name), mode="rb")
     contents = file_obj.read()
     length = len(contents)
@@ -96,4 +96,4 @@ config[prefix + 'static-library'] = static_library[0]
 config[prefix + 'shared-library'] = shared_library[0]
 Alias(prefix + 'program', program)
 config[prefix + 'program'] = program[0]
-env.Alias(target, [shared_library, program])
+env.Alias(target, [static_library, program])
