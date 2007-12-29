@@ -229,26 +229,48 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       pc = 0;
       break;
     }
-    case OC_ADVISE: {
+    case OC_RAISE: {
       uint16_t name_index = code[pc + 1];
       Value *name = constant_pool[name_index];
       uint16_t argc = code[pc + 2];
       Marker marker(stack->top_marker());
       while (!marker.is_bottom()) {
-        Tuple *data = cast<Tuple>(marker.data());
-        for (uint32_t i = 0; i < data->length(); i += 2) {
-          String *handler = cast<String>(data->get(i));
+        Tuple *handlers = cast<Tuple>(marker.data());
+        for (uint32_t i = 0; i < handlers->length(); i += 2) {
+          String *handler = cast<String>(handlers->get(i));
           if (name->equals(handler)) {
-            printf("Found handler\n");
+            Lambda *lambda = cast<Lambda>(handlers->get(i + 1));
+            lambda->ensure_compiled();
+            frame.push_activation();
+            frame.prev_pc() = pc + OpcodeInfo<OC_RAISE>::kSize;
+            frame.lambda() = lambda;
+            code = cast<Code>(lambda->code())->buffer();
+            constant_pool = cast<Tuple>(lambda->constant_pool())->buffer();
+            pc = 0;
             goto end;
           }
         }
         marker.unwind();
       }
+      {
+        Arguments args(runtime(), argc, frame);
+        unhandled_condition(name, args);
+        pc += OpcodeInfo<OC_RAISE>::kSize;
+      }
      end:
-      Arguments args(runtime(), argc, frame);
-      unhandled_condition(name, args);
-      pc += OpcodeInfo<OC_INVOKE>::kSize;
+      break;
+    }
+    case OC_CALL: {
+      uint16_t argc = code[pc + 1];
+      Value *value = frame[argc];
+      Lambda *fun = cast<Lambda>(value);
+      fun->ensure_compiled();
+      frame.push_activation();
+      frame.prev_pc() = pc + OpcodeInfo<OC_CALL>::kSize;
+      frame.lambda() = fun;
+      code = cast<Code>(fun->code())->buffer();
+      constant_pool = cast<Tuple>(fun->constant_pool())->buffer();
+      pc = 0;
       break;
     }
     case OC_MARK: {
@@ -270,19 +292,6 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       stack->set_top_marker(marker_value);
       frame.push(value);
       pc += OpcodeInfo<OC_UNMARK>::kSize;
-      break;
-    }
-    case OC_CALL: {
-      uint16_t argc = code[pc + 1];
-      Value *value = frame[argc];
-      Lambda *fun = cast<Lambda>(value);
-      fun->ensure_compiled();
-      frame.push_activation();
-      frame.prev_pc() = pc + OpcodeInfo<OC_CALL>::kSize;
-      frame.lambda() = fun;
-      code = cast<Code>(fun->code())->buffer();
-      constant_pool = cast<Tuple>(fun->constant_pool())->buffer();
-      pc = 0;
       break;
     }
     case OC_BUILTIN: {

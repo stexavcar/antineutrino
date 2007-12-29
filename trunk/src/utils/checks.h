@@ -37,6 +37,15 @@ public:
           expected, expected_source, value, value_source, cause);
     }
   }
+
+  static inline void check_ge(const char* file_name, int line_number,
+      int32_t value, const char *value_source, int32_t limit,
+      const char *limit_source, Condition cause = UNKNOWN) {
+    if (value < limit) {
+      Conditions::get().check_ge_failed(file_name, line_number,
+          value, value_source, limit, limit_source, cause);
+    }
+  }
   
   static inline void check_lt(const char* file_name, int line_number,
       int value, const char *value_source, int limit,
@@ -77,6 +86,9 @@ public:
 
 #define CHECK_EQ(expected, value) neutrino::Checks::check_eq(        \
     __FILE__, __LINE__, expected, #expected, value, #value)
+
+#define CHECK_GE(value, limit) neutrino::Checks::check_ge(           \
+    __FILE__, __LINE__, value, #value, limit, #limit)
 
 #define CHECK_LT(value, limit) neutrino::Checks::check_lt(           \
     __FILE__, __LINE__, value, #value, limit, #limit)
@@ -152,6 +164,7 @@ public:
 #define ASSERT(value)                      IF_DEBUG(CHECK(value))
 #define ASSERT_C(cond, value)              IF_DEBUG(CHECK_C(cond, value))
 #define ASSERT_EQ(expected, value)         IF_DEBUG(CHECK_EQ(expected, value))
+#define ASSERT_GE(expected, value)         IF_DEBUG(CHECK_GE(expected, value))
 #define ASSERT_LT(expected, value)         IF_DEBUG(CHECK_LT(expected, value))
 #define ASSERT_LT_C(cond, expected, value) IF_DEBUG(CHECK_LT_C(cond, expected, value))
 #define ASSERT_IS(Type, value)             IF_DEBUG(CHECK_IS(Type, value))

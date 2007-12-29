@@ -309,6 +309,12 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
         pc += OpcodeInfo<OC_INVOKE>::kSize;
         break;
       }
+      case OC_RAISE: {
+        scoped_string name(literals->get(data[pc + 1])->to_string());
+        buf.printf("raise %", name.chars());
+        pc += OpcodeInfo<OC_RAISE>::kSize;
+        break;
+      }
       case OC_CLOSURE:
         buf.printf("closure % %", data[pc + 1], data[pc + 2]);
         pc += OpcodeInfo<OC_CLOSURE>::kSize;

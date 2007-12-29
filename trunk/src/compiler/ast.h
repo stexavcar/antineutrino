@@ -109,13 +109,13 @@ DEFINE_REF_CLASS(InvokeExpression);
 // --- R a i s e   E x p r e s s i o n ---
 // ---------------------------------------
 
-#define FOR_EACH_ADVISE_EXPRESSION_FIELD(VISIT, arg)                 \
+#define FOR_EACH_RAISE_EXPRESSION_FIELD(VISIT, arg)                  \
   VISIT(String,     name,      Name,      arg)                       \
   VISIT(Tuple,      arguments, Arguments, arg)
 
-class AdviseExpression : public SyntaxTree {
+class RaiseExpression : public SyntaxTree {
 public:
-  FOR_EACH_ADVISE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  FOR_EACH_RAISE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kArgumentsOffset = kNameOffset + kPointerSize;
@@ -123,12 +123,12 @@ public:
 };
 
 template <>
-class ref_traits<AdviseExpression> : public ref_traits<SyntaxTree> {
+class ref_traits<RaiseExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_ADVISE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  FOR_EACH_RAISE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
 };
 
-DEFINE_REF_CLASS(AdviseExpression);
+DEFINE_REF_CLASS(RaiseExpression);
 
 
 // -------------------------

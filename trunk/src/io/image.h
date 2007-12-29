@@ -128,7 +128,7 @@ public:
   inline ImageTuple *arguments();
 };
 
-class ImageAdviseExpression : public ImageSyntaxTree {
+class ImageRaiseExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();
   inline ImageTuple *arguments();

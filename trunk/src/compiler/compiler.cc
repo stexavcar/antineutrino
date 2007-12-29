@@ -57,7 +57,7 @@ public:
   void slap(uint16_t height);
   void rethurn();
   void invoke(ref<String> name, uint16_t argc);
-  void advise(ref<String> name, uint16_t argc);
+  void raise(ref<String> name, uint16_t argc);
   void call(uint16_t argc);
   void tuple(uint16_t size);
   void global(ref<Value> name);
@@ -145,6 +145,7 @@ uint16_t Assembler::constant_pool_index(ref<Value> value) {
 }
 
 void Assembler::adjust_stack_height(int32_t delta) {
+  ASSERT_GE(stack_height() + delta, 0);
   stack_height_ += delta;
   IF_PARANOID(code().append(OC_CHKHGT));
   IF_PARANOID(code().append(stack_height()));
@@ -158,10 +159,10 @@ void Assembler::invoke(ref<String> name, uint16_t argc) {
   code().append(argc);
 }
 
-void Assembler::advise(ref<String> name, uint16_t argc) {
-  STATIC_CHECK(OpcodeInfo<OC_ADVISE>::kArgc == 2);
+void Assembler::raise(ref<String> name, uint16_t argc) {
+  STATIC_CHECK(OpcodeInfo<OC_RAISE>::kArgc == 2);
   uint16_t name_index = constant_pool_index(name);
-  code().append(OC_ADVISE);
+  code().append(OC_RAISE);
   code().append(name_index);
   code().append(argc);
 }
@@ -233,6 +234,7 @@ void Assembler::slap(uint16_t height) {
 
 void Assembler::rethurn() {
   STATIC_CHECK(OpcodeInfo<OC_RETURN>::kArgc == 0);
+  ASSERT(stack_height() > 0);
   code().append(OC_RETURN);
 }
 
@@ -607,20 +609,29 @@ void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {
     ref<OnClause> clause = cast<OnClause>(clauses.get(i));
     ref<String> name = clause.name();
     data.set(2 * i, name);
+    ref<LambdaExpression> handler = clause.lambda();
+    ClosureScope scope(*this, factory());
+    ref<Lambda> lambda = session().compile(handler, this);
+    scope.unlink();
+    // TODO(5): We need a lifo block mechanism to implement outers in
+    //   condition handlers
+    ASSERT_EQ(0, scope.outers().length());
+    data.set(2 * i + 1, lambda);
   }
   __ mark(data);
   __ codegen(that.value());
   __ unmark();
 }
 
-void Assembler::visit_advise_expression(ref<AdviseExpression> that) {
+void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
   RefScope scope;
   ref<Tuple> args = that.arguments();
+  __ push(runtime().vhoid()); // receiver
+  __ push(runtime().vhoid()); // method
   for (uint32_t i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
-  __ advise(that.name(), args.length());
-  if (args.length() > 0)
-    __ slap(args.length());
+  __ raise(that.name(), args.length());
+  __ slap(args.length() + 1);
 }
 
 void Assembler::visit_class_expression(ref<ClassExpression> that) {

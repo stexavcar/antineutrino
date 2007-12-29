@@ -69,7 +69,7 @@
 		</dict>
 		<dict>
 			<key>match</key>
-			<string>\b(def|class|return|operator|if|else|while|new|case|match|as|do|fn|and|or|not|on|advise)\b</string>
+			<string>\b(def|class|return|operator|if|else|while|new|case|match|as|do|fn|and|or|not|on|raise)\b</string>
 			<key>name</key>
 			<string>keyword.control.neutrino</string>
 		</dict>

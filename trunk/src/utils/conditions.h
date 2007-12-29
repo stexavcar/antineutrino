@@ -32,6 +32,10 @@ public:
       int expected, const char *expected_source, int value,
       const char *value_source, Condition cause);
 
+  void check_ge_failed(const char* file_name, int line_number,
+      int32_t value, const char *value_source, int32_t limit,
+      const char *limit_source, Condition cause);
+
   void check_lt_failed(const char* file_name, int line_number,
       int value, const char *value_source, int limit,
       const char *limit_source, Condition cause);

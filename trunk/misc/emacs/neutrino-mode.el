@@ -74,7 +74,7 @@
 (defconst neutrino-keywords-regexp
   (regexp-opt
    '("def" "class" "new" "internal" "and" "or" "not" "if" "else"
-     "return" "fn" "in" "while" "do" "operator" "on" "advise")
+     "return" "fn" "in" "while" "do" "operator" "on" "raise")
    'words))
 
 (defconst neutrino-constants-regexp
