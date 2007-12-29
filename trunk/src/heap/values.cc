@@ -421,6 +421,11 @@ static void validate_tuple(Tuple *obj) {
     GC_SAFE_CHECK_IS_C(VALIDATION, Value, obj->get(i));
 }
 
+static void validate_instance(Instance *obj) {
+  for (uint32_t i = 0; i < obj->gc_safe_chlass()->instance_field_count(); i++)
+    GC_SAFE_CHECK_IS_C(VALIDATION, Value, obj->get_field(i));
+}
+
 #define VALIDATE_FIELD(Type, name, Name, Class)                      \
   GC_SAFE_CHECK_IS_C(VALIDATION, Type, cast<Class>(obj)->name());
 
@@ -430,6 +435,9 @@ static void validate_object(Object *obj) {
   switch (type) {
     case TUPLE_TYPE:
       validate_tuple(cast<Tuple>(obj));
+      break;
+    case INSTANCE_TYPE:
+      validate_instance(cast<Instance>(obj));
       break;
     case STACK_TYPE:
       cast<Stack>(obj)->validate_stack();
@@ -450,7 +458,7 @@ static void validate_object(Object *obj) {
     case BUILTIN_CALL_TYPE:
     case UNQUOTE_EXPRESSION_TYPE:
     case CODE_TYPE: case STRING_TYPE: case VOID_TYPE: case TRUE_TYPE:
-    case FALSE_TYPE: case NULL_TYPE:
+    case FALSE_TYPE: case NULL_TYPE: case BUFFER_TYPE:
       break;
 #define MAKE_CASE(n, NAME, Name, name)                               \
     case NAME##_TYPE:                                                \

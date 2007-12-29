@@ -34,7 +34,7 @@ FOR_EACH_SIMPLE_ROOT(ALLOCATE_ROOT)
 #undef ALLOCATE_ROOT
 
   Data *class_name;
-#define FIXUP_CLASS(n, Type, name, Name, allocator)            \
+#define FIXUP_CLASS(n, Type, name, Name, allocator)                  \
   class_name = heap.new_string(#Name);                               \
   if (is<AllocationFailed>(class_name)) return false;                \
   name()->set_name(cast<String>(class_name));                        \

@@ -45,6 +45,7 @@ Data *Heap::new_lambda(uint32_t argc, Value *code, Value *constant_pool, Value *
   result->set_constant_pool(constant_pool);
   result->set_tree(tree);
   result->set_outers(roots().empty_tuple());
+  IF_PARANOID(result->validate());
   return result;
 }
 
@@ -64,6 +65,7 @@ Data *Heap::new_lambda_expression(Tuple *params, SyntaxTree *body) {
   LambdaExpression *result = cast<LambdaExpression>(val);
   result->set_params(params);
   result->set_body(body);
+  IF_PARANOID(result->validate());
   return result;
 }
 
@@ -108,7 +110,7 @@ Data *Heap::allocate_##name() {                                      \
 FOR_EACH_GENERATABLE_TYPE(MAKE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
 
-Data *Heap::new_empty_class(InstanceType instance_type) {
+Data *Heap::allocate_empty_class(InstanceType instance_type) {
   Data *val = allocate_class(instance_type);
   if (is<AllocationFailed>(val)) return val;
   ASSERT_IS(Class, val);
@@ -142,6 +144,7 @@ Data *Heap::new_method(String *name, Lambda *lambda) {
   Method *result = cast<Method>(val);
   result->set_name(name);
   result->set_lambda(lambda);
+  IF_PARANOID(result->validate());
   return result;
 }
 
@@ -154,6 +157,7 @@ Data *Heap::new_string(string value) {
   for (uint32_t i = 0; i < value.length(); i++)
     result->set(i, value[i]);
   ASSERT_EQ(size, result->size_in_memory());
+  IF_PARANOID(result->validate());
   return result;
 }
 
@@ -188,11 +192,16 @@ Data *Heap::new_string(uint32_t length) {
   String *result = cast<String>(val);
   result->set_length(length);
   ASSERT_EQ(size, result->size_in_memory());
+  IF_PARANOID(result->validate());
   return result;
 }
 
 Data *Heap::new_code(uint32_t size) {
-  return new_abstract_buffer(sizeof(uint16_t) * size, roots().code_class());
+  Data *val = new_abstract_buffer(sizeof(uint16_t) * size, roots().code_class());
+  if (is<AllocationFailed>(val)) return val;
+  Code *result = cast<Code>(val);
+  IF_PARANOID(result->validate());
+  return result;
 }
 
 Data *Heap::new_abstract_buffer(uint32_t byte_count, Class *type) {
@@ -202,6 +211,7 @@ Data *Heap::new_abstract_buffer(uint32_t byte_count, Class *type) {
   AbstractBuffer *result = cast<AbstractBuffer>(val);
   result->set_size<uint8_t>(byte_count);
   ASSERT_EQ(size, result->size_in_memory());
+  IF_PARANOID(result->validate());
   return result;
 }
 
@@ -214,6 +224,7 @@ Data *Heap::new_tuple(uint32_t length) {
   for (uint32_t i = 0; i < length; i++)
     result->set(i, roots().vhoid());
   ASSERT_EQ(size, result->size_in_memory());
+  IF_PARANOID(result->validate());
   return result;
 }
 
@@ -222,6 +233,7 @@ Data *Heap::new_symbol(Value *name) {
   if (is<AllocationFailed>(val)) return val;
   Symbol *result = cast<Symbol>(val);
   result->set_name(name);
+  IF_PARANOID(result->validate());
   return result;
 }
 
@@ -240,6 +252,7 @@ Data *Heap::new_dictionary(Tuple *table) {
   if (is<AllocationFailed>(val)) return val;
   Dictionary *result = cast<Dictionary>(val);
   result->set_table(table);
+  IF_PARANOID(result->validate());
   return result;
 }
 
@@ -252,5 +265,6 @@ Data *Heap::new_instance(Class *chlass) {
   Instance *result = cast<Instance>(val);
   for (uint32_t i = 0; i < field_count; i++)
     result->set_field(i, roots().vhoid());
+  IF_PARANOID(result->validate());
   return result;
 }

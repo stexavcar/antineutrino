@@ -70,8 +70,8 @@ ref<Method> Factory::new_method(ref<String> name, ref<Lambda> lambda) {
   ALLOCATE_CHECKED(Method, new_method(*name, *lambda));
 }
 
-ref<Class> Factory::new_empty_class(InstanceType instance_type) {
-  ALLOCATE_CHECKED(Class, new_empty_class(instance_type));
+ref<Class> Factory::allocate_empty_class(InstanceType instance_type) {
+  ALLOCATE_CHECKED(Class, allocate_empty_class(instance_type));
 }
 
 ref<Class> Factory::new_class(InstanceType instance_type,

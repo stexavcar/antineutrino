@@ -700,11 +700,9 @@ CompileSession::CompileSession(Runtime &runtime)
 
 ref<Lambda> Compiler::compile(ref<LambdaExpression> expr) {
   Runtime &runtime = Runtime::current();
+  ref<Smi> zero = new_ref(Smi::from_int(0));  
   ref<Lambda> lambda = runtime.factory().new_lambda(
-    expr->params()->length(),
-    runtime.vhoid(),
-    runtime.vhoid(),
-    expr
+    expr->params()->length(), zero, zero, expr
   );
   return lambda;
 }
@@ -732,11 +730,9 @@ void Compiler::compile(ref<Lambda> lambda) {
 }
 
 ref<Lambda> CompileSession::compile(ref<LambdaExpression> that, Assembler *enclosing) {
+  ref<Smi> zero = new_ref(Smi::from_int(0));
   ref<Lambda> lambda = runtime().factory().new_lambda(
-    that->params()->length(),
-    runtime().vhoid(),
-    runtime().vhoid(),
-    that
+      that->params()->length(), zero, zero, that
   );
   compile(lambda, enclosing);
   return lambda;

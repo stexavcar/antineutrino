@@ -108,7 +108,7 @@ void Image::copy_object_shallow(ImageObject *obj) {
     case CLASS_TYPE: {
       ImageClass *img = image_cast<ImageClass>(obj);
       InstanceType instance_type = static_cast<InstanceType>(img->instance_type());
-      Class *chlass = cast<Class>(heap.new_empty_class(instance_type));
+      Class *chlass = cast<Class>(heap.allocate_empty_class(instance_type));
       obj->point_forward(chlass);
       break;
     }
