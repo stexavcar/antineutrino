@@ -87,6 +87,8 @@ config = {
  'check-deps': []
 }
 
+build_dir = 'bin'
+
 # Sets up the build for the various targets defined in the target
 # configuration file in src/
 def load_source_targets():
@@ -99,11 +101,11 @@ def load_source_targets():
       else: prefix = ''
       SConscript(
         join('src', 'SConscript'),
-        build_dir = join('build', target),
+        build_dir = join(build_dir, target),
         exports = 'config target properties prefix',
         duplicate = False
       )
-      build = abspath(join('build', target + '-test'))
+      build = abspath(join(build_dir, target + '-test'))
       SConscript(
         join('test', 'SConscript'),
         build_dir = build,

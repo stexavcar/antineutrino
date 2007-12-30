@@ -274,13 +274,20 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       break;
     }
     case OC_NEW: {
-      uint16_t chlass_index = code[pc + 1];
-      Class *chlass = cast<Class>(constant_pool[chlass_index]);
+      uint16_t chlass_template_index = code[pc + 1];
+      Class *chlass_template = cast<Class>(constant_pool[chlass_template_index]);
+      uint32_t field_count = chlass_template->instance_field_count();
+      Protocol *proto = cast<Protocol>(frame[field_count]);
+      USE(proto);
+      Data *chlass_val = chlass_template->clone(runtime().heap());
+      if (is<AllocationFailed>(chlass_val)) return chlass_val;
+      Class *chlass = cast<Class>(chlass_val);
       Data *val = runtime().heap().new_instance(chlass);
       if (is<Signal>(val)) return val;
       Instance *instance = cast<Instance>(val);
-      for (int32_t i = chlass->instance_field_count() - 1; i >= 0; i--)
+      for (int32_t i = field_count - 1; i >= 0; i--)
         instance->set_field(i, frame.pop());
+      frame.pop(); // Pop the protocol
       frame.push(instance);
       pc += OpcodeInfo<OC_NEW>::kSize;
       break;

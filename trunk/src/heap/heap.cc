@@ -138,6 +138,10 @@ Data *Heap::new_class(InstanceType instance_type,
   return result;  
 }
 
+Data *Heap::allocate_empty_protocol() {
+  return allocate_object(Protocol::kSize, roots().protocol_class());
+}
+
 Data *Heap::new_method(String *name, Lambda *lambda) {
   Data *val = allocate_object(Method::kSize, roots().method_class());
   if (is<AllocationFailed>(val)) return val;

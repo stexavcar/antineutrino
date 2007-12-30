@@ -26,7 +26,7 @@
   (save-excursion
     (beginning-of-line)
     (or (neutrino-indentation-from-block)
-	0)))
+        0)))
 
 (defun neutrino-parse-partial-sexp ()
   (parse-partial-sexp (point-min) (point)))
@@ -34,11 +34,11 @@
 (defun neutrino-indentation-from-block ()
   (save-excursion
     (let* ((state (neutrino-parse-partial-sexp))
-	   (block-start (nth 1 state)))
+           (block-start (nth 1 state)))
       (if (not block-start)
-	  0
-	(goto-char (1+ block-start))
-	(neutrino-block-indentation)))))
+          0
+        (goto-char (1+ block-start))
+        (neutrino-block-indentation)))))
 
 (defmacro neutrino-point-after(&rest body)
   `(save-excursion
@@ -48,15 +48,15 @@
 (defun neutrino-forward-spaces (&optional limit)
   (if limit
       (save-restriction
-	(narrow-to-region (point) limit)
-	(forward-comment 100000))
+        (narrow-to-region (point) limit)
+        (forward-comment 100000))
     (forward-comment 100000)))
 
 (defun neutrino-block-indentation ()
   (let ((block-start-eol (neutrino-point-after (end-of-line)))
-	(block-after-spc (neutrino-point-after (neutrino-forward-spaces))))
+        (block-after-spc (neutrino-point-after (neutrino-forward-spaces))))
     (if (> block-after-spc block-start-eol)
-	(+ (current-indentation) neutrino-indent-step)
+        (+ (current-indentation) neutrino-indent-step)
       (current-column))))
 
 (defun neutrino-indent-line ()
@@ -74,7 +74,8 @@
 (defconst neutrino-keywords-regexp
   (regexp-opt
    '("def" "class" "new" "internal" "and" "or" "not" "if" "else"
-     "return" "fn" "in" "while" "do" "operator" "on" "raise")
+     "return" "fn" "in" "while" "do" "operator" "on" "raise" 
+     "protocol")
    'words))
 
 (defconst neutrino-constants-regexp
@@ -96,11 +97,11 @@
   
   (make-local-variable 'font-lock-defaults)
   (setq font-lock-defaults
-	'(neutrino-font-lock-keywords
-	  nil
-	  nil
-	  ((?\_ . "w"))
-	  nil))
+        '(neutrino-font-lock-keywords
+          nil
+          nil
+          ((?\_ . "w"))
+          nil))
 
   (make-local-variable 'indent-line-function)
   (setq indent-line-function #'neutrino-indent-line))

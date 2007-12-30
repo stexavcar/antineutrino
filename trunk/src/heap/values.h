@@ -523,13 +523,25 @@ DEFINE_REF_CLASS(Method);
 // --- P r o t o c o l ---
 // -----------------------
 
+#define FOR_EACH_PROTOCOL_FIELD(VISIT, arg)                          \
+  VISIT(Value, name,    Name,    arg)                                \
+  VISIT(Tuple, methods, Methods, arg)
+
 class Protocol : public Object {
 public:
-  inline uint32_t &id();
+  FOR_EACH_PROTOCOL_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const int kIdOffset = Object::kHeaderSize;
-  static const int kSize     = kIdOffset + kPointerSize;
+  static const uint32_t kNameOffset    = Object::kHeaderSize;
+  static const uint32_t kMethodsOffset = kNameOffset + kPointerSize;
+  static const uint32_t kSize          = kMethodsOffset + kPointerSize;
 };
+
+template <> class ref_traits<Protocol> : public ref_traits<Object> {
+public:
+  FOR_EACH_PROTOCOL_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(Protocol);
 
 
 // -----------------
@@ -548,6 +560,7 @@ public:
   FOR_EACH_CLASS_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   bool is_empty();
+  Data *clone(Heap &heap);
 
   IF_DEBUG(static uint32_t tag_of(Data *value));
   IF_DEBUG(static const char *tag_name(uint32_t tag));

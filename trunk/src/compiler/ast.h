@@ -105,6 +105,36 @@ public:
 DEFINE_REF_CLASS(InvokeExpression);
 
 
+// ---------------------------------------------------
+// --- I n s t a n t i a t e   E x p r e s s i o n ---
+// ---------------------------------------------------
+
+#define FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(VISIT, arg)            \
+  VISIT(SyntaxTree, receiver,  Receiver,  arg)                       \
+  VISIT(String,     name,      Name,      arg)                       \
+  VISIT(Tuple,      arguments, Arguments, arg)                       \
+  VISIT(Tuple,      terms,     Terms,     arg)
+
+class InstantiateExpression : public SyntaxTree {
+public:
+  FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uint32_t kReceiverOffset  = SyntaxTree::kHeaderSize;
+  static const uint32_t kNameOffset      = kReceiverOffset + kPointerSize;
+  static const uint32_t kArgumentsOffset = kNameOffset + kPointerSize;
+  static const uint32_t kTermsOffset     = kArgumentsOffset + kPointerSize;
+  static const uint32_t kSize            = kTermsOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<InstantiateExpression> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(InstantiateExpression);
+
+
 // ---------------------------------------
 // --- R a i s e   E x p r e s s i o n ---
 // ---------------------------------------
@@ -341,30 +371,6 @@ public:
 };
 
 DEFINE_REF_CLASS(SequenceExpression);
-
-
-// ---------------------------------------------------
-// --- I n s t a n t i a t e   E x p r e s s i o n ---
-// ---------------------------------------------------
-
-#define FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(VISIT, arg)            \
-  VISIT(Tuple, terms, Terms, arg)
-
-class InstantiateExpression : public SyntaxTree {
-public:
-  FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
-  static const uint32_t kTermsOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kSize = kTermsOffset + kPointerSize;
-};
-
-template <>
-class ref_traits<InstantiateExpression> : public ref_traits<SyntaxTree> {
-public:
-  FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
-};
-
-DEFINE_REF_CLASS(InstantiateExpression);
 
 
 // ---------------------------------------

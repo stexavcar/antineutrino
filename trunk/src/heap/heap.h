@@ -29,8 +29,11 @@ public:
   
   Data *allocate_empty_class(InstanceType instance_type);
   
+  Data *allocate_empty_protocol();
+
   Data *new_class(InstanceType instance_type, uint32_t instance_field_count,
       Tuple *methods, Value *super, Value *name);
+  
   
   Data *new_task();
   

@@ -165,7 +165,7 @@ void Assembler::instantiate(ref<Class> chlass) {
   uint16_t chlass_index = constant_pool_index(chlass);
   code().append(OC_NEW);
   code().append(chlass_index);
-  adjust_stack_height(1 - chlass->instance_field_count());
+  adjust_stack_height(-chlass->instance_field_count());
 }
 
 void Assembler::raise(ref<String> name, uint16_t argc) {
@@ -648,6 +648,7 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
   ref<Tuple> terms = that.terms();
   uint32_t term_count = terms.length() / 2;
   ref<Tuple> methods = factory().new_tuple(term_count);
+  __ codegen(that.receiver());
   for (uint32_t i = 0; i < term_count; i++) {
     ref<String> keyword = cast<String>(terms.get(2 * i));
     ref<Code> code = factory().new_code(4);

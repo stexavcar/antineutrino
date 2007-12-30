@@ -126,7 +126,7 @@ class Scanner:
   def current(self):
     if self.has_more(): return self.input[self.cursor]
     else: return None
-  
+
   def next(self):
     if self.has_next(): return self.input[self.cursor + 1]
     else: return None
@@ -184,7 +184,7 @@ class Scanner:
     if len(term) > 0:
       terms.append(term)
     return StringToken(terms)
-  
+
   def scan_documentation(self):
     value = ''
     while self.has_more() and self.current() == '#':
@@ -204,7 +204,7 @@ class Scanner:
     elif c == ';':
       return Delimiter(';')
     elif c == ':':
-      if self.current() == '=': 
+      if self.current() == '=':
         self.advance()
         return Delimiter(':=')
       else:
@@ -233,7 +233,7 @@ class Scanner:
         return Delimiter('-')
     else:
       raise "Unexpected character " + str(c)
-  
+
   def get_next_token(self):
     if is_ident_start(self.current()):
       result = self.scan_ident()
@@ -371,7 +371,7 @@ class Parser:
       decl = self.parse_declaration()
       decls.append(decl)
     return Program(decls)
-  
+
   def parse_doc_opt(self):
     if self.token().is_doc():
       value = self.token().value
@@ -392,7 +392,7 @@ class Parser:
       return self.parse_protocol_declaration(modifiers)
     else:
       return self.parse_class_declaration(modifiers)
-  
+
   def is_modifier(self, token):
     return token.is_keyword('internal')
 
@@ -404,14 +404,14 @@ class Parser:
       modifiers[self.token().value] = True
       self.advance()
     return modifiers
-  
+
   def expect_method_name(self):
     if self.token().is_operator():
       return self.expect_operator();
     elif self.token().is_keyword('new'):
       self.expect_keyword('new')
       return 'new'
-  
+
   # <member_name>
   #   -> $ident
   #   -> 'operator' $operator
@@ -421,7 +421,7 @@ class Parser:
     else:
       self.expect_keyword('operator')
       return self.expect_method_name()
-  
+
   # <protocol_declaration>
   #   -> 'protocol' $ident '{' <member_declaration>* '}'
   def parse_protocol_declaration(self, modifiers):
@@ -434,7 +434,7 @@ class Parser:
       members.append(member)
     self.expect_delimiter('}')
     return Protocol(name, members)
-  
+
   # <class_declaration>
   #   -> 'class' $ident (':' $super)? '{' <member_declaration>* '}'
   def parse_class_declaration(self, modifiers):
@@ -633,7 +633,7 @@ class Parser:
       value = self.parse_logical_expression()
       if (is_toplevel): self.expect_delimiter(';')
       return value
-  
+
   def parse_logical_expression(self):
     exprs = [ self.parse_and_expression() ]
     while self.token().is_keyword('or'):
@@ -655,7 +655,7 @@ class Parser:
     for i in xrange(2, len(exprs) + 1):
       result = Conditional(exprs[-i], result, Fahlse())
     return result
-  
+
   def parse_prefix_expression(self):
     if self.token().is_keyword('fn'):
       self.expect_keyword('fn')
@@ -666,7 +666,7 @@ class Parser:
       return Lambda(params, expr)
     else:
       return self.parse_operator_expression(None)
-  
+
   def parse_operator_expression(self, end):
     expr = self.parse_call_expression()
     while self.token().is_operator() and (self.token().name != end):
@@ -728,7 +728,7 @@ class Parser:
   def parse_new_expression(self):
     self.expect_keyword('new')
     if self.token().is_delimiter('{'):
-      constr = Ident('Object')
+      constr = Global('ObjectProtocol')
       args = [ ]
     else:
       constr = self.parse_atomic_expression()
@@ -744,7 +744,7 @@ class Parser:
         if not self.token().is_delimiter(','): break
         else: self.expect_delimiter(',')
       self.expect_delimiter('}')
-      return Instantiate(terms)
+      return Instantiate(constr, 'new', args, terms)
     else:
       return Invoke(constr, 'new', args)
 
@@ -892,6 +892,19 @@ class Class(SyntaxTree):
     methods = HEAP.new_tuple(values = [ m.quote() for m in self.members ])
     super = NAMESPACE[self.super]
     return HEAP.new_class_expression(HEAP.new_string(self.name), methods, super.image)
+
+class Protocol(SyntaxTree):
+  def __init__(self, name, members):
+    self.name = name
+    self.members = members
+  def accept(self, visitor):
+    visitor.visit_protocol(self)
+  def traverse(self, visitor):
+    for member in self.members:
+      member.accept(visitor)
+  def quote(self):
+    methods = HEAP.new_tuple(values = [ m.quote() for m in self.members ])
+    return HEAP.new_protocol_expression(HEAP.new_string(self.name), methods)
 
 class Method(SyntaxTree):
   def __init__(self, name, fun):
@@ -1129,24 +1142,32 @@ class Invoke(Expression):
   def quote(self):
     recv = self.recv.quote()
     name = HEAP.new_string(self.name)
-    args = HEAP.new_tuple(values = map(lambda x: x.quote(), self.args))
+    args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
     return HEAP.new_invoke_expression(recv, name, args)
 
 class Instantiate(Expression):
-  def __init__(self, terms):
+  def __init__(self, recv, name, args, terms):
+    self.recv = recv
+    self.name = name
+    self.args = args
     self.terms = terms
   def accept(self, visitor):
     visitor.visit_instantiate(self)
   def traverse(self, visitor):
+    self.recv.accept(visitor)
+    for arg in self.args: arg.accept(visitor)
     for (name, value) in self.terms:
       value.accept(visitor)
   def quote(self):
+    recv = self.recv.quote()
+    name = HEAP.new_string(self.name)
+    args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
     term_list = [ ]
-    for (name, value) in self.terms:
-      term_list.append(HEAP.new_string(name))
+    for (key, value) in self.terms:
+      term_list.append(HEAP.new_string(key))
       term_list.append(value.quote())
     terms = HEAP.new_tuple(values = term_list)
-    return HEAP.new_instantiate_expression(terms)
+    return HEAP.new_instantiate_expression(recv, name, args, terms)
 
 class This(Expression):
   def accept(self, visitor):
@@ -1164,7 +1185,7 @@ class Void(Expression):
   def traverse(self, visitor):
     pass
   def quote(self):
-    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['VoidValue']))  
+    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['VoidValue']))
 
 class Null(Expression):
   def accept(self, visitor):
@@ -1172,7 +1193,7 @@ class Null(Expression):
   def traverse(self, visitor):
     pass
   def quote(self):
-    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['NullValue']))  
+    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['NullValue']))
 
 class Thrue(Expression):
   def accept(self, visitor):
@@ -1182,7 +1203,7 @@ class Thrue(Expression):
   def traverse(self, visitor):
     pass
   def quote(self):
-    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['TrueValue']))  
+    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['TrueValue']))
 
 class Fahlse(Expression):
   def accept(self, visitor):
@@ -1192,7 +1213,7 @@ class Fahlse(Expression):
   def traverse(self, visitor):
     pass
   def quote(self):
-    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['FalseValue']))  
+    return HEAP.new_literal_expression(HEAP.get_root(ROOT_INDEX['FalseValue']))
 
 class Return(Expression):
   def __init__(self, value):
@@ -1296,7 +1317,7 @@ class Heap:
       addr = value.addr
       self.memory[offset] = tag_as_object(addr)
 
-  # --- A l l o c a t i o n ---      
+  # --- A l l o c a t i o n ---
 
   def allocate(self, type, size):
     if self.cursor + size > self.capacity:
@@ -1310,10 +1331,12 @@ class Heap:
     self.cursor += size
     ImageObject(addr).set_class(type)
     return addr
-  
+
   def new_class(self, instance_type):
-    result = ImageClass(self.allocate(CLASS_TYPE, ImageClass_Size), instance_type)
-    return result
+    return ImageClass(self.allocate(CLASS_TYPE, ImageClass_Size), instance_type)
+
+  def new_protocol(self, name):
+    return ImageProtocol(self.allocate(PROTOCOL_TYPE, ImageProtocol_Size), name)
 
   def get_root(self, index):
     if index in self.root_object_cache:
@@ -1329,7 +1352,7 @@ class Heap:
     result = ImageSymbol(self.allocate(SYMBOL_TYPE, ImageSymbol_Size), name)
     self.symbol_object_cache[symbol] = result
     return result
-  
+
   def new_lambda(self, argc, expr):
     return ImageLambda(self.allocate(LAMBDA_TYPE, ImageLambda_Size), argc, expr)
 
@@ -1364,7 +1387,7 @@ class Heap:
     result = ImageDictionary(self.allocate(DICTIONARY_TYPE, ImageDictionary_Size))
     self.dicts.append(result)
     return result
-  
+
   def new_tuple(self, length = None, values = None):
     if length is None: length = len(values)
     result = ImageTuple(self.allocate(TUPLE_TYPE, ImageTuple_HeaderSize + length), length)
@@ -1372,7 +1395,7 @@ class Heap:
       for i in xrange(length):
         result[i] = values[i]
     return result
-  
+
   def new_string(self, contents):
     length = len(contents)
     result = ImageString(self.allocate(STRING_TYPE, ImageString_HeaderSize + length), length)
@@ -1423,8 +1446,8 @@ class Heap:
   def new_tuple_expression(self, exprs):
     return ImageTupleExpression(self.allocate(TUPLE_EXPRESSION_TYPE, ImageTupleExpression_Size), exprs)
 
-  def new_instantiate_expression(self, terms):
-    return ImageInstantiateExpression(self.allocate(INSTANTIATE_EXPRESSION_TYPE, ImageInstantiateExpression_Size), terms)
+  def new_instantiate_expression(self, recv, name, args, terms):
+    return ImageInstantiateExpression(self.allocate(INSTANTIATE_EXPRESSION_TYPE, ImageInstantiateExpression_Size), recv, name, args, terms)
 
   def new_global(self, name):
     return ImageGlobalExpression(self.allocate(GLOBAL_EXPRESSION_TYPE, ImageGlobalExpression_Size), name)
@@ -1476,6 +1499,15 @@ class ImageClass(ImageObject):
     HEAP.set_field(self, ImageClass_SuperOffset, value)
   def set_name(self, value):
     HEAP.set_field(self, ImageClass_NameOffset, value)
+
+class ImageProtocol(ImageObject):
+  def __init__(self, addr, name):
+    ImageObject.__init__(self, addr)
+    self.set_name(name)
+  def set_methods(self, value):
+    HEAP.set_field(self, ImageProtocol_MethodsOffset, value)
+  def set_name(self, value):
+    HEAP.set_field(self, ImageProtocol_NameOffset, value)
 
 class ImageTuple(ImageObject):
   def __init__(self, addr, length):
@@ -1597,6 +1629,22 @@ class ImageInvokeExpression(ImageSyntaxTree):
   def set_args(self, value):
     HEAP.set_field(self, ImageInvokeExpression_ArgumentsOffset, value)
 
+class ImageInstantiateExpression(ImageSyntaxTree):
+  def __init__(self, addr, recv, name, args, terms):
+    ImageSyntaxTree.__init__(self, addr)
+    self.set_recv(recv)
+    self.set_name(name)
+    self.set_args(args)
+    self.set_terms(terms)
+  def set_recv(self, value):
+    HEAP.set_field(self, ImageInstantiateExpression_ReceiverOffset, value)
+  def set_name(self, value):
+    HEAP.set_field(self, ImageInstantiateExpression_NameOffset, value)
+  def set_args(self, value):
+    HEAP.set_field(self, ImageInstantiateExpression_ArgumentsOffset, value)
+  def set_terms(self, value):
+    HEAP.set_field(self, ImageInstantiateExpression_TermsOffset, value)
+
 class ImageCallExpression(ImageSyntaxTree):
   def __init__(self, addr, recv, fun, args):
     ImageSyntaxTree.__init__(self, addr)
@@ -1681,13 +1729,6 @@ class ImageSequenceExpression(ImageSyntaxTree):
   def set_expressions(self, value):
     HEAP.set_field(self, ImageSequenceExpression_ExpressionsOffset, value)
 
-class ImageInstantiateExpression(ImageSyntaxTree):
-  def __init__(self, addr, terms):
-    ImageSyntaxTree.__init__(self, addr)
-    self.set_terms(terms)
-  def set_terms(self, value):
-    HEAP.set_field(self, ImageInstantiateExpression_TermsOffset, value)
-
 class ImageLocalDefinition(ImageSyntaxTree):
   def __init__(self, addr, symbol, value, body):
     ImageSyntaxTree.__init__(self, addr)
@@ -1697,7 +1738,7 @@ class ImageLocalDefinition(ImageSyntaxTree):
   def set_symbol(self, value):
     HEAP.set_field(self, ImageLocalDefinition_SymbolOffset, value)
   def set_value(self, value):
-    HEAP.set_field(self, ImageLocalDefinition_ValueOffset, value)    
+    HEAP.set_field(self, ImageLocalDefinition_ValueOffset, value)
   def set_body(self, value):
     HEAP.set_field(self, ImageLocalDefinition_BodyOffset, value)
 
@@ -1861,6 +1902,8 @@ class Visitor:
     self.visit_node(that)
   def visit_instantiate(self, that):
     self.visit_node(that)
+  def visit_protocol(self, that):
+    self.visit_node(that)
 
 class LoadVisitor(Visitor):
   def __init__(self):
@@ -1875,6 +1918,16 @@ class LoadVisitor(Visitor):
       NAMESPACE[that.name] = that
       self.is_toplevel = False
       Visitor.visit_class(self, that)
+      self.is_toplevel = True
+  def visit_protocol(self, that):
+    name_str = HEAP.new_string(that.name)
+    protocol = HEAP.new_protocol(name_str)
+    HEAP.toplevel[name_str] = protocol
+    that.image = protocol
+    if self.is_toplevel:
+      NAMESPACE[that.name] = that
+      self.is_toplevel = False
+      Visitor.visit_protocol(self, that)
       self.is_toplevel = True
   def visit_builtin_class(self, that):
     instance_type_name = that.info.instance_type
@@ -1906,14 +1959,17 @@ class ResolveVisitor(Visitor):
     Visitor.visit_class(self, that)
 
 class CompileVisitor(Visitor):
-  def compile_class(self, that):
+  def compile_methods(self, that):
     methods = HEAP.new_tuple(values = [ m.compile() for m in that.members ])
     that.image.set_methods(methods)
   def visit_class(self, that):
-    self.compile_class(that)
+    self.compile_methods(that)
     Visitor.visit_class(self, that)
+  def visit_protocol(self, that):
+    self.compile_methods(that)
+    Visitor.visit_protocol(self, that)
   def visit_builtin_class(self, that):
-    self.compile_class(that)
+    self.compile_methods(that)
     Visitor.visit_builtin_class(self, that)
   def visit_definition(self, that):
     value = that.value.compile()
@@ -2004,7 +2060,7 @@ def define_root(n, Class, name, Name, allocator):
 def define_image_object_const(n, Type, Name):
   name = 'Image' + Type + '_' + Name
   globals()[name] = int(n)
-  
+
 BUILTIN_CLASSES = { }
 CLASSES_BY_ROOT_NAME = { }
 def define_builtin_class(Class, name, NAME):

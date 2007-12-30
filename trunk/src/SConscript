@@ -91,7 +91,8 @@ monitor_resources = env.Command(join('monitor', 'resources.cc'), monitor_resourc
 
 static_library = env.StaticLibrary(config['name'], source_files)
 shared_library = env.SharedLibrary(config['name'], source_files)
-program = env.Program(config['name'], [ shared_library ] + program_files)
+program_libs = env['LIBS'] + [ static_library ]
+program = env.Program(config['name'], program_files, LIBS = program_libs)
 config[prefix + 'static-library'] = static_library[0]
 config[prefix + 'shared-library'] = shared_library[0]
 Alias(prefix + 'program', program)

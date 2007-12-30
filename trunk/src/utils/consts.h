@@ -17,6 +17,7 @@
 #define FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                    \
   VISIT(4,  DICTIONARY,             Dictionary,            dictionary)             \
   VISIT(12, METHOD,                 Method,                method)                 \
+  VISIT(13, PROTOCOL,               Protocol,              protocol)               \
   VISIT(16, TASK,                   Task,                  task)
 
 #define FOR_EACH_OBJECT_TYPE(VISIT)                                                \
@@ -30,7 +31,6 @@
   VISIT(9,  LAMBDA,                 Lambda,                0)                      \
   VISIT(10, BUFFER,                 Buffer,                0)                      \
   VISIT(11, CODE,                   Code,                  0)                      \
-  VISIT(13, PROTOCOL,               Protocol,              0)                      \
   VISIT(14, INSTANCE,               Instance,              0)                      \
   VISIT(15, STACK,                  Stack,                 0)                      \
   FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
@@ -116,6 +116,9 @@
   VISIT(3, Class,                 SuperOffset)                       \
   VISIT(4, Class,                 NameOffset)                        \
   VISIT(5, Class,                 Size)                              \
+  VISIT(1, Protocol,              MethodsOffset)                     \
+  VISIT(2, Protocol,              NameOffset)                        \
+  VISIT(3, Protocol,              Size)                              \
   VISIT(1, Method,                NameOffset)                        \
   VISIT(2, Method,                LambdaOffset)                      \
   VISIT(3, Method,                Size)                              \
@@ -127,6 +130,11 @@
   VISIT(2, InvokeExpression,      NameOffset)                        \
   VISIT(3, InvokeExpression,      ArgumentsOffset)                   \
   VISIT(4, InvokeExpression,      Size)                              \
+  VISIT(1, InstantiateExpression, TermsOffset)                       \
+  VISIT(2, InstantiateExpression, ReceiverOffset)                    \
+  VISIT(3, InstantiateExpression, NameOffset)                        \
+  VISIT(4, InstantiateExpression, ArgumentsOffset)                   \
+  VISIT(5, InstantiateExpression, Size)                              \
   VISIT(1, ClassExpression,       NameOffset)                        \
   VISIT(2, ClassExpression,       MethodsOffset)                     \
   VISIT(3, ClassExpression,       SuperOffset)                       \
@@ -181,8 +189,6 @@
   VISIT(1, OnClause,              NameOffset)                        \
   VISIT(2, OnClause,              LambdaOffset)                      \
   VISIT(3, OnClause,              Size)                              \
-  VISIT(1, InstantiateExpression, TermsOffset)                       \
-  VISIT(2, InstantiateExpression, Size)                              \
   VISIT(1, DoOnExpression,        ValueOffset)                       \
   VISIT(2, DoOnExpression,        ClausesOffset)                     \
   VISIT(3, DoOnExpression,        Size)
@@ -192,18 +198,19 @@
 // --- R o o t s ---
 // -----------------
 
-#define FOR_EACH_SIMPLE_ROOT_OBJECT(VISIT)                                                                                                               \
-  VISIT(0,  Void,       vhoid,                        VoidValue,             new_singleton(void_class()))                  \
-  VISIT(1,  Null,       nuhll,                        NullValue,             new_singleton(null_class()))                  \
-  VISIT(2,  True,       thrue,                        TrueValue,             new_singleton(true_class()))                  \
-  VISIT(3,  False,      fahlse,                       FalseValue,            new_singleton(false_class()))                 \
-  VISIT(4,  Dictionary, toplevel,                     Toplevel,              new_dictionary())                             \
+#define FOR_EACH_SIMPLE_ROOT_OBJECT(VISIT)                                                                                      \
+  VISIT(0,  Void,       vhoid,                        VoidValue,             new_singleton(void_class()))                       \
+  VISIT(1,  Null,       nuhll,                        NullValue,             new_singleton(null_class()))                       \
+  VISIT(2,  True,       thrue,                        TrueValue,             new_singleton(true_class()))                       \
+  VISIT(3,  False,      fahlse,                       FalseValue,            new_singleton(false_class()))                      \
+  VISIT(4,  Dictionary, toplevel,                     Toplevel,              new_dictionary())                                  \
   VISIT(5,  Tuple,      empty_tuple,                  EmptyTuple,            new_tuple(0))
 
-#define FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                                                                                                           \
+#define FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                                                                                  \
   VISIT(6,  Class,      class_class,                  Class,                 0)
 
-#define FOR_EACH_SIMPLE_ROOT_CLASS(VISIT)                                                                                                                \
+#define FOR_EACH_SIMPLE_ROOT_CLASS(VISIT)                                                                                       \
+  VISIT(44, Class,      protocol_class,               Protocol,              allocate_empty_class(PROTOCOL_TYPE))               \
   VISIT(7,  Class,      string_class,                 String,                allocate_empty_class(STRING_TYPE))                 \
   VISIT(8,  Class,      tuple_class,                  Tuple,                 allocate_empty_class(TUPLE_TYPE))                  \
   VISIT(9,  Class,      void_class,                   Void,                  allocate_empty_class(VOID_TYPE))                   \

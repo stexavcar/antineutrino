@@ -9,18 +9,20 @@ def simple_record_test() {
   assert_equals("x", y.c());
 }
 
-protocol Nirk {
+(*
+protocol Fooable {
   def foo() -> 13;
 }
 
 def protocol_test() {
-  def x := new Nirk { a: 0, b: 1 };
+  def x := new Fooable() { a: 0, b: 1 };
   assert_equals(0, x.a());
   assert_equals(1, x.b());
   assert_equals(13, x.foo());
 }
+*)
 
 def main() {
   simple_record_test();
-  protocol_test();
+  // protocol_test();
 }

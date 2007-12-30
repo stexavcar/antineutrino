@@ -58,6 +58,12 @@ public:
   inline ImageValue *name();
 };
 
+class ImageProtocol : public ImageObject {
+public:
+  inline ImageTuple *methods();
+  inline ImageValue *name();
+};
+
 class ImageString : public ImageObject {
 public:
   inline uint32_t length();
@@ -128,6 +134,14 @@ public:
   inline ImageTuple *arguments();
 };
 
+class ImageInstantiateExpression : public ImageSyntaxTree {
+public:
+  inline ImageSyntaxTree *receiver();
+  inline ImageString *name();
+  inline ImageTuple *arguments();
+  inline ImageTuple *terms();
+};
+
 class ImageRaiseExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();
@@ -187,11 +201,6 @@ public:
 class ImageSequenceExpression : public ImageSyntaxTree {
 public:
   inline ImageTuple *expressions();
-};
-
-class ImageInstantiateExpression : public ImageSyntaxTree {
-public:
-  inline ImageTuple *terms();
 };
 
 class ImageTupleExpression : public ImageSyntaxTree {

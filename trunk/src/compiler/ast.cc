@@ -185,6 +185,11 @@ static void unparse_builtin_call(BuiltinCall *obj, UnparseData &data) {
   data->printf("bc[%]", obj->index());
 }
 
+static void unparse_global_expression(GlobalExpression *expr, UnparseData &data) {
+  data->append("$");
+  expr->name()->write_on(data.out(), Data::UNQUOTED);
+}
+
 static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
   InstanceType type = obj->type();
   switch (type) {
@@ -205,6 +210,9 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
     break;
   case UNQUOTE_EXPRESSION_TYPE:
     unparse_unquote_expression(cast<UnquoteExpression>(obj), data);
+    break;
+  case GLOBAL_EXPRESSION_TYPE:
+    unparse_global_expression(cast<GlobalExpression>(obj), data);
     break;
   case LOCAL_DEFINITION_TYPE:
     unparse_local_definition(cast<LocalDefinition>(obj), data);

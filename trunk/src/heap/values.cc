@@ -673,5 +673,10 @@ bool Class::is_empty() {
   return super() == Smi::from_int(0);
 }
 
+Data *Class::clone(Heap &heap) {
+  return heap.new_class(instance_type(), instance_field_count(),
+      methods(), super(), name());
+}
+
 
 } // namespace neutrino
