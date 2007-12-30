@@ -388,6 +388,8 @@ class Parser:
     modifiers = self.parse_modifiers()
     if self.token().is_keyword('def'):
       return self.parse_definition(modifiers)
+    elif self.token().is_keyword('protocol'):
+      return self.parse_protocol_declaration(modifiers)
     else:
       return self.parse_class_declaration(modifiers)
   
@@ -419,6 +421,19 @@ class Parser:
     else:
       self.expect_keyword('operator')
       return self.expect_method_name()
+  
+  # <protocol_declaration>
+  #   -> 'protocol' $ident '{' <member_declaration>* '}'
+  def parse_protocol_declaration(self, modifiers):
+    self.expect_keyword('protocol')
+    name = self.expect_ident()
+    self.expect_delimiter('{')
+    members = []
+    while not self.token().is_delimiter('}'):
+      member = self.parse_member_declaration(name)
+      members.append(member)
+    self.expect_delimiter('}')
+    return Protocol(name, members)
   
   # <class_declaration>
   #   -> 'class' $ident (':' $super)? '{' <member_declaration>* '}'
@@ -713,6 +728,12 @@ class Parser:
   def parse_new_expression(self):
     self.expect_keyword('new')
     if self.token().is_delimiter('{'):
+      constr = Ident('Object')
+      args = [ ]
+    else:
+      constr = self.parse_atomic_expression()
+      args = self.parse_arguments('(', ')')
+    if self.token().is_delimiter('{'):
       self.expect_delimiter('{')
       terms = [ ]
       while not self.token().is_delimiter('}'):
@@ -725,8 +746,6 @@ class Parser:
       self.expect_delimiter('}')
       return Instantiate(terms)
     else:
-      constr = self.parse_atomic_expression()
-      args = self.parse_arguments('(', ')')
       return Invoke(constr, 'new', args)
 
   def resolve_identifier(self, name):
@@ -797,6 +816,8 @@ class Parser:
       return Tuple(exprs)
     elif self.token().is_keyword('class'):
       return self.parse_class_declaration([])
+    elif self.token().is_keyword('protocol'):
+      return self.parse_protocol_declaration([])
     elif self.token().is_delimiter('('):
       self.expect_delimiter('(')
       value = self.parse_expression(False)
