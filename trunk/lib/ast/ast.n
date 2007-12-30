@@ -7,7 +7,7 @@ class Expression {
   def evaluate() -> (this·compile_expression())();
 }
 
-internal class ClassExpression : Expression {
+internal class LayoutExpression : Expression {
   internal def evaluate();
 }
 

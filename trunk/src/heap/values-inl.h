@@ -90,7 +90,7 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
     return is<Object>(val)                                           \
-        && cast<Object>(val)->chlass()->instance_type() == NAME##_TYPE; \
+        && cast<Object>(val)->layout()->instance_type() == NAME##_TYPE; \
   }
 FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
 #undef DEFINE_QUERY
@@ -111,7 +111,7 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
   template <>                                                        \
   inline bool gc_safe_is<Name>(Data *val) {                          \
     return is<Object>(val)                                           \
-        && cast<Object>(val)->gc_safe_chlass()->instance_type() == NAME##_TYPE; \
+        && cast<Object>(val)->gc_safe_layout()->instance_type() == NAME##_TYPE; \
   }
 FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
 #undef DEFINE_QUERY
@@ -151,7 +151,7 @@ InstanceType Value::type() {
   if (is<Smi>(this)) {
     return SMI_TYPE;
   } else {
-    uint32_t result = cast<Object>(this)->chlass()->instance_type();
+    uint32_t result = cast<Object>(this)->layout()->instance_type();
     return static_cast<InstanceType>(result);
   }
 }
@@ -163,7 +163,7 @@ InstanceType Data::gc_safe_type() {
   } else if (is<Smi>(this)) {
     return SMI_TYPE;
   } else {
-    uint32_t result = cast<Object>(this)->gc_safe_chlass()->instance_type();
+    uint32_t result = cast<Object>(this)->gc_safe_layout()->instance_type();
     return static_cast<InstanceType>(result);
   }
 }
@@ -231,17 +231,17 @@ int32_t Smi::value() {
 // -------------------
 
 #ifdef DEBUG
-Layout *Object::gc_safe_chlass() {
+Layout *Object::gc_safe_layout() {
   Data *header = this->header();
   if (is<ForwardPointer>(header)) {
-    return cast<ForwardPointer>(header)->target()->chlass();
+    return cast<ForwardPointer>(header)->target()->layout();
   } else {
     return reinterpret_cast<Layout*>(header);
   }
 }
 #endif
 
-DEFINE_FIELD_ACCESSORS(Layout, chlass, Header, Object)
+DEFINE_FIELD_ACCESSORS(Layout, layout, Header, Object)
 DEFINE_ACCESSORS(Data*, Object, header, Header)
 
 
@@ -290,12 +290,12 @@ word *Stack::bottom() {
 // -----------------------
 
 Value *&Instance::get_field(uint32_t index) {
-  ASSERT(index < gc_safe_chlass()->instance_field_count());
+  ASSERT(index < gc_safe_layout()->instance_field_count());
   return ValuePointer::access_field<Value*>(this, Instance::kHeaderSize + kPointerSize * index);
 }
 
 void Instance::set_field(uint32_t index, Value *value) {
-  ASSERT(index < gc_safe_chlass()->instance_field_count());
+  ASSERT(index < gc_safe_layout()->instance_field_count());
   return ValuePointer::set_field<Value*>(this, Instance::kHeaderSize + kPointerSize * index, value);
 }
 

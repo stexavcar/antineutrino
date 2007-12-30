@@ -18,22 +18,21 @@ public:
    * to contain object pointers must have been initialized before a
    * gc can be run.
    */
-  Data *allocate_object(uint32_t size, Layout *chlass);
+  Data *allocate_object(uint32_t size, Layout *layout);
   
   /**
    * Creates and initializes a new type object but does not check that
    * the object is valid.  This function should only be used directly
    * during bootstrapping.
    */
-  Data *allocate_class(InstanceType instance_type);
+  Data *allocate_layout(InstanceType instance_type);
   
-  Data *allocate_empty_class(InstanceType instance_type);
+  Data *allocate_empty_layout(InstanceType instance_type);
   
   Data *allocate_empty_protocol();
 
-  Data *new_class(InstanceType instance_type, uint32_t instance_field_count,
+  Data *new_layout(InstanceType instance_type, uint32_t instance_field_count,
       Tuple *methods, Value *super, Value *name);
-  
   
   Data *new_task();
   
@@ -45,7 +44,7 @@ public:
 
   Data *new_tuple(uint32_t length);
   
-  Data *new_singleton(Layout *chlass);
+  Data *new_singleton(Layout *layout);
   
   Data *new_symbol(Value *name);
   
@@ -74,7 +73,7 @@ public:
 FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
   
-  Data *new_abstract_buffer(uint32_t size, Layout *chlass);
+  Data *new_abstract_buffer(uint32_t size, Layout *layout);
   
   template <typename T> Data *new_buffer(uint32_t size);
   
@@ -82,7 +81,7 @@ FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
   
   Data *new_method(String *name, Lambda *lambda);
     
-  Data *new_instance(Layout *chlass);
+  Data *new_instance(Layout *layout);
 
   Memory &memory() { return memory_; }
   Roots &roots() { return roots_; }

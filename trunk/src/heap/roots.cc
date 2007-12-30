@@ -18,29 +18,29 @@ Roots::Roots() {
 
 bool Roots::initialize(Heap& heap) {
   // Complicated roots
-  Data *class_class_val = heap.allocate_class(LAYOUT_TYPE);
-  if (is<AllocationFailed>(class_class_val)) return false;
-  Layout *class_class_obj = reinterpret_cast<Layout*>(class_class_val);
-  class_class_obj->set_chlass(class_class_obj);
-  class_class() = cast<Layout>(class_class_obj);
+  Data *layout_layout_val = heap.allocate_layout(LAYOUT_TYPE);
+  if (is<AllocationFailed>(layout_layout_val)) return false;
+  Layout *layout_layout_obj = reinterpret_cast<Layout*>(layout_layout_val);
+  layout_layout_obj->set_layout(layout_layout_obj);
+  layout_layout() = cast<Layout>(layout_layout_obj);
   
   // All the simple roots get allocated the same way, which is what
   // makes them simple.
-#define ALLOCATE_ROOT(n, Type, name, Name, allocator)          \
+#define ALLOCATE_ROOT(n, Type, name, Name, allocator)                \
   Data *name##_val = heap.allocator;                                 \
   if (is<AllocationFailed>(name##_val)) return false;                \
   name() = cast<Type>(name##_val);
 FOR_EACH_SIMPLE_ROOT(ALLOCATE_ROOT)
 #undef ALLOCATE_ROOT
 
-  Data *class_name;
-#define FIXUP_CLASS(n, Type, name, Name, allocator)                  \
-  class_name = heap.new_string(#Name);                               \
-  if (is<AllocationFailed>(class_name)) return false;                \
-  name()->set_name(cast<String>(class_name));                        \
+  Data *layout_name;
+#define FIXUP_LAYOUT(n, Type, name, Name, allocator)                 \
+  layout_name = heap.new_string(#Name);                              \
+  if (is<AllocationFailed>(layout_name)) return false;               \
+  name()->set_name(cast<String>(layout_name));                       \
   name()->set_methods(empty_tuple());
-FOR_EACH_ROOT_CLASS(FIXUP_CLASS)
-#undef SET_CLASS_NAME
+FOR_EACH_ROOT_LAYOUT(FIXUP_LAYOUT)
+#undef FIXUP_LAYOUT
   return true;
 
 #ifdef PARANOID

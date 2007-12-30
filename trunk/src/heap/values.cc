@@ -31,7 +31,7 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
   }
 }
 
-const char *Layout::class_name(uint32_t tag) {
+const char *Layout::layout_name(uint32_t tag) {
   switch (tag) {
 #define MAKE_TYPE_CASE(n, NAME, Name, info) case NAME##_TYPE: return #Name;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
@@ -81,22 +81,22 @@ static void write_string_short_on(String *obj, Data::WriteMode mode, string_buff
   if (mode != Data::UNQUOTED) buf.append('"');
 }
 
-static void write_class_short_on(Layout *obj, string_buffer &buf) {
+static void write_layout_short_on(Layout *obj, string_buffer &buf) {
   buf.append("#<class ");
   obj->name()->write_on(buf, Data::UNQUOTED);
   buf.append(">");
 }
 
 static void write_instance_short_on(Instance *obj, string_buffer &buf) {
-  Value *class_name = obj->chlass()->name();
-  if (is<String>(class_name)) {
+  Value *layout_name = obj->layout()->name();
+  if (is<String>(layout_name)) {
     buf.append("#<");
-    if (cast<String>(class_name)->starts_with_vowel()) {
+    if (cast<String>(layout_name)->starts_with_vowel()) {
       buf.append("an ");
     } else {
       buf.append("a ");
     }
-    class_name->write_on(buf, Data::UNQUOTED);
+    layout_name->write_on(buf, Data::UNQUOTED);
     buf.append(">");
   } else {
     buf.append("#<instance>");
@@ -110,7 +110,7 @@ static void write_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
 }
 
 static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
-  uint32_t instance_type = obj->chlass()->instance_type();
+  uint32_t instance_type = obj->layout()->instance_type();
   switch (instance_type) {
   case STRING_TYPE:
     write_string_short_on(cast<String>(obj), mode, buf);
@@ -140,7 +140,7 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
     buf.append("#<code>");
     break;
   case LAYOUT_TYPE:
-    write_class_short_on(cast<Layout>(obj), buf);
+    write_layout_short_on(cast<Layout>(obj), buf);
     break;
   case METHOD_TYPE:
     buf.append("#<method>");
@@ -422,7 +422,7 @@ static void validate_tuple(Tuple *obj) {
 }
 
 static void validate_instance(Instance *obj) {
-  for (uint32_t i = 0; i < obj->gc_safe_chlass()->instance_field_count(); i++)
+  for (uint32_t i = 0; i < obj->gc_safe_layout()->instance_field_count(); i++)
     GC_SAFE_CHECK_IS_C(VALIDATION, Value, obj->get_field(i));
 }
 
@@ -430,7 +430,7 @@ static void validate_instance(Instance *obj) {
   GC_SAFE_CHECK_IS_C(VALIDATION, Type, cast<Class>(obj)->name());
 
 static void validate_object(Object *obj) {
-  GC_SAFE_CHECK_IS_C(VALIDATION, Layout, obj->chlass());
+  GC_SAFE_CHECK_IS_C(VALIDATION, Layout, obj->layout());
   InstanceType type = obj->gc_safe_type();
   switch (type) {
     case TUPLE_TYPE:
@@ -674,7 +674,7 @@ bool Layout::is_empty() {
 }
 
 Data *Layout::clone(Heap &heap) {
-  return heap.new_class(instance_type(), instance_field_count(),
+  return heap.new_layout(instance_type(), instance_field_count(),
       methods(), super(), name());
 }
 

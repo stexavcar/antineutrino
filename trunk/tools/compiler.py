@@ -1432,7 +1432,7 @@ class Heap:
     return ImageConditionalExpression(self.allocate(CONDITIONAL_EXPRESSION_TYPE, ImageConditionalExpression_Size), cond, then_part, else_part)
 
   def new_class_expression(self, name, methods, super):
-    return ImageClassExpression(self.allocate(CLASS_EXPRESSION_TYPE, ImageClassExpression_Size), name, methods, super)
+    return ImageLayoutExpression(self.allocate(LAYOUT_EXPRESSION_TYPE, ImageLayoutExpression_Size), name, methods, super)
 
   def new_return_expression(self, value):
     return ImageReturnExpression(self.allocate(RETURN_EXPRESSION_TYPE, ImageReturnExpression_Size), value)
@@ -1702,18 +1702,18 @@ class ImageConditionalExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageConditionalExpression_ElsePartOffset, value)
 
 
-class ImageClassExpression(ImageSyntaxTree):
+class ImageLayoutExpression(ImageSyntaxTree):
   def __init__(self, addr, name, methods, super):
     ImageSyntaxTree.__init__(self, addr)
     self.set_name(name)
     self.set_methods(methods)
     self.set_super(super)
   def set_name(self, value):
-    HEAP.set_field(self, ImageClassExpression_NameOffset, value)
+    HEAP.set_field(self, ImageLayoutExpression_NameOffset, value)
   def set_methods(self, value):
-    HEAP.set_field(self, ImageClassExpression_MethodsOffset, value)
+    HEAP.set_field(self, ImageLayoutExpression_MethodsOffset, value)
   def set_super(self, value):
-    HEAP.set_field(self, ImageClassExpression_SuperOffset, value)
+    HEAP.set_field(self, ImageLayoutExpression_SuperOffset, value)
 
 class ImageReturnExpression(ImageSyntaxTree):
   def __init__(self, addr, value):
@@ -1909,11 +1909,11 @@ class LoadVisitor(Visitor):
   def __init__(self):
     self.is_toplevel = True
   def visit_class(self, that):
-    chlass = HEAP.new_class(INSTANCE_TYPE)
+    layout = HEAP.new_class(INSTANCE_TYPE)
     name_str = HEAP.new_string(that.name)
-    chlass.set_name(name_str)
-    HEAP.toplevel[name_str] = chlass
-    that.image = chlass
+    layout.set_name(name_str)
+    HEAP.toplevel[name_str] = layout
+    that.image = layout
     if self.is_toplevel:
       NAMESPACE[that.name] = that
       self.is_toplevel = False
@@ -1932,12 +1932,12 @@ class LoadVisitor(Visitor):
   def visit_builtin_class(self, that):
     instance_type_name = that.info.instance_type
     instance_type_index = globals()[instance_type_name + '_TYPE']
-    chlass = HEAP.new_class(instance_type_index)
+    layout = HEAP.new_class(instance_type_index)
     name_str = HEAP.new_string(that.info.class_name)
-    chlass.set_name(name_str)
-    HEAP.toplevel[name_str] = chlass
-    HEAP.set_root(that.info.root_index, chlass)
-    that.image = chlass
+    layout.set_name(name_str)
+    HEAP.toplevel[name_str] = layout
+    HEAP.set_root(that.info.root_index, layout)
+    that.image = layout
     if self.is_toplevel:
       NAMESPACE[that.info.name] = that
       self.is_toplevel = False
@@ -2089,7 +2089,7 @@ def import_constants(file):
   consts = read_consts(file)
   consts.apply('FOR_EACH_DECLARED_TYPE', define_type_tag)
   consts.apply('FOR_EACH_ROOT', define_root)
-  consts.apply('FOR_EACH_BUILTIN_CLASS', define_builtin_class)
+  consts.apply('FOR_EACH_BUILTIN_LAYOUT', define_builtin_class)
   consts.apply('FOR_EACH_IMAGE_OBJECT_CONST', define_image_object_const)
   consts.apply('FOR_EACH_BUILTIN_METHOD', define_builtin_method)
   consts.apply('FOR_EACH_BUILTIN_FUNCTION', define_builtin_function)

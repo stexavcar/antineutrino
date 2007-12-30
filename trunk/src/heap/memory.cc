@@ -79,7 +79,7 @@ void FieldMigrator::migrate_field(Value **field) {
   address new_addr = to_space().allocate(size);
   memcpy(new_addr, ValuePointer::address_of(obj), size);
   Object *new_obj = ValuePointer::tag_as_object(new_addr);
-  ASSERT(new_obj->chlass() == obj->chlass());
+  ASSERT(new_obj->layout() == obj->layout());
   // Overwrite the header of the from object to point to the new clone
   obj->set_header(ForwardPointer::make(new_obj));
   // Finally, update the field that kept the object alive

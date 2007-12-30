@@ -108,8 +108,8 @@ void Image::copy_object_shallow(ImageObject *obj) {
     case LAYOUT_TYPE: {
       ImageLayout *img = image_cast<ImageLayout>(obj);
       InstanceType instance_type = static_cast<InstanceType>(img->instance_type());
-      Layout *chlass = cast<Layout>(heap.allocate_empty_class(instance_type));
-      obj->point_forward(chlass);
+      Layout *layout = cast<Layout>(heap.allocate_empty_layout(instance_type));
+      obj->point_forward(layout);
       break;
     }
     case BUILTIN_CALL_TYPE: {
@@ -163,13 +163,13 @@ void Image::fixup_shallow_object(ImageObject *obj) {
     }
     case LAYOUT_TYPE: {
       ImageLayout *img = image_cast<ImageLayout>(obj);
-      Layout *chlass = cast<Layout>(img->forward_pointer());
-      chlass->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
+      Layout *layout = cast<Layout>(img->forward_pointer());
+      layout->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
       if (img->super()->forward_pointer() == Smi::from_int(0))
-        chlass->set_super(Runtime::current().roots().vhoid());
+        layout->set_super(Runtime::current().roots().vhoid());
       else
-        chlass->set_super(img->super()->forward_pointer());
-      chlass->set_name(img->name()->forward_pointer());
+        layout->set_super(img->super()->forward_pointer());
+      layout->set_name(img->name()->forward_pointer());
       break;
     }
     case BUILTIN_CALL_TYPE: {
@@ -216,7 +216,7 @@ uint32_t ImageObject::type() {
     return image_cast<ImageSmi>(data)->value();
   } else if (is<ImageForwardPointer>(data)) {
     Object *target = image_cast<ImageForwardPointer>(data)->target();
-    return target->chlass()->instance_type();
+    return target->layout()->instance_type();
   } else {
     UNREACHABLE();
     return 0;

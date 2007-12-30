@@ -148,8 +148,8 @@ public:
   Value *call(Lambda *lambda, Task *task);
 private:
   Data *interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr);
-  Layout *get_class(Value *val);
-  Data *lookup_method(Layout *chlass, Value *name);
+  Layout *get_layout(Value *val);
+  Data *lookup_method(Layout *layout, Value *name);
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
 };

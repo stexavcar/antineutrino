@@ -57,7 +57,7 @@ public:
   void slap(uint16_t height);
   void rethurn();
   void invoke(ref<String> name, uint16_t argc);
-  void instantiate(ref<Layout> chlass);
+  void instantiate(ref<Layout> layout);
   void raise(ref<String> name, uint16_t argc);
   void call(uint16_t argc);
   void tuple(uint16_t size);
@@ -160,12 +160,12 @@ void Assembler::invoke(ref<String> name, uint16_t argc) {
   code().append(argc);
 }
 
-void Assembler::instantiate(ref<Layout> chlass) {
+void Assembler::instantiate(ref<Layout> layout) {
   STATIC_CHECK(OpcodeInfo<OC_NEW>::kArgc == 1);
-  uint16_t chlass_index = constant_pool_index(chlass);
+  uint16_t layout_index = constant_pool_index(layout);
   code().append(OC_NEW);
-  code().append(chlass_index);
-  adjust_stack_height(-chlass->instance_field_count());
+  code().append(layout_index);
+  adjust_stack_height(-layout->instance_field_count());
 }
 
 void Assembler::raise(ref<String> name, uint16_t argc) {
@@ -662,12 +662,12 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
     ref<SyntaxTree> value = cast<SyntaxTree>(terms.get(2 * i + 1));
     __ codegen(value);
   }
-  ref<Layout> chlass = factory().new_class(INSTANCE_TYPE, term_count,
+  ref<Layout> layout = factory().new_layout(INSTANCE_TYPE, term_count,
       methods, runtime().vhoid(), runtime().vhoid());
-  __ instantiate(chlass);
+  __ instantiate(layout);
 }
 
-void Assembler::visit_class_expression(ref<ClassExpression> that) {
+void Assembler::visit_layout_expression(ref<LayoutExpression> that) {
   visit_syntax_tree(that);
 }
 

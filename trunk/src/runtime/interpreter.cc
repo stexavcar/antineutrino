@@ -78,30 +78,30 @@ void Frame::reset(Stack *old_stack, Stack *new_stack) {
 /**
  * Returns the class object for the given value.
  */
-Layout *Interpreter::get_class(Value *value) {
-  if (is<Smi>(value)) return runtime().roots().smi_class();
-  else return cast<Object>(value)->chlass();
+Layout *Interpreter::get_layout(Value *value) {
+  if (is<Smi>(value)) return runtime().roots().smi_layout();
+  else return cast<Object>(value)->layout();
 }
 
 /**
  * Returns the method with the specified name in the given class.  If
  * no method is found Nothing is returned.
  */
-Data *Interpreter::lookup_method(Layout *chlass, Value *name) {
+Data *Interpreter::lookup_method(Layout *layout, Value *name) {
   while (true) {
-    if (chlass->is_empty()) {
-      scoped_string chlass_str(chlass->name()->to_string());
-      Conditions::get().error_occurred("Class %s is empty.", chlass_str.chars());
+    if (layout->is_empty()) {
+      scoped_string layout_str(layout->name()->to_string());
+      Conditions::get().error_occurred("Class %s is empty.", layout_str.chars());
     }
-    Tuple *methods = chlass->methods();
+    Tuple *methods = layout->methods();
     for (uint32_t i = 0; i < methods->length(); i++) {
       Method *method = cast<Method>(methods->get(i));
       if (method->name()->equals(name))
         return method;
     }
-    Value *super = chlass->super();
+    Value *super = layout->super();
     if (is<Void>(super)) break;
-    chlass = cast<Layout>(super);
+    layout = cast<Layout>(super);
   }
   return Nothing::make();
 }
@@ -211,8 +211,8 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       Value *name = constant_pool[name_index];
       uint16_t argc = code[pc + 2];
       Value *recv = frame[argc + 1];
-      Layout *chlass = get_class(recv);
-      Data *lookup_result = lookup_method(chlass, name);
+      Layout *layout = get_layout(recv);
+      Data *lookup_result = lookup_method(layout, name);
       if (is<Nothing>(lookup_result)) {
         scoped_string name_str(name->to_string());
         scoped_string recv_str(recv->to_string());
@@ -274,15 +274,15 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       break;
     }
     case OC_NEW: {
-      uint16_t chlass_template_index = code[pc + 1];
-      Layout *chlass_template = cast<Layout>(constant_pool[chlass_template_index]);
-      uint32_t field_count = chlass_template->instance_field_count();
+      uint16_t layout_template_index = code[pc + 1];
+      Layout *layout_template = cast<Layout>(constant_pool[layout_template_index]);
+      uint32_t field_count = layout_template->instance_field_count();
       Protocol *proto = cast<Protocol>(frame[field_count]);
       USE(proto);
-      Data *chlass_val = chlass_template->clone(runtime().heap());
-      if (is<AllocationFailed>(chlass_val)) return chlass_val;
-      Layout *chlass = cast<Layout>(chlass_val);
-      Data *val = runtime().heap().new_instance(chlass);
+      Data *layout_val = layout_template->clone(runtime().heap());
+      if (is<AllocationFailed>(layout_val)) return layout_val;
+      Layout *layout = cast<Layout>(layout_val);
+      Data *val = runtime().heap().new_instance(layout);
       if (is<Signal>(val)) return val;
       Instance *instance = cast<Instance>(val);
       for (int32_t i = field_count - 1; i >= 0; i--)

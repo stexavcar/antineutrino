@@ -120,8 +120,8 @@ public:
 
 class Object : public Value {
 public:
-  DECLARE_FIELD(Layout*, chlass);
-  IF_DEBUG(inline Layout *gc_safe_chlass());
+  DECLARE_FIELD(Layout*, layout);
+  IF_DEBUG(inline Layout *gc_safe_layout());
   
   /**
    * The header of an object is the first field which normally
@@ -142,7 +142,7 @@ public:
 
 template <> class ref_traits<Object> : public ref_traits<Value> {
 public:
-  inline ref<Layout> chlass();
+  inline ref<Layout> layout();
 };
 
 DEFINE_REF_CLASS(Object);
@@ -564,7 +564,7 @@ public:
 
   IF_DEBUG(static uint32_t tag_of(Data *value));
   IF_DEBUG(static const char *tag_name(uint32_t tag));
-  IF_DEBUG(static const char *class_name(uint32_t tag));
+  IF_DEBUG(static const char *layout_name(uint32_t tag));
 
   static const uint32_t kInstanceTypeOffset       = Object::kHeaderSize;
   static const uint32_t kInstanceFieldCountOffset = kInstanceTypeOffset + kPointerSize;

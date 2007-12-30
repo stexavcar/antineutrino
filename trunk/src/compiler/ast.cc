@@ -8,8 +8,8 @@ namespace neutrino {
 // --- C o m p i l i n g ---
 // -------------------------
 
-ref<Layout> ref_traits<ClassExpression>::compile() {
-  ref<ClassExpression> self = open(this);
+ref<Layout> ref_traits<LayoutExpression>::compile() {
+  ref<LayoutExpression> self = open(this);
   Factory &factory = Runtime::current().factory();
   ref<Tuple> method_asts = methods();
   ref<Tuple> methods = factory.new_tuple(method_asts.length());
@@ -19,7 +19,7 @@ ref<Layout> ref_traits<ClassExpression>::compile() {
     ref<Method> method = method_ast.compile();
     methods.set(i, method);
   }
-  return factory.new_class(INSTANCE_TYPE, 0, methods, super(), name());
+  return factory.new_layout(INSTANCE_TYPE, 0, methods, super(), name());
 }
 
 ref<Method> ref_traits<MethodExpression>::compile() {
@@ -99,7 +99,7 @@ static void unparse_invoke_expression_on(InvokeExpression *obj, UnparseData &dat
   data->append(')');
 }
 
-static void unparse_class_expression(ClassExpression *obj, UnparseData &data) {
+static void unparse_layout_expression(LayoutExpression *obj, UnparseData &data) {
   data->append("class ");
   obj->name()->write_on(data.out(), Data::UNQUOTED);
   data->append(" {");
@@ -199,8 +199,8 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
   case INVOKE_EXPRESSION_TYPE:
     unparse_invoke_expression_on(cast<InvokeExpression>(obj), data);
     break;
-  case CLASS_EXPRESSION_TYPE:
-    unparse_class_expression(cast<ClassExpression>(obj), data);
+  case LAYOUT_EXPRESSION_TYPE:
+    unparse_layout_expression(cast<LayoutExpression>(obj), data);
     break;
   case METHOD_EXPRESSION_TYPE:
     unparse_method_expression(cast<MethodExpression>(obj), data);

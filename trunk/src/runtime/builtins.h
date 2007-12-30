@@ -27,7 +27,7 @@ public:
   static builtin *get(uint32_t index);
 private:
 
-#define DECLARE_BUILTIN(n, chlass, name, str) static Data *chlass##_##name(Arguments&);
+#define DECLARE_BUILTIN(n, layout, name, str) static Data *layout##_##name(Arguments&);
 FOR_EACH_BUILTIN_METHOD(DECLARE_BUILTIN)
 #undef DECLARE_BUILTIN
 

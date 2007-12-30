@@ -133,10 +133,10 @@ Data *Builtins::object_to_string(Arguments &args) {
 // --- C l a s s   E x p r e s s i o n ---
 // ---------------------------------------
 
-Data *Builtins::class_expression_evaluate(Arguments &args) {
+Data *Builtins::layout_expression_evaluate(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
-  ref<ClassExpression> expr = new_ref(cast<ClassExpression>(args.self()));
+  ref<LayoutExpression> expr = new_ref(cast<LayoutExpression>(args.self()));
   ref<Layout> result = expr.compile();
   return *result;
 }
@@ -150,11 +150,11 @@ Data *Builtins::layout_new(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
   Runtime &runtime = Runtime::current();
-  Layout *chlass = cast<Layout>(args.self());
-  InstanceType type = chlass->instance_type();
+  Layout *layout = cast<Layout>(args.self());
+  InstanceType type = layout->instance_type();
   switch (type) {
     case INSTANCE_TYPE:
-      return runtime.heap().new_instance(chlass);
+      return runtime.heap().new_instance(layout);
     case SYMBOL_TYPE:
       return runtime.heap().new_symbol(runtime.roots().vhoid());
     default:

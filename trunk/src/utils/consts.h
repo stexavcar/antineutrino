@@ -68,7 +68,7 @@
 #define FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)                               \
   VISIT(50, LITERAL_EXPRESSION,     LiteralExpression,     literal_expression)     \
   VISIT(51, INVOKE_EXPRESSION,      InvokeExpression,      invoke_expression)      \
-  VISIT(52, CLASS_EXPRESSION,       ClassExpression,       class_expression)       \
+  VISIT(52, LAYOUT_EXPRESSION,      LayoutExpression,      layout_expression)      \
   VISIT(53, RETURN_EXPRESSION,      ReturnExpression,      return_expression)      \
   VISIT(54, METHOD_EXPRESSION,      MethodExpression,      method_expression)      \
   VISIT(55, SEQUENCE_EXPRESSION,    SequenceExpression,    sequence_expression)    \
@@ -135,10 +135,10 @@
   VISIT(3, InstantiateExpression, NameOffset)                        \
   VISIT(4, InstantiateExpression, ArgumentsOffset)                   \
   VISIT(5, InstantiateExpression, Size)                              \
-  VISIT(1, ClassExpression,       NameOffset)                        \
-  VISIT(2, ClassExpression,       MethodsOffset)                     \
-  VISIT(3, ClassExpression,       SuperOffset)                       \
-  VISIT(4, ClassExpression,       Size)                              \
+  VISIT(1, LayoutExpression,      NameOffset)                        \
+  VISIT(2, LayoutExpression,      MethodsOffset)                     \
+  VISIT(3, LayoutExpression,      SuperOffset)                       \
+  VISIT(4, LayoutExpression,      Size)                              \
   VISIT(1, ReturnExpression,      ValueOffset)                       \
   VISIT(2, ReturnExpression,      Size)                              \
   VISIT(1, MethodExpression,      NameOffset)                        \
@@ -198,79 +198,79 @@
 // --- R o o t s ---
 // -----------------
 
-#define FOR_EACH_SIMPLE_ROOT_OBJECT(VISIT)                                                                                      \
-  VISIT(0,  Void,       vhoid,                        VoidValue,             new_singleton(void_class()))                       \
-  VISIT(1,  Null,       nuhll,                        NullValue,             new_singleton(null_class()))                       \
-  VISIT(2,  True,       thrue,                        TrueValue,             new_singleton(true_class()))                       \
-  VISIT(3,  False,      fahlse,                       FalseValue,            new_singleton(false_class()))                      \
-  VISIT(4,  Dictionary, toplevel,                     Toplevel,              new_dictionary())                                  \
-  VISIT(5,  Tuple,      empty_tuple,                  EmptyTuple,            new_tuple(0))
+#define FOR_EACH_SIMPLE_ROOT_OBJECT(VISIT)                                                                                        \
+  VISIT(0,  Void,       vhoid,                         VoidValue,             new_singleton(void_layout()))                       \
+  VISIT(1,  Null,       nuhll,                         NullValue,             new_singleton(null_layout()))                       \
+  VISIT(2,  True,       thrue,                         TrueValue,             new_singleton(true_layout()))                       \
+  VISIT(3,  False,      fahlse,                        FalseValue,            new_singleton(false_layout()))                      \
+  VISIT(4,  Dictionary, toplevel,                      Toplevel,              new_dictionary())                                   \
+  VISIT(5,  Tuple,      empty_tuple,                   EmptyTuple,            new_tuple(0))
 
-#define FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                                                                                  \
-  VISIT(6,  Layout,     class_class,                  Layout,                0)
+#define FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                                                                                   \
+  VISIT(6,  Layout,     layout_layout,                 Layout,                0)
 
-#define FOR_EACH_SIMPLE_ROOT_CLASS(VISIT)                                                                                       \
-  VISIT(44, Layout,     protocol_class,               Protocol,              allocate_empty_class(PROTOCOL_TYPE))               \
-  VISIT(7,  Layout,     string_class,                 String,                allocate_empty_class(STRING_TYPE))                 \
-  VISIT(8,  Layout,     tuple_class,                  Tuple,                 allocate_empty_class(TUPLE_TYPE))                  \
-  VISIT(9,  Layout,     void_class,                   Void,                  allocate_empty_class(VOID_TYPE))                   \
-  VISIT(10, Layout,     null_class,                   Null,                  allocate_empty_class(NULL_TYPE))                   \
-  VISIT(11, Layout,     true_class,                   True,                  allocate_empty_class(TRUE_TYPE))                   \
-  VISIT(12, Layout,     false_class,                  False,                 allocate_empty_class(FALSE_TYPE))                  \
-  VISIT(13, Layout,     literal_expression_class,     LiteralExpression,     allocate_empty_class(LITERAL_EXPRESSION_TYPE))     \
-  VISIT(14, Layout,     dictionary_class,             Dictionary,            allocate_empty_class(DICTIONARY_TYPE))             \
-  VISIT(15, Layout,     lambda_class,                 Lambda,                allocate_empty_class(LAMBDA_TYPE))                 \
-  VISIT(16, Layout,     buffer_class,                 Buffer,                allocate_empty_class(BUFFER_TYPE))                 \
-  VISIT(17, Layout,     code_class,                   Code,                  allocate_empty_class(CODE_TYPE))                   \
-  VISIT(18, Layout,     method_class,                 Method,                allocate_empty_class(METHOD_TYPE))                 \
-  VISIT(19, Layout,     smi_class,                    SmallInteger,          allocate_empty_class(SMI_TYPE))                    \
-  VISIT(20, Layout,     invoke_expression_class,      InvokeExpression,      allocate_empty_class(INVOKE_EXPRESSION_TYPE))      \
-  VISIT(21, Layout,     class_expression_class,       ClassExpression,       allocate_empty_class(CLASS_EXPRESSION_TYPE))       \
-  VISIT(22, Layout,     return_expression_class,      ReturnExpression,      allocate_empty_class(RETURN_EXPRESSION_TYPE))      \
-  VISIT(23, Layout,     method_expression_class,      MethodExpression,      allocate_empty_class(METHOD_EXPRESSION_TYPE))      \
-  VISIT(24, Layout,     sequence_expression_class,    SequenceExpression,    allocate_empty_class(SEQUENCE_EXPRESSION_TYPE))    \
-  VISIT(25, Layout,     tuple_expression_class,       TupleExpression,       allocate_empty_class(TUPLE_EXPRESSION_TYPE))       \
-  VISIT(26, Layout,     global_expression_class,      GlobalExpression,      allocate_empty_class(GLOBAL_EXPRESSION_TYPE))      \
-  VISIT(27, Layout,     symbol_class,                 Symbol,                allocate_empty_class(SYMBOL_TYPE))                 \
-  VISIT(28, Layout,     call_expression_class,        CallExpression,        allocate_empty_class(CALL_EXPRESSION_TYPE))        \
-  VISIT(29, Layout,     conditional_expression_class, ConditionalExpression, allocate_empty_class(CONDITIONAL_EXPRESSION_TYPE)) \
-  VISIT(30, Layout,     this_expression_class,        ThisExpression,        allocate_empty_class(THIS_EXPRESSION_TYPE))        \
-  VISIT(31, Layout,     quote_expression_class,       QuoteExpression,       allocate_empty_class(QUOTE_EXPRESSION_TYPE))       \
-  VISIT(32, Layout,     lambda_expression_class,      LambdaExpression,      allocate_empty_class(LAMBDA_EXPRESSION_TYPE))      \
-  VISIT(33, Layout,     builtin_call_class,           BuiltinCall,           allocate_empty_class(BUILTIN_CALL_TYPE))           \
-  VISIT(34, Layout,     interpolate_expression_class, InterpolateExpression, allocate_empty_class(INTERPOLATE_EXPRESSION_TYPE)) \
-  VISIT(35, Layout,     local_definition_class,       LocalDefinition,       allocate_empty_class(LOCAL_DEFINITION_TYPE))       \
-  VISIT(36, Layout,     unquote_expression_class,     UnquoteExpression,     allocate_empty_class(UNQUOTE_EXPRESSION_TYPE))     \
-  VISIT(37, Layout,     quote_template_class,         QuoteTemplate,         allocate_empty_class(QUOTE_TEMPLATE_TYPE))         \
-  VISIT(38, Layout,     stack_class,                  Stack,                 allocate_empty_class(STACK_TYPE))                  \
-  VISIT(39, Layout,     task_class,                   Task,                  allocate_empty_class(TASK_TYPE))                   \
-  VISIT(40, Layout,     raise_expression_class,       RaiseExpression,       allocate_empty_class(RAISE_EXPRESSION_TYPE))       \
-  VISIT(41, Layout,     on_clause_class,              OnClause,              allocate_empty_class(ON_CLAUSE_TYPE))              \
-  VISIT(42, Layout,     do_on_expression_class,       DoOnExpression,        allocate_empty_class(DO_ON_EXPRESSION_TYPE))       \
-  VISIT(43, Layout,     instantiate_expression_class, InstantiateExpression, allocate_empty_class(INSTANTIATE_EXPRESSION_TYPE))
+#define FOR_EACH_SIMPLE_ROOT_LAYOUT(VISIT)                                                                                        \
+  VISIT(44, Layout,     protocol_layout,               Protocol,              allocate_empty_layout(PROTOCOL_TYPE))               \
+  VISIT(7,  Layout,     string_layout,                 String,                allocate_empty_layout(STRING_TYPE))                 \
+  VISIT(8,  Layout,     tuple_layout,                  Tuple,                 allocate_empty_layout(TUPLE_TYPE))                  \
+  VISIT(9,  Layout,     void_layout,                   Void,                  allocate_empty_layout(VOID_TYPE))                   \
+  VISIT(10, Layout,     null_layout,                   Null,                  allocate_empty_layout(NULL_TYPE))                   \
+  VISIT(11, Layout,     true_layout,                   True,                  allocate_empty_layout(TRUE_TYPE))                   \
+  VISIT(12, Layout,     false_layout,                  False,                 allocate_empty_layout(FALSE_TYPE))                  \
+  VISIT(13, Layout,     literal_expression_layout,     LiteralExpression,     allocate_empty_layout(LITERAL_EXPRESSION_TYPE))     \
+  VISIT(14, Layout,     dictionary_layout,             Dictionary,            allocate_empty_layout(DICTIONARY_TYPE))             \
+  VISIT(15, Layout,     lambda_layout,                 Lambda,                allocate_empty_layout(LAMBDA_TYPE))                 \
+  VISIT(16, Layout,     buffer_layout,                 Buffer,                allocate_empty_layout(BUFFER_TYPE))                 \
+  VISIT(17, Layout,     code_layout,                   Code,                  allocate_empty_layout(CODE_TYPE))                   \
+  VISIT(18, Layout,     method_layout,                 Method,                allocate_empty_layout(METHOD_TYPE))                 \
+  VISIT(19, Layout,     smi_layout,                    SmallInteger,          allocate_empty_layout(SMI_TYPE))                    \
+  VISIT(20, Layout,     invoke_expression_layout,      InvokeExpression,      allocate_empty_layout(INVOKE_EXPRESSION_TYPE))      \
+  VISIT(21, Layout,     layout_expression_layout,      LayoutExpression,      allocate_empty_layout(LAYOUT_EXPRESSION_TYPE))      \
+  VISIT(22, Layout,     return_expression_layout,      ReturnExpression,      allocate_empty_layout(RETURN_EXPRESSION_TYPE))      \
+  VISIT(23, Layout,     method_expression_layout,      MethodExpression,      allocate_empty_layout(METHOD_EXPRESSION_TYPE))      \
+  VISIT(24, Layout,     sequence_expression_layout,    SequenceExpression,    allocate_empty_layout(SEQUENCE_EXPRESSION_TYPE))    \
+  VISIT(25, Layout,     tuple_expression_layout,       TupleExpression,       allocate_empty_layout(TUPLE_EXPRESSION_TYPE))       \
+  VISIT(26, Layout,     global_expression_layout,      GlobalExpression,      allocate_empty_layout(GLOBAL_EXPRESSION_TYPE))      \
+  VISIT(27, Layout,     symbol_layout,                 Symbol,                allocate_empty_layout(SYMBOL_TYPE))                 \
+  VISIT(28, Layout,     call_expression_layout,        CallExpression,        allocate_empty_layout(CALL_EXPRESSION_TYPE))        \
+  VISIT(29, Layout,     conditional_expression_layout, ConditionalExpression, allocate_empty_layout(CONDITIONAL_EXPRESSION_TYPE)) \
+  VISIT(30, Layout,     this_expression_layout,        ThisExpression,        allocate_empty_layout(THIS_EXPRESSION_TYPE))        \
+  VISIT(31, Layout,     quote_expression_layout,       QuoteExpression,       allocate_empty_layout(QUOTE_EXPRESSION_TYPE))       \
+  VISIT(32, Layout,     lambda_expression_layout,      LambdaExpression,      allocate_empty_layout(LAMBDA_EXPRESSION_TYPE))      \
+  VISIT(33, Layout,     builtin_call_layout,           BuiltinCall,           allocate_empty_layout(BUILTIN_CALL_TYPE))           \
+  VISIT(34, Layout,     interpolate_expression_layout, InterpolateExpression, allocate_empty_layout(INTERPOLATE_EXPRESSION_TYPE)) \
+  VISIT(35, Layout,     local_definition_layout,       LocalDefinition,       allocate_empty_layout(LOCAL_DEFINITION_TYPE))       \
+  VISIT(36, Layout,     unquote_expression_layout,     UnquoteExpression,     allocate_empty_layout(UNQUOTE_EXPRESSION_TYPE))     \
+  VISIT(37, Layout,     quote_template_layout,         QuoteTemplate,         allocate_empty_layout(QUOTE_TEMPLATE_TYPE))         \
+  VISIT(38, Layout,     stack_layout,                  Stack,                 allocate_empty_layout(STACK_TYPE))                  \
+  VISIT(39, Layout,     task_layout,                   Task,                  allocate_empty_layout(TASK_TYPE))                   \
+  VISIT(40, Layout,     raise_expression_layout,       RaiseExpression,       allocate_empty_layout(RAISE_EXPRESSION_TYPE))       \
+  VISIT(41, Layout,     on_clause_layout,              OnClause,              allocate_empty_layout(ON_CLAUSE_TYPE))              \
+  VISIT(42, Layout,     do_on_expression_layout,       DoOnExpression,        allocate_empty_layout(DO_ON_EXPRESSION_TYPE))       \
+  VISIT(43, Layout,     instantiate_expression_layout, InstantiateExpression, allocate_empty_layout(INSTANTIATE_EXPRESSION_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
-  FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \
+  FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                            \
   FOR_EACH_SIMPLE_ROOT(VISIT)
 
 #define FOR_EACH_SIMPLE_ROOT(VISIT)                                  \
-  FOR_EACH_SIMPLE_ROOT_CLASS(VISIT)                                  \
+  FOR_EACH_SIMPLE_ROOT_LAYOUT(VISIT)                                 \
   FOR_EACH_SIMPLE_ROOT_OBJECT(VISIT)
 
-#define FOR_EACH_ROOT_CLASS(VISIT)                                   \
-  FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \
-  FOR_EACH_SIMPLE_ROOT_CLASS(VISIT)
+#define FOR_EACH_ROOT_LAYOUT(VISIT)                                  \
+  FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                            \
+  FOR_EACH_SIMPLE_ROOT_LAYOUT(VISIT)
 
 // ---------------------------------------
 // --- B u i l t - i n   C l a s s e s ---
 // ---------------------------------------
 
 /**
- * This index gives a mapping from built-in source class names to root
- * names and associated enumeration values.  Any class that is a root
+ * This index gives a mapping from built-in source layout names to root
+ * names and associated enumeration values.  Any layout that is a root
  * or has built in methods should be mentioned in this list.
  */
-#define FOR_EACH_BUILTIN_CLASS(VISIT)                                          \
+#define FOR_EACH_BUILTIN_LAYOUT(VISIT)                                          \
   VISIT(SmallInteger,          smi,                    SMI)                    \
   VISIT(String,                string,                 STRING)                 \
   VISIT(True,                  true,                   TRUE)                   \
@@ -288,7 +288,7 @@
   VISIT(Method,                method,                 METHOD)                 \
   VISIT(LiteralExpression,     literal_expression,     LITERAL_EXPRESSION)     \
   VISIT(InvokeExpression,      invoke_expression,      INVOKE_EXPRESSION)      \
-  VISIT(ClassExpression,       class_expression,       CLASS_EXPRESSION)       \
+  VISIT(LayoutExpression,      layout_expression,      LAYOUT_EXPRESSION)      \
   VISIT(ThisExpression,        this_expression,        THIS_EXPRESSION)        \
   VISIT(LocalDefinition,       local_definition,       LOCAL_DEFINITION)       \
   VISIT(LambdaExpression,      lambda_expression,      LAMBDA_EXPRESSION)      \
@@ -312,7 +312,7 @@
 // ---------------------------------------
 
 /**
- * This index defines the index, class, name and source name for all
+ * This index defines the index, layout, name and source name for all
  * internal methods.  Whenever a method is added here an associated
  * implementation must be added in builtins.cc.
  */
@@ -327,7 +327,7 @@
   VISIT(14, smi,               abs,         "||")                    \
   VISIT(20, object,            eq,          "=")                     \
   VISIT(21, object,            to_string,   "to_string")             \
-  VISIT(30, class_expression,  evaluate,    "evaluate")              \
+  VISIT(30, layout_expression, evaluate,    "evaluate")              \
   VISIT(40, layout,            new,         "new")                   \
   VISIT(41, tuple,             eq,          "=")                     \
   VISIT(42, lambda,            disassemble, "disassemble")           \

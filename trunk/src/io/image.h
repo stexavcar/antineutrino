@@ -180,7 +180,7 @@ public:
   inline ImageSyntaxTree *else_part();
 };
 
-class ImageClassExpression : public ImageSyntaxTree {
+class ImageLayoutExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();
   inline ImageTuple *methods();

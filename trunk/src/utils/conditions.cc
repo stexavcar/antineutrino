@@ -34,9 +34,9 @@ void Conditions::check_is_failed(const char *file_name, int line_number,
     "#   found: %s\n"
     "#\n";
   EnumInfo<InstanceType> enum_info;
-  const char *expected_name = Layout::class_name(type_tag);
+  const char *expected_name = Layout::layout_name(type_tag);
   uint32_t value_tag = Layout::tag_of(data);
-  const char *value_type_name = Layout::class_name(value_tag);
+  const char *value_type_name = Layout::layout_name(value_tag);
   fprintf(stderr, kErrorMessage, file_name, line_number, type_name, value_source,
       expected_name, value_type_name);
 #else // DEBUG
