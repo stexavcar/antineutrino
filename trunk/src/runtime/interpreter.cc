@@ -78,7 +78,7 @@ void Frame::reset(Stack *old_stack, Stack *new_stack) {
 /**
  * Returns the class object for the given value.
  */
-Class *Interpreter::get_class(Value *value) {
+Layout *Interpreter::get_class(Value *value) {
   if (is<Smi>(value)) return runtime().roots().smi_class();
   else return cast<Object>(value)->chlass();
 }
@@ -87,7 +87,7 @@ Class *Interpreter::get_class(Value *value) {
  * Returns the method with the specified name in the given class.  If
  * no method is found Nothing is returned.
  */
-Data *Interpreter::lookup_method(Class *chlass, Value *name) {
+Data *Interpreter::lookup_method(Layout *chlass, Value *name) {
   while (true) {
     if (chlass->is_empty()) {
       scoped_string chlass_str(chlass->name()->to_string());
@@ -101,7 +101,7 @@ Data *Interpreter::lookup_method(Class *chlass, Value *name) {
     }
     Value *super = chlass->super();
     if (is<Void>(super)) break;
-    chlass = cast<Class>(super);
+    chlass = cast<Layout>(super);
   }
   return Nothing::make();
 }
@@ -211,7 +211,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       Value *name = constant_pool[name_index];
       uint16_t argc = code[pc + 2];
       Value *recv = frame[argc + 1];
-      Class *chlass = get_class(recv);
+      Layout *chlass = get_class(recv);
       Data *lookup_result = lookup_method(chlass, name);
       if (is<Nothing>(lookup_result)) {
         scoped_string name_str(name->to_string());
@@ -275,13 +275,13 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
     }
     case OC_NEW: {
       uint16_t chlass_template_index = code[pc + 1];
-      Class *chlass_template = cast<Class>(constant_pool[chlass_template_index]);
+      Layout *chlass_template = cast<Layout>(constant_pool[chlass_template_index]);
       uint32_t field_count = chlass_template->instance_field_count();
       Protocol *proto = cast<Protocol>(frame[field_count]);
       USE(proto);
       Data *chlass_val = chlass_template->clone(runtime().heap());
       if (is<AllocationFailed>(chlass_val)) return chlass_val;
-      Class *chlass = cast<Class>(chlass_val);
+      Layout *chlass = cast<Layout>(chlass_val);
       Data *val = runtime().heap().new_instance(chlass);
       if (is<Signal>(val)) return val;
       Instance *instance = cast<Instance>(val);

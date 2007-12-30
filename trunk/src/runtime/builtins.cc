@@ -137,7 +137,7 @@ Data *Builtins::class_expression_evaluate(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
   ref<ClassExpression> expr = new_ref(cast<ClassExpression>(args.self()));
-  ref<Class> result = expr.compile();
+  ref<Layout> result = expr.compile();
   return *result;
 }
 
@@ -146,11 +146,11 @@ Data *Builtins::class_expression_evaluate(Arguments &args) {
 // --- C l a s s ---
 // -----------------
 
-Data *Builtins::class_new(Arguments &args) {
+Data *Builtins::layout_new(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
   Runtime &runtime = Runtime::current();
-  Class *chlass = cast<Class>(args.self());
+  Layout *chlass = cast<Layout>(args.self());
   InstanceType type = chlass->instance_type();
   switch (type) {
     case INSTANCE_TYPE:

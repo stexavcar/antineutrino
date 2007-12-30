@@ -105,10 +105,10 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(lambda);
       break;
     }
-    case CLASS_TYPE: {
-      ImageClass *img = image_cast<ImageClass>(obj);
+    case LAYOUT_TYPE: {
+      ImageLayout *img = image_cast<ImageLayout>(obj);
       InstanceType instance_type = static_cast<InstanceType>(img->instance_type());
-      Class *chlass = cast<Class>(heap.allocate_empty_class(instance_type));
+      Layout *chlass = cast<Layout>(heap.allocate_empty_class(instance_type));
       obj->point_forward(chlass);
       break;
     }
@@ -161,9 +161,9 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       lambda->set_outers(Runtime::current().heap().roots().empty_tuple());
       break;
     }
-    case CLASS_TYPE: {
-      ImageClass *img = image_cast<ImageClass>(obj);
-      Class *chlass = cast<Class>(img->forward_pointer());
+    case LAYOUT_TYPE: {
+      ImageLayout *img = image_cast<ImageLayout>(obj);
+      Layout *chlass = cast<Layout>(img->forward_pointer());
       chlass->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
       if (img->super()->forward_pointer() == Smi::from_int(0))
         chlass->set_super(Runtime::current().roots().vhoid());
@@ -232,8 +232,8 @@ uint32_t ImageObject::size_in_image() {
   switch (type) {
     case LAMBDA_TYPE:
       return ImageLambda_Size;
-    case CLASS_TYPE:
-      return ImageClass_Size;
+    case LAYOUT_TYPE:
+      return ImageLayout_Size;
     case SINGLETON_TYPE:
       return ImageRoot_Size;
     case BUILTIN_CALL_TYPE:

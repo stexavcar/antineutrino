@@ -21,7 +21,7 @@
   VISIT(16, TASK,                   Task,                  task)
 
 #define FOR_EACH_OBJECT_TYPE(VISIT)                                                \
-  VISIT(1,  CLASS,                  Class,                 0)                      \
+  VISIT(1,  LAYOUT,                 Layout,                0)                      \
   VISIT(2,  STRING,                 String,                0)                      \
   VISIT(3,  TUPLE,                  Tuple,                 0)                      \
   VISIT(5,  VOID,                   Void,                  0)                      \
@@ -111,11 +111,11 @@
   VISIT(3, Lambda,                LiteralsOffset)                    \
   VISIT(4, Lambda,                TreeOffset)                        \
   VISIT(5, Lambda,                Size)                              \
-  VISIT(1, Class,                 InstanceTypeOffset)                \
-  VISIT(2, Class,                 MethodsOffset)                     \
-  VISIT(3, Class,                 SuperOffset)                       \
-  VISIT(4, Class,                 NameOffset)                        \
-  VISIT(5, Class,                 Size)                              \
+  VISIT(1, Layout,                InstanceTypeOffset)                \
+  VISIT(2, Layout,                MethodsOffset)                     \
+  VISIT(3, Layout,                SuperOffset)                       \
+  VISIT(4, Layout,                NameOffset)                        \
+  VISIT(5, Layout,                Size)                              \
   VISIT(1, Protocol,              MethodsOffset)                     \
   VISIT(2, Protocol,              NameOffset)                        \
   VISIT(3, Protocol,              Size)                              \
@@ -207,47 +207,47 @@
   VISIT(5,  Tuple,      empty_tuple,                  EmptyTuple,            new_tuple(0))
 
 #define FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                                                                                  \
-  VISIT(6,  Class,      class_class,                  Class,                 0)
+  VISIT(6,  Layout,     class_class,                  Layout,                0)
 
 #define FOR_EACH_SIMPLE_ROOT_CLASS(VISIT)                                                                                       \
-  VISIT(44, Class,      protocol_class,               Protocol,              allocate_empty_class(PROTOCOL_TYPE))               \
-  VISIT(7,  Class,      string_class,                 String,                allocate_empty_class(STRING_TYPE))                 \
-  VISIT(8,  Class,      tuple_class,                  Tuple,                 allocate_empty_class(TUPLE_TYPE))                  \
-  VISIT(9,  Class,      void_class,                   Void,                  allocate_empty_class(VOID_TYPE))                   \
-  VISIT(10, Class,      null_class,                   Null,                  allocate_empty_class(NULL_TYPE))                   \
-  VISIT(11, Class,      true_class,                   True,                  allocate_empty_class(TRUE_TYPE))                   \
-  VISIT(12, Class,      false_class,                  False,                 allocate_empty_class(FALSE_TYPE))                  \
-  VISIT(13, Class,      literal_expression_class,     LiteralExpression,     allocate_empty_class(LITERAL_EXPRESSION_TYPE))     \
-  VISIT(14, Class,      dictionary_class,             Dictionary,            allocate_empty_class(DICTIONARY_TYPE))             \
-  VISIT(15, Class,      lambda_class,                 Lambda,                allocate_empty_class(LAMBDA_TYPE))                 \
-  VISIT(16, Class,      buffer_class,                 Buffer,                allocate_empty_class(BUFFER_TYPE))                 \
-  VISIT(17, Class,      code_class,                   Code,                  allocate_empty_class(CODE_TYPE))                   \
-  VISIT(18, Class,      method_class,                 Method,                allocate_empty_class(METHOD_TYPE))                 \
-  VISIT(19, Class,      smi_class,                    SmallInteger,          allocate_empty_class(SMI_TYPE))                    \
-  VISIT(20, Class,      invoke_expression_class,      InvokeExpression,      allocate_empty_class(INVOKE_EXPRESSION_TYPE))      \
-  VISIT(21, Class,      class_expression_class,       ClassExpression,       allocate_empty_class(CLASS_EXPRESSION_TYPE))       \
-  VISIT(22, Class,      return_expression_class,      ReturnExpression,      allocate_empty_class(RETURN_EXPRESSION_TYPE))      \
-  VISIT(23, Class,      method_expression_class,      MethodExpression,      allocate_empty_class(METHOD_EXPRESSION_TYPE))      \
-  VISIT(24, Class,      sequence_expression_class,    SequenceExpression,    allocate_empty_class(SEQUENCE_EXPRESSION_TYPE))    \
-  VISIT(25, Class,      tuple_expression_class,       TupleExpression,       allocate_empty_class(TUPLE_EXPRESSION_TYPE))       \
-  VISIT(26, Class,      global_expression_class,      GlobalExpression,      allocate_empty_class(GLOBAL_EXPRESSION_TYPE))      \
-  VISIT(27, Class,      symbol_class,                 Symbol,                allocate_empty_class(SYMBOL_TYPE))                 \
-  VISIT(28, Class,      call_expression_class,        CallExpression,        allocate_empty_class(CALL_EXPRESSION_TYPE))        \
-  VISIT(29, Class,      conditional_expression_class, ConditionalExpression, allocate_empty_class(CONDITIONAL_EXPRESSION_TYPE)) \
-  VISIT(30, Class,      this_expression_class,        ThisExpression,        allocate_empty_class(THIS_EXPRESSION_TYPE))        \
-  VISIT(31, Class,      quote_expression_class,       QuoteExpression,       allocate_empty_class(QUOTE_EXPRESSION_TYPE))       \
-  VISIT(32, Class,      lambda_expression_class,      LambdaExpression,      allocate_empty_class(LAMBDA_EXPRESSION_TYPE))      \
-  VISIT(33, Class,      builtin_call_class,           BuiltinCall,           allocate_empty_class(BUILTIN_CALL_TYPE))           \
-  VISIT(34, Class,      interpolate_expression_class, InterpolateExpression, allocate_empty_class(INTERPOLATE_EXPRESSION_TYPE)) \
-  VISIT(35, Class,      local_definition_class,       LocalDefinition,       allocate_empty_class(LOCAL_DEFINITION_TYPE))       \
-  VISIT(36, Class,      unquote_expression_class,     UnquoteExpression,     allocate_empty_class(UNQUOTE_EXPRESSION_TYPE))     \
-  VISIT(37, Class,      quote_template_class,         QuoteTemplate,         allocate_empty_class(QUOTE_TEMPLATE_TYPE))         \
-  VISIT(38, Class,      stack_class,                  Stack,                 allocate_empty_class(STACK_TYPE))                  \
-  VISIT(39, Class,      task_class,                   Task,                  allocate_empty_class(TASK_TYPE))                   \
-  VISIT(40, Class,      raise_expression_class,       RaiseExpression,       allocate_empty_class(RAISE_EXPRESSION_TYPE))       \
-  VISIT(41, Class,      on_clause_class,              OnClause,              allocate_empty_class(ON_CLAUSE_TYPE))              \
-  VISIT(42, Class,      do_on_expression_class,       DoOnExpression,        allocate_empty_class(DO_ON_EXPRESSION_TYPE))       \
-  VISIT(43, Class,      instantiate_expression_class, InstantiateExpression, allocate_empty_class(INSTANTIATE_EXPRESSION_TYPE))
+  VISIT(44, Layout,     protocol_class,               Protocol,              allocate_empty_class(PROTOCOL_TYPE))               \
+  VISIT(7,  Layout,     string_class,                 String,                allocate_empty_class(STRING_TYPE))                 \
+  VISIT(8,  Layout,     tuple_class,                  Tuple,                 allocate_empty_class(TUPLE_TYPE))                  \
+  VISIT(9,  Layout,     void_class,                   Void,                  allocate_empty_class(VOID_TYPE))                   \
+  VISIT(10, Layout,     null_class,                   Null,                  allocate_empty_class(NULL_TYPE))                   \
+  VISIT(11, Layout,     true_class,                   True,                  allocate_empty_class(TRUE_TYPE))                   \
+  VISIT(12, Layout,     false_class,                  False,                 allocate_empty_class(FALSE_TYPE))                  \
+  VISIT(13, Layout,     literal_expression_class,     LiteralExpression,     allocate_empty_class(LITERAL_EXPRESSION_TYPE))     \
+  VISIT(14, Layout,     dictionary_class,             Dictionary,            allocate_empty_class(DICTIONARY_TYPE))             \
+  VISIT(15, Layout,     lambda_class,                 Lambda,                allocate_empty_class(LAMBDA_TYPE))                 \
+  VISIT(16, Layout,     buffer_class,                 Buffer,                allocate_empty_class(BUFFER_TYPE))                 \
+  VISIT(17, Layout,     code_class,                   Code,                  allocate_empty_class(CODE_TYPE))                   \
+  VISIT(18, Layout,     method_class,                 Method,                allocate_empty_class(METHOD_TYPE))                 \
+  VISIT(19, Layout,     smi_class,                    SmallInteger,          allocate_empty_class(SMI_TYPE))                    \
+  VISIT(20, Layout,     invoke_expression_class,      InvokeExpression,      allocate_empty_class(INVOKE_EXPRESSION_TYPE))      \
+  VISIT(21, Layout,     class_expression_class,       ClassExpression,       allocate_empty_class(CLASS_EXPRESSION_TYPE))       \
+  VISIT(22, Layout,     return_expression_class,      ReturnExpression,      allocate_empty_class(RETURN_EXPRESSION_TYPE))      \
+  VISIT(23, Layout,     method_expression_class,      MethodExpression,      allocate_empty_class(METHOD_EXPRESSION_TYPE))      \
+  VISIT(24, Layout,     sequence_expression_class,    SequenceExpression,    allocate_empty_class(SEQUENCE_EXPRESSION_TYPE))    \
+  VISIT(25, Layout,     tuple_expression_class,       TupleExpression,       allocate_empty_class(TUPLE_EXPRESSION_TYPE))       \
+  VISIT(26, Layout,     global_expression_class,      GlobalExpression,      allocate_empty_class(GLOBAL_EXPRESSION_TYPE))      \
+  VISIT(27, Layout,     symbol_class,                 Symbol,                allocate_empty_class(SYMBOL_TYPE))                 \
+  VISIT(28, Layout,     call_expression_class,        CallExpression,        allocate_empty_class(CALL_EXPRESSION_TYPE))        \
+  VISIT(29, Layout,     conditional_expression_class, ConditionalExpression, allocate_empty_class(CONDITIONAL_EXPRESSION_TYPE)) \
+  VISIT(30, Layout,     this_expression_class,        ThisExpression,        allocate_empty_class(THIS_EXPRESSION_TYPE))        \
+  VISIT(31, Layout,     quote_expression_class,       QuoteExpression,       allocate_empty_class(QUOTE_EXPRESSION_TYPE))       \
+  VISIT(32, Layout,     lambda_expression_class,      LambdaExpression,      allocate_empty_class(LAMBDA_EXPRESSION_TYPE))      \
+  VISIT(33, Layout,     builtin_call_class,           BuiltinCall,           allocate_empty_class(BUILTIN_CALL_TYPE))           \
+  VISIT(34, Layout,     interpolate_expression_class, InterpolateExpression, allocate_empty_class(INTERPOLATE_EXPRESSION_TYPE)) \
+  VISIT(35, Layout,     local_definition_class,       LocalDefinition,       allocate_empty_class(LOCAL_DEFINITION_TYPE))       \
+  VISIT(36, Layout,     unquote_expression_class,     UnquoteExpression,     allocate_empty_class(UNQUOTE_EXPRESSION_TYPE))     \
+  VISIT(37, Layout,     quote_template_class,         QuoteTemplate,         allocate_empty_class(QUOTE_TEMPLATE_TYPE))         \
+  VISIT(38, Layout,     stack_class,                  Stack,                 allocate_empty_class(STACK_TYPE))                  \
+  VISIT(39, Layout,     task_class,                   Task,                  allocate_empty_class(TASK_TYPE))                   \
+  VISIT(40, Layout,     raise_expression_class,       RaiseExpression,       allocate_empty_class(RAISE_EXPRESSION_TYPE))       \
+  VISIT(41, Layout,     on_clause_class,              OnClause,              allocate_empty_class(ON_CLAUSE_TYPE))              \
+  VISIT(42, Layout,     do_on_expression_class,       DoOnExpression,        allocate_empty_class(DO_ON_EXPRESSION_TYPE))       \
+  VISIT(43, Layout,     instantiate_expression_class, InstantiateExpression, allocate_empty_class(INSTANTIATE_EXPRESSION_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_CLASS(VISIT)                             \
@@ -281,7 +281,7 @@
   VISIT(Expression,            expression,             EXPRESSION)             \
   VISIT(Lambda,                lambda,                 LAMBDA)                 \
   VISIT(Tuple,                 tuple,                  TUPLE)                  \
-  VISIT(Class,                 class,                  CLASS)                  \
+  VISIT(Layout,                layout,                 LAYOUT)                 \
   VISIT(Dictionary,            dictionary,             DICTIONARY)             \
   VISIT(Buffer,                buffer,                 BUFFER)                 \
   VISIT(Code,                  code,                   CODE)                   \
@@ -328,7 +328,7 @@
   VISIT(20, object,            eq,          "=")                     \
   VISIT(21, object,            to_string,   "to_string")             \
   VISIT(30, class_expression,  evaluate,    "evaluate")              \
-  VISIT(40, class,             new,         "new")                   \
+  VISIT(40, layout,            new,         "new")                   \
   VISIT(41, tuple,             eq,          "=")                     \
   VISIT(42, lambda,            disassemble, "disassemble")           \
   VISIT(43, lambda_expression, params,      "parameters")            \

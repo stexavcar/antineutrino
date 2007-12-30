@@ -455,7 +455,7 @@ class Parser:
       info = BUILTIN_CLASSES[name]
       return BuiltinClass(info, members, parent)
     else:
-      return Class(name, members, parent)
+      return Layout(name, members, parent)
 
   def pop_scope(self):
     self.scope = self.scope.parent
@@ -873,7 +873,7 @@ class BuiltinClass(SyntaxTree):
     for member in self.members:
       member.accept(visitor)
 
-class Class(SyntaxTree):
+class Layout(SyntaxTree):
   def __init__(self, name, members, super):
     self.name = name
     self.members = members
@@ -1333,7 +1333,7 @@ class Heap:
     return addr
 
   def new_class(self, instance_type):
-    return ImageClass(self.allocate(CLASS_TYPE, ImageClass_Size), instance_type)
+    return ImageLayout(self.allocate(LAYOUT_TYPE, ImageLayout_Size), instance_type)
 
   def new_protocol(self, name):
     return ImageProtocol(self.allocate(PROTOCOL_TYPE, ImageProtocol_Size), name)
@@ -1487,18 +1487,18 @@ class ImageObject(ImageValue):
   def set_class(self, value):
     HEAP.set_field(self, ImageObject_TypeOffset, value)
 
-class ImageClass(ImageObject):
+class ImageLayout(ImageObject):
   def __init__(self, addr, instance_type):
     ImageObject.__init__(self, addr)
     self.set_instance_type(instance_type)
   def set_instance_type(self, value):
-    HEAP.set_raw_field(self, ImageClass_InstanceTypeOffset, value)
+    HEAP.set_raw_field(self, ImageLayout_InstanceTypeOffset, value)
   def set_methods(self, value):
-    HEAP.set_field(self, ImageClass_MethodsOffset, value)
+    HEAP.set_field(self, ImageLayout_MethodsOffset, value)
   def set_parent(self, value):
-    HEAP.set_field(self, ImageClass_SuperOffset, value)
+    HEAP.set_field(self, ImageLayout_SuperOffset, value)
   def set_name(self, value):
-    HEAP.set_field(self, ImageClass_NameOffset, value)
+    HEAP.set_field(self, ImageLayout_NameOffset, value)
 
 class ImageProtocol(ImageObject):
   def __init__(self, addr, name):

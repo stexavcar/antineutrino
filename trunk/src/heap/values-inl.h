@@ -210,7 +210,7 @@ void Class::set_##name(T value) {                                    \
 FOR_EACH_GENERATABLE_TYPE(DEFINE_ALL_ACCESSORS)
 #undef DEFINE_ALL_ACCESSORS
 
-FOR_EACH_CLASS_FIELD(DEFINE_FIELD_ACCESSORS, Class)
+FOR_EACH_LAYOUT_FIELD(DEFINE_FIELD_ACCESSORS, Layout)
 FOR_EACH_LAMBDA_FIELD(DEFINE_FIELD_ACCESSORS, Lambda)
 
 // ---------------------------------
@@ -231,17 +231,17 @@ int32_t Smi::value() {
 // -------------------
 
 #ifdef DEBUG
-Class *Object::gc_safe_chlass() {
+Layout *Object::gc_safe_chlass() {
   Data *header = this->header();
   if (is<ForwardPointer>(header)) {
     return cast<ForwardPointer>(header)->target()->chlass();
   } else {
-    return reinterpret_cast<Class*>(header);
+    return reinterpret_cast<Layout*>(header);
   }
 }
 #endif
 
-DEFINE_FIELD_ACCESSORS(Class, chlass, Header, Object)
+DEFINE_FIELD_ACCESSORS(Layout, chlass, Header, Object)
 DEFINE_ACCESSORS(Data*, Object, header, Header)
 
 
@@ -444,8 +444,8 @@ uint32_t ref_traits<Code>::length() {
 // --- C l a s s ---
 // -----------------
 
-DEFINE_ACCESSORS(InstanceType, Class, instance_type, InstanceType)
-DEFINE_ACCESSORS(uint32_t, Class, instance_field_count, InstanceFieldCount)
+DEFINE_ACCESSORS(InstanceType, Layout, instance_type, InstanceType)
+DEFINE_ACCESSORS(uint32_t, Layout, instance_field_count, InstanceFieldCount)
 
 
 // ---------------------

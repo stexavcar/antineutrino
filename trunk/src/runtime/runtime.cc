@@ -56,8 +56,8 @@ bool Runtime::install_object(ref<Object> root, ref<Object> changes) {
   switch (type) {
     case DICTIONARY_TYPE:
       return install_dictionary(cast<Dictionary>(root), cast<Dictionary>(changes));
-    case CLASS_TYPE:
-      return install_class(cast<Class>(root), cast<Class>(changes));
+    case LAYOUT_TYPE:
+      return install_class(cast<Layout>(root), cast<Layout>(changes));
     default:
       UNHANDLED(InstanceType, type);
       return false;
@@ -88,7 +88,7 @@ bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) 
   return true;
 }
 
-bool Runtime::install_class(ref<Class> root, ref<Class> changes) {
+bool Runtime::install_class(ref<Layout> root, ref<Layout> changes) {
   if (!root->is_empty()) {
     scoped_string str(root.name().to_string());
     Conditions::get().error_occurred("Root class %s is not empty.", str.chars());

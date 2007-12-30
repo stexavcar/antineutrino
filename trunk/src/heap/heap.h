@@ -18,7 +18,7 @@ public:
    * to contain object pointers must have been initialized before a
    * gc can be run.
    */
-  Data *allocate_object(uint32_t size, Class *chlass);
+  Data *allocate_object(uint32_t size, Layout *chlass);
   
   /**
    * Creates and initializes a new type object but does not check that
@@ -45,7 +45,7 @@ public:
 
   Data *new_tuple(uint32_t length);
   
-  Data *new_singleton(Class *chlass);
+  Data *new_singleton(Layout *chlass);
   
   Data *new_symbol(Value *name);
   
@@ -74,7 +74,7 @@ public:
 FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
   
-  Data *new_abstract_buffer(uint32_t size, Class *chlass);
+  Data *new_abstract_buffer(uint32_t size, Layout *chlass);
   
   template <typename T> Data *new_buffer(uint32_t size);
   
@@ -82,7 +82,7 @@ FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
   
   Data *new_method(String *name, Lambda *lambda);
     
-  Data *new_instance(Class *chlass);
+  Data *new_instance(Layout *chlass);
 
   Memory &memory() { return memory_; }
   Roots &roots() { return roots_; }

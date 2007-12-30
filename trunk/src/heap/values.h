@@ -120,8 +120,8 @@ public:
 
 class Object : public Value {
 public:
-  DECLARE_FIELD(Class*, chlass);
-  IF_DEBUG(inline Class *gc_safe_chlass());
+  DECLARE_FIELD(Layout*, chlass);
+  IF_DEBUG(inline Layout *gc_safe_chlass());
   
   /**
    * The header of an object is the first field which normally
@@ -142,7 +142,7 @@ public:
 
 template <> class ref_traits<Object> : public ref_traits<Value> {
 public:
-  inline ref<Class> chlass();
+  inline ref<Layout> chlass();
 };
 
 DEFINE_REF_CLASS(Object);
@@ -548,16 +548,16 @@ DEFINE_REF_CLASS(Protocol);
 // --- C l a s s ---
 // -----------------
 
-#define FOR_EACH_CLASS_FIELD(VISIT, arg)                             \
+#define FOR_EACH_LAYOUT_FIELD(VISIT, arg)                            \
   VISIT(Tuple, methods, Methods, arg)                                \
   VISIT(Value, super,   Super,   arg)                                \
   VISIT(Value, name,    Name,    arg)
 
-class Class : public Object {
+class Layout : public Object {
 public:
   DECLARE_FIELD(InstanceType, instance_type);
   DECLARE_FIELD(uint32_t, instance_field_count);
-  FOR_EACH_CLASS_FIELD(DECLARE_OBJECT_FIELD, 0)
+  FOR_EACH_LAYOUT_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   bool is_empty();
   Data *clone(Heap &heap);
@@ -574,12 +574,12 @@ public:
   static const uint32_t kSize                     = kNameOffset + kPointerSize;
 };
 
-template <> class ref_traits<Class> {
+template <> class ref_traits<Layout> {
 public:
-  FOR_EACH_CLASS_FIELD(DECLARE_REF_FIELD, 0)
+  FOR_EACH_LAYOUT_FIELD(DECLARE_REF_FIELD, 0)
 };
 
-DEFINE_REF_CLASS(Class);
+DEFINE_REF_CLASS(Layout);
 
 
 // ---------------------

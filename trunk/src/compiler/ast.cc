@@ -8,7 +8,7 @@ namespace neutrino {
 // --- C o m p i l i n g ---
 // -------------------------
 
-ref<Class> ref_traits<ClassExpression>::compile() {
+ref<Layout> ref_traits<ClassExpression>::compile() {
   ref<ClassExpression> self = open(this);
   Factory &factory = Runtime::current().factory();
   ref<Tuple> method_asts = methods();

@@ -24,7 +24,7 @@ typedef byte* address;
 namespace neutrino {
 
 class Assembler;
-class Class;
+class Layout;
 class Code;
 class Data;
 class Dictionary;

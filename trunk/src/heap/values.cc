@@ -9,7 +9,7 @@ namespace neutrino {
 
 #ifdef DEBUG
 
-uint32_t Class::tag_of(Data *value) {
+uint32_t Layout::tag_of(Data *value) {
   if (is<Signal>(value)) {
     switch (cast<Signal>(value)->type()) {
 #define MAKE_SIGNAL_TYPE_CASE(n, NAME, Name, info) case Signal::NAME: return NAME##_TYPE;
@@ -22,7 +22,7 @@ FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
   }
 }
 
-const char *Class::tag_name(uint32_t tag) {
+const char *Layout::tag_name(uint32_t tag) {
   switch (tag) {
 #define MAKE_TYPE_CASE(n, NAME, Name, info) case NAME##_TYPE: return #NAME;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
@@ -31,7 +31,7 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
   }
 }
 
-const char *Class::class_name(uint32_t tag) {
+const char *Layout::class_name(uint32_t tag) {
   switch (tag) {
 #define MAKE_TYPE_CASE(n, NAME, Name, info) case NAME##_TYPE: return #Name;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
@@ -81,7 +81,7 @@ static void write_string_short_on(String *obj, Data::WriteMode mode, string_buff
   if (mode != Data::UNQUOTED) buf.append('"');
 }
 
-static void write_class_short_on(Class *obj, string_buffer &buf) {
+static void write_class_short_on(Layout *obj, string_buffer &buf) {
   buf.append("#<class ");
   obj->name()->write_on(buf, Data::UNQUOTED);
   buf.append(">");
@@ -139,8 +139,8 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
   case CODE_TYPE:
     buf.append("#<code>");
     break;
-  case CLASS_TYPE:
-    write_class_short_on(cast<Class>(obj), buf);
+  case LAYOUT_TYPE:
+    write_class_short_on(cast<Layout>(obj), buf);
     break;
   case METHOD_TYPE:
     buf.append("#<method>");
@@ -385,8 +385,8 @@ uint32_t Object::size_in_memory() {
     return Lambda::kSize;
   case BUILTIN_CALL_TYPE:
     return BuiltinCall::kSize;
-  case CLASS_TYPE:
-    return Class::kSize;
+  case LAYOUT_TYPE:
+    return Layout::kSize;
   case TUPLE_TYPE:
     return Tuple::size_for(cast<Tuple>(this)->length());
   case STRING_TYPE:
@@ -430,7 +430,7 @@ static void validate_instance(Instance *obj) {
   GC_SAFE_CHECK_IS_C(VALIDATION, Type, cast<Class>(obj)->name());
 
 static void validate_object(Object *obj) {
-  GC_SAFE_CHECK_IS_C(VALIDATION, Class, obj->chlass());
+  GC_SAFE_CHECK_IS_C(VALIDATION, Layout, obj->chlass());
   InstanceType type = obj->gc_safe_type();
   switch (type) {
     case TUPLE_TYPE:
@@ -449,8 +449,8 @@ static void validate_object(Object *obj) {
         GC_SAFE_CHECK_IS_C(VALIDATION, Tuple, cast<Lambda>(obj)->constant_pool());
       }
       break;
-    case CLASS_TYPE:
-      FOR_EACH_CLASS_FIELD(VALIDATE_FIELD, Class)
+    case LAYOUT_TYPE:
+      FOR_EACH_LAYOUT_FIELD(VALIDATE_FIELD, Layout)
       break;
     case QUOTE_TEMPLATE_TYPE:
       FOR_EACH_QUOTE_TEMPLATE_FIELD(VALIDATE_FIELD, QuoteTemplate)
@@ -505,8 +505,8 @@ void Object::for_each_field(FieldVisitor &visitor) {
     case LAMBDA_TYPE:
       FOR_EACH_LAMBDA_FIELD(VISIT_FIELD, Lambda)
       break;
-    case CLASS_TYPE:
-      FOR_EACH_CLASS_FIELD(VISIT_FIELD, Class)
+    case LAYOUT_TYPE:
+      FOR_EACH_LAYOUT_FIELD(VISIT_FIELD, Layout)
       break;
     case STACK_TYPE:
       cast<Stack>(this)->for_each_stack_field(visitor);
@@ -669,11 +669,11 @@ uint32_t Dictionary::size() {
 // --- C l a s s ---
 // -----------------
 
-bool Class::is_empty() {
+bool Layout::is_empty() {
   return super() == Smi::from_int(0);
 }
 
-Data *Class::clone(Heap &heap) {
+Data *Layout::clone(Heap &heap) {
   return heap.new_class(instance_type(), instance_field_count(),
       methods(), super(), name());
 }

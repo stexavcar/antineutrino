@@ -18,11 +18,11 @@ Roots::Roots() {
 
 bool Roots::initialize(Heap& heap) {
   // Complicated roots
-  Data *class_class_val = heap.allocate_class(CLASS_TYPE);
+  Data *class_class_val = heap.allocate_class(LAYOUT_TYPE);
   if (is<AllocationFailed>(class_class_val)) return false;
-  Class *class_class_obj = reinterpret_cast<Class*>(class_class_val);
+  Layout *class_class_obj = reinterpret_cast<Layout*>(class_class_val);
   class_class_obj->set_chlass(class_class_obj);
-  class_class() = cast<Class>(class_class_obj);
+  class_class() = cast<Layout>(class_class_obj);
   
   // All the simple roots get allocated the same way, which is what
   // makes them simple.

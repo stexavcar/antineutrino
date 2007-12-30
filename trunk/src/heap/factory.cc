@@ -70,17 +70,17 @@ ref<Method> Factory::new_method(ref<String> name, ref<Lambda> lambda) {
   ALLOCATE_CHECKED(Method, new_method(*name, *lambda));
 }
 
-ref<Class> Factory::allocate_empty_class(InstanceType instance_type) {
-  ALLOCATE_CHECKED(Class, allocate_empty_class(instance_type));
+ref<Layout> Factory::allocate_empty_class(InstanceType instance_type) {
+  ALLOCATE_CHECKED(Layout, allocate_empty_class(instance_type));
 }
 
-ref<Class> Factory::new_class(InstanceType instance_type,
+ref<Layout> Factory::new_class(InstanceType instance_type,
     uint32_t instance_field_count, ref<Tuple> methods, ref<Value> super,
     ref<Value> name) {
-  ALLOCATE_CHECKED(Class, new_class(instance_type, instance_field_count, *methods, *super, *name));
+  ALLOCATE_CHECKED(Layout, new_class(instance_type, instance_field_count, *methods, *super, *name));
 }
 
-ref<Instance> Factory::new_instance(ref<Class> chlass) {
+ref<Instance> Factory::new_instance(ref<Layout> chlass) {
   ALLOCATE_CHECKED(Instance, new_instance(*chlass));
 }
 

@@ -57,7 +57,7 @@ public:
   void slap(uint16_t height);
   void rethurn();
   void invoke(ref<String> name, uint16_t argc);
-  void instantiate(ref<Class> chlass);
+  void instantiate(ref<Layout> chlass);
   void raise(ref<String> name, uint16_t argc);
   void call(uint16_t argc);
   void tuple(uint16_t size);
@@ -160,7 +160,7 @@ void Assembler::invoke(ref<String> name, uint16_t argc) {
   code().append(argc);
 }
 
-void Assembler::instantiate(ref<Class> chlass) {
+void Assembler::instantiate(ref<Layout> chlass) {
   STATIC_CHECK(OpcodeInfo<OC_NEW>::kArgc == 1);
   uint16_t chlass_index = constant_pool_index(chlass);
   code().append(OC_NEW);
@@ -662,7 +662,7 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
     ref<SyntaxTree> value = cast<SyntaxTree>(terms.get(2 * i + 1));
     __ codegen(value);
   }
-  ref<Class> chlass = factory().new_class(INSTANCE_TYPE, term_count,
+  ref<Layout> chlass = factory().new_class(INSTANCE_TYPE, term_count,
       methods, runtime().vhoid(), runtime().vhoid());
   __ instantiate(chlass);
 }

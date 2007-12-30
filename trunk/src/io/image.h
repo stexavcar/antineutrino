@@ -50,7 +50,7 @@ class ImageSyntaxTree : public ImageObject {
   
 };
 
-class ImageClass : public ImageObject {
+class ImageLayout : public ImageObject {
 public:
   inline uint32_t instance_type();
   inline ImageTuple *methods();

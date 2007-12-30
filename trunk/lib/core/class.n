@@ -1,4 +1,4 @@
-internal class Class {
+internal class Layout {
   
   internal def operator new();
   

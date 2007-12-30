@@ -13,7 +13,7 @@ Heap::Heap(Roots &roots)
     : roots_(roots)
     , memory_(*this) { }
 
-Data *Heap::allocate_object(uint32_t size, Class *type) {
+Data *Heap::allocate_object(uint32_t size, Layout *type) {
   address addr = memory().allocate(size);
   if (!addr) return AllocationFailed::make(size);
   Object *result = ValuePointer::tag_as_object(addr);
@@ -27,9 +27,9 @@ Data *Heap::allocate_object(uint32_t size, Class *type) {
 }
 
 Data *Heap::allocate_class(InstanceType instance_type) {
-  Data *val = allocate_object(Class::kSize, roots().class_class());
+  Data *val = allocate_object(Layout::kSize, roots().class_class());
   if (is<AllocationFailed>(val)) return val;
-  Class *result = reinterpret_cast<Class*>(cast<Object>(val));
+  Layout *result = reinterpret_cast<Layout*>(cast<Object>(val));
   result->set_chlass(roots().class_class());
   result->set_instance_type(instance_type);
   result->set_super(Smi::from_int(0));
@@ -113,8 +113,8 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_ALLOCATOR)
 Data *Heap::allocate_empty_class(InstanceType instance_type) {
   Data *val = allocate_class(instance_type);
   if (is<AllocationFailed>(val)) return val;
-  ASSERT_IS(Class, val);
-  Class *result = cast<Class>(val);
+  ASSERT_IS(Layout, val);
+  Layout *result = cast<Layout>(val);
   result->set_instance_field_count(0);
   result->set_super(Smi::from_int(0));
   result->set_name(Smi::from_int(0));
@@ -128,8 +128,8 @@ Data *Heap::new_class(InstanceType instance_type,
     Value *name) {
   Data *val = allocate_class(instance_type);
   if (is<AllocationFailed>(val)) return val;
-  ASSERT_IS(Class, val);
-  Class *result = cast<Class>(val);
+  ASSERT_IS(Layout, val);
+  Layout *result = cast<Layout>(val);
   result->set_instance_field_count(instance_field_count);
   result->set_super(super);
   result->set_methods(methods);
@@ -208,7 +208,7 @@ Data *Heap::new_code(uint32_t size) {
   return result;
 }
 
-Data *Heap::new_abstract_buffer(uint32_t byte_count, Class *type) {
+Data *Heap::new_abstract_buffer(uint32_t byte_count, Layout *type) {
   uint32_t size = AbstractBuffer::size_for(byte_count);
   Data *val = allocate_object(size, type);
   if (is<AllocationFailed>(val)) return val;
@@ -241,7 +241,7 @@ Data *Heap::new_symbol(Value *name) {
   return result;
 }
 
-Data *Heap::new_singleton(Class *type) {
+Data *Heap::new_singleton(Layout *type) {
   return allocate_object(Singleton::kSize, type);
 }
 
@@ -260,7 +260,7 @@ Data *Heap::new_dictionary(Tuple *table) {
   return result;
 }
 
-Data *Heap::new_instance(Class *chlass) {
+Data *Heap::new_instance(Layout *chlass) {
   ASSERT_EQ(INSTANCE_TYPE, chlass->instance_type());
   uint32_t field_count = chlass->instance_field_count();
   uint32_t size = Instance::size_for(field_count);

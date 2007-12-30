@@ -292,7 +292,7 @@ template <>
 class ref_traits<ClassExpression> : public ref_traits<SyntaxTree> {
 public:
   FOR_EACH_CLASS_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
-  ref<Class> compile();
+  ref<Layout> compile();
 };
 
 DEFINE_REF_CLASS(ClassExpression);
