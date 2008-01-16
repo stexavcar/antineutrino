@@ -387,6 +387,8 @@ uint32_t Object::size_in_memory() {
     return BuiltinCall::kSize;
   case LAYOUT_TYPE:
     return Layout::kSize;
+  case CONTEXT_TYPE:
+    return Context::kSize;
   case TUPLE_TYPE:
     return Tuple::size_for(cast<Tuple>(this)->length());
   case STRING_TYPE:
@@ -452,6 +454,9 @@ static void validate_object(Object *obj) {
     case LAYOUT_TYPE:
       FOR_EACH_LAYOUT_FIELD(VALIDATE_FIELD, Layout)
       break;
+    case CONTEXT_TYPE:
+      FOR_EACH_CONTEXT_FIELD(VALIDATE_FIELD, Context)
+      break;
     case QUOTE_TEMPLATE_TYPE:
       FOR_EACH_QUOTE_TEMPLATE_FIELD(VALIDATE_FIELD, QuoteTemplate)
       break;
@@ -495,6 +500,8 @@ void Object::for_each_field(FieldVisitor &visitor) {
     case STRING_TYPE: case CODE_TYPE: case TRUE_TYPE: case FALSE_TYPE:
     case VOID_TYPE: case NULL_TYPE:
       return;
+    case CONTEXT_TYPE:
+      break;
     case TUPLE_TYPE:
       for (uint32_t i = 0; i < cast<Tuple>(this)->length(); i++)
         VISIT(cast<Tuple>(this)->get(i));
@@ -535,7 +542,7 @@ Value *Lambda::call(Task *task) {
 }
 
 Data *Lambda::clone(Heap &heap) {
-  return heap.new_lambda(argc(), code(), constant_pool(), tree());
+  return heap.new_lambda(argc(), code(), constant_pool(), tree(), context());
 }
 
 

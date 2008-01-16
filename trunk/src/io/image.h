@@ -85,12 +85,17 @@ public:
   uint32_t code_size_in_image();
 };
 
+class ImageContext : public ImageObject {
+public:
+};
+
 class ImageLambda : public ImageObject {
 public:
   inline uint32_t argc();
   inline ImageValue *code();
   inline ImageValue *literals();
   inline ImageSyntaxTree *tree();
+  inline ImageContext *context();
 };
 
 class ImageMethod : public ImageObject {

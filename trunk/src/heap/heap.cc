@@ -36,7 +36,8 @@ Data *Heap::allocate_layout(InstanceType instance_type) {
   return result;
 }
 
-Data *Heap::new_lambda(uint32_t argc, Value *code, Value *constant_pool, Value *tree) {
+Data *Heap::new_lambda(uint32_t argc, Value *code, Value *constant_pool,
+    Value *tree, Context *context) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_layout());
   if (is<AllocationFailed>(val)) return val;
   Lambda *result = cast<Lambda>(val);
@@ -45,6 +46,7 @@ Data *Heap::new_lambda(uint32_t argc, Value *code, Value *constant_pool, Value *
   result->set_constant_pool(constant_pool);
   result->set_tree(tree);
   result->set_outers(roots().empty_tuple());
+  result->set_context(context);
   IF_PARANOID(result->validate());
   return result;
 }
@@ -120,6 +122,14 @@ Data *Heap::allocate_empty_layout(InstanceType instance_type) {
   result->set_name(Smi::from_int(0));
   result->set_methods(roots().empty_tuple());
   ASSERT(result->is_empty());
+  return result;
+}
+
+Data *Heap::new_context() {
+  Data *val = allocate_object(Context::kSize, roots().context_layout());
+  if (is<AllocationFailed>(val)) return val;
+  Context *result = cast<Context>(val);
+  IF_PARANOID(result->validate());
   return result;
 }
 

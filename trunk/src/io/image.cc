@@ -112,6 +112,13 @@ void Image::copy_object_shallow(ImageObject *obj) {
       obj->point_forward(layout);
       break;
     }
+    case CONTEXT_TYPE: {
+      ImageContext *img = image_cast<ImageContext>(obj);
+      USE(img);
+      Context *context = cast<Context>(heap.new_context());
+      obj->point_forward(context);
+      break;
+    }
     case BUILTIN_CALL_TYPE: {
       BuiltinCall *heap_obj = cast<BuiltinCall>(heap.allocate_builtin_call());
       obj->point_forward(heap_obj);
@@ -159,6 +166,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       lambda->set_constant_pool(img->literals()->forward_pointer());
       lambda->set_tree(cast<LambdaExpression>(img->tree()->forward_pointer()));
       lambda->set_outers(Runtime::current().heap().roots().empty_tuple());
+      lambda->set_context(cast<Context>(img->context()->forward_pointer()));
       break;
     }
     case LAYOUT_TYPE: {
@@ -183,6 +191,9 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       ImageUnquoteExpression *img = image_cast<ImageUnquoteExpression>(obj);
       UnquoteExpression *expr = cast<UnquoteExpression>(img->forward_pointer());
       expr->set_index(img->index());
+      break;
+    }
+    case CONTEXT_TYPE: {
       break;
     }
     case STRING_TYPE: case CODE_TYPE: case SINGLETON_TYPE:
@@ -234,6 +245,8 @@ uint32_t ImageObject::size_in_image() {
       return ImageLambda_Size;
     case LAYOUT_TYPE:
       return ImageLayout_Size;
+    case CONTEXT_TYPE:
+      return ImageContext_Size;
     case SINGLETON_TYPE:
       return ImageRoot_Size;
     case BUILTIN_CALL_TYPE:

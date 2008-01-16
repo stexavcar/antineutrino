@@ -11,6 +11,7 @@ public:
   inline Arguments(Runtime &runtime, uint32_t argc, Frame &stack);
   inline Value *self();
   inline Value *operator[](uint32_t index);
+  inline Lambda *lambda();
   Runtime &runtime() { return runtime_; }
   uint32_t count() { return count_; }
 private:

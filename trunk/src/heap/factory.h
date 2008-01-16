@@ -15,7 +15,7 @@ public:
   ref<String> new_string(uint32_t length);
   ref<Tuple> new_tuple(uint32_t size);
   ref<Lambda> new_lambda(uint32_t argc, ref<Value> code,
-      ref<Value> literals, ref<Value> tree);
+      ref<Value> literals, ref<Value> tree, ref<Context> context);
   ref<LambdaExpression> new_lambda_expression(ref<Tuple> params,
       ref<SyntaxTree> body);
   ref<ReturnExpression> new_return_expression(ref<SyntaxTree> value);

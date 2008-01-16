@@ -41,6 +41,16 @@ void Test::to_string() {
   CHECK(tuple->to_string() == "[123, #<tuple>, 789]");
 }
 
+// Checks that the root indices are unique
+void Test::roots() {
+  switch (0) {
+#define DECLARE_ROOT_CASE(n, Type, name, Name, allocator) case n:
+FOR_EACH_ROOT(DECLARE_ROOT_CASE)
+#undef DECLARE_ROOT_CASE
+    return;
+  }
+}
+
 void Test::cast_failure() {
 #ifdef DEBUG
   Value *value = Smi::from_int(0);

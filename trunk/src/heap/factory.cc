@@ -37,8 +37,8 @@ ref<Symbol> Factory::new_symbol(ref<Value> name) {
 }
 
 ref<Lambda> Factory::new_lambda(uint32_t argc, ref<Value> code,
-    ref<Value> literals, ref<Value> tree) {
-  ALLOCATE_CHECKED(Lambda, new_lambda(argc, *code, *literals, *tree));
+    ref<Value> literals, ref<Value> tree, ref<Context> context) {
+  ALLOCATE_CHECKED(Lambda, new_lambda(argc, *code, *literals, *tree, *context));
 }
 
 ref<QuoteTemplate> Factory::new_quote_template(ref<SyntaxTree> body, ref<Tuple> unquotes) {

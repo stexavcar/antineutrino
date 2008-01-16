@@ -3,6 +3,7 @@
 
 #include "heap/memory.h"
 #include "heap/values.h"
+#include "runtime/context.h"
 #include "utils/string.h"
 
 namespace neutrino {
@@ -34,6 +35,8 @@ public:
   Data *new_layout(InstanceType instance_type, uint32_t instance_field_count,
       Tuple *methods, Value *super, Value *name);
   
+  Data *new_context();
+  
   Data *new_task();
   
   Data *new_stack(uint32_t height);
@@ -52,7 +55,8 @@ public:
   
   Data *new_dictionary(Tuple *store);
   
-  Data *new_lambda(uint32_t argc, Value *code, Value *literals, Value *tree);
+  Data *new_lambda(uint32_t argc, Value *code, Value *literals, Value *tree,
+      Context *context);
   
   Data *new_quote_template(SyntaxTree *body, Tuple *unquotes);
   

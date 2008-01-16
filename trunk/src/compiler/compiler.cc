@@ -21,11 +21,13 @@ class Label;
 
 class CompileSession {
 public:
-  CompileSession(Runtime &runtime);
+  CompileSession(Runtime &runtime, ref<Context> context);
   ref<Lambda> compile(ref<LambdaExpression> that, Assembler *enclosing);
   void compile(ref<Lambda> tree, Assembler *enclosing);
   Runtime &runtime() { return runtime_; }
+  ref<Context> context() { return context_; }
 private:
+  ref<Context> context_;
   Runtime &runtime_;
 };
 
@@ -657,7 +659,8 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
     code->at(1) = i;
     code->at(2) = 0;
     code->at(3) = OC_RETURN;
-    ref<Lambda> lambda = factory().new_lambda(0, code, runtime().empty_tuple(), runtime().nuhll());
+    ref<Lambda> lambda = factory().new_lambda(0, code, runtime().empty_tuple(),
+        runtime().nuhll(), session().context());
     methods.set(i, factory().new_method(keyword, lambda));
     ref<SyntaxTree> value = cast<SyntaxTree>(terms.get(2 * i + 1));
     __ codegen(value);
@@ -696,19 +699,19 @@ void Assembler::visit_quote_template(ref<QuoteTemplate> that) {
 // --- C o m p i l e r ---
 // -----------------------
 
-CompileSession::CompileSession(Runtime &runtime)
-    : runtime_(runtime) { }
+CompileSession::CompileSession(Runtime &runtime, ref<Context> context)
+    : runtime_(runtime), context_(context) { }
 
-ref<Lambda> Compiler::compile(ref<LambdaExpression> expr) {
+ref<Lambda> Compiler::compile(ref<LambdaExpression> expr, ref<Context> context) {
   Runtime &runtime = Runtime::current();
   ref<Smi> zero = new_ref(Smi::from_int(0));  
   ref<Lambda> lambda = runtime.factory().new_lambda(
-    expr->params()->length(), zero, zero, expr
+    expr->params()->length(), zero, zero, expr, context
   );
   return lambda;
 }
 
-ref<Lambda> Compiler::compile(ref<SyntaxTree> tree) {
+ref<Lambda> Compiler::compile(ref<SyntaxTree> tree, ref<Context> context) {
   // TODO(2): Fix this once handles can be returned from scopes
   Lambda *result;
   Runtime &runtime = Runtime::current();
@@ -719,21 +722,22 @@ ref<Lambda> Compiler::compile(ref<SyntaxTree> tree) {
       runtime.empty_tuple(),
       ret
     );
-    ref<Lambda> ref_result = compile(expr);
+    ref<Lambda> ref_result = compile(expr, context);
     result = *ref_result;
   }
   return new_ref(result);
 }
 
 void Compiler::compile(ref<Lambda> lambda) {
-  CompileSession session(Runtime::current());
+  CompileSession session(Runtime::current(), lambda.context());
   session.compile(lambda, NULL);
 }
 
-ref<Lambda> CompileSession::compile(ref<LambdaExpression> that, Assembler *enclosing) {
+ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
+    Assembler *enclosing) {
   ref<Smi> zero = new_ref(Smi::from_int(0));
   ref<Lambda> lambda = runtime().factory().new_lambda(
-      that->params()->length(), zero, zero, that
+      that->params()->length(), zero, zero, that, context()
   );
   compile(lambda, enclosing);
   return lambda;

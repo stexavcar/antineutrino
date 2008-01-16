@@ -440,10 +440,11 @@ DEFINE_REF_CLASS(Dictionary);
 // -------------------
 
 #define FOR_EACH_LAMBDA_FIELD(VISIT, arg)                            \
-  VISIT(Value, code,          Code,         arg)                     \
-  VISIT(Value, constant_pool, ConstantPool, arg)                     \
-  VISIT(Value, tree,          Tree,         arg)                     \
-  VISIT(Tuple, outers,        Outers,       arg)
+  VISIT(Value,   code,          Code,         arg)                   \
+  VISIT(Value,   constant_pool, ConstantPool, arg)                   \
+  VISIT(Value,   tree,          Tree,         arg)                   \
+  VISIT(Tuple,   outers,        Outers,       arg)                   \
+  VISIT(Context, context,       Context,      arg)
 
 class Lambda : public Object {
 public:
@@ -461,7 +462,8 @@ public:
   static const uint32_t kConstantPoolOffset = kCodeOffset + kPointerSize;
   static const uint32_t kTreeOffset         = kConstantPoolOffset + kPointerSize;
   static const uint32_t kOutersOffset       = kTreeOffset + kPointerSize;
-  static const uint32_t kSize               = kOutersOffset + kPointerSize;
+  static const uint32_t kContextOffset      = kOutersOffset + kPointerSize;
+  static const uint32_t kSize               = kContextOffset + kPointerSize;
 };
 
 template <> class ref_traits<Lambda> : public ref_traits<Object> {

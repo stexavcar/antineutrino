@@ -8,7 +8,7 @@ namespace neutrino {
 // --- C o m p i l i n g ---
 // -------------------------
 
-ref<Layout> ref_traits<LayoutExpression>::compile() {
+ref<Layout> ref_traits<LayoutExpression>::compile(ref<Context> context) {
   ref<LayoutExpression> self = open(this);
   Factory &factory = Runtime::current().factory();
   ref<Tuple> method_asts = methods();
@@ -16,15 +16,15 @@ ref<Layout> ref_traits<LayoutExpression>::compile() {
   for (uint32_t i = 0; i < method_asts.length(); i++) {
     RefScope scope;
     ref<MethodExpression> method_ast = cast<MethodExpression>(method_asts.get(i));
-    ref<Method> method = method_ast.compile();
+    ref<Method> method = method_ast.compile(context);
     methods.set(i, method);
   }
   return factory.new_layout(INSTANCE_TYPE, 0, methods, super(), name());
 }
 
-ref<Method> ref_traits<MethodExpression>::compile() {
+ref<Method> ref_traits<MethodExpression>::compile(ref<Context> context) {
   ref<MethodExpression> self = open(this);
-  ref<Lambda> code = Compiler::compile(self.lambda());
+  ref<Lambda> code = Compiler::compile(self.lambda(), context);
   ref<Method> result = Runtime::current().factory().new_method(name(), code);
   return result;
 }

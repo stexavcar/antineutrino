@@ -26,6 +26,7 @@ namespace neutrino {
 class Assembler;
 class Layout;
 class Code;
+class Context;
 class Data;
 class Dictionary;
 class DoClause;

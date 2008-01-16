@@ -137,7 +137,8 @@ Data *Builtins::layout_expression_evaluate(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
   ref<LayoutExpression> expr = new_ref(cast<LayoutExpression>(args.self()));
-  ref<Layout> result = expr.compile();
+  ref<Context> context = new_ref(args.lambda()->context());
+  ref<Layout> result = expr.compile(context);
   return *result;
 }
 
@@ -226,7 +227,8 @@ Data *Builtins::raw_print(Arguments &args) {
 
 Data *Builtins::compile_expression(Arguments &args) {
   ref<SyntaxTree> self = new_ref(cast<SyntaxTree>(args.self()));
-  ref<Lambda> code = Compiler::compile(self);
+  ref<Context> context = new_ref(args.lambda()->context());
+  ref<Lambda> code = Compiler::compile(self, context);
   return *code;
 }
 

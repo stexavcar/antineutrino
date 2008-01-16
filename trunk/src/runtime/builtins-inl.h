@@ -15,6 +15,10 @@ Value *Arguments::self() {
   return frame().self(count());
 }
 
+Lambda *Arguments::lambda() {
+  return frame().lambda();
+}
+
 Value *Arguments::operator[](uint32_t index) {
   ASSERT(index < count());
   return frame().argument(count() - index - 1);

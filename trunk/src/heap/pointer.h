@@ -103,7 +103,7 @@ private:
   
 #define MASK(value) ((1 << value) - 1)
 
-  static const uint32_t kSmiTagSize          = 1;
+  static const uint32_t kSmiTagSize          = 2;
   static const uint32_t kObjectTagSize       = 2;
   static const uint32_t kSignalTypeSize      = 2;
   static const uint32_t kSignalPayloadSize   = 28;

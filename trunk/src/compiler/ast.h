@@ -292,7 +292,7 @@ template <>
 class ref_traits<LayoutExpression> : public ref_traits<SyntaxTree> {
 public:
   FOR_EACH_LAYOUT_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
-  ref<Layout> compile();
+  ref<Layout> compile(ref<Context> context);
 };
 
 DEFINE_REF_CLASS(LayoutExpression);
@@ -343,7 +343,7 @@ template <>
 class ref_traits<MethodExpression> : public ref_traits<SyntaxTree> {
 public:
   FOR_EACH_METHOD_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
-  ref<Method> compile();
+  ref<Method> compile(ref<Context> context);
 };
 
 DEFINE_REF_CLASS(MethodExpression);

@@ -1284,7 +1284,7 @@ class Symbol(object):
 # ---------------------------
 
 def tag_as_smi(value):
-  return value << 1
+  return value << 2
 
 def tag_as_object(value):
   assert value & 0x3 is 0
@@ -1293,7 +1293,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 43
+  kRootCount  = 46
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1305,6 +1305,7 @@ class Heap:
     self.roots = self.new_tuple(Heap.kRootCount)
     self.toplevel = self.new_dictionary()
     self.set_root(ROOT_INDEX['Toplevel'], self.toplevel)
+    self.context = self.new_context()
   def set_raw(self, offset, value):
     self.memory[offset] = value
   def set_root(self, index, value):
@@ -1335,6 +1336,9 @@ class Heap:
   def new_class(self, instance_type):
     return ImageLayout(self.allocate(LAYOUT_TYPE, ImageLayout_Size), instance_type)
 
+  def new_context(self):
+    return ImageContext(self.allocate(CONTEXT_TYPE, ImageContext_Size))
+
   def new_protocol(self, name):
     return ImageProtocol(self.allocate(PROTOCOL_TYPE, ImageProtocol_Size), name)
 
@@ -1354,7 +1358,7 @@ class Heap:
     return result
 
   def new_lambda(self, argc, expr):
-    return ImageLambda(self.allocate(LAMBDA_TYPE, ImageLambda_Size), argc, expr)
+    return ImageLambda(self.allocate(LAMBDA_TYPE, ImageLambda_Size), argc, expr, self.context)
 
   def new_method(self, name, body):
     return ImageMethod(self.allocate(METHOD_TYPE, ImageMethod_Size), name, body)
@@ -1519,11 +1523,12 @@ class ImageTuple(ImageObject):
     HEAP.set_field(self, ImageTuple_HeaderSize + index, value)
 
 class ImageLambda(ImageObject):
-  def __init__(self, addr, argc, tree):
+  def __init__(self, addr, argc, tree, context):
     ImageObject.__init__(self, addr)
     self.set_argc(argc)
     self.set_code(0)
     self.set_literals(0)
+    self.set_context(context)
     self.set_tree(tree)
   def set_argc(self, value):
     HEAP.set_raw_field(self, ImageLambda_ArgcOffset, value)
@@ -1533,6 +1538,12 @@ class ImageLambda(ImageObject):
     HEAP.set_field(self, ImageLambda_LiteralsOffset, value)
   def set_tree(self, value):
     HEAP.set_field(self, ImageLambda_TreeOffset, value)
+  def set_context(self, value):
+    HEAP.set_field(self, ImageLambda_ContextOffset, value)
+
+class ImageContext(ImageObject):
+  def __init__(self, addr):
+    ImageObject.__init__(self, addr)
 
 class ImageBuiltinCall(ImageObject):
   def __init__(self, addr, argc, index):
