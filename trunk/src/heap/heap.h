@@ -92,6 +92,9 @@ FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
 private:
   Roots &roots_;
   Memory memory_;
+  
+  static Watch<Counter> &allocation_count() { return allocation_count_; }
+  static Watch<Counter> allocation_count_;
 };
 
 }

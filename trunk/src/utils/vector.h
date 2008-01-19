@@ -13,6 +13,7 @@ namespace neutrino {
 template <typename T>
 class vector {
 public:
+  inline vector();
   IF_DEBUG(inline vector(T *data, uint32_t length));
   IF_NOT_DEBUG(inline vector(T *data));
   inline T &operator[](uint32_t index);

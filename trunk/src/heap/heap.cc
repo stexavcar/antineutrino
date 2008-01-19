@@ -4,16 +4,20 @@
 #include "heap/pointer.h"
 #include "heap/roots.h"
 #include "heap/values-inl.h"
+#include "monitor/monitor-inl.h"
 #include "utils/string-inl.h"
 #include "utils/types-inl.h"
 
 using namespace neutrino;
+
+Watch<Counter> Heap::allocation_count_("allocation count");
 
 Heap::Heap(Roots &roots)
     : roots_(roots)
     , memory_(*this) { }
 
 Data *Heap::allocate_object(uint32_t size, Layout *type) {
+  allocation_count()->increment();
   address addr = memory().allocate(size);
   if (!addr) return AllocationFailed::make(size);
   Object *result = ValuePointer::tag_as_object(addr);

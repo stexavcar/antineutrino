@@ -23,6 +23,7 @@ typedef byte* address;
 // Forward declarations
 namespace neutrino {
 
+class AbstractWatch;
 class Assembler;
 class Layout;
 class Code;

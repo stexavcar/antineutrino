@@ -27,8 +27,8 @@ public:
   Runtime &runtime() { return runtime_; }
   ref<Context> context() { return context_; }
 private:
-  ref<Context> context_;
   Runtime &runtime_;
+  ref<Context> context_;
 };
 
 class Assembler : public Visitor {

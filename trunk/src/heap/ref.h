@@ -50,6 +50,8 @@ private:
   static list_buffer<RefBlock*> block_stack_;
   static RefBlock *spare_block() { return spare_block_; }
   static RefBlock *spare_block_;
+  static Watch<HighWaterMark> &block_count() { return block_count_; }
+  static Watch<HighWaterMark> block_count_;
 };
 
 class RefIterator {

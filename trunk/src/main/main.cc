@@ -1,10 +1,11 @@
 #include <stdio.h>
 
 #include "io/image.h"
-#include "monitor/http.h"
+#include "monitor/monitor.h"
 #include "platform/abort.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
+#include "utils/vector.h"
 
 namespace neutrino {
 
@@ -16,8 +17,6 @@ public:
 
 void Main::main(list<char*> &args) {
   if (!Abort::setup_signal_handler()) return;
-  WebServer *server = WebServer::make();
-  server->start();
   Runtime runtime;
   runtime.initialize();
   Runtime::Scope runtime_scope(runtime);
@@ -30,8 +29,9 @@ void Main::main(list<char*> &args) {
     delete image;
   }
   runtime.start();
-  server->stop();
-  delete server;
+  string_buffer stats;
+  Monitor::write_on(stats);
+  printf("%s", stats.to_string().chars());
 }
 
 /**

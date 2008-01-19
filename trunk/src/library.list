@@ -11,11 +11,7 @@ heap/roots.cc
 heap/space.cc
 heap/values.cc
 io/image.cc
-monitor/handlers.cc
-monitor/http_<platform>.cc
 monitor/monitor.cc
-monitor/resources.cc         # generated
-monitor/web.cc
 platform/<platform>/abort.cc
 runtime/builtins.cc
 runtime/interpreter.cc
