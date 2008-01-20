@@ -19,6 +19,13 @@ T list<T>::operator[](uint32_t index) {
 }
 
 template <typename T>
+list<T> list<T>::sublist(uint32_t start, uint32_t length) {
+  if (length == 0) return list<T>(NULL, 0);
+  ASSERT(start + length < length_);
+  return list<T>(elms_ + start, length);
+}
+
+template <typename T>
 list_buffer<T>::list_buffer() {
   data_ = new T[kInitialCapacity];
   length_ = 0;
@@ -40,6 +47,14 @@ template <typename T>
 void list_buffer<T>::append(T obj) {
   if (length() >= capacity_) extend_capacity();
   data()[length_++] = obj;
+}
+
+template <typename T>
+list<T> list_buffer<T>::to_list() {
+  T *elms = new T[length()];
+  for (uint32_t i = 0; i < length(); i++)
+    elms[i] = data()[i];
+  return list<T>(elms, length());
 }
 
 template <typename T>

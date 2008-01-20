@@ -17,5 +17,6 @@ runtime/builtins.cc
 runtime/interpreter.cc
 runtime/runtime.cc
 utils/conditions.cc
+utils/flags.cc
 utils/nonlocal.cc
 utils/string.cc

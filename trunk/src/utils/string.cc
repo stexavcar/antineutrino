@@ -89,12 +89,7 @@ void string_buffer::ensure_capacity(int required) {
 }
 
 string string_buffer::to_string() {
-  int length = cursor_;
-  char *chars = new char[length + 1];
-  for (int i = 0; i < length; i++)
-    chars[i] = data_[i];
-  chars[length] = '\0';
-  return string(chars, length);
+  return string::dup(raw_string());
 }
 
 string string_buffer::raw_string() {

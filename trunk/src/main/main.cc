@@ -1,10 +1,12 @@
 #include <stdio.h>
 
 #include "io/image.h"
+#include "main/flags.h"
 #include "monitor/monitor.h"
 #include "platform/abort.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
+#include "utils/flags.h"
 #include "utils/vector.h"
 
 namespace neutrino {
@@ -12,35 +14,44 @@ namespace neutrino {
 class Main {
 public:
   static void main(list<char*> &args);
-  static Image *read_image(char *name);
+  static void on_option_error(string message);
+  static Image *read_image(string name);
 };
+
+void Main::on_option_error(string message) {
+  message.println();
+  exit(1);
+}
 
 void Main::main(list<char*> &args) {
   if (!Abort::setup_signal_handler()) return;
+  list<string> files = FlagParser::parse_flags(args, on_option_error);
   Runtime runtime;
   runtime.initialize();
   Runtime::Scope runtime_scope(runtime);
-  for (uint32_t i = 1; i < args.length(); i++) {
+  for (uint32_t i = 0; i < files.length(); i++) {
     RefScope ref_scope;
-    char *arg = args[i];
-    Image *image = read_image(arg);
+    string file = files[i];
+    Image *image = read_image(file);
     bool loaded = runtime.load_image(*image);
     USE(loaded); ASSERT(loaded);
     delete image;
   }
   runtime.start();
-  string_buffer stats;
-  Monitor::write_on(stats);
-  printf("%s", stats.to_string().chars());
+  if (Flags::print_stats_on_exit) {
+    string_buffer stats;
+    Monitor::write_on(stats);
+    printf("%s", stats.to_string().chars());
+  }
 }
 
 /**
  * Reads the contents of the specified file into a string.
  */
-Image *Main::read_image(char *name) {
-  FILE *file = fopen(name, "rb");
+Image *Main::read_image(string name) {
+  FILE *file = fopen(name.chars(), "rb");
   if (file == NULL) {
-    printf("Unable to open %s.\n", name);
+    printf("Unable to open %s.\n", name.chars());
     exit(1);
   }
   fseek(file, 0, SEEK_END);

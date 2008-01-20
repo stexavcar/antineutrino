@@ -17,12 +17,12 @@
 #define SEMI_STATIC_JOIN_HELPER(a, b) a##b
 
 #ifdef DEBUG
-#define IF_DEBUG(arg) arg
-#define IF_NOT_DEBUG(arg) typedef void SEMI_STATIC_JOIN(__IfNotDebug__, __LINE__)
+#define IF_DEBUG(arg)       arg
+#define IF_NOT_DEBUG(arg)   typedef void SEMI_STATIC_JOIN(__IfNotDebug__, __LINE__)
 #define IF_ELSE_DEBUG(t, e) t
 #else
-#define IF_DEBUG(arg) typedef void SEMI_STATIC_JOIN(__IfDebug__, __LINE__)
-#define IF_NOT_DEBUG(arg) arg
+#define IF_DEBUG(arg)       typedef void SEMI_STATIC_JOIN(__IfDebug__, __LINE__)
+#define IF_NOT_DEBUG(arg)   arg
 #define IF_ELSE_DEBUG(t, e) e
 #endif
 

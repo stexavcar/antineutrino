@@ -10,6 +10,11 @@ uint32_t string::operator[](uint32_t index) {
   return chars_[index];
 }
 
+string string::substring(uint32_t start) {
+  ASSERT(start < length());
+  return string(chars_ + start, length_ - start);
+}
+
 }
 
 #endif // _STRING_INL_H

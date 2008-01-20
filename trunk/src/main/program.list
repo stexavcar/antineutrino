@@ -1,4 +1,5 @@
 # These are files that are only used as part of the stand-alone
 # executable but not the library.
 
+main/flags.cc
 main/main.cc
