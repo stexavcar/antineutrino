@@ -13,6 +13,7 @@ namespace neutrino {
 template <typename T>
 class list {
 public:
+  list();
   list(T *elms, uint32_t length);
   uint32_t length() { return length_; }
   T operator[](uint32_t index);

@@ -6,13 +6,16 @@ namespace neutrino {
 
 AbstractRegisterFlag *AbstractRegisterFlag::first_ = NULL;
 
-AbstractRegisterFlag::AbstractRegisterFlag(string name, uint32_t argc)
+AbstractRegisterFlag::AbstractRegisterFlag(string name, int32_t argc)
     : name_(name), argc_(argc), next_(first_) {
   first_ = this;
 }
 
 RegisterFlag<bool>::RegisterFlag(string name, bool *var)
     : AbstractRegisterFlag(name, 0), var_(var) { }
+
+RegisterFlag< list<string> >::RegisterFlag(string name, list<string> *var)
+    : AbstractRegisterFlag(name, -1), var_(var) { }
 
 bool FlagParser::compare_options(string a, string b) {
   if (a.length() != b.length()) return false;
@@ -32,7 +35,8 @@ list<string> FlagParser::parse_flags(list<char*> &args, ErrorHandler on_error) {
     if (str.length() < 2 || str[0] != '-' || str[1] != '-') {
       buf.append(str);
     } else {
-      string name = str.substring(2);
+      bool is_list = (str[str.length() - 1] == '[');
+      string name = is_list ? str.substring(2, str.length() - 3) : str.substring(2);
       AbstractRegisterFlag *option = AbstractRegisterFlag::first_;
       while (option != NULL) {
         if (compare_options(option->name(), name))
@@ -44,8 +48,32 @@ list<string> FlagParser::parse_flags(list<char*> &args, ErrorHandler on_error) {
         message.printf("Unknown option %", str.chars());
         on_error(message.raw_string());
         UNREACHABLE();
+      } else if (is_list) {
+        if (option->argc() >= 0) {
+          string_buffer message;
+          message.printf("% is not a list option", str.chars());
+          on_error(message.raw_string());
+        } else {
+          uint32_t start = cursor;
+          while (cursor < args.length() && !string::equals(args[cursor], "]"))
+            cursor++;
+          if (cursor == args.length()) {
+            string_buffer message;
+            message.printf("Malformed list option %", str.chars());
+            on_error(message.raw_string());
+          } else {
+            list<char*> option_args = args.sublist(start, cursor - start);
+            option->process(option_args);
+            cursor++;
+          }
+        }
       } else {
-        uint32_t argc = option->argc();
+        int32_t argc = option->argc();
+        if (argc < 0) {
+          string_buffer message;
+          message.printf("% is a list option", str.chars());
+          on_error(message.raw_string());
+        }
         if (args.length() < argc + cursor) {
           string_buffer message;
           message.printf("Not enough arguments to %", str.chars());
@@ -63,6 +91,13 @@ list<string> FlagParser::parse_flags(list<char*> &args, ErrorHandler on_error) {
 void RegisterFlag<bool>::process(list<char*> args) {
   ASSERT(args.length() == 0);
   *var_ = !*var_;
+}
+
+void RegisterFlag< list<string> >::process(list<char*> args) {
+  string *array = new string[args.length()];
+  for (uint32_t i = 0; i < args.length(); i++)
+    array[i] = args[i];
+  *var_ = list<string>(array, args.length());
 }
 
 } // neutrino

@@ -1,4 +1,4 @@
 #!/bin/sh
 
 ./tools/compiler.py lib/ $1 -c src/utils/consts.h -o temp.nc
-./build/debug/neutrino temp.nc
+./build/debug/neutrino --images[ temp.nc ]

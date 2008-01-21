@@ -1,7 +1,7 @@
 #include <stdio.h>
 
 #include "io/image.h"
-#include "main/flags.h"
+#include "main/options.h"
 #include "monitor/monitor.h"
 #include "platform/abort.h"
 #include "runtime/runtime-inl.h"
@@ -25,7 +25,8 @@ void Main::on_option_error(string message) {
 
 void Main::main(list<char*> &args) {
   if (!Abort::setup_signal_handler()) return;
-  list<string> files = FlagParser::parse_flags(args, on_option_error);
+  FlagParser::parse_flags(args, on_option_error);
+  list<string> files = Options::images;
   Runtime runtime;
   runtime.initialize();
   Runtime::Scope runtime_scope(runtime);
@@ -38,7 +39,7 @@ void Main::main(list<char*> &args) {
     delete image;
   }
   runtime.start();
-  if (Flags::print_stats_on_exit) {
+  if (Options::print_stats_on_exit) {
     string_buffer stats;
     Monitor::write_on(stats);
     printf("%s", stats.to_string().chars());

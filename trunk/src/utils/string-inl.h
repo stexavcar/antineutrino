@@ -15,6 +15,12 @@ string string::substring(uint32_t start) {
   return string(chars_ + start, length_ - start);
 }
 
+string string::substring(uint32_t start, uint32_t length) {
+  if (length == 0) return string();
+  ASSERT(start + length < length_);
+  return string(chars_ + start, length);
+}
+
 }
 
 #endif // _STRING_INL_H

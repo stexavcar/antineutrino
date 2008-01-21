@@ -57,10 +57,10 @@ class PyNeutrinoTestCase:
   def __str__(self):
     return self.target + ' ' + basename(self.test_case)[:-3]
   def command(self):
-    list = [ self.executable, self.test_case ]
+    list = [ self.executable, '--images[', self.test_case, ']' ]
     return ' '.join(list)
   def run(self):
-    (exit_code, output, errors) = execute(self.executable, [ '', self.test_case ])
+    (exit_code, output, errors) = execute(self.executable, [ '', '--images[', self.test_case, ']' ])
     if exit_code == 0: return Result(Result.PASSED, output=output, error=errors)
     else: return Result(Result.FAILED, output=output, error=errors)
 

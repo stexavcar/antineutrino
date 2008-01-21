@@ -17,6 +17,7 @@ public:
   inline uint32_t length() { return length_; }
   inline uint32_t operator[](uint32_t index);
   inline string substring(uint32_t start);
+  inline string substring(uint32_t start, uint32_t length);
   
   /**
    * Returns the characters of this string.  The value returned is

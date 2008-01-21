@@ -7,6 +7,11 @@
 namespace neutrino {
 
 template <typename T>
+list<T>::list()
+    : elms_(NULL)
+    , length_(0) { }
+
+template <typename T>
 list<T>::list(T elms[], uint32_t length)
     : elms_(elms)
     , length_(length) { }
