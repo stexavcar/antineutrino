@@ -1,6 +1,7 @@
 #ifndef _RUNTIME_INTERPRETER_INL
 #define _RUNTIME_INTERPRETER_INL
 
+#include "heap/pointer-inl.h"
 #include "runtime/interpreter.h"
 #include "utils/checks.h"
 

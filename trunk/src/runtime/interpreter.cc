@@ -1,10 +1,10 @@
 #include "heap/ref-inl.h"
-#include "heap/values-inl.h"
 #include "runtime/builtins-inl.h"
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/vector-inl.h"
 #include "utils/checks.h"
+#include "values/values-inl.h"
 
 namespace neutrino {
 

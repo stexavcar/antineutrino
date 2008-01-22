@@ -2,8 +2,8 @@
 #include "heap/memory-inl.h"
 #include "heap/ref-inl.h"
 #include "heap/space.h"
-#include "heap/values-inl.h"
 #include "utils/checks.h"
+#include "values/values-inl.h"
 
 using namespace neutrino;
 

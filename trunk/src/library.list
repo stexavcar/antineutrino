@@ -9,7 +9,6 @@ heap/memory.cc
 heap/ref.cc
 heap/roots.cc
 heap/space.cc
-heap/values.cc
 io/image.cc
 monitor/monitor.cc
 platform/<platform>/abort.cc
@@ -20,3 +19,4 @@ utils/conditions.cc
 utils/flags.cc
 utils/nonlocal.cc
 utils/string.cc
+values/values.cc

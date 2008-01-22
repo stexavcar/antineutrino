@@ -1,6 +1,6 @@
-#include "heap/values-inl.h"
 #include "cctest/tests-inl.h"
 #include "runtime/runtime.h"
+#include "values/values-inl.h"
 
 using namespace neutrino;
 

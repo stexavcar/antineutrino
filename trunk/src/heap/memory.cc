@@ -1,8 +1,8 @@
 #include <string.h>
 
 #include "heap/memory-inl.h"
-#include "heap/values-inl.h"
 #include "monitor/monitor-inl.h"
+#include "values/values-inl.h"
 
 namespace neutrino {
 

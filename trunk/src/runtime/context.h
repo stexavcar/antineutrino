@@ -1,6 +1,8 @@
 #ifndef _RUNTIME_CONTEXT
 #define _RUNTIME_CONTEXT
 
+#include "values/values.h"
+
 namespace neutrino {
 
 #define FOR_EACH_CONTEXT_FIELD(VISIT, arg)

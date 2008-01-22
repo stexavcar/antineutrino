@@ -1,8 +1,8 @@
 #include "heap/ref-inl.h"
 #include "heap/heap.h"
-#include "heap/values-inl.h"
 #include "runtime/runtime.h"
 #include "cctest/tests-inl.h"
+#include "values/values-inl.h"
 
 using namespace neutrino;
 

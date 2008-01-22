@@ -2,7 +2,7 @@
 #define _IO_AST_INL
 
 #include "compiler/ast.h"
-#include "heap/values-inl.h"
+#include "values/values-inl.h"
 
 namespace neutrino {
 

@@ -4,11 +4,11 @@
 #include "compiler/ast.h"
 #include "heap/pointer-inl.h"
 #include "heap/ref-inl.h"
-#include "heap/values.h"
 #include "runtime/context.h"
 #include "utils/vector-inl.h"
 #include "utils/checks.h"
 #include "utils/types-inl.h"
+#include "values/values.h"
 
 namespace neutrino {
 

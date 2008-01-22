@@ -1,9 +1,9 @@
 #ifndef _UTILS_CHECK
 #define _UTILS_CHECK
 
-#include "heap/values.h"
 #include "utils/conditions.h"
 #include "utils/globals.h"
+#include "values/values.h"
 
 namespace neutrino {
 

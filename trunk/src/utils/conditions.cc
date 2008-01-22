@@ -1,8 +1,8 @@
 #include <stdarg.h>
 
-#include "heap/values-inl.h"
 #include "platform/abort.h"
 #include "utils/checks.h"
+#include "values/values-inl.h"
 
 namespace neutrino {
 

@@ -1,10 +1,10 @@
 #include "compiler/ast-inl.h"
 #include "compiler/compiler.h"
-#include "heap/values-inl.h"
 #include "runtime/builtins-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/checks.h"
 #include "utils/globals.h"
+#include "values/values-inl.h"
 
 namespace neutrino {
 

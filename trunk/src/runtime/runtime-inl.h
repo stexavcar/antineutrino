@@ -3,9 +3,9 @@
 
 #include "heap/heap-inl.h"
 #include "heap/roots-inl.h"
-#include "heap/values-inl.h"
 #include "runtime/runtime.h"
 #include "utils/checks.h"
+#include "values/values-inl.h"
 
 namespace neutrino {
 

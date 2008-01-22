@@ -1,7 +1,7 @@
 #include "heap/ref-inl.h"
-#include "heap/values-inl.h"
 #include "io/image.h"
 #include "runtime/runtime-inl.h"
+#include "values/values-inl.h"
 
 namespace neutrino {
 

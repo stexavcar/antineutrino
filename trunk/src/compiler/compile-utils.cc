@@ -1,7 +1,7 @@
 #include "compiler/compile-utils-inl.h"
 #include "heap/factory.h"
 #include "heap/ref-inl.h"
-#include "heap/values-inl.h"
+#include "values/values-inl.h"
 
 namespace neutrino {
 
