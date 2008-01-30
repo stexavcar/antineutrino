@@ -97,23 +97,25 @@ def read_files_from(config, root, file):
         cooked_lines.append(line)
   return cooked_lines
 
-HEADER_PATTERN = re.compile('^(\w+)\s*(\*?)\s*(?:\:\s*([\w\s]+))?{$')
+HEADER_PATTERN = re.compile('^(\w+)\s*(\*?)\s*(?:\[\s*(\w*)\s*\])?\s*(?:\:\s*([\w\s]+))?{$')
 PROPERTY_PATTERN = re.compile('^(\w+)\s*(\:\=|\+\=)(.*)$')
 
 class Configuration:
-  def __init__(self, sections, targets):
+  def __init__(self, sections, targets, options):
     self.sections = sections
     self.targets = targets
+    self.options = options
   def __repr__(self):
     return 'config ' + str(self.sections)
-  def get_properties(self, name):
+  def get_properties(self, name, options):
     properties = { }
-    self.load_section_into(name, properties)
+    self.load_section_into(self.sections[name], properties)
+    for (name, value) in options.items():
+      self.load_section_into(self.options[name].values[value], properties)
     return properties
-  def load_section_into(self, name, properties):
-    section = self.sections[name]
+  def load_section_into(self, section, properties):
     for super in section.supers:
-      self.load_section_into(super, properties)
+      self.load_section_into(self.sections[super], properties)
     for (key, (value, is_extension)) in section.properties.items():
       if (key in properties) and is_extension:
         old_value = properties[key]
@@ -133,6 +135,12 @@ class Section:
   def __repr__(self):
     return 'section ' + str(self.properties)
 
+class Option:
+  def __init__(self, name):
+    self.name = name
+    self.values = { }
+    self.default = None
+
 def read_config_file(name, parent=None):
   lines = read_lines_from(name)
   # Mapping from section names to a mapping from property name to a
@@ -140,9 +148,12 @@ def read_config_file(name, parent=None):
   sections = { }
   # A list of names of targets
   targets = [ ]
+  # The set of available options
+  options = { }
   if parent:
     sections.update(**parent.sections)
     targets += parent.targets
+    options.update(**parent.options)
   index = 0
   # Function used to signal when an unexpected line occurs
   def unexpected_line():
@@ -159,9 +170,10 @@ def read_config_file(name, parent=None):
     if not header_match: unexpected_line()
     index = index + 1
     section = header_match.group(1)
+    option_name = (header_match.group(3))
     is_target = (header_match.group(2) == '*')
-    if is_target: targets.append(section)
-    supers_str = header_match.group(3)
+    if is_target and not option_name: targets.append(section)
+    supers_str = header_match.group(4)
     if supers_str: supers = supers_str.split()
     else: supers = []
     # Read the lines following the section header and load them into
@@ -181,9 +193,16 @@ def read_config_file(name, parent=None):
       value = parse_value(property_match.group(3).strip())
       properties[name] = (value, operator == '+=')
       index = index + 1
-    sections[section] = Section(section, supers, properties)
+    obj = Section(section, supers, properties)
+    sections[section] = obj
+    if option_name:
+      if not option_name in options:
+        options[option_name] = Option(option_name)
+      option = options[option_name]
+      option.values[section] = obj
+      if is_target: option.default = section
     index = index + 1
-  return Configuration(sections, targets)
+  return Configuration(sections, targets, options)
 
 # Apply a set of items read from a configuration file to an
 # environment

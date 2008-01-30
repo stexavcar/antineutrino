@@ -61,6 +61,16 @@ options.Add(EnumOption(
   'color',
   allowed_values = ['dots', 'color']
 ))
+for option in configurations.options.values():
+  name = option.name
+  values = [ sec.name for sec in option.values.values() ]
+  default = option.default
+  options.Add(EnumOption(
+    name,
+    name,
+    default,
+    allowed_values = values
+  ))
 common = Environment(
   options = options,
   CPPPATH = [abspath(src), abspath(join(root, 'test'))],
@@ -92,10 +102,13 @@ build_dir = 'bin'
 # Sets up the build for the various targets defined in the target
 # configuration file in src/
 def load_source_targets():
+  options = { }
+  for option in configurations.options.values():
+    options[option.name] = common[option.name]
   # At this point we don't use the contents of the section, we
   # just delegate to the SConscript file in src/
   for target in config['targets'].targets:
-    properties = config['targets'].get_properties(target)
+    properties = config['targets'].get_properties(target, options)
     if (common['mode'] == 'all') or (common['mode'] == target):
       if common['mode'] == 'all': prefix = target + '-'
       else: prefix = ''
