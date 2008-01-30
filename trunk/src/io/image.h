@@ -98,9 +98,15 @@ public:
   inline ImageContext *context();
 };
 
+class ImageSignature : public ImageObject {
+public:
+  inline ImageTuple *parameters();
+};
+
 class ImageMethod : public ImageObject {
 public:
   inline ImageString *name();
+  inline ImageSignature *signature();
   inline ImageLambda *lambda();
 };
 

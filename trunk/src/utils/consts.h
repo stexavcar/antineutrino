@@ -18,7 +18,8 @@
   VISIT(1,  DICTIONARY,             Dictionary,            dictionary)             \
   VISIT(2,  METHOD,                 Method,                method)                 \
   VISIT(3,  PROTOCOL,               Protocol,              protocol)               \
-  VISIT(4,  TASK,                   Task,                  task)
+  VISIT(4,  TASK,                   Task,                  task)                   \
+  VISIT(73, SIGNATURE,              Signature,             signature)
 
 #define FOR_EACH_OBJECT_TYPE(VISIT)                                                \
   VISIT(5,  LAYOUT,                 Layout,                0)                      \
@@ -122,8 +123,11 @@
   VISIT(2, Protocol,              NameOffset)                        \
   VISIT(3, Protocol,              Size)                              \
   VISIT(1, Method,                NameOffset)                        \
-  VISIT(2, Method,                LambdaOffset)                      \
-  VISIT(3, Method,                Size)                              \
+  VISIT(2, Method,                SignatureOffset)                   \
+  VISIT(3, Method,                LambdaOffset)                      \
+  VISIT(4, Method,                Size)                              \
+  VISIT(1, Signature,             ParametersOffset)                  \
+  VISIT(2, Signature,             Size)                              \
   VISIT(1, Root,                  IndexOffset)                       \
   VISIT(2, Root,                  Size)                              \
   VISIT(1, LiteralExpression,     ValueOffset)                       \
@@ -251,7 +255,8 @@
   VISIT(42, Layout,     on_clause_layout,              OnClause,              allocate_empty_layout(ON_CLAUSE_TYPE))              \
   VISIT(43, Layout,     do_on_expression_layout,       DoOnExpression,        allocate_empty_layout(DO_ON_EXPRESSION_TYPE))       \
   VISIT(44, Layout,     instantiate_expression_layout, InstantiateExpression, allocate_empty_layout(INSTANTIATE_EXPRESSION_TYPE)) \
-  VISIT(45, Layout,     context_layout,                Context,               allocate_empty_layout(CONTEXT_TYPE))
+  VISIT(45, Layout,     context_layout,                Context,               allocate_empty_layout(CONTEXT_TYPE))                \
+  VISIT(46, Layout,     signature_layout,              Signature,             allocate_empty_layout(SIGNATURE_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                            \

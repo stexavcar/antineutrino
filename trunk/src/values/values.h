@@ -497,30 +497,6 @@ class True : public Singleton { };
 class False : public Singleton { };
 
 
-// -------------------
-// --- M e t h o d ---
-// -------------------
-
-#define FOR_EACH_METHOD_FIELD(VISIT, arg)                            \
-  VISIT(String, name,   Name,   arg)                                 \
-  VISIT(Lambda, lambda, Lambda, arg)
-
-class Method : public Object {
-public:
-  FOR_EACH_METHOD_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
-  static const int kNameOffset   = Object::kHeaderSize;
-  static const int kLambdaOffset = kNameOffset + kPointerSize;
-  static const int kSize         = kLambdaOffset + kPointerSize;
-};
-
-template <> class ref_traits<Method> : public ref_traits<Object> {
-public:
-  FOR_EACH_METHOD_FIELD(DECLARE_REF_FIELD, 0)
-};
-
-DEFINE_REF_CLASS(Method);
-
 // -----------------------
 // --- P r o t o c o l ---
 // -----------------------
@@ -638,5 +614,7 @@ class ForwardPointer : public Data {
 };
 
 } // neutrino
+
+#include "values/method.h"
 
 #endif // _VALUES

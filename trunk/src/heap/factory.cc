@@ -66,8 +66,13 @@ ref<Code> Factory::new_code(uint32_t size) {
   ALLOCATE_CHECKED(Code, new_code(size));
 }
 
-ref<Method> Factory::new_method(ref<String> name, ref<Lambda> lambda) {
-  ALLOCATE_CHECKED(Method, new_method(*name, *lambda));
+ref<Signature> Factory::new_signature(ref<Tuple> parameters) {
+  ALLOCATE_CHECKED(Signature, new_signature(*parameters));
+}
+
+ref<Method> Factory::new_method(ref<String> name, ref<Signature> signature,
+    ref<Lambda> lambda) {
+  ALLOCATE_CHECKED(Method, new_method(*name, *signature, *lambda));
 }
 
 ref<Layout> Factory::allocate_empty_layout(InstanceType instance_type) {

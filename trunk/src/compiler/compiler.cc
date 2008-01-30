@@ -650,6 +650,7 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
   ref<Tuple> terms = that.terms();
   uint32_t term_count = terms.length() / 2;
   ref<Tuple> methods = factory().new_tuple(term_count);
+  ref<Signature> signature = factory().new_signature(factory().new_tuple(0));
   __ codegen(that.receiver());
   for (uint32_t i = 0; i < term_count; i++) {
     ref<String> keyword = cast<String>(terms.get(2 * i));
@@ -661,7 +662,7 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
     code->at(3) = OC_RETURN;
     ref<Lambda> lambda = factory().new_lambda(0, code, runtime().empty_tuple(),
         runtime().nuhll(), session().context());
-    methods.set(i, factory().new_method(keyword, lambda));
+    methods.set(i, factory().new_method(keyword, signature, lambda));
     ref<SyntaxTree> value = cast<SyntaxTree>(terms.get(2 * i + 1));
     __ codegen(value);
   }

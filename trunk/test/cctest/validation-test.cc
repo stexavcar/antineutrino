@@ -8,7 +8,9 @@ void Test::validation() {
   LocalRuntime runtime;
   String *name = cast<String>(runtime.heap().new_string(0));
   Lambda *lambda = cast<Lambda>(runtime.heap().allocate_lambda(0));
-  Method *method = cast<Method>(runtime.heap().new_method(name, lambda));
+  Tuple *params = cast<Tuple>(runtime.heap().new_tuple(0));
+  Signature *signature = cast<Signature>(runtime.heap().new_signature(params));
+  Method *method = cast<Method>(runtime.heap().new_method(name, signature, lambda));
   ASSERT(method->validate());
   method->set_lambda(reinterpret_cast<Lambda*>(name));
   ASSERT_ABORTS(VALIDATION, method->validate());

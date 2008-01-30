@@ -156,12 +156,22 @@ Data *Heap::allocate_empty_protocol() {
   return allocate_object(Protocol::kSize, roots().protocol_layout());
 }
 
-Data *Heap::new_method(String *name, Lambda *lambda) {
+Data *Heap::new_method(String *name, Signature *signature, Lambda *lambda) {
   Data *val = allocate_object(Method::kSize, roots().method_layout());
   if (is<AllocationFailed>(val)) return val;
   Method *result = cast<Method>(val);
   result->set_name(name);
+  result->set_signature(signature);
   result->set_lambda(lambda);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
+Data *Heap::new_signature(Tuple *parameters) {
+  Data *val = allocate_object(Signature::kSize, roots().signature_layout());
+  if (is<AllocationFailed>(val)) return val;
+  Signature *result = cast<Signature>(val);
+  result->set_parameters(parameters);
   IF_PARANOID(result->validate());
   return result;
 }

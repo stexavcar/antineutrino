@@ -80,11 +80,13 @@ FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
   Data *new_abstract_buffer(uint32_t size, Layout *layout);
   
   template <typename T> Data *new_buffer(uint32_t size);
-  
+
   Data *new_code(uint32_t size);
+
+  Data *new_method(String *name, Signature *signature, Lambda *lambda);
   
-  Data *new_method(String *name, Lambda *lambda);
-    
+  Data *new_signature(Tuple *parameters);
+
   Data *new_instance(Layout *layout);
 
   Memory &memory() { return memory_; }

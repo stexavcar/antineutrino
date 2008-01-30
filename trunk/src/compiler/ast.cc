@@ -25,7 +25,9 @@ ref<Layout> ref_traits<LayoutExpression>::compile(ref<Context> context) {
 ref<Method> ref_traits<MethodExpression>::compile(ref<Context> context) {
   ref<MethodExpression> self = open(this);
   ref<Lambda> code = Compiler::compile(self.lambda(), context);
-  ref<Method> result = Runtime::current().factory().new_method(name(), code);
+  Factory &factory = Runtime::current().factory();
+  ref<Signature> signature = factory.new_signature(factory.new_tuple(0));
+  ref<Method> result = factory.new_method(name(), signature, code);
   return result;
 }
 

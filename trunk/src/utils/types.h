@@ -52,6 +52,7 @@ class ReturnExpression;
 class Roots;
 class Runtime;
 class SemiSpace;
+class Signature;
 class Smi;
 class Stack;
 class StackFlags;

@@ -916,7 +916,7 @@ class Method(SyntaxTree):
     self.fun.accept(visitor)
   def compile(self):
     body = self.fun.compile()
-    return HEAP.new_method(HEAP.new_string(self.name), body)
+    return HEAP.new_method(HEAP.new_string(self.name), HEAP.new_signature(), body)
   def quote(self):
     fun = self.fun.quote()
     return HEAP.new_method_expression(HEAP.new_string(self.name), fun)
@@ -1293,7 +1293,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 46
+  kRootCount  = 47
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1306,6 +1306,7 @@ class Heap:
     self.toplevel = self.new_dictionary()
     self.set_root(ROOT_INDEX['Toplevel'], self.toplevel)
     self.context = self.new_context()
+    self.empty_tuple = self.new_tuple(length = 0)
   def set_raw(self, offset, value):
     self.memory[offset] = value
   def set_root(self, index, value):
@@ -1360,8 +1361,11 @@ class Heap:
   def new_lambda(self, argc, expr):
     return ImageLambda(self.allocate(LAMBDA_TYPE, ImageLambda_Size), argc, expr, self.context)
 
-  def new_method(self, name, body):
-    return ImageMethod(self.allocate(METHOD_TYPE, ImageMethod_Size), name, body)
+  def new_method(self, name, signature, body):
+    return ImageMethod(self.allocate(METHOD_TYPE, ImageMethod_Size), name, signature, body)
+
+  def new_signature(self):
+    return ImageSignature(self.allocate(SIGNATURE_TYPE, ImageSignature_Size), self.empty_tuple)
 
   def new_lambda_expression(self, params, body):
     return ImageLambdaExpression(self.allocate(LAMBDA_EXPRESSION_TYPE, ImageLambdaExpression_Size), params, body)
@@ -1556,14 +1560,22 @@ class ImageBuiltinCall(ImageObject):
     HEAP.set_raw_field(self, ImageBuiltinCall_IndexOffset, value)
 
 class ImageMethod(ImageObject):
-  def __init__(self, addr, name, body):
+  def __init__(self, addr, name, signature, body):
     ImageObject.__init__(self, addr)
     self.set_name(name)
+    self.set_signature(signature)
     self.set_body(body)
   def set_name(self, value):
     HEAP.set_field(self, ImageMethod_NameOffset, value)
+  def set_signature(self, value):
+    HEAP.set_field(self, ImageMethod_SignatureOffset, value)
   def set_body(self, value):
     HEAP.set_field(self, ImageMethod_LambdaOffset, value)
+
+class ImageSignature(ImageObject):
+  def __init__(self, addr, parameters):
+    ImageObject.__init__(self, addr)
+    HEAP.set_field(self, ImageSignature_ParametersOffset, parameters)
 
 class ImageString(ImageObject):
   def __init__(self, addr, length):
