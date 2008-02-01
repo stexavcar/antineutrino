@@ -1,5 +1,5 @@
-# The root of the neutrino class hierarchy
-class Object {
+# The root of the neutrino protocol hierarchy
+protocol Object {
 
   internal def operator=(that);
   internal def to_string();

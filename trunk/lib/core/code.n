@@ -1,7 +1,7 @@
-internal class Code {
+internal protocol Code {
 
 }
 
-internal class Method {
+internal protocol Method {
 
 }

@@ -1,3 +1,3 @@
-internal class Void {
+internal protocol Void {
 
 }

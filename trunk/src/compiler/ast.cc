@@ -8,8 +8,8 @@ namespace neutrino {
 // --- C o m p i l i n g ---
 // -------------------------
 
-ref<Layout> ref_traits<LayoutExpression>::compile(ref<Context> context) {
-  ref<LayoutExpression> self = open(this);
+ref<Protocol> ref_traits<ProtocolExpression>::compile(ref<Context> context) {
+  ref<ProtocolExpression> self = open(this);
   Factory &factory = Runtime::current().factory();
   ref<Tuple> method_asts = methods();
   ref<Tuple> methods = factory.new_tuple(method_asts.length());
@@ -19,7 +19,7 @@ ref<Layout> ref_traits<LayoutExpression>::compile(ref<Context> context) {
     ref<Method> method = method_ast.compile(context);
     methods.set(i, method);
   }
-  return factory.new_layout(INSTANCE_TYPE, 0, methods, super(), name());
+  return factory.new_protocol(methods, super(), name());
 }
 
 ref<Method> ref_traits<MethodExpression>::compile(ref<Context> context) {
@@ -101,8 +101,8 @@ static void unparse_invoke_expression_on(InvokeExpression *obj, UnparseData &dat
   data->append(')');
 }
 
-static void unparse_layout_expression(LayoutExpression *obj, UnparseData &data) {
-  data->append("class ");
+static void unparse_protocol_expression(ProtocolExpression *obj, UnparseData &data) {
+  data->append("protocol ");
   obj->name()->write_on(data.out(), Data::UNQUOTED);
   data->append(" {");
   Tuple *methods = obj->methods();
@@ -201,8 +201,8 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
   case INVOKE_EXPRESSION_TYPE:
     unparse_invoke_expression_on(cast<InvokeExpression>(obj), data);
     break;
-  case LAYOUT_EXPRESSION_TYPE:
-    unparse_layout_expression(cast<LayoutExpression>(obj), data);
+  case PROTOCOL_EXPRESSION_TYPE:
+    unparse_protocol_expression(cast<ProtocolExpression>(obj), data);
     break;
   case METHOD_EXPRESSION_TYPE:
     unparse_method_expression(cast<MethodExpression>(obj), data);

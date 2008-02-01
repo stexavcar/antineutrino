@@ -671,7 +671,7 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
   __ instantiate(layout);
 }
 
-void Assembler::visit_layout_expression(ref<LayoutExpression> that) {
+void Assembler::visit_protocol_expression(ref<ProtocolExpression> that) {
   visit_syntax_tree(that);
 }
 

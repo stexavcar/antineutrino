@@ -70,7 +70,7 @@
 #define FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)                               \
   VISIT(53, LITERAL_EXPRESSION,     LiteralExpression,     literal_expression)     \
   VISIT(54, INVOKE_EXPRESSION,      InvokeExpression,      invoke_expression)      \
-  VISIT(55, LAYOUT_EXPRESSION,      LayoutExpression,      layout_expression)      \
+  VISIT(55, PROTOCOL_EXPRESSION,    ProtocolExpression,    protocol_expression)    \
   VISIT(56, RETURN_EXPRESSION,      ReturnExpression,      return_expression)      \
   VISIT(57, METHOD_EXPRESSION,      MethodExpression,      method_expression)      \
   VISIT(58, SEQUENCE_EXPRESSION,    SequenceExpression,    sequence_expression)    \
@@ -141,10 +141,10 @@
   VISIT(3, InstantiateExpression, NameOffset)                        \
   VISIT(4, InstantiateExpression, ArgumentsOffset)                   \
   VISIT(5, InstantiateExpression, Size)                              \
-  VISIT(1, LayoutExpression,      NameOffset)                        \
-  VISIT(2, LayoutExpression,      MethodsOffset)                     \
-  VISIT(3, LayoutExpression,      SuperOffset)                       \
-  VISIT(4, LayoutExpression,      Size)                              \
+  VISIT(1, ProtocolExpression,    NameOffset)                        \
+  VISIT(2, ProtocolExpression,    MethodsOffset)                     \
+  VISIT(3, ProtocolExpression,    SuperOffset)                       \
+  VISIT(4, ProtocolExpression,    Size)                              \
   VISIT(1, ReturnExpression,      ValueOffset)                       \
   VISIT(2, ReturnExpression,      Size)                              \
   VISIT(1, MethodExpression,      NameOffset)                        \
@@ -232,7 +232,7 @@
   VISIT(19, Layout,     method_layout,                 Method,                allocate_empty_layout(METHOD_TYPE))                 \
   VISIT(20, Layout,     smi_layout,                    SmallInteger,          allocate_empty_layout(SMI_TYPE))                    \
   VISIT(21, Layout,     invoke_expression_layout,      InvokeExpression,      allocate_empty_layout(INVOKE_EXPRESSION_TYPE))      \
-  VISIT(22, Layout,     layout_expression_layout,      LayoutExpression,      allocate_empty_layout(LAYOUT_EXPRESSION_TYPE))      \
+  VISIT(22, Layout,     protocol_expression_layout,    ProtocolExpression,    allocate_empty_layout(PROTOCOL_EXPRESSION_TYPE))    \
   VISIT(23, Layout,     return_expression_layout,      ReturnExpression,      allocate_empty_layout(RETURN_EXPRESSION_TYPE))      \
   VISIT(24, Layout,     method_expression_layout,      MethodExpression,      allocate_empty_layout(METHOD_EXPRESSION_TYPE))      \
   VISIT(25, Layout,     sequence_expression_layout,    SequenceExpression,    allocate_empty_layout(SEQUENCE_EXPRESSION_TYPE))    \
@@ -290,14 +290,14 @@
   VISIT(Expression,            expression,             EXPRESSION)             \
   VISIT(Lambda,                lambda,                 LAMBDA)                 \
   VISIT(Tuple,                 tuple,                  TUPLE)                  \
-  VISIT(Layout,                layout,                 LAYOUT)                 \
+  VISIT(Protocol,              protocol,               PROTOCOL)               \
   VISIT(Dictionary,            dictionary,             DICTIONARY)             \
   VISIT(Buffer,                buffer,                 BUFFER)                 \
   VISIT(Code,                  code,                   CODE)                   \
   VISIT(Method,                method,                 METHOD)                 \
   VISIT(LiteralExpression,     literal_expression,     LITERAL_EXPRESSION)     \
   VISIT(InvokeExpression,      invoke_expression,      INVOKE_EXPRESSION)      \
-  VISIT(LayoutExpression,      layout_expression,      LAYOUT_EXPRESSION)      \
+  VISIT(ProtocolExpression,    protocol_expression,    PROTOCOL_EXPRESSION)    \
   VISIT(ThisExpression,        this_expression,        THIS_EXPRESSION)        \
   VISIT(LocalDefinition,       local_definition,       LOCAL_DEFINITION)       \
   VISIT(LambdaExpression,      lambda_expression,      LAMBDA_EXPRESSION)      \
@@ -326,22 +326,22 @@
  * implementation must be added in builtins.cc.
  */
 #define FOR_EACH_BUILTIN_METHOD(VISIT)                               \
-  VISIT(0,  string,            length,      "||")                    \
-  VISIT(1,  string,            eq,          "=")                     \
-  VISIT(2,  string,            plus,        "+")                     \
-  VISIT(10, smi,               plus,        "+")                     \
-  VISIT(11, smi,               minus,       "-")                     \
-  VISIT(12, smi,               times,       "*")                     \
-  VISIT(13, smi,               divide,      "/")                     \
-  VISIT(14, smi,               abs,         "||")                    \
-  VISIT(20, object,            eq,          "=")                     \
-  VISIT(21, object,            to_string,   "to_string")             \
-  VISIT(30, layout_expression, evaluate,    "evaluate")              \
-  VISIT(40, layout,            new,         "new")                   \
-  VISIT(41, tuple,             eq,          "=")                     \
-  VISIT(42, lambda,            disassemble, "disassemble")           \
-  VISIT(43, lambda_expression, params,      "parameters")            \
-  VISIT(44, lambda_expression, body,        "body")
+  VISIT(0,  string,              length,      "||")                  \
+  VISIT(1,  string,              eq,          "=")                   \
+  VISIT(2,  string,              plus,        "+")                   \
+  VISIT(10, smi,                 plus,        "+")                   \
+  VISIT(11, smi,                 minus,       "-")                   \
+  VISIT(12, smi,                 times,       "*")                   \
+  VISIT(13, smi,                 divide,      "/")                   \
+  VISIT(14, smi,                 abs,         "||")                  \
+  VISIT(20, object,              eq,          "=")                   \
+  VISIT(21, object,              to_string,   "to_string")           \
+  VISIT(30, protocol_expression, evaluate,    "evaluate")            \
+  VISIT(40, protocol,            new,         "new")                 \
+  VISIT(41, tuple,               eq,          "=")                   \
+  VISIT(42, lambda,              disassemble, "disassemble")         \
+  VISIT(43, lambda_expression,   params,      "parameters")          \
+  VISIT(44, lambda_expression,   body,        "body")
 
 
 // -------------------------------------------

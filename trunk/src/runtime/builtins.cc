@@ -133,12 +133,12 @@ Data *Builtins::object_to_string(Arguments &args) {
 // --- C l a s s   E x p r e s s i o n ---
 // ---------------------------------------
 
-Data *Builtins::layout_expression_evaluate(Arguments &args) {
+Data *Builtins::protocol_expression_evaluate(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
-  ref<LayoutExpression> expr = new_ref(cast<LayoutExpression>(args.self()));
+  ref<ProtocolExpression> expr = new_ref(cast<ProtocolExpression>(args.self()));
   ref<Context> context = new_ref(args.lambda()->context());
-  ref<Layout> result = expr.compile(context);
+  ref<Protocol> result = expr.compile(context);
   return *result;
 }
 
@@ -147,7 +147,7 @@ Data *Builtins::layout_expression_evaluate(Arguments &args) {
 // --- C l a s s ---
 // -----------------
 
-Data *Builtins::layout_new(Arguments &args) {
+Data *Builtins::protocol_new(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
   Runtime &runtime = Runtime::current();

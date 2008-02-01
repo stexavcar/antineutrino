@@ -1,13 +1,13 @@
-class Boolean {
+protocol Boolean {
   
 }
 
-# The class of the singleton true value
-internal class True : Boolean {
+# The protocol of the singleton true value
+internal protocol True : Boolean {
 
 }
 
-# The class of the singleton false value
-internal class False : Boolean {
+# The protocol of the singleton false value
+internal protocol False : Boolean {
   
 }

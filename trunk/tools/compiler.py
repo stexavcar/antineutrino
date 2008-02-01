@@ -391,7 +391,7 @@ class Parser:
     elif self.token().is_keyword('protocol'):
       return self.parse_protocol_declaration(modifiers)
     else:
-      return self.parse_class_declaration(modifiers)
+      assert False
 
   def is_modifier(self, token):
     return token.is_keyword('internal')
@@ -427,19 +427,6 @@ class Parser:
   def parse_protocol_declaration(self, modifiers):
     self.expect_keyword('protocol')
     name = self.expect_ident()
-    self.expect_delimiter('{')
-    members = []
-    while not self.token().is_delimiter('}'):
-      member = self.parse_member_declaration(name)
-      members.append(member)
-    self.expect_delimiter('}')
-    return Protocol(name, members)
-
-  # <class_declaration>
-  #   -> 'class' $ident (':' $super)? '{' <member_declaration>* '}'
-  def parse_class_declaration(self, modifiers):
-    self.expect_keyword('class')
-    name = self.expect_ident()
     if self.token().is_delimiter(':'):
       self.expect_delimiter(':')
       parent = self.expect_ident()
@@ -455,7 +442,7 @@ class Parser:
       info = BUILTIN_CLASSES[name]
       return BuiltinClass(info, members, parent)
     else:
-      return Layout(name, members, parent)
+      return Protocol(name, members, parent)
 
   def pop_scope(self):
     self.scope = self.scope.parent
@@ -814,8 +801,6 @@ class Parser:
     elif self.token().is_delimiter('['):
       exprs = self.parse_arguments('[', ']')
       return Tuple(exprs)
-    elif self.token().is_keyword('class'):
-      return self.parse_class_declaration([])
     elif self.token().is_keyword('protocol'):
       return self.parse_protocol_declaration([])
     elif self.token().is_delimiter('('):
@@ -894,9 +879,15 @@ class Layout(SyntaxTree):
     return HEAP.new_class_expression(HEAP.new_string(self.name), methods, super.image)
 
 class Protocol(SyntaxTree):
-  def __init__(self, name, members):
+  def __init__(self, name, members, super):
     self.name = name
     self.members = members
+    if super:
+      self.super = super
+    elif not self.name == 'Object':
+      self.super = 'Object'
+    else:
+      self.super = None
   def accept(self, visitor):
     visitor.visit_protocol(self)
   def traverse(self, visitor):
@@ -904,7 +895,8 @@ class Protocol(SyntaxTree):
       member.accept(visitor)
   def quote(self):
     methods = HEAP.new_tuple(values = [ m.quote() for m in self.members ])
-    return HEAP.new_protocol_expression(HEAP.new_string(self.name), methods)
+    super = NAMESPACE[self.super]
+    return HEAP.new_protocol_expression(HEAP.new_string(self.name), methods, super.image)
 
 class Method(SyntaxTree):
   def __init__(self, name, fun):
@@ -1439,8 +1431,8 @@ class Heap:
   def new_conditional(self, cond, then_part, else_part):
     return ImageConditionalExpression(self.allocate(CONDITIONAL_EXPRESSION_TYPE, ImageConditionalExpression_Size), cond, then_part, else_part)
 
-  def new_class_expression(self, name, methods, super):
-    return ImageLayoutExpression(self.allocate(LAYOUT_EXPRESSION_TYPE, ImageLayoutExpression_Size), name, methods, super)
+  def new_protocol_expression(self, name, methods, super):
+    return ImageProtocolExpression(self.allocate(PROTOCOL_EXPRESSION_TYPE, ImageProtocolExpression_Size), name, methods, super)
 
   def new_return_expression(self, value):
     return ImageReturnExpression(self.allocate(RETURN_EXPRESSION_TYPE, ImageReturnExpression_Size), value)
@@ -1725,18 +1717,12 @@ class ImageConditionalExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageConditionalExpression_ElsePartOffset, value)
 
 
-class ImageLayoutExpression(ImageSyntaxTree):
+class ImageProtocolExpression(ImageSyntaxTree):
   def __init__(self, addr, name, methods, super):
     ImageSyntaxTree.__init__(self, addr)
-    self.set_name(name)
-    self.set_methods(methods)
-    self.set_super(super)
-  def set_name(self, value):
-    HEAP.set_field(self, ImageLayoutExpression_NameOffset, value)
-  def set_methods(self, value):
-    HEAP.set_field(self, ImageLayoutExpression_MethodsOffset, value)
-  def set_super(self, value):
-    HEAP.set_field(self, ImageLayoutExpression_SuperOffset, value)
+    HEAP.set_field(self, ImageProtocolExpression_NameOffset, name)
+    HEAP.set_field(self, ImageProtocolExpression_MethodsOffset, methods)
+    HEAP.set_field(self, ImageProtocolExpression_SuperOffset, super)
 
 class ImageReturnExpression(ImageSyntaxTree):
   def __init__(self, addr, value):

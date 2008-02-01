@@ -191,7 +191,7 @@ public:
   inline ImageSyntaxTree *else_part();
 };
 
-class ImageLayoutExpression : public ImageSyntaxTree {
+class ImageProtocolExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();
   inline ImageTuple *methods();

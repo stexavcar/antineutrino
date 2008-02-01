@@ -152,6 +152,17 @@ Data *Heap::new_layout(InstanceType instance_type,
   return result;  
 }
 
+Data *Heap::new_protocol(Tuple *methods, Value *super, Value *name) {
+  Data *val = allocate_object(Protocol::kSize, roots().protocol_layout());
+  if (is<AllocationFailed>(val)) return val;
+  Protocol *result = cast<Protocol>(val);
+  result->set_methods(methods);
+  // result->set_super(super);
+  result->set_name(name);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
 Data *Heap::allocate_empty_protocol() {
   return allocate_object(Protocol::kSize, roots().protocol_layout());
 }

@@ -273,14 +273,14 @@ DEFINE_REF_CLASS(ConditionalExpression);
 // --- C l a s s   E x p r e s s i o n ---
 // ---------------------------------------
 
-#define FOR_EACH_LAYOUT_EXPRESSION_FIELD(VISIT, arg)                 \
+#define FOR_EACH_PROTOCOL_EXPRESSION_FIELD(VISIT, arg)               \
   VISIT(String, name,    Name,    arg)                               \
   VISIT(Tuple,  methods, Methods, arg)                               \
   VISIT(Value,  super,   Super,   arg)
 
-class LayoutExpression : public SyntaxTree {
+class ProtocolExpression : public SyntaxTree {
 public:
-  FOR_EACH_LAYOUT_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  FOR_EACH_PROTOCOL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
   static const uint32_t kMethodsOffset = kNameOffset + kPointerSize;
@@ -289,13 +289,13 @@ public:
 };
 
 template <>
-class ref_traits<LayoutExpression> : public ref_traits<SyntaxTree> {
+class ref_traits<ProtocolExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_LAYOUT_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
-  ref<Layout> compile(ref<Context> context);
+  FOR_EACH_PROTOCOL_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  ref<Protocol> compile(ref<Context> context);
 };
 
-DEFINE_REF_CLASS(LayoutExpression);
+DEFINE_REF_CLASS(ProtocolExpression);
 
 
 // -----------------------------------------

@@ -1,35 +1,35 @@
 internal def compile_expression();
 internal def lift(x);
 
-class SyntaxTree { }
+protocol SyntaxTree { }
 
-class Expression {
+protocol Expression {
   def evaluate() -> (this·compile_expression())();
 }
 
-internal class LayoutExpression : Expression {
+internal protocol ProtocolExpression : Expression {
   internal def evaluate();
 }
 
-internal class LambdaExpression : Expression {
+internal protocol LambdaExpression : Expression {
   internal def parameters();
   internal def body();
 }
 
-internal class Symbol : Expression { }
-internal class ThisExpression : Expression { }
-internal class LocalDefinition : Expression { }
-internal class LiteralExpression : Expression { }
-internal class InvokeExpression : Expression { }
-internal class ReturnExpression : Expression { }
-internal class CallExpression : Expression { }
-internal class MethodExpression : Expression { }
-internal class SequenceExpression : Expression { }
-internal class TupleExpression : Expression { }
-internal class GlobalExpression : Expression { }
-internal class ConditionalExpression : Expression { }
-internal class QuoteExpression : Expression { }
-internal class BuiltinCall : Expression { }
-internal class InterpolateExpression : Expression { }
-internal class LocalDefinition : Expression { }
-internal class QuoteTemplate : Expression { }
+internal protocol Symbol : Expression { }
+internal protocol ThisExpression : Expression { }
+internal protocol LocalDefinition : Expression { }
+internal protocol LiteralExpression : Expression { }
+internal protocol InvokeExpression : Expression { }
+internal protocol ReturnExpression : Expression { }
+internal protocol CallExpression : Expression { }
+internal protocol MethodExpression : Expression { }
+internal protocol SequenceExpression : Expression { }
+internal protocol TupleExpression : Expression { }
+internal protocol GlobalExpression : Expression { }
+internal protocol ConditionalExpression : Expression { }
+internal protocol QuoteExpression : Expression { }
+internal protocol BuiltinCall : Expression { }
+internal protocol InterpolateExpression : Expression { }
+internal protocol LocalDefinition : Expression { }
+internal protocol QuoteTemplate : Expression { }

@@ -85,6 +85,11 @@ ref<Layout> Factory::new_layout(InstanceType instance_type,
   ALLOCATE_CHECKED(Layout, new_layout(instance_type, instance_field_count, *methods, *super, *name));
 }
 
+ref<Protocol> Factory::new_protocol(ref<Tuple> methods, ref<Value> super,
+    ref<Value> name) {
+  ALLOCATE_CHECKED(Protocol, new_protocol(*methods, *super, *name));
+}
+
 ref<Instance> Factory::new_instance(ref<Layout> layout) {
   ALLOCATE_CHECKED(Instance, new_instance(*layout));
 }

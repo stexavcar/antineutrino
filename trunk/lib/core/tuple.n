@@ -1,4 +1,4 @@
-internal class Tuple {
+internal protocol Tuple {
 
   internal def operator=(that);
 

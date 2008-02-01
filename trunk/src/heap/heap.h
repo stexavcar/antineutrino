@@ -35,6 +35,8 @@ public:
   Data *new_layout(InstanceType instance_type, uint32_t instance_field_count,
       Tuple *methods, Value *super, Value *name);
   
+  Data *new_protocol(Tuple *methods, Value *super, Value *name);
+  
   Data *new_context();
   
   Data *new_task();

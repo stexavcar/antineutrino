@@ -1,4 +1,4 @@
-internal class Lambda {
+internal protocol Lambda {
 
   internal def disassemble();
 
