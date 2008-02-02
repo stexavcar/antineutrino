@@ -5,7 +5,3 @@ protocol Object {
   internal def to_string();
 
 }
-
-protocol ObjectProtocol {
-
-}

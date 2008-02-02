@@ -715,7 +715,7 @@ class Parser:
   def parse_new_expression(self):
     self.expect_keyword('new')
     if self.token().is_delimiter('{'):
-      constr = Global('ObjectProtocol')
+      constr = Global('Object')
       args = [ ]
     else:
       constr = self.parse_atomic_expression()
@@ -857,26 +857,6 @@ class BuiltinClass(SyntaxTree):
   def traverse(self, visitor):
     for member in self.members:
       member.accept(visitor)
-
-class Layout(SyntaxTree):
-  def __init__(self, name, members, super):
-    self.name = name
-    self.members = members
-    if super:
-      self.super = super
-    elif not self.name == 'Object':
-      self.super = 'Object'
-    else:
-      self.super = None
-  def accept(self, visitor):
-    visitor.visit_class(self)
-  def traverse(self, visitor):
-    for member in self.members:
-      member.accept(visitor)
-  def quote(self):
-    methods = HEAP.new_tuple(values = [ m.quote() for m in self.members ])
-    super = NAMESPACE[self.super]
-    return HEAP.new_class_expression(HEAP.new_string(self.name), methods, super.image)
 
 class Protocol(SyntaxTree):
   def __init__(self, name, members, super):
@@ -1326,9 +1306,6 @@ class Heap:
     ImageObject(addr).set_class(type)
     return addr
 
-  def new_class(self, instance_type):
-    return ImageLayout(self.allocate(LAYOUT_TYPE, ImageLayout_Size), instance_type)
-
   def new_context(self):
     return ImageContext(self.allocate(CONTEXT_TYPE, ImageContext_Size))
 
@@ -1487,19 +1464,6 @@ class ImageObject(ImageValue):
   def set_class(self, value):
     HEAP.set_field(self, ImageObject_TypeOffset, value)
 
-class ImageLayout(ImageObject):
-  def __init__(self, addr, instance_type):
-    ImageObject.__init__(self, addr)
-    self.set_instance_type(instance_type)
-  def set_instance_type(self, value):
-    HEAP.set_raw_field(self, ImageLayout_InstanceTypeOffset, value)
-  def set_methods(self, value):
-    HEAP.set_field(self, ImageLayout_MethodsOffset, value)
-  def set_parent(self, value):
-    HEAP.set_field(self, ImageLayout_SuperOffset, value)
-  def set_name(self, value):
-    HEAP.set_field(self, ImageLayout_NameOffset, value)
-
 class ImageProtocol(ImageObject):
   def __init__(self, addr, name):
     ImageObject.__init__(self, addr)
@@ -1508,6 +1472,8 @@ class ImageProtocol(ImageObject):
     HEAP.set_field(self, ImageProtocol_MethodsOffset, value)
   def set_name(self, value):
     HEAP.set_field(self, ImageProtocol_NameOffset, value)
+  def set_super(self, value):
+    HEAP.set_field(self, ImageProtocol_SuperOffset, value)
 
 class ImageTuple(ImageObject):
   def __init__(self, addr, length):
@@ -1857,8 +1823,6 @@ class Visitor:
     self.visit_node(that)
   def visit_definition(self, that):
     self.visit_node(that)
-  def visit_class(self, that):
-    self.visit_node(that)
   def visit_builtin_class(self, that):
     self.visit_node(that)
   def visit_lambda(self, that):
@@ -1917,17 +1881,6 @@ class Visitor:
 class LoadVisitor(Visitor):
   def __init__(self):
     self.is_toplevel = True
-  def visit_class(self, that):
-    layout = HEAP.new_class(INSTANCE_TYPE)
-    name_str = HEAP.new_string(that.name)
-    layout.set_name(name_str)
-    HEAP.toplevel[name_str] = layout
-    that.image = layout
-    if self.is_toplevel:
-      NAMESPACE[that.name] = that
-      self.is_toplevel = False
-      Visitor.visit_class(self, that)
-      self.is_toplevel = True
   def visit_protocol(self, that):
     name_str = HEAP.new_string(that.name)
     protocol = HEAP.new_protocol(name_str)
@@ -1939,41 +1892,38 @@ class LoadVisitor(Visitor):
       Visitor.visit_protocol(self, that)
       self.is_toplevel = True
   def visit_builtin_class(self, that):
+    assert self.is_toplevel
     instance_type_name = that.info.instance_type
     instance_type_index = globals()[instance_type_name + '_TYPE']
-    layout = HEAP.new_class(instance_type_index)
     name_str = HEAP.new_string(that.info.class_name)
-    layout.set_name(name_str)
+    layout = HEAP.new_protocol(name_str)
     HEAP.toplevel[name_str] = layout
     HEAP.set_root(that.info.root_index, layout)
     that.image = layout
     if self.is_toplevel:
       NAMESPACE[that.info.name] = that
       self.is_toplevel = False
-      Visitor.visit_class(self, that)
+      Visitor.visit_builtin_class(self, that)
       self.is_toplevel = True
 
 class ResolveVisitor(Visitor):
   def resolve_class(self, that):
     if that.super:
       value = NAMESPACE[that.super]
-      that.image.set_parent(value.image)
+      that.image.set_super(value.image)
     else:
-      that.image.set_parent(HEAP.get_root(ROOT_INDEX['VoidValue']))
-  def visit_class(self, that):
-    self.resolve_class(that)
-    Visitor.visit_class(self, that)
+      that.image.set_super(HEAP.get_root(ROOT_INDEX['VoidValue']))
   def visit_builtin_class(self, that):
     self.resolve_class(that)
-    Visitor.visit_class(self, that)
+    Visitor.visit_builtin_class(self, that)
+  def visit_protocol(self, that):
+    self.resolve_class(that)
+    Visitor.visit_protocol(self, that)
 
 class CompileVisitor(Visitor):
   def compile_methods(self, that):
     methods = HEAP.new_tuple(values = [ m.compile() for m in that.members ])
     that.image.set_methods(methods)
-  def visit_class(self, that):
-    self.compile_methods(that)
-    Visitor.visit_class(self, that)
   def visit_protocol(self, that):
     self.compile_methods(that)
     Visitor.visit_protocol(self, that)

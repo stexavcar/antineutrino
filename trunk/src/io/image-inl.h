@@ -208,10 +208,10 @@ uint32_t ImageCode::at(uint32_t index) {
 
 DEFINE_GETTER    (Tuple,            Protocol,              methods,       Methods)
 DEFINE_GETTER    (Value,            Protocol,              name,          Name)
+DEFINE_GETTER    (Value,            Protocol,              super,         Super)
 DEFINE_RAW_GETTER(uint32_t,         Layout,                instance_type, InstanceType)
 DEFINE_GETTER    (Tuple,            Layout,                methods,       Methods)
-DEFINE_GETTER    (Value,            Layout,                super,         Super)
-DEFINE_GETTER    (Value,            Layout,                name,          Name)
+DEFINE_GETTER    (Value,            Layout,                protocol,      Protocol)
 DEFINE_RAW_GETTER(uint32_t,         Lambda,                argc,          Argc)
 DEFINE_GETTER    (Value,            Lambda,                code,          Code)
 DEFINE_GETTER    (Value,            Lambda,                literals,      Literals)

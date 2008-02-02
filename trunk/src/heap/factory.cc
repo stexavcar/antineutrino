@@ -80,9 +80,8 @@ ref<Layout> Factory::allocate_empty_layout(InstanceType instance_type) {
 }
 
 ref<Layout> Factory::new_layout(InstanceType instance_type,
-    uint32_t instance_field_count, ref<Tuple> methods, ref<Value> super,
-    ref<Value> name) {
-  ALLOCATE_CHECKED(Layout, new_layout(instance_type, instance_field_count, *methods, *super, *name));
+    uint32_t instance_field_count, ref<Value> protocol, ref<Tuple> methods) {
+  ALLOCATE_CHECKED(Layout, new_layout(instance_type, instance_field_count, *protocol, *methods));
 }
 
 ref<Protocol> Factory::new_protocol(ref<Tuple> methods, ref<Value> super,

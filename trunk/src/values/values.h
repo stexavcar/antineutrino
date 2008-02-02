@@ -503,7 +503,8 @@ class False : public Singleton { };
 
 #define FOR_EACH_PROTOCOL_FIELD(VISIT, arg)                          \
   VISIT(Value, name,    Name,    arg)                                \
-  VISIT(Tuple, methods, Methods, arg)
+  VISIT(Tuple, methods, Methods, arg)                                \
+  VISIT(Value, super,   Super,   arg)
 
 class Protocol : public Object {
 public:
@@ -511,7 +512,8 @@ public:
   
   static const uint32_t kNameOffset    = Object::kHeaderSize;
   static const uint32_t kMethodsOffset = kNameOffset + kPointerSize;
-  static const uint32_t kSize          = kMethodsOffset + kPointerSize;
+  static const uint32_t kSuperOffset   = kMethodsOffset + kPointerSize;
+  static const uint32_t kSize          = kSuperOffset + kPointerSize;
 };
 
 template <> class ref_traits<Protocol> : public ref_traits<Object> {
@@ -527,9 +529,8 @@ DEFINE_REF_CLASS(Protocol);
 // -----------------
 
 #define FOR_EACH_LAYOUT_FIELD(VISIT, arg)                            \
-  VISIT(Tuple, methods, Methods, arg)                                \
-  VISIT(Value, super,   Super,   arg)                                \
-  VISIT(Value, name,    Name,    arg)
+  VISIT(Value, protocol, Protocol, arg)                              \
+  VISIT(Tuple, methods,  Methods,  arg)
 
 class Layout : public Object {
 public:
@@ -546,10 +547,9 @@ public:
 
   static const uint32_t kInstanceTypeOffset       = Object::kHeaderSize;
   static const uint32_t kInstanceFieldCountOffset = kInstanceTypeOffset + kPointerSize;
-  static const uint32_t kMethodsOffset            = kInstanceFieldCountOffset + kPointerSize;
-  static const uint32_t kSuperOffset              = kMethodsOffset + kPointerSize;
-  static const uint32_t kNameOffset               = kSuperOffset + kPointerSize;
-  static const uint32_t kSize                     = kNameOffset + kPointerSize;
+  static const uint32_t kProtocolOffset           = kInstanceFieldCountOffset + kPointerSize;
+  static const uint32_t kMethodsOffset            = kProtocolOffset + kPointerSize;
+  static const uint32_t kSize                     = kMethodsOffset + kPointerSize;
 };
 
 template <> class ref_traits<Layout> {

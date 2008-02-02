@@ -28,8 +28,8 @@ public:
   ref<Dictionary> new_dictionary();
   ref<Code> new_code(uint32_t size);
   ref<Layout> new_layout(InstanceType instance_type, 
-      uint32_t instance_field_count, ref<Tuple> methods,
-      ref<Value> super, ref<Value> name);
+      uint32_t instance_field_count, ref<Value> protocol,
+      ref<Tuple> methods);
   ref<Protocol> new_protocol(ref<Tuple> methods, ref<Value> super,
       ref<Value> name);
   ref<Instance> new_instance(ref<Layout> layout);

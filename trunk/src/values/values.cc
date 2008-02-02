@@ -81,14 +81,14 @@ static void write_string_short_on(String *obj, Data::WriteMode mode, string_buff
   if (mode != Data::UNQUOTED) buf.append('"');
 }
 
-static void write_layout_short_on(Layout *obj, string_buffer &buf) {
-  buf.append("#<class ");
+static void write_protocol_short_on(Protocol *obj, string_buffer &buf) {
+  buf.append("#<protocol ");
   obj->name()->write_on(buf, Data::UNQUOTED);
   buf.append(">");
 }
 
 static void write_instance_short_on(Instance *obj, string_buffer &buf) {
-  Value *layout_name = obj->layout()->name();
+  Value *layout_name = 0; // obj->layout()->name();
   if (is<String>(layout_name)) {
     buf.append("#<");
     if (cast<String>(layout_name)->starts_with_vowel()) {
@@ -139,8 +139,8 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
   case CODE_TYPE:
     buf.append("#<code>");
     break;
-  case LAYOUT_TYPE:
-    write_layout_short_on(cast<Layout>(obj), buf);
+  case PROTOCOL_TYPE:
+    write_protocol_short_on(cast<Protocol>(obj), buf);
     break;
   case METHOD_TYPE:
     buf.append("#<method>");
@@ -677,12 +677,12 @@ uint32_t Dictionary::size() {
 // -----------------
 
 bool Layout::is_empty() {
-  return super() == Smi::from_int(0);
+  return protocol() == Smi::from_int(0);
 }
 
 Data *Layout::clone(Heap &heap) {
   return heap.new_layout(instance_type(), instance_field_count(),
-      methods(), super(), name());
+      protocol(), methods());
 }
 
 

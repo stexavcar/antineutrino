@@ -151,16 +151,14 @@ Data *Builtins::protocol_new(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
   Runtime &runtime = Runtime::current();
-  Layout *layout = cast<Layout>(args.self());
-  InstanceType type = layout->instance_type();
-  switch (type) {
-    case INSTANCE_TYPE:
-      return runtime.heap().new_instance(layout);
-    case SYMBOL_TYPE:
-      return runtime.heap().new_symbol(runtime.roots().vhoid());
-    default:
-      UNHANDLED(InstanceType, type);
-      return 0;
+  Protocol *protocol = cast<Protocol>(args.self());
+  if (protocol == runtime.roots().symbol_layout()->protocol()) {
+    return runtime.heap().new_symbol(runtime.roots().vhoid());
+  } else {
+    Data *layout_val = runtime.heap().new_layout(INSTANCE_TYPE, 0, protocol, runtime.roots().empty_tuple());
+    if (is<AllocationFailed>(layout_val)) return layout_val;
+    Layout *layout = cast<Layout>(layout_val);
+    return runtime.heap().new_instance(layout);
   }
 }
 

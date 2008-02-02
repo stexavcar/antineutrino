@@ -83,25 +83,32 @@ Layout *Interpreter::get_layout(Value *value) {
   else return cast<Object>(value)->layout();
 }
 
+
+static inline Method *lookup_method_local(Tuple *methods, Value *name) {
+  for (uint32_t i = 0; i < methods->length(); i++) {
+    Method *method = cast<Method>(methods->get(i));
+    if (method->name()->equals(name))
+      return method;
+  }
+  return 0;
+}
+
+
 /**
  * Returns the method with the specified name in the given class.  If
  * no method is found Nothing is returned.
  */
 Data *Interpreter::lookup_method(Layout *layout, Value *name) {
-  while (true) {
-    if (layout->is_empty()) {
-      scoped_string layout_str(layout->name()->to_string());
-      Conditions::get().error_occurred("Class %s is empty.", layout_str.chars());
-    }
-    Tuple *methods = layout->methods();
-    for (uint32_t i = 0; i < methods->length(); i++) {
-      Method *method = cast<Method>(methods->get(i));
-      if (method->name()->equals(name))
-        return method;
-    }
-    Value *super = layout->super();
-    if (is<Void>(super)) break;
-    layout = cast<Layout>(super);
+  // Look up any layout-local methods
+  Method *method = lookup_method_local(layout->methods(), name);
+  if (method != 0) return method;
+  // Look up methods in protocols
+  Value *current = layout->protocol();
+  while (is<Protocol>(current)) {
+    Protocol *protocol = cast<Protocol>(current);
+    Method *method = lookup_method_local(protocol->methods(), name);
+    if (method != 0) return method;
+    current = protocol->super();
   }
   return Nothing::make();
 }
@@ -214,6 +221,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       Layout *layout = get_layout(recv);
       Data *lookup_result = lookup_method(layout, name);
       if (is<Nothing>(lookup_result)) {
+        lookup_method(layout, name);
         scoped_string name_str(name->to_string());
         scoped_string recv_str(recv->to_string());
         Conditions::get().error_occurred("Lookup failure: %s::%s",

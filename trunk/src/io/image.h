@@ -53,15 +53,15 @@ class ImageSyntaxTree : public ImageObject {
 class ImageLayout : public ImageObject {
 public:
   inline uint32_t instance_type();
+  inline ImageValue *protocol();
   inline ImageTuple *methods();
-  inline ImageValue *super();
-  inline ImageValue *name();
 };
 
 class ImageProtocol : public ImageObject {
 public:
   inline ImageTuple *methods();
   inline ImageValue *name();
+  inline ImageValue *super();
 };
 
 class ImageString : public ImageObject {

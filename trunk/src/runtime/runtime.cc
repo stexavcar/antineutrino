@@ -45,7 +45,6 @@ bool Runtime::install_loaded_roots(ref<Tuple> roots) {
     if (is<Smi>(raw_changes)) continue;
     ref<Object> changes = cast<Object>(raw_changes);
     ref<Object> root = get_root(i);
-    if (root.type() != changes.type()) return false;
     if (!install_object(root, changes)) return false;
   }
   return true;
@@ -57,7 +56,7 @@ bool Runtime::install_object(ref<Object> root, ref<Object> changes) {
     case DICTIONARY_TYPE:
       return install_dictionary(cast<Dictionary>(root), cast<Dictionary>(changes));
     case LAYOUT_TYPE:
-      return install_layout(cast<Layout>(root), cast<Layout>(changes));
+      return install_layout(cast<Layout>(root), cast<Protocol>(changes));
     default:
       UNHANDLED(InstanceType, type);
       return false;
@@ -88,14 +87,13 @@ bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) 
   return true;
 }
 
-bool Runtime::install_layout(ref<Layout> root, ref<Layout> changes) {
+bool Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
   if (!root->is_empty()) {
-    scoped_string str(root.name().to_string());
+    scoped_string str(changes.name().to_string());
     Conditions::get().error_occurred("Root class %s is not empty.", str.chars());
     return false;
   }
-  root->set_methods(changes->methods());
-  root->set_super(changes->super());
+  root->set_protocol(*changes);
   ASSERT(!root->is_empty());
   return true;
 }

@@ -667,7 +667,7 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
     __ codegen(value);
   }
   ref<Layout> layout = factory().new_layout(INSTANCE_TYPE, term_count,
-      methods, runtime().vhoid(), runtime().vhoid());
+      runtime().vhoid(), methods);
   __ instantiate(layout);
 }
 

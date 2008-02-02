@@ -116,12 +116,12 @@
   VISIT(6, Lambda,                Size)                              \
   VISIT(1, Layout,                InstanceTypeOffset)                \
   VISIT(2, Layout,                MethodsOffset)                     \
-  VISIT(3, Layout,                SuperOffset)                       \
-  VISIT(4, Layout,                NameOffset)                        \
-  VISIT(5, Layout,                Size)                              \
+  VISIT(3, Layout,                ProtocolOffset)                    \
+  VISIT(4, Layout,                Size)                              \
   VISIT(1, Protocol,              MethodsOffset)                     \
   VISIT(2, Protocol,              NameOffset)                        \
-  VISIT(3, Protocol,              Size)                              \
+  VISIT(3, Protocol,              SuperOffset)                       \
+  VISIT(4, Protocol,              Size)                              \
   VISIT(1, Method,                NameOffset)                        \
   VISIT(2, Method,                SignatureOffset)                   \
   VISIT(3, Method,                LambdaOffset)                      \

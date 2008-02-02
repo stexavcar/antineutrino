@@ -14,10 +14,6 @@ def get_wildcard_mapping():
 source_files = read_files_from(get_wildcard_mapping(), config['src'], join(config['src'], 'library.list'))
 program_files = read_files_from(get_wildcard_mapping(), config['src'], join(config['src'], 'main', 'program.list'))
 
-monitor_resources_path = join(config['root'], 'resources', 'monitor')
-monitor_resource_files_raw = read_files_from(get_wildcard_mapping(), monitor_resources_path, join(monitor_resources_path, 'resources.list'))
-monitor_resource_files = [ join(monitor_resources_path, path) for path in monitor_resource_files_raw ]
-
 # Creates a new environment and pre-configure it based on the set
 # of configuration items
 def create_environment():
@@ -57,37 +53,6 @@ single_compare_template = """\
 def process_name(str):
   parts = re.split('\.|\\|/', str)
   return ''.join([ p[0].upper() + p[1:].lower() for p in parts ])
-
-def generate_resources_file(source, target, env):
-  prefix = abspath(join(config['root'], 'resources', 'monitor'))
-  filenames = [ str(name) for name in source ]
-  chunks = [ ]
-  compares = [ ]
-  for name in filenames:
-    short_name = abspath(name)[len(prefix)+1:]
-    file_obj = open(str(name), mode="rb")
-    contents = file_obj.read()
-    length = len(contents)
-    chunk = single_resource_template % {
-      'name': process_name(short_name),
-      'length': length,
-      'data': ', '.join([ '0x%x' % ord(c) for c in contents ])
-    }
-    chunks.append(chunk)
-    compare = single_compare_template % {
-      'file': short_name,
-      'name': process_name(short_name)
-    }
-    compares.append(compare)
-  text = generated_file_template % {
-    'chunks': "\n".join(chunks),
-    'compares': "".join(compares)
-  }
-  output = open(str(target[0]), "w")
-  output.write(text)
-  output.close()
-
-monitor_resources = env.Command(join('monitor', 'resources.cc'), monitor_resource_files, generate_resources_file)
 
 static_library = env.StaticLibrary(config['name'], source_files)
 shared_library = env.SharedLibrary(config['name'], source_files)

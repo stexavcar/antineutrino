@@ -33,7 +33,7 @@ public:
   Data *allocate_empty_protocol();
 
   Data *new_layout(InstanceType instance_type, uint32_t instance_field_count,
-      Tuple *methods, Value *super, Value *name);
+      Value *protocol, Tuple *methods);
   
   Data *new_protocol(Tuple *methods, Value *super, Value *name);
   

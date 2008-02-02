@@ -33,11 +33,7 @@ bool Roots::initialize(Heap& heap) {
 FOR_EACH_SIMPLE_ROOT(ALLOCATE_ROOT)
 #undef ALLOCATE_ROOT
 
-  Data *layout_name;
 #define FIXUP_LAYOUT(n, Type, name, Name, allocator)                 \
-  layout_name = heap.new_string(#Name);                              \
-  if (is<AllocationFailed>(layout_name)) return false;               \
-  name()->set_name(cast<String>(layout_name));                       \
   name()->set_methods(empty_tuple());
 FOR_EACH_ROOT_LAYOUT(FIXUP_LAYOUT)
 #undef FIXUP_LAYOUT

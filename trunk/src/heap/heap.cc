@@ -36,7 +36,7 @@ Data *Heap::allocate_layout(InstanceType instance_type) {
   Layout *result = reinterpret_cast<Layout*>(cast<Object>(val));
   result->set_layout(roots().layout_layout());
   result->set_instance_type(instance_type);
-  result->set_super(Smi::from_int(0));
+  result->set_protocol(Smi::from_int(0));
   return result;
 }
 
@@ -122,9 +122,7 @@ Data *Heap::allocate_empty_layout(InstanceType instance_type) {
   ASSERT_IS(Layout, val);
   Layout *result = cast<Layout>(val);
   result->set_instance_field_count(0);
-  result->set_super(Smi::from_int(0));
-  result->set_name(Smi::from_int(0));
-  result->set_methods(roots().empty_tuple());
+  result->set_protocol(Smi::from_int(0));
   ASSERT(result->is_empty());
   return result;
 }
@@ -138,16 +136,14 @@ Data *Heap::new_context() {
 }
 
 Data *Heap::new_layout(InstanceType instance_type, 
-    uint32_t instance_field_count, Tuple *methods, Value *super,
-    Value *name) {
+    uint32_t instance_field_count, Value *protocol, Tuple *methods) {
   Data *val = allocate_layout(instance_type);
   if (is<AllocationFailed>(val)) return val;
   ASSERT_IS(Layout, val);
   Layout *result = cast<Layout>(val);
   result->set_instance_field_count(instance_field_count);
-  result->set_super(super);
+  result->set_protocol(protocol);
   result->set_methods(methods);
-  result->set_name(name);
   IF_PARANOID(result->validate());
   return result;  
 }
@@ -157,7 +153,7 @@ Data *Heap::new_protocol(Tuple *methods, Value *super, Value *name) {
   if (is<AllocationFailed>(val)) return val;
   Protocol *result = cast<Protocol>(val);
   result->set_methods(methods);
-  // result->set_super(super);
+  result->set_super(super);
   result->set_name(name);
   IF_PARANOID(result->validate());
   return result;

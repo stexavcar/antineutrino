@@ -19,7 +19,8 @@ uint32_t string::length(const char* chars) {
 
 string string::dup(string arg) {
   char *result = new char[arg.length() + 1];
-  memcpy(result, arg.chars(), arg.length() + 1);
+  memcpy(result, arg.chars(), arg.length());
+  result[arg.length()] = '\0';
   return string(result, arg.length());
 }
 
