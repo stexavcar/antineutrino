@@ -18,8 +18,14 @@ typedef signed char int8_t;
 
 typedef int8_t byte;
 typedef byte* address;
-typedef signed int word;
-typedef unsigned int uword;
+
+#if defined(M32)
+typedef int32_t word;
+typedef uint32_t uword;
+#elif defined(M64)
+typedef int64_t word;
+typedef uint64_t uword;
+#endif
 
 #define TYPE_CHECK(S, T) while (false) { *(static_cast<S*>(0)) = static_cast<T>(0); }
 
