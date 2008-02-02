@@ -84,13 +84,63 @@ Layout *Interpreter::get_layout(Value *value) {
 }
 
 
-static inline Method *lookup_method_local(Tuple *methods, Value *name) {
+class MethodLookup {
+public:
+  MethodLookup()
+    : score_(static_cast<uword>(-1))
+    , method_(Nothing::make())
+    , is_ambiguous_(false) { }
+  void score_method(Method *method, Layout *reciever);
+  void lookup_in_dictionary(Tuple *methods, Value *name, Layout *reciever);
+  Data *method() { return method_; }
+  bool is_ambiguous() { return is_ambiguous_; }
+private:
+  uword score_;
+  Data *method_;
+  bool is_ambiguous_;
+};
+
+
+static inline word get_distance(Layout *layout, Protocol *target) {
+  Value *current = layout->protocol();
+  word distance = 0;
+  while (is<Protocol>(current)) {
+    if (current == target) return distance;
+    distance++;
+    current = cast<Protocol>(current)->super();
+  }
+  return -1;
+}
+
+
+void MethodLookup::score_method(Method *method, Layout *reciever) {
+  uword score = 0;
+  Signature *signature = method->signature();
+  for (uword i = 0; i < signature->parameters()->length(); i++) {
+    Value *param = signature->parameters()->get(i);
+    if (is<Protocol>(param)) {
+      word distance = get_distance(reciever, cast<Protocol>(param));
+      if (distance >= 0) score += distance;
+      else return;
+    }
+  }
+  if (score < score_) {
+    score_ = score;
+    method_ = method;
+    is_ambiguous_ = false;
+  } else if (score == score_) {
+    is_ambiguous_ = true;
+  }
+}
+
+
+void MethodLookup::lookup_in_dictionary(Tuple *methods, Value *name,
+    Layout *reciever) {
   for (uword i = 0; i < methods->length(); i++) {
     Method *method = cast<Method>(methods->get(i));
     if (method->name()->equals(name))
-      return method;
+      score_method(method, reciever);
   }
-  return 0;
 }
 
 
@@ -100,17 +150,17 @@ static inline Method *lookup_method_local(Tuple *methods, Value *name) {
  */
 Data *Interpreter::lookup_method(Layout *layout, Value *name) {
   // Look up any layout-local methods
-  Method *method = lookup_method_local(layout->methods(), name);
-  if (method != 0) return method;
+  MethodLookup lookup;
+  lookup.lookup_in_dictionary(layout->methods(), name, layout);
   // Look up methods in protocols
   Value *current = layout->protocol();
   while (is<Protocol>(current)) {
     Protocol *protocol = cast<Protocol>(current);
-    Method *method = lookup_method_local(protocol->methods(), name);
-    if (method != 0) return method;
+    lookup.lookup_in_dictionary(protocol->methods(), name, layout);
     current = protocol->super();
   }
-  return Nothing::make();
+  ASSERT(!lookup.is_ambiguous());
+  return lookup.method();
 }
 
 static void unhandled_condition(Value *name, Arguments &args) {
@@ -221,7 +271,6 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Layout *layout = get_layout(recv);
       Data *lookup_result = lookup_method(layout, name);
       if (is<Nothing>(lookup_result)) {
-        lookup_method(layout, name);
         scoped_string name_str(name->to_string());
         scoped_string recv_str(recv->to_string());
         Conditions::get().error_occurred("Lookup failure: %s::%s",

@@ -852,6 +852,21 @@ class BuiltinClass(SyntaxTree):
       self.super = super
     elif not self.info.name == u'Object':
       self.super = u'Object'
+    self.signature = None
+    self.image = None
+  def get_signature(self):
+    if not self.signature:
+      tuple = HEAP.new_tuple(length = 1)
+      self.signature_tuple = tuple
+      self.signature = HEAP.new_signature(tuple)
+      if self.image:
+        tuple[0] = self.image
+    return self.signature
+  def set_image(self, value):
+    assert not self.image
+    self.image = value
+    if self.signature:
+      self.signature_tuple[0] = value
   def accept(self, visitor):
     visitor.visit_builtin_class(self)
   def traverse(self, visitor):
@@ -868,6 +883,21 @@ class Protocol(SyntaxTree):
       self.super = 'Object'
     else:
       self.super = None
+    self.signature = None
+    self.image = None
+  def get_signature(self):
+    if not self.signature:
+      tuple = HEAP.new_tuple(length = 1)
+      self.signature_tuple = tuple
+      self.signature = HEAP.new_signature(tuple)
+      if self.image:
+        tuple[0] = self.image
+    return self.signature
+  def set_image(self, value):
+    assert not self.image
+    self.image = value
+    if self.signature:
+      self.signature_tuple[0] = value    
   def accept(self, visitor):
     visitor.visit_protocol(self)
   def traverse(self, visitor):
@@ -886,9 +916,10 @@ class Method(SyntaxTree):
     visitor.visit_method(self)
   def traverse(self, visitor):
     self.fun.accept(visitor)
-  def compile(self):
+  def compile(self, protocol):
     body = self.fun.compile()
-    return HEAP.new_method(HEAP.new_string(self.name), HEAP.new_signature(), body)
+    signature = protocol.get_signature()
+    return HEAP.new_method(HEAP.new_string(self.name), signature, body)
   def quote(self):
     fun = self.fun.quote()
     return HEAP.new_method_expression(HEAP.new_string(self.name), fun)
@@ -1333,8 +1364,8 @@ class Heap:
   def new_method(self, name, signature, body):
     return ImageMethod(self.allocate(METHOD_TYPE, ImageMethod_Size), name, signature, body)
 
-  def new_signature(self):
-    return ImageSignature(self.allocate(SIGNATURE_TYPE, ImageSignature_Size), self.empty_tuple)
+  def new_signature(self, elements):
+    return ImageSignature(self.allocate(SIGNATURE_TYPE, ImageSignature_Size), elements)
 
   def new_lambda_expression(self, params, body):
     return ImageLambdaExpression(self.allocate(LAMBDA_EXPRESSION_TYPE, ImageLambdaExpression_Size), params, body)
@@ -1884,6 +1915,7 @@ class LoadVisitor(Visitor):
   def visit_protocol(self, that):
     name_str = HEAP.new_string(that.name)
     protocol = HEAP.new_protocol(name_str)
+    that.set_image(protocol)
     HEAP.toplevel[name_str] = protocol
     that.image = protocol
     if self.is_toplevel:
@@ -1892,19 +1924,19 @@ class LoadVisitor(Visitor):
       Visitor.visit_protocol(self, that)
       self.is_toplevel = True
   def visit_builtin_class(self, that):
-    assert self.is_toplevel
     instance_type_name = that.info.instance_type
     instance_type_index = globals()[instance_type_name + '_TYPE']
     name_str = HEAP.new_string(that.info.class_name)
     layout = HEAP.new_protocol(name_str)
+    that.set_image(layout)
     HEAP.toplevel[name_str] = layout
     HEAP.set_root(that.info.root_index, layout)
     that.image = layout
-    if self.is_toplevel:
-      NAMESPACE[that.info.name] = that
-      self.is_toplevel = False
-      Visitor.visit_builtin_class(self, that)
-      self.is_toplevel = True
+    assert self.is_toplevel
+    NAMESPACE[that.info.name] = that
+    self.is_toplevel = False
+    Visitor.visit_builtin_class(self, that)
+    self.is_toplevel = True
 
 class ResolveVisitor(Visitor):
   def resolve_class(self, that):
@@ -1922,7 +1954,7 @@ class ResolveVisitor(Visitor):
 
 class CompileVisitor(Visitor):
   def compile_methods(self, that):
-    methods = HEAP.new_tuple(values = [ m.compile() for m in that.members ])
+    methods = HEAP.new_tuple(values = [ m.compile(that) for m in that.members ])
     that.image.set_methods(methods)
   def visit_protocol(self, that):
     self.compile_methods(that)
