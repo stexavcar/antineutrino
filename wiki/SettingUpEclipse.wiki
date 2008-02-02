@@ -7,4 +7,4 @@ To build you have to specify which scons to use by setting the `SCONS` variable.
    * Under C/C++ > CDT build variables add a variable with the name `SCONS` and whose value is the command to run scons.  If you have a sane installation this will just be `scons`.
    * Try building.  If this doesn't work then restarting eclipse should do the trick.
 
-With the setup that comes with the antineutrino project eclipse will rebuild whenever a file is saved.  If you have a reasonably modern machine this should never be a problem.
+With the setup that comes with the antineutrino project eclipse will rebuild whenever a file is saved.  If you have a reasonably modern machine this should not be a problem.
