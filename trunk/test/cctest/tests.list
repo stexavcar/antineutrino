@@ -2,6 +2,7 @@ buffer-test.cc
 builtin-string-test.cc
 dictionary-test.cc
 equality-test.cc
+forwarder-test.cc
 heap-test.cc
 memory-test.cc
 platform-test.cc

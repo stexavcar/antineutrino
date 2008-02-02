@@ -90,6 +90,12 @@ FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
   Data *new_signature(Tuple *parameters);
 
   Data *new_instance(Layout *layout);
+  
+  inline Data *new_transparent_forwarder(Value *target);
+  
+  Data *new_smi_forwarder(Smi *target);
+  
+  Data *new_forwarder_descriptor(ForwarderType type, Value *target);
 
   Memory &memory() { return memory_; }
   Roots &roots() { return roots_; }

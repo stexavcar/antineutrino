@@ -48,6 +48,12 @@ public:
   
   static inline bool is_valid_smi(word val);
   
+  static inline Forwarder *tag_as_forwarder(address val);
+  
+  static inline bool has_forwarder_tag(void *val);
+  
+  static inline address target_of(void *forwarder);
+  
   /**
    * Packages the given type and payload into a signal-tagged value.
    * The type must not require more then kSignalTypeSize bits and the
@@ -105,6 +111,7 @@ private:
 
   static const uword kSmiTagSize          = 2;
   static const uword kObjectTagSize       = 2;
+  static const uword kForwarderTagSize    = 2;
   static const uword kSignalTypeSize      = 2;
   static const uword kSignalPayloadSize   = 28;
   
@@ -112,12 +119,14 @@ private:
   static const uword kObjectAlignmentMask = MASK(kObjectAlignmentSize);
 
   static const uword kObjectTagMask       = MASK(kObjectTagSize);
+  static const uword kForwarderTagMask    = MASK(kForwarderTagSize);
   static const uword kSmiTagMask          = MASK(kSmiTagSize);
   static const uword kSignalTypeMask      = MASK(kSignalTypeSize);
   static const uword kSignalPayloadMask   = MASK(kSignalPayloadSize);
   
-  static const uword kObjectTag           = 0x1;
   static const uword kSmiTag              = 0x0;
+  static const uword kObjectTag           = 0x1;
+  static const uword kForwarderTag        = 0x2;
   static const uword kSignalTag           = 0x3;
 
 #undef MASK

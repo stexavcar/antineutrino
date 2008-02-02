@@ -47,11 +47,16 @@ public:
 };
 
 
+class Indirect : public Data {
+  
+};
+
+
 // -----------------
 // --- V a l u e ---
 // -----------------
 
-class Value : public Data {
+class Value : public Indirect {
 public:
   
   inline InstanceType type();
@@ -146,6 +151,52 @@ public:
 };
 
 DEFINE_REF_CLASS(Object);
+
+
+// -------------------------
+// --- F o r w a r d e r ---
+// -------------------------
+
+/**
+ * A transparent forwarder that delegates all access to a wrapped
+ * object.  In reality it is a differently tagged object pointer
+ * that either points directly to the delegate object, or to a
+ * forward pointer descriptor object that holds a pointer to the
+ * delegate object.
+ */
+class Forwarder : public Indirect {
+public:
+  inline Object *target();
+  
+  static inline Forwarder *to(Object *obj);
+};
+
+
+enum ForwarderType {
+  TRANSPARENT_FORWARDER
+};
+
+#define FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(VISIT, arg)              \
+  VISIT(Value, target, Target, arg)
+
+class ForwarderDescriptor : public Object {
+public:
+  inline ForwarderType &type();
+  inline void set_type(ForwarderType value);
+  
+  FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uword kTypeOffset   = Object::kHeaderSize;
+  static const uword kTargetOffset = kTypeOffset + kPointerSize;
+  static const uword kSize         = kTargetOffset + kPointerSize;
+};
+
+template <> class ref_traits<ForwarderDescriptor> : public ref_traits<Object> {
+public:
+  FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(ForwarderDescriptor);
 
 
 // -----------------

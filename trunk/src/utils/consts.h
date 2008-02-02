@@ -19,7 +19,8 @@
   VISIT(2,  METHOD,                 Method,                method)                 \
   VISIT(3,  PROTOCOL,               Protocol,              protocol)               \
   VISIT(4,  TASK,                   Task,                  task)                   \
-  VISIT(73, SIGNATURE,              Signature,             signature)
+  VISIT(73, SIGNATURE,              Signature,             signature)              \
+  VISIT(74, FORWARDER_DESCRIPTOR,   ForwarderDescriptor,   forwarder_descriptor)
 
 #define FOR_EACH_OBJECT_TYPE(VISIT)                                                \
   VISIT(5,  LAYOUT,                 Layout,                0)                      \
@@ -43,7 +44,8 @@
   VISIT(21, VALUE,                  Value,                 0)                      \
   VISIT(22, ABSTRACT_BUFFER,        AbstractBuffer,        0)                      \
   VISIT(23, SINGLETON,              Singleton,             0)                      \
-  VISIT(24, SYNTAX_TREE,            SyntaxTree,            0)
+  VISIT(24, SYNTAX_TREE,            SyntaxTree,            0)                      \
+  VISIT(25, INDIRECT,               Indirect,              0)
 
 #define FOR_EACH_SIGNAL_TYPE(VISIT)                                                \
   VISIT(30, ALLOCATION_FAILED,      AllocationFailed,      0)                      \
@@ -54,6 +56,7 @@
   VISIT(40, SMI,                    Smi,                   0)                      \
   VISIT(41, SIGNAL,                 Signal,                0)                      \
   VISIT(42, FORWARD_POINTER,        ForwardPointer,        0)                      \
+  VISIT(43, FORWARDER,              Forwarder,             0)                      \
   FOR_EACH_SIGNAL_TYPE(VISIT)                                                      \
   FOR_EACH_OBJECT_TYPE(VISIT)
 
@@ -198,7 +201,10 @@
   VISIT(1, DoOnExpression,        ValueOffset)                       \
   VISIT(2, DoOnExpression,        ClausesOffset)                     \
   VISIT(3, DoOnExpression,        Size)                              \
-  VISIT(1, Context,               Size)
+  VISIT(1, Context,               Size)                              \
+  VISIT(1, ForwarderDescriptor,   TypeOffset)                        \
+  VISIT(2, ForwarderDescriptor,   TargetOffset)                      \
+  VISIT(3, ForwarderDescriptor,   Size)
 
 
 // -----------------
@@ -256,7 +262,8 @@
   VISIT(43, Layout,     do_on_expression_layout,       DoOnExpression,        allocate_empty_layout(DO_ON_EXPRESSION_TYPE))       \
   VISIT(44, Layout,     instantiate_expression_layout, InstantiateExpression, allocate_empty_layout(INSTANTIATE_EXPRESSION_TYPE)) \
   VISIT(45, Layout,     context_layout,                Context,               allocate_empty_layout(CONTEXT_TYPE))                \
-  VISIT(46, Layout,     signature_layout,              Signature,             allocate_empty_layout(SIGNATURE_TYPE))
+  VISIT(46, Layout,     signature_layout,              Signature,             allocate_empty_layout(SIGNATURE_TYPE))              \
+  VISIT(47, Layout,     forwarder_descriptor_layout,   ForwarderDescriptor,   allocate_empty_layout(FORWARDER_DESCRIPTOR_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                            \

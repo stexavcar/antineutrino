@@ -72,8 +72,18 @@ inline bool is<Object>(Data *val) {
 }
 
 template <>
+inline bool is<Forwarder>(Data *val) {
+  return ValuePointer::has_forwarder_tag(val);
+}
+
+template <>
 inline bool is<Value>(Data *val) {
-  return is<Smi>(val) || is<Object>(val);
+  return is<Object>(val) || is<Smi>(val);
+}
+
+template <>
+inline bool is<Indirect>(Data *val) {
+  return !ValuePointer::has_signal_tag(val);
 }
 
 template <>
@@ -143,6 +153,49 @@ inline bool is<ForwardPointer>(Data *val) {
 FOR_EACH_SIGNAL_TYPE(DEFINE_SIGNAL_QUERY)
 #undef DEFINE_SIGNAL_QUERY
 
+
+// -----------------------------
+// --- C o n v e r s i o n s ---
+// -----------------------------
+
+template <>
+inline Data *to<Smi>(Indirect *val) {
+  if (is<Smi>(val)) {
+    return val;
+  } else if (is<Forwarder>(val)) {
+    Value *target = cast<Forwarder>(val)->target();
+    if (is<ForwarderDescriptor>(target)) {
+      return to<Smi>(cast<ForwarderDescriptor>(target)->target());
+    }
+  }
+  return Nothing::make();
+}
+
+template <>
+inline Data *to<Value>(Indirect *val) {
+  if (is<Value>(val)) {
+    return val;
+  } else if (is<Forwarder>(val)) {
+    Value *target = cast<Forwarder>(val)->target();
+    if (is<ForwarderDescriptor>(target)) {
+      return cast<ForwarderDescriptor>(target)->target();
+    }
+  }
+  return Nothing::make();
+}
+
+#define DEFINE_CONVERTER(n, NAME, Name, info)                        \
+  template <>                                                        \
+  inline Data *to<Name>(Indirect *val) {                             \
+    if (is<Name>(val)) {                                             \
+      return val;                                                    \
+    } else if (is<Forwarder>(val)) {                                 \
+      return to<Name>(cast<Forwarder>(val)->target());               \
+    }                                                                \
+    return Nothing::make();                                          \
+  }
+FOR_EACH_OBJECT_TYPE(DEFINE_CONVERTER)
+#undef DEFINE_CONVERTER
 
 // -----------------
 // --- V a l u e ---
@@ -218,12 +271,25 @@ FOR_EACH_LAMBDA_FIELD(DEFINE_FIELD_ACCESSORS, Lambda)
 // --- S m a l l   I n t e g e r ---
 // ---------------------------------
 
-Smi* Smi::from_int(word value) {
+Smi *Smi::from_int(word value) {
   return ValuePointer::tag_as_smi(value);
 }
 
 word Smi::value() {
   return ValuePointer::value_of(this);
+}
+
+
+// -------------------------
+// --- F o r w a r d e r ---
+// -------------------------
+
+Forwarder *Forwarder::to(Object *obj) {
+  return ValuePointer::tag_as_forwarder(ValuePointer::address_of(obj));
+}
+
+Object *Forwarder::target() {
+  return ValuePointer::tag_as_object(ValuePointer::target_of(this));
 }
 
 
@@ -382,6 +448,14 @@ bool Dictionary::Iterator::next(Dictionary::Iterator::Entry *entry) {
 // -------------------
 
 DEFINE_ACCESSORS(uword, Lambda, argc, Argc)
+
+
+// -----------------------------------------------
+// --- F o r w a r d e r   D e s c r i p t o r ---
+// -----------------------------------------------
+
+DEFINE_ACCESSORS(ForwarderType, ForwarderDescriptor, type, Type)
+
 
 // -------------------
 // --- B u f f e r ---

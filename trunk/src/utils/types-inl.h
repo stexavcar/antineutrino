@@ -16,13 +16,16 @@ inline To *pointer_cast(From *val) {
 template <class C>
 inline bool is(Data *val);
 
+template <class T>
+inline bool is(ref<Value> val) { return is<T>(*val); }
+
 #ifdef DEBUG
 template <class C>
 inline bool gc_safe_is(Data *val) { return is<C>(val); }
 #endif
 
-template <class T>
-inline bool is(ref<Value> val) { return is<T>(*val); }
+template <class C>
+inline Data *to(Indirect *obj);
 
 }
 

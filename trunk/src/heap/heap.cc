@@ -8,7 +8,7 @@
 #include "utils/types-inl.h"
 #include "values/values-inl.h"
 
-using namespace neutrino;
+namespace neutrino {
 
 Watch<Counter> Heap::allocation_count_("allocation count");
 
@@ -303,3 +303,22 @@ Data *Heap::new_instance(Layout *layout) {
   IF_PARANOID(result->validate());
   return result;
 }
+
+Data *Heap::new_smi_forwarder(Smi *target) {
+  Data *val = new_forwarder_descriptor(TRANSPARENT_FORWARDER, target);
+  if (is<AllocationFailed>(val)) return val;
+  Object *desc = cast<Object>(val);
+  return Forwarder::to(desc);
+}
+
+Data *Heap::new_forwarder_descriptor(ForwarderType type, Value *target) {
+  Data *val = allocate_object(ForwarderDescriptor::kSize, roots().forwarder_descriptor_layout());
+  if (is<AllocationFailed>(val)) return val;
+  ForwarderDescriptor *result = cast<ForwarderDescriptor>(val);
+  result->set_type(type);
+  result->set_target(target);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
+} // neutrino

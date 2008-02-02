@@ -267,6 +267,11 @@ public:
   inline ImageSyntaxTree *body();
 };
 
+class ImageForwarderDescriptor : public ImageObject {
+public:
+  inline ImageValue *target();
+};
+
 template <class C>
 static inline bool is(ImageData *val);
 

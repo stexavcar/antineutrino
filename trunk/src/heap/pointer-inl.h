@@ -41,6 +41,20 @@ Smi *ValuePointer::tag_as_smi(word val) {
   return reinterpret_cast<Smi*>((val << kSmiTagSize) | kSmiTag);
 }
 
+Forwarder *ValuePointer::tag_as_forwarder(address addr) {
+  ASSERT_EQ(0, reinterpret_cast<word>(addr) & kForwarderTagMask);
+  return reinterpret_cast<Forwarder*>(reinterpret_cast<word>(addr) + kForwarderTag);
+}
+
+bool ValuePointer::has_forwarder_tag(void *val) {
+  return (reinterpret_cast<word>(val) & kForwarderTagMask) == kForwarderTag;
+}
+
+address ValuePointer::target_of(void *forwarder) {
+  ASSERT(has_forwarder_tag(forwarder));
+  return reinterpret_cast<address>(reinterpret_cast<word>(forwarder) & ~kForwarderTagMask);
+}
+
 word ValuePointer::value_of(void *val) {
   ASSERT(has_smi_tag(val));
   return reinterpret_cast<word>(val) >> kSmiTagSize;
