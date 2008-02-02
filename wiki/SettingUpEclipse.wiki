@@ -17,5 +17,6 @@ The code style used is K&R but with:
 
    * Indentation 2 spaces
    * Always spaces, never tabs
+   * Lines should, if possible, be no longer than 70-80 characters
 
 An eclipse code style setting that can be imported under Window > Preferences... > C/C++ > Code Style is available at `misc/eclipse/codestyle.xml`.
