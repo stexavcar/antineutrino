@@ -6,7 +6,7 @@
 
 namespace neutrino {
 
-Arguments::Arguments(Runtime &runtime, uint32_t count, Frame &frame)
+Arguments::Arguments(Runtime &runtime, uword count, Frame &frame)
     : runtime_(runtime)
     , count_(count)
     , frame_(frame) { }
@@ -19,7 +19,7 @@ Lambda *Arguments::lambda() {
   return frame().lambda();
 }
 
-Value *Arguments::operator[](uint32_t index) {
+Value *Arguments::operator[](uword index) {
   ASSERT(index < count());
   return frame().argument(count() - index - 1);
 }

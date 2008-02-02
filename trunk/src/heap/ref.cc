@@ -29,12 +29,12 @@ Value **RefScope::grow() {
 
 void RefScope::shrink() {
   ASSERT(current().block_count != 0);
-  uint32_t blocks_to_delete = current().block_count;
+  uword blocks_to_delete = current().block_count;
   if (spare_block() == NULL) {
     spare_block_ = block_stack().pop();
     blocks_to_delete--;
   }
-  for (uint32_t i = 0; i < blocks_to_delete; i++) {
+  for (uword i = 0; i < blocks_to_delete; i++) {
     block_count()->decrement();
     delete block_stack().pop();
   }

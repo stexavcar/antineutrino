@@ -10,7 +10,7 @@ namespace neutrino {
 #ifdef DEBUG
 
 template <typename T>
-vector<T>::vector(T *data, uint32_t length) : data_(data), length_(length) { }
+vector<T>::vector(T *data, uword length) : data_(data), length_(length) { }
 
 template <typename T>
 vector<T>::vector() : data_(NULL), length_(0) { }
@@ -28,7 +28,7 @@ vector<T>::vector() : data_(NULL) { }
 
 
 template <typename T>
-T &vector<T>::operator[](uint32_t index) {
+T &vector<T>::operator[](uword index) {
   ASSERT_LT_C(OUT_OF_BOUNDS, index, length_);
   return data_[index];
 }

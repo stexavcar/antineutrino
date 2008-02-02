@@ -16,15 +16,15 @@ Heap::Heap(Roots &roots)
     : roots_(roots)
     , memory_(*this) { }
 
-Data *Heap::allocate_object(uint32_t size, Layout *type) {
+Data *Heap::allocate_object(uword size, Layout *type) {
   allocation_count()->increment();
   address addr = memory().allocate(size);
   if (!addr) return AllocationFailed::make(size);
   Object *result = ValuePointer::tag_as_object(addr);
   result->set_layout(type);
 #ifdef DEBUG
-  uint32_t *fields = reinterpret_cast<uint32_t*>(addr);
-  for (uint32_t i = 1; i < size / kPointerSize; i++)
+  uword *fields = reinterpret_cast<uword*>(addr);
+  for (uword i = 1; i < size / kPointerSize; i++)
     fields[i] = ValuePointer::kUninitialized;
 #endif
   return result;
@@ -40,7 +40,7 @@ Data *Heap::allocate_layout(InstanceType instance_type) {
   return result;
 }
 
-Data *Heap::new_lambda(uint32_t argc, Value *code, Value *constant_pool,
+Data *Heap::new_lambda(uword argc, Value *code, Value *constant_pool,
     Value *tree, Context *context) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_layout());
   if (is<AllocationFailed>(val)) return val;
@@ -93,7 +93,7 @@ Data *Heap::new_return_expression(SyntaxTree *value) {
   return result;
 }
 
-Data *Heap::allocate_lambda(uint32_t argc) {
+Data *Heap::allocate_lambda(uword argc) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_layout());
   if (is<AllocationFailed>(val)) return val;
   Lambda *result = cast<Lambda>(val);
@@ -136,7 +136,7 @@ Data *Heap::new_context() {
 }
 
 Data *Heap::new_layout(InstanceType instance_type, 
-    uint32_t instance_field_count, Value *protocol, Tuple *methods) {
+    uword instance_field_count, Value *protocol, Tuple *methods) {
   Data *val = allocate_layout(instance_type);
   if (is<AllocationFailed>(val)) return val;
   ASSERT_IS(Layout, val);
@@ -184,20 +184,20 @@ Data *Heap::new_signature(Tuple *parameters) {
 }
 
 Data *Heap::new_string(string value) {
-  uint32_t size = String::size_for(value.length());
+  uword size = String::size_for(value.length());
   Data *val = allocate_object(size, roots().string_layout());
   if (is<AllocationFailed>(val)) return val;
   String *result = cast<String>(val);
   result->set_length(value.length());
-  for (uint32_t i = 0; i < value.length(); i++)
+  for (uword i = 0; i < value.length(); i++)
     result->set(i, value[i]);
   ASSERT_EQ(size, result->size_in_memory());
   IF_PARANOID(result->validate());
   return result;
 }
 
-Data *Heap::new_stack(uint32_t height) {
-  uint32_t size = Stack::size_for(height);
+Data *Heap::new_stack(uword height) {
+  uword size = Stack::size_for(height);
   Data *val = allocate_object(size, roots().stack_layout());
   if (is<AllocationFailed>(val)) return val;
   Stack *result = cast<Stack>(val);
@@ -220,8 +220,8 @@ Data *Heap::new_task() {
   return result;
 }
 
-Data *Heap::new_string(uint32_t length) {
-  uint32_t size = String::size_for(length);
+Data *Heap::new_string(uword length) {
+  uword size = String::size_for(length);
   Data *val = allocate_object(size, roots().string_layout());
   if (is<AllocationFailed>(val)) return val;
   String *result = cast<String>(val);
@@ -231,7 +231,7 @@ Data *Heap::new_string(uint32_t length) {
   return result;
 }
 
-Data *Heap::new_code(uint32_t size) {
+Data *Heap::new_code(uword size) {
   Data *val = new_abstract_buffer(sizeof(uint16_t) * size, roots().code_layout());
   if (is<AllocationFailed>(val)) return val;
   Code *result = cast<Code>(val);
@@ -239,8 +239,8 @@ Data *Heap::new_code(uint32_t size) {
   return result;
 }
 
-Data *Heap::new_abstract_buffer(uint32_t byte_count, Layout *type) {
-  uint32_t size = AbstractBuffer::size_for(byte_count);
+Data *Heap::new_abstract_buffer(uword byte_count, Layout *type) {
+  uword size = AbstractBuffer::size_for(byte_count);
   Data *val = allocate_object(size, type);
   if (is<AllocationFailed>(val)) return val;
   AbstractBuffer *result = cast<AbstractBuffer>(val);
@@ -250,13 +250,13 @@ Data *Heap::new_abstract_buffer(uint32_t byte_count, Layout *type) {
   return result;
 }
 
-Data *Heap::new_tuple(uint32_t length) {
-  uint32_t size = Tuple::size_for(length);
+Data *Heap::new_tuple(uword length) {
+  uword size = Tuple::size_for(length);
   Data *val = allocate_object(size, roots().tuple_layout());
   if (is<AllocationFailed>(val)) return val;
   Tuple *result = cast<Tuple>(val);
   result->set_length(length);
-  for (uint32_t i = 0; i < length; i++)
+  for (uword i = 0; i < length; i++)
     result->set(i, roots().vhoid());
   ASSERT_EQ(size, result->size_in_memory());
   IF_PARANOID(result->validate());
@@ -293,12 +293,12 @@ Data *Heap::new_dictionary(Tuple *table) {
 
 Data *Heap::new_instance(Layout *layout) {
   ASSERT_EQ(INSTANCE_TYPE, layout->instance_type());
-  uint32_t field_count = layout->instance_field_count();
-  uint32_t size = Instance::size_for(field_count);
+  uword field_count = layout->instance_field_count();
+  uword size = Instance::size_for(field_count);
   Data *val = allocate_object(size, layout);
   if (is<AllocationFailed>(val)) return val;
   Instance *result = cast<Instance>(val);
-  for (uint32_t i = 0; i < field_count; i++)
+  for (uword i = 0; i < field_count; i++)
     result->set_field(i, roots().vhoid());
   IF_PARANOID(result->validate());
   return result;

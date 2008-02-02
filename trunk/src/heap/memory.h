@@ -10,7 +10,7 @@ class Memory {
 public:
   Memory(Heap &heap);
   ~Memory();
-  inline address allocate(uint32_t size);
+  inline address allocate(uword size);
   void collect_garbage();
   SemiSpace &young_space() { return *young_space_; }
 private:

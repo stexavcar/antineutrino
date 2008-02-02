@@ -44,8 +44,8 @@ void Marker::unwind() {
 // --- F r a m e ---
 // -----------------
 
-uint32_t &Frame::prev_pc() {
-  return reinterpret_cast<uint32_t*>(fp_)[kPrevPcOffset];
+uword &Frame::prev_pc() {
+  return reinterpret_cast<uword*>(fp_)[kPrevPcOffset];
 }
 
 word *&Frame::prev_fp() {
@@ -60,25 +60,25 @@ bool Frame::is_bottom() {
   return prev_fp() == 0;
 }
 
-Value *Frame::pop(uint32_t height) {
+Value *Frame::pop(uword height) {
   Value *result = *reinterpret_cast<Value**>(sp_ - 1);
   sp_ -= height;
   return result;
 }
 
-Value *&Frame::operator[](uint32_t index) {
+Value *&Frame::operator[](uword index) {
   return *reinterpret_cast<Value**>(sp_ - 1 - index);
 }
 
-Value *&Frame::argument(uint32_t index) {
+Value *&Frame::argument(uword index) {
   return *reinterpret_cast<Value**>(fp_ - index - 1);
 }
 
-Value *&Frame::local(uint32_t index) {
+Value *&Frame::local(uword index) {
   return *reinterpret_cast<Value**>(fp_ + Frame::kSize + index);
 }
 
-Value *&Frame::self(uint32_t argc) {
+Value *&Frame::self(uword argc) {
   return argument(argc + 1);
 }
 
@@ -111,7 +111,7 @@ void Frame::unwind() {
 
 void Frame::unwind(word *bottom) {
   sp_ = fp();
-  fp_ = reinterpret_cast<uint32_t>(prev_fp()) + bottom;
+  fp_ = reinterpret_cast<uword>(prev_fp()) + bottom;
 }
 
 
@@ -130,8 +130,8 @@ class OpcodeInfo { };
 #define DECLARE_OPCODE_INFO(n, NAME, argc)                           \
   template <> class OpcodeInfo<OC_##NAME> {                          \
   public:                                                            \
-    static const uint32_t kArgc = argc;                              \
-    static const uint32_t kSize = argc + 1;                          \
+    static const uword kArgc = argc;                              \
+    static const uword kSize = argc + 1;                          \
   };
 FOR_EACH_OPCODE(DECLARE_OPCODE_INFO)
 #undef DECLARE_OPCODE_INFO

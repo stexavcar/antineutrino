@@ -6,7 +6,7 @@
 
 namespace neutrino {
 
-static const uint32_t kSize = 1024 * 256;
+static const uword kSize = 1024 * 256;
 
 Memory::Memory(Heap &heap) 
     : heap_(heap)
@@ -63,7 +63,7 @@ void FieldMigrator::migrate_field(Value **field) {
   // to-space
   IF_PARANOID(obj->validate());
   uncook(obj);
-  uint32_t size = obj->size_in_memory();
+  uword size = obj->size_in_memory();
   address new_addr = to_space().allocate(size);
   memcpy(new_addr, ValuePointer::address_of(obj), size);
   Object *new_obj = ValuePointer::tag_as_object(new_addr);

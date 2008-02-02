@@ -35,7 +35,7 @@ public:
 #define CHECK_ABORTS(TYPE, operation)                                \
   do {                                                               \
     bool __has_aborted__ = false;                                    \
-    uint32_t __type__;                                               \
+    uword __type__;                                               \
     {                                                                \
       ConditionCatcher __catcher__;                                  \
       TRY (__catcher__) {                                            \

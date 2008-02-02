@@ -23,7 +23,7 @@ FOR_EACH_CONDITION(MAKE_ENUM_INFO_ENTRY)
 MAKE_ENUM_INFO_FOOTER()
 
 void Conditions::check_is_failed(const char *file_name, int line_number,
-    const char *type_name, uint32_t type_tag, Data *data,
+    const char *type_name, uword type_tag, Data *data,
     const char *value_source, Condition cause) {
   notify(cause);
 #ifdef DEBUG
@@ -35,7 +35,7 @@ void Conditions::check_is_failed(const char *file_name, int line_number,
     "#\n";
   EnumInfo<InstanceType> enum_info;
   const char *expected_name = Layout::layout_name(type_tag);
-  uint32_t value_tag = Layout::tag_of(data);
+  uword value_tag = Layout::tag_of(data);
   const char *value_type_name = Layout::layout_name(value_tag);
   fprintf(stderr, kErrorMessage, file_name, line_number, type_name, value_source,
       expected_name, value_type_name);
@@ -76,7 +76,7 @@ void Conditions::check_eq_failed(const char* file_name, int line_number,
 }
 
 void Conditions::check_ge_failed(const char* file_name, int line_number,
-    int32_t value, const char *value_source, int32_t limit,
+    word value, const char *value_source, word limit,
     const char *limit_source, Condition cause) {
   notify(cause);
   static const char *kErrorMessage =
@@ -133,7 +133,7 @@ void Conditions::unreachable(const char *file_name, int line_number,
 }
 
 void Conditions::unhandled(const char *file_name, int line_number,
-    const char *enum_name, int32_t value, AbstractEnumInfo &info,
+    const char *enum_name, word value, AbstractEnumInfo &info,
     Condition cause) {
   notify(cause);
   string name = info.get_name_for(value);

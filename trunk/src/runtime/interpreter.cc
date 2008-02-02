@@ -36,13 +36,13 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
   lambda.ensure_compiled();
   ASSERT(task->stack()->status().is_empty);
   task->stack()->status().is_empty = false;
-  uint32_t argc = 0;
+  uword argc = 0;
   Frame frame(task->stack()->bottom() + Frame::accessible_below_fp(argc));
   frame.self(argc) = runtime().roots().vhoid();
   frame.lambda() = *lambda;
   frame.prev_fp() = 0;
   ASSERT(frame.sp() >= frame.fp() + Frame::kSize);
-  uint32_t pc = 0;
+  uword pc = 0;
   Data *value;
   while (true) {
     value = interpret(task->stack(), frame, &pc);
@@ -70,7 +70,7 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
 }
 
 void Frame::reset(Stack *old_stack, Stack *new_stack) {
-  uint32_t delta = new_stack->bottom() - old_stack->bottom();
+  uword delta = new_stack->bottom() - old_stack->bottom();
   fp_ += delta;
   sp_ += delta;
 }
@@ -85,7 +85,7 @@ Layout *Interpreter::get_layout(Value *value) {
 
 
 static inline Method *lookup_method_local(Tuple *methods, Value *name) {
-  for (uint32_t i = 0; i < methods->length(); i++) {
+  for (uword i = 0; i < methods->length(); i++) {
     Method *method = cast<Method>(methods->get(i));
     if (method->name()->equals(name))
       return method;
@@ -119,7 +119,7 @@ static void unhandled_condition(Value *name, Arguments &args) {
   name->write_on(buf, Data::UNQUOTED);
   buf.append("(");
   bool is_first = true;
-  for (uint32_t i = 0; i < args.count(); i++) {
+  for (uword i = 0; i < args.count(); i++) {
     if (is_first) is_first = false;
     else buf.append(", ");
     args[i]->write_on(buf);
@@ -138,7 +138,7 @@ static void unhandled_condition(Value *name, Arguments &args) {
  */
 class ExecutionWrapUp {
 public:
-  inline ExecutionWrapUp(uint32_t *pc_from, uint32_t *pc_to) {
+  inline ExecutionWrapUp(uword *pc_from, uword *pc_to) {
     pc_from_ = pc_from;
     pc_to_ = pc_to;
   }
@@ -146,11 +146,11 @@ public:
     *pc_to_ = *pc_from_;
   }
 private:
-  uint32_t *pc_from_, *pc_to_;
+  uword *pc_from_, *pc_to_;
 };
 
-Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
-  uint32_t pc = *pc_ptr;
+Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
+  uword pc = *pc_ptr;
   ExecutionWrapUp wrap_up(&pc, pc_ptr);
   vector<uint16_t> code = cast<Code>(frame.lambda()->code())->buffer();
   vector<Value*> constant_pool = cast<Tuple>(frame.lambda()->constant_pool())->buffer();
@@ -244,7 +244,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       Marker marker(stack->top_marker());
       while (!marker.is_bottom()) {
         Tuple *handlers = cast<Tuple>(marker.data());
-        for (uint32_t i = 0; i < handlers->length(); i += 2) {
+        for (uword i = 0; i < handlers->length(); i += 2) {
           String *handler = cast<String>(handlers->get(i));
           if (name->equals(handler)) {
             Lambda *lambda = cast<Lambda>(handlers->get(i + 1));
@@ -284,7 +284,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
     case OC_NEW: {
       uint16_t layout_template_index = code[pc + 1];
       Layout *layout_template = cast<Layout>(constant_pool[layout_template_index]);
-      uint32_t field_count = layout_template->instance_field_count();
+      uword field_count = layout_template->instance_field_count();
       Protocol *proto = cast<Protocol>(frame[field_count]);
       USE(proto);
       Data *layout_val = layout_template->clone(runtime().heap());
@@ -293,7 +293,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       Data *val = runtime().heap().new_instance(layout);
       if (is<Signal>(val)) return val;
       Instance *instance = cast<Instance>(val);
-      for (int32_t i = field_count - 1; i >= 0; i--)
+      for (word i = field_count - 1; i >= 0; i--)
         instance->set_field(i, frame.pop());
       frame.pop(); // Pop the protocol
       frame.push(instance);
@@ -381,7 +381,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       Data *val = runtime().heap().new_tuple(length);
       if (is<Signal>(val)) return val;
       Tuple *result = cast<Tuple>(val);
-      for (int32_t i = length - 1; i >= 0; i--)
+      for (word i = length - 1; i >= 0; i--)
         result->set(i, frame.pop());
       frame.push(result);
       pc += OpcodeInfo<OC_TUPLE>::kSize;
@@ -394,17 +394,17 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       break;
     }
     case OC_CONCAT: {
-      uint32_t terms = code[pc + 1];
-      uint32_t length = 0;
-      for (uint32_t i = 0; i < terms; i++)
+      uword terms = code[pc + 1];
+      uword length = 0;
+      for (uword i = 0; i < terms; i++)
         length += cast<String>(frame[i])->length();
       Data *val = runtime().heap().new_string(length);
       if (is<Signal>(val)) return val;
       String *result = cast<String>(val);
-      uint32_t cursor = 0;
-      for (int32_t i = terms - 1; i >= 0; i--) {
+      uword cursor = 0;
+      for (word i = terms - 1; i >= 0; i--) {
         String *term = cast<String>(frame[i]);
-        for (uint32_t j = 0; j < term->length(); j++)
+        for (uword j = 0; j < term->length(); j++)
           result->set(cursor + j, term->at(j));
         cursor += term->length();
       }
@@ -414,13 +414,13 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       break;
     }
     case OC_CLOSURE: {
-      uint32_t index = code[pc + 1];
+      uword index = code[pc + 1];
       Lambda *lambda = cast<Lambda>(constant_pool[index]);
-      uint32_t outer_count = cast<Code>(frame.lambda()->code())->at(pc + 2);
+      uword outer_count = cast<Code>(frame.lambda()->code())->at(pc + 2);
       Data *outers_val = runtime().heap().new_tuple(outer_count);
       if (is<Signal>(outers_val)) return outers_val;
       Tuple *outers = cast<Tuple>(outers_val);
-      for (uint32_t i = 0; i < outer_count; i++)
+      for (uword i = 0; i < outer_count; i++)
         outers->set(outer_count - i - 1, frame.pop());
       Data *clone_val = lambda->clone(runtime().heap());
       if (is<Signal>(clone_val)) return clone_val;
@@ -431,18 +431,18 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr) {
       break;
     }
     case OC_OUTER: {
-      uint32_t index = code[pc + 1];
+      uword index = code[pc + 1];
       Value *value = frame.lambda()->outers()->get(index);
       frame.push(value);
       pc += OpcodeInfo<OC_OUTER>::kSize;
       break;
     }
     case OC_QUOTE: {
-      uint32_t unquote_count = code[pc + 1];
+      uword unquote_count = code[pc + 1];
       Data *unquotes_val = runtime().heap().new_tuple(unquote_count);
       if (is<Signal>(unquotes_val)) return unquotes_val;
       Tuple *unquotes = cast<Tuple>(unquotes_val);
-      for (uint32_t i = 0; i < unquote_count; i++)
+      for (uword i = 0; i < unquote_count; i++)
         unquotes->set(unquote_count - i - 1, frame.pop());
       SyntaxTree *tree = cast<SyntaxTree>(frame.pop());
       Data *result_val = runtime().heap().new_quote_template(tree, unquotes);
@@ -467,8 +467,8 @@ void Stack::validate_stack() {
   while (true) {
     GC_SAFE_CHECK_IS_C(VALIDATION, Lambda, frame.lambda());
     if (frame.is_bottom()) break;
-    uint32_t local_count = frame.locals();
-    for (uint32_t i = 0; i < local_count; i++)
+    uword local_count = frame.locals();
+    for (uword i = 0; i < local_count; i++)
       GC_SAFE_CHECK_IS_C(VALIDATION, Value, frame[i]);
     frame.unwind();
   }
@@ -482,7 +482,7 @@ void Stack::recook_stack() {
   word *bot = bottom();
   Frame frame(bot + fp());
   while (!frame.is_bottom()) {
-    frame.prev_fp() = bot + reinterpret_cast<uint32_t>(frame.prev_fp());
+    frame.prev_fp() = bot + reinterpret_cast<uword>(frame.prev_fp());
     frame.unwind();
   }
   IF_DEBUG(status().is_cooked = true);
@@ -514,8 +514,8 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
   while (true) {
     visitor.visit_field(pointer_cast<Value*>(&frame.lambda()));
     if (frame.is_bottom()) break;
-    uint32_t stack_height = frame.locals();
-    for (uint32_t i = 0; i < stack_height; i++) {
+    uword stack_height = frame.locals();
+    for (uword i = 0; i < stack_height; i++) {
       // Visit the i'th local variable
       visitor.visit_field(&frame[i]);
     }

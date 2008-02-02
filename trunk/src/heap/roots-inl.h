@@ -17,7 +17,7 @@ Value *&RootIterator::next() {
   return roots_.get(index_++);
 }
 
-Value *&Roots::get(uint32_t n) {
+Value *&Roots::get(uword n) {
   ASSERT(n < kCount);
   return entries_[n];
 }

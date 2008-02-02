@@ -3,7 +3,7 @@
 
 namespace neutrino {
 
-SemiSpace::SemiSpace(uint32_t capacity) {
+SemiSpace::SemiSpace(uword capacity) {
   cursor_ = 0;
   capacity_ = capacity;
   data_ = new int8_t[capacity];

@@ -100,9 +100,9 @@ DEFINE_REF_CLASS(Value);
 
 class Smi : public Value {
 public:
-  inline int32_t value();
+  inline word value();
 
-  static inline Smi *from_int(int32_t value);
+  static inline Smi *from_int(word value);
 };
 
 
@@ -132,7 +132,7 @@ public:
   DECLARE_FIELD(Data*, header);
   
   void for_each_field(FieldVisitor &visitor);
-  uint32_t size_in_memory();
+  uword size_in_memory();
   void preprocess();
   void postprocess();
   
@@ -180,8 +180,8 @@ public:
    */
   typedef StackStatus Status;
   
-  DECLARE_FIELD(uint32_t, height);
-  DECLARE_FIELD(uint32_t, fp);
+  DECLARE_FIELD(uword, height);
+  DECLARE_FIELD(uword, fp);
   DECLARE_FIELD(word*,    top_marker);
   DECLARE_FIELD(Status, status);
   inline word *bottom();
@@ -200,14 +200,14 @@ public:
    */
   void recook_stack();
 
-  static inline uint32_t size_for(uint32_t height);
-  static const uint32_t kInitialHeight = 2048;
+  static inline uword size_for(uword height);
+  static const uword kInitialHeight = 2048;
   
-  static const uint32_t kHeightOffset    = Object::kHeaderSize;
-  static const uint32_t kFpOffset        = kHeightOffset + kPointerSize;
-  static const uint32_t kTopMarkerOffset = kFpOffset + kPointerSize;
-  static const uint32_t kStatusOffset    = kTopMarkerOffset + kPointerSize;
-  static const uint32_t kHeaderSize      = kStatusOffset + kPointerSize;
+  static const uword kHeightOffset    = Object::kHeaderSize;
+  static const uword kFpOffset        = kHeightOffset + kPointerSize;
+  static const uword kTopMarkerOffset = kFpOffset + kPointerSize;
+  static const uword kStatusOffset    = kTopMarkerOffset + kPointerSize;
+  static const uword kHeaderSize      = kStatusOffset + kPointerSize;
 };
 
 template <> class ref_traits<Stack> : public ref_traits<Object> {
@@ -227,8 +227,8 @@ class Task : public Object {
 public:
   FOR_EACH_TASK_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kStackOffset = Object::kHeaderSize;
-  static const uint32_t kSize = kStackOffset + kPointerSize;
+  static const uword kStackOffset = Object::kHeaderSize;
+  static const uword kSize = kStackOffset + kPointerSize;
 };
 
 template <> class ref_traits<Task> : public ref_traits<Object> {
@@ -245,12 +245,12 @@ DEFINE_REF_CLASS(Task);
 
 class Instance : public Object {
 public:
-  inline Value *&get_field(uint32_t index);
-  inline void set_field(uint32_t index, Value *value);
+  inline Value *&get_field(uword index);
+  inline void set_field(uword index, Value *value);
   
-  static inline uint32_t size_for(uint32_t elms);
+  static inline uword size_for(uword elms);
   
-  static const uint32_t kHeaderSize = Object::kHeaderSize;
+  static const uword kHeaderSize = Object::kHeaderSize;
 };
 
 
@@ -271,14 +271,14 @@ public:
    * viewed as an array of int32s it will return 400 when viewed as
    * an array of int8s.
    */
-  template <typename T> inline uint32_t size();
+  template <typename T> inline uword size();
   
   /**
    * Sets the size of this buffer when viewed as the given type.
    * There is no reason to use this function outside of low-level
    * heap management.
    */
-  template <typename T> inline void set_size(uint32_t);
+  template <typename T> inline void set_size(uword);
   
   /**
    * Returns the element at the specified index, viewing the buffer as
@@ -288,11 +288,11 @@ public:
    * the 200th element of the same buffer when read as an array of
    * int8s.
    */
-  template <typename T> inline T &at(uint32_t index);
+  template <typename T> inline T &at(uword index);
   
   template <typename T> inline vector<T> buffer();
   
-  static inline uint32_t size_for(uint32_t byte_count);
+  static inline uword size_for(uword byte_count);
   
   static const int kSizeOffset = Object::kHeaderSize;
   static const int kHeaderSize = kSizeOffset + kPointerSize;
@@ -301,8 +301,8 @@ public:
 template <>
 class ref_traits<AbstractBuffer> : public ref_traits<Object> {
 public:
-  template <typename T> inline uint32_t &size();
-  template <typename T> inline T &at(uint32_t index);
+  template <typename T> inline uword &size();
+  template <typename T> inline T &at(uword index);
 };
 
 DEFINE_REF_CLASS(AbstractBuffer);
@@ -314,14 +314,14 @@ DEFINE_REF_CLASS(AbstractBuffer);
 
 class String : public Object {
 public:
-  DECLARE_FIELD(uint32_t, length);
-  inline char &at(uint32_t index);
-  inline void set(uint32_t index, char value);
+  DECLARE_FIELD(uword, length);
+  inline char &at(uword index);
+  inline void set(uword index, char value);
   
   bool string_equals(String *that);
   bool starts_with_vowel();
   
-  static inline uint32_t size_for(uint32_t chars);
+  static inline uword size_for(uword chars);
 
   static const int kLengthOffset = Object::kHeaderSize;
   static const int kHeaderSize   = kLengthOffset + kPointerSize;
@@ -346,16 +346,16 @@ class Buffer : public AbstractBuffer {
 
 class Code : public AbstractBuffer {
 public:
-  inline uint16_t &at(uint32_t index);
+  inline uint16_t &at(uword index);
   inline vector<uint16_t> buffer();
-  inline uint32_t length();
+  inline uword length();
 };
 
 template <>
 class ref_traits<Code> : public ref_traits<AbstractBuffer> {
 public:
-  inline uint16_t &at(uint32_t index);
-  inline uint32_t length();
+  inline uint16_t &at(uword index);
+  inline uword length();
 };
 
 DEFINE_REF_CLASS(Code);
@@ -367,12 +367,12 @@ DEFINE_REF_CLASS(Code);
 
 class Tuple : public Object {
 public:
-  DECLARE_FIELD(uint32_t, length);
+  DECLARE_FIELD(uword, length);
   inline vector<Value*> buffer();
-  inline Value *&get(uint32_t index);
-  inline void set(uint32_t index, Value *value);
+  inline Value *&get(uword index);
+  inline void set(uword index, Value *value);
   
-  static inline uint32_t size_for(uint32_t elms);
+  static inline uword size_for(uword elms);
   
   static const int kLengthOffset = Object::kHeaderSize;
   static const int kHeaderSize   = kLengthOffset + kPointerSize;
@@ -380,9 +380,9 @@ public:
 
 template <> class ref_traits<Tuple> : public ref_traits<Object> {
 public:
-  inline uint32_t length();
-  inline ref<Value> get(uint32_t index);
-  inline void set(uint32_t index, ref<Value> value);
+  inline uword length();
+  inline ref<Value> get(uword index);
+  inline void set(uword index, ref<Value> value);
 };
 
 DEFINE_REF_CLASS(Tuple);
@@ -399,7 +399,7 @@ class Dictionary : public Object {
 public:
   FOR_EACH_DICTIONARY_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  uint32_t size();
+  uword size();
   
   Data *get(Value *key);
   bool set(Value *key, Value *value);
@@ -415,9 +415,9 @@ public:
     inline bool next(Entry *entry);
   private:
     Tuple *table() { return table_; }
-    uint32_t index() { return index_; }
+    uword index() { return index_; }
     Tuple *table_;
-    uint32_t index_;
+    uword index_;
   };
   
   static const int kTableOffset = Object::kHeaderSize;
@@ -429,7 +429,7 @@ public:
   FOR_EACH_DICTIONARY_FIELD(DECLARE_REF_FIELD, 0)
   inline ref<Value> get(ref<Value> key);
   inline void set(ref<Value> key, ref<Value> value);
-  inline uint32_t size();
+  inline uword size();
 };
 
 DEFINE_REF_CLASS(Dictionary);
@@ -448,7 +448,7 @@ DEFINE_REF_CLASS(Dictionary);
 
 class Lambda : public Object {
 public:
-  DECLARE_FIELD(uint32_t, argc);
+  DECLARE_FIELD(uword, argc);
   FOR_EACH_LAMBDA_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   Value *call(Task *task);
@@ -457,13 +457,13 @@ public:
 
   string disassemble();
   
-  static const uint32_t kArgcOffset         = Object::kHeaderSize;
-  static const uint32_t kCodeOffset         = kArgcOffset + kPointerSize;
-  static const uint32_t kConstantPoolOffset = kCodeOffset + kPointerSize;
-  static const uint32_t kTreeOffset         = kConstantPoolOffset + kPointerSize;
-  static const uint32_t kOutersOffset       = kTreeOffset + kPointerSize;
-  static const uint32_t kContextOffset      = kOutersOffset + kPointerSize;
-  static const uint32_t kSize               = kContextOffset + kPointerSize;
+  static const uword kArgcOffset         = Object::kHeaderSize;
+  static const uword kCodeOffset         = kArgcOffset + kPointerSize;
+  static const uword kConstantPoolOffset = kCodeOffset + kPointerSize;
+  static const uword kTreeOffset         = kConstantPoolOffset + kPointerSize;
+  static const uword kOutersOffset       = kTreeOffset + kPointerSize;
+  static const uword kContextOffset      = kOutersOffset + kPointerSize;
+  static const uword kSize               = kContextOffset + kPointerSize;
 };
 
 template <> class ref_traits<Lambda> : public ref_traits<Object> {
@@ -510,10 +510,10 @@ class Protocol : public Object {
 public:
   FOR_EACH_PROTOCOL_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kNameOffset    = Object::kHeaderSize;
-  static const uint32_t kMethodsOffset = kNameOffset + kPointerSize;
-  static const uint32_t kSuperOffset   = kMethodsOffset + kPointerSize;
-  static const uint32_t kSize          = kSuperOffset + kPointerSize;
+  static const uword kNameOffset    = Object::kHeaderSize;
+  static const uword kMethodsOffset = kNameOffset + kPointerSize;
+  static const uword kSuperOffset   = kMethodsOffset + kPointerSize;
+  static const uword kSize          = kSuperOffset + kPointerSize;
 };
 
 template <> class ref_traits<Protocol> : public ref_traits<Object> {
@@ -535,21 +535,21 @@ DEFINE_REF_CLASS(Protocol);
 class Layout : public Object {
 public:
   DECLARE_FIELD(InstanceType, instance_type);
-  DECLARE_FIELD(uint32_t, instance_field_count);
+  DECLARE_FIELD(uword, instance_field_count);
   FOR_EACH_LAYOUT_FIELD(DECLARE_OBJECT_FIELD, 0)
   
   bool is_empty();
   Data *clone(Heap &heap);
 
-  IF_DEBUG(static uint32_t tag_of(Data *value));
-  IF_DEBUG(static const char *tag_name(uint32_t tag));
-  IF_DEBUG(static const char *layout_name(uint32_t tag));
+  IF_DEBUG(static uword tag_of(Data *value));
+  IF_DEBUG(static const char *tag_name(uword tag));
+  IF_DEBUG(static const char *layout_name(uword tag));
 
-  static const uint32_t kInstanceTypeOffset       = Object::kHeaderSize;
-  static const uint32_t kInstanceFieldCountOffset = kInstanceTypeOffset + kPointerSize;
-  static const uint32_t kProtocolOffset           = kInstanceFieldCountOffset + kPointerSize;
-  static const uint32_t kMethodsOffset            = kProtocolOffset + kPointerSize;
-  static const uint32_t kSize                     = kMethodsOffset + kPointerSize;
+  static const uword kInstanceTypeOffset       = Object::kHeaderSize;
+  static const uword kInstanceFieldCountOffset = kInstanceTypeOffset + kPointerSize;
+  static const uword kProtocolOffset           = kInstanceFieldCountOffset + kPointerSize;
+  static const uword kMethodsOffset            = kProtocolOffset + kPointerSize;
+  static const uword kSize                     = kMethodsOffset + kPointerSize;
 };
 
 template <> class ref_traits<Layout> {
@@ -570,8 +570,8 @@ DEFINE_REF_CLASS(Layout);
  */
 class Signal : public Data {
 public:
-  inline uint32_t type();
-  inline uint32_t payload();
+  inline uword type();
+  inline uword payload();
   enum Type {
     FIRST_SIGNAL_TYPE = -1
 #define DECLARE_SIGNAL_TYPE(n, NAME, Name, info) , NAME

@@ -80,9 +80,9 @@ static inline C *image_cast(ImageData *val) {
 // ---------------------------------------
 
 void ImageObject::point_forward(Object *obj) {
-  uint32_t offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
+  uword offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
   ImageForwardPointer *pointer = ImageForwardPointer::to(obj);
-  Image::current().heap()[offset] = reinterpret_cast<uint32_t>(pointer);
+  Image::current().heap()[offset] = reinterpret_cast<uword>(pointer);
 }
 
 Value *ImageValue::forward_pointer() {
@@ -100,14 +100,14 @@ Smi *ImageSmi::forward_pointer() {
 }
 
 Object *ImageObject::forward_pointer() {
-  uint32_t offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
+  uword offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
   ImageData *value = ImageData::from(Image::current().heap()[offset]);
   ImageForwardPointer *pointer = image_cast<ImageForwardPointer>(value);
   return pointer->target();
 }
 
 ImageForwardPointer *ImageForwardPointer::to(Object *obj) {
-  uint32_t value = ValuePointer::tag_as_signal(ValuePointer::address_of(obj));
+  uword value = ValuePointer::tag_as_signal(ValuePointer::address_of(obj));
   return reinterpret_cast<ImageForwardPointer*>(value);
 }
 
@@ -148,71 +148,71 @@ void ImageIterator::reset() {
 }
 
 ImageObject *ImageIterator::next() {
-  uint32_t object_ptr = ValuePointer::tag_offset_as_object(cursor());
+  uword object_ptr = ValuePointer::tag_offset_as_object(cursor());
   ImageObject *obj = image_cast<ImageObject>(ImageData::from(object_ptr));
   cursor_ += obj->size_in_image();
   return obj;
 }
 
-ImageData *ImageData::from(uint32_t addr) {
+ImageData *ImageData::from(uword addr) {
   return reinterpret_cast<ImageData*>(addr);
 }
 
-int32_t ImageSmi::value() {
+word ImageSmi::value() {
   return ValuePointer::value_of(this);
 }
 
 #define DEFINE_RAW_GETTER(T, Class, name, Name)                      \
   T Image##Class::name() {                                           \
-    uint32_t offset = ValuePointer::offset_of(this) + Image##Class##_##Name##Offset;\
+    uword offset = ValuePointer::offset_of(this) + Image##Class##_##Name##Offset;\
     return Image::current().heap()[offset];                          \
   }
 
 #define DEFINE_GETTER(T, Class, name, Name)                          \
   Image##T *Image##Class::name() {                                   \
-    uint32_t offset = ValuePointer::offset_of(this) + Image##Class##_##Name##Offset;\
+    uword offset = ValuePointer::offset_of(this) + Image##Class##_##Name##Offset;\
     ImageData *data = ImageData::from(Image::current().heap()[offset]);\
     return image_cast<Image##T>(data);                               \
   }
 
 // --- S t r i n g ---
 
-DEFINE_RAW_GETTER(uint32_t, String, length, Length)
+DEFINE_RAW_GETTER(uword, String, length, Length)
 
-uint32_t ImageString::at(uint32_t index) {
+uword ImageString::at(uword index) {
   ASSERT(index < length());
-  uint32_t offset = ValuePointer::offset_of(this) + ImageString_HeaderSize + index;
+  uword offset = ValuePointer::offset_of(this) + ImageString_HeaderSize + index;
   return Image::current().heap()[offset];
 }
 
 // --- T u p l e ---
 
-DEFINE_RAW_GETTER(uint32_t, Tuple, length, Length)
+DEFINE_RAW_GETTER(uword, Tuple, length, Length)
 
-ImageValue *ImageTuple::at(uint32_t index) {
+ImageValue *ImageTuple::at(uword index) {
   ASSERT(index < length());
-  uint32_t offset = ValuePointer::offset_of(this) + ImageCode_HeaderSize + index;
+  uword offset = ValuePointer::offset_of(this) + ImageCode_HeaderSize + index;
   ImageData *data = ImageData::from(Image::current().heap()[offset]);
   return image_cast<ImageValue>(data);
 }
 
 // --- C o d e ---
 
-DEFINE_RAW_GETTER(uint32_t, Code, length, Length)
+DEFINE_RAW_GETTER(uword, Code, length, Length)
 
-uint32_t ImageCode::at(uint32_t index) {
+uword ImageCode::at(uword index) {
   ASSERT(index < length());
-  uint32_t offset = ValuePointer::offset_of(this) + ImageCode_HeaderSize + index;
+  uword offset = ValuePointer::offset_of(this) + ImageCode_HeaderSize + index;
   return Image::current().heap()[offset];
 }
 
 DEFINE_GETTER    (Tuple,            Protocol,              methods,       Methods)
 DEFINE_GETTER    (Value,            Protocol,              name,          Name)
 DEFINE_GETTER    (Value,            Protocol,              super,         Super)
-DEFINE_RAW_GETTER(uint32_t,         Layout,                instance_type, InstanceType)
+DEFINE_RAW_GETTER(uword,         Layout,                instance_type, InstanceType)
 DEFINE_GETTER    (Tuple,            Layout,                methods,       Methods)
 DEFINE_GETTER    (Value,            Layout,                protocol,      Protocol)
-DEFINE_RAW_GETTER(uint32_t,         Lambda,                argc,          Argc)
+DEFINE_RAW_GETTER(uword,         Lambda,                argc,          Argc)
 DEFINE_GETTER    (Value,            Lambda,                code,          Code)
 DEFINE_GETTER    (Value,            Lambda,                literals,      Literals)
 DEFINE_GETTER    (SyntaxTree,       Lambda,                tree,          Tree)
@@ -222,7 +222,7 @@ DEFINE_GETTER    (Signature,        Method,                signature,     Signat
 DEFINE_GETTER    (Lambda,           Method,                lambda,        Lambda)
 DEFINE_GETTER    (Tuple,            Signature,             parameters,    Parameters)
 DEFINE_GETTER    (Tuple,            Dictionary,            table,         Table)
-DEFINE_RAW_GETTER(uint32_t,         Root,                  index,         Index)
+DEFINE_RAW_GETTER(uword,         Root,                  index,         Index)
 DEFINE_GETTER    (Value,            LiteralExpression,     value,         Value)
 DEFINE_GETTER    (SyntaxTree,       InvokeExpression,      receiver,      Receiver)
 DEFINE_GETTER    (String,           InvokeExpression,      name,          Name)
@@ -258,10 +258,10 @@ DEFINE_GETTER    (SyntaxTree,       QuoteExpression,       value,         Value)
 DEFINE_GETTER    (Tuple,            QuoteExpression,       unquotes,      Unquotes)
 DEFINE_GETTER    (SyntaxTree,       QuoteTemplate,         value,         Value)
 DEFINE_GETTER    (Tuple,            QuoteTemplate,         unquotes,      Unquotes)
-DEFINE_RAW_GETTER(uint32_t,         UnquoteExpression,     index,         Index)
+DEFINE_RAW_GETTER(uword,         UnquoteExpression,     index,         Index)
 DEFINE_GETTER    (String,           GlobalExpression,      name,          Name)
-DEFINE_RAW_GETTER(uint32_t,         BuiltinCall,           argc,          Argc)
-DEFINE_RAW_GETTER(uint32_t,         BuiltinCall,           index,         Index)
+DEFINE_RAW_GETTER(uword,         BuiltinCall,           argc,          Argc)
+DEFINE_RAW_GETTER(uword,         BuiltinCall,           index,         Index)
 DEFINE_GETTER    (Tuple,            InterpolateExpression, terms,         Terms)
 DEFINE_GETTER    (Symbol,           LocalDefinition,       symbol,        Symbol)
 DEFINE_GETTER    (SyntaxTree,       LocalDefinition,       value,         Value)

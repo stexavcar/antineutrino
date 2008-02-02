@@ -33,7 +33,7 @@ public:
   FOR_EACH_ROOT(DECLARE_ROOT_ACCESSOR)
   #undef DECLARE_ROOT_ACCESSOR
   
-  inline ref<Object> get_root(uint32_t index);
+  inline ref<Object> get_root(uword index);
   
   /**
    * Stack-allocated class that sets the given runtime as the current

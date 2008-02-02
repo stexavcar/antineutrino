@@ -55,9 +55,9 @@ public:
   inline bool is_bottom();
   inline void unwind();
   
-  static const uint32_t kPrevMpOffset = 0;
-  static const uint32_t kDataOffset   = kPrevMpOffset + 1;
-  static const uint32_t kSize         = kDataOffset + 1;
+  static const uword kPrevMpOffset = 0;
+  static const uword kDataOffset   = kPrevMpOffset + 1;
+  static const uword kSize         = kDataOffset + 1;
 private:
   word *mp_;
 };
@@ -93,15 +93,15 @@ class Frame {
 public:
   Frame(word *fp, word *sp) : fp_(fp), sp_(sp) { }
   Frame(word *fp) : fp_(fp), sp_(fp + kSize) { }
-  uint32_t locals() { return sp() - (fp() + kSize); }
-  inline uint32_t &prev_pc();
+  uword locals() { return sp() - (fp() + kSize); }
+  inline uword &prev_pc();
   inline word *&prev_fp();
   inline Lambda *&lambda();
-  inline Value *&local(uint32_t index);
-  inline Value *&argument(uint32_t index);
-  inline Value *&self(uint32_t argc);
-  inline Value *pop(uint32_t height = 1);
-  inline Value *&operator[](uint32_t offset);
+  inline Value *&local(uword index);
+  inline Value *&argument(uword index);
+  inline Value *&self(uword argc);
+  inline Value *pop(uword height = 1);
+  inline Value *&operator[](uword offset);
   inline void push_activation();
   inline Marker push_marker();
   inline Marker pop_marker();
@@ -127,12 +127,12 @@ public:
    * Returns the number of stack entries below the current fp that may
    * be accessed through this stack frame.
    */
-  static inline uint32_t accessible_below_fp(uint32_t argc) { return argc + 2; }
+  static inline uword accessible_below_fp(uword argc) { return argc + 2; }
 
-  static const uint32_t kPrevPcOffset = 0;
-  static const uint32_t kPrevFpOffset = kPrevPcOffset + 1;
-  static const uint32_t kLambdaOffset = kPrevFpOffset + 1;
-  static const uint32_t kSize         = kLambdaOffset + 1;
+  static const uword kPrevPcOffset = 0;
+  static const uword kPrevFpOffset = kPrevPcOffset + 1;
+  static const uword kLambdaOffset = kPrevFpOffset + 1;
+  static const uword kSize         = kLambdaOffset + 1;
 
 private:
   word *fp_;
@@ -147,7 +147,7 @@ public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
   Value *call(Lambda *lambda, Task *task);
 private:
-  Data *interpret(Stack *stack, Frame &frame, uint32_t *pc_ptr);
+  Data *interpret(Stack *stack, Frame &frame, uword *pc_ptr);
   Layout *get_layout(Value *val);
   Data *lookup_method(Layout *layout, Value *name);
   Runtime &runtime() { return runtime_; }

@@ -11,7 +11,7 @@ namespace neutrino {
 
 class SyntaxTree : public Object {
 public:
-  inline Value *&at(uint32_t index);
+  inline Value *&at(uword index);
   
   void unparse_on(string_buffer &buf);
   
@@ -39,8 +39,8 @@ class LiteralExpression : public SyntaxTree {
 public:
   FOR_EACH_LITERAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kSize = kValueOffset + kPointerSize;
+  static const uword kValueOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize = kValueOffset + kPointerSize;
 };
 
 template <>
@@ -63,9 +63,9 @@ class QuoteTemplate : public SyntaxTree {
 public:
   FOR_EACH_QUOTE_TEMPLATE_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kUnquotesOffset = kValueOffset + kPointerSize;
-  static const uint32_t kSize = kUnquotesOffset + kPointerSize;
+  static const uword kValueOffset = SyntaxTree::kHeaderSize;
+  static const uword kUnquotesOffset = kValueOffset + kPointerSize;
+  static const uword kSize = kUnquotesOffset + kPointerSize;
 };
 
 template <>
@@ -90,10 +90,10 @@ class InvokeExpression : public SyntaxTree {
 public:
   FOR_EACH_INVOKE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kReceiverOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kNameOffset = kReceiverOffset + kPointerSize;
-  static const uint32_t kArgumentsOffset = kNameOffset + kPointerSize;
-  static const uint32_t kSize = kArgumentsOffset + kPointerSize;
+  static const uword kReceiverOffset = SyntaxTree::kHeaderSize;
+  static const uword kNameOffset = kReceiverOffset + kPointerSize;
+  static const uword kArgumentsOffset = kNameOffset + kPointerSize;
+  static const uword kSize = kArgumentsOffset + kPointerSize;
 };
 
 template <>
@@ -119,11 +119,11 @@ class InstantiateExpression : public SyntaxTree {
 public:
   FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kReceiverOffset  = SyntaxTree::kHeaderSize;
-  static const uint32_t kNameOffset      = kReceiverOffset + kPointerSize;
-  static const uint32_t kArgumentsOffset = kNameOffset + kPointerSize;
-  static const uint32_t kTermsOffset     = kArgumentsOffset + kPointerSize;
-  static const uint32_t kSize            = kTermsOffset + kPointerSize;
+  static const uword kReceiverOffset  = SyntaxTree::kHeaderSize;
+  static const uword kNameOffset      = kReceiverOffset + kPointerSize;
+  static const uword kArgumentsOffset = kNameOffset + kPointerSize;
+  static const uword kTermsOffset     = kArgumentsOffset + kPointerSize;
+  static const uword kSize            = kTermsOffset + kPointerSize;
 };
 
 template <>
@@ -147,9 +147,9 @@ class RaiseExpression : public SyntaxTree {
 public:
   FOR_EACH_RAISE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kArgumentsOffset = kNameOffset + kPointerSize;
-  static const uint32_t kSize = kArgumentsOffset + kPointerSize;
+  static const uword kNameOffset = SyntaxTree::kHeaderSize;
+  static const uword kArgumentsOffset = kNameOffset + kPointerSize;
+  static const uword kSize = kArgumentsOffset + kPointerSize;
 };
 
 template <>
@@ -173,9 +173,9 @@ class OnClause : public SyntaxTree {
 public:
   FOR_EACH_ON_CLAUSE_FIELD(DECLARE_OBJECT_FIELD, 0)
 
-  static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kLambdaOffset = kNameOffset + kPointerSize;
-  static const uint32_t kSize = kLambdaOffset + kPointerSize;
+  static const uword kNameOffset = SyntaxTree::kHeaderSize;
+  static const uword kLambdaOffset = kNameOffset + kPointerSize;
+  static const uword kSize = kLambdaOffset + kPointerSize;
 };
 
 template <>
@@ -199,9 +199,9 @@ class DoOnExpression : public SyntaxTree {
 public:
   FOR_EACH_DO_ON_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kClausesOffset = kValueOffset + kPointerSize;
-  static const uint32_t kSize = kClausesOffset + kPointerSize;
+  static const uword kValueOffset = SyntaxTree::kHeaderSize;
+  static const uword kClausesOffset = kValueOffset + kPointerSize;
+  static const uword kSize = kClausesOffset + kPointerSize;
 };
 
 template <>
@@ -226,10 +226,10 @@ class CallExpression : public SyntaxTree {
 public:
   FOR_EACH_CALL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kReceiverOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kFunctionOffset = kReceiverOffset + kPointerSize;
-  static const uint32_t kArgumentsOffset = kFunctionOffset + kPointerSize;
-  static const uint32_t kSize = kArgumentsOffset + kPointerSize;
+  static const uword kReceiverOffset = SyntaxTree::kHeaderSize;
+  static const uword kFunctionOffset = kReceiverOffset + kPointerSize;
+  static const uword kArgumentsOffset = kFunctionOffset + kPointerSize;
+  static const uword kSize = kArgumentsOffset + kPointerSize;
 };
 
 template <>
@@ -254,10 +254,10 @@ class ConditionalExpression : public SyntaxTree {
 public:
   FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kConditionOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kThenPartOffset = kConditionOffset + kPointerSize;
-  static const uint32_t kElsePartOffset = kThenPartOffset + kPointerSize;
-  static const uint32_t kSize = kElsePartOffset + kPointerSize;
+  static const uword kConditionOffset = SyntaxTree::kHeaderSize;
+  static const uword kThenPartOffset = kConditionOffset + kPointerSize;
+  static const uword kElsePartOffset = kThenPartOffset + kPointerSize;
+  static const uword kSize = kElsePartOffset + kPointerSize;
 };
 
 template <>
@@ -282,10 +282,10 @@ class ProtocolExpression : public SyntaxTree {
 public:
   FOR_EACH_PROTOCOL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kMethodsOffset = kNameOffset + kPointerSize;
-  static const uint32_t kSuperOffset = kMethodsOffset + kPointerSize;
-  static const uint32_t kSize = kSuperOffset + kPointerSize;
+  static const uword kNameOffset = SyntaxTree::kHeaderSize;
+  static const uword kMethodsOffset = kNameOffset + kPointerSize;
+  static const uword kSuperOffset = kMethodsOffset + kPointerSize;
+  static const uword kSize = kSuperOffset + kPointerSize;
 };
 
 template <>
@@ -309,8 +309,8 @@ class ReturnExpression : public SyntaxTree {
 public:
   FOR_EACH_RETURN_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kSize = kValueOffset + kPointerSize;
+  static const uword kValueOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize = kValueOffset + kPointerSize;
 };
 
 template <>
@@ -334,9 +334,9 @@ class MethodExpression : public SyntaxTree {
 public:
   FOR_EACH_METHOD_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kLambdaOffset = kNameOffset + kPointerSize;
-  static const uint32_t kSize = kLambdaOffset + kPointerSize;
+  static const uword kNameOffset = SyntaxTree::kHeaderSize;
+  static const uword kLambdaOffset = kNameOffset + kPointerSize;
+  static const uword kSize = kLambdaOffset + kPointerSize;
 };
 
 template <>
@@ -360,8 +360,8 @@ class SequenceExpression : public SyntaxTree {
 public:
   FOR_EACH_SEQUENCE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kExpressionsOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kSize = kExpressionsOffset + kPointerSize;
+  static const uword kExpressionsOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize = kExpressionsOffset + kPointerSize;
 };
 
 template <>
@@ -384,8 +384,8 @@ class TupleExpression : public SyntaxTree {
 public:
   FOR_EACH_TUPLE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
 
-  static const uint32_t kValuesOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kSize = kValuesOffset + kPointerSize;
+  static const uword kValuesOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize = kValuesOffset + kPointerSize;
 };
 
 template <>
@@ -408,8 +408,8 @@ class GlobalExpression : public SyntaxTree {
 public:
   FOR_EACH_GLOBAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kSize = kNameOffset + kPointerSize;
+  static const uword kNameOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize = kNameOffset + kPointerSize;
 };
 
 template <>
@@ -432,8 +432,8 @@ class Symbol : public SyntaxTree {
 public:
   FOR_EACH_SYMBOL_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kNameOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kSize = kNameOffset + kPointerSize;
+  static const uword kNameOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize = kNameOffset + kPointerSize;
 };
 
 template <>
@@ -457,9 +457,9 @@ class QuoteExpression : public SyntaxTree {
 public:
   FOR_EACH_QUOTE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kValueOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kUnquotesOffset = kValueOffset + kPointerSize;
-  static const uint32_t kSize = kUnquotesOffset + kPointerSize;
+  static const uword kValueOffset = SyntaxTree::kHeaderSize;
+  static const uword kUnquotesOffset = kValueOffset + kPointerSize;
+  static const uword kSize = kUnquotesOffset + kPointerSize;
 };
 
 template <>
@@ -477,10 +477,10 @@ DEFINE_REF_CLASS(QuoteExpression);
 
 class UnquoteExpression : public SyntaxTree {
 public:
-  DECLARE_FIELD(uint32_t, index);
+  DECLARE_FIELD(uword, index);
   
-  static const uint32_t kIndexOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kSize        = kIndexOffset + kPointerSize;
+  static const uword kIndexOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize        = kIndexOffset + kPointerSize;
 };
 
 template <>
@@ -501,9 +501,9 @@ class LambdaExpression : public SyntaxTree {
 public:
   FOR_EACH_LAMBDA_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kParamsOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kBodyOffset = kParamsOffset + kPointerSize;
-  static const uint32_t kSize = kBodyOffset + kPointerSize;
+  static const uword kParamsOffset = SyntaxTree::kHeaderSize;
+  static const uword kBodyOffset = kParamsOffset + kPointerSize;
+  static const uword kSize = kBodyOffset + kPointerSize;
 };
 
 template <>
@@ -522,7 +522,7 @@ DEFINE_REF_CLASS(LambdaExpression);
 
 class ThisExpression : public SyntaxTree {
 public:
-  static const uint32_t kSize = SyntaxTree::kHeaderSize;
+  static const uword kSize = SyntaxTree::kHeaderSize;
 };
 
 
@@ -537,8 +537,8 @@ class InterpolateExpression : public SyntaxTree {
 public:
   FOR_EACH_INTERPOLATE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
 
-  static const uint32_t kTermsOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kSize = kTermsOffset + kPointerSize;
+  static const uword kTermsOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize = kTermsOffset + kPointerSize;
 };
 
 template <>
@@ -558,19 +558,19 @@ DEFINE_REF_CLASS(InterpolateExpression);
 
 class BuiltinCall : public SyntaxTree {
 public:
-  DECLARE_FIELD(uint32_t, argc);
-  DECLARE_FIELD(uint32_t, index);
+  DECLARE_FIELD(uword, argc);
+  DECLARE_FIELD(uword, index);
 
-  static const uint32_t kArgcOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kIndexOffset = kArgcOffset + kPointerSize;
-  static const uint32_t kSize = kIndexOffset + kPointerSize;
+  static const uword kArgcOffset = SyntaxTree::kHeaderSize;
+  static const uword kIndexOffset = kArgcOffset + kPointerSize;
+  static const uword kSize = kIndexOffset + kPointerSize;
 };
 
 template <>
 class ref_traits<BuiltinCall> : public ref_traits<SyntaxTree> {
 public:
-  inline uint32_t argc();
-  inline uint32_t index();
+  inline uword argc();
+  inline uword index();
 };
 
 DEFINE_REF_CLASS(BuiltinCall);
@@ -589,10 +589,10 @@ class LocalDefinition : public SyntaxTree {
 public:
   FOR_EACH_LOCAL_DEFINITION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kSymbolOffset = SyntaxTree::kHeaderSize;
-  static const uint32_t kValueOffset = kSymbolOffset + kPointerSize;
-  static const uint32_t kBodyOffset = kValueOffset + kPointerSize;
-  static const uint32_t kSize = kBodyOffset + kPointerSize;
+  static const uword kSymbolOffset = SyntaxTree::kHeaderSize;
+  static const uword kValueOffset = kSymbolOffset + kPointerSize;
+  static const uword kBodyOffset = kValueOffset + kPointerSize;
+  static const uword kSize = kBodyOffset + kPointerSize;
 };
 
 template <>

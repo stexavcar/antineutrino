@@ -42,10 +42,10 @@ FOR_EACH_SIGNAL_CODE(MAKE_CASE)
  * Removes all occurrences of the given substring from the string.
  */
 static void remove_substring(char *str, const char *substr) {
-  uint32_t p = 0;
-  uint32_t i = 0;
+  uword p = 0;
+  uword i = 0;
   while (str[p]) {
-    uint32_t j;
+    uword j;
     for (j = 0; str[p + j] == substr[j] && substr[j]; j++);
     if (substr[j]) {
       str[i] = str[p];
@@ -97,7 +97,7 @@ static void print_error_report(int signum, siginfo_t *info, void *ptr) {
     fprintf(stderr, "code:   %s (%s)\n", enum_info.name, enum_info.desc);    
   switch (info->si_signo) {
     case SIGSEGV: case SIGILL: case SIGFPE: case SIGBUS:
-      fprintf(stderr, "addr:   %x\n", reinterpret_cast<uint32_t>(info->si_addr));
+      fprintf(stderr, "addr:   %x\n", static_cast<uint32_t>(reinterpret_cast<uword>(info->si_addr)));
       break;
   }
   fprintf(stderr, "status: %i\n", info->si_status);

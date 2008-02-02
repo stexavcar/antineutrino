@@ -7,20 +7,20 @@ namespace neutrino {
 
 class SemiSpace {
 public:
-  SemiSpace(uint32_t capacity);
+  SemiSpace(uword capacity);
   ~SemiSpace();
-  uint32_t capacity();
+  uword capacity();
   address start() { return data_; }
   address end() { return data_ + capacity_; }
   address cursor() { return data_ + cursor_; }
-  uint32_t bytes_allocated() { return cursor() - start(); }
+  uword bytes_allocated() { return cursor() - start(); }
   bool contains(Object *obj);
-  inline address allocate(uint32_t size);
+  inline address allocate(uword size);
 private:
   friend class SemiSpaceIterator;
   address data_;
-  uint32_t cursor_;
-  uint32_t capacity_;
+  uword cursor_;
+  uword capacity_;
 };
 
 class SemiSpaceIterator {
@@ -30,7 +30,7 @@ public:
   inline Object *next();
 private:
   SemiSpace &space_;
-  uint32_t offset_;
+  uword offset_;
 };
 
 }

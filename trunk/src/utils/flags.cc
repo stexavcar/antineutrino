@@ -6,7 +6,7 @@ namespace neutrino {
 
 AbstractRegisterFlag *AbstractRegisterFlag::first_ = NULL;
 
-AbstractRegisterFlag::AbstractRegisterFlag(string name, int32_t argc)
+AbstractRegisterFlag::AbstractRegisterFlag(string name, word argc)
     : name_(name), argc_(argc), next_(first_) {
   first_ = this;
 }
@@ -19,8 +19,8 @@ RegisterFlag< list<string> >::RegisterFlag(string name, list<string> *var)
 
 bool FlagParser::compare_options(string a, string b) {
   if (a.length() != b.length()) return false;
-  for (uint32_t i = 0; i < a.length(); i++) {
-    uint32_t c = a[i];
+  for (uword i = 0; i < a.length(); i++) {
+    uword c = a[i];
     if (c == '_') c = '-';
     if (b[i] != c) return false;
   }
@@ -28,7 +28,7 @@ bool FlagParser::compare_options(string a, string b) {
 }
 
 list<string> FlagParser::parse_flags(list<char*> &args, ErrorHandler on_error) {
-  uint32_t cursor = 1;
+  uword cursor = 1;
   list_buffer<string> buf;
   while (cursor < args.length()) {
     string str(args[cursor++]);
@@ -54,7 +54,7 @@ list<string> FlagParser::parse_flags(list<char*> &args, ErrorHandler on_error) {
           message.printf("% is not a list option", str.chars());
           on_error(message.raw_string());
         } else {
-          uint32_t start = cursor;
+          uword start = cursor;
           while (cursor < args.length() && !string::equals(args[cursor], "]"))
             cursor++;
           if (cursor == args.length()) {
@@ -68,7 +68,7 @@ list<string> FlagParser::parse_flags(list<char*> &args, ErrorHandler on_error) {
           }
         }
       } else {
-        int32_t argc = option->argc();
+        word argc = option->argc();
         if (argc < 0) {
           string_buffer message;
           message.printf("% is a list option", str.chars());
@@ -95,7 +95,7 @@ void RegisterFlag<bool>::process(list<char*> args) {
 
 void RegisterFlag< list<string> >::process(list<char*> args) {
   string *array = new string[args.length()];
-  for (uint32_t i = 0; i < args.length(); i++)
+  for (uword i = 0; i < args.length(); i++)
     array[i] = args[i];
   *var_ = list<string>(array, args.length());
 }

@@ -33,7 +33,7 @@ public:
       const char *value_source, Condition cause);
 
   void check_ge_failed(const char* file_name, int line_number,
-      int32_t value, const char *value_source, int32_t limit,
+      word value, const char *value_source, word limit,
       const char *limit_source, Condition cause);
 
   void check_lt_failed(const char* file_name, int line_number,
@@ -45,14 +45,14 @@ public:
       Value *value, const char *value_source, Condition cause);
 
   void check_is_failed(const char *file_name, int line_number,
-      const char *type_name, uint32_t type_tag, Data *value,
+      const char *type_name, uword type_tag, Data *value,
       const char *value_source, Condition cause);
   
   void unreachable(const char *file_name, int line_number,
       Condition cause);
 
   void unhandled(const char *file_name, int line_number,
-      const char *enum_name, int32_t value, AbstractEnumInfo &info,
+      const char *enum_name, word value, AbstractEnumInfo &info,
       Condition cause);
   
   void error_occurred(const char *format, ...);

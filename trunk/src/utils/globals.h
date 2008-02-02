@@ -45,8 +45,8 @@
 template <typename T>
 static inline void USE(T t) { }
 
-static const uint32_t kPointerSize = sizeof(void*);
-static const uint32_t kWordSize = sizeof(word);
+static const uword kPointerSize = sizeof(void*);
+static const uword kWordSize = sizeof(word);
 
 static const bool kDebugMode = IF_ELSE_DEBUG(true, false);
 
@@ -56,7 +56,7 @@ static const bool kDebugMode = IF_ELSE_DEBUG(true, false);
  * increase in size by the golden ratio but is computed purely with
  * simple integer operations.
  */
-static inline uint32_t grow_value(uint32_t n) {
+static inline uword grow_value(uword n) {
   return ((n << 3) + (n << 2) + n) >> 3;
 }
 

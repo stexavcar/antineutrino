@@ -14,14 +14,14 @@ template <typename T>
 class list {
 public:
   list();
-  list(T *elms, uint32_t length);
-  uint32_t length() { return length_; }
-  T operator[](uint32_t index);
-  list<T> sublist(uint32_t start, uint32_t length);
+  list(T *elms, uword length);
+  uword length() { return length_; }
+  T operator[](uword index);
+  list<T> sublist(uword start, uword length);
   void dispose();
 private:
   T *elms_;
-  uint32_t length_;
+  uword length_;
 };
 
 /**
@@ -38,7 +38,7 @@ public:
   T pop();
   T peek();
   T *data() { return data_; }
-  T &operator[](uint32_t index);
+  T &operator[](uword index);
 
   /**
    * Creates a list containing a copy of the contents of this list
@@ -47,13 +47,13 @@ public:
    */
   list<T> to_list();
   
-  uint32_t length() { return length_; }
+  uword length() { return length_; }
 private:
   void extend_capacity();
-  static const uint32_t kInitialCapacity = 4;
+  static const uword kInitialCapacity = 4;
   T *data_;
-  uint32_t length_;
-  uint32_t capacity_;
+  uword length_;
+  uword capacity_;
 };
 
 }

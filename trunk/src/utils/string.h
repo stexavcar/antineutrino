@@ -12,12 +12,12 @@ public:
       : chars_(chars), length_(length(chars)) { }
   inline string()
       : chars_(NULL), length_(0) { }
-  inline string(const char *chars, uint32_t length)
+  inline string(const char *chars, uword length)
       : chars_(chars), length_(length) { }
-  inline uint32_t length() { return length_; }
-  inline uint32_t operator[](uint32_t index);
-  inline string substring(uint32_t start);
-  inline string substring(uint32_t start, uint32_t length);
+  inline uword length() { return length_; }
+  inline uword operator[](uword index);
+  inline string substring(uword start);
+  inline string substring(uword start, uword length);
   
   /**
    * Returns the characters of this string.  The value returned is
@@ -30,12 +30,12 @@ public:
   void dispose();
   void println();
   bool is_empty() { return chars_ == NULL; }
-  static uint32_t length(const char* chars);
+  static uword length(const char* chars);
   static string dup(string arg);
   static bool equals(const char* a, const char* b);
 private:
   const char *chars_;
-  uint32_t length_;
+  uword length_;
 };
 
 class scoped_string {
@@ -54,7 +54,7 @@ private:
  */
 class string_buffer {
 public:
-  string_buffer(uint32_t capacity = 16);
+  string_buffer(uword capacity = 16);
   ~string_buffer();
   bool is_empty() { return cursor_ == 0; }
   void append(string str);
@@ -75,8 +75,10 @@ public:
   class element {
   public:
     element(double value) : tag_(DOUBLE_TAG) { value_.u_double = value; }
-    element(int32_t value) : tag_(INT_TAG) { value_.u_int = value; }
-    element(uint32_t value) : tag_(INT_TAG) { value_.u_int = value; }
+    element(uint16_t value) : tag_(INT_TAG) { value_.u_int = value; }
+    element(int16_t value) : tag_(INT_TAG) { value_.u_int = value; }
+    element(word value) : tag_(INT_TAG) { value_.u_int = value; }
+    element(uword value) : tag_(INT_TAG) { value_.u_int = value; }
     element(const char *value) : tag_(STRING_TAG) { value_.u_string = value; }
     /**
      * Prints this element on the specified buffer.  If the params
@@ -90,7 +92,7 @@ public:
     enum Tag { INT_TAG, STRING_TAG, DOUBLE_TAG };
     Tag tag_;
     union {
-      int32_t u_int;
+      word u_int;
       const char *u_string;
       double u_double;
     } value_;
@@ -100,7 +102,7 @@ public:
    * Writes the specified string to this buffer, formatted using the
    * specified elements.
    */
-  void printf(string format, uint32_t argc, element argv[]);
+  void printf(string format, uword argc, element argv[]);
   
   /**
    * Convenience methods for calling printf.  These allow printf to be
@@ -117,8 +119,8 @@ public:
 private:
   void ensure_capacity(int required);
   char *data_;
-  uint32_t capacity_;
-  uint32_t cursor_;
+  uword capacity_;
+  uword cursor_;
 };
 
 }

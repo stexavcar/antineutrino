@@ -8,13 +8,13 @@
 namespace neutrino {
 
 #define DECLARE_IMAGE_OBJECT_CONST(n, Type, Const)                   \
-  static const uint32_t Image##Type##_##Const = n;
+  static const uword Image##Type##_##Const = n;
 FOR_EACH_IMAGE_OBJECT_CONST(DECLARE_IMAGE_OBJECT_CONST)
 #undef DECLARE_IMAGE_OBJECT_CONST
 
 class ImageData {
 public:
-  static inline ImageData *from(uint32_t value);
+  static inline ImageData *from(uword value);
 };
 
 class ImageForwardPointer : public ImageData {
@@ -30,7 +30,7 @@ public:
 
 class ImageSmi : public ImageValue {
 public:
-  inline int32_t value();
+  inline word value();
   inline Smi *forward_pointer();
 };
 
@@ -40,10 +40,10 @@ public:
 
 class ImageObject : public ImageValue {
 public:
-  uint32_t type();
+  uword type();
   void point_forward(Object *target);
   inline Object *forward_pointer();
-  uint32_t size_in_image();
+  uword size_in_image();
 };
 
 class ImageSyntaxTree : public ImageObject {
@@ -52,7 +52,7 @@ class ImageSyntaxTree : public ImageObject {
 
 class ImageLayout : public ImageObject {
 public:
-  inline uint32_t instance_type();
+  inline uword instance_type();
   inline ImageValue *protocol();
   inline ImageTuple *methods();
 };
@@ -66,23 +66,23 @@ public:
 
 class ImageString : public ImageObject {
 public:
-  inline uint32_t length();
-  inline uint32_t at(uint32_t offset);
-  uint32_t string_size_in_image();
+  inline uword length();
+  inline uword at(uword offset);
+  uword string_size_in_image();
 };
 
 class ImageTuple : public ImageObject {
 public:
-  inline uint32_t length();
-  inline ImageValue *at(uint32_t offset);
-  uint32_t tuple_size_in_image();
+  inline uword length();
+  inline ImageValue *at(uword offset);
+  uword tuple_size_in_image();
 };
 
 class ImageCode : public ImageObject {
 public:
-  inline uint32_t length();
-  inline uint32_t at(uint32_t offset);
-  uint32_t code_size_in_image();
+  inline uword length();
+  inline uword at(uword offset);
+  uword code_size_in_image();
 };
 
 class ImageContext : public ImageObject {
@@ -91,7 +91,7 @@ public:
 
 class ImageLambda : public ImageObject {
 public:
-  inline uint32_t argc();
+  inline uword argc();
   inline ImageValue *code();
   inline ImageValue *literals();
   inline ImageSyntaxTree *tree();
@@ -126,7 +126,7 @@ public:
 
 class ImageRoot : public ImageObject {
 public:
-  inline uint32_t index();
+  inline uword index();
 };
 
 // -------------------------------
@@ -243,7 +243,7 @@ public:
 
 class ImageUnquoteExpression : public ImageSyntaxTree {
 public:
-  inline uint32_t index();
+  inline uword index();
 };
 
 class ImageThisExpression : public ImageSyntaxTree {
@@ -251,8 +251,8 @@ class ImageThisExpression : public ImageSyntaxTree {
 
 class ImageBuiltinCall : public ImageSyntaxTree {
 public:
-  inline uint32_t argc();
-  inline uint32_t index();
+  inline uword argc();
+  inline uword index();
 };
 
 class ImageInterpolateExpression : public ImageSyntaxTree {
@@ -275,12 +275,12 @@ static inline C *image_cast(ImageData *val);
 
 class Image {
 public:
-  Image(uint32_t size, uint32_t *data);
+  Image(uword size, uword *data);
   ~Image();
   bool initialize();
   Tuple *load();
   static inline Image &current();
-  uint32_t *heap() { return heap_; }
+  uword *heap() { return heap_; }
 
   class Scope {
   public:
@@ -295,17 +295,17 @@ private:
   typedef void (ObjectCallback)(ImageObject *obj);
   static void copy_object_shallow(ImageObject *obj);
   static void fixup_shallow_object(ImageObject *obj);
-  uint32_t heap_size() { return heap_size_; }
+  uword heap_size() { return heap_size_; }
   
-  uint32_t size_, heap_size_;
-  uint32_t *data_, *heap_;
+  uword size_, heap_size_;
+  uword *data_, *heap_;
   static Image *current_;
   
-  static const uint32_t kMagicNumber = 0xFABACEAE;
-  static const uint32_t kMagicNumberOffset = 0;
-  static const uint32_t kHeapSizeOffset    = kMagicNumberOffset + 1;
-  static const uint32_t kRootsOffset       = kHeapSizeOffset + 1;
-  static const uint32_t kHeaderSize        = kRootsOffset + 1;
+  static const uword kMagicNumber = 0xFABACEAE;
+  static const uword kMagicNumberOffset = 0;
+  static const uword kHeapSizeOffset    = kMagicNumberOffset + 1;
+  static const uword kRootsOffset       = kHeapSizeOffset + 1;
+  static const uword kHeaderSize        = kRootsOffset + 1;
 
 };
 
@@ -316,10 +316,10 @@ public:
   inline ImageObject *next();
   inline void reset();
 private:
-  uint32_t cursor() { return cursor_; }
-  uint32_t limit() { return limit_; }
-  uint32_t cursor_;
-  uint32_t limit_;
+  uword cursor() { return cursor_; }
+  uword limit() { return limit_; }
+  uword cursor_;
+  uword limit_;
 };
 
 }

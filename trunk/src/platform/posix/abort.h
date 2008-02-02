@@ -2,6 +2,17 @@
 #define _PLATFORM_POSIX_ABORT
 
 #include "platform/abort.h"
+#include "utils/checks.h"
+#include "utils/types.h"
+
+#if defined(M64) && defined(__STRICT_ANSI__)
+// On 64-bit linux with strict ansi __*64 do not get defined for some
+// reason.
+typedef word __s64;
+typedef uword __u64;
+STATIC_CHECK(sizeof(__s64) == 8);
+STATIC_CHECK(sizeof(__u64) == 8);
+#endif
 
 #include <signal.h>
 #include <stdlib.h>

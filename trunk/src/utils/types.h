@@ -6,6 +6,7 @@
 #endif
 
 #ifdef MSVC
+#if defined(M32)
 typedef unsigned int uint32_t;
 typedef signed int int32_t;
 typedef unsigned short uint16_t;
@@ -13,10 +14,12 @@ typedef signed short int16_t;
 typedef unsigned char uint8_t;
 typedef signed char int8_t;
 #endif
+#endif
 
 typedef int8_t byte;
-typedef int32_t word;
 typedef byte* address;
+typedef signed int word;
+typedef unsigned int uword;
 
 #define TYPE_CHECK(S, T) while (false) { *(static_cast<S*>(0)) = static_cast<T>(0); }
 

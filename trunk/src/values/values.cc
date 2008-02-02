@@ -9,7 +9,7 @@ namespace neutrino {
 
 #ifdef DEBUG
 
-uint32_t Layout::tag_of(Data *value) {
+uword Layout::tag_of(Data *value) {
   if (is<Signal>(value)) {
     switch (cast<Signal>(value)->type()) {
 #define MAKE_SIGNAL_TYPE_CASE(n, NAME, Name, info) case Signal::NAME: return NAME##_TYPE;
@@ -22,7 +22,7 @@ FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
   }
 }
 
-const char *Layout::tag_name(uint32_t tag) {
+const char *Layout::tag_name(uword tag) {
   switch (tag) {
 #define MAKE_TYPE_CASE(n, NAME, Name, info) case NAME##_TYPE: return #NAME;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
@@ -31,7 +31,7 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
   }
 }
 
-const char *Layout::layout_name(uint32_t tag) {
+const char *Layout::layout_name(uword tag) {
   switch (tag) {
 #define MAKE_TYPE_CASE(n, NAME, Name, info) case NAME##_TYPE: return #Name;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
@@ -76,7 +76,7 @@ static void write_smi_short_on(Smi *obj, string_buffer &buf) {
 
 static void write_string_short_on(String *obj, Data::WriteMode mode, string_buffer &buf) {
   if (mode != Data::UNQUOTED) buf.append('"');
-  for (uint32_t i = 0; i < obj->length(); i++)
+  for (uword i = 0; i < obj->length(); i++)
     buf.append(obj->at(i));
   if (mode != Data::UNQUOTED) buf.append('"');
 }
@@ -110,7 +110,7 @@ static void write_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
 }
 
 static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
-  uint32_t instance_type = obj->layout()->instance_type();
+  uword instance_type = obj->layout()->instance_type();
   switch (instance_type) {
   case STRING_TYPE:
     write_string_short_on(cast<String>(obj), mode, buf);
@@ -188,7 +188,7 @@ static void write_data_short_on(Data *obj, Data::WriteMode mode, string_buffer &
 
 static void write_tuple_on(Tuple *obj, string_buffer &buf) {
   buf.append('[');
-  for (uint32_t i = 0; i < obj->length(); i++) {
+  for (uword i = 0; i < obj->length(); i++) {
     if (i > 0) buf.append(", ");
     obj->get(i)->write_short_on(buf);
   }
@@ -262,9 +262,9 @@ void Data::write_short_on(string_buffer &buf, Data::WriteMode mode) {
 // --- D i s a s s e m b l e r ---
 // -------------------------------
 
-static void disassemble_buffer(uint16_t *data, uint32_t size,
+static void disassemble_buffer(uint16_t *data, uword size,
     Tuple *literals, string_buffer &buf) {
-  uint32_t pc = 0;
+  uword pc = 0;
   while (pc < size) {
     buf.printf("%{ 3} ", pc);
     switch (data[pc]) {
@@ -364,7 +364,7 @@ static void disassemble_buffer(uint16_t *data, uint32_t size,
 }
 
 string Lambda::disassemble() {
-  uint32_t size = cast<Code>(code())->length();
+  uword size = cast<Code>(code())->length();
   uint16_t *data = &cast<Code>(code())->at(0);
   string_buffer buf;
   disassemble_buffer(data, size, cast<Tuple>(constant_pool()), buf);
@@ -376,7 +376,7 @@ string Lambda::disassemble() {
 // --- S i z e ---
 // ---------------
 
-uint32_t Object::size_in_memory() {
+uword Object::size_in_memory() {
   InstanceType instance_type = type();
   switch (instance_type) {
   case TRUE_TYPE: case FALSE_TYPE: case VOID_TYPE: case NULL_TYPE:
@@ -419,12 +419,12 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 // execution must hold valid non-signal pointers.
 
 static void validate_tuple(Tuple *obj) {
-  for (uint32_t i = 0; i < obj->length(); i++)
+  for (uword i = 0; i < obj->length(); i++)
     GC_SAFE_CHECK_IS_C(VALIDATION, Value, obj->get(i));
 }
 
 static void validate_instance(Instance *obj) {
-  for (uint32_t i = 0; i < obj->gc_safe_layout()->instance_field_count(); i++)
+  for (uword i = 0; i < obj->gc_safe_layout()->instance_field_count(); i++)
     GC_SAFE_CHECK_IS_C(VALIDATION, Value, obj->get_field(i));
 }
 
@@ -503,7 +503,7 @@ void Object::for_each_field(FieldVisitor &visitor) {
     case CONTEXT_TYPE:
       break;
     case TUPLE_TYPE:
-      for (uint32_t i = 0; i < cast<Tuple>(this)->length(); i++)
+      for (uword i = 0; i < cast<Tuple>(this)->length(); i++)
         VISIT(cast<Tuple>(this)->get(i));
       break;
     case BUILTIN_CALL_TYPE:
@@ -595,7 +595,7 @@ bool Value::equals(Value *that) {
 bool String::string_equals(String *that) {
   if (this->length() != that->length())
     return false;
-  for (uint32_t i = 0; i < this->length(); i++) {
+  for (uword i = 0; i < this->length(); i++) {
     if (this->at(i) != that->at(i))
       return false;
   }
@@ -610,7 +610,7 @@ bool String::string_equals(String *that) {
 // TODO(1): Implement proper unicode vowel/consonant predicate
 bool String::starts_with_vowel() {
   if (length() == 0) return false;
-  uint32_t chr = at(0);
+  uword chr = at(0);
   if ('A' <= chr && chr <= 'Z') chr += 'a' - 'A';
   switch (chr) {
   case 'a': case 'e': case 'i': case 'o': case 'u':
@@ -632,7 +632,7 @@ struct DictionaryLookup {
 static bool lookup_key(Tuple *table, Value *key,
     DictionaryLookup &result) {
   ASSERT(key->is_key());
-  for (uint32_t i = 0; i < table->length(); i += 2) {
+  for (uword i = 0; i < table->length(); i += 2) {
     if (key->equals(table->get(i))) {
       result.value = &table->get(i + 1);
       return true;
@@ -654,11 +654,11 @@ bool Dictionary::set(Value *key, Value *value) {
   } else {
     // Extend table with the new pair
     Tuple *table = this->table();
-    uint32_t length = table->length();
+    uword length = table->length();
     Data *new_table_val = Runtime::current().heap().new_tuple(length + 2);
     if (is<AllocationFailed>(new_table_val)) return false;
     Tuple *new_table = cast<Tuple>(new_table_val);
-    for (uint32_t i = 0; i < length; i++)
+    for (uword i = 0; i < length; i++)
       new_table->set(i, table->get(i));
     new_table->set(length, key);
     new_table->set(length + 1, value);
@@ -667,7 +667,7 @@ bool Dictionary::set(Value *key, Value *value) {
   return true;
 }
 
-uint32_t Dictionary::size() {
+uword Dictionary::size() {
   return table()->length() / 2;
 }
 

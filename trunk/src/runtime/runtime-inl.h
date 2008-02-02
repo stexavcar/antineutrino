@@ -14,7 +14,7 @@ Runtime &Runtime::current() {
   return *current_;
 }
 
-ref<Object> Runtime::get_root(uint32_t n) {
+ref<Object> Runtime::get_root(uword n) {
   ASSERT(is<Object>(roots().get(n)));
   return ref<Object>(reinterpret_cast<Object**>(&roots().get(n)));
 }

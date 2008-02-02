@@ -15,7 +15,7 @@ namespace neutrino {
 class AbstractEnumInfo {
 public:
   virtual ~AbstractEnumInfo() { }
-  virtual string get_name_for(int32_t) = 0;
+  virtual string get_name_for(word) = 0;
 };
 
 class Checks {
@@ -39,7 +39,7 @@ public:
   }
 
   static inline void check_ge(const char* file_name, int line_number,
-      int32_t value, const char *value_source, int32_t limit,
+      word value, const char *value_source, word limit,
       const char *limit_source, Condition cause = UNKNOWN) {
     if (value < limit) {
       Conditions::get().check_ge_failed(file_name, line_number,
@@ -66,7 +66,7 @@ public:
   }
 
   static inline void check_is(const char *file_name, int line_number,
-      const char *type_name, uint32_t type_tag, Data *data,
+      const char *type_name, uword type_tag, Data *data,
       const char *value_source, bool holds, Condition cause = UNKNOWN) {
     if (!holds) {
       Conditions::get().check_is_failed(file_name, line_number,
@@ -130,7 +130,7 @@ public:
 #define MAKE_ENUM_INFO_HEADER(Enum)                                  \
   template <> class EnumInfo<Enum> : public AbstractEnumInfo {       \
   public:                                                            \
-    virtual string get_name_for(int32_t kind) {                      \
+    virtual string get_name_for(word kind) {                      \
       switch (kind) {
 
 #define MAKE_ENUM_INFO_FOOTER()                                      \
@@ -144,7 +144,7 @@ public:
 template <typename Enum>
 class EnumInfo : public AbstractEnumInfo {
 public:
-  virtual string get_name_for(int32_t);
+  virtual string get_name_for(word);
 };
 
 #else // DEBUG
@@ -188,7 +188,7 @@ template <> class StaticAssertion<true> { };
 // name depending on the source line.
 template <int> class StaticAssertionHelper { };
 #define STATIC_CHECK(test)                                           \
-    typedef StaticAssertionHelper<sizeof(StaticAssertion<static_cast<bool>(test)>)> \
+    typedef neutrino::StaticAssertionHelper<sizeof(neutrino::StaticAssertion<static_cast<bool>(test)>)> \
       SEMI_STATIC_JOIN(__StaticAssertTypedef__, __LINE__)
 
 } // namespace neutrino

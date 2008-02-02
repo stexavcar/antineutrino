@@ -6,7 +6,7 @@
 
 namespace neutrino {
 
-address SemiSpace::allocate(uint32_t size) {
+address SemiSpace::allocate(uword size) {
   ValuePointer::is_aligned(size);
   if (cursor_ + size > capacity_) return 0;
   address result = start() + cursor_;

@@ -20,15 +20,15 @@ public:
 
 class AbstractRegisterFlag {
 public:
-  AbstractRegisterFlag(string name, int32_t argc);
+  AbstractRegisterFlag(string name, word argc);
   virtual void process(list<char*> args) = 0;
 private:
   string name() { return name_; }
-  int32_t argc() { return argc_; }
+  word argc() { return argc_; }
   AbstractRegisterFlag *next() { return next_; }
   
   string name_;
-  int32_t argc_;
+  word argc_;
   AbstractRegisterFlag *next_;
 
   static AbstractRegisterFlag *first_;

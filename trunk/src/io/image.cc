@@ -23,7 +23,7 @@ namespace neutrino {
 
 Image *Image::current_ = NULL;
 
-Image::Image(uint32_t size, uint32_t *data)
+Image::Image(uword size, uword *data)
     : size_(size)
     , data_(data)
     , heap_(0) { }
@@ -70,37 +70,37 @@ Tuple *Image::load() {
 }
 
 void Image::copy_object_shallow(ImageObject *obj) {
-  uint32_t type = obj->type();
+  uword type = obj->type();
   Heap &heap = Runtime::current().heap();
   switch (type) {
     case STRING_TYPE: {
       ImageString *img = image_cast<ImageString>(obj);
-      uint32_t length = img->length();
+      uword length = img->length();
       String *str = cast<String>(heap.new_string(length));
-      for (uint32_t i = 0; i < length; i++)
+      for (uword i = 0; i < length; i++)
         str->at(i) = img->at(i);
       obj->point_forward(str);
       break;
     }
     case CODE_TYPE: {
       ImageCode *img = image_cast<ImageCode>(obj);
-      uint32_t length = img->length();
+      uword length = img->length();
       Code *code = cast<Code>(heap.new_code(length));
-      for (uint32_t i = 0; i < length; i++)
+      for (uword i = 0; i < length; i++)
         code->at(i) = img->at(i);
       obj->point_forward(code);
       break;
     }
     case TUPLE_TYPE: {
       ImageTuple *img = image_cast<ImageTuple>(obj);
-      uint32_t length = img->length();
+      uword length = img->length();
       Tuple *tuple = cast<Tuple>(heap.new_tuple(length));
       obj->point_forward(tuple);
       break;
     }
     case LAMBDA_TYPE: {
       ImageLambda *img = image_cast<ImageLambda>(obj);
-      uint32_t argc = img->argc();
+      uword argc = img->argc();
       Lambda *lambda = cast<Lambda>(heap.allocate_lambda(argc));
       obj->point_forward(lambda);
       break;
@@ -149,13 +149,13 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 }
 
 void Image::fixup_shallow_object(ImageObject *obj) {
-  uint32_t type = obj->type();
+  uword type = obj->type();
   switch (type) {
     case TUPLE_TYPE: {
       ImageTuple *img = image_cast<ImageTuple>(obj);
       Tuple *tuple = cast<Tuple>(img->forward_pointer());
-      uint32_t length = tuple->length();
-      for (uint32_t i = 0; i < length; i++)
+      uword length = tuple->length();
+      for (uword i = 0; i < length; i++)
         tuple->set(i, img->at(i)->forward_pointer());
       break;
     }
@@ -215,9 +215,9 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
   IF_PARANOID(if (obj->type() != SINGLETON_TYPE) obj->forward_pointer()->validate());
 }
 
-uint32_t ImageObject::type() {
-  uint32_t offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
-  uint32_t value = Image::current().heap()[offset];
+uword ImageObject::type() {
+  uword offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
+  uword value = Image::current().heap()[offset];
   ImageData *data = ImageData::from(value);
   if (is<ImageSmi>(data)) {
     return image_cast<ImageSmi>(data)->value();
@@ -234,8 +234,8 @@ uint32_t ImageObject::type() {
 // --- O b j e c t   s i z e ---
 // -----------------------------
 
-uint32_t ImageObject::size_in_image() {
-  uint32_t type = this->type();
+uword ImageObject::size_in_image() {
+  uword type = this->type();
   switch (type) {
     case LAMBDA_TYPE:
       return ImageLambda_Size;
@@ -265,15 +265,15 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
   }
 }
 
-uint32_t ImageString::string_size_in_image() {
+uword ImageString::string_size_in_image() {
   return ImageString_HeaderSize + length();
 }
 
-uint32_t ImageCode::code_size_in_image() {
+uword ImageCode::code_size_in_image() {
   return ImageCode_HeaderSize + length();
 }
 
-uint32_t ImageTuple::tuple_size_in_image() {
+uword ImageTuple::tuple_size_in_image() {
   return ImageTuple_HeaderSize + length();
 }
 

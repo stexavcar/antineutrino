@@ -16,10 +16,10 @@ class Method : public Object {
 public:
   FOR_EACH_METHOD_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kNameOffset      = Object::kHeaderSize;
-  static const uint32_t kSignatureOffset = kNameOffset + kPointerSize;
-  static const uint32_t kLambdaOffset    = kSignatureOffset + kPointerSize;
-  static const uint32_t kSize            = kLambdaOffset + kPointerSize;
+  static const uword kNameOffset      = Object::kHeaderSize;
+  static const uword kSignatureOffset = kNameOffset + kPointerSize;
+  static const uword kLambdaOffset    = kSignatureOffset + kPointerSize;
+  static const uword kSize            = kLambdaOffset + kPointerSize;
 };
 
 template <> class ref_traits<Method> : public ref_traits<Object> {
@@ -41,8 +41,8 @@ class Signature : public Object {
 public:
   FOR_EACH_SIGNATURE_FIELD(DECLARE_OBJECT_FIELD, 0)
 
-  static const uint32_t kParametersOffset = Object::kHeaderSize;
-  static const uint32_t kSize             = kParametersOffset + kPointerSize;
+  static const uword kParametersOffset = Object::kHeaderSize;
+  static const uword kSize             = kParametersOffset + kPointerSize;
 };
 
 template <> class ref_traits<Signature> : public ref_traits<Object> {
@@ -74,10 +74,10 @@ class Method : public Object {
 public:
   FOR_EACH_METHOD_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uint32_t kNameOffset      = Object::kHeaderSize;
-  static const uint32_t kSignatureOffset = kNameOffset + kPointerSize;
-  static const uint32_t kLambdaOffset    = kSignatureOffset + kPointerSize;
-  static const uint32_t kSize            = kLambdaOffset + kPointerSize;
+  static const uword kNameOffset      = Object::kHeaderSize;
+  static const uword kSignatureOffset = kNameOffset + kPointerSize;
+  static const uword kLambdaOffset    = kSignatureOffset + kPointerSize;
+  static const uword kSize            = kLambdaOffset + kPointerSize;
 };
 
 template <> class ref_traits<Method> : public ref_traits<Object> {
@@ -99,8 +99,8 @@ class Signature : public Object {
 public:
   FOR_EACH_SIGNATURE_FIELD(DECLARE_OBJECT_FIELD, 0)
 
-  static const uint32_t kParametersOffset = Object::kHeaderSize;
-  static const uint32_t kSize             = kParametersOffset + kPointerSize;
+  static const uword kParametersOffset = Object::kHeaderSize;
+  static const uword kSize             = kParametersOffset + kPointerSize;
 };
 
 template <> class ref_traits<Signature> : public ref_traits<Object> {

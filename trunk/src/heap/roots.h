@@ -27,7 +27,7 @@ public:
    */
   bool initialize(Heap& heap);
 
-  static const uint32_t kCount = 47;
+  static const uword kCount = 47;
 
 // Declare root field accessors
 #define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, allocator) \
@@ -35,7 +35,7 @@ public:
 FOR_EACH_ROOT(DECLARE_ROOT_ACCESSOR)
 #undef DECLARE_ROOT_ACCESSOR
 
-  inline Value *&get(uint32_t index);
+  inline Value *&get(uword index);
 
 private:
   friend class RootIterator;
@@ -53,7 +53,7 @@ public:
   inline Value *&next();
 private:
   Roots &roots_;
-  uint32_t index_;
+  uword index_;
 };
 
 }

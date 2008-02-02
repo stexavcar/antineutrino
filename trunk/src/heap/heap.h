@@ -19,7 +19,7 @@ public:
    * to contain object pointers must have been initialized before a
    * gc can be run.
    */
-  Data *allocate_object(uint32_t size, Layout *layout);
+  Data *allocate_object(uword size, Layout *layout);
   
   /**
    * Creates and initializes a new type object but does not check that
@@ -32,7 +32,7 @@ public:
   
   Data *allocate_empty_protocol();
 
-  Data *new_layout(InstanceType instance_type, uint32_t instance_field_count,
+  Data *new_layout(InstanceType instance_type, uword instance_field_count,
       Value *protocol, Tuple *methods);
   
   Data *new_protocol(Tuple *methods, Value *super, Value *name);
@@ -41,13 +41,13 @@ public:
   
   Data *new_task();
   
-  Data *new_stack(uint32_t height);
+  Data *new_stack(uword height);
   
   Data *new_string(string value);
 
-  Data *new_string(uint32_t length);
+  Data *new_string(uword length);
 
-  Data *new_tuple(uint32_t length);
+  Data *new_tuple(uword length);
   
   Data *new_singleton(Layout *layout);
   
@@ -57,7 +57,7 @@ public:
   
   Data *new_dictionary(Tuple *store);
   
-  Data *new_lambda(uint32_t argc, Value *code, Value *literals, Value *tree,
+  Data *new_lambda(uword argc, Value *code, Value *literals, Value *tree,
       Context *context);
   
   Data *new_quote_template(SyntaxTree *body, Tuple *unquotes);
@@ -68,7 +68,7 @@ public:
   
   Data *new_literal_expression(Value *value);
   
-  Data *allocate_lambda(uint32_t argc);
+  Data *allocate_lambda(uword argc);
   
   Data *allocate_builtin_call();
   
@@ -79,11 +79,11 @@ public:
 FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
   
-  Data *new_abstract_buffer(uint32_t size, Layout *layout);
+  Data *new_abstract_buffer(uword size, Layout *layout);
   
-  template <typename T> Data *new_buffer(uint32_t size);
+  template <typename T> Data *new_buffer(uword size);
 
-  Data *new_code(uint32_t size);
+  Data *new_code(uword size);
 
   Data *new_method(String *name, Signature *signature, Lambda *lambda);
   

@@ -11,7 +11,7 @@ WatchData::WatchData(AbstractWatch &holder)
   first_ = this;
 }
 
-AbstractWatch::AbstractWatch(string name, uint32_t monitor_size)
+AbstractWatch::AbstractWatch(string name, uword monitor_size)
     : name_(name)
     , data_(*this)
     , monitor_size_(monitor_size) { }
@@ -26,7 +26,7 @@ void WatchData::initialize(WatchMalloc *monitor_malloc) {
   }
 }
 
-void Monitor::initialize(MonitorType type, uint32_t size) {
+void Monitor::initialize(MonitorType type, uword size) {
   type_ = type;
   size_ = size;
 }

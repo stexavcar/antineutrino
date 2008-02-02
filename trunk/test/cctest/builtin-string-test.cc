@@ -28,11 +28,11 @@ void Test::grow_factor() {
   static const float kDeviation = 0.01;
   static const float kLowerRatio = kGoldenRatio * (1 - kDeviation);
   static const float kUpperRatio = kGoldenRatio * (1 + kDeviation);
-  for (uint32_t i = 100; i < 100000000; i = static_cast<uint32_t>(i * 1.1)) {
-    uint32_t size = grow_value(i);
-    uint32_t lower_limit = static_cast<uint32_t>(kLowerRatio * i);
+  for (uword i = 100; i < 100000000; i = static_cast<uword>(i * 1.1)) {
+    uword size = grow_value(i);
+    uword lower_limit = static_cast<uword>(kLowerRatio * i);
     CHECK(lower_limit < size);
-    uint32_t upper_limit = static_cast<uint32_t>(kUpperRatio * i);
+    uword upper_limit = static_cast<uword>(kUpperRatio * i);
     CHECK(size < upper_limit);
   }
 }

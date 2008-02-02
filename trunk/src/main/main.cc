@@ -30,7 +30,7 @@ void Main::main(list<char*> &args) {
   Runtime runtime;
   runtime.initialize();
   Runtime::Scope runtime_scope(runtime);
-  for (uint32_t i = 0; i < files.length(); i++) {
+  for (uword i = 0; i < files.length(); i++) {
     RefScope ref_scope;
     string file = files[i];
     Image *image = read_image(file);
@@ -56,19 +56,19 @@ Image *Main::read_image(string name) {
     exit(1);
   }
   fseek(file, 0, SEEK_END);
-  uint32_t size = ftell(file);
+  uword size = ftell(file);
   rewind(file);
-  uint32_t *buffer = new uint32_t[size];
-  for (uint32_t i = 0; i < size / kWordSize;) {
-    const uint32_t kSize = 256;
+  uword *buffer = new uword[size];
+  for (uword i = 0; i < size / kWordSize;) {
+    const uword kSize = 256;
     uint8_t bytes[kSize];
-    uint32_t count = fread(bytes, kWordSize, kSize / kWordSize, file);
+    uword count = fread(bytes, kWordSize, kSize / kWordSize, file);
     if (count <= 0) {
       fclose(file);
       delete[] buffer;
       return NULL;
     }
-    for (uint32_t j = 0; j < count; j++) {
+    for (uword j = 0; j < count; j++) {
       uint8_t b0 = bytes[kWordSize * j + 0];
       uint8_t b1 = bytes[kWordSize * j + 1];
       uint8_t b2 = bytes[kWordSize * j + 2];

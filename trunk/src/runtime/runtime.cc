@@ -39,7 +39,7 @@ bool Runtime::load_image(Image &image) {
 }
 
 bool Runtime::install_loaded_roots(ref<Tuple> roots) {
-  for (uint32_t i = 0; i < roots.length(); i++) {
+  for (uword i = 0; i < roots.length(); i++) {
     RefScope scope;
     ref<Value> raw_changes = roots.get(i);
     if (is<Smi>(raw_changes)) continue;
@@ -66,12 +66,12 @@ bool Runtime::install_object(ref<Object> root, ref<Object> changes) {
 bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) {
   // First copy all elements into the tables so that we can iterate
   // through the elements independent of whether a gc occurs or not
-  uint32_t length = changes.size();
+  uword length = changes.size();
   ref<Tuple> keys = factory().new_tuple(length);
   ref<Tuple> values = factory().new_tuple(length);
   Dictionary::Iterator iter(*changes);
   Dictionary::Iterator::Entry entry;
-  for (uint32_t i = 0; i < length; i++) {
+  for (uword i = 0; i < length; i++) {
     bool next_result = iter.next(&entry);
     USE(next_result); ASSERT(next_result);
     keys->set(i, entry.key);
@@ -80,7 +80,7 @@ bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) 
   // Check that we've reached the end
   ASSERT(!iter.next(&entry));
   // Then add the elements to the root object
-  for (uint32_t i = 0; i < length; i++) {
+  for (uword i = 0; i < length; i++) {
     RefScope scope;
     root.set(keys.get(i), values.get(i));
   }

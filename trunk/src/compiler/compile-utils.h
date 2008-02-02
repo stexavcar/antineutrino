@@ -10,9 +10,9 @@ public:
   inline heap_list(Factory &factory);
   void initialize();
   ~heap_list();
-  uint32_t length() { return length_; }
-  inline ref<Value> operator[](uint32_t index);
-  inline Value *get(uint32_t index);
+  uword length() { return length_; }
+  inline ref<Value> operator[](uword index);
+  inline Value *get(uword index);
   void append(ref<Value> value);
   void extend_capacity();
 private:
@@ -21,7 +21,7 @@ private:
   void set_data(persistent<Tuple> value) { data_ = value; }
   Factory &factory_;
   persistent<Tuple> data_;
-  uint32_t length_;
+  uword length_;
 };
 
 }

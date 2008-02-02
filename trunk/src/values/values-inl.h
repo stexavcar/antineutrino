@@ -152,7 +152,7 @@ InstanceType Value::type() {
   if (is<Smi>(this)) {
     return SMI_TYPE;
   } else {
-    uint32_t result = cast<Object>(this)->layout()->instance_type();
+    uword result = cast<Object>(this)->layout()->instance_type();
     return static_cast<InstanceType>(result);
   }
 }
@@ -164,7 +164,7 @@ InstanceType Data::gc_safe_type() {
   } else if (is<Smi>(this)) {
     return SMI_TYPE;
   } else {
-    uint32_t result = cast<Object>(this)->gc_safe_layout()->instance_type();
+    uword result = cast<Object>(this)->gc_safe_layout()->instance_type();
     return static_cast<InstanceType>(result);
   }
 }
@@ -218,11 +218,11 @@ FOR_EACH_LAMBDA_FIELD(DEFINE_FIELD_ACCESSORS, Lambda)
 // --- S m a l l   I n t e g e r ---
 // ---------------------------------
 
-Smi* Smi::from_int(int32_t value) {
+Smi* Smi::from_int(word value) {
   return ValuePointer::tag_as_smi(value);
 }
 
-int32_t Smi::value() {
+word Smi::value() {
   return ValuePointer::value_of(this);
 }
 
@@ -250,20 +250,20 @@ DEFINE_ACCESSORS(Data*, Object, header, Header)
 // --- S t r i n g ---
 // -------------------
 
-DEFINE_ACCESSORS(uint32_t, String, length, Length)
+DEFINE_ACCESSORS(uword, String, length, Length)
 
-char &String::at(uint32_t index) {
+char &String::at(uword index) {
   ASSERT_C(OUT_OF_BOUNDS, index < length());
   return ValuePointer::access_direct<char>(this, String::kHeaderSize + sizeof(char) * index);
 }
 
-void String::set(uint32_t index, char value) {
+void String::set(uword index, char value) {
   ASSERT_C(OUT_OF_BOUNDS, index < length());
   return ValuePointer::set_field<char>(this, String::kHeaderSize + sizeof(char) * index, value);
 }
 
-uint32_t String::size_for(uint32_t chars) {
-  uint32_t raw_size = kHeaderSize + sizeof(char) * chars;
+uword String::size_for(uword chars) {
+  uword raw_size = kHeaderSize + sizeof(char) * chars;
   return ValuePointer::align(raw_size);
 }
 
@@ -272,12 +272,12 @@ uint32_t String::size_for(uint32_t chars) {
 // --- S t a c k ---
 // -----------------
 
-DEFINE_ACCESSORS(uint32_t,      Stack, height,     Height)
-DEFINE_ACCESSORS(uint32_t,      Stack, fp,         Fp)
+DEFINE_ACCESSORS(uword,      Stack, height,     Height)
+DEFINE_ACCESSORS(uword,      Stack, fp,         Fp)
 DEFINE_ACCESSORS(word*,         Stack, top_marker, TopMarker)
 DEFINE_ACCESSORS(Stack::Status, Stack, status,     Status)
 
-uint32_t Stack::size_for(uint32_t height) {
+uword Stack::size_for(uword height) {
   return kHeaderSize + height;
 }
 
@@ -290,17 +290,17 @@ word *Stack::bottom() {
 // --- I n s t a n c e ---
 // -----------------------
 
-Value *&Instance::get_field(uint32_t index) {
+Value *&Instance::get_field(uword index) {
   ASSERT(index < gc_safe_layout()->instance_field_count());
   return ValuePointer::access_field<Value*>(this, Instance::kHeaderSize + kPointerSize * index);
 }
 
-void Instance::set_field(uint32_t index, Value *value) {
+void Instance::set_field(uword index, Value *value) {
   ASSERT(index < gc_safe_layout()->instance_field_count());
   return ValuePointer::set_field<Value*>(this, Instance::kHeaderSize + kPointerSize * index, value);
 }
 
-uint32_t Instance::size_for(uint32_t fields) {
+uword Instance::size_for(uword fields) {
   return Instance::kHeaderSize + fields * kPointerSize;
 }
 
@@ -309,9 +309,9 @@ uint32_t Instance::size_for(uint32_t fields) {
 // --- T u p l e ---
 // -----------------
 
-DEFINE_ACCESSORS(uint32_t, Tuple, length, Length)
+DEFINE_ACCESSORS(uword, Tuple, length, Length)
 
-Value *&Tuple::get(uint32_t index) {
+Value *&Tuple::get(uword index) {
   ASSERT_C(OUT_OF_BOUNDS, index < length());
   return ValuePointer::access_field<Value*>(this, Tuple::kHeaderSize + kPointerSize * index);
 }
@@ -320,24 +320,24 @@ vector<Value*> Tuple::buffer() {
   return NEW_VECTOR(Value*, &ValuePointer::access_direct<Value*>(this, Tuple::kHeaderSize), length());
 }
 
-void Tuple::set(uint32_t index, Value *value) {
+void Tuple::set(uword index, Value *value) {
   ASSERT_C(OUT_OF_BOUNDS, index < length());
   return ValuePointer::set_field<Value*>(this, Tuple::kHeaderSize + kPointerSize * index, value);
 }
 
-uint32_t Tuple::size_for(uint32_t elms) {
+uword Tuple::size_for(uword elms) {
   return Tuple::kHeaderSize + elms * kPointerSize;
 }
 
-uint32_t ref_traits<Tuple>::length() {
+uword ref_traits<Tuple>::length() {
   return open(this)->length();
 }
 
-ref<Value> ref_traits<Tuple>::get(uint32_t index) {
+ref<Value> ref_traits<Tuple>::get(uword index) {
   return new_ref(open(this)->get(index));
 }
 
-void ref_traits<Tuple>::set(uint32_t index, ref<Value> value) {
+void ref_traits<Tuple>::set(uword index, ref<Value> value) {
   open(this)->set(index, *value);
 }
 
@@ -356,7 +356,7 @@ void ref_traits<Dictionary>::set(ref<Value> key, ref<Value> value) {
   open(this)->set(*key, *value);
 }
 
-uint32_t ref_traits<Dictionary>::size() {
+uword ref_traits<Dictionary>::size() {
   return open(this)->size();
 }
 
@@ -381,26 +381,26 @@ bool Dictionary::Iterator::next(Dictionary::Iterator::Entry *entry) {
 // --- L a m b d a ---
 // -------------------
 
-DEFINE_ACCESSORS(uint32_t, Lambda, argc, Argc)
+DEFINE_ACCESSORS(uword, Lambda, argc, Argc)
 
 // -------------------
 // --- B u f f e r ---
 // -------------------
 
 template <typename T>
-uint32_t AbstractBuffer::size() {
-  uint32_t field = ValuePointer::access_field<uint32_t>(this, kSizeOffset);
+uword AbstractBuffer::size() {
+  uword field = ValuePointer::access_field<uword>(this, kSizeOffset);
   return field / sizeof(T);
 }
 
 template <typename T>
-void AbstractBuffer::set_size(uint32_t size) {
-  uint32_t value = size / sizeof(T);
-  ValuePointer::set_field<uint32_t>(this, kSizeOffset, value);
+void AbstractBuffer::set_size(uword size) {
+  uword value = size / sizeof(T);
+  ValuePointer::set_field<uword>(this, kSizeOffset, value);
 }
 
 template <typename T>
-T &AbstractBuffer::at(uint32_t index) {
+T &AbstractBuffer::at(uword index) {
   ASSERT_C(OUT_OF_BOUNDS, index < size<T>());
   return ValuePointer::access_direct<T>(this, kHeaderSize + index * sizeof(T));
 }
@@ -410,8 +410,8 @@ vector<T> AbstractBuffer::buffer() {
   return NEW_VECTOR(T, &ValuePointer::access_direct<T>(this, kHeaderSize), size<T>());
 }
 
-uint32_t AbstractBuffer::size_for(uint32_t byte_count) {
-  uint32_t raw_size = kHeaderSize + byte_count;
+uword AbstractBuffer::size_for(uword byte_count) {
+  uword raw_size = kHeaderSize + byte_count;
   return ValuePointer::align(raw_size);
 }
 
@@ -420,7 +420,7 @@ uint32_t AbstractBuffer::size_for(uint32_t byte_count) {
 // --- C o d e ---
 // ---------------
 
-uint16_t &Code::at(uint32_t index) {
+uint16_t &Code::at(uword index) {
   return AbstractBuffer::at<uint16_t>(index);
 }
 
@@ -428,15 +428,15 @@ vector<uint16_t> Code::buffer() {
   return AbstractBuffer::buffer<uint16_t>();
 }
 
-uint32_t Code::length() {
+uword Code::length() {
   return AbstractBuffer::size<uint16_t>();
 }
 
-uint16_t &ref_traits<Code>::at(uint32_t index) {
+uint16_t &ref_traits<Code>::at(uword index) {
   return open(this)->at(index);
 }
 
-uint32_t ref_traits<Code>::length() {
+uword ref_traits<Code>::length() {
   return open(this)->length();
 }
 
@@ -446,18 +446,18 @@ uint32_t ref_traits<Code>::length() {
 // -----------------
 
 DEFINE_ACCESSORS(InstanceType, Layout, instance_type, InstanceType)
-DEFINE_ACCESSORS(uint32_t, Layout, instance_field_count, InstanceFieldCount)
+DEFINE_ACCESSORS(uword, Layout, instance_field_count, InstanceFieldCount)
 
 
 // ---------------------
 // --- S i g n a l s ---
 // ---------------------
 
-uint32_t Signal::type() {
+uword Signal::type() {
   return ValuePointer::signal_type(this);
 }
 
-uint32_t Signal::payload() {
+uword Signal::payload() {
   return ValuePointer::signal_payload(this);
 }
 

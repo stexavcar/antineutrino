@@ -11,12 +11,12 @@ heap_list::heap_list(Factory &factory)
     , length_(0) {
 }
 
-Value *heap_list::get(uint32_t index) {
+Value *heap_list::get(uword index) {
   ASSERT(index < length());
   return data()->get(index);
 }
 
-ref<Value> heap_list::operator[](uint32_t index) {
+ref<Value> heap_list::operator[](uword index) {
   return new_ref(get(index));
 }
 

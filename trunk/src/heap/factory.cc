@@ -24,11 +24,11 @@ ref<String> Factory::new_string(string str) {
   ALLOCATE_CHECKED(String, new_string(str));
 }
 
-ref<String> Factory::new_string(uint32_t length) {
+ref<String> Factory::new_string(uword length) {
   ALLOCATE_CHECKED(String, new_string(length));
 }
 
-ref<Tuple> Factory::new_tuple(uint32_t size) {
+ref<Tuple> Factory::new_tuple(uword size) {
   ALLOCATE_CHECKED(Tuple, new_tuple(size));
 }
 
@@ -36,7 +36,7 @@ ref<Symbol> Factory::new_symbol(ref<Value> name) {
   ALLOCATE_CHECKED(Symbol, new_symbol(*name));
 }
 
-ref<Lambda> Factory::new_lambda(uint32_t argc, ref<Value> code,
+ref<Lambda> Factory::new_lambda(uword argc, ref<Value> code,
     ref<Value> literals, ref<Value> tree, ref<Context> context) {
   ALLOCATE_CHECKED(Lambda, new_lambda(argc, *code, *literals, *tree, *context));
 }
@@ -62,7 +62,7 @@ ref<Dictionary> Factory::new_dictionary() {
   ALLOCATE_CHECKED(Dictionary, new_dictionary());
 }
 
-ref<Code> Factory::new_code(uint32_t size) {
+ref<Code> Factory::new_code(uword size) {
   ALLOCATE_CHECKED(Code, new_code(size));
 }
 
@@ -80,7 +80,7 @@ ref<Layout> Factory::allocate_empty_layout(InstanceType instance_type) {
 }
 
 ref<Layout> Factory::new_layout(InstanceType instance_type,
-    uint32_t instance_field_count, ref<Value> protocol, ref<Tuple> methods) {
+    uword instance_field_count, ref<Value> protocol, ref<Tuple> methods) {
   ALLOCATE_CHECKED(Layout, new_layout(instance_type, instance_field_count, *protocol, *methods));
 }
 

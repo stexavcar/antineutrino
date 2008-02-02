@@ -8,9 +8,9 @@ namespace neutrino {
 
 FOR_EACH_QUOTE_TEMPLATE_FIELD(DEFINE_FIELD_ACCESSORS, QuoteTemplate)
 
-DEFINE_ACCESSORS(uint32_t, BuiltinCall, argc, Argc)
-DEFINE_ACCESSORS(uint32_t, BuiltinCall, index, Index)
-DEFINE_ACCESSORS(uint32_t, UnquoteExpression, index, Index)
+DEFINE_ACCESSORS(uword, BuiltinCall, argc, Argc)
+DEFINE_ACCESSORS(uword, BuiltinCall, index, Index)
+DEFINE_ACCESSORS(uword, UnquoteExpression, index, Index)
 
 QuoteTemplateScope::QuoteTemplateScope(Visitor &visitor,
     ref<QuoteTemplate> value)

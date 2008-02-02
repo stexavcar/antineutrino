@@ -13,7 +13,7 @@ namespace neutrino {
 // --- I n f r a s t r u c t u r e ---
 // -----------------------------------
 
-builtin *Builtins::get(uint32_t index) {
+builtin *Builtins::get(uword index) {
   switch (index) {
 
 #define MAKE_CASE(n, type, name, str) case n: return &Builtins::type##_##name;
@@ -46,10 +46,10 @@ Data *Builtins::string_eq(Arguments &args) {
   String *self = cast<String>(args.self());
   if (!is<String>(args[0])) return Runtime::current().roots().fahlse();
   String *that = cast<String>(args[0]);
-  uint32_t length = self->length();
+  uword length = self->length();
   if (length != that->length())
     return Runtime::current().roots().fahlse();
-  for (uint32_t i = 0; i < length; i++) {
+  for (uword i = 0; i < length; i++) {
     if (self->at(i) != that->at(i))
       return Runtime::current().roots().fahlse();
   }
@@ -60,11 +60,11 @@ Data *Builtins::string_plus(Arguments &args) {
   ASSERT_EQ(1, args.count());
   String *self = cast<String>(args.self());
   String *that = cast<String>(args[0]);
-  uint32_t length = self->length() + that->length();
+  uword length = self->length() + that->length();
   String *result = cast<String>(Runtime::current().heap().new_string(length));
-  for (uint32_t i = 0; i < self->length(); i++)
+  for (uword i = 0; i < self->length(); i++)
     result->at(i) = self->at(i);
-  for (uint32_t i = 0; i < that->length(); i++)
+  for (uword i = 0; i < that->length(); i++)
     result->at(self->length() + i) = that->at(i);
   return result;
 }
@@ -105,7 +105,7 @@ Data *Builtins::smi_divide(Arguments &args) {
 Data *Builtins::smi_abs(Arguments &args) {
   ASSERT_EQ(0, args.count());
   Smi *self = cast<Smi>(args.self());
-  int32_t value = self->value();
+  word value = self->value();
   if (value >= 0) return self;
   else return Smi::from_int(-value);
 }
@@ -176,7 +176,7 @@ Data *Builtins::tuple_eq(Arguments &args) {
   Tuple *that = cast<Tuple>(other);
   if (self->length() != that->length())
     return Runtime::current().roots().fahlse();
-  for (uint32_t i = 0; i < self->length(); i++) {
+  for (uword i = 0; i < self->length(); i++) {
     if (!self->get(i)->equals(that->get(i)))
       return Runtime::current().roots().fahlse();
   }
@@ -217,7 +217,7 @@ Data *Builtins::lambda_expression_body(Arguments &args) {
 Data *Builtins::raw_print(Arguments &args) {
   ASSERT_EQ(1, args.count());
   String *str_obj = cast<String>(args[0]);
-  for (uint32_t i = 0; i < str_obj->length(); i++)
+  for (uword i = 0; i < str_obj->length(); i++)
     putc(str_obj->at(i), stdout);
   putc('\n', stdout);
   return Runtime::current().roots().vhoid();

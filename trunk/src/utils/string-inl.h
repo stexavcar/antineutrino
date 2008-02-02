@@ -5,17 +5,17 @@
 
 namespace neutrino {
 
-uint32_t string::operator[](uint32_t index) {
+uword string::operator[](uword index) {
   ASSERT(index < length());
   return chars_[index];
 }
 
-string string::substring(uint32_t start) {
+string string::substring(uword start) {
   ASSERT(start < length());
   return string(chars_ + start, length_ - start);
 }
 
-string string::substring(uint32_t start, uint32_t length) {
+string string::substring(uword start, uword length) {
   if (length == 0) return string();
   ASSERT(start + length < length_);
   return string(chars_ + start, length);

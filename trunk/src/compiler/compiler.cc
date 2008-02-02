@@ -90,8 +90,8 @@ private:
   ref<LambdaExpression> lambda() { return lambda_; }
   Runtime &runtime() { return session().runtime(); }
   CompileSession &session() { return session_; }
-  uint32_t stack_height() { return stack_height_; }
-  void adjust_stack_height(int32_t delta);
+  uword stack_height() { return stack_height_; }
+  void adjust_stack_height(word delta);
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }
   ref<LambdaExpression> lambda_;
@@ -99,38 +99,38 @@ private:
   list_buffer<uint16_t> code_;
   heap_list pool_;
   Scope *scope_;
-  uint32_t stack_height_;
+  uword stack_height_;
 };
 
 class Label {
 public:
   Label() : is_bound_(false) , value_(kNoTarget) { }
   bool is_bound() { return is_bound_; }
-  uint32_t value() { return value_; }
-  void set_value(uint32_t addr) { ASSERT(addr != kNoTarget); value_ = addr; }
-  static const uint32_t kNoTarget = 0;
+  uword value() { return value_; }
+  void set_value(uword addr) { ASSERT(addr != kNoTarget); value_ = addr; }
+  static const uword kNoTarget = 0;
 private:
   bool is_bound_;
-  uint32_t value_;
+  uword value_;
 };
 
 SyntaxTree *Assembler::resolve_unquote(UnquoteExpression *expr) {
   ref<QuoteTemplate> templ = current_quote();
-  uint32_t index = expr->index();
+  uword index = expr->index();
   Value *term = templ->unquotes()->get(index);
   return cast<SyntaxTree>(term);
 }
 
 ref<Code> Assembler::flush_code() {
   ref<Code> result = factory().new_code(code().length());
-  for (uint32_t i = 0; i < result.length(); i++)
+  for (uword i = 0; i < result.length(); i++)
     result.at(i) = code()[i];
   return result;
 }
 
 ref<Tuple> Assembler::flush_constant_pool() {
   ref<Tuple> result = factory().new_tuple(pool().length());
-  for (uint32_t i = 0; i < result.length(); i++)
+  for (uword i = 0; i < result.length(); i++)
     result->set(i, pool().get(i));
   return result;
 }
@@ -147,7 +147,7 @@ uint16_t Assembler::constant_pool_index(ref<Value> value) {
   return result;
 }
 
-void Assembler::adjust_stack_height(int32_t delta) {
+void Assembler::adjust_stack_height(word delta) {
   ASSERT_GE(stack_height() + delta, 0);
   stack_height_ += delta;
   IF_PARANOID(code().append(OC_CHKHGT));
@@ -295,11 +295,11 @@ void Assembler::ghoto(Label &label) {
 
 void Assembler::bind(Label &label) {
   ASSERT(!label.is_bound());
-  uint32_t value = code().length();
-  uint32_t current = label.value();
+  uword value = code().length();
+  uword current = label.value();
   label.set_value(value);
   while (current != Label::kNoTarget) {
-    uint32_t next = code()[current];
+    uword next = code()[current];
     code()[current] = value;
     current = next;
   }
@@ -387,7 +387,7 @@ private:
 };
 
 void ArgumentScope::lookup(ref<Symbol> symbol, Lookup &result) {
-  for (uint32_t i = 0; i < symbols().length(); i++) {
+  for (uword i = 0; i < symbols().length(); i++) {
     Value *entry = symbols()->get(i);
     if (is<UnquoteExpression>(entry))
       entry = result.assembler.resolve_unquote(cast<UnquoteExpression>(entry));
@@ -402,16 +402,16 @@ void ArgumentScope::lookup(ref<Symbol> symbol, Lookup &result) {
 
 class LocalScope : public Scope {
 public:
-  LocalScope(Assembler &assembler, ref<Symbol> symbol, uint32_t height)
+  LocalScope(Assembler &assembler, ref<Symbol> symbol, uword height)
       : Scope(assembler)
       , symbol_(symbol)
       , height_(height) { }
   virtual void lookup(ref<Symbol> name, Lookup &result);
 private:
   ref<Symbol> symbol() { return symbol_; }
-  uint32_t height() { return height_; }
+  uword height() { return height_; }
   ref<Symbol> symbol_;
-  uint32_t height_;
+  uword height_;
 };
 
 void LocalScope::lookup(ref<Symbol> name, Lookup &result) {
@@ -437,7 +437,7 @@ private:
 };
 
 void ClosureScope::lookup(ref<Symbol> symbol, Lookup &result) {
-  for (uint32_t i = 0; i < outers().length(); i++) {
+  for (uword i = 0; i < outers().length(); i++) {
     if (outers().get(i)->equals(*symbol)) {
       result.category = OUTER;
       result.outer_info.index = i;
@@ -471,7 +471,7 @@ void Assembler::visit_quote_expression(ref<QuoteExpression> that) {
   if (that->unquotes()->length() > 0) {
     RefScope scope;
     ref<Tuple> unquotes = that.unquotes();
-    for (uint32_t i = 0; i < unquotes->length(); i++) {
+    for (uword i = 0; i < unquotes->length(); i++) {
       __ codegen(cast<SyntaxTree>(unquotes.get(i)));
     }
     __ quote(unquotes->length());
@@ -483,7 +483,7 @@ void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
   __ codegen(that.receiver());
   __ push(runtime().vhoid());
   ref<Tuple> args = that.arguments();
-  for (uint32_t i = 0; i < args.length(); i++)
+  for (uword i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
   __ invoke(that.name(), args.length());
   __ slap(args.length() + 1);
@@ -494,7 +494,7 @@ void Assembler::visit_call_expression(ref<CallExpression> that) {
   __ codegen(that.receiver());
   __ codegen(that.function());
   ref<Tuple> args = that.arguments();
-  for (uint32_t i = 0; i < args.length(); i++)
+  for (uword i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
   __ call(args.length());
   __ slap(args.length() + 1);
@@ -505,7 +505,7 @@ void Assembler::visit_sequence_expression(ref<SequenceExpression> that) {
   ref<Tuple> expressions = that.expressions();
   ASSERT(expressions.length() > 1);
   bool is_first = true;
-  for (uint32_t i = 0; i < expressions.length(); i++) {
+  for (uword i = 0; i < expressions.length(); i++) {
     if (is_first) {
       is_first = false;
     } else {
@@ -518,7 +518,7 @@ void Assembler::visit_sequence_expression(ref<SequenceExpression> that) {
 void Assembler::visit_tuple_expression(ref<TupleExpression> that) {
   RefScope scope;
   ref<Tuple> values = that.values();
-  for (uint32_t i = 0; i < values.length(); i++)
+  for (uword i = 0; i < values.length(); i++)
     __ codegen(cast<SyntaxTree>(values.get(i)));
   __ tuple(values.length());
 }
@@ -554,7 +554,7 @@ void Assembler::visit_conditional_expression(ref<ConditionalExpression> that) {
   __ codegen(that.condition());
   __ if_true(then);
   adjust_stack_height(-1);
-  uint32_t height_before = stack_height();
+  uword height_before = stack_height();
   __ codegen(that.else_part());
   __ ghoto(end);
   __ bind(then);
@@ -567,7 +567,7 @@ void Assembler::visit_conditional_expression(ref<ConditionalExpression> that) {
 void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
   RefScope scope;
   ref<Tuple> terms = that.terms();
-  for (uint32_t i = 0; i < terms.length(); i++) {
+  for (uword i = 0; i < terms.length(); i++) {
     ref<Value> entry = terms.get(i);
     if (is<String>(entry)) {
       __ push(entry);
@@ -582,7 +582,7 @@ void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
 }
 
 void Assembler::visit_local_definition(ref<LocalDefinition> that) {
-  uint32_t height = stack_height();
+  uword height = stack_height();
   __ codegen(that.value());
   LocalScope scope(*this, that.symbol(), height);
   __ codegen(that.body());
@@ -594,7 +594,7 @@ void Assembler::visit_lambda_expression(ref<LambdaExpression> that) {
   ref<Lambda> lambda = session().compile(that, this);
   scope.unlink();
   if (scope.outers().length() > 0) {
-    for (uint32_t i = 0; i < scope.outers().length(); i++) {
+    for (uword i = 0; i < scope.outers().length(); i++) {
       ref<Symbol> sym = cast<Symbol>(scope.outers()[i]);
       load_symbol(sym);
     }
@@ -616,7 +616,7 @@ void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {
   RefScope scope;
   ref<Tuple> clauses = that.clauses();
   ref<Tuple> data = factory().new_tuple(2 * clauses.length());
-  for (uint32_t i = 0; i < clauses.length(); i++) {
+  for (uword i = 0; i < clauses.length(); i++) {
     ref<OnClause> clause = cast<OnClause>(clauses.get(i));
     ref<String> name = clause.name();
     data.set(2 * i, name);
@@ -639,7 +639,7 @@ void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
   ref<Tuple> args = that.arguments();
   __ push(runtime().vhoid()); // receiver
   __ push(runtime().vhoid()); // method
-  for (uint32_t i = 0; i < args.length(); i++)
+  for (uword i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
   __ raise(that.name(), args.length());
   __ slap(args.length() + 1);
@@ -648,11 +648,11 @@ void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
 void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
   RefScope scope;
   ref<Tuple> terms = that.terms();
-  uint32_t term_count = terms.length() / 2;
+  uword term_count = terms.length() / 2;
   ref<Tuple> methods = factory().new_tuple(term_count);
   ref<Signature> signature = factory().new_signature(factory().new_tuple(0));
   __ codegen(that.receiver());
-  for (uint32_t i = 0; i < term_count; i++) {
+  for (uword i = 0; i < term_count; i++) {
     ref<String> keyword = cast<String>(terms.get(2 * i));
     ref<Code> code = factory().new_code(4);
     STATIC_CHECK(OpcodeInfo<OC_FIELD>::kArgc == 2);

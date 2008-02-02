@@ -21,7 +21,7 @@ private:
 class RefScopeInfo {
 public:
   inline RefScopeInfo();
-  int32_t block_count;
+  word block_count;
   Value **next_cell;
   Value **limit;
 };
@@ -60,7 +60,7 @@ public:
   inline bool has_next();
   inline Value *&next();
 private:
-  uint32_t current_block_;
+  uword current_block_;
   Value **current_, **limit_;
 };
 

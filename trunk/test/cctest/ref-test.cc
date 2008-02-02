@@ -29,7 +29,7 @@ void Test::unscoped() {
 #endif // DEBUG
 }
 
-static void test_deep(uint32_t n) {
+static void test_deep(uword n) {
   if (n == 0) return;
   RefScope scope;
   static const int kCount = 300;
@@ -46,9 +46,9 @@ void Test::deep() {
   test_deep(1234);
 }
 
-static void count_refs(uint32_t expected) {
+static void count_refs(uword expected) {
   RefIterator iter;
-  uint32_t count = 0;
+  uword count = 0;
   while (iter.has_next()) {
     CHECK(count < expected);
     Value *val = iter.next();
@@ -61,8 +61,8 @@ static void count_refs(uint32_t expected) {
 
 void Test::ref_iteration() {
   RefScope scope;
-  const uint32_t kRefCount = 1024;
-  for (uint32_t i = 0; i < kRefCount; i++) {
+  const uword kRefCount = 1024;
+  for (uword i = 0; i < kRefCount; i++) {
     count_refs(i);
     ref<Smi> next = new_ref(Smi::from_int(i));
   }

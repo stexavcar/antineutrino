@@ -12,9 +12,9 @@ public:
   Factory(Runtime &heap);
   ref<Layout> allocate_empty_layout(InstanceType instance_type);
   ref<String> new_string(string str);
-  ref<String> new_string(uint32_t length);
-  ref<Tuple> new_tuple(uint32_t size);
-  ref<Lambda> new_lambda(uint32_t argc, ref<Value> code,
+  ref<String> new_string(uword length);
+  ref<Tuple> new_tuple(uword size);
+  ref<Lambda> new_lambda(uword argc, ref<Value> code,
       ref<Value> literals, ref<Value> tree, ref<Context> context);
   ref<LambdaExpression> new_lambda_expression(ref<Tuple> params,
       ref<SyntaxTree> body);
@@ -26,9 +26,9 @@ public:
       ref<Lambda> lambda);
   ref<Symbol> new_symbol(ref<Value> value);
   ref<Dictionary> new_dictionary();
-  ref<Code> new_code(uint32_t size);
+  ref<Code> new_code(uword size);
   ref<Layout> new_layout(InstanceType instance_type, 
-      uint32_t instance_field_count, ref<Value> protocol,
+      uword instance_field_count, ref<Value> protocol,
       ref<Tuple> methods);
   ref<Protocol> new_protocol(ref<Tuple> methods, ref<Value> super,
       ref<Value> name);

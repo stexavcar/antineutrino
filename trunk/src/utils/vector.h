@@ -14,12 +14,12 @@ template <typename T>
 class vector {
 public:
   inline vector();
-  IF_DEBUG(inline vector(T *data, uint32_t length));
+  IF_DEBUG(inline vector(T *data, uword length));
   IF_NOT_DEBUG(inline vector(T *data));
-  inline T &operator[](uint32_t index);
+  inline T &operator[](uword index);
 private:
   T *data_;
-  IF_DEBUG(uint32_t length_);
+  IF_DEBUG(uword length_);
 };
 
 #ifdef DEBUG

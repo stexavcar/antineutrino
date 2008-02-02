@@ -9,7 +9,7 @@ namespace neutrino {
 
 class Context : public Object {
 public:
-  static const uint32_t kSize = Object::kHeaderSize;
+  static const uword kSize = Object::kHeaderSize;
 };
 
 }
@@ -24,7 +24,7 @@ namespace neutrino {
 
 class Context : public Object {
 public:
-  static const uint32_t kSize = Object::kHeaderSize;
+  static const uword kSize = Object::kHeaderSize;
 };
 
 }

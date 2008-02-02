@@ -18,7 +18,7 @@ private:
   AbstractWatch &holder_;
 
   static WatchData *first_;
-  static const uint32_t kNameLength = 32;
+  static const uword kNameLength = 32;
   
   friend class Monitor;
 };
@@ -29,11 +29,11 @@ enum MonitorType {
 
 class Monitor {
 public:
-  void initialize(MonitorType type, uint32_t size);
+  void initialize(MonitorType type, uword size);
   static void write_on(string_buffer &buf);
 private:
   MonitorType type_;
-  uint32_t size_;
+  uword size_;
 };
 
 struct Counter : public Monitor {
@@ -43,7 +43,7 @@ public:
   inline void decrement();
   void write_on(string name, string_buffer &buf);
 private:
-  uint32_t count_;
+  uword count_;
 };
 
 struct HighWaterMark : public Monitor {
@@ -52,21 +52,21 @@ struct HighWaterMark : public Monitor {
   inline void decrement();
   void write_on(string name, string_buffer &buf);
 private:
-  uint32_t count_;
-  uint32_t high_water_mark_;
+  uword count_;
+  uword high_water_mark_;
 };
 
 class AbstractWatch {
 public:
-  explicit AbstractWatch(string name, uint32_t monitor_size);
+  explicit AbstractWatch(string name, uword monitor_size);
   virtual void initialize_monitor(void *data) = 0;
-  uint32_t monitor_size() { return monitor_size_; }
+  uword monitor_size() { return monitor_size_; }
   string name() { return name_; }
   virtual void write_on(string_buffer &buf) = 0;
 private:
   string name_;
   WatchData data_;
-  uint32_t monitor_size_;
+  uword monitor_size_;
 };
 
 template <class Type>

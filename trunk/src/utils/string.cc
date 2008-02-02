@@ -10,7 +10,7 @@ using namespace neutrino;
 
 // --- S t r i n g ---
 
-uint32_t string::length(const char* chars) {
+uword string::length(const char* chars) {
   int result = 0;
   while (chars[result] != '\0')
     result++;
@@ -35,7 +35,7 @@ bool string::equals(const char* a, const char* b) {
 
 bool string::operator==(string that) {
   if (length() != that.length()) return false;
-  for (uint32_t i = 0; i < length(); i++) {
+  for (uword i = 0; i < length(); i++) {
     if (operator[](i) != that[i])
       return false;
   }
@@ -52,7 +52,7 @@ void string::println() {
 
 // --- S t r i n g   b u f f e r ---
 
-string_buffer::string_buffer(uint32_t capacity)
+string_buffer::string_buffer(uword capacity)
     : data_(new char[capacity])
     , capacity_(capacity)
     , cursor_(0) { }
@@ -63,7 +63,7 @@ string_buffer::~string_buffer() {
 
 void string_buffer::append(string str) {
   ensure_capacity(str.length());
-  for (uint32_t i = 0; i < str.length(); i++)
+  for (uword i = 0; i < str.length(); i++)
     data_[cursor_ + i] = str[i];
   cursor_ += str.length();
 }
@@ -78,11 +78,11 @@ void string_buffer::clear() {
 }
   
 void string_buffer::ensure_capacity(int required) {
-  uint32_t previous_capacity = cursor_ + required;
+  uword previous_capacity = cursor_ + required;
   if (previous_capacity < capacity_) return;
-  uint32_t new_capacity = grow_value(previous_capacity);
+  uword new_capacity = grow_value(previous_capacity);
   char *new_data = new char[new_capacity];
-  for (uint32_t i = 0; i < capacity_; i++)
+  for (uword i = 0; i < capacity_; i++)
     new_data[i] = data_[i];
   delete[] data_;
   data_ = new_data;
@@ -124,7 +124,7 @@ void string_buffer::printf(string format, element arg1,
   printf(format, argc, argv);
 }
 
-void string_buffer::printf(string format, uint32_t argc, element argv[]) {
+void string_buffer::printf(string format, uword argc, element argv[]) {
   const int kMaxParamsLength = 16;
   const int kPrefixLength = 2;
   const int kSuffixLength = 2;
@@ -132,8 +132,8 @@ void string_buffer::printf(string format, uint32_t argc, element argv[]) {
   // after the param string
   char params_buffer[kMaxParamsLength + kPrefixLength + kSuffixLength];
   char *params = params_buffer + kPrefixLength;
-  uint32_t i = 0;
-  uint32_t cursor = 0;
+  uword i = 0;
+  uword cursor = 0;
   while (i < format.length()) {
     char c = format[i];
     bool is_positional = false;
@@ -160,7 +160,7 @@ void string_buffer::printf(string format, uint32_t argc, element argv[]) {
       // array
       c = format[i++];
       ASSERT('0' <= c && c <= '9');
-      uint32_t index = c - '0';
+      uword index = c - '0';
       ASSERT(index < argc);
       element = &argv[index];
     } else {

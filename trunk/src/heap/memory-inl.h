@@ -8,7 +8,7 @@
 
 namespace neutrino {
 
-address Memory::allocate(uint32_t size) {
+address Memory::allocate(uword size) {
   return young_space().allocate(size);
 }
 

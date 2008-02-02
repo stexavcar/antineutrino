@@ -55,7 +55,7 @@ void Test::dictionary_iterator() {
   for (int i = 0; i < kCount; i++)
     visited[i] = false;
   while (iter.next(&entry)) {
-    int32_t i = cast<Smi>(entry.key)->value();
+    word i = cast<Smi>(entry.key)->value();
     CHECK_EQ(cast<Smi>(entry.value)->value(),
               i + 7);
     visited[i] = true;

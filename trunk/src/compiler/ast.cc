@@ -13,7 +13,7 @@ ref<Protocol> ref_traits<ProtocolExpression>::compile(ref<Context> context) {
   Factory &factory = Runtime::current().factory();
   ref<Tuple> method_asts = methods();
   ref<Tuple> methods = factory.new_tuple(method_asts.length());
-  for (uint32_t i = 0; i < method_asts.length(); i++) {
+  for (uword i = 0; i < method_asts.length(); i++) {
     RefScope scope;
     ref<MethodExpression> method_ast = cast<MethodExpression>(method_asts.get(i));
     ref<Method> method = method_ast.compile(context);
@@ -93,7 +93,7 @@ static void unparse_invoke_expression_on(InvokeExpression *obj, UnparseData &dat
   obj->name()->write_on(data.out(), Data::UNQUOTED);
   data->append('(');
   bool is_first = true;
-  for (uint32_t i = 0; i < obj->arguments()->length(); i++) {
+  for (uword i = 0; i < obj->arguments()->length(); i++) {
     if (is_first) is_first = false;
     else data->append(", ");
     unparse_syntax_tree_on(cast<SyntaxTree>(obj->arguments()->get(i)), data);
@@ -106,7 +106,7 @@ static void unparse_protocol_expression(ProtocolExpression *obj, UnparseData &da
   obj->name()->write_on(data.out(), Data::UNQUOTED);
   data->append(" {");
   Tuple *methods = obj->methods();
-  for (uint32_t i = 0; i < methods->length(); i++) {
+  for (uword i = 0; i < methods->length(); i++) {
     MethodExpression *method = cast<MethodExpression>(methods->get(i));
     data->append(" ");
     unparse_syntax_tree_on(method, data);
@@ -138,7 +138,7 @@ static void unparse_local_definition(LocalDefinition *obj, UnparseData &data) {
 static void unparse_symbol(Symbol *obj, UnparseData &data) {
   Value *name = obj->name();
   if (is<Void>(name)) {
-    data->printf("&#%", reinterpret_cast<uint32_t>(obj));
+    data->printf("&#%", reinterpret_cast<uword>(obj));
   } else {
     data->append("$");
     name->write_on(data.out(), Data::UNQUOTED);
@@ -148,7 +148,7 @@ static void unparse_symbol(Symbol *obj, UnparseData &data) {
 static void unparse_list_on(Tuple *objs, UnparseData &data) {
   data->append("(");
   bool is_first = true;
-  for (uint32_t i = 0; i < objs->length(); i++) {
+  for (uword i = 0; i < objs->length(); i++) {
     if (is_first) is_first = false;
     else data->append(", ");
     unparse_syntax_tree_on(cast<SyntaxTree>(objs->get(i)), data);
@@ -262,7 +262,7 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
   }
   case UNQUOTE_EXPRESSION_TYPE: {
     ref<QuoteTemplate> templ = visitor.current_quote();
-    uint32_t index = cast<UnquoteExpression>(self)->index();
+    uword index = cast<UnquoteExpression>(self)->index();
     Value *term = templ->unquotes()->get(index);
     ref<SyntaxTree> value = new_ref(cast<SyntaxTree>(term));
     return value.accept(visitor);
@@ -281,7 +281,7 @@ FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(MAKE_VISIT)
 
 static void traverse_tuple(Visitor &visitor, ref<Tuple> expressions) {
   RefScope scope;
-  for (uint32_t i = 0; i < expressions.length(); i++)
+  for (uword i = 0; i < expressions.length(); i++)
     cast<SyntaxTree>(expressions.get(i)).accept(visitor);
 }
 
