@@ -85,7 +85,7 @@ ref<Layout> Factory::new_layout(InstanceType instance_type,
 }
 
 ref<Protocol> Factory::new_protocol(ref<Tuple> methods, ref<Value> super,
-    ref<Value> name) {
+    ref<Immediate> name) {
   ALLOCATE_CHECKED(Protocol, new_protocol(*methods, *super, *name));
 }
 

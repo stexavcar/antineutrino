@@ -47,33 +47,14 @@ public:
 };
 
 
-class Indirect : public Data {
-  
-};
-
-
 // -----------------
 // --- V a l u e ---
 // -----------------
 
-class Value : public Indirect {
+class Value : public Data {
 public:
   
   inline InstanceType type();
-  
-  /**
-   * Returns true if this object supports comparisons with other
-   * objecs.
-   */
-  bool is_key();
-
-  /**
-   * Checks that this object is consistent; that all fields are legal
-   * and hold objects of the expected type.  It always returns false,
-   * since it fails by aborting execution, but has a boolean return
-   * type to allow it to be used in ASSERTs.
-   */
-  IF_DEBUG(bool validate());
   
   /**
    * Built-in support for comparing value objects.  This method
@@ -87,23 +68,52 @@ public:
    * objects that support it and otherwise simple object identity.
    */
   bool is_identical(Value *that);
+  
+  /**
+   * Returns true if this object supports comparisons with other
+   * objecs.
+   */
+  bool is_key();
 
 };
 
 template <> class ref_traits<Value> {
 public:
-  inline string to_string();
   inline InstanceType type();
 };
 
 DEFINE_REF_CLASS(Value);
+
+// -------------------------
+// --- I m m e d i a t e ---
+// -------------------------
+
+class Immediate : public Value {
+public:
+
+  /**
+   * Checks that this object is consistent; that all fields are legal
+   * and hold objects of the expected type.  It always returns false,
+   * since it fails by aborting execution, but has a boolean return
+   * type to allow it to be used in ASSERTs.
+   */
+  IF_DEBUG(bool validate());
+
+};
+
+template <> class ref_traits<Immediate> : public ref_traits<Value> {
+public:
+  inline string to_string();
+};
+
+DEFINE_REF_CLASS(Immediate);
 
 
 // ---------------------------------
 // --- S m a l l   I n t e g e r ---
 // ---------------------------------
 
-class Smi : public Value {
+class Smi : public Immediate {
 public:
   inline word value();
 
@@ -123,7 +133,7 @@ public:
 #define DECLARE_OBJECT_FIELD(Type, name, Name, arg) DECLARE_FIELD(Type*, name);
 #define DECLARE_REF_FIELD(Type, name, Name, arg) inline ref<Type> name();
 
-class Object : public Value {
+class Object : public Immediate {
 public:
   DECLARE_FIELD(Layout*, layout);
   IF_DEBUG(inline Layout *gc_safe_layout());
@@ -145,7 +155,7 @@ public:
   static const int kHeaderSize   = kHeaderOffset + kPointerSize;
 };
 
-template <> class ref_traits<Object> : public ref_traits<Value> {
+template <> class ref_traits<Object> : public ref_traits<Immediate> {
 public:
   inline ref<Layout> layout();
 };
@@ -164,11 +174,11 @@ DEFINE_REF_CLASS(Object);
  * forward pointer descriptor object that holds a pointer to the
  * delegate object.
  */
-class Forwarder : public Indirect {
+class Forwarder : public Value {
 public:
-  inline Object *target();
+  inline ForwarderDescriptor *descriptor();
   
-  static inline Forwarder *to(Object *obj);
+  static inline Forwarder *to(ForwarderDescriptor *obj);
 };
 
 
@@ -553,9 +563,9 @@ class False : public Singleton { };
 // -----------------------
 
 #define FOR_EACH_PROTOCOL_FIELD(VISIT, arg)                          \
-  VISIT(Value, name,    Name,    arg)                                \
-  VISIT(Tuple, methods, Methods, arg)                                \
-  VISIT(Value, super,   Super,   arg)
+  VISIT(Immediate, name,    Name,    arg)                            \
+  VISIT(Tuple,     methods, Methods, arg)                            \
+  VISIT(Value,     super,   Super,   arg)
 
 class Protocol : public Object {
 public:

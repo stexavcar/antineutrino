@@ -8,7 +8,6 @@
 
 namespace neutrino {
 
-
 // -----------------------------------
 // --- I n f r a s t r u c t u r e ---
 // -----------------------------------
@@ -31,21 +30,28 @@ FOR_EACH_BUILTIN_FUNCTION(MAKE_CASE)
 }
 
 
+#define SIGNAL_CHECK(Type, name, operation)                          \
+  Data *name##_val = operation;                                      \
+  if (is<Signal>(name##_val)) return name##_val;                     \
+  Type *name = cast<Type>(name##_val);
+
+
 // -------------------
 // --- S t r i n g ---
 // -------------------
 
 Data *Builtins::string_length(Arguments &args) {
   ASSERT_EQ(0, args.count());
-  String *self = cast<String>(args.self());
+  SIGNAL_CHECK(String, self, to<String>(args.self()));
   return Smi::from_int(self->length());
 }
 
 Data *Builtins::string_eq(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  String *self = cast<String>(args.self());
-  if (!is<String>(args[0])) return Runtime::current().roots().fahlse();
-  String *that = cast<String>(args[0]);
+  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  Data *other = to<String>(args[0]);
+  if (is<Nothing>(other)) return Runtime::current().roots().fahlse();
+  String *that = cast<String>(other);
   uword length = self->length();
   if (length != that->length())
     return Runtime::current().roots().fahlse();
@@ -58,8 +64,8 @@ Data *Builtins::string_eq(Arguments &args) {
 
 Data *Builtins::string_plus(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  String *self = cast<String>(args.self());
-  String *that = cast<String>(args[0]);
+  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  SIGNAL_CHECK(String, that, to<String>(args[0]));
   uword length = self->length() + that->length();
   String *result = cast<String>(Runtime::current().heap().new_string(length));
   for (uword i = 0; i < self->length(); i++)
@@ -76,35 +82,35 @@ Data *Builtins::string_plus(Arguments &args) {
 
 Data *Builtins::smi_plus(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  Smi *self = cast<Smi>(args.self());
-  Smi *that = cast<Smi>(args[0]);
+  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
+  SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
   return Smi::from_int(self->value() + that->value());
 }
 
 Data *Builtins::smi_minus(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  Smi *self = cast<Smi>(args.self());
-  Smi *that = cast<Smi>(args[0]);
+  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
+  SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
   return Smi::from_int(self->value() - that->value());
 }
 
 Data *Builtins::smi_times(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  Smi *self = cast<Smi>(args.self());
-  Smi *that = cast<Smi>(args[0]);
+  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
+  SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
   return Smi::from_int(self->value() * that->value());
 }
 
 Data *Builtins::smi_divide(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  Smi *self = cast<Smi>(args.self());
-  Smi *that = cast<Smi>(args[0]);
+  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
+  SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
   return Smi::from_int(self->value() / that->value());
 }
 
 Data *Builtins::smi_abs(Arguments &args) {
   ASSERT_EQ(0, args.count());
-  Smi *self = cast<Smi>(args.self());
+  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
   word value = self->value();
   if (value >= 0) return self;
   else return Smi::from_int(-value);
@@ -117,7 +123,9 @@ Data *Builtins::smi_abs(Arguments &args) {
 
 Data *Builtins::object_eq(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  return (args.self() == args[0])
+  Immediate *self = deref(args.self());
+  Immediate *other = deref(args[0]);
+  return (self == other)
        ? static_cast<Value*>(Runtime::current().roots().thrue())
        : static_cast<Value*>(Runtime::current().roots().fahlse());
 }
@@ -125,7 +133,7 @@ Data *Builtins::object_eq(Arguments &args) {
 Data *Builtins::object_to_string(Arguments &args) {
   ASSERT_EQ(0, args.count());
   scoped_string str(args.self()->to_string());
-  return cast<Value>(Runtime::current().heap().new_string(*str));
+  return Runtime::current().heap().new_string(*str);
 }
 
 
@@ -135,8 +143,9 @@ Data *Builtins::object_to_string(Arguments &args) {
 
 Data *Builtins::protocol_expression_evaluate(Arguments &args) {
   ASSERT_EQ(0, args.count());
+  SIGNAL_CHECK(ProtocolExpression, raw_expr, to<ProtocolExpression>(args.self()));
   RefScope scope;
-  ref<ProtocolExpression> expr = new_ref(cast<ProtocolExpression>(args.self()));
+  ref<ProtocolExpression> expr = new_ref(raw_expr);
   ref<Context> context = new_ref(args.lambda()->context());
   ref<Protocol> result = expr.compile(context);
   return *result;
@@ -151,7 +160,7 @@ Data *Builtins::protocol_new(Arguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
   Runtime &runtime = Runtime::current();
-  Protocol *protocol = cast<Protocol>(args.self());
+  SIGNAL_CHECK(Protocol, protocol, to<Protocol>(args.self()));
   if (protocol == runtime.roots().symbol_layout()->protocol()) {
     return runtime.heap().new_symbol(runtime.roots().vhoid());
   } else {
@@ -169,9 +178,9 @@ Data *Builtins::protocol_new(Arguments &args) {
 
 Data *Builtins::tuple_eq(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  Tuple *self = cast<Tuple>(args.self());
-  Value *other = args[0];
-  if (!is<Tuple>(other))
+  SIGNAL_CHECK(Tuple, self, to<Tuple>(args.self()));
+  Data *other = to<Tuple>(args[0]);
+  if (is<Nothing>(other))
     return Runtime::current().roots().fahlse();
   Tuple *that = cast<Tuple>(other);
   if (self->length() != that->length())
@@ -216,7 +225,7 @@ Data *Builtins::lambda_expression_body(Arguments &args) {
 
 Data *Builtins::raw_print(Arguments &args) {
   ASSERT_EQ(1, args.count());
-  String *str_obj = cast<String>(args[0]);
+  SIGNAL_CHECK(String, str_obj, to<String>(args[0]));
   for (uword i = 0; i < str_obj->length(); i++)
     putc(str_obj->at(i), stdout);
   putc('\n', stdout);
@@ -224,7 +233,8 @@ Data *Builtins::raw_print(Arguments &args) {
 }
 
 Data *Builtins::compile_expression(Arguments &args) {
-  ref<SyntaxTree> self = new_ref(cast<SyntaxTree>(args.self()));
+  SIGNAL_CHECK(SyntaxTree, raw_self, to<SyntaxTree>(args.self()));
+  ref<SyntaxTree> self = new_ref(raw_self);
   ref<Context> context = new_ref(args.lambda()->context());
   ref<Lambda> code = Compiler::compile(self, context);
   return *code;
@@ -233,6 +243,18 @@ Data *Builtins::compile_expression(Arguments &args) {
 Data *Builtins::lift(Arguments &args) {
   Value *value = args[0];
   return Runtime::current().heap().new_literal_expression(value);
+}
+
+Data *Builtins::make_forwarder(Arguments &args) {
+  ASSERT_EQ(0, args.count());
+  return Runtime::current().heap().new_transparent_forwarder(args.self());
+}
+
+Data *Builtins::set_target(Arguments &args) {
+  ASSERT_EQ(1, args.count());
+  Forwarder *forwarder = cast<Forwarder>(args.self());
+  forwarder->descriptor()->set_target(args[0]);
+  return Runtime::current().roots().vhoid();
 }
 
 } // namespace neutrino

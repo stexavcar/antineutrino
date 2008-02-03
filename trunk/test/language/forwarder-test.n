@@ -1,0 +1,13 @@
+internal def make_forwarder();
+internal def set_target(value);
+
+def main() {
+  def x := "foo"·make_forwarder();
+  assert_equals("foo", x);
+  assert_equals(3, |x|);
+  assert_equals("foobar", x + "bar");
+  x·set_target("nirk");
+  assert_equals("nirk", x);
+  assert_equals(4, |x|);
+  assert_equals("nirkbar", x + "bar");
+}

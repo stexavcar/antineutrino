@@ -78,7 +78,7 @@ void Frame::reset(Stack *old_stack, Stack *new_stack) {
 /**
  * Returns the class object for the given value.
  */
-Layout *Interpreter::get_layout(Value *value) {
+Layout *Interpreter::get_layout(Immediate *value) {
   if (is<Smi>(value)) return runtime().roots().smi_layout();
   else return cast<Object>(value)->layout();
 }
@@ -91,7 +91,7 @@ public:
     , method_(Nothing::make())
     , is_ambiguous_(false) { }
   void score_method(Method *method, Layout *reciever);
-  void lookup_in_dictionary(Tuple *methods, Value *name, Layout *reciever);
+  void lookup_in_dictionary(Tuple *methods, Immediate *name, Layout *reciever);
   Data *method() { return method_; }
   bool is_ambiguous() { return is_ambiguous_; }
 private:
@@ -134,7 +134,7 @@ void MethodLookup::score_method(Method *method, Layout *reciever) {
 }
 
 
-void MethodLookup::lookup_in_dictionary(Tuple *methods, Value *name,
+void MethodLookup::lookup_in_dictionary(Tuple *methods, Immediate *name,
     Layout *reciever) {
   for (uword i = 0; i < methods->length(); i++) {
     Method *method = cast<Method>(methods->get(i));
@@ -148,7 +148,7 @@ void MethodLookup::lookup_in_dictionary(Tuple *methods, Value *name,
  * Returns the method with the specified name in the given class.  If
  * no method is found Nothing is returned.
  */
-Data *Interpreter::lookup_method(Layout *layout, Value *name) {
+Data *Interpreter::lookup_method(Layout *layout, Immediate *name) {
   // Look up any layout-local methods
   MethodLookup lookup;
   lookup.lookup_in_dictionary(layout->methods(), name, layout);
@@ -265,10 +265,10 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     }
     case OC_INVOKE: {
       uint16_t name_index = code[pc + 1];
-      Value *name = constant_pool[name_index];
+      Immediate *name = cast<Immediate>(constant_pool[name_index]);
       uint16_t argc = code[pc + 2];
       Value *recv = frame[argc + 1];
-      Layout *layout = get_layout(recv);
+      Layout *layout = get_layout(deref(recv));
       Data *lookup_result = lookup_method(layout, name);
       if (is<Nothing>(lookup_result)) {
         scoped_string name_str(name->to_string());

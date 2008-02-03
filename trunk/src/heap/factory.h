@@ -31,7 +31,7 @@ public:
       uword instance_field_count, ref<Value> protocol,
       ref<Tuple> methods);
   ref<Protocol> new_protocol(ref<Tuple> methods, ref<Value> super,
-      ref<Value> name);
+      ref<Immediate> name);
   ref<Instance> new_instance(ref<Layout> layout);
 private:
   template <typename T, class M> inline ref<T> allocate(M fun);

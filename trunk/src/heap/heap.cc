@@ -148,7 +148,7 @@ Data *Heap::new_layout(InstanceType instance_type,
   return result;  
 }
 
-Data *Heap::new_protocol(Tuple *methods, Value *super, Value *name) {
+Data *Heap::new_protocol(Tuple *methods, Value *super, Immediate *name) {
   Data *val = allocate_object(Protocol::kSize, roots().protocol_layout());
   if (is<AllocationFailed>(val)) return val;
   Protocol *result = cast<Protocol>(val);
@@ -304,10 +304,10 @@ Data *Heap::new_instance(Layout *layout) {
   return result;
 }
 
-Data *Heap::new_smi_forwarder(Smi *target) {
+Data *Heap::new_transparent_forwarder(Value *target) {
   Data *val = new_forwarder_descriptor(TRANSPARENT_FORWARDER, target);
   if (is<AllocationFailed>(val)) return val;
-  Object *desc = cast<Object>(val);
+  ForwarderDescriptor *desc = cast<ForwarderDescriptor>(val);
   return Forwarder::to(desc);
 }
 

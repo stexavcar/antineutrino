@@ -478,7 +478,7 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 
 #undef VALIDATE_FIELD
 
-bool Value::validate() {
+bool Immediate::validate() {
   if (is<Object>(this)) validate_object(cast<Object>(this));
   return true;
 }

@@ -25,7 +25,7 @@ inline bool gc_safe_is(Data *val) { return is<C>(val); }
 #endif
 
 template <class C>
-inline Data *to(Indirect *obj);
+inline Data *to(Value *obj);
 
 }
 

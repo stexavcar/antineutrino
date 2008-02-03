@@ -77,12 +77,12 @@ inline bool is<Forwarder>(Data *val) {
 }
 
 template <>
-inline bool is<Value>(Data *val) {
+inline bool is<Immediate>(Data *val) {
   return is<Object>(val) || is<Smi>(val);
 }
 
 template <>
-inline bool is<Indirect>(Data *val) {
+inline bool is<Value>(Data *val) {
   return !ValuePointer::has_signal_tag(val);
 }
 
@@ -135,6 +135,12 @@ inline bool is<AbstractBuffer>(Data *val) {
 }
 
 template <>
+inline bool is<Singleton>(Data *val) {
+  UNREACHABLE();
+  return false;
+}
+
+template <>
 inline bool is<Signal>(Data *val) {
   return ValuePointer::has_signal_tag(val);
 }
@@ -158,44 +164,32 @@ FOR_EACH_SIGNAL_TYPE(DEFINE_SIGNAL_QUERY)
 // --- C o n v e r s i o n s ---
 // -----------------------------
 
-template <>
-inline Data *to<Smi>(Indirect *val) {
-  if (is<Smi>(val)) {
-    return val;
-  } else if (is<Forwarder>(val)) {
-    Value *target = cast<Forwarder>(val)->target();
-    if (is<ForwarderDescriptor>(target)) {
-      return to<Smi>(cast<ForwarderDescriptor>(target)->target());
-    }
+/**
+ * This is the slow case in the 'to' function.  It gets called if the
+ * object is not immediately an instance of C.
+ */
+template <class C> Data *convert_object(Value *obj) {
+  ASSERT(!is<C>(obj));
+  if (is<Forwarder>(obj)) {
+    return to<C>(cast<Forwarder>(obj)->descriptor()->target());
+  } else {
+    return Nothing::make();
   }
-  return Nothing::make();
-}
-
-template <>
-inline Data *to<Value>(Indirect *val) {
-  if (is<Value>(val)) {
-    return val;
-  } else if (is<Forwarder>(val)) {
-    Value *target = cast<Forwarder>(val)->target();
-    if (is<ForwarderDescriptor>(target)) {
-      return cast<ForwarderDescriptor>(target)->target();
-    }
-  }
-  return Nothing::make();
 }
 
 #define DEFINE_CONVERTER(n, NAME, Name, info)                        \
   template <>                                                        \
-  inline Data *to<Name>(Indirect *val) {                             \
-    if (is<Name>(val)) {                                             \
-      return val;                                                    \
-    } else if (is<Forwarder>(val)) {                                 \
-      return to<Name>(cast<Forwarder>(val)->target());               \
-    }                                                                \
-    return Nothing::make();                                          \
+  inline Data *to<Name>(Value *val) {                                \
+    return is<Name>(val) ? val : convert_object<Name>(val);          \
   }
-FOR_EACH_OBJECT_TYPE(DEFINE_CONVERTER)
+FOR_EACH_DECLARED_TYPE(DEFINE_CONVERTER)
 #undef DEFINE_CONVERTER
+
+// All values can be converted to immediates so to<Immediate> can't
+// fail.
+inline Immediate *deref(Value *value) {
+  return cast<Immediate>(to<Immediate>(value));
+}
 
 // -----------------
 // --- V a l u e ---
@@ -204,6 +198,8 @@ FOR_EACH_OBJECT_TYPE(DEFINE_CONVERTER)
 InstanceType Value::type() {
   if (is<Smi>(this)) {
     return SMI_TYPE;
+  } else if (is<Forwarder>(this)) {
+    return FORWARDER_TYPE;
   } else {
     uword result = cast<Object>(this)->layout()->instance_type();
     return static_cast<InstanceType>(result);
@@ -223,7 +219,7 @@ InstanceType Data::gc_safe_type() {
 }
 #endif
 
-string ref_traits<Value>::to_string() {
+string ref_traits<Immediate>::to_string() {
   return open(this)->to_string();
 }
 
@@ -284,12 +280,12 @@ word Smi::value() {
 // --- F o r w a r d e r ---
 // -------------------------
 
-Forwarder *Forwarder::to(Object *obj) {
+Forwarder *Forwarder::to(ForwarderDescriptor *obj) {
   return ValuePointer::tag_as_forwarder(ValuePointer::address_of(obj));
 }
 
-Object *Forwarder::target() {
-  return ValuePointer::tag_as_object(ValuePointer::target_of(this));
+ForwarderDescriptor *Forwarder::descriptor() {
+  return cast<ForwarderDescriptor>(ValuePointer::tag_as_object(ValuePointer::target_of(this)));
 }
 
 

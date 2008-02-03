@@ -35,7 +35,7 @@ public:
   Data *new_layout(InstanceType instance_type, uword instance_field_count,
       Value *protocol, Tuple *methods);
   
-  Data *new_protocol(Tuple *methods, Value *super, Value *name);
+  Data *new_protocol(Tuple *methods, Value *super, Immediate *name);
   
   Data *new_context();
   
@@ -91,12 +91,9 @@ FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
 
   Data *new_instance(Layout *layout);
   
-  inline Data *new_transparent_forwarder(Value *target);
-  
-  Data *new_smi_forwarder(Smi *target);
-  
+  Data *new_transparent_forwarder(Value *target);
   Data *new_forwarder_descriptor(ForwarderType type, Value *target);
-
+  
   Memory &memory() { return memory_; }
   Roots &roots() { return roots_; }
 private:

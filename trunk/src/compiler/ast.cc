@@ -253,8 +253,8 @@ void SyntaxTree::unparse_on(string_buffer &buf) {
 // ---------------------
 
 void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
-  InstanceType type = this->type();
   ref<SyntaxTree> self = open(this);
+  InstanceType type = self->type();
   switch (type) {
   case QUOTE_TEMPLATE_TYPE: {
     QuoteTemplateScope scope(visitor, cast<QuoteTemplate>(self));
@@ -287,8 +287,8 @@ static void traverse_tuple(Visitor &visitor, ref<Tuple> expressions) {
 
 void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
 #define VISIT_FIELD(Type, field) cast<Type>(self).field().accept(visitor)
-  InstanceType type = this->type();
   ref<SyntaxTree> self = open(this);
+  InstanceType type = self->type();
   switch (type) {
   case RETURN_EXPRESSION_TYPE:
     VISIT_FIELD(ReturnExpression, value);

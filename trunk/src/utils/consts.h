@@ -45,7 +45,7 @@
   VISIT(22, ABSTRACT_BUFFER,        AbstractBuffer,        0)                      \
   VISIT(23, SINGLETON,              Singleton,             0)                      \
   VISIT(24, SYNTAX_TREE,            SyntaxTree,            0)                      \
-  VISIT(25, INDIRECT,               Indirect,              0)
+  VISIT(25, IMMEDIATE,              Immediate,             0)
 
 #define FOR_EACH_SIGNAL_TYPE(VISIT)                                                \
   VISIT(30, ALLOCATION_FAILED,      AllocationFailed,      0)                      \
@@ -363,7 +363,8 @@
 #define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
   VISIT(101, raw_print,          "raw_print")                        \
   VISIT(102, compile_expression, "compile_expression")               \
-  VISIT(103, lift,               "lift")
-
+  VISIT(103, lift,               "lift")                             \
+  VISIT(104, make_forwarder,     "make_forwarder")                   \
+  VISIT(105, set_target,         "set_target")
 
 #endif // _UTILS_CONSTS
