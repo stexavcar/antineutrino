@@ -352,7 +352,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     case OC_FIELD: {
       uint16_t index = code[pc + 1];
       uint16_t argc = code[pc + 2];
-      Value *value = cast<Instance>(frame.self(argc))->get_field(index);
+      Value *value = cast<Instance>(to<Instance>(frame.self(argc)))->get_field(index);
       frame.push(value);
       pc += OpcodeInfo<OC_FIELD>::kSize;
       break;

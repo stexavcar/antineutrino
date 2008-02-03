@@ -1,7 +1,7 @@
 internal def make_forwarder();
 internal def set_target(value);
 
-def main() {
+def simple_forwarder() {
   def x := "foo"·make_forwarder();
   assert_equals("foo", x);
   assert_equals(3, |x|);
@@ -10,4 +10,16 @@ def main() {
   assert_equals("nirk", x);
   assert_equals(4, |x|);
   assert_equals("nirkbar", x + "bar");
+}
+
+def record_forwarder() {
+  def r := new { x: 2, y: 3 };
+  def f := r·make_forwarder();
+  assert_equals(2, f.x());
+  assert_equals(3, f.y());
+}
+
+def main() {
+  simple_forwarder();
+  record_forwarder();
 }
