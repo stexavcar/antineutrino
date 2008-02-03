@@ -33,7 +33,7 @@ public:
   Data *allocate_empty_protocol();
 
   Data *new_layout(InstanceType instance_type, uword instance_field_count,
-      Value *protocol, Tuple *methods);
+      Immediate *protocol, Tuple *methods);
   
   Data *new_protocol(Tuple *methods, Value *super, Immediate *name);
   

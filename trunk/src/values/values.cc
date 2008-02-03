@@ -88,19 +88,22 @@ static void write_protocol_short_on(Protocol *obj, string_buffer &buf) {
 }
 
 static void write_instance_short_on(Instance *obj, string_buffer &buf) {
-  Value *layout_name = 0; // obj->layout()->name();
-  if (is<String>(layout_name)) {
-    buf.append("#<");
-    if (cast<String>(layout_name)->starts_with_vowel()) {
-      buf.append("an ");
-    } else {
-      buf.append("a ");
+  Immediate *protocol = obj->layout()->protocol();
+  if (is<Protocol>(protocol)) {
+    Value *layout_name = cast<Protocol>(protocol)->name();
+    if (is<String>(layout_name)) {
+      buf.append("#<");
+      if (cast<String>(layout_name)->starts_with_vowel()) {
+        buf.append("an ");
+      } else {
+        buf.append("a ");
+      }
+      layout_name->write_on(buf, Data::UNQUOTED);
+      buf.append(">");
+      return;
     }
-    layout_name->write_on(buf, Data::UNQUOTED);
-    buf.append(">");
-  } else {
-    buf.append("#<instance>");
   }
+  buf.append("#<instance>");
 }
 
 static void write_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {

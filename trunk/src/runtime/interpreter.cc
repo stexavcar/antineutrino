@@ -335,10 +335,10 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Layout *layout_template = cast<Layout>(constant_pool[layout_template_index]);
       uword field_count = layout_template->instance_field_count();
       Protocol *proto = cast<Protocol>(frame[field_count]);
-      USE(proto);
       Data *layout_val = layout_template->clone(runtime().heap());
       if (is<AllocationFailed>(layout_val)) return layout_val;
       Layout *layout = cast<Layout>(layout_val);
+      layout->set_protocol(proto);
       Data *val = runtime().heap().new_instance(layout);
       if (is<Signal>(val)) return val;
       Instance *instance = cast<Instance>(val);

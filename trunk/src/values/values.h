@@ -590,8 +590,8 @@ DEFINE_REF_CLASS(Protocol);
 // -----------------
 
 #define FOR_EACH_LAYOUT_FIELD(VISIT, arg)                            \
-  VISIT(Value, protocol, Protocol, arg)                              \
-  VISIT(Tuple, methods,  Methods,  arg)
+  VISIT(Immediate, protocol, Protocol, arg)                          \
+  VISIT(Tuple,     methods,  Methods,  arg)
 
 class Layout : public Object {
 public:

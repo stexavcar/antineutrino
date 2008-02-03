@@ -28,7 +28,7 @@ public:
   ref<Dictionary> new_dictionary();
   ref<Code> new_code(uword size);
   ref<Layout> new_layout(InstanceType instance_type, 
-      uword instance_field_count, ref<Value> protocol,
+      uword instance_field_count, ref<Immediate> protocol,
       ref<Tuple> methods);
   ref<Protocol> new_protocol(ref<Tuple> methods, ref<Value> super,
       ref<Immediate> name);

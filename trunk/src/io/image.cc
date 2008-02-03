@@ -173,7 +173,7 @@ void Image::fixup_shallow_object(ImageObject *obj) {
       ImageLayout *img = image_cast<ImageLayout>(obj);
       Layout *layout = cast<Layout>(img->forward_pointer());
       layout->set_methods(cast<Tuple>(img->methods()->forward_pointer()));
-      layout->set_protocol(img->protocol()->forward_pointer());
+      layout->set_protocol(cast<Immediate>(img->protocol()->forward_pointer()));
       break;
     }
     case BUILTIN_CALL_TYPE: {

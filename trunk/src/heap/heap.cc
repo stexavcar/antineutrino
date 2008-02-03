@@ -136,7 +136,7 @@ Data *Heap::new_context() {
 }
 
 Data *Heap::new_layout(InstanceType instance_type, 
-    uword instance_field_count, Value *protocol, Tuple *methods) {
+    uword instance_field_count, Immediate *protocol, Tuple *methods) {
   Data *val = allocate_layout(instance_type);
   if (is<AllocationFailed>(val)) return val;
   ASSERT_IS(Layout, val);

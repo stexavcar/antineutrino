@@ -80,7 +80,7 @@ ref<Layout> Factory::allocate_empty_layout(InstanceType instance_type) {
 }
 
 ref<Layout> Factory::new_layout(InstanceType instance_type,
-    uword instance_field_count, ref<Value> protocol, ref<Tuple> methods) {
+    uword instance_field_count, ref<Immediate> protocol, ref<Tuple> methods) {
   ALLOCATE_CHECKED(Layout, new_layout(instance_type, instance_field_count, *protocol, *methods));
 }
 

@@ -15,6 +15,7 @@ def simple_forwarder() {
 def record_forwarder() {
   def r := new { x: 2, y: 3 };
   def f := r·make_forwarder();
+  assert_equals(r, f);
   assert_equals(2, f.x());
   assert_equals(3, f.y());
   f·set_target(null);
