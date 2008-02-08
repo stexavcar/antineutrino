@@ -90,7 +90,8 @@
   VISIT(69, RAISE_EXPRESSION,       RaiseExpression,       raise_expression)       \
   VISIT(70, ON_CLAUSE,              OnClause,              on_clause)              \
   VISIT(71, DO_ON_EXPRESSION,       DoOnExpression,        do_on_expression)       \
-  VISIT(72, INSTANTIATE_EXPRESSION, InstantiateExpression, instantiate_expression)
+  VISIT(72, INSTANTIATE_EXPRESSION, InstantiateExpression, instantiate_expression) \
+  VISIT(75, ARGUMENTS,              Arguments,             arguments)
 
 #define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
   FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
@@ -204,7 +205,10 @@
   VISIT(1, Context,               Size)                              \
   VISIT(1, ForwarderDescriptor,   TypeOffset)                        \
   VISIT(2, ForwarderDescriptor,   TargetOffset)                      \
-  VISIT(3, ForwarderDescriptor,   Size)
+  VISIT(3, ForwarderDescriptor,   Size)                              \
+  VISIT(1, Arguments,             ArgumentsOffset)                   \
+  VISIT(2, Arguments,             KeywordsOffset)                    \
+  VISIT(3, Arguments,             Size)
 
 
 // -----------------
@@ -263,7 +267,8 @@
   VISIT(44, Layout,     instantiate_expression_layout, InstantiateExpression, allocate_empty_layout(INSTANTIATE_EXPRESSION_TYPE)) \
   VISIT(45, Layout,     context_layout,                Context,               allocate_empty_layout(CONTEXT_TYPE))                \
   VISIT(46, Layout,     signature_layout,              Signature,             allocate_empty_layout(SIGNATURE_TYPE))              \
-  VISIT(47, Layout,     forwarder_descriptor_layout,   ForwarderDescriptor,   allocate_empty_layout(FORWARDER_DESCRIPTOR_TYPE))
+  VISIT(47, Layout,     forwarder_descriptor_layout,   ForwarderDescriptor,   allocate_empty_layout(FORWARDER_DESCRIPTOR_TYPE))   \
+  VISIT(48, Layout,     arguments_layout,              Arguments,             allocate_empty_layout(ARGUMENTS_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                            \

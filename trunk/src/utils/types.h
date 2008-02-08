@@ -33,6 +33,7 @@ typedef uint64_t uword;
 namespace neutrino {
 
 class AbstractWatch;
+class Arguments;
 class Assembler;
 class Layout;
 class Code;

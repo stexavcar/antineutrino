@@ -163,7 +163,7 @@ Data *Interpreter::lookup_method(Layout *layout, Immediate *name) {
   return lookup.method();
 }
 
-static void unhandled_condition(Value *name, Arguments &args) {
+static void unhandled_condition(Value *name, BuiltinArguments &args) {
   string_buffer buf;
   buf.append("Unhandled condition: ");
   name->write_on(buf, Data::UNQUOTED);
@@ -310,7 +310,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
         marker.unwind();
       }
       {
-        Arguments args(runtime(), argc, frame);
+        BuiltinArguments args(runtime(), argc, frame);
         unhandled_condition(name, args);
         pc += OpcodeInfo<OC_RAISE>::kSize;
       }
@@ -382,7 +382,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       uint16_t argc = code[pc + 1];
       uint16_t index = code[pc + 2];
       builtin *builtin = Builtins::get(index);
-      Arguments args(runtime(), argc, frame);
+      BuiltinArguments args(runtime(), argc, frame);
       Value *value = cast<Value>(builtin(args));
       frame.push(value);
       pc += OpcodeInfo<OC_BUILTIN>::kSize;

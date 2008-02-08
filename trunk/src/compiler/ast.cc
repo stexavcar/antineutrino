@@ -93,10 +93,10 @@ static void unparse_invoke_expression_on(InvokeExpression *obj, UnparseData &dat
   obj->name()->write_on(data.out(), Data::UNQUOTED);
   data->append('(');
   bool is_first = true;
-  for (uword i = 0; i < obj->arguments()->length(); i++) {
+  for (uword i = 0; i < obj->arguments()->arguments()->length(); i++) {
     if (is_first) is_first = false;
     else data->append(", ");
-    unparse_syntax_tree_on(cast<SyntaxTree>(obj->arguments()->get(i)), data);
+    unparse_syntax_tree_on(cast<SyntaxTree>(obj->arguments()->arguments()->get(i)), data);
   }
   data->append(')');
 }
@@ -167,7 +167,7 @@ static void unparse_call_expression(CallExpression *obj, UnparseData &data) {
   unparse_syntax_tree_on(obj->receiver(), data);
   data->append("·");
   unparse_syntax_tree_on(obj->function(), data);
-  unparse_list_on(obj->arguments(), data);
+  unparse_list_on(obj->arguments()->arguments(), data);
 }
 
 static void unparse_unquote_expression(UnquoteExpression *obj, UnparseData &data) {
@@ -296,14 +296,14 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
   case INVOKE_EXPRESSION_TYPE: {
     RefScope scope;
     VISIT_FIELD(InvokeExpression, receiver);
-    traverse_tuple(visitor, cast<InvokeExpression>(self).arguments());
+    VISIT_FIELD(InvokeExpression, arguments);
     break;
   }
   case CALL_EXPRESSION_TYPE: {
     RefScope scope;
     VISIT_FIELD(CallExpression, receiver);
     VISIT_FIELD(CallExpression, function);
-    traverse_tuple(visitor, cast<CallExpression>(self).arguments());
+    VISIT_FIELD(CallExpression, arguments);
     break;
   }
   case CONDITIONAL_EXPRESSION_TYPE: {

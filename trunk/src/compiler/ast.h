@@ -84,7 +84,7 @@ DEFINE_REF_CLASS(QuoteTemplate);
 #define FOR_EACH_INVOKE_EXPRESSION_FIELD(VISIT, arg)                 \
   VISIT(SyntaxTree, receiver,  Receiver,  arg)                       \
   VISIT(String,     name,      Name,      arg)                       \
-  VISIT(Tuple,      arguments, Arguments, arg)
+  VISIT(Arguments,  arguments, Arguments, arg)
 
 class InvokeExpression : public SyntaxTree {
 public:
@@ -105,6 +105,32 @@ public:
 DEFINE_REF_CLASS(InvokeExpression);
 
 
+// -------------------------
+// --- A r g u m e n t s ---
+// -------------------------
+
+#define FOR_EACH_ARGUMENTS_FIELD(VISIT, arg)                         \
+  VISIT(Tuple, arguments, Arguments, arg)                            \
+  VISIT(Tuple, keywords,  Keywords,  arg)
+
+class Arguments : public SyntaxTree {
+public:
+  FOR_EACH_ARGUMENTS_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uword kArgumentsOffset = SyntaxTree::kHeaderSize;
+  static const uword kKeywordsOffset  = kArgumentsOffset + kPointerSize;
+  static const uword kSize            = kKeywordsOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<Arguments> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_ARGUMENTS_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(Arguments);
+
+
 // ---------------------------------------------------
 // --- I n s t a n t i a t e   E x p r e s s i o n ---
 // ---------------------------------------------------
@@ -112,7 +138,7 @@ DEFINE_REF_CLASS(InvokeExpression);
 #define FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(VISIT, arg)            \
   VISIT(SyntaxTree, receiver,  Receiver,  arg)                       \
   VISIT(String,     name,      Name,      arg)                       \
-  VISIT(Tuple,      arguments, Arguments, arg)                       \
+  VISIT(Arguments,  arguments, Arguments, arg)                       \
   VISIT(Tuple,      terms,     Terms,     arg)
 
 class InstantiateExpression : public SyntaxTree {
@@ -141,7 +167,7 @@ DEFINE_REF_CLASS(InstantiateExpression);
 
 #define FOR_EACH_RAISE_EXPRESSION_FIELD(VISIT, arg)                  \
   VISIT(String,     name,      Name,      arg)                       \
-  VISIT(Tuple,      arguments, Arguments, arg)
+  VISIT(Arguments,  arguments, Arguments, arg)
 
 class RaiseExpression : public SyntaxTree {
 public:
@@ -220,7 +246,7 @@ DEFINE_REF_CLASS(DoOnExpression);
 #define FOR_EACH_CALL_EXPRESSION_FIELD(VISIT, arg)                   \
   VISIT(SyntaxTree, receiver,  Receiver,  arg)                       \
   VISIT(SyntaxTree, function,  Function,  arg)                       \
-  VISIT(Tuple,      arguments, Arguments, arg)
+  VISIT(Arguments,  arguments, Arguments, arg)
 
 class CallExpression : public SyntaxTree {
 public:

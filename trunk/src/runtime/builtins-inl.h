@@ -6,24 +6,24 @@
 
 namespace neutrino {
 
-Arguments::Arguments(Runtime &runtime, uword count, Frame &frame)
+BuiltinArguments::BuiltinArguments(Runtime &runtime, uword count, Frame &frame)
     : runtime_(runtime)
     , count_(count)
     , frame_(frame) { }
 
-Value *Arguments::self() {
+Value *BuiltinArguments::self() {
   return frame().self(count());
 }
 
-Lambda *Arguments::lambda() {
+Lambda *BuiltinArguments::lambda() {
   return frame().lambda();
 }
 
-Value *Arguments::operator[](uword index) {
+Value *BuiltinArguments::operator[](uword index) {
   ASSERT(index < count());
   return frame().argument(count() - index - 1);
 }
 
-}
+} // neutrino
 
 #endif // _RUNTIME_BUILTINS_INL

@@ -138,25 +138,31 @@ public:
   inline ImageValue *value();
 };
 
+class ImageArguments : public ImageSyntaxTree {
+public:
+  inline ImageTuple *arguments();
+  inline ImageTuple *keywords();
+};
+
 class ImageInvokeExpression : public ImageSyntaxTree {
 public:
   inline ImageSyntaxTree *receiver();
   inline ImageString *name();
-  inline ImageTuple *arguments();
+  inline ImageArguments *arguments();
 };
 
 class ImageInstantiateExpression : public ImageSyntaxTree {
 public:
   inline ImageSyntaxTree *receiver();
   inline ImageString *name();
-  inline ImageTuple *arguments();
+  inline ImageArguments *arguments();
   inline ImageTuple *terms();
 };
 
 class ImageRaiseExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();
-  inline ImageTuple *arguments();
+  inline ImageArguments *arguments();
 };
 
 class ImageLambdaExpression : public ImageSyntaxTree {
@@ -181,7 +187,7 @@ class ImageCallExpression : public ImageSyntaxTree {
 public:
   inline ImageSyntaxTree *receiver();
   inline ImageSyntaxTree *function();
-  inline ImageTuple *arguments();
+  inline ImageArguments *arguments();
 };
 
 class ImageConditionalExpression : public ImageSyntaxTree {

@@ -482,7 +482,7 @@ void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
   RefScope scope;
   __ codegen(that.receiver());
   __ push(runtime().vhoid());
-  ref<Tuple> args = that.arguments();
+  ref<Tuple> args = that.arguments().arguments();
   for (uword i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
   __ invoke(that.name(), args.length());
@@ -493,7 +493,7 @@ void Assembler::visit_call_expression(ref<CallExpression> that) {
   RefScope scope;
   __ codegen(that.receiver());
   __ codegen(that.function());
-  ref<Tuple> args = that.arguments();
+  ref<Tuple> args = that.arguments().arguments();
   for (uword i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
   __ call(args.length());
@@ -636,7 +636,7 @@ void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {
 
 void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
   RefScope scope;
-  ref<Tuple> args = that.arguments();
+  ref<Tuple> args = that.arguments().arguments();
   __ push(runtime().vhoid()); // receiver
   __ push(runtime().vhoid()); // method
   for (uword i = 0; i < args.length(); i++)
@@ -693,6 +693,10 @@ void Assembler::visit_unquote_expression(ref<UnquoteExpression> that) {
 void Assembler::visit_quote_template(ref<QuoteTemplate> that) {
   // This is handled specially by the visitor and should never be
   // visited explicitly
+  UNREACHABLE();
+}
+
+void Assembler::visit_arguments(ref<Arguments> that) {
   UNREACHABLE();
 }
 

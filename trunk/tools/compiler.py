@@ -516,10 +516,16 @@ class Parser:
     if self.token().is_delimiter('~'):
       return self.parse_unquote_expression()
     else:
-      return Symbol(self.expect_ident())
+      name = self.expect_ident()
+      if self.token().is_delimiter(':'):
+        is_keyword = True
+        self.expect_delimiter(':')
+      else:
+        is_keyword = False
+      return Symbol(name)
 
   # <params>
-  #   -> $ident *: ','
+  #   -> <param> *: ','
   def parse_params(self, start, end):
     params = []
     self.expect_delimiter(start)
@@ -547,8 +553,27 @@ class Parser:
   # <arguments>
   #   -> <expression> *: ','
   def parse_arguments(self, start, end):
-    args = []
     self.expect_delimiter(start)
+    args = []
+    keywords = { }
+    def parse_argument():
+      expr = self.parse_expression(False)
+      if self.token().is_delimiter(':') and expr.is_identifier():
+        self.expect_delimiter(':')
+        keywords[expr.name] = len(args)
+        expr = self.parse_expression(False)
+      args.append(expr)
+    if not self.token().is_delimiter(end):
+      parse_argument()
+    while self.token().is_delimiter(','):
+      self.advance()
+      parse_argument()
+    self.expect_delimiter(end)
+    return Arguments(args, keywords)
+
+  def parse_expressions(self, start, end):
+    self.expect_delimiter(start)
+    args = []
     if not self.token().is_delimiter(end):
       expr = self.parse_expression(False)
       args.append(expr)
@@ -659,7 +684,7 @@ class Parser:
     while self.token().is_operator() and (self.token().name != end):
       op = self.expect_operator()
       right = self.parse_call_expression()
-      expr = Invoke(expr, op, [right])
+      expr = Invoke(expr, op, Arguments([right], {}))
     return expr
 
   # <conditional-expression>
@@ -716,7 +741,7 @@ class Parser:
     self.expect_keyword('new')
     if self.token().is_delimiter('{'):
       constr = Global('Object')
-      args = [ ]
+      args = Arguments([], {})
     else:
       constr = self.parse_atomic_expression()
       args = self.parse_arguments('(', ')')
@@ -799,7 +824,7 @@ class Parser:
     elif self.token().is_keyword('new'):
       return self.parse_new_expression()
     elif self.token().is_delimiter('['):
-      exprs = self.parse_arguments('[', ']')
+      exprs = self.parse_expressions('[', ']')
       return Tuple(exprs)
     elif self.token().is_keyword('protocol'):
       return self.parse_protocol_declaration([])
@@ -815,7 +840,7 @@ class Parser:
       match = circumfix_match(op)
       value = self.parse_operator_expression(match)
       self.expect_operator(match)
-      return Invoke(value, op + match, [])
+      return Invoke(value, op + match, Arguments([], {}))
     else:
       self.parse_error()
 
@@ -925,7 +950,8 @@ class Method(SyntaxTree):
     return HEAP.new_method_expression(HEAP.new_string(self.name), fun)
 
 class Expression(SyntaxTree):
-  pass
+  def is_identifier(self):
+    return False
 
 def quote_value(val):
   if type(val) is int: return val
@@ -965,11 +991,13 @@ class Interpolated(Expression):
 
 class Tuple(Expression):
   def __init__(self, values):
+    assert type(values) is list
     self.values = values
   def accept(self, visitor):
     visitor.visit_tuple(self)
   def traverse(self, visitor):
-    for value in self.values: value.accept(visitor)
+    for value in self.values:
+      value.accept(visitor)
   def quote(self):
     values = HEAP.new_tuple(values = [ value.quote() for value in self.values ])
     return HEAP.new_tuple_expression(values)
@@ -1019,6 +1047,8 @@ class BuiltinCall(Expression):
 class Identifier(Expression):
   def accept(self, visitor):
     visitor.visit_identifier(self)
+  def is_identifier(self):
+    return True
   def traverse(self, visitor):
     pass
 
@@ -1049,13 +1079,13 @@ class Call(Expression):
   def traverse(self, visitor):
     self.recv.accept(visitor)
     self.fun.accept(visitor)
-    for arg in self.args: arg.accept(visitor)
+    self.args.accept(visitor)
   def __repr__(self):
     return str(self.recv) + "·" + str(self.fun) + exprs_repr(self.args)
   def quote(self):
     recv = self.recv.quote()
     fun = self.fun.quote()
-    args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
+    args = self.args.quote()
     return HEAP.new_call_expression(recv, fun, args)
 
 class Raise(Expression):
@@ -1065,10 +1095,10 @@ class Raise(Expression):
   def accept(self, visitor):
     visitor.visit_raise(self)
   def traverse(self, visitor):
-    for arg in self.args: arg.accept(visitor)
+    self.args.accept(visitor)
   def quote(self):
     name = HEAP.new_string(self.name)
-    args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
+    args = self.args.quote()
     return HEAP.new_raise_expression(name, args)
 
 class DoOnExpression(Expression):
@@ -1128,7 +1158,29 @@ class Unquote(Expression):
     return HEAP.new_unquote_expression(self.value)
 
 def exprs_repr(args):
-  return '(' + ', '.join([str(arg) for arg in args]) + ')'
+  return '(' + ', '.join([str(arg) for arg in args.args]) + ')'
+
+class Arguments(SyntaxTree):
+  def __init__(self, args, keywords):
+    self.args = args
+    self.keywords = keywords
+  def accept(self, visitor):
+    visitor.visit_arguments(self)
+  def traverse(self, visitor):
+    for arg in self.args:
+      arg.accept(visitor)
+  def quote(self):
+    args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
+    if len(self.keywords) == 0:
+      keywords = HEAP.empty_tuple
+    else:
+      keywords_list = [ ]
+      for (word, index) in self.keywords.items():
+        word_obj = HEAP.new_string(word)
+        index_obj = tag_as_smi(index)
+        keywords_list.append(HEAP.new_tuple(values = [word_obj, index_obj]))
+      keywords = HEAP.new_tuple(values = keywords_list)
+    return HEAP.new_arguments(args, keywords)
 
 class Invoke(Expression):
   def __init__(self, recv, name, args):
@@ -1139,13 +1191,13 @@ class Invoke(Expression):
     visitor.visit_invoke(self)
   def traverse(self, visitor):
     self.recv.accept(visitor)
-    for arg in self.args: arg.accept(visitor)
+    self.args.accept(visitor)
   def __repr__(self):
     return str(self.recv) + '.' + self.name + exprs_repr(self.args)
   def quote(self):
     recv = self.recv.quote()
     name = HEAP.new_string(self.name)
-    args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
+    args = self.args.quote()
     return HEAP.new_invoke_expression(recv, name, args)
 
 class Instantiate(Expression):
@@ -1158,13 +1210,13 @@ class Instantiate(Expression):
     visitor.visit_instantiate(self)
   def traverse(self, visitor):
     self.recv.accept(visitor)
-    for arg in self.args: arg.accept(visitor)
+    self.args.accept(visitor)
     for (name, value) in self.terms:
       value.accept(visitor)
   def quote(self):
     recv = self.recv.quote()
     name = HEAP.new_string(self.name)
-    args = HEAP.new_tuple(values = [ arg.quote() for arg in self.args ])
+    args = self.args.quote()
     term_list = [ ]
     for (key, value) in self.terms:
       term_list.append(HEAP.new_string(key))
@@ -1421,6 +1473,9 @@ class Heap:
   def new_literal_expression(self, value):
     return ImageLiteralExpression(self.allocate(LITERAL_EXPRESSION_TYPE, ImageLiteralExpression_Size), value)
 
+  def new_arguments(self, args, keywords):
+    return ImageArguments(self.allocate(ARGUMENTS_TYPE, ImageArguments_Size), args, keywords)
+
   def new_invoke_expression(self, recv, name, args):
     return ImageInvokeExpression(self.allocate(INVOKE_EXPRESSION_TYPE, ImageInvokeExpression_Size), recv, name, args)
 
@@ -1631,15 +1686,15 @@ class ImageLiteralExpression(ImageSyntaxTree):
 class ImageInvokeExpression(ImageSyntaxTree):
   def __init__(self, addr, recv, name, args):
     ImageSyntaxTree.__init__(self, addr)
-    self.set_recv(recv)
-    self.set_name(name)
-    self.set_args(args)
-  def set_recv(self, value):
-    HEAP.set_field(self, ImageInvokeExpression_ReceiverOffset, value)
-  def set_name(self, value):
-    HEAP.set_field(self, ImageInvokeExpression_NameOffset, value)
-  def set_args(self, value):
-    HEAP.set_field(self, ImageInvokeExpression_ArgumentsOffset, value)
+    HEAP.set_field(self, ImageInvokeExpression_ReceiverOffset, recv)
+    HEAP.set_field(self, ImageInvokeExpression_NameOffset, name)
+    HEAP.set_field(self, ImageInvokeExpression_ArgumentsOffset, args)
+
+class ImageArguments(ImageSyntaxTree):
+  def __init__(self, addr, args, keywords):
+    ImageSyntaxTree.__init__(self, addr)
+    HEAP.set_field(self, ImageArguments_ArgumentsOffset, args)
+    HEAP.set_field(self, ImageArguments_KeywordsOffset, keywords)
 
 class ImageInstantiateExpression(ImageSyntaxTree):
   def __init__(self, addr, recv, name, args, terms):
@@ -1907,6 +1962,8 @@ class Visitor:
   def visit_instantiate(self, that):
     self.visit_node(that)
   def visit_protocol(self, that):
+    self.visit_node(that)
+  def visit_arguments(self, that):
     self.visit_node(that)
 
 class LoadVisitor(Visitor):

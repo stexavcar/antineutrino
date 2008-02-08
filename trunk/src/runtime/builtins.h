@@ -6,9 +6,9 @@
 
 namespace neutrino {
 
-class Arguments {
+class BuiltinArguments {
 public:
-  inline Arguments(Runtime &runtime, uword argc, Frame &stack);
+  inline BuiltinArguments(Runtime &runtime, uword argc, Frame &stack);
   inline Value *self();
   inline Value *operator[](uword index);
   inline Lambda *lambda();
@@ -21,18 +21,18 @@ private:
   Frame &frame_;
 };
 
-typedef Data *(builtin)(Arguments&);
+typedef Data *(builtin)(BuiltinArguments&);
 
 class Builtins {
 public:
   static builtin *get(uword index);
 private:
 
-#define DECLARE_BUILTIN(n, layout, name, str) static Data *layout##_##name(Arguments&);
+#define DECLARE_BUILTIN(n, layout, name, str) static Data *layout##_##name(BuiltinArguments&);
 FOR_EACH_BUILTIN_METHOD(DECLARE_BUILTIN)
 #undef DECLARE_BUILTIN
 
-#define DECLARE_BUILTIN(n, name, str) static Data *name(Arguments&);
+#define DECLARE_BUILTIN(n, name, str) static Data *name(BuiltinArguments&);
 FOR_EACH_BUILTIN_FUNCTION(DECLARE_BUILTIN)
 #undef DECLARE_BUILTIN
 

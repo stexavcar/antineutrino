@@ -40,13 +40,13 @@ FOR_EACH_BUILTIN_FUNCTION(MAKE_CASE)
 // --- S t r i n g ---
 // -------------------
 
-Data *Builtins::string_length(Arguments &args) {
+Data *Builtins::string_length(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   SIGNAL_CHECK(String, self, to<String>(args.self()));
   return Smi::from_int(self->length());
 }
 
-Data *Builtins::string_eq(Arguments &args) {
+Data *Builtins::string_eq(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(String, self, to<String>(args.self()));
   Data *other = to<String>(args[0]);
@@ -62,7 +62,7 @@ Data *Builtins::string_eq(Arguments &args) {
   return Runtime::current().roots().thrue();
 }
 
-Data *Builtins::string_plus(Arguments &args) {
+Data *Builtins::string_plus(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(String, self, to<String>(args.self()));
   SIGNAL_CHECK(String, that, to<String>(args[0]));
@@ -80,35 +80,35 @@ Data *Builtins::string_plus(Arguments &args) {
 // --- S m a l l   I n t e g e r ---
 // ---------------------------------
 
-Data *Builtins::smi_plus(Arguments &args) {
+Data *Builtins::smi_plus(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
   SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
   return Smi::from_int(self->value() + that->value());
 }
 
-Data *Builtins::smi_minus(Arguments &args) {
+Data *Builtins::smi_minus(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
   SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
   return Smi::from_int(self->value() - that->value());
 }
 
-Data *Builtins::smi_times(Arguments &args) {
+Data *Builtins::smi_times(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
   SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
   return Smi::from_int(self->value() * that->value());
 }
 
-Data *Builtins::smi_divide(Arguments &args) {
+Data *Builtins::smi_divide(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
   SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
   return Smi::from_int(self->value() / that->value());
 }
 
-Data *Builtins::smi_abs(Arguments &args) {
+Data *Builtins::smi_abs(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
   word value = self->value();
@@ -121,7 +121,7 @@ Data *Builtins::smi_abs(Arguments &args) {
 // --- O b j e c t ---
 // -------------------
 
-Data *Builtins::object_eq(Arguments &args) {
+Data *Builtins::object_eq(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   Immediate *self = deref(args.self());
   Immediate *other = deref(args[0]);
@@ -130,7 +130,7 @@ Data *Builtins::object_eq(Arguments &args) {
        : static_cast<Value*>(Runtime::current().roots().fahlse());
 }
 
-Data *Builtins::object_to_string(Arguments &args) {
+Data *Builtins::object_to_string(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   scoped_string str(args.self()->to_string());
   return Runtime::current().heap().new_string(*str);
@@ -141,7 +141,7 @@ Data *Builtins::object_to_string(Arguments &args) {
 // --- C l a s s   E x p r e s s i o n ---
 // ---------------------------------------
 
-Data *Builtins::protocol_expression_evaluate(Arguments &args) {
+Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   SIGNAL_CHECK(ProtocolExpression, raw_expr, to<ProtocolExpression>(args.self()));
   RefScope scope;
@@ -156,7 +156,7 @@ Data *Builtins::protocol_expression_evaluate(Arguments &args) {
 // --- C l a s s ---
 // -----------------
 
-Data *Builtins::protocol_new(Arguments &args) {
+Data *Builtins::protocol_new(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   RefScope scope;
   Runtime &runtime = Runtime::current();
@@ -176,7 +176,7 @@ Data *Builtins::protocol_new(Arguments &args) {
 // --- T u p l e ---
 // -----------------
 
-Data *Builtins::tuple_eq(Arguments &args) {
+Data *Builtins::tuple_eq(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(Tuple, self, to<Tuple>(args.self()));
   Data *other = to<Tuple>(args[0]);
@@ -197,7 +197,7 @@ Data *Builtins::tuple_eq(Arguments &args) {
 // --- L a m b d a ---
 // -------------------
 
-Data *Builtins::lambda_disassemble(Arguments &args) {
+Data *Builtins::lambda_disassemble(BuiltinArguments &args) {
   ref<Lambda> self = new_ref(cast<Lambda>(args.self()));
   self.ensure_compiled();
   scoped_string str(self->disassemble());
@@ -210,11 +210,11 @@ Data *Builtins::lambda_disassemble(Arguments &args) {
 // --- L a m b d a   E x p r e s s i o n ---
 // -----------------------------------------
 
-Data *Builtins::lambda_expression_params(Arguments &args) {
+Data *Builtins::lambda_expression_params(BuiltinArguments &args) {
   return cast<LambdaExpression>(args.self())->params();
 }
 
-Data *Builtins::lambda_expression_body(Arguments &args) {
+Data *Builtins::lambda_expression_body(BuiltinArguments &args) {
   return cast<LambdaExpression>(args.self())->body();
 }
 
@@ -223,7 +223,7 @@ Data *Builtins::lambda_expression_body(Arguments &args) {
 // --- F u n c t i o n s ---
 // -------------------------
 
-Data *Builtins::raw_print(Arguments &args) {
+Data *Builtins::raw_print(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(String, str_obj, to<String>(args[0]));
   for (uword i = 0; i < str_obj->length(); i++)
@@ -232,7 +232,7 @@ Data *Builtins::raw_print(Arguments &args) {
   return Runtime::current().roots().vhoid();
 }
 
-Data *Builtins::compile_expression(Arguments &args) {
+Data *Builtins::compile_expression(BuiltinArguments &args) {
   SIGNAL_CHECK(SyntaxTree, raw_self, to<SyntaxTree>(args.self()));
   ref<SyntaxTree> self = new_ref(raw_self);
   ref<Context> context = new_ref(args.lambda()->context());
@@ -240,17 +240,17 @@ Data *Builtins::compile_expression(Arguments &args) {
   return *code;
 }
 
-Data *Builtins::lift(Arguments &args) {
+Data *Builtins::lift(BuiltinArguments &args) {
   Value *value = args[0];
   return Runtime::current().heap().new_literal_expression(value);
 }
 
-Data *Builtins::make_forwarder(Arguments &args) {
+Data *Builtins::make_forwarder(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   return Runtime::current().heap().new_transparent_forwarder(args.self());
 }
 
-Data *Builtins::set_target(Arguments &args) {
+Data *Builtins::set_target(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   Forwarder *forwarder = cast<Forwarder>(args.self());
   forwarder->descriptor()->set_target(args[0]);
