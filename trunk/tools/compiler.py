@@ -10,6 +10,9 @@ from os import path
 from buildutils import KEYWORDS
 import re, string, struct, codecs
 
+INTERNAL = 'internal'
+NATIVE = 'native'
+
 # -------------------
 # --- T o k e n s ---
 # -------------------
@@ -394,7 +397,10 @@ class Parser:
       assert False
 
   def is_modifier(self, token):
-    return token.is_keyword('internal')
+    return token.is_keyword(INTERNAL) or token.is_keyword(NATIVE)
+
+  def has_body(self, modifiers):
+    return (not INTERNAL in modifiers) and (not NATIVE in modifiers)
 
   # <modifiers>
   #   -> <modifier>*
@@ -438,7 +444,7 @@ class Parser:
       member = self.parse_member_declaration(name)
       members.append(member)
     self.expect_delimiter('}')
-    if 'internal' in modifiers:
+    if INTERNAL in modifiers:
       info = BUILTIN_CLASSES[name]
       return BuiltinClass(info, members, parent)
     else:
@@ -458,7 +464,7 @@ class Parser:
     self.expect_keyword('def')
     name = self.parse_member_name()
     params = self.parse_params('(', ')')
-    if 'internal' in modifiers:
+    if INTERNAL in modifiers:
       self.expect_delimiter(';')
       key = (class_name, name)
       if not key in BUILTIN_METHODS:
@@ -485,9 +491,13 @@ class Parser:
       return Definition(name, value)
     else:
       params = self.parse_params('(', ')')
-      if 'internal' in modifiers:
-        index = BUILTIN_FUNCTIONS[name]
-        fun = Lambda(params, Return(BuiltinCall(len(params), index)))
+      if not self.has_body(modifiers):
+        if INTERNAL in modifiers:
+          index = BUILTIN_FUNCTIONS[name]
+          fun = Lambda(params, Return(BuiltinCall(len(params), index)))
+        else:
+          assert NATIVE in modifiers
+          fun = Lambda(params, Return(ExternalCall(len(params), name)))
         self.expect_delimiter(';')
       else:
         self.push_scope(params)
@@ -1044,6 +1054,17 @@ class BuiltinCall(Expression):
   def quote(self):
     return HEAP.new_builtin_call(self.argc, self.index)
 
+class ExternalCall(Expression):
+  def __init__(self, argc, name):
+    self.argc = argc
+    self.name = name
+  def accept(self, visitor):
+    visitor.visit_external_call(self)
+  def traverse(self, visitor):
+    pass
+  def quote(self):
+    return HEAP.new_external_call(self.argc, HEAP.new_string(self.name))
+
 class Identifier(Expression):
   def accept(self, visitor):
     visitor.visit_identifier(self)
@@ -1348,7 +1369,7 @@ def tag_as_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 47
+  kRootCount  = 50
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1430,6 +1451,9 @@ class Heap:
 
   def new_builtin_call(self, argc, index):
     return ImageBuiltinCall(self.allocate(BUILTIN_CALL_TYPE, ImageBuiltinCall_Size), argc, index)
+
+  def new_external_call(self, argc, name):
+    return ImageExternalCall(self.allocate(EXTERNAL_CALL_TYPE, ImageExternalCall_Size), argc, name)
 
   def new_quote_expression(self, value, unquotes):
     return ImageQuoteExpression(self.allocate(QUOTE_EXPRESSION_TYPE, ImageQuoteExpression_Size), value, unquotes)
@@ -1596,12 +1620,14 @@ class ImageContext(ImageObject):
 class ImageBuiltinCall(ImageObject):
   def __init__(self, addr, argc, index):
     ImageObject.__init__(self, addr)
-    self.set_argc(argc)
-    self.set_index(index)
-  def set_argc(self, value):
-    HEAP.set_raw_field(self, ImageBuiltinCall_ArgcOffset, value)
-  def set_index(self, value):
-    HEAP.set_raw_field(self, ImageBuiltinCall_IndexOffset, value)
+    HEAP.set_raw_field(self, ImageBuiltinCall_ArgcOffset, argc)
+    HEAP.set_raw_field(self, ImageBuiltinCall_IndexOffset, index)
+
+class ImageExternalCall(ImageObject):
+  def __init__(self, addr, argc, name):
+    ImageObject.__init__(self, addr)
+    HEAP.set_field(self, ImageBuiltinCall_ArgcOffset, argc)
+    HEAP.set_field(self, ImageBuiltinCall_IndexOffset, name)
 
 class ImageMethod(ImageObject):
   def __init__(self, addr, name, signature, body):
@@ -1964,6 +1990,8 @@ class Visitor:
   def visit_protocol(self, that):
     self.visit_node(that)
   def visit_arguments(self, that):
+    self.visit_node(that)
+  def visit_external_call(self, that):
     self.visit_node(that)
 
 class LoadVisitor(Visitor):

@@ -72,6 +72,7 @@ public:
   void ghoto(Label &label);
   void bind(Label &label);
   void builtin(uint16_t argc, uint16_t index);
+  void external(uint16_t argc, ref<String> name);
   void concat(uint16_t terms);
   void quote(uint16_t unquotes);
   void mark(ref<Value> data);
@@ -276,6 +277,15 @@ void Assembler::builtin(uint16_t argc, uint16_t index) {
   code().append(OC_BUILTIN);
   code().append(argc);
   code().append(index);
+  adjust_stack_height(1);
+}
+
+void Assembler::external(uint16_t argc, ref<String> name) {
+  STATIC_CHECK(OpcodeInfo<OC_EXTERNAL>::kArgc == 2);
+  code().append(OC_EXTERNAL);
+  code().append(argc);
+  uint16_t name_index = constant_pool_index(name);
+  code().append(name_index);
   adjust_stack_height(1);
 }
 
@@ -610,6 +620,10 @@ void Assembler::visit_this_expression(ref<ThisExpression> that) {
 
 void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
   __ builtin(that->argc(), that->index());
+}
+
+void Assembler::visit_external_call(ref<ExternalCall> that) {
+  __ external(that->argc()->value(), that.name());
 }
 
 void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {

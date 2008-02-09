@@ -7,6 +7,7 @@
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
 #include "utils/flags.h"
+#include "utils/scoped-ptrs-inl.h"
 #include "utils/vector.h"
 
 namespace neutrino {
@@ -16,6 +17,7 @@ public:
   static void main(list<char*> &args);
   static void on_option_error(string message);
   static Image *read_image(string name);
+  static DynamicLibraryCollection *load_dynamic_libraries();
 };
 
 void Main::on_option_error(string message) {
@@ -23,11 +25,27 @@ void Main::on_option_error(string message) {
   exit(1);
 }
 
+DynamicLibraryCollection *Main::load_dynamic_libraries() {
+  // To begin with the result is owned by this scope so it will be
+  // correctly cleaned up on premature return.
+  own_ptr<DynamicLibraryCollection> result(&DynamicLibraryCollection::create());
+  list<string> &libs = Options::libs;
+  for (uword i = 0; i < libs.length(); i++) {
+    if (!result->load(libs[i])) {
+      Conditions::get().error_occurred("Error loading library %s", libs[i].chars());
+      return NULL;
+    }
+  }
+  return result.release();
+}
+
 void Main::main(list<char*> &args) {
   if (!Abort::setup_signal_handler()) return;
   FlagParser::parse_flags(args, on_option_error);
+  own_ptr<DynamicLibraryCollection> dylibs(load_dynamic_libraries());
+  if (*dylibs == NULL) return;
   list<string> files = Options::images;
-  Runtime runtime;
+  Runtime runtime(*dylibs);
   runtime.initialize();
   Runtime::Scope runtime_scope(runtime);
   for (uword i = 0; i < files.length(); i++) {

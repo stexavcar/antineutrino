@@ -7,10 +7,11 @@ namespace neutrino {
 
 Runtime *Runtime::current_ = NULL;
 
-Runtime::Runtime()
+Runtime::Runtime(DynamicLibraryCollection *dylibs)
   : heap_(roots_)
   , factory_(*this)
-  , interpreter_(*this) {
+  , interpreter_(*this)
+  , dylibs_(dylibs) {
 }
 
 bool Runtime::initialize() {

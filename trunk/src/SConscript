@@ -25,10 +25,13 @@ env = create_environment()
 
 static_library = env.StaticLibrary(config['name'], source_files)
 shared_library = env.SharedLibrary(config['name'], source_files)
-program = env.Program(config['name'], [ program_files, static_library ])
+program = env.Program(config['name'], [ program_files, shared_library ])
+env.Depends(program, config[prefix + 'natives'])
 config[prefix + 'static-library'] = static_library[0]
 config[prefix + 'shared-library'] = shared_library[0]
 Alias(prefix + 'program', program)
 Alias(prefix + 'lib', static_library)
 config[prefix + 'program'] = program[0]
+if prefix + 'program' != 'program':
+  Depends('program', prefix + 'program')
 env.Alias(target, [static_library, program])

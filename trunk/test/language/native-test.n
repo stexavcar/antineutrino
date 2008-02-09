@@ -1,0 +1,10 @@
+native def min(a, b);
+
+def test_simple_native() {
+  assert_equals(1, min(1, 2));
+  assert_equals(2, min(5, 2));
+}
+
+def main() {
+  test_simple_native();
+}

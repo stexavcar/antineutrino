@@ -3,6 +3,8 @@ from os.path import join, walk, abspath, exists
 from testutils import PyNeutrinoTestCase, is_selected, relative
 
 executable = relative(config['bin'], str(config[prefix + 'program']))
+natives = relative(config['bin'], str(config[prefix + 'natives']))
+
 
 compiler = join(config['root'], 'tools', 'compiler.py')
 env['BUILDERS']['CompilePyNeutrinoTest'] = Builder(action = "python " + compiler + " -c " + join(config['src'], 'utils', 'consts.h') + ' ' + join(config['root'], 'lib') + " $SOURCE -o $TARGET")
@@ -17,7 +19,7 @@ def add_test(arg, dir, fnames):
       compile = env.CompilePyNeutrinoTest(compiled_name, full_path)
       env.Depends(compile, compiler)
       test_file = relative(config['bin'], join(build, compiled_name))
-      test_case = PyNeutrinoTestCase(executable, test_file, target)
+      test_case = PyNeutrinoTestCase(executable, test_file, [ natives ], target)
       config['tests'].append(test_case)
       config['check-deps'].append(compile)
       config['check-deps'].append(executable)

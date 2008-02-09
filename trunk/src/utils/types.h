@@ -69,6 +69,7 @@ class Smi;
 class Stack;
 class StackFlags;
 class string_buffer;
+class Task;
 class True;
 class Value;
 class Visitor;

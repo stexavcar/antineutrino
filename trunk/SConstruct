@@ -107,11 +107,21 @@ def load_source_targets():
     options[option.name] = common[option.name]
   # At this point we don't use the contents of the section, we
   # just delegate to the SConscript file in src/
+  if common['mode'] == 'all':
+    Alias('program')
+    Alias('natives')
   for target in config['targets'].targets:
     properties = config['targets'].get_properties(target, options)
     if (common['mode'] == 'all') or (common['mode'] == target):
       if common['mode'] == 'all': prefix = target + '-'
       else: prefix = ''
+      build = abspath(join(build_dir, target + '-natives'))
+      SConscript(
+        join('natives', 'SConscript'),
+        build_dir = build,
+        exports = 'config target properties common prefix build',
+        duplicate = False
+      )
       SConscript(
         join('src', 'SConscript'),
         build_dir = join(build_dir, target),
@@ -132,4 +142,5 @@ def run_tests(target, source, env):
 load_source_targets()
 
 Command('check', config['check-deps'], Action(run_tests, None))
-Default('check')
+
+Default(['program', 'natives'])

@@ -602,6 +602,31 @@ public:
 DEFINE_REF_CLASS(BuiltinCall);
 
 
+// ---------------------------------
+// --- E x t e r n a l   C a l l ---
+// ---------------------------------
+
+#define FOR_EACH_EXTERNAL_CALL_FIELD(VISIT, arg)                     \
+  VISIT(Smi,    argc, Argc, arg)                                     \
+  VISIT(String, name, Name, arg)
+
+class ExternalCall : public SyntaxTree {
+public:
+  FOR_EACH_EXTERNAL_CALL_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uword kArgcOffset = SyntaxTree::kHeaderSize;
+  static const uword kNameOffset = kArgcOffset + kPointerSize;
+  static const uword kSize       = kNameOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<ExternalCall> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_EXTERNAL_CALL_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(ExternalCall);
+
 // ---------------------------------------
 // --- L o c a l   D e f i n i t i o n ---
 // ---------------------------------------

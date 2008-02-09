@@ -50,17 +50,20 @@ class CCTestCase:
     return ' '.join(list)
 
 class PyNeutrinoTestCase:
-  def __init__(self, executable, test_case, target):
+  def __init__(self, executable, test_case, libs, target):
     self.executable = executable
     self.test_case = test_case
+    self.libs = libs
     self.target = target
   def __str__(self):
     return self.target + ' ' + basename(self.test_case)[:-3]
+  def args(self):
+    return [ '--images[', self.test_case, ']', '--libs[' ] + self.libs + [ ']' ]
   def command(self):
-    list = [ self.executable, '--images[', self.test_case, ']' ]
+    list = [ self.executable ] + self.args()
     return ' '.join(list)
   def run(self):
-    (exit_code, output, errors) = execute(self.executable, [ '', '--images[', self.test_case, ']' ])
+    (exit_code, output, errors) = execute(self.executable, [ '' ] + self.args())
     if exit_code == 0: return Result(Result.PASSED, output=output, error=errors)
     else: return Result(Result.FAILED, output=output, error=errors)
 

@@ -623,6 +623,15 @@ bool String::starts_with_vowel() {
   }
 }
 
+vector<char> String::c_str() {
+  uword length = this->length();
+  char *result = new char[length + 1];
+  for (uword i = 0; i < length; i++)
+    result[i] = at(i);
+  result[length] = '\0';
+  return NEW_VECTOR(char, result, length);
+}
+
 
 // ---------------------------
 // --- D i c t i o n a r y ---

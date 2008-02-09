@@ -2,6 +2,7 @@
 #define _UTILS_STRING
 
 #include "utils/globals.h"
+#include "utils/misc.h"
 #include "utils/types.h"
 
 namespace neutrino {
@@ -52,7 +53,7 @@ private:
 /**
  * An extensible buffer for building up strings.
  */
-class string_buffer {
+class string_buffer : public nocopy {
 public:
   string_buffer(uword capacity = 16);
   ~string_buffer();

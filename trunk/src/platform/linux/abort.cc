@@ -1,38 +1,41 @@
-#include "platform/posix/abort.cc"
-
-#include <stdlib.h>
-#include <dlfcn.h>
 #include <cxxabi.h>
+#include <execinfo.h>
+#include <stdlib.h>
+#include <stdio.h>
+
+#include "platform/posix/abort.cc"
+#include "utils/scoped-ptrs-inl.h"
 
 namespace neutrino {
 
 void Abort::abort() {
+  print_stack_trace(0, "neutrino::");
   ::abort();
 }
 
-void print_stack_trace(void *ptr, const char *prefix) {
+static void print_stack_trace(void *addr, const char *prefix) {
+  const uword kTraceSize = 256;
+  void *trace[kTraceSize];
+  size_t actual_size = backtrace(trace, kTraceSize);
+  own_ptr<char*, ptr_free> lines(backtrace_symbols(trace, actual_size));
   fprintf(stderr, "--- Stack ---\n");
-  ucontext_t *ucontext = reinterpret_cast<ucontext_t*>(ptr);
-  void **fp = reinterpret_cast<void**>(ucontext->uc_mcontext.gregs[REG_EBP]);
-  void *pc = reinterpret_cast<void*>(ucontext->uc_mcontext.gregs[REG_EIP]);
-  while (fp && pc) {
-    Dl_info info;
-    if (dladdr(pc, &info)) {
-      const char *mangled = info.dli_sname;
-      int status = 0;
-      char *demangled = abi::__cxa_demangle(mangled, 0, 0, &status);
-      if (status == 0 && demangled) {
-        remove_substring(demangled, prefix);
-        fprintf(stderr, "%s\n", demangled);
-        free(demangled);
-      } else if (mangled) {
-        fprintf(stderr, "%s(...)\n", mangled);
-        if (strcmp("main", mangled) == 0)
-          break;
+  for (uword i = 0; i < actual_size; i++) {
+    own_ptr<char, ptr_free> mangled(strdup((*lines)[i]));
+    char *start_paren = index(*mangled, '(');
+    if (start_paren != NULL) {
+      char *end_paren = index(*mangled, '+');
+      if (end_paren != NULL) {
+        *end_paren = '\0';
+        int status = 0;
+        own_ptr<char, ptr_free> demangled(abi::__cxa_demangle(start_paren + 1, 0, 0, &status));
+        if (status == 0 && *demangled != NULL) {
+          remove_substring(*demangled, prefix);
+          fprintf(stderr, "%s\n", *demangled);
+          continue;
+        }
       }
     }
-    pc = fp[1];
-    fp = static_cast<void**>(fp[0]);
+    fprintf(stderr, "%s\n", (*lines)[i]);
   }
 }
 

@@ -17,6 +17,7 @@ public:
   IF_DEBUG(inline vector(T *data, uword length));
   IF_NOT_DEBUG(inline vector(T *data));
   inline T &operator[](uword index);
+  inline T *data() { return data_; }
 private:
   T *data_;
   IF_DEBUG(uword length_);

@@ -228,12 +228,11 @@ struct StackStatus {
 
   bool is_empty : 1;
   IF_DEBUG(bool is_cooked : 1);
-  IF_DEBUG(bool is_parked : 1);
+  IF_DEBUG(bool is_parked : 1);  
 };
 
 class Stack : public Object {
 public:
-
   /**
    * Make StackFlags seem like a nested class, Stack::Flags.  The
    * reason it is not a true nested class is that it has to be forward
@@ -381,6 +380,7 @@ public:
   
   bool string_equals(String *that);
   bool starts_with_vowel();
+  vector<char> c_str();
   
   static inline uword size_for(uword chars);
 

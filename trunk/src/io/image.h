@@ -261,6 +261,12 @@ public:
   inline uword index();
 };
 
+class ImageExternalCall : public ImageSyntaxTree {
+public:
+  inline ImageSmi *argc();
+  inline ImageString *name();
+};
+
 class ImageInterpolateExpression : public ImageSyntaxTree {
 public:
   inline ImageTuple *terms();

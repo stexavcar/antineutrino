@@ -5,6 +5,7 @@
 #include "heap/heap.h"
 #include "heap/ref.h"
 #include "heap/roots.h"
+#include "platform/dylib.h"
 #include "runtime/interpreter.h"
 
 namespace neutrino {
@@ -14,7 +15,7 @@ namespace neutrino {
  */
 class Runtime {
 public:
-  Runtime();
+  Runtime(DynamicLibraryCollection *dylibs = 0);
   bool initialize();
   Factory &factory() { return factory_; }
   Heap &heap() { return heap_; }
@@ -48,6 +49,7 @@ public:
   };
   
   static inline Runtime &current();
+  DynamicLibraryCollection *dylibs() { return dylibs_; }
   
 private:
   static Runtime *current_;
@@ -55,8 +57,9 @@ private:
   Heap heap_;
   Factory factory_;
   Interpreter interpreter_;
+  DynamicLibraryCollection *dylibs_;
 };
 
-}
+} // neutrino
 
 #endif // _RUNTIME

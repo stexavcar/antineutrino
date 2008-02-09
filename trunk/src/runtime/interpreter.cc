@@ -2,8 +2,9 @@
 #include "runtime/builtins-inl.h"
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
-#include "utils/vector-inl.h"
 #include "utils/checks.h"
+#include "utils/scoped-ptrs-inl.h"
+#include "utils/vector-inl.h"
 #include "values/values-inl.h"
 
 namespace neutrino {
@@ -386,6 +387,22 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Value *value = cast<Value>(builtin(args));
       frame.push(value);
       pc += OpcodeInfo<OC_BUILTIN>::kSize;
+      break;
+    }
+    case OC_EXTERNAL: {
+      uint16_t argc = code[pc + 1];
+      String *name_obj = cast<String>(constant_pool[code[pc + 2]]);
+      own_vector<char> name(name_obj->c_str());
+      DynamicLibraryCollection *dylibs = runtime().dylibs();
+      ASSERT(dylibs != NULL);
+      void *result = dylibs->lookup(name.data());
+      ASSERT(result != NULL);
+      typedef Value *(*External)(BuiltinArguments &);
+      External external = reinterpret_cast<External>(reinterpret_cast<uword>(result));
+      BuiltinArguments args(runtime(), argc, frame);
+      Value *value = cast<Value>(external(args));
+      frame.push(value);
+      pc += OpcodeInfo<OC_EXTERNAL>::kSize;
       break;
     }
     case OC_RETURN: {

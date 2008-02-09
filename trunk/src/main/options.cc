@@ -9,4 +9,7 @@ REGISTER_FLAG(bool, Options, print_stats_on_exit);
 list<string> Options::images;
 REGISTER_FLAG(list<string>, Options, images);
 
+list<string> Options::libs;
+REGISTER_FLAG(list<string>, Options, libs);
+
 } // neutrino

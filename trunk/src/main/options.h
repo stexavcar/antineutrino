@@ -10,6 +10,7 @@ class Options {
 public:
   static bool print_stats_on_exit;
   static list<string> images;
+  static list<string> libs;
 };
 
 } // neutrino

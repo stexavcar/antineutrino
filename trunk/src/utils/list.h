@@ -1,6 +1,7 @@
 #ifndef _UTILS_LIST
 #define _UTILS_LIST
 
+#include "utils/misc.h"
 #include "utils/types.h"
 
 namespace neutrino {
@@ -28,7 +29,7 @@ private:
  * A locally scoped heap-allocated extensible list.
  */
 template <typename T>
-class list_buffer {
+class list_buffer : public nocopy {
 public:
   list_buffer();
   ~list_buffer();
