@@ -373,8 +373,6 @@
 #define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
   VISIT(101, raw_print,          "raw_print")                        \
   VISIT(102, compile_expression, "compile_expression")               \
-  VISIT(103, lift,               "lift")                             \
-  VISIT(104, make_forwarder,     "make_forwarder")                   \
-  VISIT(105, set_target,         "set_target")
+  VISIT(103, lift,               "lift")
 
 #endif // _UTILS_CONSTS

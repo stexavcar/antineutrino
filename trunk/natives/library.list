@@ -2,3 +2,4 @@
 # loaded with the neutrino library
 
 core/file.cc
+test/test.cc
