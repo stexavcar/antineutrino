@@ -1,0 +1,4 @@
+# These files are bundled together in one dynamic library that is
+# loaded with the neutrino library
+
+core/file.cc
