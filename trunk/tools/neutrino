@@ -1,4 +1,4 @@
 #!/bin/sh
 
-./tools/compiler.py lib/ $1 -c src/utils/consts.h -o temp.nc
-./build/bin/paranoid/neutrino --images[ temp.nc ] --libs[ ./build/bin/paranoid-natives/libcore.so ]
+../tools/compiler.py ../lib/ $1 -c ../src/utils/consts.h -o temp.nc
+./bin/paranoid/neutrino --images[ temp.nc ] --libs[ ./bin/paranoid-natives/libcore.dylib ]

@@ -24,11 +24,3 @@ def open(name) {
   if (handle = null) return null;
   return new File() { handle: handle, name: name };
 }
-
-(*
-def main() {
-  def f := open("SConstruct");
-  print(f.read());
-  f.close();
-}
-*)

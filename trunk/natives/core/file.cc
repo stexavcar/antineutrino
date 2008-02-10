@@ -13,7 +13,9 @@ extern "C" Data *native_open_file(BuiltinArguments &args) {
   own_vector<char> name(name_obj->c_str());
   FILE *file = fopen(name.data(), "r");
   if (file == NULL) return args.runtime().roots().nuhll();
-  return Smi::from_int(reinterpret_cast<uword>(file));
+  uword ptr = reinterpret_cast<uword>(file);
+  ASSERT_EQ(0, ptr & 0x3);
+  return Smi::from_int(ptr >> 2);
 }
 
 extern "C" Data *native_close_file(BuiltinArguments &args) {
@@ -27,7 +29,7 @@ extern "C" Data *native_close_file(BuiltinArguments &args) {
 extern "C" Data *native_read_file(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   Smi *handle_obj = cast<Smi>(to<Smi>(args[0]));
-  FILE *file = reinterpret_cast<FILE*>(handle_obj->value());
+  FILE *file = reinterpret_cast<FILE*>(handle_obj->value() << 2);
   fseek(file, 0, SEEK_END);
   uword size = ftell(file);
   rewind(file);
