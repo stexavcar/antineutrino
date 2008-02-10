@@ -943,6 +943,12 @@ class Protocol(SyntaxTree):
     super = NAMESPACE[self.super]
     return HEAP.new_protocol_expression(HEAP.new_string(self.name), methods, super.image)
 
+class Selector(SyntaxTree):
+  def __init__(self, name, argc, keywords):
+    self.name = name
+    self.argc = argc
+    self.keywords = keywords
+
 class Method(SyntaxTree):
   def __init__(self, name, fun):
     self.name = name
@@ -1195,8 +1201,11 @@ class Arguments(SyntaxTree):
     if len(self.keywords) == 0:
       keywords = HEAP.empty_tuple
     else:
+      sorted_keywords = self.keywords.keys()
+      sorted_keywords.sort();
       keywords_list = [ ]
-      for (word, index) in self.keywords.items():
+      for word in sorted_keywords:
+        index = self.keywords[word]
         word_obj = HEAP.new_string(word)
         index_obj = tag_as_smi(index)
         keywords_list.append(HEAP.new_tuple(values = [word_obj, index_obj]))

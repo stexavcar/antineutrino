@@ -111,7 +111,8 @@ def load_source_targets():
     Alias('program')
     Alias('natives')
   for target in config['targets'].targets:
-    properties = config['targets'].get_properties(target, options)
+    properties = config['targets'].get_properties(target, options, [])
+    native_properties = config['targets'].get_properties(target, options, ['natives'])
     if (common['mode'] == 'all') or (common['mode'] == target):
       if common['mode'] == 'all': prefix = target + '-'
       else: prefix = ''
@@ -119,7 +120,7 @@ def load_source_targets():
       SConscript(
         join('natives', 'SConscript'),
         build_dir = build,
-        exports = 'config target properties common prefix build',
+        exports = 'config target native_properties common prefix build',
         duplicate = False
       )
       SConscript(

@@ -97,8 +97,20 @@ def read_files_from(config, root, file):
         cooked_lines.append(line)
   return cooked_lines
 
-HEADER_PATTERN = re.compile('^(\w+)\s*(\*?)\s*(?:\[\s*(\w*)\s*\])?\s*(?:\:\s*([\w\s]+))?{$')
-PROPERTY_PATTERN = re.compile('^(\w+)\s*(\:\=|\+\=)(.*)$')
+def compile_regexp(str):
+  """ Translates a slightly more readable regular expression syntax
+  into the standard python syntax and compiles it"""
+  str = str.replace(' ', '\s*')
+  str = str.replace('(', '(?:')
+  str = str.replace(')', ')')
+  str = str.replace('{', '(')
+  str = str.replace('}', ')')
+  str = str.replace('\(', '{')
+  str = '^' + str + '$'
+  return re.compile(str)
+
+HEADER_PATTERN = compile_regexp('{\w+} (/ {\w+} )? {\*?} (\[ {\w+} \])? (\: {[\w\s]+})?\{')
+PROPERTY_PATTERN = compile_regexp('{\w+} {\:\=|\+\=}{.*}')
 
 class Configuration:
   def __init__(self, sections, targets, options):
@@ -107,33 +119,57 @@ class Configuration:
     self.options = options
   def __repr__(self):
     return 'config ' + str(self.sections)
-  def get_properties(self, name, options):
+  def get_properties(self, name, options, triggers):
     properties = { }
-    self.load_section_into(self.sections[name], properties)
+    self.load_section_into(self.sections[name], properties, triggers)
     for (name, value) in options.items():
-      self.load_section_into(self.options[name].values[value], properties)
+      self.load_section_into(self.options[name].values[value], properties, triggers)
     return properties
-  def load_section_into(self, section, properties):
-    for super in section.supers:
-      self.load_section_into(self.sections[super], properties)
-    for (key, (value, is_extension)) in section.properties.items():
-      if (key in properties) and is_extension:
-        old_value = properties[key]
-        if type(old_value) is str:
-          value = old_value + ' ' + value
-        elif type(old_value) is list:
-          value = old_value + value
-        else:
-          assert False
-      properties[key] = value
+  def load_section_into(self, section, properties, triggers):
+    for super in section.get_supers(triggers):
+      self.load_section_into(self.sections[super], properties, triggers)
+    for props in section.get_property_groups(triggers):
+      for (key, (value, is_extension)) in props.items():
+        if (key in properties) and is_extension:
+          old_value = properties[key]
+          if type(old_value) is str:
+            value = old_value + ' ' + value
+          elif type(old_value) is list:
+            value = old_value + value
+          else:
+            assert False
+        properties[key] = value
 
 class Section:
-  def __init__(self, name, supers, properties):
+  def __init__(self, name, trigger, supers, properties):
     self.name = name
+    self.trigger = trigger
     self.supers = supers
     self.properties = properties
   def __repr__(self):
     return 'section ' + str(self.properties)
+
+class SectionGroup:
+  def __init__(self, name):
+    self.name = name
+    self.default = None
+    self.sections = { }
+  def add_section(self, section):
+    if not section.trigger:
+      self.default = section
+    else:
+      self.sections[section.trigger] = section
+  def update_properties(self, props, triggers):
+    for group in self.get_property_groups(triggers):
+      props.update(**group)
+  def get_supers(self, triggers):
+    return self.default.supers
+  def get_property_groups(self, triggers):
+    result = [ self.default.properties ]
+    for trigger in triggers:
+      if trigger in self.sections:
+        result.append(self.sections[trigger].properties)
+    return result
 
 class Option:
   def __init__(self, name):
@@ -141,7 +177,7 @@ class Option:
     self.values = { }
     self.default = None
 
-def read_config_file(name, parent=None):
+def read_config_file(name, parent=None, triggers=[]):
   lines = read_lines_from(name)
   # Mapping from section names to a mapping from property name to a
   # pair of the value plus whether or not it is an extension
@@ -170,10 +206,11 @@ def read_config_file(name, parent=None):
     if not header_match: unexpected_line()
     index = index + 1
     section = header_match.group(1)
-    option_name = (header_match.group(3))
-    is_target = (header_match.group(2) == '*')
+    trigger = header_match.group(2)
+    option_name = (header_match.group(4))
+    is_target = (header_match.group(3) == '*')
     if is_target and not option_name: targets.append(section)
-    supers_str = header_match.group(4)
+    supers_str = header_match.group(5)
     if supers_str: supers = supers_str.split()
     else: supers = []
     # Read the lines following the section header and load them into
@@ -181,8 +218,8 @@ def read_config_file(name, parent=None):
     properties = { }
     if section in sections:
       previous = sections[section]
-      properties.update(**previous.properties)
-      supers = previous.supers + supers
+      previous.update_properties(properties, triggers)
+      supers = previous.get_supers(triggers) + supers
     # Sets a name to a value using the specified mode
     # Then add the lines read from this section
     while lines[index] != '}':
@@ -193,13 +230,16 @@ def read_config_file(name, parent=None):
       value = parse_value(property_match.group(3).strip())
       properties[name] = (value, operator == '+=')
       index = index + 1
-    obj = Section(section, supers, properties)
-    sections[section] = obj
+    if not section in sections:
+      sections[section] = SectionGroup(section)
+    obj = Section(section, trigger, supers, properties)
+    group = sections[section]
+    group.add_section(obj)
     if option_name:
       if not option_name in options:
         options[option_name] = Option(option_name)
       option = options[option_name]
-      option.values[section] = obj
+      option.values[section] = group
       if is_target: option.default = section
     index = index + 1
   return Configuration(sections, targets, options)
