@@ -353,16 +353,18 @@ DEFINE_REF_CLASS(ReturnExpression);
 // -----------------------------------------
 
 #define FOR_EACH_METHOD_EXPRESSION_FIELD(VISIT, arg)                 \
-  VISIT(String,           name,   Name,   arg)                       \
-  VISIT(LambdaExpression, lambda, Lambda, arg)
+  VISIT(String,           name,      Name,     arg)                  \
+  VISIT(LambdaExpression, lambda,    Lambda,   arg)                  \
+  VISIT(Bool,             is_static, IsStatic, arg)
 
 class MethodExpression : public SyntaxTree {
 public:
   FOR_EACH_METHOD_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uword kNameOffset = SyntaxTree::kHeaderSize;
-  static const uword kLambdaOffset = kNameOffset + kPointerSize;
-  static const uword kSize = kLambdaOffset + kPointerSize;
+  static const uword kNameOffset     = SyntaxTree::kHeaderSize;
+  static const uword kLambdaOffset   = kNameOffset + kPointerSize;
+  static const uword kIsStaticOffset = kLambdaOffset + kPointerSize;
+  static const uword kSize           = kIsStaticOffset + kPointerSize;
 };
 
 template <>

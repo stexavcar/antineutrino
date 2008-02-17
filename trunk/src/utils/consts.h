@@ -45,7 +45,8 @@
   VISIT(22, ABSTRACT_BUFFER,        AbstractBuffer,        0)                      \
   VISIT(23, SINGLETON,              Singleton,             0)                      \
   VISIT(24, SYNTAX_TREE,            SyntaxTree,            0)                      \
-  VISIT(25, IMMEDIATE,              Immediate,             0)
+  VISIT(25, IMMEDIATE,              Immediate,             0)                      \
+  VISIT(26, BOOL,                   Bool,                  0)
 
 #define FOR_EACH_SIGNAL_TYPE(VISIT)                                                \
   VISIT(30, ALLOCATION_FAILED,      AllocationFailed,      0)                      \
@@ -103,7 +104,7 @@
 // -------------------------------------
 
 #define FOR_EACH_IMAGE_OBJECT_CONST(VISIT)                           \
-  VISIT(0, Object,                TypeOffset)                        \
+  VISIT(0, Object,                LayoutOffset)                      \
   VISIT(1, Object,                HeaderSize)                        \
   VISIT(1, Dictionary,            TableOffset)                       \
   VISIT(2, Dictionary,            Size)                              \
@@ -122,7 +123,8 @@
   VISIT(1, Layout,                InstanceTypeOffset)                \
   VISIT(2, Layout,                MethodsOffset)                     \
   VISIT(3, Layout,                ProtocolOffset)                    \
-  VISIT(4, Layout,                Size)                              \
+  VISIT(4, Layout,                FieldCountOffset)                  \
+  VISIT(5, Layout,                Size)                              \
   VISIT(1, Protocol,              MethodsOffset)                     \
   VISIT(2, Protocol,              NameOffset)                        \
   VISIT(3, Protocol,              SuperOffset)                       \
@@ -154,7 +156,8 @@
   VISIT(2, ReturnExpression,      Size)                              \
   VISIT(1, MethodExpression,      NameOffset)                        \
   VISIT(2, MethodExpression,      LambdaOffset)                      \
-  VISIT(3, MethodExpression,      Size)                              \
+  VISIT(3, MethodExpression,      IsStaticOffset)                    \
+  VISIT(4, MethodExpression,      Size)                              \
   VISIT(1, SequenceExpression,    ExpressionsOffset)                 \
   VISIT(2, SequenceExpression,    Size)                              \
   VISIT(1, TupleExpression,       ValuesOffset)                      \

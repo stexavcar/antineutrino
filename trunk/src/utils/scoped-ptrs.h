@@ -49,6 +49,7 @@ public:
 
   inline T *data() { return value_.data(); }
   inline T &operator[](uword index) { return value_[index]; }
+  inline vector<T> release();
 private:
   vector<T> value_;
 };

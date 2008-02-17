@@ -80,8 +80,17 @@ static inline C *image_cast(ImageData *val) {
 // --- F o r w a r d   P o i n t e r s ---
 // ---------------------------------------
 
+ImageData *ImageObject::header() {
+  uword offset = ValuePointer::offset_of(this) + ImageObject_LayoutOffset;
+  return reinterpret_cast<ImageData*>(Image::current().heap()[offset]);
+}
+
+bool ImageObject::has_been_migrated() {
+  return is<ImageForwardPointer>(header());
+}
+
 void ImageObject::point_forward(Object *obj) {
-  uword offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
+  uword offset = ValuePointer::offset_of(this) + ImageObject_LayoutOffset;
   ImageForwardPointer *pointer = ImageForwardPointer::to(obj);
   Image::current().heap()[offset] = reinterpret_cast<uword>(pointer);
 }
@@ -101,7 +110,7 @@ Smi *ImageSmi::forward_pointer() {
 }
 
 Object *ImageObject::forward_pointer() {
-  uword offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
+  uword offset = ValuePointer::offset_of(this) + ImageObject_LayoutOffset;
   ImageData *value = ImageData::from(Image::current().heap()[offset]);
   ImageForwardPointer *pointer = image_cast<ImageForwardPointer>(value);
   return pointer->target();
@@ -250,6 +259,7 @@ DEFINE_GETTER    (Value,            ProtocolExpression,    super,         Super)
 DEFINE_GETTER    (SyntaxTree,       ReturnExpression,      value,         Value)
 DEFINE_GETTER    (String,           MethodExpression,      name,          Name)
 DEFINE_GETTER    (LambdaExpression, MethodExpression,      lambda,        Lambda)
+DEFINE_GETTER    (Value,            MethodExpression,      is_static,     IsStatic)
 DEFINE_GETTER    (Tuple,            LambdaExpression,      params,        Params)
 DEFINE_GETTER    (SyntaxTree,       LambdaExpression,      body,          Body)
 DEFINE_GETTER    (Tuple,            SequenceExpression,    expressions,   Expressions)

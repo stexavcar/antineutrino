@@ -10,6 +10,7 @@
 namespace neutrino {
 
 enum InstanceType {
+  __illegal_instance_type = -1,
   __first_instance_type = 0
 #define DECLARE_INSTANCE_TYPE(n, NAME, Name, info) , NAME##_TYPE = n
 FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
@@ -542,7 +543,12 @@ DEFINE_REF_CLASS(Lambda);
 
 class Singleton : public Object {
 public:
-  static const int kSize = Object::kHeaderSize;
+  static const uword kSize = Object::kHeaderSize;
+};
+
+class Bool : public Singleton {
+public:
+  static const uword kSize = Singleton::kSize;
 };
 
 #define FOR_EACH_VOID_FIELD(VISIT, arg)
@@ -552,10 +558,10 @@ class Void : public Singleton { };
 class Null : public Singleton { };
 
 #define FOR_EACH_TRUE_FIELD(VISIT, arg)
-class True : public Singleton { };
+class True : public Bool { };
 
 #define FOR_EACH_FALSE_FIELD(VISIT, arg)
-class False : public Singleton { };
+class False : public Bool { };
 
 
 // -----------------------

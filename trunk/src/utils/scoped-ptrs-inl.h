@@ -22,6 +22,14 @@ own_vector<T>::~own_vector() {
   delete[] value_.data();
 }
 
+template <typename T>
+vector<T> own_vector<T>::release() {
+  vector<T> result = value_;
+  value_ = NEW_VECTOR(T, NULL, 0);
+  return result;
+}
+
+
 } // neutrino
 
 #endif // _SCOPED_PTRS_INL

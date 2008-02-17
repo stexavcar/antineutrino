@@ -4,8 +4,11 @@
 #include "utils/consts.h"
 #include "utils/globals.h"
 #include "utils/types.h"
+#include "values/values.h"
 
 namespace neutrino {
+
+class ImageLayout;
 
 #define DECLARE_IMAGE_OBJECT_CONST(n, Type, Const)                   \
   static const uword Image##Type##_##Const = n;
@@ -38,11 +41,22 @@ public:
 // --- O b j e c t s ---
 // ---------------------
 
+class TypeInfo {
+public:
+  TypeInfo() : type(__illegal_instance_type), layout(0) { }
+  bool has_layout() { return layout != 0; }
+  InstanceType type;
+  Layout *layout;
+};
+
 class ImageObject : public ImageValue {
 public:
-  uword type();
+  InstanceType type();
+  void type_info(TypeInfo *result);
   void point_forward(Object *target);
   inline Object *forward_pointer();
+  inline ImageData *header();
+  inline bool has_been_migrated();
   uword size_in_image();
 };
 
@@ -213,6 +227,7 @@ class ImageMethodExpression : public ImageSyntaxTree {
 public:
   inline ImageString *name();
   inline ImageLambdaExpression *lambda();
+  inline ImageValue *is_static();
 };
 
 class ImageSequenceExpression : public ImageSyntaxTree {

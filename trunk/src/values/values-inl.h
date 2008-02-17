@@ -141,6 +141,13 @@ inline bool is<Singleton>(Data *val) {
 }
 
 template <>
+inline bool is<Bool>(Data *val) {
+  if (!is<Object>(val)) return false;
+  InstanceType type = cast<Object>(val)->type();
+  return (type == TRUE_TYPE) || (type == FALSE_TYPE);
+}
+
+template <>
 inline bool is<Signal>(Data *val) {
   return ValuePointer::has_signal_tag(val);
 }

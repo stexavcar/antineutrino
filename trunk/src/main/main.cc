@@ -51,10 +51,9 @@ void Main::main(list<char*> &args) {
   for (uword i = 0; i < files.length(); i++) {
     RefScope ref_scope;
     string file = files[i];
-    Image *image = read_image(file);
-    bool loaded = runtime.load_image(*image);
+    own_ptr<Image> image(read_image(file));
+    bool loaded = runtime.load_image(**image);
     USE(loaded); ASSERT(loaded);
-    delete image;
   }
   runtime.start();
   if (Options::print_stats_on_exit) {
@@ -76,14 +75,13 @@ Image *Main::read_image(string name) {
   fseek(file, 0, SEEK_END);
   uword size = ftell(file);
   rewind(file);
-  uword *buffer = new uword[size];
+  own_vector<uword> buffer(ALLOCATE_VECTOR(uword, size));
   for (uword i = 0; i < size / kWordSize;) {
     const uword kSize = 256;
     uint8_t bytes[kSize];
     uword count = fread(bytes, kWordSize, kSize / kWordSize, file);
     if (count <= 0) {
       fclose(file);
-      delete[] buffer;
       return NULL;
     }
     for (uword j = 0; j < count; j++) {
@@ -95,7 +93,7 @@ Image *Main::read_image(string name) {
     }
   }
   fclose(file);
-  return new Image(size, buffer);
+  return new Image(size, buffer.release().data());
 }
 
 }

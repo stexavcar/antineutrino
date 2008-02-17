@@ -70,8 +70,19 @@ Tuple *Image::load() {
 }
 
 void Image::copy_object_shallow(ImageObject *obj) {
-  uword type = obj->type();
   Heap &heap = Runtime::current().heap();
+  ImageData *header = obj->header();
+  // Always migrate layout objects before the objects they describe.
+  // It is useful to be able to make the assumption that the layout
+  // has been moved before any instances because the layout field in
+  // the image will be overwritten with a forward pointer.
+  if (is<ImageLayout>(header) && !image_cast<ImageObject>(header)->has_been_migrated()) {
+    copy_object_shallow(image_cast<ImageObject>(header));
+    ASSERT(image_cast<ImageObject>(header)->has_been_migrated());
+  }
+  TypeInfo type_info;
+  obj->type_info(&type_info);
+  InstanceType type = type_info.type;
   switch (type) {
     case STRING_TYPE: {
       ImageString *img = image_cast<ImageString>(obj);
@@ -146,10 +157,12 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
       UNHANDLED(InstanceType, type);
       break;
   }
+  if (type_info.has_layout())
+    obj->forward_pointer()->set_layout(type_info.layout);
 }
 
 void Image::fixup_shallow_object(ImageObject *obj) {
-  uword type = obj->type();
+  InstanceType type = obj->type();
   switch (type) {
     case TUPLE_TYPE: {
       ImageTuple *img = image_cast<ImageTuple>(obj);
@@ -212,21 +225,31 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
       UNHANDLED(InstanceType, type);
       break;
   }
-  IF_PARANOID(if (obj->type() != SINGLETON_TYPE) obj->forward_pointer()->validate());
+  IF_PARANOID(if (type != SINGLETON_TYPE) obj->forward_pointer()->validate());
 }
 
-uword ImageObject::type() {
-  uword offset = ValuePointer::offset_of(this) + ImageObject_TypeOffset;
+InstanceType ImageObject::type() {
+  TypeInfo type_info;
+  this->type_info(&type_info);
+  return type_info.type;
+}
+
+void ImageObject::type_info(TypeInfo *result) {
+  uword offset = ValuePointer::offset_of(this) + ImageObject_LayoutOffset;
   uword value = Image::current().heap()[offset];
   ImageData *data = ImageData::from(value);
   if (is<ImageSmi>(data)) {
-    return image_cast<ImageSmi>(data)->value();
+    word value = image_cast<ImageSmi>(data)->value();
+    result->type = static_cast<InstanceType>(value);
   } else if (is<ImageForwardPointer>(data)) {
     Object *target = image_cast<ImageForwardPointer>(data)->target();
-    return target->layout()->instance_type();
+    result->layout = target->layout();
+    result->type = target->layout()->instance_type();
+  } else if (is<ImageLayout>(data)) {
+    word value = image_cast<ImageLayout>(data)->instance_type();
+    result->type = static_cast<InstanceType>(value);
   } else {
     UNREACHABLE();
-    return 0;
   }
 }
 

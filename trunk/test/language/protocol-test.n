@@ -13,6 +13,15 @@ def test_inheritance() {
   assert_equals(7, b.x());
 }
 
+protocol X {
+  static def foo() -> 8;
+}
+
+def test_statics() {
+  assert_equals(8, X.foo());
+}
+
 def main() {
-  test_inheritance();
+  // test_inheritance();
+  test_statics();
 }

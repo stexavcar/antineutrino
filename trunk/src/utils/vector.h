@@ -23,6 +23,8 @@ private:
   IF_DEBUG(uword length_);
 };
 
+#define ALLOCATE_VECTOR(Type, length) NEW_VECTOR(Type, new Type[length], length)
+
 #ifdef DEBUG
 #define NEW_VECTOR(Type, data, length) neutrino::vector<Type>(data, length)
 #else

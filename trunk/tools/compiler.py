@@ -12,6 +12,7 @@ import re, string, struct, codecs
 
 INTERNAL = 'internal'
 NATIVE = 'native'
+STATIC = 'static'
 
 # -------------------
 # --- T o k e n s ---
@@ -397,7 +398,8 @@ class Parser:
       assert False
 
   def is_modifier(self, token):
-    return token.is_keyword(INTERNAL) or token.is_keyword(NATIVE)
+    return (token.is_keyword(INTERNAL) or token.is_keyword(NATIVE) or
+            token.is_keyword(STATIC))
 
   def has_body(self, modifiers):
     return (not INTERNAL in modifiers) and (not NATIVE in modifiers)
@@ -464,6 +466,7 @@ class Parser:
     self.expect_keyword('def')
     name = self.parse_member_name()
     params = self.parse_params('(', ')')
+    is_static = STATIC in modifiers
     if INTERNAL in modifiers:
       self.expect_delimiter(';')
       key = (class_name, name)
@@ -476,7 +479,7 @@ class Parser:
       body = self.parse_function_body(True)
       fun = Lambda(params, body)
       self.pop_scope()
-    return Method(name, fun)
+    return Method(is_static, name, fun)
 
   # <definition>
   #   -> 'def' $ident ':=' <expression> ';'
@@ -950,7 +953,8 @@ class Selector(SyntaxTree):
     self.keywords = keywords
 
 class Method(SyntaxTree):
-  def __init__(self, name, fun):
+  def __init__(self, is_static, name, fun):
+    self.is_static = is_static
     self.name = name
     self.fun = fun
   def accept(self, visitor):
@@ -963,7 +967,9 @@ class Method(SyntaxTree):
     return HEAP.new_method(HEAP.new_string(self.name), signature, body)
   def quote(self):
     fun = self.fun.quote()
-    return HEAP.new_method_expression(HEAP.new_string(self.name), fun)
+    if self.is_static: is_static = HEAP.true
+    else: is_static = HEAP.false
+    return HEAP.new_method_expression(HEAP.new_string(self.name), fun, is_static)
 
 class Expression(SyntaxTree):
   def is_identifier(self):
@@ -1392,6 +1398,9 @@ class Heap:
     self.set_root(ROOT_INDEX['Toplevel'], self.toplevel)
     self.context = self.new_context()
     self.empty_tuple = self.new_tuple(length = 0)
+    self.void = self.get_root(ROOT_INDEX['VoidValue'])
+    self.true = self.get_root(ROOT_INDEX['TrueValue'])
+    self.false = self.get_root(ROOT_INDEX['FalseValue'])
   def set_raw(self, offset, value):
     self.memory[offset] = value
   def set_root(self, index, value):
@@ -1416,7 +1425,7 @@ class Heap:
       self.memory = new_memory
     addr = self.cursor * POINTER_SIZE
     self.cursor += size
-    ImageObject(addr).set_class(type)
+    ImageObject(addr).set_layout(type)
     return addr
 
   def new_context(self):
@@ -1424,6 +1433,9 @@ class Heap:
 
   def new_protocol(self, name):
     return ImageProtocol(self.allocate(PROTOCOL_TYPE, ImageProtocol_Size), name)
+
+  def new_layout(self, proto, methods, instance_type, field_count):
+    return ImageLayout(self.allocate(LAYOUT_TYPE, ImageLayout_Size), proto, methods, instance_type, field_count)
 
   def get_root(self, index):
     if index in self.root_object_cache:
@@ -1536,8 +1548,8 @@ class Heap:
   def new_sequence_expression(self, exprs):
     return ImageSequenceExpression(self.allocate(SEQUENCE_EXPRESSION_TYPE, ImageSequenceExpression_Size), exprs)
 
-  def new_method_expression(self, name, fun):
-    return ImageMethodExpression(self.allocate(METHOD_EXPRESSION_TYPE, ImageMethodExpression_Size), name, fun)
+  def new_method_expression(self, name, fun, is_static):
+    return ImageMethodExpression(self.allocate(METHOD_EXPRESSION_TYPE, ImageMethodExpression_Size), name, fun, is_static)
 
   def new_tuple_expression(self, exprs):
     return ImageTupleExpression(self.allocate(TUPLE_EXPRESSION_TYPE, ImageTupleExpression_Size), exprs)
@@ -1580,8 +1592,8 @@ class ImageValue:
 class ImageObject(ImageValue):
   def __init__(self, addr):
     self.addr = addr
-  def set_class(self, value):
-    HEAP.set_field(self, ImageObject_TypeOffset, value)
+  def set_layout(self, value):
+    HEAP.set_field(self, ImageObject_LayoutOffset, value)
 
 class ImageProtocol(ImageObject):
   def __init__(self, addr, name):
@@ -1593,6 +1605,14 @@ class ImageProtocol(ImageObject):
     HEAP.set_field(self, ImageProtocol_NameOffset, value)
   def set_super(self, value):
     HEAP.set_field(self, ImageProtocol_SuperOffset, value)
+
+class ImageLayout(ImageObject):
+  def __init__(self, addr, proto, methods, instance_type, field_count):
+    ImageObject.__init__(self, addr)
+    HEAP.set_field(self, ImageLayout_ProtocolOffset, proto)
+    HEAP.set_field(self, ImageLayout_MethodsOffset, methods)
+    HEAP.set_raw_field(self, ImageLayout_InstanceTypeOffset, instance_type)
+    HEAP.set_raw_field(self, ImageLayout_FieldCountOffset, field_count)
 
 class ImageTuple(ImageObject):
   def __init__(self, addr, length):
@@ -1814,16 +1834,12 @@ class ImageProtocolExpression(ImageSyntaxTree):
 class ImageReturnExpression(ImageSyntaxTree):
   def __init__(self, addr, value):
     ImageSyntaxTree.__init__(self, addr)
-    self.set_value(value)
-  def set_value(self, value):
     HEAP.set_field(self, ImageReturnExpression_ValueOffset, value)
 
 class ImageSequenceExpression(ImageSyntaxTree):
   def __init__(self, addr, exprs):
     ImageSyntaxTree.__init__(self, addr)
-    self.set_expressions(exprs)
-  def set_expressions(self, value):
-    HEAP.set_field(self, ImageSequenceExpression_ExpressionsOffset, value)
+    HEAP.set_field(self, ImageSequenceExpression_ExpressionsOffset, exprs)
 
 class ImageLocalDefinition(ImageSyntaxTree):
   def __init__(self, addr, symbol, value, body):
@@ -1853,14 +1869,11 @@ class ImageInterpolateExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageInterpolateExpression_TermsOffset, value)
 
 class ImageMethodExpression(ImageSyntaxTree):
-  def __init__(self, addr, name, fun):
+  def __init__(self, addr, name, fun, is_static):
     ImageSyntaxTree.__init__(self, addr)
-    self.set_name(name)
-    self.set_lambda(fun)
-  def set_name(self, value):
-    HEAP.set_field(self, ImageMethodExpression_NameOffset, value)
-  def set_lambda(self, value):
-    HEAP.set_field(self, ImageMethodExpression_LambdaOffset, value)
+    HEAP.set_field(self, ImageMethodExpression_NameOffset, name)
+    HEAP.set_field(self, ImageMethodExpression_LambdaOffset, fun)
+    HEAP.set_field(self, ImageMethodExpression_IsStaticOffset, is_static)
 
 class ImageLambdaExpression(ImageSyntaxTree):
   def __init__(self, addr, params, body):
@@ -2038,7 +2051,7 @@ class ResolveVisitor(Visitor):
       value = NAMESPACE[that.super]
       that.image.set_super(value.image)
     else:
-      that.image.set_super(HEAP.get_root(ROOT_INDEX['VoidValue']))
+      that.image.set_super(HEAP.void)
   def visit_builtin_class(self, that):
     self.resolve_class(that)
     Visitor.visit_builtin_class(self, that)
@@ -2048,8 +2061,11 @@ class ResolveVisitor(Visitor):
 
 class CompileVisitor(Visitor):
   def compile_methods(self, that):
-    methods = HEAP.new_tuple(values = [ m.compile(that) for m in that.members ])
+    methods = HEAP.new_tuple(values = [ m.compile(that) for m in that.members if not m.is_static ])
+    statics = HEAP.new_tuple(values = [ m.compile(that) for m in that.members if m.is_static ])
+    layout = HEAP.new_layout(HEAP.void, statics, PROTOCOL_TYPE, 0)
     that.image.set_methods(methods)
+    that.image.set_layout(layout)
   def visit_protocol(self, that):
     self.compile_methods(that)
     Visitor.visit_protocol(self, that)
