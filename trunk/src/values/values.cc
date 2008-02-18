@@ -87,6 +87,16 @@ static void write_protocol_short_on(Protocol *obj, string_buffer &buf) {
   buf.append(">");
 }
 
+static void write_layout_short_on(Layout *obj, string_buffer &buf) {
+  buf.append("#<layout");
+  Immediate *protocol = obj->protocol();
+  if (is<Protocol>(protocol)) {
+    buf.append(" ");
+    cast<Protocol>(protocol)->name()->write_on(buf, Data::UNQUOTED);
+  }
+  buf.append(">");
+}
+
 static void write_instance_short_on(Instance *obj, string_buffer &buf) {
   Immediate *protocol = obj->layout()->protocol();
   if (is<Protocol>(protocol)) {
@@ -144,6 +154,9 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
     break;
   case PROTOCOL_TYPE:
     write_protocol_short_on(cast<Protocol>(obj), buf);
+    break;
+  case LAYOUT_TYPE:
+    write_layout_short_on(cast<Layout>(obj), buf);
     break;
   case METHOD_TYPE:
     buf.append("#<method>");

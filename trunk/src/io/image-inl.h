@@ -90,6 +90,7 @@ bool ImageObject::has_been_migrated() {
 }
 
 void ImageObject::point_forward(Object *obj) {
+  ASSERT(!is<ImageForwardPointer>(header()));
   uword offset = ValuePointer::offset_of(this) + ImageObject_LayoutOffset;
   ImageForwardPointer *pointer = ImageForwardPointer::to(obj);
   Image::current().heap()[offset] = reinterpret_cast<uword>(pointer);

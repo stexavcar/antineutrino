@@ -22,6 +22,6 @@ def test_statics() {
 }
 
 def main() {
-  // test_inheritance();
+  test_inheritance();
   test_statics();
 }

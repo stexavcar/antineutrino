@@ -76,10 +76,8 @@ void Image::copy_object_shallow(ImageObject *obj) {
   // It is useful to be able to make the assumption that the layout
   // has been moved before any instances because the layout field in
   // the image will be overwritten with a forward pointer.
-  if (is<ImageLayout>(header) && !image_cast<ImageObject>(header)->has_been_migrated()) {
-    copy_object_shallow(image_cast<ImageObject>(header));
-    ASSERT(image_cast<ImageObject>(header)->has_been_migrated());
-  }
+  if (is<ImageLayout>(header) && !image_cast<ImageLayout>(header)->has_been_migrated())
+    copy_object_shallow(image_cast<ImageLayout>(header));
   TypeInfo type_info;
   obj->type_info(&type_info);
   InstanceType type = type_info.type;
@@ -117,6 +115,9 @@ void Image::copy_object_shallow(ImageObject *obj) {
       break;
     }
     case LAYOUT_TYPE: {
+      // Because of the rule that layouts must be moved before their
+      // instances this layout may already have been moved.
+      if (obj->has_been_migrated()) return;
       ImageLayout *img = image_cast<ImageLayout>(obj);
       InstanceType instance_type = static_cast<InstanceType>(img->instance_type());
       Layout *layout = cast<Layout>(heap.allocate_empty_layout(instance_type));
@@ -235,9 +236,7 @@ InstanceType ImageObject::type() {
 }
 
 void ImageObject::type_info(TypeInfo *result) {
-  uword offset = ValuePointer::offset_of(this) + ImageObject_LayoutOffset;
-  uword value = Image::current().heap()[offset];
-  ImageData *data = ImageData::from(value);
+  ImageData *data = header();
   if (is<ImageSmi>(data)) {
     word value = image_cast<ImageSmi>(data)->value();
     result->type = static_cast<InstanceType>(value);
@@ -246,8 +245,11 @@ void ImageObject::type_info(TypeInfo *result) {
     result->layout = target->layout();
     result->type = target->layout()->instance_type();
   } else if (is<ImageLayout>(data)) {
-    word value = image_cast<ImageLayout>(data)->instance_type();
+    ImageLayout *layout = image_cast<ImageLayout>(data);
+    word value = layout->instance_type();
     result->type = static_cast<InstanceType>(value);
+    if (layout->has_been_migrated())
+      result->layout = cast<Layout>(layout->forward_pointer());
   } else {
     UNREACHABLE();
   }

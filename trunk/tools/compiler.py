@@ -887,9 +887,9 @@ class BuiltinClass(SyntaxTree):
     self.info = info
     self.members = members
     if super:
-      self.super = super
+      self.super_name = super
     elif not self.info.name == u'Object':
-      self.super = u'Object'
+      self.super_name = u'Object'
     self.signature = None
     self.image = None
   def get_signature(self):
@@ -911,26 +911,32 @@ class BuiltinClass(SyntaxTree):
     for member in self.members:
       member.accept(visitor)
 
-class Protocol(SyntaxTree):
-  def __init__(self, name, members, super):
-    self.name = name
-    self.members = members
-    if super:
-      self.super = super
-    elif not self.name == 'Object':
-      self.super = 'Object'
-    else:
-      self.super = None
+class SignatureProvider(SyntaxTree):
+  def __init__(self):
     self.signature = None
-    self.image = None
   def get_signature(self):
     if not self.signature:
       tuple = HEAP.new_tuple(length = 1)
       self.signature_tuple = tuple
       self.signature = HEAP.new_signature(tuple)
-      if self.image:
-        tuple[0] = self.image
+      if self.get_image():
+        tuple[0] = self.get_image()
     return self.signature
+
+class Protocol(SignatureProvider):
+  def __init__(self, name, members, super):
+    SignatureProvider.__init__(self)
+    self.name = name
+    self.members = members
+    if super:
+      self.super_name = super
+    elif not self.name == 'Object':
+      self.super_name = 'Object'
+    else:
+      self.super_name = None
+    self.image = None
+  def get_image(self):
+    return self.image
   def set_image(self, value):
     assert not self.image
     self.image = value
@@ -943,7 +949,7 @@ class Protocol(SyntaxTree):
       member.accept(visitor)
   def quote(self):
     methods = HEAP.new_tuple(values = [ m.quote() for m in self.members ])
-    super = NAMESPACE[self.super]
+    super = NAMESPACE[self.super_name]
     return HEAP.new_protocol_expression(HEAP.new_string(self.name), methods, super.image)
 
 class Selector(SyntaxTree):
@@ -961,9 +967,12 @@ class Method(SyntaxTree):
     visitor.visit_method(self)
   def traverse(self, visitor):
     self.fun.accept(visitor)
-  def compile(self, protocol):
+  def compile(self, protocol = None):
     body = self.fun.compile()
-    signature = protocol.get_signature()
+    if protocol:
+      signature = protocol.get_signature()
+    else:
+      signature = HEAP.empty_signature
     return HEAP.new_method(HEAP.new_string(self.name), signature, body)
   def quote(self):
     fun = self.fun.quote()
@@ -1377,9 +1386,19 @@ class Symbol(object):
 def tag_as_smi(value):
   return value << 2
 
+def has_smi_tag(value):
+  return value & 0x3 is 0
+
 def tag_as_object(value):
   assert value & 0x3 is 0
   return value | 0x1
+
+def has_object_tag(value):
+  return value & 0x3 is 0x1
+
+def untag_object(value):
+  assert (value & 0x3) is 0x1
+  return value & ~0x3;
 
 POINTER_SIZE = 4
 
@@ -1398,6 +1417,7 @@ class Heap:
     self.set_root(ROOT_INDEX['Toplevel'], self.toplevel)
     self.context = self.new_context()
     self.empty_tuple = self.new_tuple(length = 0)
+    self.empty_signature = self.new_signature(self.empty_tuple)
     self.void = self.get_root(ROOT_INDEX['VoidValue'])
     self.true = self.get_root(ROOT_INDEX['TrueValue'])
     self.false = self.get_root(ROOT_INDEX['FalseValue'])
@@ -1569,6 +1589,11 @@ class Heap:
   def set_field(self, obj, offset, value):
     self[(obj.addr / POINTER_SIZE) + offset] = value
 
+  def get_address(self, obj, offset, Type):
+    value = self[(obj.addr / POINTER_SIZE) + offset]
+    if has_smi_tag(value): return value >> 2
+    else: return Type(untag_object(value))
+
   def flush(self):
     for dict in self.dicts:
       dict.commit()
@@ -1596,9 +1621,10 @@ class ImageObject(ImageValue):
     HEAP.set_field(self, ImageObject_LayoutOffset, value)
 
 class ImageProtocol(ImageObject):
-  def __init__(self, addr, name):
+  def __init__(self, addr, name=None):
     ImageObject.__init__(self, addr)
-    self.set_name(name)
+    if name:
+      self.set_name(name)
   def set_methods(self, value):
     HEAP.set_field(self, ImageProtocol_MethodsOffset, value)
   def set_name(self, value):
@@ -2019,39 +2045,42 @@ class Visitor:
 class LoadVisitor(Visitor):
   def __init__(self):
     self.is_toplevel = True
-  def visit_protocol(self, that):
-    name_str = HEAP.new_string(that.name)
+  def do_it(self, that, name, name_str):
     protocol = HEAP.new_protocol(name_str)
+    static_protocol = HEAP.new_protocol(HEAP.void)
     that.set_image(protocol)
+    that.static_protocol = static_protocol
     HEAP.toplevel[name_str] = protocol
     that.image = protocol
     if self.is_toplevel:
-      NAMESPACE[that.name] = that
-      self.is_toplevel = False
-      Visitor.visit_protocol(self, that)
-      self.is_toplevel = True
+      NAMESPACE[name] = that
+  def visit_protocol(self, that):
+    name_str = HEAP.new_string(that.name)
+    self.do_it(that, that.name, name_str)
+    was_toplevel = self.is_toplevel
+    self.is_toplevel = False
+    Visitor.visit_protocol(self, that)
+    self.is_toplevel = was_toplevel
   def visit_builtin_class(self, that):
     instance_type_name = that.info.instance_type
     instance_type_index = globals()[instance_type_name + '_TYPE']
     name_str = HEAP.new_string(that.info.class_name)
-    layout = HEAP.new_protocol(name_str)
-    that.set_image(layout)
-    HEAP.toplevel[name_str] = layout
-    HEAP.set_root(that.info.root_index, layout)
-    that.image = layout
+    self.do_it(that, that.info.class_name, name_str)
+    HEAP.set_root(that.info.root_index, that.image)
     assert self.is_toplevel
-    NAMESPACE[that.info.name] = that
     self.is_toplevel = False
     Visitor.visit_builtin_class(self, that)
     self.is_toplevel = True
 
 class ResolveVisitor(Visitor):
   def resolve_class(self, that):
-    if that.super:
-      value = NAMESPACE[that.super]
+    if that.super_name:
+      value = NAMESPACE[that.super_name]
       that.image.set_super(value.image)
+      that.super = value
     else:
       that.image.set_super(HEAP.void)
+      that.super = None
   def visit_builtin_class(self, that):
     self.resolve_class(that)
     Visitor.visit_builtin_class(self, that)
@@ -2059,11 +2088,24 @@ class ResolveVisitor(Visitor):
     self.resolve_class(that)
     Visitor.visit_protocol(self, that)
 
+class DummySignatureProvider(SignatureProvider):
+  def __init__(self, protocol):
+    SignatureProvider.__init__(self)
+    self.protocol = protocol
+  def get_image(self):
+    return self.protocol
+
 class CompileVisitor(Visitor):
   def compile_methods(self, that):
     methods = HEAP.new_tuple(values = [ m.compile(that) for m in that.members if not m.is_static ])
-    statics = HEAP.new_tuple(values = [ m.compile(that) for m in that.members if m.is_static ])
-    layout = HEAP.new_layout(HEAP.void, statics, PROTOCOL_TYPE, 0)
+    provider = DummySignatureProvider(that.static_protocol)
+    statics = HEAP.new_tuple(values = [ m.compile(provider) for m in that.members if m.is_static ])
+    that.static_protocol.set_methods(statics)
+    if that.super_name:
+      that.static_protocol.set_super(that.super.static_protocol)
+    else:
+      that.static_protocol.set_super(NAMESPACE['Protocol'].image)
+    layout = HEAP.new_layout(that.static_protocol, HEAP.empty_tuple, PROTOCOL_TYPE, 0)
     that.image.set_methods(methods)
     that.image.set_layout(layout)
   def visit_protocol(self, that):

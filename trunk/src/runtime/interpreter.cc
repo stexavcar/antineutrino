@@ -150,15 +150,13 @@ void MethodLookup::lookup_in_dictionary(Tuple *methods, Immediate *name,
  * no method is found Nothing is returned.
  */
 Data *Interpreter::lookup_method(Layout *layout, Immediate *name) {
-  // Look up any layout-local methods
-  name->to_string().println();
   MethodLookup lookup;
+  // Look up any layout-local methods
   lookup.lookup_in_dictionary(layout->methods(), name, layout);
   // Look up methods in protocols
   Value *current = layout->protocol();
   while (is<Protocol>(current)) {
     Protocol *protocol = cast<Protocol>(current);
-    protocol->to_string().println();
     lookup.lookup_in_dictionary(protocol->methods(), name, layout);
     current = protocol->super();
   }

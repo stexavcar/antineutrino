@@ -111,7 +111,7 @@ Data *Heap::allocate_unquote_expression() {
 
 #define MAKE_ALLOCATOR(n, NAME, Name, name)                          \
 Data *Heap::allocate_##name() {                                      \
-  return allocate_object(Name::kSize, roots().name##_layout());       \
+  return allocate_object(Name::kSize, roots().name##_layout());      \
 }
 FOR_EACH_GENERATABLE_TYPE(MAKE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
