@@ -22,7 +22,7 @@ public:
   ref<QuoteTemplate> new_quote_template(ref<SyntaxTree> body, ref<Tuple> unquotes);
   ref<LiteralExpression> new_literal_expression(ref<Value> value);
   ref<Signature> new_signature(ref<Tuple> parameters);
-  ref<Method> new_method(ref<String> name, ref<Signature> signature,
+  ref<Method> new_method(ref<Selector> selector, ref<Signature> signature,
       ref<Lambda> lambda);
   ref<Symbol> new_symbol(ref<Value> value);
   ref<Dictionary> new_dictionary();
@@ -33,6 +33,7 @@ public:
   ref<Protocol> new_protocol(ref<Tuple> methods, ref<Value> super,
       ref<Immediate> name);
   ref<Instance> new_instance(ref<Layout> layout);
+  ref<Selector> new_selector(ref<Immediate> name, Smi *argc);
 private:
   template <typename T, class M> inline ref<T> allocate(M fun);
   Runtime &runtime() { return runtime_; }

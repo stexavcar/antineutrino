@@ -20,4 +20,5 @@ utils/conditions.cc
 utils/flags.cc
 utils/nonlocal.cc
 utils/string.cc
+values/method.cc
 values/values.cc

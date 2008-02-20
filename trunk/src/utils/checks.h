@@ -128,16 +128,14 @@ public:
  */
 
 #define MAKE_ENUM_INFO_HEADER(Enum)                                  \
-  template <> class EnumInfo<Enum> : public AbstractEnumInfo {       \
-  public:                                                            \
-    virtual string get_name_for(word kind) {                      \
+  template <>                                                        \
+  string EnumInfo<Enum>::get_name_for(word kind) {                   \
       switch (kind) {
 
 #define MAKE_ENUM_INFO_FOOTER()                                      \
-        default: return "<unknown>";                                 \
-      }                                                              \
+      default: return "<unknown>";                                   \
     }                                                                \
-  };
+  }
 
 #define MAKE_ENUM_INFO_ENTRY(NAME) case NAME: return #NAME;
 

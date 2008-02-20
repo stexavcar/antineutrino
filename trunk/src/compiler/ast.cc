@@ -27,7 +27,7 @@ ref<Method> ref_traits<MethodExpression>::compile(ref<Context> context) {
   ref<Lambda> code = Compiler::compile(self.lambda(), context);
   Factory &factory = Runtime::current().factory();
   ref<Signature> signature = factory.new_signature(factory.new_tuple(0));
-  ref<Method> result = factory.new_method(name(), signature, code);
+  ref<Method> result = factory.new_method(selector(), signature, code);
   return result;
 }
 
@@ -90,7 +90,7 @@ static void unparse_literal_expression_on(LiteralExpression *obj,
 static void unparse_invoke_expression_on(InvokeExpression *obj, UnparseData &data) {
   unparse_syntax_tree_on(obj->receiver(), data);
   data->append('.');
-  obj->name()->write_on(data.out(), Data::UNQUOTED);
+  obj->selector()->write_on(data.out(), Data::UNQUOTED);
   data->append('(');
   bool is_first = true;
   for (uword i = 0; i < obj->arguments()->arguments()->length(); i++) {
@@ -121,7 +121,7 @@ static void unparse_return_expression(ReturnExpression *obj, UnparseData &data) 
 
 static void unparse_method_expression(MethodExpression *obj, UnparseData &data) {
   data->append("def ");
-  obj->name()->write_on(data.out(), Data::UNQUOTED);
+  obj->selector()->write_on(data.out(), Data::UNQUOTED);
   unparse_syntax_tree_on(obj->lambda(), data);
   data->append(";");
 }

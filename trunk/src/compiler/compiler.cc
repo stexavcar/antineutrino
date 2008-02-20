@@ -58,7 +58,7 @@ public:
   void pop(uint16_t height = 1);
   void slap(uint16_t height);
   void rethurn();
-  void invoke(ref<String> name, uint16_t argc);
+  void invoke(ref<Selector> selector, uint16_t argc);
   void instantiate(ref<Layout> layout);
   void raise(ref<String> name, uint16_t argc);
   void call(uint16_t argc);
@@ -155,11 +155,11 @@ void Assembler::adjust_stack_height(word delta) {
   IF_PARANOID(code().append(stack_height()));
 }
 
-void Assembler::invoke(ref<String> name, uint16_t argc) {
+void Assembler::invoke(ref<Selector> selector, uint16_t argc) {
   STATIC_CHECK(OpcodeInfo<OC_INVOKE>::kArgc == 2);
-  uint16_t name_index = constant_pool_index(name);
+  uint16_t selector_index = constant_pool_index(selector);
   code().append(OC_INVOKE);
-  code().append(name_index);
+  code().append(selector_index);
   code().append(argc);
 }
 
@@ -495,7 +495,7 @@ void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
   ref<Tuple> args = that.arguments().arguments();
   for (uword i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
-  __ invoke(that.name(), args.length());
+  __ invoke(that.selector(), args.length());
   __ slap(args.length() + 1);
 }
 
@@ -584,7 +584,9 @@ void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
     } else {
       __ codegen(cast<SyntaxTree>(entry));
       __ push(runtime().vhoid());
-      __ invoke(factory().new_string("to_string"), 0);
+      ref<String> name = factory().new_string("to_string");
+      ref<Selector> selector = factory().new_selector(name, Smi::from_int(0));
+      __ invoke(selector, 0);
       __ slap(1);
     }
   }
@@ -676,7 +678,8 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
     code->at(3) = OC_RETURN;
     ref<Lambda> lambda = factory().new_lambda(0, code, runtime().empty_tuple(),
         runtime().nuhll(), session().context());
-    methods.set(i, factory().new_method(keyword, signature, lambda));
+    ref<Selector> selector = factory().new_selector(keyword, Smi::from_int(0));
+    methods.set(i, factory().new_method(selector, signature, lambda));
     ref<SyntaxTree> value = cast<SyntaxTree>(terms.get(2 * i + 1));
     __ codegen(value);
   }

@@ -149,7 +149,7 @@ public:
 private:
   Data *interpret(Stack *stack, Frame &frame, uword *pc_ptr);
   Layout *get_layout(Immediate *val);
-  Data *lookup_method(Layout *layout, Immediate *name);
+  Data *lookup_method(Layout *layout, Selector *selector);
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
 };

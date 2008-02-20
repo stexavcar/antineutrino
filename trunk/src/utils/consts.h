@@ -20,7 +20,8 @@
   VISIT(3,  PROTOCOL,               Protocol,              protocol)               \
   VISIT(4,  TASK,                   Task,                  task)                   \
   VISIT(73, SIGNATURE,              Signature,             signature)              \
-  VISIT(74, FORWARDER_DESCRIPTOR,   ForwarderDescriptor,   forwarder_descriptor)
+  VISIT(74, FORWARDER_DESCRIPTOR,   ForwarderDescriptor,   forwarder_descriptor)   \
+  VISIT(77, SELECTOR,               Selector,              selector)
 
 #define FOR_EACH_OBJECT_TYPE(VISIT)                                                \
   VISIT(5,  LAYOUT,                 Layout,                0)                      \
@@ -129,7 +130,7 @@
   VISIT(2, Protocol,              NameOffset)                        \
   VISIT(3, Protocol,              SuperOffset)                       \
   VISIT(4, Protocol,              Size)                              \
-  VISIT(1, Method,                NameOffset)                        \
+  VISIT(1, Method,                SelectorOffset)                    \
   VISIT(2, Method,                SignatureOffset)                   \
   VISIT(3, Method,                LambdaOffset)                      \
   VISIT(4, Method,                Size)                              \
@@ -140,7 +141,7 @@
   VISIT(1, LiteralExpression,     ValueOffset)                       \
   VISIT(2, LiteralExpression,     Size)                              \
   VISIT(1, InvokeExpression,      ReceiverOffset)                    \
-  VISIT(2, InvokeExpression,      NameOffset)                        \
+  VISIT(2, InvokeExpression,      SelectorOffset)                    \
   VISIT(3, InvokeExpression,      ArgumentsOffset)                   \
   VISIT(4, InvokeExpression,      Size)                              \
   VISIT(1, InstantiateExpression, TermsOffset)                       \
@@ -154,7 +155,7 @@
   VISIT(4, ProtocolExpression,    Size)                              \
   VISIT(1, ReturnExpression,      ValueOffset)                       \
   VISIT(2, ReturnExpression,      Size)                              \
-  VISIT(1, MethodExpression,      NameOffset)                        \
+  VISIT(1, MethodExpression,      SelectorOffset)                    \
   VISIT(2, MethodExpression,      LambdaOffset)                      \
   VISIT(3, MethodExpression,      IsStaticOffset)                    \
   VISIT(4, MethodExpression,      Size)                              \
@@ -215,7 +216,10 @@
   VISIT(3, Arguments,             Size)                              \
   VISIT(1, ExternalCall,          ArgcOffset)                        \
   VISIT(2, ExternalCall,          NameOffset)                        \
-  VISIT(3, ExternalCall,          Size)
+  VISIT(3, ExternalCall,          Size)                              \
+  VISIT(1, Selector,              NameOffset)                        \
+  VISIT(2, Selector,              ArgcOffset)                        \
+  VISIT(3, Selector,              Size)
 
 
 // -----------------
@@ -276,7 +280,8 @@
   VISIT(46, Layout,     signature_layout,              Signature,             allocate_empty_layout(SIGNATURE_TYPE))              \
   VISIT(47, Layout,     forwarder_descriptor_layout,   ForwarderDescriptor,   allocate_empty_layout(FORWARDER_DESCRIPTOR_TYPE))   \
   VISIT(48, Layout,     arguments_layout,              Arguments,             allocate_empty_layout(ARGUMENTS_TYPE))              \
-  VISIT(49, Layout,     external_call_layout,          ExternalCall,          allocate_empty_layout(EXTERNAL_CALL_TYPE))
+  VISIT(49, Layout,     external_call_layout,          ExternalCall,          allocate_empty_layout(EXTERNAL_CALL_TYPE))          \
+  VISIT(50, Layout,     selector_layout,               Selector,              allocate_empty_layout(SELECTOR_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                            \

@@ -92,7 +92,7 @@ public:
     , method_(Nothing::make())
     , is_ambiguous_(false) { }
   void score_method(Method *method, Layout *reciever);
-  void lookup_in_dictionary(Tuple *methods, Immediate *name, Layout *reciever);
+  void lookup_in_dictionary(Tuple *methods, Selector *name, Layout *reciever);
   Data *method() { return method_; }
   bool is_ambiguous() { return is_ambiguous_; }
 private:
@@ -135,11 +135,11 @@ void MethodLookup::score_method(Method *method, Layout *reciever) {
 }
 
 
-void MethodLookup::lookup_in_dictionary(Tuple *methods, Immediate *name,
+void MethodLookup::lookup_in_dictionary(Tuple *methods, Selector *selector,
     Layout *reciever) {
   for (uword i = 0; i < methods->length(); i++) {
     Method *method = cast<Method>(methods->get(i));
-    if (method->name()->equals(name))
+    if (method->selector()->equals(selector))
       score_method(method, reciever);
   }
 }
@@ -149,15 +149,15 @@ void MethodLookup::lookup_in_dictionary(Tuple *methods, Immediate *name,
  * Returns the method with the specified name in the given class.  If
  * no method is found Nothing is returned.
  */
-Data *Interpreter::lookup_method(Layout *layout, Immediate *name) {
+Data *Interpreter::lookup_method(Layout *layout, Selector *selector) {
   MethodLookup lookup;
   // Look up any layout-local methods
-  lookup.lookup_in_dictionary(layout->methods(), name, layout);
+  lookup.lookup_in_dictionary(layout->methods(), selector, layout);
   // Look up methods in protocols
   Value *current = layout->protocol();
   while (is<Protocol>(current)) {
     Protocol *protocol = cast<Protocol>(current);
-    lookup.lookup_in_dictionary(protocol->methods(), name, layout);
+    lookup.lookup_in_dictionary(protocol->methods(), selector, layout);
     current = protocol->super();
   }
   ASSERT(!lookup.is_ambiguous());
@@ -265,17 +265,17 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       break;
     }
     case OC_INVOKE: {
-      uint16_t name_index = code[pc + 1];
-      Immediate *name = cast<Immediate>(constant_pool[name_index]);
+      uint16_t selector_index = code[pc + 1];
+      Selector *selector = cast<Selector>(constant_pool[selector_index]);
       uint16_t argc = code[pc + 2];
       Value *recv = frame[argc + 1];
       Layout *layout = get_layout(deref(recv));
-      Data *lookup_result = lookup_method(layout, name);
+      Data *lookup_result = lookup_method(layout, selector);
       if (is<Nothing>(lookup_result)) {
-        scoped_string name_str(name->to_string());
+        scoped_string selector_str(selector->to_string());
         scoped_string recv_str(recv->to_string());
         Conditions::get().error_occurred("Lookup failure: %s::%s",
-            recv_str.chars(), name_str.chars());
+            recv_str.chars(), selector_str.chars());
       }
       Method *method = cast<Method>(lookup_result);
       frame.push_activation();

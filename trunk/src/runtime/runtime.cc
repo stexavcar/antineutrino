@@ -1,6 +1,7 @@
 #include "heap/ref-inl.h"
 #include "io/image.h"
 #include "runtime/runtime-inl.h"
+#include "utils/checks.h"
 #include "values/values-inl.h"
 
 namespace neutrino {
@@ -31,12 +32,52 @@ void Runtime::start() {
   cast<Lambda>(value)->call(task);
 }
 
+void Runtime::report_load_error(ImageLoadInfo &info) {
+  switch (info.status) {
+    case ImageLoadInfo::TYPE_MISMATCH: {
+      static const char *kErrorMessage =
+        "Type mismatch while loading image\n"
+        "  Expected: %s\n"
+        "  Found: %s\n";
+      const char *expected_str = Layout::layout_name(info.error_info.type_mismatch.expected);
+      const char *found_str = Layout::layout_name(info.error_info.type_mismatch.found);
+      Conditions::get().error_occurred(kErrorMessage, expected_str,
+          found_str);
+      return;
+    }
+    case ImageLoadInfo::ROOT_COUNT: {
+      static const char *kErrorMessage = 
+        "Invalid root count\n"
+        "  Expected: %i\n"
+        "  Found: %i\n";
+      Conditions::get().error_occurred(kErrorMessage,
+          info.error_info.root_count.expected,
+          info.error_info.root_count.found);
+      return;
+    }
+    default:
+      UNHANDLED(ImageLoadInfo::Status, info.status);
+      break;
+  }
+}
+
 bool Runtime::load_image(Image &image) {
-  if (!image.initialize()) return false;
+  ImageLoadInfo info;
+  image.initialize(info);
+  if (info.has_error()) {
+    report_load_error(info);
+    return false;    
+  }
   Runtime::Scope runtime_scope(*this);
-  Tuple *roots = image.load();
-  RefScope ref_scope;
-  return install_loaded_roots(new_ref(roots));
+  Data *roots_val = image.load(info);
+  if (info.has_error()) {
+    report_load_error(info);
+    return false;
+  } else {
+    Tuple *roots = cast<Tuple>(roots_val);
+    RefScope ref_scope;
+    return install_loaded_roots(new_ref(roots));
+  }
 }
 
 bool Runtime::install_loaded_roots(ref<Tuple> roots) {

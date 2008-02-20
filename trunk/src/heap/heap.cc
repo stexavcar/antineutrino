@@ -163,11 +163,11 @@ Data *Heap::allocate_empty_protocol() {
   return allocate_object(Protocol::kSize, roots().protocol_layout());
 }
 
-Data *Heap::new_method(String *name, Signature *signature, Lambda *lambda) {
+Data *Heap::new_method(Selector *selector, Signature *signature, Lambda *lambda) {
   Data *val = allocate_object(Method::kSize, roots().method_layout());
   if (is<AllocationFailed>(val)) return val;
   Method *result = cast<Method>(val);
-  result->set_name(name);
+  result->set_selector(selector);
   result->set_signature(signature);
   result->set_lambda(lambda);
   IF_PARANOID(result->validate());
@@ -300,6 +300,16 @@ Data *Heap::new_instance(Layout *layout) {
   Instance *result = cast<Instance>(val);
   for (uword i = 0; i < field_count; i++)
     result->set_field(i, roots().vhoid());
+  IF_PARANOID(result->validate());
+  return result;
+}
+
+Data *Heap::new_selector(Immediate *name, Smi *argc) {
+  Data *val = allocate_object(Selector::kSize, roots().selector_layout());
+  if (is<AllocationFailed>(val)) return val;
+  Selector *result = cast<Selector>(val);
+  result->set_name(name);
+  result->set_argc(argc);
   IF_PARANOID(result->validate());
   return result;
 }

@@ -31,15 +31,6 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
   }
 }
 
-const char *Layout::layout_name(uword tag) {
-  switch (tag) {
-#define MAKE_TYPE_CASE(n, NAME, Name, info) case NAME##_TYPE: return #Name;
-FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
-#undef MAKE_TYPE_CASE
-    default: return "<illegal>";
-  }
-}
-
 #endif // DEBUG
 
 MAKE_ENUM_INFO_HEADER(InstanceType)
@@ -53,6 +44,15 @@ MAKE_ENUM_INFO_HEADER(Signal::Type)
 FOR_EACH_SIGNAL_TYPE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
+
+const char *Layout::layout_name(uword tag) {
+  switch (tag) {
+#define MAKE_TYPE_CASE(n, NAME, Name, info) case NAME##_TYPE: return #Name;
+FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
+#undef MAKE_TYPE_CASE
+    default: return "<illegal>";
+  }
+}
 
 // -----------------------
 // --- P r i n t i n g ---
@@ -122,6 +122,12 @@ static void write_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
   buf.append('>');
 }
 
+static void write_selector_short_on(Selector *obj, string_buffer &buf) {
+  obj->name()->write_short_on(buf, Data::UNQUOTED);
+  buf.append('/');
+  obj->argc()->write_short_on(buf);
+}
+
 static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
   uword instance_type = obj->layout()->instance_type();
   switch (instance_type) {
@@ -157,6 +163,9 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
     break;
   case LAYOUT_TYPE:
     write_layout_short_on(cast<Layout>(obj), buf);
+    break;
+  case SELECTOR_TYPE:
+    write_selector_short_on(cast<Selector>(obj), buf);
     break;
   case METHOD_TYPE:
     buf.append("#<method>");
@@ -235,7 +244,7 @@ static void write_dictionary_on(Dictionary *obj, string_buffer &buf) {
 
 static void write_method_on(Method *obj, string_buffer &buf) {
   buf.append("method ");
-  obj->name()->write_short_on(buf);
+  obj->selector()->write_short_on(buf);
 }
 
 static void write_object_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
@@ -569,7 +578,7 @@ Data *Lambda::clone(Heap &heap) {
 bool Value::is_key() {
   switch (type()) {
     case STRING_TYPE: case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE:
-    case FALSE_TYPE: case SMI_TYPE: case SYMBOL_TYPE:
+    case FALSE_TYPE: case SMI_TYPE: case SYMBOL_TYPE: case SELECTOR_TYPE:
       return true;
     default:
       return false;
@@ -592,6 +601,8 @@ bool Value::equals(Value *that) {
   switch (type) {
   case STRING_TYPE:
     return cast<String>(this)->string_equals(cast<String>(that));
+  case SELECTOR_TYPE:
+    return cast<Selector>(this)->selector_equals(cast<Selector>(that));
   case SMI_TYPE: case SYMBOL_TYPE:
     return this == that;
   case VOID_TYPE:

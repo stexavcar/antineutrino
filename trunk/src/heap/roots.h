@@ -1,6 +1,7 @@
 #ifndef _HEAP_ROOTS
 #define _HEAP_ROOTS
 
+#include "utils/checks.h"
 #include "utils/consts.h"
 #include "utils/globals.h"
 #include "utils/types.h"
@@ -27,7 +28,7 @@ public:
    */
   bool initialize(Heap& heap);
 
-  static const uword kCount = 50;
+  static const uword kCount = 51;
 
 // Declare root field accessors
 #define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, allocator) \

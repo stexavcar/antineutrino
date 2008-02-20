@@ -610,8 +610,8 @@ public:
 
   IF_DEBUG(static uword tag_of(Data *value));
   IF_DEBUG(static const char *tag_name(uword tag));
-  IF_DEBUG(static const char *layout_name(uword tag));
-
+  
+  static const char *layout_name(uword tag);
   static const uword kInstanceTypeOffset       = Object::kHeaderSize;
   static const uword kInstanceFieldCountOffset = kInstanceTypeOffset + kPointerSize;
   static const uword kProtocolOffset           = kInstanceFieldCountOffset + kPointerSize;

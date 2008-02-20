@@ -21,6 +21,7 @@ public:
   Heap &heap() { return heap_; }
   Roots &roots() { return roots_; }
   bool load_image(Image &image);
+  void report_load_error(ImageLoadInfo &info);
   bool install_loaded_roots(ref<Tuple> roots);
   bool install_object(ref<Object> root, ref<Object> changes);
   bool install_dictionary(ref<Dictionary> root, ref<Dictionary> changes);

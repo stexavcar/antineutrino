@@ -70,9 +70,9 @@ ref<Signature> Factory::new_signature(ref<Tuple> parameters) {
   ALLOCATE_CHECKED(Signature, new_signature(*parameters));
 }
 
-ref<Method> Factory::new_method(ref<String> name, ref<Signature> signature,
+ref<Method> Factory::new_method(ref<Selector> selector, ref<Signature> signature,
     ref<Lambda> lambda) {
-  ALLOCATE_CHECKED(Method, new_method(*name, *signature, *lambda));
+  ALLOCATE_CHECKED(Method, new_method(*selector, *signature, *lambda));
 }
 
 ref<Layout> Factory::allocate_empty_layout(InstanceType instance_type) {
@@ -91,6 +91,10 @@ ref<Protocol> Factory::new_protocol(ref<Tuple> methods, ref<Value> super,
 
 ref<Instance> Factory::new_instance(ref<Layout> layout) {
   ALLOCATE_CHECKED(Instance, new_instance(*layout));
+}
+
+ref<Selector> Factory::new_selector(ref<Immediate> name, Smi *argc) {
+  ALLOCATE_CHECKED(Selector, new_selector(*name, argc));
 }
 
 }

@@ -83,17 +83,17 @@ DEFINE_REF_CLASS(QuoteTemplate);
 
 #define FOR_EACH_INVOKE_EXPRESSION_FIELD(VISIT, arg)                 \
   VISIT(SyntaxTree, receiver,  Receiver,  arg)                       \
-  VISIT(String,     name,      Name,      arg)                       \
+  VISIT(Selector,   selector,  Selector,  arg)                       \
   VISIT(Arguments,  arguments, Arguments, arg)
 
 class InvokeExpression : public SyntaxTree {
 public:
   FOR_EACH_INVOKE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uword kReceiverOffset = SyntaxTree::kHeaderSize;
-  static const uword kNameOffset = kReceiverOffset + kPointerSize;
-  static const uword kArgumentsOffset = kNameOffset + kPointerSize;
-  static const uword kSize = kArgumentsOffset + kPointerSize;
+  static const uword kReceiverOffset  = SyntaxTree::kHeaderSize;
+  static const uword kSelectorOffset  = kReceiverOffset + kPointerSize;
+  static const uword kArgumentsOffset = kSelectorOffset + kPointerSize;
+  static const uword kSize            = kArgumentsOffset + kPointerSize;
 };
 
 template <>
@@ -353,7 +353,7 @@ DEFINE_REF_CLASS(ReturnExpression);
 // -----------------------------------------
 
 #define FOR_EACH_METHOD_EXPRESSION_FIELD(VISIT, arg)                 \
-  VISIT(String,           name,      Name,     arg)                  \
+  VISIT(Selector,         selector,  Selector, arg)                  \
   VISIT(LambdaExpression, lambda,    Lambda,   arg)                  \
   VISIT(Bool,             is_static, IsStatic, arg)
 
@@ -361,8 +361,8 @@ class MethodExpression : public SyntaxTree {
 public:
   FOR_EACH_METHOD_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
   
-  static const uword kNameOffset     = SyntaxTree::kHeaderSize;
-  static const uword kLambdaOffset   = kNameOffset + kPointerSize;
+  static const uword kSelectorOffset = SyntaxTree::kHeaderSize;
+  static const uword kLambdaOffset   = kSelectorOffset + kPointerSize;
   static const uword kIsStaticOffset = kLambdaOffset + kPointerSize;
   static const uword kSize           = kIsStaticOffset + kPointerSize;
 };

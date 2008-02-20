@@ -973,12 +973,16 @@ class Method(SyntaxTree):
       signature = protocol.get_signature()
     else:
       signature = HEAP.empty_signature
-    return HEAP.new_method(HEAP.new_string(self.name), signature, body)
+    name = HEAP.new_string(self.name)
+    argc = len(self.fun.params)
+    return HEAP.new_method(HEAP.new_selector(name, argc), signature, body)
   def quote(self):
     fun = self.fun.quote()
     if self.is_static: is_static = HEAP.true
     else: is_static = HEAP.false
-    return HEAP.new_method_expression(HEAP.new_string(self.name), fun, is_static)
+    name = HEAP.new_string(self.name)
+    argc = len(self.fun.params)
+    return HEAP.new_method_expression(HEAP.new_selector(name, argc), fun, is_static)
 
 class Expression(SyntaxTree):
   def is_identifier(self):
@@ -1208,6 +1212,8 @@ class Arguments(SyntaxTree):
     self.keywords = keywords
   def accept(self, visitor):
     visitor.visit_arguments(self)
+  def length(self):
+    return len(self.args)
   def traverse(self, visitor):
     for arg in self.args:
       arg.accept(visitor)
@@ -1242,8 +1248,9 @@ class Invoke(Expression):
   def quote(self):
     recv = self.recv.quote()
     name = HEAP.new_string(self.name)
+    selector = HEAP.new_selector(name, self.args.length())
     args = self.args.quote()
-    return HEAP.new_invoke_expression(recv, name, args)
+    return HEAP.new_invoke_expression(recv, selector, args)
 
 class Instantiate(Expression):
   def __init__(self, recv, name, args, terms):
@@ -1403,7 +1410,7 @@ def untag_object(value):
 POINTER_SIZE = 4
 
 class Heap:
-  kRootCount  = 50
+  kRootCount  = 51
   def __init__(self):
     self.capacity = 1024
     self.cursor = 0
@@ -1480,6 +1487,9 @@ class Heap:
 
   def new_signature(self, elements):
     return ImageSignature(self.allocate(SIGNATURE_TYPE, ImageSignature_Size), elements)
+
+  def new_selector(self, name, argc):
+    return ImageSelector(self.allocate(SELECTOR_TYPE, ImageSelector_Size), name, argc)
 
   def new_lambda_expression(self, params, body):
     return ImageLambdaExpression(self.allocate(LAMBDA_EXPRESSION_TYPE, ImageLambdaExpression_Size), params, body)
@@ -1606,6 +1616,7 @@ class Heap:
     output = open(file, 'wb')
     write(4206546606L)
     write(len(buffer))
+    write(Heap.kRootCount)
     write(tag_as_object(self.roots.addr))
     for value in buffer:
       write(value)
@@ -1685,22 +1696,22 @@ class ImageExternalCall(ImageObject):
     HEAP.set_field(self, ImageBuiltinCall_IndexOffset, name)
 
 class ImageMethod(ImageObject):
-  def __init__(self, addr, name, signature, body):
+  def __init__(self, addr, selector, signature, body):
     ImageObject.__init__(self, addr)
-    self.set_name(name)
-    self.set_signature(signature)
-    self.set_body(body)
-  def set_name(self, value):
-    HEAP.set_field(self, ImageMethod_NameOffset, value)
-  def set_signature(self, value):
-    HEAP.set_field(self, ImageMethod_SignatureOffset, value)
-  def set_body(self, value):
-    HEAP.set_field(self, ImageMethod_LambdaOffset, value)
+    HEAP.set_field(self, ImageMethod_SelectorOffset, selector)
+    HEAP.set_field(self, ImageMethod_SignatureOffset, signature)
+    HEAP.set_field(self, ImageMethod_LambdaOffset, body)
 
 class ImageSignature(ImageObject):
   def __init__(self, addr, parameters):
     ImageObject.__init__(self, addr)
     HEAP.set_field(self, ImageSignature_ParametersOffset, parameters)
+
+class ImageSelector(ImageObject):
+  def __init__(self, addr, name, argc):
+    ImageObject.__init__(self, addr)
+    HEAP.set_field(self, ImageSelector_NameOffset, name)
+    HEAP.set_field(self, ImageSelector_ArgcOffset, argc)
 
 class ImageString(ImageObject):
   def __init__(self, addr, length):
@@ -1765,10 +1776,10 @@ class ImageLiteralExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageLiteralExpression_ValueOffset, value)
 
 class ImageInvokeExpression(ImageSyntaxTree):
-  def __init__(self, addr, recv, name, args):
+  def __init__(self, addr, recv, selector, args):
     ImageSyntaxTree.__init__(self, addr)
     HEAP.set_field(self, ImageInvokeExpression_ReceiverOffset, recv)
-    HEAP.set_field(self, ImageInvokeExpression_NameOffset, name)
+    HEAP.set_field(self, ImageInvokeExpression_SelectorOffset, selector)
     HEAP.set_field(self, ImageInvokeExpression_ArgumentsOffset, args)
 
 class ImageArguments(ImageSyntaxTree):
@@ -1895,9 +1906,9 @@ class ImageInterpolateExpression(ImageSyntaxTree):
     HEAP.set_field(self, ImageInterpolateExpression_TermsOffset, value)
 
 class ImageMethodExpression(ImageSyntaxTree):
-  def __init__(self, addr, name, fun, is_static):
+  def __init__(self, addr, selector, fun, is_static):
     ImageSyntaxTree.__init__(self, addr)
-    HEAP.set_field(self, ImageMethodExpression_NameOffset, name)
+    HEAP.set_field(self, ImageMethodExpression_SelectorOffset, selector)
     HEAP.set_field(self, ImageMethodExpression_LambdaOffset, fun)
     HEAP.set_field(self, ImageMethodExpression_IsStaticOffset, is_static)
 

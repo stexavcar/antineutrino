@@ -26,7 +26,7 @@ template <class C> class ValueInfo { };
 #define SPECIALIZE_VALUE_INFO(n, NAME, Name, info)                   \
 template <> class ValueInfo<Name> {                                  \
 public:                                                              \
-  static const int kTag = NAME##_TYPE;                               \
+  static const InstanceType kTag = NAME##_TYPE;                      \
 };
 FOR_EACH_DECLARED_TYPE(SPECIALIZE_VALUE_INFO)
 #undef SPECIALIZE_VALUE_INFO
