@@ -38,21 +38,46 @@ void Runtime::report_load_error(ImageLoadInfo &info) {
       static const char *kErrorMessage =
         "Type mismatch while loading image\n"
         "  Expected: %s\n"
-        "  Found: %s\n";
+        "  Found: %s";
       const char *expected_str = Layout::layout_name(info.error_info.type_mismatch.expected);
       const char *found_str = Layout::layout_name(info.error_info.type_mismatch.found);
       Conditions::get().error_occurred(kErrorMessage, expected_str,
           found_str);
       return;
     }
+    case ImageLoadInfo::INVALID_IMAGE: {
+      static const char *kErrorMessage = "Invalid image";
+      Conditions::get().error_occurred(kErrorMessage);
+      return;
+    }
     case ImageLoadInfo::ROOT_COUNT: {
       static const char *kErrorMessage = 
         "Invalid root count\n"
         "  Expected: %i\n"
-        "  Found: %i\n";
+        "  Found: %i";
       Conditions::get().error_occurred(kErrorMessage,
           info.error_info.root_count.expected,
           info.error_info.root_count.found);
+      return;
+    }
+    case ImageLoadInfo::INVALID_MAGIC: {
+      static const char *kErrorMessage =
+        "Invalid image\n"
+        "  Expected magic number: 0x%08X\n"
+        "  Found: 0x%08X";
+      Conditions::get().error_occurred(kErrorMessage,
+          Image::kMagicNumber,
+          info.error_info.magic.found);
+      return;
+    }
+    case ImageLoadInfo::INVALID_VERSION: {
+      static const char *kErrorMessage =
+        "Invalid image\n"
+        "  Expected version: %i\n"
+        "  Found: %i";
+      Conditions::get().error_occurred(kErrorMessage,
+          Image::kCurrentVersion,
+          info.error_info.version.found);
       return;
     }
     default:

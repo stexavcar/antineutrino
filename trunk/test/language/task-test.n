@@ -1,0 +1,16 @@
+def test_simple_task() {
+(*
+  def t := task {
+    yield 1;
+    yield 2;
+    yield 3;
+  };
+  assert_equals(1, t());
+  assert_equals(2, t());
+  assert_equals(3, t());
+*)
+}
+
+def main() {
+  test_simple_task();
+}

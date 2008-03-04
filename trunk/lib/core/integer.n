@@ -3,14 +3,14 @@
 # you're dealing with small or big integers.
 internal protocol SmallInteger {
 
-  internal def operator ||();
+  internal def | |();
+  
+  internal def +(that);
 
-  internal def operator +(that);
+  internal def -(that);
 
-  internal def operator -(that);
+  internal def *(that);
 
-  internal def operator *(that);
-
-  internal def operator /(that);
+  internal def /(that);
 
 }

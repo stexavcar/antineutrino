@@ -642,6 +642,11 @@ class Parser:
       value = self.parse_expression(False)
       if is_toplevel: self.expect_delimiter(';')
       return Return(value)
+    elif self.token().is_keyword('yield'):
+      self.expect_keyword('yield')
+      value = self.parse_expression(False)
+      if is_toplevel: self.expect_delimiter(';')
+      return Yield(value)
     elif self.token().is_keyword('raise'):
       self.expect_keyword('raise')
       name = self.expect_ident()
@@ -689,6 +694,12 @@ class Parser:
       expr = self.parse_function_body(False)
       self.pop_scope()
       return Lambda(params, expr)
+    elif self.token().is_keyword('task'):
+      self.expect_keyword('task')
+      self.push_scope([])
+      expr = self.parse_function_body(False)
+      self.pop_scope();
+      return Task(expr);
     else:
       return self.parse_operator_expression(None)
 
@@ -1333,6 +1344,26 @@ class Return(Expression):
     return "^" + str(self.value)
   def quote(self):
     return HEAP.new_return_expression(self.value.quote())
+
+class Yield(Expression):
+  def __init__(self, value):
+    self.value = value
+  def accept(self, visitor):
+    visitor.visit_yield(self)
+  def traverse(self, visitor):
+    self.value.accept(visitor)
+  def quote(self):
+    return HEAP.new_yield_expression(self.value.quote())
+
+class Task(Expression):
+  def __init__(self, body):
+    self.body = body
+  def accept(self, visitor):
+    visitor.visit_task(self)
+  def traverse(self, visitor):
+    self.body.accept(visitor)
+  def quote(self):
+    return HEAP.new_task_expression(self.body.quote())
 
 class Sequence(Expression):
   def __init__(self, exprs):
@@ -2051,6 +2082,10 @@ class Visitor:
   def visit_arguments(self, that):
     self.visit_node(that)
   def visit_external_call(self, that):
+    self.visit_node(that)
+  def visit_task(self, that):
+    self.visit_node(that)
+  def visit_yield(self, that):
     self.visit_node(that)
 
 class LoadVisitor(Visitor):

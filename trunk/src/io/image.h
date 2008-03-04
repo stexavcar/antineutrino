@@ -313,7 +313,7 @@ public:
 
 #define FOR_EACH_IMAGE_LOAD_STATUS(VISIT)                            \
   VISIT(TYPE_MISMATCH) VISIT(FINE)          VISIT(INVALID_IMAGE)     \
-  VISIT(ROOT_COUNT)
+  VISIT(ROOT_COUNT)    VISIT(INVALID_MAGIC) VISIT(INVALID_VERSION)
 
 struct ImageLoadInfo {
 public:
@@ -327,6 +327,8 @@ public:
   void type_mismatch(InstanceType expected, InstanceType found);
   void invalid_image();
   void invalid_root_count(word expected, word found);
+  void invalid_magic_number(uword found);
+  void invalid_version(uword found);
   bool has_error() { return status != FINE; }
 public:
   Status status;
@@ -339,6 +341,12 @@ public:
       word expected;
       word found;
     } root_count;
+    struct {
+      uword found;
+    } magic;
+    struct {
+      uword found;
+    } version;
   } error_info;
 };
 
@@ -373,6 +381,8 @@ public:
 
 private:
   friend class ImageIterator;
+  friend class Runtime;
+  
   typedef void (ObjectCallback)(ImageObject *obj);
   static void copy_object_shallow(ImageObject *obj, ImageLoadInfo &load_info);
   static void fixup_shallow_object(ImageObject *obj, ImageLoadInfo &load_info);
@@ -382,9 +392,12 @@ private:
   uword *data_, *heap_;
   static Image *current_;
   
-  static const uword kMagicNumber = 0xFABACEAE;
+  static const uword kCurrentVersion    = 2;
+  
+  static const uword kMagicNumber       = 0xFABACEAE;
   static const uword kMagicNumberOffset = 0;
-  static const uword kHeapSizeOffset    = kMagicNumberOffset + 1;
+  static const uword kVersionOffset     = kMagicNumberOffset + 1;
+  static const uword kHeapSizeOffset    = kVersionOffset + 1;
   static const uword kRootCountOffset   = kHeapSizeOffset + 1;
   static const uword kRootsOffset       = kRootCountOffset + 1;
   static const uword kHeaderSize        = kRootsOffset + 1;

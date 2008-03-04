@@ -22,7 +22,7 @@ Image *Image::current_ = NULL;
 Image::Image(uword size, uword *data)
     : size_(size)
     , data_(data)
-    , heap_(0) { }
+    , heap_(NULL) { }
 
 Image::~Image() {
   delete[] data_;
@@ -48,6 +48,16 @@ void ImageLoadInfo::invalid_root_count(word expected, word found) {
   error_info.root_count.found = found;
 }
 
+void ImageLoadInfo::invalid_magic_number(uword found) {
+  status = INVALID_MAGIC;
+  error_info.magic.found = found;
+}
+
+void ImageLoadInfo::invalid_version(uword found) {
+  status = INVALID_VERSION;
+  error_info.version.found = found;
+}
+
 MAKE_ENUM_INFO_HEADER(ImageLoadInfo::Status)
 #define MAKE_ENTRY(NAME) MAKE_ENUM_INFO_ENTRY(ImageLoadInfo::NAME)
 FOR_EACH_IMAGE_LOAD_STATUS(MAKE_ENTRY)
@@ -64,7 +74,11 @@ void Image::initialize(ImageLoadInfo &info) {
     return;
   }
   if (data_[kMagicNumberOffset] != kMagicNumber) {
-    info.invalid_image();
+    info.invalid_magic_number(data_[kMagicNumberOffset]);
+    return;
+  }
+  if (data_[kVersionOffset] != Image::kCurrentVersion) {
+    info.invalid_version(data_[kVersionOffset]);
     return;
   }
   if (data_[kRootCountOffset] != Roots::kCount) {
@@ -98,7 +112,8 @@ Data *Image::load(ImageLoadInfo &info) {
   }
   ImageData *roots_val = ImageValue::from(data_[kRootsOffset]);
   ImageTuple *roots_img = image_cast<ImageTuple>(roots_val, info);
-  return cast<Tuple>(roots_img->forward_pointer());
+  if (info.has_error()) return Nothing::make();
+  return safe_cast<Tuple>(roots_img->forward_pointer(), info);
 }
 
 void Image::copy_object_shallow(ImageObject *obj, ImageLoadInfo &info) {

@@ -6,7 +6,7 @@ executable = relative(config['bin'], str(config[prefix + 'program']))
 natives = relative(config['bin'], str(config[prefix + 'natives']))
 
 
-compiler = join(config['root'], 'tools', 'compiler.py')
+compiler = join(config['root'], 'tools', 'pyneu', 'main.py')
 env['BUILDERS']['CompilePyNeutrinoTest'] = Builder(action = "python " + compiler + " -c " + join(config['src'], 'utils', 'consts.h') + ' ' + join(config['root'], 'lib') + " $SOURCE -o $TARGET")
 
 def add_test(arg, dir, fnames):
