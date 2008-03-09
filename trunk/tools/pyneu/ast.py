@@ -368,7 +368,8 @@ class LocalDefinition(Expression):
 
 
 def to_literal(value):
-  if type(value) is unicode: return values.String(value)
+  if type(value) in [unicode, str]: return values.String(value)
+  elif type(value) in [int, long]: return values.Smi(value)
   if isinstance(value, SyntaxTree): return value.evaluate()
   else: return value
 

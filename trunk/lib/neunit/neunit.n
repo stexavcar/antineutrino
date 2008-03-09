@@ -14,7 +14,3 @@ def assert_equals(expected, value) {
   if (expected = value) return null;
   fail("Expected [${expected}], found [${value}]");
 }
-
-def main() {
-  print("Nirk");
-}

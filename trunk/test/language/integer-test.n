@@ -1,3 +1,8 @@
+def test_number_syntax() {
+  assert_equals(1234567, 1 234 567);
+  assert_equals(4567, 4 5 6 7);
+}
+
 def test_addition() {
   assert_equals(2, 1 + 1);
   assert_equals(3, 2 + 1);
@@ -13,6 +18,7 @@ def test_multiplication() {
 }
 
 def main() {
+  test_number_syntax();
   test_addition();
   test_multiplication();
 }

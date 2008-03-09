@@ -60,6 +60,13 @@ class Parser(object):
     self.advance()
     return value
 
+  def expect_number(self):
+    if not self.token().is_number():
+      self.unexpected_token()
+    value = self.token().value()
+    self.advance()
+    return value
+
   def expect_keyword(self, value = None):
     if not self.token().is_keyword(value):
       self.unexpected_token()
@@ -367,6 +374,9 @@ class Parser(object):
       return ast.Literal(ast.Null())
     elif self.token().is_string():
       value = self.expect_string()
+      return ast.Literal(value)
+    elif self.token().is_number():
+      value = self.expect_number()
       return ast.Literal(value)
     elif self.token().is_identifier():
       name = self.expect_identifier()

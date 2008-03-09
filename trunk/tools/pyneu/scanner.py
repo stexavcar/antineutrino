@@ -131,6 +131,9 @@ class Token(object):
   def is_delimiter(self, value):
     return False
 
+  def is_number(self):
+    return False
+
 
 class Keyword(Token):
 
@@ -150,6 +153,15 @@ class Ident(Token):
     super(Ident, self).__init__(pos, value)
   
   def is_identifier(self):
+    return True
+
+
+class Number(Token):
+
+  def __init__(self, value, pos):
+    super(Number, self).__init__(pos, value)
+
+  def is_number(self):
     return True
 
 
@@ -252,6 +264,8 @@ class Scanner(object):
       result = self.scan_string()
     elif is_operator(current):
       result = self.scan_operator()
+    elif is_digit(current):
+      result = self.scan_number()
     else:
       pos = self.reader.position()
       raise SyntaxError(self.new_position(pos, 0),
@@ -282,7 +296,17 @@ class Scanner(object):
         self.reader.advance()
       self.skip_whitespace()
     return Documentation(value, self.new_position(start))
-  
+
+  def scan_number(self):
+    start = self.reader.position()
+    value = ''
+    while self.reader.has_more() and is_digit(self.reader.current()):
+      value += self.reader.current()
+      self.reader.advance()
+      if not is_digit(self.reader.current()):
+        self.skip_whitespace()
+    return Number(int(value), self.new_position(start))
+
   def scan_delimiter(self):
     start = self.reader.position()
     value = ''
