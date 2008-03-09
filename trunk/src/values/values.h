@@ -33,18 +33,18 @@ FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
  */
 class Data {
 public:
-  
+
   enum WriteMode { DEFAULT, UNQUOTED };
-  
+
   IF_DEBUG(inline InstanceType gc_safe_type());
   IF_DEBUG(Mirror &mirror());
-  
+
   void write_on(string_buffer &buf, WriteMode mode = DEFAULT);
   void write_short_on(string_buffer &buf, WriteMode mode = DEFAULT);
-  
+
   string to_string(WriteMode mode = DEFAULT);
   string to_short_string();
-  
+
 };
 
 
@@ -54,22 +54,22 @@ public:
 
 class Value : public Data {
 public:
-  
+
   inline InstanceType type();
-  
+
   /**
    * Built-in support for comparing value objects.  This method
    * aborts if the receiver or the argument does not support value
    * comparison, that is, structural rather than identity comparison.
    */
   bool equals(Value *that);
-  
+
   /**
    * Identity comparison.  This is the same as value comparison for
    * objects that support it and otherwise simple object identity.
    */
   bool is_identical(Value *that);
-  
+
   /**
    * Returns true if this object supports comparisons with other
    * objecs.
@@ -138,7 +138,7 @@ class Object : public Immediate {
 public:
   DECLARE_FIELD(Layout*, layout);
   IF_DEBUG(inline Layout *gc_safe_layout());
-  
+
   /**
    * The header of an object is the first field which normally
    * contains the class, but may during garbage collection contain a
@@ -146,12 +146,12 @@ public:
    * should not be used outside of garbage collection.
    */
   DECLARE_FIELD(Data*, header);
-  
+
   void for_each_field(FieldVisitor &visitor);
   uword size_in_memory();
   void preprocess();
   void postprocess();
-  
+
   static const int kHeaderOffset = 0;
   static const int kHeaderSize   = kHeaderOffset + kPointerSize;
 };
@@ -178,7 +178,7 @@ DEFINE_REF_CLASS(Object);
 class Forwarder : public Value {
 public:
   inline ForwarderDescriptor *descriptor();
-  
+
   static inline Forwarder *to(ForwarderDescriptor *obj);
 };
 
@@ -194,9 +194,9 @@ class ForwarderDescriptor : public Object {
 public:
   inline ForwarderType &type();
   inline void set_type(ForwarderType value);
-  
+
   FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kTypeOffset   = Object::kHeaderSize;
   static const uword kTargetOffset = kTypeOffset + kPointerSize;
   static const uword kSize         = kTargetOffset + kPointerSize;
@@ -229,7 +229,7 @@ struct StackStatus {
 
   bool is_empty : 1;
   IF_DEBUG(bool is_cooked : 1);
-  IF_DEBUG(bool is_parked : 1);  
+  IF_DEBUG(bool is_parked : 1);
 };
 
 class Stack : public Object {
@@ -240,22 +240,22 @@ public:
    * declared.
    */
   typedef StackStatus Status;
-  
+
   DECLARE_FIELD(uword, height);
   DECLARE_FIELD(uword, fp);
   DECLARE_FIELD(word*,    top_marker);
   DECLARE_FIELD(Status, status);
   inline word *bottom();
-  
+
   IF_DEBUG(void validate_stack());
   void for_each_stack_field(FieldVisitor &visitor);
-  
+
   /**
    * Converts all derived pointers in this object into neutral
    * integers.
    */
   void uncook_stack();
-  
+
   /**
    * Converts all un-cooked derived pointers back into real ones.
    */
@@ -263,7 +263,7 @@ public:
 
   static inline uword size_for(uword height);
   static const uword kInitialHeight = 2048;
-  
+
   static const uword kHeightOffset    = Object::kHeaderSize;
   static const uword kFpOffset        = kHeightOffset + kPointerSize;
   static const uword kTopMarkerOffset = kFpOffset + kPointerSize;
@@ -287,7 +287,7 @@ DEFINE_REF_CLASS(Stack);
 class Task : public Object {
 public:
   FOR_EACH_TASK_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kStackOffset = Object::kHeaderSize;
   static const uword kSize = kStackOffset + kPointerSize;
 };
@@ -308,9 +308,9 @@ class Instance : public Object {
 public:
   inline Value *&get_field(uword index);
   inline void set_field(uword index, Value *value);
-  
+
   static inline uword size_for(uword elms);
-  
+
   static const uword kHeaderSize = Object::kHeaderSize;
 };
 
@@ -325,7 +325,7 @@ public:
  */
 class AbstractBuffer : public Object {
 public:
-  
+
   /**
    * Returns the size of this buffer when the elements are viewed as
    * the specified type.  For instance, if this method return 100 when
@@ -333,14 +333,14 @@ public:
    * an array of int8s.
    */
   template <typename T> inline uword size();
-  
+
   /**
    * Sets the size of this buffer when viewed as the given type.
    * There is no reason to use this function outside of low-level
    * heap management.
    */
   template <typename T> inline void set_size(uword);
-  
+
   /**
    * Returns the element at the specified index, viewing the buffer as
    * an array of the specified element type.  The index is an element
@@ -350,11 +350,11 @@ public:
    * int8s.
    */
   template <typename T> inline T &at(uword index);
-  
+
   template <typename T> inline vector<T> buffer();
-  
+
   static inline uword size_for(uword byte_count);
-  
+
   static const int kSizeOffset = Object::kHeaderSize;
   static const int kHeaderSize = kSizeOffset + kPointerSize;
 };
@@ -378,11 +378,11 @@ public:
   DECLARE_FIELD(uword, length);
   inline char &at(uword index);
   inline void set(uword index, char value);
-  
+
   bool string_equals(String *that);
   bool starts_with_vowel();
   vector<char> c_str();
-  
+
   static inline uword size_for(uword chars);
 
   static const int kLengthOffset = Object::kHeaderSize;
@@ -398,7 +398,7 @@ public:
  * A fixed-length piece of memory which can be used for... whatever.
  */
 class Buffer : public AbstractBuffer {
-  
+
 };
 
 
@@ -433,9 +433,9 @@ public:
   inline vector<Value*> buffer();
   inline Value *&get(uword index);
   inline void set(uword index, Value *value);
-  
+
   static inline uword size_for(uword elms);
-  
+
   static const int kLengthOffset = Object::kHeaderSize;
   static const int kHeaderSize   = kLengthOffset + kPointerSize;
 };
@@ -460,12 +460,12 @@ DEFINE_REF_CLASS(Tuple);
 class Dictionary : public Object {
 public:
   FOR_EACH_DICTIONARY_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   uword size();
-  
+
   Data *get(Value *key);
   bool set(Value *key, Value *value);
-  
+
   class Iterator {
   public:
     class Entry {
@@ -481,7 +481,7 @@ public:
     Tuple *table_;
     uword index_;
   };
-  
+
   static const int kTableOffset = Object::kHeaderSize;
   static const int kSize        = kTableOffset + kPointerSize;
 };
@@ -512,13 +512,13 @@ class Lambda : public Object {
 public:
   DECLARE_FIELD(uword, argc);
   FOR_EACH_LAMBDA_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   Value *call(Task *task);
   Data *clone(Heap &heap);
   void ensure_compiled();
 
   string disassemble();
-  
+
   static const uword kArgcOffset         = Object::kHeaderSize;
   static const uword kCodeOffset         = kArgcOffset + kPointerSize;
   static const uword kConstantPoolOffset = kCodeOffset + kPointerSize;
@@ -576,7 +576,7 @@ class False : public Bool { };
 class Protocol : public Object {
 public:
   FOR_EACH_PROTOCOL_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kNameOffset    = Object::kHeaderSize;
   static const uword kMethodsOffset = kNameOffset + kPointerSize;
   static const uword kSuperOffset   = kMethodsOffset + kPointerSize;
@@ -604,13 +604,13 @@ public:
   DECLARE_FIELD(InstanceType, instance_type);
   DECLARE_FIELD(uword, instance_field_count);
   FOR_EACH_LAYOUT_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   bool is_empty();
   Data *clone(Heap &heap);
 
   IF_DEBUG(static uword tag_of(Data *value));
   IF_DEBUG(static const char *tag_name(uword tag));
-  
+
   static const char *layout_name(uword tag);
   static const uword kInstanceTypeOffset       = Object::kHeaderSize;
   static const uword kInstanceFieldCountOffset = kInstanceTypeOffset + kPointerSize;

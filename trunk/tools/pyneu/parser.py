@@ -177,7 +177,7 @@ class Parser(object):
       self.expect_delimiter('{')
       exprs = self.statements()
       self.expect_delimiter('}')
-      exprs.append(ast.Return(ast.Void()))
+      exprs.append(ast.Return(ast.Literal(ast.Void())))
       return ast.Sequence(exprs)
     else:
       self.unexpected_token()
@@ -249,7 +249,7 @@ class Parser(object):
       self.expect_keyword(ELSE)
       else_part = self.expression(is_toplevel)
     else:
-      else_part = ast.Void()
+      else_part = ast.Literal(ast.Void())
     return ast.Conditional(cond, then_part, else_part)
 
   def local_definition(self, is_toplevel):
@@ -359,7 +359,7 @@ class Parser(object):
       return ast.This()
     elif self.token().is_keyword(NULL):
       self.expect_keyword(NULL)
-      return ast.Null()
+      return ast.Literal(ast.Null())
     elif self.token().is_string():
       value = self.expect_string()
       return ast.Literal(value)

@@ -155,6 +155,7 @@ class Lambda(Object):
     result = heap.allocate(fields.ImageLambda_Size, Smi(values.Lambda.index))
     result[fields.ImageLambda_ArgcOffset] = Raw(self.argc_)
     result[fields.ImageLambda_TreeOffset] = self.body_
+    result[fields.ImageLambda_ContextOffset] = Context()
     return result
 
 
@@ -201,10 +202,34 @@ class Dictionary(Object):
     return "{%s}" % items
 
 
+class Context(Object):
+
+  def __init__(self):
+    super(Context, self).__init__()
+
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageContext_Size, Smi(values.Context.index))
+    return result
+
+
 class SyntaxTree(Object):
 
   def __init__(self):
     super(SyntaxTree, self).__init__()
+
+
+class LambdaExpression(SyntaxTree):
+
+  def __init__(self, params, body):
+    super(LambdaExpression, self).__init__()
+    self.params_ = params
+    self.body_ = body
+
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageLambdaExpression_Size, Smi(values.LambdaExpression.index))
+    result[fields.ImageLambdaExpression_ParamsOffset] = Tuple(entries = self.params_)
+    result[fields.ImageLambdaExpression_BodyOffset] = self.body_
+    return result
 
 
 class Symbol(SyntaxTree):
@@ -221,11 +246,15 @@ class Symbol(SyntaxTree):
 
 class Arguments(SyntaxTree):
 
-  def __init__(self):
+  def __init__(self, args, keywords):
     super(Arguments, self).__init__()
+    self.args_ = args
+    self.keywords_ = keywords
 
   def allocate(self, heap):
     result = heap.allocate(fields.ImageArguments_Size, Smi(values.Arguments.index))
+    result[fields.ImageArguments_ArgumentsOffset] = Tuple(entries = self.args_)
+    result[fields.ImageArguments_KeywordsOffset] = Tuple(entries = [])
     return result
 
 
@@ -264,7 +293,7 @@ class NativeCall(SyntaxTree):
 
   def allocate(self, heap):
     result = heap.allocate(fields.ImageExternalCall_Size, Smi(values.ExternalCall.index))
-    result[fields.ImageExternalCall_ArgcOffset] = Raw(self.argc_)
+    result[fields.ImageExternalCall_ArgcOffset] = Smi(self.argc_)
     result[fields.ImageExternalCall_NameOffset] = String(self.name_)
     return result
 
@@ -315,6 +344,11 @@ class InstantiateExpression(SyntaxTree):
     result[fields.ImageInstantiateExpression_ReceiverOffset] = self.recv_
     result[fields.ImageInstantiateExpression_NameOffset] = String(self.name_)
     result[fields.ImageInstantiateExpression_ArgumentsOffset] = self.args_
+    terms = [ ]
+    for (k, v) in self.terms_.items():
+      terms.append(String(k))
+      terms.append(v)
+    result[fields.ImageInstantiateExpression_TermsOffset] = Tuple(entries = terms)
     return result
 
 
@@ -354,13 +388,6 @@ class GlobalExpression(SyntaxTree):
     return result
 
 
-class LocalExpression(SyntaxTree):
-
-  def __init__(self, symbol):
-    super(LocalExpression, self).__init__()
-    self.symbol_ = symbol
-
-
 class LiteralExpression(SyntaxTree):
 
   def __init__(self, value):
@@ -369,6 +396,7 @@ class LiteralExpression(SyntaxTree):
 
   def allocate(self, heap):
     result = heap.allocate(fields.ImageLiteralExpression_Size, Smi(values.LiteralExpression.index))
+    result[fields.ImageLiteralExpression_ValueOffset] = self.value_
     return result
 
 

@@ -38,7 +38,8 @@ class Arguments(SyntaxTree):
     return len(self.args_)
 
   def quote(self):
-    return values.Arguments()
+    args = [ s.quote() for s in self.args_ ]
+    return values.Arguments(args, None)
 
 
 class File(SyntaxTree):
@@ -136,9 +137,14 @@ class Lambda(Expression):
   def body(self):
     return self.body_
 
+  def quote(self):
+    params = [ p.quote() for p in self.params() ]
+    body = self.body().quote()
+    return values.LambdaExpression(params, body)
+
   def evaluate(self):
     argc = len(self.params())
-    body = self.body().quote()
+    body = self.quote()
     return values.Lambda(argc, body)
 
 
@@ -218,7 +224,9 @@ class Instantiate(Expression):
   def quote(self):
     recv = self.recv_.quote()
     args = self.args_.quote()
-    terms = [ (k, v.quote()) for (k, v) in self.terms_ ]
+    terms = { }
+    for (k, v) in self.terms_:
+      terms[k] = v.quote()
     return values.InstantiateExpression(recv, self.name_, args, terms)
 
 
@@ -259,6 +267,9 @@ class Null(Expression):
   def __init__(self):
     super(Null, self).__init__()
 
+  def evaluate(self):
+    return self.quote()
+
   def quote(self):
     return values.NULL
 
@@ -267,6 +278,9 @@ class Void(Expression):
 
   def __init__(self):
     super(Void, self).__init__()
+
+  def evaluate(self):
+    return self.quote()
 
   def quote(self):
     return values.VOID
@@ -322,6 +336,12 @@ class LocalDefinition(Expression):
     return values.LocalDefinition(symbol, value, body)
 
 
+def to_literal(value):
+  if type(value) is unicode: return values.String(value)
+  if isinstance(value, SyntaxTree): return value.evaluate()
+  else: return value
+
+
 class Literal(Expression):
 
   def __init__(self, value):
@@ -329,7 +349,7 @@ class Literal(Expression):
     self.value_ = value
 
   def quote(self):
-    return values.LiteralExpression(self.value_)
+    return values.LiteralExpression(to_literal(self.value_))
 
 
 class Identifier(Expression):
@@ -358,7 +378,7 @@ class Local(Identifier):
     self.symbol_ = symbol
 
   def quote(self):
-    return values.LocalExpression(self.symbol_.quote())
+    return self.symbol_.quote()
 
 # --- V i s i t o r ---
 
