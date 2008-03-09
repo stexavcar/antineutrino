@@ -226,7 +226,6 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     case OC_GLOBAL: {
       uint16_t index = code[pc + 1];
       Value *name = constant_pool[index];
-      name->to_string().println();
       Data *value = runtime().toplevel()->get(name);
       if (is<Nothing>(value)) {
         frame.push(runtime().roots().vhoid());

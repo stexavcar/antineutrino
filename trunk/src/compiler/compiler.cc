@@ -38,6 +38,7 @@ public:
       : lambda_(lambda)
       , session_(session)
       , pool_(session.runtime().factory())
+      , scope_(NULL) 
       , stack_height_(0) {
     if (enclosing == NULL) return;
     scope_ = enclosing->scope_;
@@ -334,9 +335,19 @@ void Assembler::unmark() {
 // --- S c o p e ---
 // -----------------
 
+#define FOR_EACH_CATEGORY(VISIT)                                     \
+  VISIT(MISSING) VISIT(ARGUMENT) VISIT(LOCAL) VISIT(OUTER)
+
 enum Category {
-  MISSING, ARGUMENT, LOCAL, OUTER
+  __first_category
+#define MAKE_ENUM_ENTRY(NAME) , NAME
+FOR_EACH_CATEGORY(MAKE_ENUM_ENTRY)
+#undef MAKE_ENUM_ENTRY
 };
+
+MAKE_ENUM_INFO_HEADER(Category)
+FOR_EACH_CATEGORY(MAKE_ENUM_INFO_ENTRY)
+MAKE_ENUM_INFO_FOOTER()
 
 struct Lookup {
   Lookup(Assembler &assm)
@@ -551,7 +562,7 @@ void Assembler::load_symbol(ref<Symbol> that) {
       __ outer(lookup.outer_info.index);
       break;
     default:
-      UNREACHABLE();
+      UNHANDLED(Category, lookup.category);
   }
 }
 

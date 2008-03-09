@@ -19,12 +19,21 @@ class Symbol(SyntaxTree):
   def __init__(self, name):
     super(Symbol, self).__init__()
     self.name_ = name
+    self.image_ = None
 
   def name(self):
     return self.name_
 
+  def __repr__(self):
+    return "$%s" % self.name_
+
   def quote(self):
-    return values.Symbol(self.name_)
+    # We need to preserve the identity of this symbol when quoting,
+    # so the result has to be cached so we can return if this symbol
+    # is quoted again later
+    if not self.image_:
+      self.image_ = values.Symbol(self.name_)
+    return self.image_
 
 
 class Arguments(SyntaxTree):
@@ -131,6 +140,12 @@ class Lambda(Expression):
     else:
       self.body_ = body
 
+  def accept(self, visitor):
+    visitor.visit_lambda(self)
+
+  def traverse(self, visitor):
+    self.body().accept(visitor)
+
   def params(self):
     return self.params_
 
@@ -170,12 +185,28 @@ class Sequence(Expression):
 
 class Protocol(Expression):
 
-  def __init__(self, modifiers, name, s, members):
+  def __init__(self, modifiers, name, super_name, members):
     super(Protocol, self).__init__()
     self.modifiers_ = modifiers
     self.name_ = name
-    self.super_ = s
+    self.super_name_ = super_name
     self.members_ = members
+
+  def accept(self, visitor):
+    visitor.visit_protocol(self)
+
+  def traverse(self, visitor):
+    for member in self.members_:
+      member.accept(visitor)
+
+  def super_name(self):
+    return self.super_name_
+
+  def name(self):
+    return self.name_
+
+  def modifiers(self):
+    return self.modifiers_
 
   def evaluate(self):
     members = [ member.evaluate() for member in self.members_ ]
@@ -391,4 +422,10 @@ class Visitor(object):
     self.visit_tree(that)
 
   def visit_definition(self, that):
+    self.visit_tree(that)
+
+  def visit_lambda(self, that):
+    self.visit_tree(that)
+
+  def visit_protocol(self, that):
     self.visit_tree(that)

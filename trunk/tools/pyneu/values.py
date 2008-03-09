@@ -26,8 +26,11 @@ class Object(Value):
     if not heap in self.addresses:
       obj = self.allocate(heap)
       assert isinstance(obj, image.Address)
-      self.addresses[heap] = obj
+      self.set_cache(heap, obj)
     return self.addresses[heap].tag_as_object()
+
+  def set_cache(self, heap, obj):
+    self.addresses[heap] = obj
 
 
 class String(Object):
@@ -81,16 +84,17 @@ EMPTY_TUPLE = Tuple(length = 0)
 
 class Signature(Object):
 
-  def __init__(self):
+  def __init__(self, elements):
     super(Signature, self).__init__()
+    self.elements_ = elements
 
   def allocate(self, heap):
     result = heap.allocate(fields.ImageSignature_Size, Smi(values.Signature.index))
-    result[fields.ImageSignature_ParametersOffset] = EMPTY_TUPLE
+    result[fields.ImageSignature_ParametersOffset] = Tuple(entries = self.elements_)
     return result
 
 
-EMPTY_SIGNATURE = Signature()
+EMPTY_SIGNATURE = Signature([])
 
 
 class Selector(Object):
@@ -115,12 +119,16 @@ class Method(Object):
     super(Method, self).__init__()
     self.selector_ = selector
     self.lam_ = lam
+    self.signature_ = None
+
+  def set_signature(self, protocol):
+    self.signature_ = Signature([protocol])
 
   def allocate(self, heap):
     size = fields.ImageMethod_Size
     result = heap.allocate(size, Smi(values.Method.index))
     result[fields.ImageMethod_SelectorOffset] = self.selector_
-    result[fields.ImageMethod_SignatureOffset] = EMPTY_SIGNATURE
+    result[fields.ImageMethod_SignatureOffset] = self.signature_
     result[fields.ImageMethod_LambdaOffset] = self.lam_
     return result
 
@@ -165,11 +173,17 @@ class Protocol(Object):
     super(Protocol, self).__init__()
     self.name_ = name
     self.members_ = members
+    self.super_ = None
+
+  def members(self):
+    return self.members_
 
   def allocate(self, heap):
     result = heap.allocate(fields.ImageProtocol_Size, Smi(values.Protocol.index))
+    self.set_cache(heap, result)
     result[fields.ImageProtocol_NameOffset] = self.name_
     result[fields.ImageProtocol_MethodsOffset] = Tuple(entries = self.members_)
+    result[fields.ImageProtocol_SuperOffset] = self.super_
     return result
 
 
@@ -185,12 +199,15 @@ class Dictionary(Object):
   def __setitem__(self, key, value):
     self.map()[key] = value
 
+  def __getitem__(self, key):
+    return self.map()[key]
+
   def allocate(self, heap):
     length = len(self.map_)
     table = Tuple(length = length * 2)
     index = 0
     for (key, value) in self.map().items():
-      table[index] = key
+      table[index] = String(key)
       table[index + 1] = value
       index += 2
     result = heap.allocate(fields.ImageDictionary_Size, Smi(values.Dictionary.index))

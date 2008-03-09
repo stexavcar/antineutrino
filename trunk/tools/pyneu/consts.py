@@ -20,6 +20,7 @@ def new_namespace(values = None):
 
 (__values_map, values) = new_namespace()
 (__lower_to_upper_map, lower_to_upper) = new_namespace()
+(__upper_to_lower_map, upper_to_lower) = new_namespace()
 def install_value_type(n, NAME, Name, name):
   (_, __values_map[Name]) = new_namespace({
     'index': int(n),
@@ -28,6 +29,7 @@ def install_value_type(n, NAME, Name, name):
     'name': name
   })
   __lower_to_upper_map[name] = Name
+  __upper_to_lower_map[Name] = name
 
 
 (__image_map, fields) = new_namespace()

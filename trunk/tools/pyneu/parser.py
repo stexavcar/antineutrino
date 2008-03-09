@@ -118,7 +118,9 @@ class Parser(object):
     self.expect_keyword(DEF)
     name = self.expect_identifier()
     params = self.parameters()
+    self.resolver().push_scope(params)
     body = self.function_body(True)
+    self.resolver().pop_scope()
     return ast.Definition(name, ast.Lambda(modifiers, name, params, body))
 
   def protocol_declaration(self, modifiers):
@@ -145,9 +147,13 @@ class Parser(object):
     name = self.method_name()
     if self.token().is_delimiter('('):
       params = self.parameters()
+      has_params = True
     else:
       params = ast.Null()
+      has_params = False
+    if has_params: self.resolver().push_scope(params)
     body = self.function_body(True)
+    if has_params: self.resolver().pop_scope()
     return ast.Method(doc, modifiers, klass, name, params, body)
 
   def method_name(self):
@@ -261,13 +267,12 @@ class Parser(object):
     if self.token().is_keyword(IN):
       self.expect_keyword(IN)
       body = self.expression(is_toplevel)
-      self.resolver().pop_scope()
-      return ast.LocalDefinition(name, value, body)
     elif is_toplevel:
       self.expect_delimiter(';')
       stmts = self.statements()
-      self.resolver().pop_scope()
-      return ast.LocalDefinition(name, value, ast.Sequence.make(stmts))
+      body = ast.Sequence.make(stmts)
+    self.resolver().pop_scope()
+    return ast.LocalDefinition(name, value, body)
 
   def logical_expression(self):
     return self.and_expression()
