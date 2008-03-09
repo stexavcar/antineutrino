@@ -3,7 +3,7 @@
 
 import codecs
 import compiler
-import const
+import consts
 import optparse
 import os
 import scanner
@@ -18,7 +18,7 @@ SYNTAX_ERROR_TEMPLATE = """\
 
 
 def main(options, args):
-  const.initialize_from(options.consts)
+  consts.initialize_from(options.consts)
   files = reduce(list.__add__, map(find_source_files, args), [])
   try:
     compiler.compile(files, options.out)

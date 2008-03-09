@@ -36,13 +36,14 @@ void Runtime::report_load_error(ImageLoadInfo &info) {
   switch (info.status) {
     case ImageLoadInfo::TYPE_MISMATCH: {
       static const char *kErrorMessage =
-        "Type mismatch while loading image\n"
+        "Type mismatch while loading image (%s)\n"
         "  Expected: %s\n"
         "  Found: %s";
       const char *expected_str = Layout::layout_name(info.error_info.type_mismatch.expected);
       const char *found_str = Layout::layout_name(info.error_info.type_mismatch.found);
-      Conditions::get().error_occurred(kErrorMessage, expected_str,
-          found_str);
+      const char *location = info.error_info.type_mismatch.location;
+      Conditions::get().error_occurred(kErrorMessage, location,
+          expected_str, found_str);
       return;
     }
     case ImageLoadInfo::INVALID_IMAGE: {

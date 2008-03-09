@@ -1,21 +1,76 @@
 import re
 import string
 
+def new_namespace(values = None):
+  if values is None:
+    values = { }
+  class Namespace(object):
+    def __getattr__(self, key):
+      return values[key]
+    def __getitem__(self, key):
+      return values[key]
+    def __str__(self):
+      return "namespace %s" % values
+    def __repr__(self):
+      return str(self)
+  return (values, Namespace())
+
 # --- I n i t i a l i z a t i o n ---
 
-values = { }
 
+(__values_map, values) = new_namespace()
+(__lower_to_upper_map, lower_to_upper) = new_namespace()
 def install_value_type(n, NAME, Name, name):
-  values[Name] = { 
-    'n': n,
+  (_, __values_map[Name]) = new_namespace({
+    'index': int(n),
     'NAME': NAME,
     'Name': Name,
     'name': name
-  }
+  })
+  __lower_to_upper_map[name] = Name
 
+
+(__image_map, fields) = new_namespace()
+def install_image_entry(n, Name, Field):
+  key = "Image%s_%s" % (Name, Field)
+  __image_map[key] = int(n)
+  
+
+(__roots_map, roots) = new_namespace()
+def install_root(n, Type, name, Protocol, allocator):
+  (_, __roots_map[name]) = new_namespace({
+    'index': int(n),
+    'type': Type,
+    'name': name,
+    'protocol': Protocol
+  })
+
+
+(__builtin_functions_map, builtin_functions) = new_namespace()
+def install_builtin_function(n, function_name, string_name):
+  name = string_name[1:-1]
+  (_, __builtin_functions_map[name]) = new_namespace({
+    'index': int(n)
+  })
+
+
+def install_builtin_method(n, klass, function_name, string_name):
+  method_name = string_name[1:-1]
+  Class = lower_to_upper[klass]
+  name = "%s.%s" % (Class, method_name)
+  (_, __builtin_functions_map[name]) = new_namespace({
+    'index': int(n),
+  })
+
+  
 def initialize_from(name):
   consts = read_consts(name)
-  consts['FOR_EACH_VALUE_TYPE'](install_value_type)
+  consts['FOR_EACH_DECLARED_TYPE'](install_value_type)
+  consts['FOR_EACH_IMAGE_OBJECT_CONST'](install_image_entry)
+  consts['FOR_EACH_ROOT'](install_root)
+  consts['FOR_EACH_BUILTIN_FUNCTION'](install_builtin_function)
+  consts['FOR_EACH_BUILTIN_METHOD'](install_builtin_method)
+  
 
 # --- M a c r o   P a r s i n g ---
 

@@ -1,4 +1,5 @@
 import ast
+import consts
 import image
 import parser
 import reader
@@ -9,7 +10,9 @@ def compile(files, out):
   asts = load_files(files)
   toplevel = values.Dictionary()
   load_into(asts, toplevel)
-  heap = image.Heap()
+  roots = values.Tuple(length = image.Heap.kRootCount)
+  roots[consts.roots.toplevel.index] = toplevel
+  heap = image.Heap(roots)
   heap.store(out)
 
 
@@ -46,5 +49,5 @@ class LoadVisitor(ast.Visitor):
   
   def visit_definition(self, that):
     name = values.String(that.name())
-    value = values.String(str(that.value()))
+    value = that.value().evaluate()
     self.toplevel()[name] = value

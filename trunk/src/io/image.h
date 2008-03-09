@@ -18,7 +18,7 @@ FOR_EACH_IMAGE_OBJECT_CONST(DECLARE_IMAGE_OBJECT_CONST)
 #undef DECLARE_IMAGE_OBJECT_CONST
 
 #define DECLARE_IMAGE_FIELD(Type, name)                              \
-  inline Image##Type *name(ImageLoadInfo &info)
+  inline Image##Type *name(ImageLoadInfo &info, const char *location)
 
 class ImageData {
 public:
@@ -324,7 +324,8 @@ public:
 #undef MAKE_ENUM
   };
   ImageLoadInfo() : status(FINE) { }
-  void type_mismatch(InstanceType expected, InstanceType found);
+  void type_mismatch(InstanceType expected, InstanceType found,
+      const char *location);
   void invalid_image();
   void invalid_root_count(word expected, word found);
   void invalid_magic_number(uword found);
@@ -336,6 +337,7 @@ public:
     struct {
       InstanceType expected;
       InstanceType found;
+      const char *location;
     } type_mismatch;
     struct {
       word expected;
@@ -396,11 +398,11 @@ private:
   
   static const uword kMagicNumber       = 0xFABACEAE;
   static const uword kMagicNumberOffset = 0;
-  static const uword kVersionOffset     = kMagicNumberOffset + 1;
-  static const uword kHeapSizeOffset    = kVersionOffset + 1;
-  static const uword kRootCountOffset   = kHeapSizeOffset + 1;
-  static const uword kRootsOffset       = kRootCountOffset + 1;
-  static const uword kHeaderSize        = kRootsOffset + 1;
+  static const uword kVersionOffset     = 1;
+  static const uword kHeapSizeOffset    = 2;
+  static const uword kRootCountOffset   = 3;
+  static const uword kRootsOffset       = 4;
+  static const uword kHeaderSize        = 5;
 
 };
 

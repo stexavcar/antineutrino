@@ -94,9 +94,10 @@ InstanceType ImageData::type() {
 }
 
 template <class C>
-static inline C *image_cast(ImageData *val, ImageLoadInfo &info) {
+static inline C *image_cast(ImageData *val, ImageLoadInfo &info,
+    const char *location) {
   if (!is<C>(val)) {
-    info.type_mismatch(ImageValueInfo<C>::kTag, val->type());
+    info.type_mismatch(ImageValueInfo<C>::kTag, val->type(), location);
     return 0;
   } else {
     return image_raw_cast<C>(val);
@@ -104,9 +105,10 @@ static inline C *image_cast(ImageData *val, ImageLoadInfo &info) {
 }
 
 template <class To, class From>
-inline To *safe_cast(From *from, ImageLoadInfo &info) {
+inline To *safe_cast(From *from, ImageLoadInfo &info,
+    const char *location) {
   if (!is<To>(from)) {
-    info.type_mismatch(ValueInfo<To>::kTag, from->type());
+    info.type_mismatch(ValueInfo<To>::kTag, from->type(), location);
     return 0;
   } else {
     return cast<To>(from);
@@ -217,10 +219,10 @@ word ImageSmi::value() {
   }
 
 #define DEFINE_GETTER(T, Class, name, Name)                          \
-  Image##T *Image##Class::name(ImageLoadInfo &info) {                \
+  Image##T *Image##Class::name(ImageLoadInfo &info, const char *location) {\
     uword offset = ValuePointer::offset_of(this) + Image##Class##_##Name##Offset;\
     ImageData *data = ImageData::from(Image::current().heap()[offset]);\
-    return image_cast<Image##T>(data, info);                         \
+    return image_cast<Image##T>(data, info, location);               \
   }
 
 // --- S t r i n g ---

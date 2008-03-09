@@ -24,24 +24,24 @@
   VISIT(77, SELECTOR,               Selector,              selector)
 
 #define FOR_EACH_OBJECT_TYPE(VISIT)                                                \
-  VISIT(5,  LAYOUT,                 Layout,                0)                      \
-  VISIT(6,  STRING,                 String,                0)                      \
-  VISIT(7,  TUPLE,                  Tuple,                 0)                      \
-  VISIT(8,  VOID,                   Void,                  0)                      \
-  VISIT(9,  NULL,                   Null,                  0)                      \
-  VISIT(10, TRUE,                   True,                  0)                      \
-  VISIT(11, FALSE,                  False,                 0)                      \
-  VISIT(12, LAMBDA,                 Lambda,                0)                      \
-  VISIT(13, BUFFER,                 Buffer,                0)                      \
-  VISIT(14, CODE,                   Code,                  0)                      \
-  VISIT(15, INSTANCE,               Instance,              0)                      \
-  VISIT(16, STACK,                  Stack,                 0)                      \
-  VISIT(17, CONTEXT,                Context,               0)                      \
+  VISIT(5,  LAYOUT,                 Layout,                layout)                 \
+  VISIT(6,  STRING,                 String,                string)                 \
+  VISIT(7,  TUPLE,                  Tuple,                 tuple)                  \
+  VISIT(8,  VOID,                   Void,                  void)                   \
+  VISIT(9,  NULL,                   Null,                  null)                   \
+  VISIT(10, TRUE,                   True,                  true)                   \
+  VISIT(11, FALSE,                  False,                 false)                  \
+  VISIT(12, LAMBDA,                 Lambda,                lambda)                 \
+  VISIT(13, BUFFER,                 Buffer,                buffer)                 \
+  VISIT(14, CODE,                   Code,                  code)                   \
+  VISIT(15, INSTANCE,               Instance,              instance)               \
+  VISIT(16, STACK,                  Stack,                 stack)                  \
+  VISIT(17, CONTEXT,                Context,               context)                \
   FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
   FOR_EACH_SYNTAX_TREE_TYPE(VISIT)
 
 #define FOR_EACH_VIRTUAL_TYPE(VISIT)                                               \
-  VISIT(20, OBJECT,                 Object,                0)                      \
+  VISIT(20, OBJECT,                 Object,                object)                 \
   VISIT(21, VALUE,                  Value,                 0)                      \
   VISIT(22, ABSTRACT_BUFFER,        AbstractBuffer,        0)                      \
   VISIT(23, SINGLETON,              Singleton,             0)                      \
@@ -55,7 +55,7 @@
   VISIT(32, NOTHING,                Nothing,               0)
 
 #define FOR_EACH_VALUE_TYPE(VISIT)                                                 \
-  VISIT(40, SMI,                    Smi,                   0)                      \
+  VISIT(40, SMI,                    Smi,                   smi)                    \
   VISIT(41, SIGNAL,                 Signal,                0)                      \
   VISIT(42, FORWARD_POINTER,        ForwardPointer,        0)                      \
   VISIT(43, FORWARDER,              Forwarder,             0)                      \

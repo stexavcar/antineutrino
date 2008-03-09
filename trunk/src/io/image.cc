@@ -32,10 +32,12 @@ Image::~Image() {
 // --- I m a g e   L o a d   I n f o ---
 // -------------------------------------
 
-void ImageLoadInfo::type_mismatch(InstanceType expected, InstanceType found) {
+void ImageLoadInfo::type_mismatch(InstanceType expected, InstanceType found,
+    const char *location) {
   status = TYPE_MISMATCH;
   error_info.type_mismatch.expected = expected;
   error_info.type_mismatch.found = found;
+  error_info.type_mismatch.location = location;
 }
 
 void ImageLoadInfo::invalid_image() {
@@ -111,9 +113,9 @@ Data *Image::load(ImageLoadInfo &info) {
       return Nothing::make();
   }
   ImageData *roots_val = ImageValue::from(data_[kRootsOffset]);
-  ImageTuple *roots_img = image_cast<ImageTuple>(roots_val, info);
+  ImageTuple *roots_img = image_cast<ImageTuple>(roots_val, info, "<roots>");
   if (info.has_error()) return Nothing::make();
-  return safe_cast<Tuple>(roots_img->forward_pointer(), info);
+  return safe_cast<Tuple>(roots_img->forward_pointer(), info, "<roots>");
 }
 
 void Image::copy_object_shallow(ImageObject *obj, ImageLoadInfo &info) {
@@ -213,9 +215,9 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 
 void Image::fixup_shallow_object(ImageObject *obj, ImageLoadInfo &info) {
 #define TRANSFER_FIELD(Type, field, Field, arg)                      \
-  ImageValue *field##_img = img->field(info);                        \
+  ImageValue *field##_img = img->field(info, #arg "." #field);       \
   if (info.has_error()) return;                                      \
-  Type *field##_value = safe_cast<Type>(field##_img->forward_pointer(), info);    \
+  Type *field##_value = safe_cast<Type>(field##_img->forward_pointer(), info, #arg "." #field); \
   if (info.has_error()) return;                                      \
   heap_obj->set_##field(field##_value);
   InstanceType type = obj->type();
@@ -231,18 +233,18 @@ void Image::fixup_shallow_object(ImageObject *obj, ImageLoadInfo &info) {
     case LAMBDA_TYPE: {
       ImageLambda *img = image_raw_cast<ImageLambda>(obj);
       Lambda *heap_obj = cast<Lambda>(img->forward_pointer());
-      TRANSFER_FIELD(Value, code, Code, 0);
-      TRANSFER_FIELD(LambdaExpression, tree, Tree, 0);
-      TRANSFER_FIELD(Context, context, Context, 0);
-      heap_obj->set_constant_pool(img->literals(info)->forward_pointer());
+      TRANSFER_FIELD(Value, code, Code, Lambda);
+      TRANSFER_FIELD(LambdaExpression, tree, Tree, Lambda);
+      TRANSFER_FIELD(Context, context, Context, Lambda);
+      heap_obj->set_constant_pool(img->literals(info, "Lambda.constant_pool")->forward_pointer());
       heap_obj->set_outers(Runtime::current().heap().roots().empty_tuple());
       break;
     }
     case LAYOUT_TYPE: {
       ImageLayout *img = image_raw_cast<ImageLayout>(obj);
       Layout *layout = cast<Layout>(img->forward_pointer());
-      layout->set_methods(cast<Tuple>(img->methods(info)->forward_pointer()));
-      layout->set_protocol(cast<Immediate>(img->protocol(info)->forward_pointer()));
+      layout->set_methods(cast<Tuple>(img->methods(info, "Layout.methods")->forward_pointer()));
+      layout->set_protocol(cast<Immediate>(img->protocol(info, "Layout.protocol")->forward_pointer()));
       break;
     }
     case BUILTIN_CALL_TYPE: {
@@ -266,11 +268,11 @@ void Image::fixup_shallow_object(ImageObject *obj, ImageLoadInfo &info) {
       break;
 #define MAKE_CASE(n, NAME, Name, name)                               \
     case NAME##_TYPE: {                                              \
-      Image##Name *img = image_cast<Image##Name>(obj, info);         \
-      if (info.has_error()) return;                                 \
+      Image##Name *img = image_cast<Image##Name>(obj, info, #Name);  \
+      if (info.has_error()) return;                                  \
       Name *heap_obj = cast<Name>(img->forward_pointer());           \
       USE(heap_obj);                                                 \
-      FOR_EACH_##NAME##_FIELD(TRANSFER_FIELD, 0)                     \
+      FOR_EACH_##NAME##_FIELD(TRANSFER_FIELD, Name)                  \
       break;                                                         \
     }
 FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)

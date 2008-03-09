@@ -119,7 +119,7 @@ class Parser(object):
     name = self.expect_identifier()
     params = self.parameters()
     body = self.function_body(True)
-    return ast.Definition(name, ast.Lambda(params, body))
+    return ast.Definition(name, ast.Lambda(modifiers, name, params, body))
 
   def protocol_declaration(self, modifiers):
     self.expect_keyword(PROTOCOL)
@@ -132,13 +132,13 @@ class Parser(object):
     self.expect_delimiter('{')
     members = [ ]
     while not self.token().is_delimiter('}'):
-      member = self.member_declaration()
+      member = self.member_declaration(name)
       members.append(member)
     self.expect_delimiter('}')
     protocol = ast.Protocol(modifiers, name, parent, members)
     return ast.Definition(name, protocol)
 
-  def member_declaration(self):
+  def member_declaration(self, klass):
     doc = self.documentation_opt()
     modifiers = self.modifiers()
     self.expect_keyword(DEF)
@@ -148,7 +148,8 @@ class Parser(object):
     else:
       params = None
     body = self.function_body(True)
-    return ast.MethodDeclaration(doc, modifiers, name, params, body)
+    full_name = "%s.%s" % (klass, name)
+    return ast.Method(doc, modifiers, full_name, params, body)
   
   def method_name(self):
     if self.token().is_identifier():
@@ -158,6 +159,7 @@ class Parser(object):
       if scanner.is_circumfix_operator(value):
         match = self.expect_operator(scanner.circumfix_match(value))
         return value + match
+      return value
     elif self.token().is_keyword():
       return self.expect_keyword()
     else:
@@ -321,6 +323,7 @@ class Parser(object):
       else:
         args = self.arguments()
         expr = ast.Call(ast.This(), expr, args)
+    return expr
   
   def new_expression(self):
     self.expect_keyword(NEW)

@@ -139,6 +139,9 @@ class Keyword(Token):
   
   def is_keyword(self, value = None):
     return (not value) or (self.value() == value)
+  
+  def __str__(self):
+    return "keyword %s" % self.value()
 
 
 class Ident(Token):
