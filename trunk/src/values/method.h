@@ -15,7 +15,7 @@ namespace neutrino {
 class Method : public Object {
 public:
   FOR_EACH_METHOD_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kSelectorOffset  = Object::kHeaderSize;
   static const uword kSignatureOffset = kSelectorOffset + kPointerSize;
   static const uword kLambdaOffset    = kSignatureOffset + kPointerSize;
@@ -64,9 +64,9 @@ DEFINE_REF_CLASS(Signature);
 class Selector : public Object {
 public:
   FOR_EACH_SELECTOR_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   bool selector_equals(Selector *that);
-  
+
   static const uword kNameOffset = Object::kHeaderSize;
   static const uword kArgcOffset = kNameOffset + kPointerSize;
   static const uword kSize       = kArgcOffset + kPointerSize;

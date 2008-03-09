@@ -12,9 +12,9 @@ namespace neutrino {
 class SyntaxTree : public Object {
 public:
   inline Value *&at(uword index);
-  
+
   void unparse_on(string_buffer &buf);
-  
+
   static const int kHeaderSize = Object::kHeaderSize;
 };
 
@@ -38,7 +38,7 @@ DEFINE_REF_CLASS(SyntaxTree);
 class LiteralExpression : public SyntaxTree {
 public:
   FOR_EACH_LITERAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kValueOffset + kPointerSize;
 };
@@ -62,7 +62,7 @@ DEFINE_REF_CLASS(LiteralExpression);
 class QuoteTemplate : public SyntaxTree {
 public:
   FOR_EACH_QUOTE_TEMPLATE_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kUnquotesOffset = kValueOffset + kPointerSize;
   static const uword kSize = kUnquotesOffset + kPointerSize;
@@ -89,7 +89,7 @@ DEFINE_REF_CLASS(QuoteTemplate);
 class InvokeExpression : public SyntaxTree {
 public:
   FOR_EACH_INVOKE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kReceiverOffset  = SyntaxTree::kHeaderSize;
   static const uword kSelectorOffset  = kReceiverOffset + kPointerSize;
   static const uword kArgumentsOffset = kSelectorOffset + kPointerSize;
@@ -116,7 +116,7 @@ DEFINE_REF_CLASS(InvokeExpression);
 class Arguments : public SyntaxTree {
 public:
   FOR_EACH_ARGUMENTS_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kArgumentsOffset = SyntaxTree::kHeaderSize;
   static const uword kKeywordsOffset  = kArgumentsOffset + kPointerSize;
   static const uword kSize            = kKeywordsOffset + kPointerSize;
@@ -144,7 +144,7 @@ DEFINE_REF_CLASS(Arguments);
 class InstantiateExpression : public SyntaxTree {
 public:
   FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kReceiverOffset  = SyntaxTree::kHeaderSize;
   static const uword kNameOffset      = kReceiverOffset + kPointerSize;
   static const uword kArgumentsOffset = kNameOffset + kPointerSize;
@@ -172,7 +172,7 @@ DEFINE_REF_CLASS(InstantiateExpression);
 class RaiseExpression : public SyntaxTree {
 public:
   FOR_EACH_RAISE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kNameOffset = SyntaxTree::kHeaderSize;
   static const uword kArgumentsOffset = kNameOffset + kPointerSize;
   static const uword kSize = kArgumentsOffset + kPointerSize;
@@ -224,7 +224,7 @@ DEFINE_REF_CLASS(OnClause);
 class DoOnExpression : public SyntaxTree {
 public:
   FOR_EACH_DO_ON_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kClausesOffset = kValueOffset + kPointerSize;
   static const uword kSize = kClausesOffset + kPointerSize;
@@ -251,7 +251,7 @@ DEFINE_REF_CLASS(DoOnExpression);
 class CallExpression : public SyntaxTree {
 public:
   FOR_EACH_CALL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kReceiverOffset = SyntaxTree::kHeaderSize;
   static const uword kFunctionOffset = kReceiverOffset + kPointerSize;
   static const uword kArgumentsOffset = kFunctionOffset + kPointerSize;
@@ -279,7 +279,7 @@ DEFINE_REF_CLASS(CallExpression);
 class ConditionalExpression : public SyntaxTree {
 public:
   FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kConditionOffset = SyntaxTree::kHeaderSize;
   static const uword kThenPartOffset = kConditionOffset + kPointerSize;
   static const uword kElsePartOffset = kThenPartOffset + kPointerSize;
@@ -307,7 +307,7 @@ DEFINE_REF_CLASS(ConditionalExpression);
 class ProtocolExpression : public SyntaxTree {
 public:
   FOR_EACH_PROTOCOL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kNameOffset = SyntaxTree::kHeaderSize;
   static const uword kMethodsOffset = kNameOffset + kPointerSize;
   static const uword kSuperOffset = kMethodsOffset + kPointerSize;
@@ -334,7 +334,7 @@ DEFINE_REF_CLASS(ProtocolExpression);
 class ReturnExpression : public SyntaxTree {
 public:
   FOR_EACH_RETURN_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kValueOffset + kPointerSize;
 };
@@ -360,7 +360,7 @@ DEFINE_REF_CLASS(ReturnExpression);
 class MethodExpression : public SyntaxTree {
 public:
   FOR_EACH_METHOD_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kSelectorOffset = SyntaxTree::kHeaderSize;
   static const uword kLambdaOffset   = kSelectorOffset + kPointerSize;
   static const uword kIsStaticOffset = kLambdaOffset + kPointerSize;
@@ -387,7 +387,7 @@ DEFINE_REF_CLASS(MethodExpression);
 class SequenceExpression : public SyntaxTree {
 public:
   FOR_EACH_SEQUENCE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kExpressionsOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kExpressionsOffset + kPointerSize;
 };
@@ -435,7 +435,7 @@ DEFINE_REF_CLASS(TupleExpression);
 class GlobalExpression : public SyntaxTree {
 public:
   FOR_EACH_GLOBAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kNameOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kNameOffset + kPointerSize;
 };
@@ -459,7 +459,7 @@ DEFINE_REF_CLASS(GlobalExpression);
 class Symbol : public SyntaxTree {
 public:
   FOR_EACH_SYMBOL_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kNameOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kNameOffset + kPointerSize;
 };
@@ -484,7 +484,7 @@ DEFINE_REF_CLASS(Symbol);
 class QuoteExpression : public SyntaxTree {
 public:
   FOR_EACH_QUOTE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kUnquotesOffset = kValueOffset + kPointerSize;
   static const uword kSize = kUnquotesOffset + kPointerSize;
@@ -506,7 +506,7 @@ DEFINE_REF_CLASS(QuoteExpression);
 class UnquoteExpression : public SyntaxTree {
 public:
   DECLARE_FIELD(uword, index);
-  
+
   static const uword kIndexOffset = SyntaxTree::kHeaderSize;
   static const uword kSize        = kIndexOffset + kPointerSize;
 };
@@ -528,7 +528,7 @@ DEFINE_REF_CLASS(UnquoteExpression);
 class LambdaExpression : public SyntaxTree {
 public:
   FOR_EACH_LAMBDA_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kParamsOffset = SyntaxTree::kHeaderSize;
   static const uword kBodyOffset = kParamsOffset + kPointerSize;
   static const uword kSize = kBodyOffset + kPointerSize;
@@ -615,7 +615,7 @@ DEFINE_REF_CLASS(BuiltinCall);
 class ExternalCall : public SyntaxTree {
 public:
   FOR_EACH_EXTERNAL_CALL_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kArgcOffset = SyntaxTree::kHeaderSize;
   static const uword kNameOffset = kArgcOffset + kPointerSize;
   static const uword kSize       = kNameOffset + kPointerSize;
@@ -641,7 +641,7 @@ DEFINE_REF_CLASS(ExternalCall);
 class LocalDefinition : public SyntaxTree {
 public:
   FOR_EACH_LOCAL_DEFINITION_FIELD(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kSymbolOffset = SyntaxTree::kHeaderSize;
   static const uword kValueOffset = kSymbolOffset + kPointerSize;
   static const uword kBodyOffset = kValueOffset + kPointerSize;

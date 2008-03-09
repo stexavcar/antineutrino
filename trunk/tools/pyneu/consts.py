@@ -34,7 +34,7 @@ def install_value_type(n, NAME, Name, name):
 def install_image_entry(n, Name, Field):
   key = "Image%s_%s" % (Name, Field)
   __image_map[key] = int(n)
-  
+
 
 (__roots_map, roots) = new_namespace()
 def install_root(n, Type, name, Protocol, allocator):
@@ -62,7 +62,7 @@ def install_builtin_method(n, klass, function_name, string_name):
     'index': int(n),
   })
 
-  
+
 def initialize_from(name):
   consts = read_consts(name)
   consts['FOR_EACH_DECLARED_TYPE'](install_value_type)
@@ -70,7 +70,7 @@ def initialize_from(name):
   consts['FOR_EACH_ROOT'](install_root)
   consts['FOR_EACH_BUILTIN_FUNCTION'](install_builtin_function)
   consts['FOR_EACH_BUILTIN_METHOD'](install_builtin_method)
-  
+
 
 # --- M a c r o   P a r s i n g ---
 
@@ -87,11 +87,11 @@ class MacroCollection(object):
 
 
 class BoundMacro(object):
-  
+
   def __init__(self, collection, macro):
     self.collection_ = collection
     self.macro_ = macro
-  
+
   def __call__(self, function):
     self.macro_.apply(self.collection_, function)
 

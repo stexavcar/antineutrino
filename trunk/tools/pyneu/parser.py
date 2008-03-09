@@ -13,82 +13,82 @@ MODIFIERS = [ INTERNAL, NATIVE ]
 
 
 class Parser(object):
-  
+
   def __init__(self, scan):
     self.scan_ = scan
     self.resolver_ = VariableResolver()
-  
+
   def scanner(self):
     return self.scan_
-  
+
   def resolver(self):
     return self.resolver_
-  
+
   def token(self):
     return self.scanner().current()
-  
+
   def advance(self):
     self.scanner().advance()
-  
+
   def has_more(self):
     return self.scanner().has_more()
-  
+
   def open(doc):
     read = reader.Reader(doc)
     scan = scanner.Scanner(read)
     return Parser(scan)
   open = staticmethod(open)
-  
+
   def expect_documentation(self):
     if not self.token().is_documentation():
       self.unexpected_token()
     value = self.token().value()
     self.advance()
     return value
-  
+
   def expect_identifier(self):
     if not self.token().is_identifier():
       self.unexpected_token()
     value = self.token().value()
     self.advance()
     return value
-  
+
   def expect_string(self):
     if not self.token().is_string():
       self.unexpected_token()
     value = self.token().value()
     self.advance()
     return value
-  
+
   def expect_keyword(self, value = None):
     if not self.token().is_keyword(value):
       self.unexpected_token()
     value = self.token().value()
     self.advance()
     return value
-  
+
   def expect_delimiter(self, value):
     if not self.token().is_delimiter(value):
       self.unexpected_token()
     self.advance()
-  
+
   def expect_operator(self, value = None):
     if not self.token().is_operator(value):
       self.unexpected_token()
     value = self.token().value()
     self.advance()
     return value
-  
+
   def unexpected_token(self):
     pos = self.token().position()
     raise scanner.SyntaxError(pos, 'Unexpected token')
-  
+
   def is_modifier(self, token):
     for modifier in MODIFIERS:
       if token.is_keyword(modifier):
         return True
     return False
-  
+
   def modifiers(self):
     result = [ ]
     while self.is_modifier(self.token()):
@@ -96,14 +96,14 @@ class Parser(object):
       result.append(modifier)
       self.expect_keyword(modifier)
     return result
-  
+
   def program(self):
     definitions = [ ]
     while self.has_more():
       definition = self.toplevel_definition()
       definitions.append(definition)
     return ast.File(definitions)
-  
+
   def toplevel_definition(self):
     doc = self.documentation_opt()
     modifiers = self.modifiers()
@@ -113,7 +113,7 @@ class Parser(object):
       return self.protocol_declaration(modifiers)
     else:
       self.unexpected_token()
-  
+
   def definition(self, modifiers):
     self.expect_keyword(DEF)
     name = self.expect_identifier()
@@ -146,11 +146,10 @@ class Parser(object):
     if self.token().is_delimiter('('):
       params = self.parameters()
     else:
-      params = None
+      params = ast.Null()
     body = self.function_body(True)
-    full_name = "%s.%s" % (klass, name)
-    return ast.Method(doc, modifiers, full_name, params, body)
-  
+    return ast.Method(doc, modifiers, klass, name, params, body)
+
   def method_name(self):
     if self.token().is_identifier():
       return self.expect_identifier()
@@ -164,7 +163,7 @@ class Parser(object):
       return self.expect_keyword()
     else:
       self.unexpected_token()
-  
+
   def function_body(self, is_toplevel):
     if self.token().is_delimiter(';'):
       self.expect_delimiter(';')
@@ -182,14 +181,14 @@ class Parser(object):
       return ast.Sequence(exprs)
     else:
       self.unexpected_token()
-  
+
   def statements(self):
     stmts = [ ]
     while self.has_more() and not self.token().is_delimiter('}'):
       stmt = self.control_expression(True)
       stmts.append(stmt)
     return stmts
-  
+
   def parameters(self):
     result = [ ]
     self.expect_delimiter('(')
@@ -200,7 +199,7 @@ class Parser(object):
         result.append(self.parameter())
     self.expect_delimiter(')')
     return result
-  
+
   def parameter(self):
     if self.token().is_delimiter('~'):
       return self.unquote_expression()
@@ -209,10 +208,10 @@ class Parser(object):
       if self.token().is_delimiter(':'):
         self.expect_delimiter(':')
       return ast.Symbol(name)
-  
+
   def expression(self, is_toplevel):
     return self.control_expression(is_toplevel)
-  
+
   def control_expression(self, is_toplevel):
     if self.token().is_keyword(DEF):
       return self.local_definition(is_toplevel)
@@ -226,7 +225,7 @@ class Parser(object):
       value = self.logical_expression()
       if is_toplevel: self.expect_delimiter(';')
       return value
-  
+
   def return_expression(self, is_toplevel):
     self.expect_keyword(RETURN)
     value = self.expression(False)
@@ -252,7 +251,7 @@ class Parser(object):
     else:
       else_part = ast.Void()
     return ast.Conditional(cond, then_part, else_part)
-  
+
   def local_definition(self, is_toplevel):
     self.expect_keyword(DEF)
     name = ast.Symbol(self.expect_identifier())
@@ -269,19 +268,19 @@ class Parser(object):
       stmts = self.statements()
       self.resolver().pop_scope()
       return ast.LocalDefinition(name, value, ast.Sequence.make(stmts))
-  
+
   def logical_expression(self):
     return self.and_expression()
-  
+
   def and_expression(self):
     return self.not_expression()
-  
+
   def not_expression(self):
     return self.prefix_expression()
-  
+
   def prefix_expression(self):
     return self.operator_expression()
-  
+
   def operator_expression(self):
     exprs = [ self.call_expression() ]
     ops = [ ]
@@ -299,13 +298,13 @@ class Parser(object):
         args = ast.Arguments([rest], {})
         exprs.append(ast.Invoke(next, op, args))
     return exprs[0]
-  
+
   def at_call_start(self):
     token = self.token()
     return (token.is_delimiter(scanner.DELEGATE_CALL_OPERATOR)
          or token.is_delimiter(scanner.METHOD_CALL_OPERATOR)
          or token.is_delimiter('('))
-  
+
   def call_expression(self):
     expr = self.unary_expression()
     while self.at_call_start():
@@ -324,7 +323,7 @@ class Parser(object):
         args = self.arguments()
         expr = ast.Call(ast.This(), expr, args)
     return expr
-  
+
   def new_expression(self):
     self.expect_keyword(NEW)
     if self.token().is_delimiter('{'):
@@ -334,7 +333,7 @@ class Parser(object):
       recv = self.atomic_expression()
       args = self.arguments()
     return self.call_prefix(recv, "new", args)
-  
+
   def call_prefix(self, recv, name, args):
     if self.token().is_delimiter('{'):
       self.expect_delimiter('{')
@@ -353,7 +352,7 @@ class Parser(object):
 
   def unary_expression(self):
     return self.atomic_expression()
-  
+
   def atomic_expression(self):
     if self.token().is_keyword(THIS):
       self.expect_keyword(THIS)
@@ -376,7 +375,7 @@ class Parser(object):
       return value
     else:
       self.unexpected_token()
-  
+
   def arguments(self):
     self.expect_delimiter('(')
     args = [ ]
@@ -418,7 +417,7 @@ class LocalScope(object):
   def __init__(self, parent, symbols):
     self.symbols_ = symbols
     self.parent_ = parent
-  
+
   def parent(self):
     return self.parent_
 
@@ -430,16 +429,16 @@ class LocalScope(object):
 
 
 class VariableResolver(object):
-  
+
   def __init__(self):
     self.scope_ = GlobalScope()
-    
+
   def scope(self):
     return self.scope_
-  
+
   def lookup(self, name):
     return self.scope().lookup(name)
-  
+
   def push_scope(self, symbols):
     self.scope_ = LocalScope(self.scope_, symbols)
 
