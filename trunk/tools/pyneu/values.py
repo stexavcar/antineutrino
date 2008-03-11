@@ -472,3 +472,31 @@ class LocalDefinition(SyntaxTree):
     result[fields.ImageLocalDefinition_ValueOffset] = self.value_
     result[fields.ImageLocalDefinition_BodyOffset] = self.body_
     return result
+
+
+class DoOnExpression(SyntaxTree):
+  
+  def __init__(self, value, clauses):
+    super(DoOnExpression, self).__init__()
+    self.value_ = value
+    self.clauses_ = clauses
+  
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageDoOnExpression_Size, Smi(values.DoOnExpression.index))
+    result[fields.ImageDoOnExpression_ValueOffset] = self.value_
+    result[fields.ImageDoOnExpression_ClausesOffset] = Tuple(entries = self.clauses_)
+    return result
+
+
+class OnClause(SyntaxTree):
+  
+  def __init__(self, name, body):
+    super(OnClause, self).__init__()
+    self.name_ = name
+    self.body_ = body
+  
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageOnClause_Size, Smi(values.OnClause.index))
+    result[fields.ImageOnClause_NameOffset] = String(self.name_)
+    result[fields.ImageOnClause_LambdaOffset] = self.body_
+    return result

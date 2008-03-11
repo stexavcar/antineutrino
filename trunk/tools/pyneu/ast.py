@@ -286,6 +286,30 @@ class Return(Expression):
     return values.ReturnExpression(self.value_.quote())
 
 
+class DoOnExpression(Expression):
+  
+  def __init__(self, value, clauses):
+    super(DoOnExpression, self).__init__()
+    self.value_ = value
+    self.clauses_ = clauses
+  
+  def quote(self):
+    clauses = [ c.quote() for c in self.clauses_ ]
+    value = self.value_.quote()
+    return values.DoOnExpression(value, clauses)
+
+
+class OnClause(SyntaxTree):
+  
+  def __init__(self, name, lam):
+    super(OnClause, self).__init__()
+    self.name_ = name
+    self.lambda_ = lam
+  
+  def quote(self):
+    return values.OnClause(self.name_, self.lambda_.quote())
+
+
 class Raise(Expression):
 
   def __init__(self, name, args):
