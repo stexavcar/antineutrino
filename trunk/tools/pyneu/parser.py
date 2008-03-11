@@ -9,7 +9,7 @@ for word in scanner.KEYWORDS.keys():
   globals()[word.upper()] = word
 
 
-MODIFIERS = [ INTERNAL, NATIVE ]
+MODIFIERS = [ INTERNAL, NATIVE, STATIC ]
 
 
 class Parser(object):
@@ -126,7 +126,7 @@ class Parser(object):
     name = self.expect_identifier()
     params = self.parameters()
     self.resolver().push_scope(params)
-    body = self.function_body(True)
+    body = self.function_body(True, None)
     self.resolver().pop_scope()
     return ast.Definition(name, ast.Lambda(modifiers, name, params, body))
 
@@ -159,7 +159,7 @@ class Parser(object):
       params = ast.Null()
       has_params = False
     if has_params: self.resolver().push_scope(params)
-    body = self.function_body(True)
+    body = self.function_body(True, None)
     if has_params: self.resolver().pop_scope()
     return ast.Method(doc, modifiers, klass, name, params, body)
 
@@ -177,13 +177,13 @@ class Parser(object):
     else:
       self.unexpected_token()
 
-  def function_body(self, is_toplevel):
+  def function_body(self, is_toplevel, end):
     if self.token().is_delimiter(';'):
       self.expect_delimiter(';')
       return None
     elif self.token().is_delimiter('->'):
       self.expect_delimiter('->')
-      value = self.expression(False)
+      value = self.expression(False, end)
       if is_toplevel: self.expect_delimiter(';')
       return ast.Return(value)
     elif self.token().is_delimiter('{'):
@@ -191,14 +191,14 @@ class Parser(object):
       exprs = self.statements()
       self.expect_delimiter('}')
       exprs.append(ast.Return(ast.Literal(ast.Void())))
-      return ast.Sequence(exprs)
+      return ast.Sequence.make(exprs)
     else:
       self.unexpected_token()
 
   def statements(self):
     stmts = [ ]
     while self.has_more() and not self.token().is_delimiter('}'):
-      stmt = self.control_expression(True)
+      stmt = self.control_expression(True, None)
       stmts.append(stmt)
     return stmts
 
@@ -222,26 +222,35 @@ class Parser(object):
         self.expect_delimiter(':')
       return ast.Symbol(name)
 
-  def expression(self, is_toplevel):
-    return self.control_expression(is_toplevel)
+  def expression(self, is_toplevel, end):
+    return self.control_expression(is_toplevel, end)
 
-  def control_expression(self, is_toplevel):
+  def control_expression(self, is_toplevel, end):
     if self.token().is_keyword(DEF):
-      return self.local_definition(is_toplevel)
+      return self.local_definition(is_toplevel, end)
     elif self.token().is_keyword(IF):
-      return self.conditional_expression(is_toplevel)
+      return self.conditional_expression(is_toplevel, end)
     elif self.token().is_keyword(RETURN):
-      return self.return_expression(is_toplevel)
+      return self.return_expression(is_toplevel, end)
     elif self.token().is_keyword(RAISE):
       return self.raise_expression(is_toplevel)
     else:
-      value = self.logical_expression()
+      value = self.lambda_expression(end)
       if is_toplevel: self.expect_delimiter(';')
       return value
+  
+  def lambda_expression(self, end):
+    if self.token().is_keyword(FN):
+      self.expect_keyword(FN)
+      params = self.parameters()
+      body = self.function_body(False, end)
+      return ast.Lambda([], None, params, body)
+    else:
+      return self.logical_expression()
 
-  def return_expression(self, is_toplevel):
+  def return_expression(self, is_toplevel, end):
     self.expect_keyword(RETURN)
-    value = self.expression(False)
+    value = self.expression(False, end)
     if is_toplevel: self.expect_delimiter(';')
     return ast.Return(value)
 
@@ -252,28 +261,28 @@ class Parser(object):
     if is_toplevel: self.expect_delimiter(';')
     return ast.Raise(name, args)
 
-  def conditional_expression(self, is_toplevel):
+  def conditional_expression(self, is_toplevel, end):
     self.expect_keyword(IF)
     self.expect_delimiter('(')
-    cond = self.expression(False)
+    cond = self.expression(False, None)
     self.expect_delimiter(')')
-    then_part = self.expression(is_toplevel)
+    then_part = self.expression(is_toplevel, end)
     if self.token().is_keyword(ELSE):
       self.expect_keyword(ELSE)
-      else_part = self.expression(is_toplevel)
+      else_part = self.expression(is_toplevel, end)
     else:
       else_part = ast.Literal(ast.Void())
     return ast.Conditional(cond, then_part, else_part)
 
-  def local_definition(self, is_toplevel):
+  def local_definition(self, is_toplevel, end):
     self.expect_keyword(DEF)
     name = ast.Symbol(self.expect_identifier())
     self.expect_delimiter(':=')
-    value = self.expression(False)
+    value = self.expression(False, None)
     self.resolver().push_scope([ name ])
     if self.token().is_keyword(IN):
       self.expect_keyword(IN)
-      body = self.expression(is_toplevel)
+      body = self.expression(is_toplevel, end)
     elif is_toplevel:
       self.expect_delimiter(';')
       stmts = self.statements()
@@ -282,10 +291,26 @@ class Parser(object):
     return ast.LocalDefinition(name, value, body)
 
   def logical_expression(self):
-    return self.and_expression()
+    exprs = [ self.and_expression() ]
+    while self.token().is_keyword(OR):
+      self.expect_keyword(OR)
+      exprs.append(self.and_expression())
+    result = exprs[-1]
+    for i in xrange(2, len(exprs) + 1):
+      result = ast.Conditional(exprs[-i], ast.Literal(ast.Thrue()), result)
+    return result
 
   def and_expression(self):
-    return self.not_expression()
+    exprs = [ self.not_expression() ]
+    while self.token().is_keyword(AND):
+      self.expect_keyword(AND)
+      exprs.append(self.not_expression())
+    # We construct the resulting conditional expression backwards
+    # To make the conditionals simple
+    result = exprs[-1];
+    for i in xrange(2, len(exprs) + 1):
+      result = ast.Conditional(exprs[-i], result, ast.Literal(ast.Fahlse()))
+    return result
 
   def not_expression(self):
     return self.prefix_expression()
@@ -339,8 +364,8 @@ class Parser(object):
   def new_expression(self):
     self.expect_keyword(NEW)
     if self.token().is_delimiter('{'):
-      recv = Global('Object')
-      args = Arguments([], {})
+      recv = ast.Global('Object')
+      args = ast.Arguments([], {})
     else:
       recv = self.atomic_expression()
       args = self.arguments()
@@ -353,7 +378,7 @@ class Parser(object):
       while not self.token().is_delimiter('}'):
         name = self.expect_identifier()
         self.expect_delimiter(':')
-        value = self.expression(False)
+        value = self.expression(False, None)
         terms.append((name, value))
         if not self.token().is_delimiter(','): break
         else: self.expect_delimiter(',')
@@ -372,6 +397,12 @@ class Parser(object):
     elif self.token().is_keyword(NULL):
       self.expect_keyword(NULL)
       return ast.Literal(ast.Null())
+    elif self.token().is_keyword(TRUE):
+      self.expect_keyword(TRUE)
+      return ast.Literal(ast.Thrue())
+    elif self.token().is_keyword(FALSE):
+      self.expect_keyword(FALSE)
+      return ast.Literal(ast.Fahlse())
     elif self.token().is_string():
       value = self.expect_string()
       return ast.Literal(value)
@@ -385,22 +416,46 @@ class Parser(object):
       return self.new_expression()
     elif self.token().is_delimiter('('):
       self.expect_delimiter('(')
-      value = self.expression(False)
+      value = self.expression(False, None)
       self.expect_delimiter(')')
       return value
+    elif self.token().is_delimiter('['):
+      return self.tuple()
+    elif self.token().is_operator():
+      return self.circumfix()
     else:
       self.unexpected_token()
+  
+  def circumfix(self):
+    assert self.token().is_operator()
+    value = self.token().value()
+    if not scanner.is_circumfix_operator(value):
+      self.unexpected_token()
+    self.expect_operator()
+    match = scanner.circumfix_match(value)
+    expr = self.expression(False, match)
+  
+  def tuple(self):
+    self.expect_delimiter('[')
+    elms = [ ]
+    if not self.token().is_delimiter(']'):
+      elms.append(self.expression(False))
+    while self.token().is_delimiter(','):
+      self.expect_delimiter(',')
+      elms.append(self.expression(False))
+    self.expect_delimiter(']')
+    return ast.Tuple(elms)
 
   def arguments(self):
     self.expect_delimiter('(')
     args = [ ]
-    keywords = [ ]
+    keywords = { }
     def parse_argument():
-      expr = self.expression(False)
+      expr = self.expression(False, None)
       if self.token().is_delimiter(':') and expr.is_identifier():
         self.expect_delimiter(':')
         keywords[expr.name] = len(args)
-        expr = self.expression(False)
+        expr = self.expression(False, None)
       args.append(expr)
     if not self.token().is_delimiter(')'):
       parse_argument()

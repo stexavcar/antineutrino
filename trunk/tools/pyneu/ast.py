@@ -122,6 +122,9 @@ class Expression(SyntaxTree):
 
   def is_sequence(self):
     return False
+  
+  def is_identifier(self):
+    return False
 
 
 class Lambda(Expression):
@@ -261,6 +264,17 @@ class Instantiate(Expression):
     return values.InstantiateExpression(recv, self.name_, args, terms)
 
 
+class Tuple(Expression):
+  
+  def __init__(self, exprs):
+    super(Tuple, self).__init__()
+    self.exprs_ = exprs
+
+  def quote(self):
+    expr = [ e.quote() for e in self.exprs_ ]
+    return values.TupleExpression(expr)
+
+
 class Return(Expression):
 
   def __init__(self, value):
@@ -315,6 +329,30 @@ class Void(Expression):
 
   def quote(self):
     return values.VOID
+
+
+class Thrue(Expression):
+  
+  def __init__(self):
+    super(Thrue, self).__init__()
+  
+  def evaluate(self):
+    return self.quote()
+  
+  def quote(self):
+    return values.TRUE
+
+
+class Fahlse(Expression):
+  
+  def __init__(self):
+    super(Fahlse, self).__init__()
+  
+  def evaluate(self):
+    return self.quote()
+  
+  def quote(self):
+    return values.FALSE
 
 
 class Conditional(Expression):
@@ -392,6 +430,9 @@ class Identifier(Expression):
 
   def name(self):
     return self.name_
+  
+  def is_identifier(self):
+    return True
 
 
 class Global(Identifier):

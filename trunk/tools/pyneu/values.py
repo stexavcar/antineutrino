@@ -445,6 +445,18 @@ class ConditionalExpression(SyntaxTree):
     return result
 
 
+class TupleExpression(SyntaxTree):
+  
+  def __init__(self, values):
+    super(TupleExpression, self).__init__()
+    self.values_ = values
+  
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageTupleExpression_Size, Smi(values.TupleExpression.index))
+    result[fields.ImageTupleExpression_ValuesOffset] = Tuple(entries = self.values_)
+    return result
+
+
 class LocalDefinition(SyntaxTree):
 
   def __init__(self, symbol, value, body):
