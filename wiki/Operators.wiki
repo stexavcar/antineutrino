@@ -1,11 +1,31 @@
 #summary Operator Precedence Hierarchy
 
+==Summary==
+
 This is how the operator precedence hierarchy _should_ look, not how it does look.  See issue 4.
 
-|| `return`, `if`, `def` ||
-|| `fn` ||
-|| `or` ||
-|| `and` ||
-|| `not` ||
-|| _binary operators_ ||
-|| _function, method calls_ ||
+|| *L* || *A* || *Name* || *Form* ||
+|| 0 || || tuple || `[expr, ..., expr]` ||
+|| 0 || || parens || `(expr)` ||
+|| 1 || || new || `new expr(expr, ..., expr)` ||
+|| 2 || L || invocation || `expr . member` ||
+|| 2 || L || call || `expr (expr, ..., expr)` ||
+|| 2 || L || subscript || `expr [expr, ..., expr]` ||
+|| 3 || L || mult || `expr * expr` ||
+|| 3 || L || div || `expr / expr` ||
+|| 3 || L || mod || `expr % expr` ||
+|| 4 || L || add || `expr + expr` ||
+|| 4 || L || sub || `expr - expr` ||
+|| ... || ... || ... || ... ||
+|| 10 || || not || `not expr` ||
+|| 11 || L || and || `expr and expr` ||
+|| 12 || L || or || `expr or expr` ||
+|| 13 || L || lambda || `fn (x, ..., x) -> expr` ||
+
+==Examples==
+
+|| *Expression* || *Parses as* || *As opposed to* ||
+|| `new foo(a, b, c)(d, e, f)` || `(new foo(a, b, c))(d, e, f)` || `new (foo(a, b, c))(d, e, f)` ||
+|| `not a and not b` || `(not a) and (not b)` || `not (a and (not b))` ||
+|| `a or b and c` || `a or (b and c)` || `(a or b) and c` ||
+|| `fn (x) -> x or y` || `fn (x) -> (x or y)` || `(fn (x) -> x) or y` ||
