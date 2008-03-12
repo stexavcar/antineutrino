@@ -432,7 +432,7 @@ class LocalDefinition(Expression):
 def to_literal(value):
   if type(value) in [unicode, str]: return values.String(value)
   elif type(value) in [int, long]: return values.Smi(value)
-  if isinstance(value, SyntaxTree): return value.evaluate()
+  if isinstance(value, SyntaxTree): return value.quote()
   else: return value
 
 
@@ -445,6 +445,16 @@ class Literal(Expression):
   def quote(self):
     return values.LiteralExpression(to_literal(self.value_))
 
+
+class Interpolate(Expression):
+  
+  def __init__(self, terms):
+    super(Interpolate, self).__init__()
+    self.terms_ = terms
+
+  def quote(self):
+    terms = [ to_literal(t) for t in self.terms_ ]
+    return values.InterpolateExpression(terms)
 
 class Identifier(Expression):
 

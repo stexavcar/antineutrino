@@ -1,7 +1,6 @@
 def interpolation_test() {
   assert_equals("abc", "${"a"}${"b"}${"c"}");
   assert_equals("aabb", "a${"a${"b${"b"}"}"}");
-  local_test(1, 2, 3);
 }
 
 def local_test(a, b, c) {
@@ -11,4 +10,5 @@ def local_test(a, b, c) {
 
 def main() {
   interpolation_test();
+  local_test(1, 2, 3);
 }

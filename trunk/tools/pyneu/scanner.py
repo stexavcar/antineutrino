@@ -243,7 +243,13 @@ class Scanner(object):
   def __init__(self, reader):
     self.reader = reader
     self.skip_whitespace()
-    self.advance()
+    self.parser_ = None
+  
+  def set_parser(self, parser):
+    self.parser_ = parser
+  
+  def parser(self):
+    return self.parser_
   
   def has_more(self):
     return self.reader.has_more()
@@ -279,13 +285,31 @@ class Scanner(object):
   
   def scan_string(self):
     start = self.reader.position()
+    terms = [ ]
     self.reader.advance()
-    result = ''
+    term = ''
     while self.reader.has_more() and self.reader.current() != '"':
-      result += self.reader.current()
-      self.reader.advance()
+      if self.reader.current() == '$':
+        self.reader.advance()
+        current = self.reader.current()
+        if current == '{':
+          if len(term) > 0:
+            terms.append(term)
+            term = ''
+          self.reader.advance()
+          self.advance()
+          expr = self.parser().expression(False)
+          terms.append(expr)
+        else:
+          raise SyntaxError(self.new_position(self.reader.position(), 0),
+              "Unexpected control character '%s'" % current)
+      else:
+        term += self.reader.current()
+        self.reader.advance()
     if self.has_more(): self.reader.advance()
-    return String(result, self.new_position(start))
+    if len(term) > 0:
+      terms.append(term)
+    return String(terms, self.new_position(start))
     
   def scan_documentation(self):
     start = self.reader.position()

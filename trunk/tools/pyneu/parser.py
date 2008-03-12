@@ -17,6 +17,7 @@ class Parser(object):
   def __init__(self, scan):
     self.scan_ = scan
     self.resolver_ = VariableResolver()
+    scan.set_parser(self)
 
   def scanner(self):
     return self.scan_
@@ -36,7 +37,9 @@ class Parser(object):
   def open(doc):
     read = reader.Reader(doc)
     scan = scanner.Scanner(read)
-    return Parser(scan)
+    result = Parser(scan)
+    scan.advance()
+    return result
   open = staticmethod(open)
 
   def expect_documentation(self):
@@ -418,8 +421,13 @@ class Parser(object):
       self.expect_keyword(FALSE)
       return ast.Literal(ast.Fahlse())
     elif self.token().is_string():
-      value = self.expect_string()
-      return ast.Literal(value)
+      terms = self.expect_string()
+      if len(terms) == 0:
+        return ast.Literal("")
+      elif len(terms) == 1 and not isinstance(terms[0], ast.SyntaxTree):
+        return ast.Literal(terms[0])
+      else:
+        return ast.Interpolate(terms)
     elif self.token().is_number():
       value = self.expect_number()
       return ast.Literal(value)

@@ -417,6 +417,18 @@ class LiteralExpression(SyntaxTree):
     return result
 
 
+class InterpolateExpression(SyntaxTree):
+  
+  def __init__(self, terms):
+    super(InterpolateExpression, self).__init__()
+    self.terms_ = terms
+  
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageInterpolateExpression_Size, Smi(values.InterpolateExpression.index))
+    result[fields.ImageInterpolateExpression_TermsOffset] = Tuple(entries = self.terms_)
+    return result
+
+
 class SequenceExpression(SyntaxTree):
 
   def __init__(self, exprs):
