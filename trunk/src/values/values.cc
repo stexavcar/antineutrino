@@ -380,6 +380,10 @@ static void disassemble_buffer(uint16_t *data, uword size,
         buf.printf("check height %", data[pc + 1]);
         pc += OpcodeInfo<OC_CHKHGT>::kSize;
         break;
+      case OC_TUPLE:
+        buf.printf("tuple %", data[pc + 1]);
+        pc += OpcodeInfo<OC_TUPLE>::kSize;
+        break;
       default:
         UNHANDLED(Opcode, data[pc]);
         return;

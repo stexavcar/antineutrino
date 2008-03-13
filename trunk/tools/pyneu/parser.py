@@ -342,15 +342,12 @@ class Parser(object):
       ops.append(self.expect_operator())
       exprs.append(self.call_expression())
     # TODO: operator precedence
-    if ops:
-      exprs.reverse()
-      ops.reverse()
-      while ops:
-        rest = exprs.pop()
-        next = exprs.pop()
-        op = ops.pop()
-        args = ast.Arguments([rest], {})
-        exprs.append(ast.Invoke(next, op, args))
+    while ops:
+      rest = exprs.pop()
+      next = exprs.pop()
+      op = ops.pop()
+      args = ast.Arguments([rest], {})
+      exprs.append(ast.Invoke(next, op, args))
     return exprs[0]
 
   def at_call_start(self):
