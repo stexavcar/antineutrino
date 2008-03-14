@@ -1,11 +1,11 @@
 def factorial_code(n) {
-  if (n = 0) return <1>;
-  else return <(~(factorial_code(n - 1)) * ~(lift(n)))>;
+  if (n = 0) return «1»;
+  else return «‹factorial_code(n - 1)› * ‹lift(n)›»;
 }
 
 def simple_unquote_test() {
-  def x := <3>;
-  assert_equals(5, <2 + ~x>.evaluate());
+  def x := «3»;
+  assert_equals(5, «2 + ‹x›».evaluate());
 }
 
 def lift_test() {
@@ -14,14 +14,14 @@ def lift_test() {
 }
 
 def make_power(s, n) {
-  if (n = 0) return <1>;
-  else return <(~s * ~(make_power(s, n - 1)))>;
+  if (n = 0) return «1»;
+  else return «‹s› * ‹make_power(s, n - 1)›»;
 }
 
 def make_power_test() {
   def s := new Symbol();
   def body := make_power(s, 8);
-  def fun := <(fn (~s) -> ~body)>;
+  def fun := «fn (‹s›) -> ‹body›»;
   def power := fun.evaluate();
   assert_equals(256, power(2));
 }

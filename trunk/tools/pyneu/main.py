@@ -31,6 +31,7 @@ def report_error(ce):
   doc = pos.document()
   lineno = doc.get_line_of_offset(pos.start())
   source = codecs.utf_8_encode(doc.get_line(lineno))[0]
+  message = codecs.utf_8_encode(ce.message())[0]
   linestart = doc.get_line_start(lineno)
   spaces = " " * (pos.start() - linestart)
   wave = "^" * (pos.end() - pos.start() + 1)
@@ -42,7 +43,7 @@ def report_error(ce):
     'filename': doc.name,
     'line': lineno + 1,
     'range': r,
-    'message': ce.message(),
+    'message': message,
     'source': source,
     'underline': spaces + wave
   }

@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import ast
 import reader
 import scanner
@@ -330,15 +332,25 @@ class Parser(object):
     return result
 
   def not_expression(self):
-    return self.prefix_expression()
+    return self.circumfix_expression()
+  
+  def circumfix_expression(self):
+    if self.token().is_operator():
+      value = self.token().value()
+      if not scanner.is_circumfix_operator(value):
+        self.unexpected_token()
+      self.expect_operator()
+      match = scanner.circumfix_match(value)
+      expr = self.circumfix_expression()
+      self.expect_operator(match)
+      return ast.Invoke(expr, value + match, ast.Arguments([], {}))
+    else:
+      return self.operator_expression()
 
-  def prefix_expression(self):
-    return self.operator_expression(None)
-
-  def operator_expression(self, end):
+  def operator_expression(self):
     exprs = [ self.call_expression() ]
     ops = [ ]
-    while self.token().is_operator() and not (end and self.token().is_operator(end)):
+    while self.token().is_operator():
       ops.append(self.expect_operator())
       exprs.append(self.call_expression())
     # TODO: operator precedence
@@ -438,23 +450,20 @@ class Parser(object):
       value = self.expression(False)
       self.expect_delimiter(')')
       return value
+    elif self.token().is_delimiter(u'«'):
+      self.expect_delimiter(u'«')
+      value = self.expression(False)
+      self.expect_delimiter(u'»')
+      return value
+    elif self.token().is_delimiter(u'‹'):
+      self.expect_delimiter(u'‹')
+      value = self.expression(False)
+      self.expect_delimiter(u'›')
+      return value
     elif self.token().is_delimiter('['):
       return self.tuple()
-    elif self.token().is_operator():
-      return self.circumfix()
     else:
       self.unexpected_token()
-  
-  def circumfix(self):
-    assert self.token().is_operator()
-    value = self.token().value()
-    if not scanner.is_circumfix_operator(value):
-      self.unexpected_token()
-    self.expect_operator()
-    match = scanner.circumfix_match(value)
-    expr = self.operator_expression(match)
-    self.expect_operator(match)
-    return ast.Invoke(expr, value + match, ast.Arguments([], {}))
   
   def tuple(self):
     self.expect_delimiter('[')
