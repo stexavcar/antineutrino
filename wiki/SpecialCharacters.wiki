@@ -1,0 +1,12 @@
+#summary How to produce the special characters
+
+The core neutrino syntax uses a number of special non-ascii characters.  Ascii is just so 1960s.  This may cause problems on some platforms and in some editors.
+
+|| *C* || *Name* || *Syntax* || *Mac, US* ||
+|| « || left guillemet  || start code quote || A-| ||
+|| » || right guillemet  || end code quote || A-\ _or_ S-A-| ||
+|| · || middle dot || delegating call || A-( _or_ S-A-9 ||
+|| ≤ || less or equal || binary operator || A-< ||
+|| ≥ || greater or equal || binary operator || A-> ||
+|| ≠ || not equal || binary operator || A-= ||
+|| ÷ || division || binary operator || A-/ ||
