@@ -1,0 +1,14 @@
+# This list is here to help track dependencies.  If a file affects the
+# way neutrino files are compiled it must be listed here so the build
+# scripts know that they have to rebuild if the file is changed.
+
+__init__.py
+ast.py
+compiler.py
+consts.py
+image.py
+main.py
+parser.py
+reader.py
+scanner.py
+values.py

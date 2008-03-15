@@ -1,12 +1,14 @@
 Import('env build config prefix target')
 from os.path import join, walk, abspath, exists
 from testutils import PyNeutrinoTestCase, is_selected, relative
+from buildutils import read_files_from
 
 executable = relative(config['bin'], str(config[prefix + 'program']))
 natives = relative(config['bin'], str(config[prefix + 'natives']))
 
-
-compiler = join(config['root'], 'tools', 'pyneu', 'main.py')
+pyneu_path = join(config['root'], 'tools', 'pyneu')
+compiler = join(pyneu_path, 'main.py')
+pyneu_files = [ join(pyneu_path, f) for f in read_files_from({ }, pyneu_path, join(pyneu_path, 'pyneu.list')) ]
 env['BUILDERS']['CompilePyNeutrinoTest'] = Builder(action = "python " + compiler + " -c " + join(config['src'], 'utils', 'consts.h') + ' ' + join(config['root'], 'lib') + " $SOURCE -o $TARGET")
 
 def add_test(arg, dir, fnames):
@@ -17,7 +19,7 @@ def add_test(arg, dir, fnames):
       short_name = fname[:-2]
       compiled_name = short_name + '.nc'
       compile = env.CompilePyNeutrinoTest(compiled_name, full_path)
-      env.Depends(compile, compiler)
+      env.Depends(compile, pyneu_files)
       test_file = relative(config['bin'], join(build, compiled_name))
       test_case = PyNeutrinoTestCase(executable, test_file, [ natives ], target)
       config['tests'].append(test_case)
