@@ -2,14 +2,16 @@
 
 The core neutrino syntax uses a number of special non-ascii characters.  Ascii is just so 1960s.  This may cause problems on some platforms and in some editors.
 
-|| *C* || *Name*           || *Syntax*         || *Mac, US*      || *[http://en.wikipedia.org/wiki/Compose_key Compose]* ||
+|| *C* || *Name*           || *Syntax*         || *Mac, US*      || *Compose*^1^ ||
 || «   || left guillemet   || start code quote || A-|            || `< <`     ||
 || »   || right guillemet  || end code quote   || A-\ _or_ S-A-| || `> >`     ||
 || ‹   || left angle       || start unquote    || A-# _or_ A-S-3 || `. <`     ||
 || ›   || right angle      || end unquote      || A-$ _or_ A-S-4 || `. >`     ||
 || ·   || middle dot       || delegating call  || A-( _or_ S-A-9 || `. .`     ||
 || ×   || multiplication   || binary operator  ||                || `x x`     ||
+|| ÷   || division         || binary operator  || A-/            || `- :`     ||
 || ≤   || less or equal    || binary operator  || A-<            ||           ||
 || ≥   || greater or equal || binary operator  || A->            ||           ||
 || ≠   || not equal        || binary operator  || A-=            ||           ||
-|| ÷   || division         || binary operator  || A-/            || `- :`     ||
+
+^1^: The _compose_ column shows which characters can be composed is your system has a [http://en.wikipedia.org/wiki/Compose_key compose key].  Many unix/linux system have this though it may be disabled by default.
