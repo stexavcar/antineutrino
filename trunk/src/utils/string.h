@@ -80,8 +80,8 @@ public:
     element(int16_t value) : tag_(INT_TAG) { value_.u_int = value; }
     element(uint32_t value) : tag_(INT_TAG) { value_.u_int = value; }
     element(int32_t value) : tag_(INT_TAG) { value_.u_int = value; }
-    element(uint64_t value) : tag_(INT_TAG) { value_.u_int = value; }
-    element(int64_t value) : tag_(INT_TAG) { value_.u_int = value; }
+    element(uint64_t value) : tag_(INT_TAG) { value_.u_int = static_cast<word>(value); }
+    element(int64_t value) : tag_(INT_TAG) { value_.u_int = static_cast<word>(value); }
     element(const char *value) : tag_(STRING_TAG) { value_.u_string = value; }
     /**
      * Prints this element on the specified buffer.  If the params

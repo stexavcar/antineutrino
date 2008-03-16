@@ -169,7 +169,7 @@ void Assembler::instantiate(ref<Layout> layout) {
   uint16_t layout_index = constant_pool_index(layout);
   code().append(OC_NEW);
   code().append(layout_index);
-  adjust_stack_height(-layout->instance_field_count());
+  adjust_stack_height(-static_cast<word>(layout->instance_field_count()));
 }
 
 void Assembler::raise(ref<String> name, uint16_t argc) {
@@ -327,7 +327,7 @@ void Assembler::mark(ref<Value> data) {
 void Assembler::unmark() {
   STATIC_CHECK(OpcodeInfo<OC_UNMARK>::kArgc == 0);
   code().append(OC_UNMARK);  
-  adjust_stack_height(-Marker::kSize);
+  adjust_stack_height(-static_cast<word>(Marker::kSize));
 }
 
 

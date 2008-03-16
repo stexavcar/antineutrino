@@ -197,7 +197,7 @@ void string_buffer::element::print_on(string_buffer &buf, char *params,
     int offset) {
   switch (tag_) {
   case INT_TAG: {
-    int value = value_.u_int;
+    word value = value_.u_int;
     const char kTempSize = 24;
     char temp[kTempSize];
     if (params) {
