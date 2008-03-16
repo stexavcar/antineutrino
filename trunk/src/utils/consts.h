@@ -221,7 +221,6 @@
   VISIT(2, Selector,              ArgcOffset)                        \
   VISIT(3, Selector,              Size)
 
-
 // -----------------
 // --- R o o t s ---
 // -----------------

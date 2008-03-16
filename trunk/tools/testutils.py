@@ -1,10 +1,9 @@
 from os.path import abspath, basename, join, commonprefix
 import subprocess, os, sys, time, re
 
-def execute(executable, args):
+def execute(args):
   process = subprocess.Popen(
     args = args,
-    executable = abspath(str(executable)),
     stdout = subprocess.PIPE,
     stderr = subprocess.PIPE
   )
@@ -41,7 +40,7 @@ class CCTestCase:
   def __str__(self):
     return self.target + ' ' + self.test_case + " (" + basename(str(self.executable)) + ")"
   def run(self):
-    (exit_code, output, errors) = execute(self.executable, [ '', self.test_case ])
+    (exit_code, output, errors) = execute([ abspath(self.executable), self.test_case ])
     status = None
     if exit_code == 0: return Result(Result.PASSED, output=output, error=errors)
     else: return Result(Result.FAILED, output=output, error=errors)
@@ -63,7 +62,7 @@ class PyNeutrinoTestCase:
     list = [ self.executable ] + self.args()
     return ' '.join(list)
   def run(self):
-    (exit_code, output, errors) = execute(self.executable, [ '' ] + self.args())
+    (exit_code, output, errors) = execute([ abspath(self.executable) ] + self.args())
     if exit_code == 0: return Result(Result.PASSED, output=output, error=errors)
     else: return Result(Result.FAILED, output=output, error=errors)
 

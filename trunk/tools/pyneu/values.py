@@ -1,3 +1,4 @@
+import codecs
 from consts import values, fields, roots
 import image
 from image import Raw
@@ -45,12 +46,13 @@ class String(Object):
     return '"%s"' % self.value_
 
   def allocate(self, heap):
-    length = len(self.value_)
+    (chars, _) = codecs.utf_8_encode(self.value_)
+    length = len(chars)
     size = fields.ImageString_HeaderSize + length
     result = heap.allocate(size, Smi(values.String.index))
     result[fields.ImageString_LengthOffset] = Raw(length)
     for i in xrange(length):
-      char = self.value_[i]
+      char = chars[i]
       result[fields.ImageString_HeaderSize + i] = Raw(ord(char))
     return result
 
@@ -181,7 +183,7 @@ class Protocol(Object):
   def allocate(self, heap):
     result = heap.allocate(fields.ImageProtocol_Size, Smi(values.Protocol.index))
     self.set_cache(heap, result)
-    result[fields.ImageProtocol_NameOffset] = self.name_
+    result[fields.ImageProtocol_NameOffset] = String(self.name_)
     result[fields.ImageProtocol_MethodsOffset] = Tuple(entries = self.members_)
     result[fields.ImageProtocol_SuperOffset] = self.super_
     return result
@@ -246,6 +248,52 @@ class LambdaExpression(SyntaxTree):
     result = heap.allocate(fields.ImageLambdaExpression_Size, Smi(values.LambdaExpression.index))
     result[fields.ImageLambdaExpression_ParamsOffset] = Tuple(entries = self.params_)
     result[fields.ImageLambdaExpression_BodyOffset] = self.body_
+    return result
+
+
+class MethodExpression(SyntaxTree):
+
+  def __init__(self, selector, body, is_static):
+    super(MethodExpression, self).__init__()
+    self.selector_ = selector
+    self.body_ = body
+    self.is_static_ = is_static
+
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageMethodExpression_Size, Smi(values.MethodExpression.index))
+    result[fields.ImageMethodExpression_SelectorOffset] = self.selector_
+    result[fields.ImageMethodExpression_LambdaOffset] = self.body_
+    result[fields.ImageMethodExpression_IsStaticOffset] = self.is_static_
+    return result
+
+
+class ProtocolExpression(SyntaxTree):
+
+  def __init__(self, name, methods, shuper):
+    super(ProtocolExpression, self).__init__()
+    self.name_ = name
+    self.methods_ = methods
+    self.super_ = shuper
+
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageProtocolExpression_Size, Smi(values.ProtocolExpression.index))
+    result[fields.ImageProtocolExpression_NameOffset] = String(self.name_)
+    result[fields.ImageProtocolExpression_MethodsOffset] = Tuple(entries = self.methods_)
+    result[fields.ImageProtocolExpression_SuperOffset] = self.super_
+    return result
+
+
+class QuoteExpression(SyntaxTree):
+
+  def __init__(self, value, unquotes):
+    super(QuoteExpression, self).__init__()
+    self.value_ = value
+    self.unquotes_ = unquotes
+
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageQuoteExpression_Size, Smi(values.QuoteExpression.index))
+    result[fields.ImageQuoteExpression_ValueOffset] = self.value_
+    result[fields.ImageQuoteExpression_UnquotesOffset] = Tuple(entries = self.unquotes_)
     return result
 
 
@@ -418,11 +466,11 @@ class LiteralExpression(SyntaxTree):
 
 
 class InterpolateExpression(SyntaxTree):
-  
+
   def __init__(self, terms):
     super(InterpolateExpression, self).__init__()
     self.terms_ = terms
-  
+
   def allocate(self, heap):
     result = heap.allocate(fields.ImageInterpolateExpression_Size, Smi(values.InterpolateExpression.index))
     result[fields.ImageInterpolateExpression_TermsOffset] = Tuple(entries = self.terms_)
@@ -458,11 +506,11 @@ class ConditionalExpression(SyntaxTree):
 
 
 class TupleExpression(SyntaxTree):
-  
+
   def __init__(self, values):
     super(TupleExpression, self).__init__()
     self.values_ = values
-  
+
   def allocate(self, heap):
     result = heap.allocate(fields.ImageTupleExpression_Size, Smi(values.TupleExpression.index))
     result[fields.ImageTupleExpression_ValuesOffset] = Tuple(entries = self.values_)
@@ -487,12 +535,12 @@ class LocalDefinition(SyntaxTree):
 
 
 class DoOnExpression(SyntaxTree):
-  
+
   def __init__(self, value, clauses):
     super(DoOnExpression, self).__init__()
     self.value_ = value
     self.clauses_ = clauses
-  
+
   def allocate(self, heap):
     result = heap.allocate(fields.ImageDoOnExpression_Size, Smi(values.DoOnExpression.index))
     result[fields.ImageDoOnExpression_ValueOffset] = self.value_
@@ -501,12 +549,12 @@ class DoOnExpression(SyntaxTree):
 
 
 class OnClause(SyntaxTree):
-  
+
   def __init__(self, name, body):
     super(OnClause, self).__init__()
     self.name_ = name
     self.body_ = body
-  
+
   def allocate(self, heap):
     result = heap.allocate(fields.ImageOnClause_Size, Smi(values.OnClause.index))
     result[fields.ImageOnClause_NameOffset] = String(self.name_)

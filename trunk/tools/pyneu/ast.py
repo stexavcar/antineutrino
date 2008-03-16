@@ -46,6 +46,13 @@ class Arguments(SyntaxTree):
   def __len__(self):
     return len(self.args_)
 
+  def accept(self, visitor):
+    visitor.visit_arguments(self)
+
+  def traverse(self, visitor):
+    for arg in self.args_:
+      arg.accept(visitor)
+
   def quote(self):
     args = [ s.quote() for s in self.args_ ]
     return values.Arguments(args, None)
@@ -105,6 +112,12 @@ class Method(Declaration):
     full_name = "%s.%s" % (klass, name)
     self.lambda_ = Lambda(modifiers, full_name, params, body)
 
+  def quote(self):
+    argc = len(self.lambda_.params())
+    selector = values.Selector(self.name_, argc)
+    lam = self.lambda_.quote()
+    return values.MethodExpression(selector, lam, values.FALSE)
+
   def evaluate(self):
     argc = len(self.lambda_.params())
     selector = values.Selector(self.name_, argc)
@@ -122,7 +135,7 @@ class Expression(SyntaxTree):
 
   def is_sequence(self):
     return False
-  
+
   def is_identifier(self):
     return False
 
@@ -166,6 +179,19 @@ class Lambda(Expression):
     return values.Lambda(argc, body)
 
 
+class Quote(Expression):
+
+  def __init__(self, value, unquotes):
+    super(Quote, self).__init__()
+    self.value_ = value
+    self.unquotes_ = unquotes
+
+  def quote(self):
+    value = self.value_.quote()
+    unquotes = [ u.quote() for u in self.unquotes_ ]
+    return values.QuoteExpression(value, unquotes)
+
+
 class Sequence(Expression):
 
   def __init__(self, exprs):
@@ -175,6 +201,13 @@ class Sequence(Expression):
 
   def quote(self):
     return values.SequenceExpression([ e.quote() for e in self.exprs_ ])
+
+  def accept(self, visitor):
+    visitor.visit_sequence(self)
+
+  def traverse(self, visitor):
+    for expr in self.exprs_:
+      expr.accept(visitor)
 
   def is_sequence(self):
     return False
@@ -213,8 +246,13 @@ class Protocol(Expression):
 
   def evaluate(self):
     members = [ member.evaluate() for member in self.members_ ]
-    return values.Protocol(values.String(self.name_), members)
+    return values.Protocol(self.name_, members)
 
+  def quote(self):
+    members = [ member.quote() for member in self.members_ ]
+    if self.super_name_: sup = Global(self.super_name_).quote()
+    else: sup = values.VOID
+    return values.ProtocolExpression(self.name_, members, sup)
 
 class Call(Expression):
 
@@ -223,6 +261,14 @@ class Call(Expression):
     self.recv_ = recv
     self.fun_ = fun
     self.args_ = args
+
+  def accept(self, visitor):
+    visitor.visit_call(self)
+
+  def traverse(self, visitor):
+    self.recv_.accept(visitor)
+    self.fun_.accept(visitor)
+    self.args_.accept(visitor)
 
   def quote(self):
     recv = self.recv_.quote()
@@ -238,6 +284,13 @@ class Invoke(Expression):
     self.recv_ = recv
     self.name_ = name
     self.args_ = args
+
+  def accept(self, visitor):
+    visitor.visit_invoke(self)
+
+  def traverse(self, visitor):
+    self.recv_.accept(visitor)
+    self.args_.accept(visitor)
 
   def quote(self):
     recv = self.recv_.quote()
@@ -255,6 +308,15 @@ class Instantiate(Expression):
     self.args_ = args
     self.terms_ = terms
 
+  def accept(self, visitor):
+    visitor.visit_instantiate(self)
+
+  def traverse(self, visitor):
+    self.recv_.accept(visitor)
+    self.args_.accept(visitor)
+    for (k, v) in self.terms_:
+      v.accept(visitor)
+
   def quote(self):
     recv = self.recv_.quote()
     args = self.args_.quote()
@@ -265,7 +327,7 @@ class Instantiate(Expression):
 
 
 class Tuple(Expression):
-  
+
   def __init__(self, exprs):
     super(Tuple, self).__init__()
     self.exprs_ = exprs
@@ -282,17 +344,23 @@ class Return(Expression):
     assert not value is None
     self.value_ = value
 
+  def accept(self, visitor):
+    visitor.visit_return(self)
+
+  def traverse(self, visitor):
+    self.value_.accept(visitor)
+
   def quote(self):
     return values.ReturnExpression(self.value_.quote())
 
 
 class DoOnExpression(Expression):
-  
+
   def __init__(self, value, clauses):
     super(DoOnExpression, self).__init__()
     self.value_ = value
     self.clauses_ = clauses
-  
+
   def quote(self):
     clauses = [ c.quote() for c in self.clauses_ ]
     value = self.value_.quote()
@@ -300,12 +368,12 @@ class DoOnExpression(Expression):
 
 
 class OnClause(SyntaxTree):
-  
+
   def __init__(self, name, lam):
     super(OnClause, self).__init__()
     self.name_ = name
     self.lambda_ = lam
-  
+
   def quote(self):
     return values.OnClause(self.name_, self.lambda_.quote())
 
@@ -317,6 +385,12 @@ class Raise(Expression):
     self.name_ = name
     self.args_ = args
 
+  def accept(self, visitor):
+    visitor.visit_raise(self)
+
+  def traverse(self, visitor):
+    self.args_.accept(visitor)
+
   def quote(self):
     args = self.args_.quote()
     return values.RaiseExpression(self.name_, args)
@@ -326,6 +400,12 @@ class This(Expression):
 
   def __init__(self):
     super(This, self).__init__()
+
+  def accept(self, visitor):
+    visitor.visit_this(self)
+
+  def traverse(self, visitor):
+    pass
 
   def quote(self):
     return values.ThisExpression()
@@ -356,25 +436,25 @@ class Void(Expression):
 
 
 class Thrue(Expression):
-  
+
   def __init__(self):
     super(Thrue, self).__init__()
-  
+
   def evaluate(self):
     return self.quote()
-  
+
   def quote(self):
     return values.TRUE
 
 
 class Fahlse(Expression):
-  
+
   def __init__(self):
     super(Fahlse, self).__init__()
-  
+
   def evaluate(self):
     return self.quote()
-  
+
   def quote(self):
     return values.FALSE
 
@@ -385,6 +465,14 @@ class Conditional(Expression):
     self.cond_ = cond
     self.then_part_ = then_part
     self.else_part_ = else_part
+
+  def accept(self, visitor):
+    visitor.visit_conditional(self)
+
+  def traverse(self, visitor):
+    self.cond_.accept(visitor)
+    self.then_part_.accept(visitor)
+    self.else_part_.accept(visitor)
 
   def quote(self):
     cond = self.cond_.quote()
@@ -400,6 +488,12 @@ class InternalCall(Expression):
     self.argc_ = argc
     self.index_ = index
 
+  def accept(self, visitor):
+    visitor.visit_internal_call(self)
+
+  def traverse(self, visitor):
+    pass
+
   def quote(self):
     return values.InternalCall(self.argc_, self.index_)
 
@@ -411,6 +505,12 @@ class NativeCall(Expression):
     self.argc_ = argc
     self.name_ = name
 
+  def accept(self, visitor):
+    visitor.visit_native_call(self)
+
+  def traverse(self, visitor):
+    pass
+
   def quote(self):
     return values.NativeCall(self.argc_, self.name_)
 
@@ -421,6 +521,13 @@ class LocalDefinition(Expression):
     self.symbol_ = symbol
     self.value_ = value
     self.body_ = body
+
+  def accept(self, visitor):
+    visitor.visit_local_definition(self)
+
+  def traverse(self, visitor):
+    self.value_.accept(visitor)
+    self.body_.accept(visitor)
 
   def quote(self):
     symbol = self.symbol_.quote()
@@ -442,15 +549,29 @@ class Literal(Expression):
     super(Literal, self).__init__()
     self.value_ = value
 
+  def accept(self, visitor):
+    visitor.visit_literal(self)
+
+  def traverse(self, visitor):
+    pass
+
   def quote(self):
     return values.LiteralExpression(to_literal(self.value_))
 
 
 class Interpolate(Expression):
-  
+
   def __init__(self, terms):
     super(Interpolate, self).__init__()
     self.terms_ = terms
+
+  def accept(self, visitor):
+    visitor.visit_interpolate(self)
+
+  def traverse(self, visitor):
+    for term in self.terms_:
+      if isinstance(term, Expression):
+        term.accept(visitor)
 
   def quote(self):
     terms = [ to_literal(t) for t in self.terms_ ]
@@ -464,7 +585,7 @@ class Identifier(Expression):
 
   def name(self):
     return self.name_
-  
+
   def is_identifier(self):
     return True
 
@@ -473,6 +594,12 @@ class Global(Identifier):
 
   def __init__(self, name):
     super(Global, self).__init__(name)
+
+  def accept(self, visitor):
+    visitor.visit_global(self)
+
+  def traverse(self, visitor):
+    pass
 
   def quote(self):
     return values.GlobalExpression(self.name())
@@ -483,6 +610,12 @@ class Local(Identifier):
   def __init__(self, symbol):
     super(Local, self).__init__(symbol.name())
     self.symbol_ = symbol
+
+  def accept(self, visitor):
+    visitor.visit_local(self)
+
+  def traverse(self, visitor):
+    pass
 
   def quote(self):
     return self.symbol_.quote()
@@ -504,4 +637,52 @@ class Visitor(object):
     self.visit_tree(that)
 
   def visit_protocol(self, that):
+    self.visit_tree(that)
+
+  def visit_return(self, that):
+    self.visit_tree(that)
+
+  def visit_internal_call(self, that):
+    self.visit_tree(that)
+
+  def visit_call(self, that):
+    self.visit_tree(that)
+
+  def visit_this(self, that):
+    self.visit_tree(that)
+
+  def visit_global(self, that):
+    self.visit_tree(that)
+
+  def visit_arguments(self, that):
+    self.visit_tree(that)
+
+  def visit_invoke(self, that):
+    self.visit_tree(that)
+
+  def visit_local(self, that):
+    self.visit_tree(that)
+
+  def visit_sequence(self, that):
+    self.visit_tree(that)
+
+  def visit_raise(self, that):
+    self.visit_tree(that)
+
+  def visit_literal(self, that):
+    self.visit_tree(that)
+
+  def visit_conditional(self, that):
+    self.visit_tree(that)
+
+  def visit_interpolate(self, that):
+    self.visit_tree(that)
+
+  def visit_native_call(self, that):
+    self.visit_tree(that)
+
+  def visit_local_definition(self, that):
+    self.visit_tree(that)
+
+  def visit_instantiate(self, that):
     self.visit_tree(that)

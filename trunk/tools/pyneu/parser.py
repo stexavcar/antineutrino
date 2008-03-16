@@ -19,6 +19,7 @@ class Parser(object):
   def __init__(self, scan):
     self.scan_ = scan
     self.resolver_ = VariableResolver()
+    self.quoter_ = QuoteLevel(None)
     scan.set_parser(self)
 
   def scanner(self):
@@ -26,6 +27,9 @@ class Parser(object):
 
   def resolver(self):
     return self.resolver_
+
+  def quoter(self):
+    return self.quoter_
 
   def token(self):
     return self.scanner().current()
@@ -122,7 +126,8 @@ class Parser(object):
     if self.token().is_keyword(DEF):
       return self.definition(modifiers)
     elif self.token().is_keyword(PROTOCOL):
-      return self.protocol_declaration(modifiers)
+      protocol = self.protocol(modifiers)
+      return ast.Definition(protocol.name(), protocol)
     else:
       self.unexpected_token()
 
@@ -135,7 +140,7 @@ class Parser(object):
     self.resolver().pop_scope()
     return ast.Definition(name, ast.Lambda(modifiers, name, params, body))
 
-  def protocol_declaration(self, modifiers):
+  def protocol(self, modifiers):
     self.expect_keyword(PROTOCOL)
     name = self.expect_identifier()
     if self.token().is_delimiter(':'):
@@ -149,8 +154,7 @@ class Parser(object):
       member = self.member_declaration(name)
       members.append(member)
     self.expect_delimiter('}')
-    protocol = ast.Protocol(modifiers, name, parent, members)
-    return ast.Definition(name, protocol)
+    return ast.Protocol(modifiers, name, parent, members)
 
   def member_declaration(self, klass):
     doc = self.documentation_opt()
@@ -245,7 +249,7 @@ class Parser(object):
       value = self.lambda_expression()
       if is_toplevel: self.expect_delimiter(';')
       return value
-  
+
   def do_on_expression(self, is_toplevel):
     self.expect_keyword(DO)
     value = self.expression(is_toplevel)
@@ -257,7 +261,7 @@ class Parser(object):
       body = self.function_body(is_toplevel)
       clauses.append(ast.OnClause(name, ast.Lambda([], None, params, ast.Return(body))))
     return ast.DoOnExpression(value, clauses)
-  
+
   def lambda_expression(self):
     if self.token().is_keyword(FN):
       self.expect_keyword(FN)
@@ -332,25 +336,23 @@ class Parser(object):
     return result
 
   def not_expression(self):
-    return self.circumfix_expression()
-  
-  def circumfix_expression(self):
-    if self.token().is_operator():
-      value = self.token().value()
-      if not scanner.is_circumfix_operator(value):
-        self.unexpected_token()
-      self.expect_operator()
-      match = scanner.circumfix_match(value)
-      expr = self.circumfix_expression()
-      self.expect_operator(match)
-      return ast.Invoke(expr, value + match, ast.Arguments([], {}))
-    else:
-      return self.operator_expression()
+    return self.operator_expression(None)
 
-  def operator_expression(self):
+  def circumfix_expression(self):
+    assert self.token().is_operator()
+    value = self.token().value()
+    if not scanner.is_circumfix_operator(value):
+      self.unexpected_token()
+    self.expect_operator()
+    match = scanner.circumfix_match(value)
+    expr = self.operator_expression(match)
+    self.expect_operator(match)
+    return ast.Invoke(expr, value + match, ast.Arguments([], {}))
+
+  def operator_expression(self, match):
     exprs = [ self.call_expression() ]
     ops = [ ]
-    while self.token().is_operator():
+    while self.token().is_operator() and (not match or not self.token().is_operator(match)):
       ops.append(self.expect_operator())
       exprs.append(self.call_expression())
     # TODO: operator precedence
@@ -429,6 +431,8 @@ class Parser(object):
     elif self.token().is_keyword(FALSE):
       self.expect_keyword(FALSE)
       return ast.Literal(ast.Fahlse())
+    elif self.token().is_keyword(PROTOCOL):
+      return self.protocol([])
     elif self.token().is_string():
       terms = self.expect_string()
       if len(terms) == 0:
@@ -451,20 +455,33 @@ class Parser(object):
       self.expect_delimiter(')')
       return value
     elif self.token().is_delimiter(u'«'):
-      self.expect_delimiter(u'«')
-      value = self.expression(False)
-      self.expect_delimiter(u'»')
-      return value
+      return self.quote_expression()
     elif self.token().is_delimiter(u'‹'):
-      self.expect_delimiter(u'‹')
-      value = self.expression(False)
-      self.expect_delimiter(u'›')
-      return value
+      return self.unquote_expression()
+    elif self.token().is_operator():
+      return self.circumfix_expression()
     elif self.token().is_delimiter('['):
       return self.tuple()
     else:
       self.unexpected_token()
-  
+
+  def quote_expression(self):
+    self.expect_delimiter(u'«')
+    my_quoter = QuoteLevel(self.quoter())
+    self.quoter_ = my_quoter
+    value = self.expression(False)
+    self.expect_delimiter(u'»')
+    self.quoter_ = my_quoter.parent()
+    unquotes = my_quoter.unquotes()
+    return ast.Quote(value, unquotes)
+    return value
+
+  def unquote_expression(self):
+    self.expect_delimiter(u'‹')
+    value = self.expression(False)
+    self.expect_delimiter(u'›')
+    return value
+
   def tuple(self):
     self.expect_delimiter('[')
     elms = [ ]
@@ -544,3 +561,24 @@ class VariableResolver(object):
 
   def pop_scope(self):
     self.scope_ = self.scope().parent()
+
+
+# --- Q u o t i n g ---
+
+
+class QuoteLevel(object):
+
+  def __init__(self, parent):
+    self.parent_ = parent
+    self.unquotes_ = [ ]
+
+  def parent(self):
+    return self.parent_
+
+  def unquotes(self):
+    return self.unquotes_
+
+  def register_unquoted(self, expr):
+    index = len(self.unquotes_)
+    self.unquotes_.append(expr)
+    return index

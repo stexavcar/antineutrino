@@ -117,9 +117,9 @@ static void write_instance_short_on(Instance *obj, string_buffer &buf) {
 }
 
 static void write_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
-  buf.append('<');
+  buf.append("«");
   obj->unparse_on(buf);
-  buf.append('>');
+  buf.append("»");
 }
 
 static void write_selector_short_on(Selector *obj, string_buffer &buf) {
