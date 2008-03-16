@@ -112,6 +112,9 @@ class Method(Declaration):
     full_name = "%s.%s" % (klass, name)
     self.lambda_ = Lambda(modifiers, full_name, params, body)
 
+  def is_static(self):
+    return parser.STATIC in self.modifiers_
+
   def quote(self):
     argc = len(self.lambda_.params())
     selector = values.Selector(self.name_, argc)
@@ -122,7 +125,7 @@ class Method(Declaration):
     argc = len(self.lambda_.params())
     selector = values.Selector(self.name_, argc)
     lam = self.lambda_.evaluate()
-    return values.Method(selector, lam)
+    return values.Method(selector, lam, self.is_static())
 
 
 # --- E x p r e s s i o n s ---
@@ -237,6 +240,7 @@ class Protocol(Expression):
     self.name_ = name
     self.super_name_ = super_name
     self.members_ = members
+    self.image_ = None
 
   def accept(self, visitor):
     visitor.visit_protocol(self)
@@ -255,8 +259,12 @@ class Protocol(Expression):
     return self.modifiers_
 
   def evaluate(self):
-    members = [ member.evaluate() for member in self.members_ ]
-    return values.Protocol(self.name_, members)
+    assert not self.image_
+    members = [ m.evaluate() for m in self.members_ if not m.is_static() ]
+    static_members = [ m.evaluate() for m in self.members_ if m.is_static() ]
+    result = values.Protocol(self.name_, members, static_members)
+    self.image_ = result
+    return result
 
   def quote(self):
     members = [ member.quote() for member in self.members_ ]

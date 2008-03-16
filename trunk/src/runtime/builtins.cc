@@ -245,4 +245,21 @@ Data *Builtins::lift(BuiltinArguments &args) {
   return Runtime::current().heap().new_literal_expression(value);
 }
 
+
+// ---------------
+// --- T e s t ---
+// ---------------
+
+Data *Builtins::make_forwarder(BuiltinArguments &args) {
+  ASSERT_EQ(0, args.count());
+  return args.runtime().heap().new_transparent_forwarder(args.self());
+}
+
+Data *Builtins::set_target(BuiltinArguments &args) {
+  ASSERT_EQ(1, args.count());
+  Forwarder *forwarder = cast<Forwarder>(args.self());
+  forwarder->descriptor()->set_target(args[0]);
+  return args.runtime().roots().vhoid();
+}
+
 } // namespace neutrino

@@ -74,7 +74,7 @@ class ResolveVisitor(ast.Visitor):
 
   def visit_protocol(self, that):
     # Find the super protocol value
-    image = self.toplevel()[that.name()]
+    image = that.image_
     super_name = that.super_name()
     if super_name:
       image.super_ = self.toplevel()[super_name]
@@ -91,5 +91,10 @@ class ResolveVisitor(ast.Visitor):
       self.roots()[index] = image
 
     # For all methods in this protocol set the appropriate signature
-    for member in image.members():
+    for member in image.methods():
       member.set_signature(image)
+
+    static_protocol = image.static_protocol()
+    if static_protocol:
+      for method in static_protocol.methods():
+        method.set_signature(static_protocol)

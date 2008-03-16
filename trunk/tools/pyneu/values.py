@@ -117,14 +117,18 @@ class Selector(Object):
 
 class Method(Object):
 
-  def __init__(self, selector, lam):
+  def __init__(self, selector, lam, is_static):
     super(Method, self).__init__()
     self.selector_ = selector
     self.lam_ = lam
+    self.is_static_ = is_static
     self.signature_ = None
 
   def set_signature(self, protocol):
     self.signature_ = Signature([protocol])
+
+  def is_static(self):
+    return self.is_static_
 
   def allocate(self, heap):
     size = fields.ImageMethod_Size
@@ -171,21 +175,48 @@ class Lambda(Object):
 
 class Protocol(Object):
 
-  def __init__(self, name, members):
+  def __init__(self, name, methods, static_members, sup=None):
     super(Protocol, self).__init__()
     self.name_ = name
-    self.members_ = members
-    self.super_ = None
+    self.methods_ = methods
+    self.super_ = sup
+    if static_members:
+      self.static_protocol_ = Protocol(None, static_members, [], VOID)
+    else:
+      self.static_protocol_ = None
 
-  def members(self):
-    return self.members_
+  def methods(self):
+    return self.methods_
+
+  def static_protocol(self):
+    return self.static_protocol_
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageProtocol_Size, Smi(values.Protocol.index))
+    if self.static_protocol_:
+      layout = Layout(values.Protocol.index, self.static_protocol_)
+    else:
+      layout = Smi(values.Protocol.index)
+    result = heap.allocate(fields.ImageProtocol_Size, layout)
     self.set_cache(heap, result)
-    result[fields.ImageProtocol_NameOffset] = String(self.name_)
-    result[fields.ImageProtocol_MethodsOffset] = Tuple(entries = self.members_)
+    if self.name_:
+      result[fields.ImageProtocol_NameOffset] = String(self.name_)
+    result[fields.ImageProtocol_MethodsOffset] = Tuple(entries = self.methods_)
     result[fields.ImageProtocol_SuperOffset] = self.super_
+    return result
+
+
+class Layout(Object):
+
+  def __init__(self, instance_type, protocol):
+    super(Layout, self).__init__()
+    self.instance_type_ = instance_type
+    self.protocol_ = protocol
+
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageLayout_Size, Smi(values.Layout.index))
+    result[fields.ImageLayout_InstanceTypeOffset] = Raw(self.instance_type_)
+    result[fields.ImageLayout_ProtocolOffset] = self.protocol_
+    result[fields.ImageLayout_MethodsOffset] = EMPTY_TUPLE
     return result
 
 

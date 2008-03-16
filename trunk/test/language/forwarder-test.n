@@ -1,5 +1,5 @@
-native def make_forwarder();
-native def set_target(value);
+internal def make_forwarder();
+internal def set_target(value);
 
 def simple_forwarder() {
   def x := "foo"·make_forwarder();

@@ -266,7 +266,9 @@ class Parser(object):
     if self.token().is_keyword(FN):
       self.expect_keyword(FN)
       params = self.parameters()
+      self.resolver().push_scope(params)
       body = self.function_body(False)
+      self.resolver().pop_scope()
       return ast.Lambda([], None, params, body)
     else:
       return self.logical_expression()
@@ -561,7 +563,11 @@ class VariableResolver(object):
     return self.scope().lookup(name)
 
   def push_scope(self, symbols):
-    self.scope_ = LocalScope(self.scope_, symbols)
+    entries = [ ]
+    for entry in symbols:
+      if isinstance(entry, ast.Symbol):
+        entries.append(entry)
+    self.scope_ = LocalScope(self.scope_, entries)
 
   def pop_scope(self):
     self.scope_ = self.scope().parent()
