@@ -297,6 +297,18 @@ class QuoteExpression(SyntaxTree):
     return result
 
 
+class UnquoteExpression(SyntaxTree):
+
+  def __init__(self, index):
+    super(UnquoteExpression, self).__init__()
+    self.index_ = index
+
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageUnquoteExpression_Size, Smi(values.UnquoteExpression.index))
+    result[fields.ImageUnquoteExpression_IndexOffset] = Raw(self.index_)
+    return result
+
+
 class Symbol(SyntaxTree):
 
   def __init__(self, name):

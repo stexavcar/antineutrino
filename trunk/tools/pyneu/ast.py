@@ -192,6 +192,16 @@ class Quote(Expression):
     return values.QuoteExpression(value, unquotes)
 
 
+class Unquote(Expression):
+
+  def __init__(self, index):
+    super(Unquote, self).__init__()
+    self.index_ = index
+
+  def quote(self):
+    return values.UnquoteExpression(self.index_)
+
+
 class Sequence(Expression):
 
   def __init__(self, exprs):

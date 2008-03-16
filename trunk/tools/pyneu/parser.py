@@ -223,7 +223,7 @@ class Parser(object):
     return result
 
   def parameter(self):
-    if self.token().is_delimiter('~'):
+    if self.token().is_delimiter(u'‹'):
       return self.unquote_expression()
     else:
       name = self.expect_identifier()
@@ -478,9 +478,13 @@ class Parser(object):
 
   def unquote_expression(self):
     self.expect_delimiter(u'‹')
-    value = self.expression(False)
+    current_quoter = self.quoter()
+    self.quoter_ = current_quoter.parent()
+    expr = self.expression(False)
+    self.quoter_ = current_quoter
     self.expect_delimiter(u'›')
-    return value
+    index = current_quoter.register_unquoted(expr)
+    return ast.Unquote(index)
 
   def tuple(self):
     self.expect_delimiter('[')
