@@ -8,6 +8,7 @@ The core neutrino syntax uses a number of special non-ascii characters.  Ascii i
 || ‹   || left angle       || start unquote    || A-# _or_ A-S-3 || `. <`     ||
 || ›   || right angle      || end unquote      || A-$ _or_ A-S-4 || `. >`     ||
 || ·   || middle dot       || delegating call  || A-( _or_ S-A-9 || `. .`     ||
+|| ×   || multiplication   || binary operator  ||                || `x x`     ||
 || ≤   || less or equal    || binary operator  || A-<            ||           ||
 || ≥   || greater or equal || binary operator  || A->            ||           ||
 || ≠   || not equal        || binary operator  || A-=            ||           ||
