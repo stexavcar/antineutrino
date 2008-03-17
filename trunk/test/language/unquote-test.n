@@ -1,6 +1,6 @@
 def factorial_code(n) {
   if (n = 0) return «1»;
-  else return «‹factorial_code(n - 1)› * ‹lift(n)›»;
+  else return «‹factorial_code(n - 1)› × ‹lift(n)›»;
 }
 
 def simple_unquote_test() {
@@ -15,7 +15,7 @@ def lift_test() {
 
 def make_power(s, n) {
   if (n = 0) return «1»;
-  else return «‹s› * ‹make_power(s, n - 1)›»;
+  else return «‹s› × ‹make_power(s, n - 1)›»;
 }
 
 def make_power_test() {

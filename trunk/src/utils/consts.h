@@ -355,8 +355,8 @@
   VISIT(2,  string,              plus,        "+")                   \
   VISIT(10, smi,                 plus,        "+")                   \
   VISIT(11, smi,                 minus,       "-")                   \
-  VISIT(12, smi,                 times,       "*")                   \
-  VISIT(13, smi,                 divide,      "/")                   \
+  VISIT(12, smi,                 times,       "×")                   \
+  VISIT(13, smi,                 divide,      "÷")                   \
   VISIT(14, smi,                 abs,         "||")                  \
   VISIT(20, object,              eq,          "=")                   \
   VISIT(21, object,              to_string,   "to_string")           \

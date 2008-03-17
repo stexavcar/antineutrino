@@ -1,5 +1,6 @@
 import re
 import string
+import codecs
 
 def new_namespace(values = None):
   if values is None:
@@ -48,16 +49,21 @@ def install_root(n, Type, name, Protocol, allocator):
   })
 
 
+def get_string_contents(str):
+  (result, _) = codecs.utf_8_decode(str[1:-1])
+  return result
+
+
 (__builtin_functions_map, builtin_functions) = new_namespace()
 def install_builtin_function(n, function_name, string_name):
-  name = string_name[1:-1]
+  name = get_string_contents(string_name)
   (_, __builtin_functions_map[name]) = new_namespace({
     'index': int(n)
   })
 
 
 def install_builtin_method(n, klass, function_name, string_name):
-  method_name = string_name[1:-1]
+  method_name = get_string_contents(string_name)
   Class = lower_to_upper[klass]
   name = "%s.%s" % (Class, method_name)
   (_, __builtin_functions_map[name]) = new_namespace({
