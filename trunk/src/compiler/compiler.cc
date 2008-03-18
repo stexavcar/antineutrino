@@ -53,8 +53,14 @@ public:
   
   uint16_t constant_pool_index(ref<Value> value);
   void load_symbol(ref<Symbol> sym);
+  void store_symbol(ref<Symbol> sym);
   
-  void codegen(ref<SyntaxTree> that) { that.accept(*this); }
+  void codegen(ref<SyntaxTree> that) {
+    IF_DEBUG(uword height_before = stack_height());
+    that.accept(*this);
+    ASSERT_EQ(height_before + 1, stack_height());
+  }
+  
   void push(ref<Value> value);
   void pop(uint16_t height = 1);
   void slap(uint16_t height);
@@ -66,7 +72,8 @@ public:
   void tuple(uint16_t size);
   void global(ref<Value> name);
   void argument(uint16_t index);
-  void local(uint16_t height);
+  void load_local(uint16_t height);
+  void store_local(uint16_t height);
   void outer(uint16_t index);
   void closure(ref<Lambda> lambda, uint16_t outers);
   void if_true(Label &label);
@@ -209,11 +216,17 @@ void Assembler::argument(uint16_t index) {
   adjust_stack_height(1);
 }
 
-void Assembler::local(uint16_t height) {
-  STATIC_CHECK(OpcodeInfo<OC_LOCAL>::kArgc == 1);
-  code().append(OC_LOCAL);
+void Assembler::load_local(uint16_t height) {
+  STATIC_CHECK(OpcodeInfo<OC_LD_LOCAL>::kArgc == 1);
+  code().append(OC_LD_LOCAL);
   code().append(height);
   adjust_stack_height(1);
+}
+
+void Assembler::store_local(uint16_t height) {
+  STATIC_CHECK(OpcodeInfo<OC_ST_LOCAL>::kArgc == 1);
+  code().append(OC_ST_LOCAL);
+  code().append(height);
 }
 
 void Assembler::outer(uint16_t index) {
@@ -527,11 +540,8 @@ void Assembler::visit_sequence_expression(ref<SequenceExpression> that) {
   ASSERT(expressions.length() > 1);
   bool is_first = true;
   for (uword i = 0; i < expressions.length(); i++) {
-    if (is_first) {
-      is_first = false;
-    } else {
-      __ pop();
-    }
+    if (is_first) is_first = false;
+    else __ pop();
     __ codegen(cast<SyntaxTree>(expressions.get(i)));
   }
 }
@@ -556,7 +566,7 @@ void Assembler::load_symbol(ref<Symbol> that) {
       __ argument(lookup.argument_info.index);
       break;
     case LOCAL:
-      __ local(lookup.local_info.height);
+      __ load_local(lookup.local_info.height);
       break;
     case OUTER:
       __ outer(lookup.outer_info.index);
@@ -566,8 +576,25 @@ void Assembler::load_symbol(ref<Symbol> that) {
   }
 }
 
+void Assembler::store_symbol(ref<Symbol> that) {
+  Lookup lookup(*this);
+  scope().lookup(that, lookup);
+  switch (lookup.category) {
+    case LOCAL:
+      __ store_local(lookup.local_info.height);
+      break;
+    default:
+      UNHANDLED(Category, lookup.category);
+  }
+}
+
 void Assembler::visit_symbol(ref<Symbol> that) {
   load_symbol(that);
+}
+
+void Assembler::visit_assignment(ref<Assignment> that) {
+  __ codegen(that.value());
+  store_symbol(that.symbol());
 }
 
 void Assembler::visit_conditional_expression(ref<ConditionalExpression> that) {

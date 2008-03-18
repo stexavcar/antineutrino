@@ -94,7 +94,10 @@
   VISIT(71, DO_ON_EXPRESSION,       DoOnExpression,        do_on_expression)       \
   VISIT(72, INSTANTIATE_EXPRESSION, InstantiateExpression, instantiate_expression) \
   VISIT(75, ARGUMENTS,              Arguments,             arguments)              \
-  VISIT(76, EXTERNAL_CALL,          ExternalCall,          external_call)
+  VISIT(76, EXTERNAL_CALL,          ExternalCall,          external_call)          \
+  VISIT(80, ASSIGNMENT,             Assignment,            assignment)
+
+
 
 #define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
   FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
@@ -191,6 +194,9 @@
   VISIT(2, LocalDefinition,       ValueOffset)                       \
   VISIT(3, LocalDefinition,       BodyOffset)                        \
   VISIT(4, LocalDefinition,       Size)                              \
+  VISIT(1, Assignment,            SymbolOffset)                      \
+  VISIT(2, Assignment,            ValueOffset)                       \
+  VISIT(3, Assignment,            Size)                              \
   VISIT(1, UnquoteExpression,     IndexOffset)                       \
   VISIT(2, UnquoteExpression,     Size)                              \
   VISIT(1, QuoteTemplate,         ValueOffset)                       \
@@ -280,7 +286,8 @@
   VISIT(47, Layout,     forwarder_descriptor_layout,   ForwarderDescriptor,   allocate_empty_layout(FORWARDER_DESCRIPTOR_TYPE))   \
   VISIT(48, Layout,     arguments_layout,              Arguments,             allocate_empty_layout(ARGUMENTS_TYPE))              \
   VISIT(49, Layout,     external_call_layout,          ExternalCall,          allocate_empty_layout(EXTERNAL_CALL_TYPE))          \
-  VISIT(50, Layout,     selector_layout,               Selector,              allocate_empty_layout(SELECTOR_TYPE))
+  VISIT(50, Layout,     selector_layout,               Selector,              allocate_empty_layout(SELECTOR_TYPE))               \
+  VISIT(53, Layout,     assignment_layout,             Assignment,            allocate_empty_layout(ASSIGNMENT_TYPE))
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                            \

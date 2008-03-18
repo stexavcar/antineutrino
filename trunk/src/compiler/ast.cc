@@ -192,6 +192,24 @@ static void unparse_global_expression(GlobalExpression *expr, UnparseData &data)
   expr->name()->write_on(data.out(), Data::UNQUOTED);
 }
 
+static void unparse_sequence_expression(SequenceExpression *expr, UnparseData &data) {
+  data->append("{");
+  Tuple *exprs = expr->expressions();
+  bool is_first = true;
+  for (uword i = 0; i < exprs->length(); i++) {
+    if (is_first) is_first = false;
+    else data->append(", ");
+    unparse_syntax_tree_on(cast<SyntaxTree>(exprs->get(i)), data);
+  }
+  data->append("}");
+}
+
+static void unparse_assignment(Assignment *expr, UnparseData &data) {
+  unparse_syntax_tree_on(expr->symbol(), data);
+  data->append(" := ");
+  unparse_syntax_tree_on(expr->value(), data);
+}
+
 static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
   InstanceType type = obj->type();
   switch (type) {
@@ -236,6 +254,12 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
     break;
   case BUILTIN_CALL_TYPE:
     unparse_builtin_call(cast<BuiltinCall>(obj), data);
+    break;
+  case SEQUENCE_EXPRESSION_TYPE:
+    unparse_sequence_expression(cast<SequenceExpression>(obj), data);
+    break;
+  case ASSIGNMENT_TYPE:
+    unparse_assignment(cast<Assignment>(obj), data);
     break;
   default:
     UNHANDLED(InstanceType, type);

@@ -536,6 +536,7 @@ class NativeCall(Expression):
 class LocalDefinition(Expression):
 
   def __init__(self, symbol, value, body):
+    super(LocalDefinition, self).__init__()
     self.symbol_ = symbol
     self.value_ = value
     self.body_ = body
@@ -552,6 +553,19 @@ class LocalDefinition(Expression):
     value = self.value_.quote()
     body = self.body_.quote()
     return values.LocalDefinition(symbol, value, body)
+
+
+class Assignment(Expression):
+
+  def __init__(self, symbol, value):
+    super(Assignment, self).__init__()
+    self.symbol_ = symbol
+    self.value_ = value
+  
+  def quote(self):
+    symbol = self.symbol_.quote()
+    value = self.value_.quote()
+    return values.Assignment(symbol, value)
 
 
 def to_literal(value):
@@ -628,6 +642,9 @@ class Local(Identifier):
   def __init__(self, symbol):
     super(Local, self).__init__(symbol.name())
     self.symbol_ = symbol
+  
+  def symbol(self):
+    return self.symbol_
 
   def accept(self, visitor):
     visitor.visit_local(self)

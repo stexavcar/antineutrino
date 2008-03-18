@@ -657,6 +657,32 @@ public:
 DEFINE_REF_CLASS(LocalDefinition);
 
 
+// ---------------------------
+// --- A s s i g n m e n t ---
+// ---------------------------
+
+#define FOR_EACH_ASSIGNMENT_FIELD(VISIT, arg)                        \
+  VISIT(Symbol,     symbol, Symbol, arg)                             \
+  VISIT(SyntaxTree, value,  Value,  arg)
+
+class Assignment : public SyntaxTree {
+public:
+  FOR_EACH_ASSIGNMENT_FIELD(DECLARE_OBJECT_FIELD, 0)
+
+  static const uword kSymbolOffset = SyntaxTree::kHeaderSize;
+  static const uword kValueOffset = kSymbolOffset + kPointerSize;
+  static const uword kSize = kValueOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<Assignment> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_ASSIGNMENT_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(Assignment);
+
+
 // ---------------------
 // --- V i s i t o r ---
 // ---------------------

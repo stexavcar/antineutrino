@@ -235,11 +235,17 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc += OpcodeInfo<OC_GLOBAL>::kSize;
       break;
     }
-    case OC_LOCAL: {
+    case OC_LD_LOCAL: {
       uint16_t index = code[pc + 1];
       Value *value = frame.local(index);
       frame.push(value);
-      pc += OpcodeInfo<OC_LOCAL>::kSize;
+      pc += OpcodeInfo<OC_LD_LOCAL>::kSize;
+      break;
+    }
+    case OC_ST_LOCAL: {
+      uint16_t index = code[pc + 1];
+      frame.local(index) = frame[0];
+      pc += OpcodeInfo<OC_ST_LOCAL>::kSize;
       break;
     }
     case OC_ARGUMENT: {

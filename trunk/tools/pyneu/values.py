@@ -577,6 +577,21 @@ class LocalDefinition(SyntaxTree):
     return result
 
 
+class Assignment(SyntaxTree):
+
+  def __init__(self, symbol, value):
+    super(Assignment, self).__init__()
+    assert isinstance(symbol, Symbol)
+    self.symbol_ = symbol
+    self.value_ = value
+
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageAssignment_Size, Smi(values.Assignment.index))
+    result[fields.ImageAssignment_SymbolOffset] = self.symbol_
+    result[fields.ImageAssignment_ValueOffset] = self.value_
+    return result
+
+
 class DoOnExpression(SyntaxTree):
 
   def __init__(self, value, clauses):

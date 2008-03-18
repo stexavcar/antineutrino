@@ -297,9 +297,9 @@ static void disassemble_buffer(uint16_t *data, uword size,
         buf.printf("argument %", data[pc + 1]);
         pc += OpcodeInfo<OC_ARGUMENT>::kSize;
         break;
-      case OC_LOCAL:
-        buf.printf("local %", data[pc + 1]);
-        pc += OpcodeInfo<OC_LOCAL>::kSize;
+      case OC_LD_LOCAL:
+        buf.printf("load local %", data[pc + 1]);
+        pc += OpcodeInfo<OC_LD_LOCAL>::kSize;
         break;
       case OC_GLOBAL: {
         scoped_string name(literals->get(data[pc + 1])->to_string());

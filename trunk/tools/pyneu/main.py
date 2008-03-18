@@ -22,8 +22,10 @@ def main(options, args):
   files = reduce(list.__add__, map(find_source_files, args), [])
   try:
     compiler.compile(files, options.out)
+    return 0
   except scanner.CompilationError, ce:
     report_error(ce)
+    return 1
 
 
 def report_error(ce):

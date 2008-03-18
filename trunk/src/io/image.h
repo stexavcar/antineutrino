@@ -306,6 +306,12 @@ public:
   DECLARE_IMAGE_FIELD(SyntaxTree, body);
 };
 
+class ImageAssignment : public ImageSyntaxTree {
+public:
+  DECLARE_IMAGE_FIELD(Symbol, symbol);
+  DECLARE_IMAGE_FIELD(SyntaxTree, value);
+};
+
 class ImageForwarderDescriptor : public ImageObject {
 public:
   DECLARE_IMAGE_FIELD(Value, target);

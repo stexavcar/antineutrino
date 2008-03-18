@@ -235,7 +235,7 @@ class Parser(object):
     return self.control_expression(is_toplevel)
 
   def control_expression(self, is_toplevel):
-    if self.token().is_keyword(DEF):
+    if self.token().is_keyword(DEF) or self.token().is_keyword(VAR):
       return self.local_definition(is_toplevel)
     elif self.token().is_keyword(IF):
       return self.conditional_expression(is_toplevel)
@@ -300,7 +300,9 @@ class Parser(object):
     return ast.Conditional(cond, then_part, else_part)
 
   def local_definition(self, is_toplevel):
-    self.expect_keyword(DEF)
+    is_var = self.token().is_keyword(VAR)
+    if is_var: self.expect_keyword(VAR)
+    else: self.expect_keyword(DEF)
     name = ast.Symbol(self.expect_identifier())
     self.expect_delimiter(':=')
     value = self.expression(False)
@@ -338,8 +340,21 @@ class Parser(object):
     return result
 
   def not_expression(self):
-    return self.operator_expression(None)
+    return self.assignment_expression()
 
+  def assignment_expression(self):
+    value = self.operator_expression(None)
+    if self.token().is_delimiter(':='):
+      if not value.is_identifier():
+        self.unexpected_token()
+      local = self.resolver().lookup(value.name())
+      symbol = local.symbol()
+      self.expect_delimiter(':=')
+      rvalue = self.assignment_expression()
+      return ast.Assignment(symbol, rvalue)
+    else:
+      return value
+ 
   def circumfix_expression(self):
     assert self.token().is_operator()
     value = self.token().value()
