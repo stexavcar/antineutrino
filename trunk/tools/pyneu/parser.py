@@ -241,6 +241,8 @@ class Parser(object):
       return self.conditional_expression(is_toplevel)
     elif self.token().is_keyword(RETURN):
       return self.return_expression(is_toplevel)
+    elif self.token().is_keyword(YIELD):
+      return self.yield_expression(is_toplevel)
     elif self.token().is_keyword(DO):
       return self.do_on_expression(is_toplevel)
     elif self.token().is_keyword(RAISE):
@@ -270,8 +272,21 @@ class Parser(object):
       body = self.function_body(False)
       self.resolver().pop_scope()
       return ast.Lambda([], None, params, body)
+    if self.token().is_keyword(TASK):
+      self.expect_keyword(TASK)
+      params = [ ]
+      self.resolver().push_scope(params)
+      body = self.function_body(False)
+      self.resolver().pop_scope()
+      return ast.Task(ast.Lambda([], None, params, body))
     else:
       return self.logical_expression()
+
+  def yield_expression(self, is_toplevel):
+    self.expect_keyword(YIELD)
+    value = self.expression(False)
+    if is_toplevel: self.expect_delimiter(';')
+    return ast.Yield(value)
 
   def return_expression(self, is_toplevel):
     self.expect_keyword(RETURN)

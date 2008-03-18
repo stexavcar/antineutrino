@@ -282,6 +282,18 @@ class LambdaExpression(SyntaxTree):
     return result
 
 
+class TaskExpression(SyntaxTree):
+
+  def __init__(self, body):
+    super(TaskExpression, self).__init__()
+    self.body_ = body
+
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageTaskExpression_Size, Smi(values.TaskExpression.index))
+    result[fields.ImageTaskExpression_LambdaOffset] = self.body_
+    return result
+
+
 class MethodExpression(SyntaxTree):
 
   def __init__(self, selector, body, is_static):
@@ -375,6 +387,18 @@ class ReturnExpression(SyntaxTree):
   def allocate(self, heap):
     result = heap.allocate(fields.ImageReturnExpression_Size, Smi(values.ReturnExpression.index))
     result[fields.ImageReturnExpression_ValueOffset] = self.value_
+    return result
+
+
+class YieldExpression(SyntaxTree):
+
+  def __init__(self, value):
+    super(YieldExpression, self).__init__()
+    self.value_ = value
+
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageYieldExpression_Size, Smi(values.YieldExpression.index))
+    result[fields.ImageYieldExpression_ValueOffset] = self.value_
     return result
 
 

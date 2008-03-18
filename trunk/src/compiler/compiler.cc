@@ -3,6 +3,7 @@
 #include "compiler/compile-utils-inl.h"
 #include "heap/memory-inl.h"
 #include "heap/ref-inl.h"
+#include "runtime/builtins.h"
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
@@ -76,6 +77,8 @@ public:
   void store_local(uint16_t height);
   void outer(uint16_t index);
   void closure(ref<Lambda> lambda, uint16_t outers);
+  void task();
+  void yield();
   void if_true(Label &label);
   void ghoto(Label &label);
   void bind(Label &label);
@@ -242,6 +245,16 @@ void Assembler::closure(ref<Lambda> lambda, uint16_t outers) {
   code().append(OC_CLOSURE);
   code().append(index);
   code().append(outers);
+}
+
+void Assembler::task() {
+  STATIC_CHECK(OpcodeInfo<OC_TASK>::kArgc == 0);
+  code().append(OC_TASK);
+}
+
+void Assembler::yield() {
+  STATIC_CHECK(OpcodeInfo<OC_YIELD>::kArgc == 0);
+  code().append(OC_YIELD);
 }
 
 void Assembler::pop(uint16_t height) {
@@ -496,6 +509,11 @@ void Assembler::visit_return_expression(ref<ReturnExpression> that) {
   __ rethurn();
 }
 
+void Assembler::visit_yield_expression(ref<YieldExpression> that) {
+  __ codegen(that.value());
+  __ yield();
+}
+
 void Assembler::visit_literal_expression(ref<LiteralExpression> that) {
   __ push(that.value());
 }
@@ -654,12 +672,25 @@ void Assembler::visit_lambda_expression(ref<LambdaExpression> that) {
   }
 }
 
+void Assembler::visit_task_expression(ref<TaskExpression> that) {
+  __ codegen(that.lambda());
+  __ task();
+}
+
 void Assembler::visit_this_expression(ref<ThisExpression> that) {
   __ argument(lambda()->params()->length() + 1);
 }
 
 void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
-  __ builtin(that->argc(), that->index());
+  uword index = that->index();
+  special_builtin *special = Builtins::get_special(index);
+  if (special == NULL) {
+    // This is a plain runtime builtin
+    __ builtin(that->argc(), that->index());
+  } else {
+    // This is a special compiletime builtin
+    UNREACHABLE();
+  }
 }
 
 void Assembler::visit_external_call(ref<ExternalCall> that) {

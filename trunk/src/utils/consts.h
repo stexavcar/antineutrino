@@ -95,8 +95,9 @@
   VISIT(72, INSTANTIATE_EXPRESSION, InstantiateExpression, instantiate_expression) \
   VISIT(75, ARGUMENTS,              Arguments,             arguments)              \
   VISIT(76, EXTERNAL_CALL,          ExternalCall,          external_call)          \
+  VISIT(78, TASK_EXPRESSION,        TaskExpression,        task_expression)        \
+  VISIT(79, YIELD_EXPRESSION,       YieldExpression,       yield_expression)       \
   VISIT(80, ASSIGNMENT,             Assignment,            assignment)
-
 
 
 #define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
@@ -225,7 +226,11 @@
   VISIT(3, ExternalCall,          Size)                              \
   VISIT(1, Selector,              NameOffset)                        \
   VISIT(2, Selector,              ArgcOffset)                        \
-  VISIT(3, Selector,              Size)
+  VISIT(3, Selector,              Size)                              \
+  VISIT(1, TaskExpression,        LambdaOffset)                      \
+  VISIT(2, TaskExpression,        Size)                              \
+  VISIT(1, YieldExpression,       ValueOffset)                       \
+  VISIT(2, YieldExpression,       Size)
 
 // -----------------
 // --- R o o t s ---
@@ -287,7 +292,10 @@
   VISIT(48, Layout,     arguments_layout,              Arguments,             allocate_empty_layout(ARGUMENTS_TYPE))              \
   VISIT(49, Layout,     external_call_layout,          ExternalCall,          allocate_empty_layout(EXTERNAL_CALL_TYPE))          \
   VISIT(50, Layout,     selector_layout,               Selector,              allocate_empty_layout(SELECTOR_TYPE))               \
+  VISIT(51, Layout,     task_expression_layout,        TaskExpression,        allocate_empty_layout(TASK_EXPRESSION_TYPE))        \
+  VISIT(52, Layout,     yield_expression_layout,       YieldExpression,       allocate_empty_layout(YIELD_EXPRESSION_TYPE))       \
   VISIT(53, Layout,     assignment_layout,             Assignment,            allocate_empty_layout(ASSIGNMENT_TYPE))
+
 
 #define FOR_EACH_ROOT(VISIT)                                         \
   FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                            \
@@ -300,51 +308,6 @@
 #define FOR_EACH_ROOT_LAYOUT(VISIT)                                  \
   FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                            \
   FOR_EACH_SIMPLE_ROOT_LAYOUT(VISIT)
-
-// ---------------------------------------
-// --- B u i l t - i n   C l a s s e s ---
-// ---------------------------------------
-
-/**
- * This index gives a mapping from built-in source layout names to root
- * names and associated enumeration values.  Any layout that is a root
- * or has built in methods should be mentioned in this list.
- */
-#define FOR_EACH_BUILTIN_LAYOUT(VISIT)                                          \
-  VISIT(SmallInteger,          smi,                    SMI)                    \
-  VISIT(String,                string,                 STRING)                 \
-  VISIT(True,                  true,                   TRUE)                   \
-  VISIT(False,                 false,                  FALSE)                  \
-  VISIT(Void,                  void,                   VOID)                   \
-  VISIT(Null,                  null,                   NULL)                   \
-  VISIT(Object,                object,                 OBJECT)                 \
-  VISIT(Expression,            expression,             EXPRESSION)             \
-  VISIT(Lambda,                lambda,                 LAMBDA)                 \
-  VISIT(Tuple,                 tuple,                  TUPLE)                  \
-  VISIT(Protocol,              protocol,               PROTOCOL)               \
-  VISIT(Dictionary,            dictionary,             DICTIONARY)             \
-  VISIT(Buffer,                buffer,                 BUFFER)                 \
-  VISIT(Code,                  code,                   CODE)                   \
-  VISIT(Method,                method,                 METHOD)                 \
-  VISIT(LiteralExpression,     literal_expression,     LITERAL_EXPRESSION)     \
-  VISIT(InvokeExpression,      invoke_expression,      INVOKE_EXPRESSION)      \
-  VISIT(ProtocolExpression,    protocol_expression,    PROTOCOL_EXPRESSION)    \
-  VISIT(ThisExpression,        this_expression,        THIS_EXPRESSION)        \
-  VISIT(LocalDefinition,       local_definition,       LOCAL_DEFINITION)       \
-  VISIT(LambdaExpression,      lambda_expression,      LAMBDA_EXPRESSION)      \
-  VISIT(ReturnExpression,      return_expression,      RETURN_EXPRESSION)      \
-  VISIT(CallExpression,        call_expression,        CALL_EXPRESSION)        \
-  VISIT(MethodExpression,      method_expression,      METHOD_EXPRESSION)      \
-  VISIT(SequenceExpression,    sequence_expression,    SEQUENCE_EXPRESSION)    \
-  VISIT(TupleExpression,       tuple_expression,       TUPLE_EXPRESSION)       \
-  VISIT(GlobalExpression,      global_expression,      GLOBAL_EXPRESSION)      \
-  VISIT(Symbol,                symbol,                 SYMBOL)                 \
-  VISIT(ConditionalExpression, conditional_expression, CONDITIONAL_EXPRESSION) \
-  VISIT(QuoteExpression,       quote_expression,       QUOTE_EXPRESSION)       \
-  VISIT(BuiltinCall,           builtin_call,           BUILTIN_CALL)           \
-  VISIT(InterpolateExpression, interpolate_expression, INTERPOLATE_EXPRESSION) \
-  VISIT(LocalDefinition,       local_definition,       LOCAL_DEFINITION)       \
-  VISIT(QuoteTemplate,         quote_template,         QUOTE_TEMPLATE)
 
 
 // ---------------------------------------
@@ -375,6 +338,14 @@
   VISIT(44, lambda_expression,   body,        "body")
 
 
+// ---------------------------------------
+// --- S p e c i a l   B u i l t i n s ---
+// ---------------------------------------
+
+#define FOR_EACH_SPECIAL_BUILTIN_FUNCTION(VISIT)                     \
+  VISIT(50, attach_task, "attach_task")
+
+
 // -------------------------------------------
 // --- B u i l t - i n   F u n c t i o n s ---
 // -------------------------------------------
@@ -384,11 +355,15 @@
  * functions.  Whenever a method is added here an associated
  * implementation must be added in builtins.cc.
  */
-#define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
+#define FOR_EACH_PLAIN_BUILTIN_FUNCTION(VISIT)                       \
   VISIT(101, raw_print,          "raw_print")                        \
   VISIT(102, compile_expression, "compile_expression")               \
   VISIT(103, lift,               "lift")                             \
   VISIT(104, make_forwarder,     "make_forwarder")                   \
   VISIT(105, set_target,         "set_target")
+
+#define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
+  FOR_EACH_SPECIAL_BUILTIN_FUNCTION(VISIT)                           \
+  FOR_EACH_PLAIN_BUILTIN_FUNCTION(VISIT)
 
 #endif // _UTILS_CONSTS

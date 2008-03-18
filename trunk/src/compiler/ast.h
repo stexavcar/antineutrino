@@ -348,6 +348,30 @@ public:
 DEFINE_REF_CLASS(ReturnExpression);
 
 
+// ---------------------------------------
+// --- Y i e l d   E x p r e s s i o n ---
+// ---------------------------------------
+
+#define FOR_EACH_YIELD_EXPRESSION_FIELD(VISIT, arg)                 \
+  VISIT(SyntaxTree, value, Value, arg)
+
+class YieldExpression : public SyntaxTree {
+public:
+  FOR_EACH_YIELD_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+
+  static const uword kValueOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize = kValueOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<YieldExpression> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_YIELD_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(YieldExpression);
+
+
 // -----------------------------------------
 // --- M e t h o d   E x p r e s s i o n ---
 // -----------------------------------------
@@ -541,6 +565,31 @@ public:
 };
 
 DEFINE_REF_CLASS(LambdaExpression);
+
+
+// -------------------------------------
+// --- T a s k   E x p r e s s i o n ---
+// -------------------------------------
+
+#define FOR_EACH_TASK_EXPRESSION_FIELD(VISIT, arg)                   \
+  VISIT(LambdaExpression, lambda, Lambda, arg)
+
+class TaskExpression : public SyntaxTree {
+public:
+  FOR_EACH_TASK_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uword kLambdaOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize = kLambdaOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<TaskExpression> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_TASK_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(TaskExpression);
+
 
 // -------------------------------------
 // --- T h i s   E x p r e s s i o n ---

@@ -20,7 +20,21 @@ FOR_EACH_BUILTIN_METHOD(MAKE_CASE)
 #undef MAKE_CASE
 
 #define MAKE_CASE(n, name, str) case n: return &Builtins::name;
-FOR_EACH_BUILTIN_FUNCTION(MAKE_CASE)
+FOR_EACH_PLAIN_BUILTIN_FUNCTION(MAKE_CASE)
+#undef MAKE_CASE
+
+    default:
+      UNREACHABLE();
+      return NULL;
+  }
+}
+
+
+special_builtin *Builtins::get_special(uword index) {
+  switch (index) {
+
+#define MAKE_CASE(n, name, str) case n: return &Builtins::name;
+FOR_EACH_SPECIAL_BUILTIN_FUNCTION(MAKE_CASE)
 #undef MAKE_CASE
 
     default:
@@ -243,6 +257,15 @@ Data *Builtins::compile_expression(BuiltinArguments &args) {
 Data *Builtins::lift(BuiltinArguments &args) {
   Value *value = args[0];
   return Runtime::current().heap().new_literal_expression(value);
+}
+
+
+// ---------------
+// --- T a s k ---
+// ---------------
+
+void Builtins::attach_task(Assembler &assembler) {
+  UNREACHABLE();
 }
 
 

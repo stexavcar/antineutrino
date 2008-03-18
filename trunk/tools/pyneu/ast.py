@@ -146,6 +146,7 @@ class Expression(SyntaxTree):
 class Lambda(Expression):
 
   def __init__(self, modifiers, name, params, body):
+    super(Lambda, self).__init__()
     self.modifiers_ = modifiers
     self.name_ = name
     self.params_ = params
@@ -180,6 +181,22 @@ class Lambda(Expression):
     argc = len(self.params())
     body = self.quote()
     return values.Lambda(argc, body)
+
+
+class Task(Expression):
+
+  def __init__(self, lam):
+    super(Task, self).__init__()
+    self.lambda_ = lam
+
+  def accept(self, visitor):
+    visitor.visit_task(self)
+
+  def traverse(self, visitor):
+    self.body_.accept(visitor)
+
+  def quote(self):
+    return values.TaskExpression(self.lambda_.quote())
 
 
 class Quote(Expression):
@@ -359,7 +376,6 @@ class Return(Expression):
 
   def __init__(self, value):
     super(Return, self).__init__()
-    assert not value is None
     self.value_ = value
 
   def accept(self, visitor):
@@ -370,6 +386,22 @@ class Return(Expression):
 
   def quote(self):
     return values.ReturnExpression(self.value_.quote())
+
+
+class Yield(Expression):
+
+  def __init__(self, value):
+    super(Yield, self).__init__()
+    self.value_ = value
+
+  def accept(self, visitor):
+    visitor.visit_yield(self)
+
+  def traverse(self, visitor):
+    self.value_.accept(visitor)
+
+  def quote(self):
+    return values.YieldExpression(self.value_.quote())
 
 
 class DoOnExpression(Expression):

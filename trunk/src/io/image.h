@@ -197,6 +197,11 @@ public:
   DECLARE_IMAGE_FIELD(SyntaxTree, body);
 };
 
+class ImageTaskExpression : public ImageSyntaxTree {
+public:
+  DECLARE_IMAGE_FIELD(LambdaExpression, lambda);
+};
+
 class ImageDoOnExpression : public ImageSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, value);
@@ -231,6 +236,11 @@ public:
 };
 
 class ImageReturnExpression : public ImageSyntaxTree {
+public:
+  DECLARE_IMAGE_FIELD(SyntaxTree, value);
+};
+
+class ImageYieldExpression : public ImageSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, value);
 };

@@ -140,6 +140,9 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
   case LAMBDA_TYPE:
     buf.append("#<lambda>");
     break;
+  case TASK_TYPE:
+    buf.append("#<task>");
+    break;
   case VOID_TYPE:
     buf.append("void");
     break;

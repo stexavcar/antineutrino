@@ -297,6 +297,7 @@ DEFINE_GETTER    (String,           ProtocolExpression,    name,          Name)
 DEFINE_GETTER    (Tuple,            ProtocolExpression,    methods,       Methods)
 DEFINE_GETTER    (Value,            ProtocolExpression,    super,         Super)
 DEFINE_GETTER    (SyntaxTree,       ReturnExpression,      value,         Value)
+DEFINE_GETTER    (SyntaxTree,       YieldExpression,       value,         Value)
 DEFINE_GETTER    (Selector,         MethodExpression,      selector,      Selector)
 DEFINE_GETTER    (LambdaExpression, MethodExpression,      lambda,        Lambda)
 DEFINE_GETTER    (Value,            MethodExpression,      is_static,     IsStatic)
@@ -327,6 +328,7 @@ DEFINE_GETTER    (Tuple,            Arguments,             arguments,     Argume
 DEFINE_GETTER    (Tuple,            Arguments,             keywords,      Keywords)
 DEFINE_GETTER    (Value,            Selector,              name,          Name)
 DEFINE_GETTER    (Smi,              Selector,              argc,          Argc)
+DEFINE_GETTER    (LambdaExpression, TaskExpression,        lambda,        Lambda)
 
 #undef DEFINE_RAW_GETTER
 #undef DEFINE_GETTER

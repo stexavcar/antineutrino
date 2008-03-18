@@ -34,15 +34,7 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
   RefScope scope;
   ref<Task> task = new_ref(initial_task);
   ref<Lambda> lambda = new_ref(initial_lambda);
-  lambda.ensure_compiled();
-  ASSERT(task->stack()->status().is_empty);
-  task->stack()->status().is_empty = false;
-  uword argc = 0;
-  Frame frame(task->stack()->bottom() + Frame::accessible_below_fp(argc));
-  frame.self(argc) = runtime().roots().vhoid();
-  frame.lambda() = *lambda;
-  frame.prev_fp() = 0;
-  ASSERT(frame.sp() >= frame.fp() + Frame::kSize);
+  Frame frame = prepare_call(task, lambda, 0);
   uword pc = 0;
   Data *value;
   while (true) {
@@ -68,6 +60,18 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
   }
   task->stack()->status().is_empty = true;
   return cast<Value>(value);
+}
+
+Frame Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc) {
+  lambda.ensure_compiled();
+  ASSERT(task->stack()->status().is_empty);
+  task->stack()->status().is_empty = false;
+  Frame frame(task->stack()->bottom() + Frame::accessible_below_fp(argc));
+  frame.self(argc) = runtime().roots().vhoid();
+  frame.lambda() = *lambda;
+  frame.prev_fp() = 0;
+  ASSERT(frame.sp() >= frame.fp() + Frame::kSize);
+  return frame;
 }
 
 void Frame::reset(Stack *old_stack, Stack *new_stack) {
@@ -391,8 +395,12 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       builtin *builtin = Builtins::get(index);
       BuiltinArguments args(runtime(), argc, frame);
       Value *value = cast<Value>(builtin(args));
-      frame.push(value);
-      pc += OpcodeInfo<OC_BUILTIN>::kSize;
+      if (is<Signal>(value)) {
+        break;
+      } else {
+        frame.push(value);
+        pc += OpcodeInfo<OC_BUILTIN>::kSize;
+      }
       break;
     }
     case OC_EXTERNAL: {
@@ -411,7 +419,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc += OpcodeInfo<OC_EXTERNAL>::kSize;
       break;
     }
-    case OC_RETURN: {
+    case OC_YIELD: case OC_RETURN: {
       Value *value = frame.pop();
       if (frame.is_bottom())
         return value;
@@ -500,6 +508,17 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       clone->set_outers(outers);
       frame.push(clone);
       pc += OpcodeInfo<OC_CLOSURE>::kSize;
+      break;
+    }
+    case OC_TASK: {
+      Lambda *lambda = cast<Lambda>(frame.pop());
+      Data *task_val = runtime().heap().new_task();
+      if (is<Signal>(task_val)) return task_val;
+      Task *task = cast<Task>(task_val);
+      RefScope scope;
+      prepare_call(new_ref(task), new_ref(lambda), 0);
+      frame.push(task);
+      pc += OpcodeInfo<OC_TASK>::kSize;
       break;
     }
     case OC_OUTER: {

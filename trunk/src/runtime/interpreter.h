@@ -24,7 +24,9 @@ namespace neutrino {
   VISIT(18, CHKHGT, 1) VISIT(19, OUTER,  1)   VISIT(20, CLOSURE,  2) \
   VISIT(21, QUOTE,  1) VISIT(22, UNQUOTE, 1)  VISIT(23, RAISE,    2) \
   VISIT(24, MARK,   1) VISIT(25, UNMARK, 0)   VISIT(26, NEW,      1) \
-  VISIT(27, FIELD,  2) VISIT(28, EXTERNAL, 2) VISIT(29, ST_LOCAL, 1)
+  VISIT(27, FIELD,  2) VISIT(28, EXTERNAL, 2) VISIT(29, TASK,     0) \
+  VISIT(30, YIELD,  0) VISIT(31, ST_LOCAL, 1)
+
 
 enum Opcode {
   __first_opcode = -1
@@ -147,6 +149,7 @@ public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
   Value *call(Lambda *lambda, Task *task);
 private:
+  Frame prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc);
   Data *interpret(Stack *stack, Frame &frame, uword *pc_ptr);
   Layout *get_layout(Immediate *val);
   Data *lookup_method(Layout *layout, Selector *selector);

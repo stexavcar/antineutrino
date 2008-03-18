@@ -58,7 +58,8 @@ def get_string_contents(str):
 def install_builtin_function(n, function_name, string_name):
   name = get_string_contents(string_name)
   (_, __builtin_functions_map[name]) = new_namespace({
-    'index': int(n)
+    'index': int(n),
+    'special': False
   })
 
 
@@ -68,6 +69,7 @@ def install_builtin_method(n, klass, function_name, string_name):
   name = "%s.%s" % (Class, method_name)
   (_, __builtin_functions_map[name]) = new_namespace({
     'index': int(n),
+    'special': False
   })
 
 
