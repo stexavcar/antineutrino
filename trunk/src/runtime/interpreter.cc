@@ -341,6 +341,9 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc = 0;
       break;
     }
+    case OC_ATTACH: {
+      UNREACHABLE();
+    }
     case OC_NEW: {
       uint16_t layout_template_index = code[pc + 1];
       Layout *layout_template = cast<Layout>(constant_pool[layout_template_index]);

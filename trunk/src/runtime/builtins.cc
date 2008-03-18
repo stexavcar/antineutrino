@@ -30,20 +30,6 @@ FOR_EACH_PLAIN_BUILTIN_FUNCTION(MAKE_CASE)
 }
 
 
-special_builtin *Builtins::get_special(uword index) {
-  switch (index) {
-
-#define MAKE_CASE(n, name, str) case n: return &Builtins::name;
-FOR_EACH_SPECIAL_BUILTIN_FUNCTION(MAKE_CASE)
-#undef MAKE_CASE
-
-    default:
-      UNREACHABLE();
-      return NULL;
-  }
-}
-
-
 #define SIGNAL_CHECK(Type, name, operation)                          \
   Data *name##_val = operation;                                      \
   if (is<Signal>(name##_val)) return name##_val;                     \
@@ -257,15 +243,6 @@ Data *Builtins::compile_expression(BuiltinArguments &args) {
 Data *Builtins::lift(BuiltinArguments &args) {
   Value *value = args[0];
   return Runtime::current().heap().new_literal_expression(value);
-}
-
-
-// ---------------
-// --- T a s k ---
-// ---------------
-
-void Builtins::attach_task(Assembler &assembler) {
-  UNREACHABLE();
 }
 
 

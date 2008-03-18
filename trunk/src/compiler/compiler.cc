@@ -32,6 +32,8 @@ private:
   ref<Context> context_;
 };
 
+typedef void (Assembler::*special_builtin)();
+
 class Assembler : public Visitor {
 public:
   Assembler(ref<LambdaExpression> lambda, CompileSession &session,
@@ -62,10 +64,13 @@ public:
     ASSERT_EQ(height_before + 1, stack_height());
   }
   
+  special_builtin get_special(uword index);
+  
   void push(ref<Value> value);
   void pop(uint16_t height = 1);
   void slap(uint16_t height);
   void rethurn();
+  void attach();
   void invoke(ref<Selector> selector, uint16_t argc);
   void instantiate(ref<Layout> layout);
   void raise(ref<String> name, uint16_t argc);
@@ -89,6 +94,10 @@ public:
   void mark(ref<Value> data);
   void unmark();
   
+#define MAKE_CASE(n, name, str) void name();
+FOR_EACH_SPECIAL_BUILTIN_FUNCTION(MAKE_CASE)
+#undef MAKE_CASE
+
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
 #define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
   virtual void visit_##name(ref<Name> that);
@@ -275,6 +284,12 @@ void Assembler::rethurn() {
   STATIC_CHECK(OpcodeInfo<OC_RETURN>::kArgc == 0);
   ASSERT(stack_height() > 0);
   code().append(OC_RETURN);
+}
+
+void Assembler::attach() {
+  STATIC_CHECK(OpcodeInfo<OC_ATTACH>::kArgc == 0);
+  code().append(OC_ATTACH);
+  adjust_stack_height(1);
 }
 
 void Assembler::tuple(uint16_t size) {
@@ -620,12 +635,12 @@ void Assembler::visit_conditional_expression(ref<ConditionalExpression> that) {
   __ codegen(that.condition());
   __ if_true(then);
   adjust_stack_height(-1);
-  uword height_before = stack_height();
+  IF_DEBUG(uword height_before = stack_height());
   __ codegen(that.else_part());
   __ ghoto(end);
   __ bind(then);
   adjust_stack_height(-1);
-  USE(height_before); ASSERT_EQ(height_before, stack_height());
+  ASSERT_EQ(height_before, stack_height());
   __ codegen(that.then_part());
   __ bind(end);
 }
@@ -683,13 +698,12 @@ void Assembler::visit_this_expression(ref<ThisExpression> that) {
 
 void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
   uword index = that->index();
-  special_builtin *special = Builtins::get_special(index);
+  special_builtin special = get_special(index);
   if (special == NULL) {
     // This is a plain runtime builtin
     __ builtin(that->argc(), that->index());
   } else {
-    // This is a special compiletime builtin
-    UNREACHABLE();
+    (this->*special)();
   }
 }
 
@@ -785,6 +799,25 @@ void Assembler::visit_quote_template(ref<QuoteTemplate> that) {
 void Assembler::visit_arguments(ref<Arguments> that) {
   UNREACHABLE();
 }
+
+// -----------------------
+// --- B u i l t i n s ---
+// -----------------------
+
+void Assembler::attach_task() {
+  __ attach();
+}
+
+special_builtin Assembler::get_special(uword index) {
+  switch (index) {
+#define MAKE_CASE(n, name, str) case n: return &Assembler::name;
+FOR_EACH_SPECIAL_BUILTIN_FUNCTION(MAKE_CASE)
+#undef MAKE_CASE
+    default:
+      return NULL;
+  }
+}
+
 
 // -----------------------
 // --- C o m p i l e r ---

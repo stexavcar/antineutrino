@@ -1,0 +1,7 @@
+internal def attach_task();
+
+internal protocol Task {
+
+  def attach() -> this·attach_task();
+
+}

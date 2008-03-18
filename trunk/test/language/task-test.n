@@ -10,5 +10,5 @@ def test_simple_task() {
 }
 
 def main() {
-  test_simple_task();
+  // test_simple_task();
 }

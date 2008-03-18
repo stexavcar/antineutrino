@@ -22,12 +22,10 @@ private:
 };
 
 typedef Data *(builtin)(BuiltinArguments&);
-typedef void (special_builtin)(Assembler&);
 
 class Builtins {
 public:
   static builtin *get(uword index);
-  static special_builtin *get_special(uword index);
 private:
 
 #define DECLARE_BUILTIN(n, layout, name, str) static Data *layout##_##name(BuiltinArguments&);
@@ -36,10 +34,6 @@ FOR_EACH_BUILTIN_METHOD(DECLARE_BUILTIN)
 
 #define DECLARE_BUILTIN(n, name, str) static Data *name(BuiltinArguments&);
 FOR_EACH_PLAIN_BUILTIN_FUNCTION(DECLARE_BUILTIN)
-#undef DECLARE_BUILTIN
-
-#define DECLARE_BUILTIN(n, name, str) static void name(Assembler&);
-FOR_EACH_SPECIAL_BUILTIN_FUNCTION(DECLARE_BUILTIN)
 #undef DECLARE_BUILTIN
 
 };
