@@ -127,6 +127,7 @@ class ImageSelector : public ImageObject {
 public:
   DECLARE_IMAGE_FIELD(Value, name);
   DECLARE_IMAGE_FIELD(Smi, argc);
+  DECLARE_IMAGE_FIELD(Tuple, keywords);
 };
 
 class ImageMethod : public ImageObject {

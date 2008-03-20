@@ -177,6 +177,7 @@ void Assembler::adjust_stack_height(word delta) {
 
 void Assembler::invoke(ref<Selector> selector, uint16_t argc) {
   STATIC_CHECK(OpcodeInfo<OC_INVOKE>::kArgc == 2);
+  selector.to_string().println();
   uint16_t selector_index = constant_pool_index(selector);
   code().append(OC_INVOKE);
   code().append(selector_index);

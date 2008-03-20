@@ -328,6 +328,7 @@ DEFINE_GETTER    (Tuple,            Arguments,             arguments,     Argume
 DEFINE_GETTER    (Tuple,            Arguments,             keywords,      Keywords)
 DEFINE_GETTER    (Value,            Selector,              name,          Name)
 DEFINE_GETTER    (Smi,              Selector,              argc,          Argc)
+DEFINE_GETTER    (Tuple,            Selector,              keywords,      Keywords)
 DEFINE_GETTER    (LambdaExpression, TaskExpression,        lambda,        Lambda)
 
 #undef DEFINE_RAW_GETTER

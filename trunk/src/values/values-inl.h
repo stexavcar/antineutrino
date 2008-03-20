@@ -398,6 +398,10 @@ uword Tuple::size_for(uword elms) {
   return Tuple::kHeaderSize + elms * kPointerSize;
 }
 
+bool Tuple::is_empty() {
+  return length() == 0;
+}
+
 uword ref_traits<Tuple>::length() {
   return open(this)->length();
 }

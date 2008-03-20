@@ -58,8 +58,9 @@ DEFINE_REF_CLASS(Signature);
 // -----------------------
 
 #define FOR_EACH_SELECTOR_FIELD(VISIT, arg)                          \
-  VISIT(Immediate, name, Name, arg)                                  \
-  VISIT(Smi,       argc, Argc, arg)
+  VISIT(Immediate, name,     Name,     arg)                          \
+  VISIT(Smi,       argc,     Argc,     arg)                          \
+  VISIT(Tuple,     keywords, Keywords, arg)
 
 class Selector : public Object {
 public:
@@ -67,9 +68,10 @@ public:
 
   bool selector_equals(Selector *that);
 
-  static const uword kNameOffset = Object::kHeaderSize;
-  static const uword kArgcOffset = kNameOffset + kPointerSize;
-  static const uword kSize       = kArgcOffset + kPointerSize;
+  static const uword kNameOffset     = Object::kHeaderSize;
+  static const uword kArgcOffset     = kNameOffset + kPointerSize;
+  static const uword kKeywordsOffset = kArgcOffset + kPointerSize;
+  static const uword kSize           = kKeywordsOffset + kPointerSize;
 };
 
 template <> class ref_traits<Selector> : public ref_traits<Object> {

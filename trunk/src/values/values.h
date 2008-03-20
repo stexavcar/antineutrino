@@ -433,6 +433,7 @@ public:
   inline vector<Value*> buffer();
   inline Value *&get(uword index);
   inline void set(uword index, Value *value);
+  inline bool is_empty();
 
   static inline uword size_for(uword elms);
 

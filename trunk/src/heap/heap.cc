@@ -310,6 +310,7 @@ Data *Heap::new_selector(Immediate *name, Smi *argc) {
   Selector *result = cast<Selector>(val);
   result->set_name(name);
   result->set_argc(argc);
+  result->set_keywords(roots().empty_tuple());
   IF_PARANOID(result->validate());
   return result;
 }

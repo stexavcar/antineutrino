@@ -537,7 +537,7 @@ class Parser(object):
       expr = self.expression(False)
       if self.token().is_delimiter(':') and expr.is_identifier():
         self.expect_delimiter(':')
-        keywords[expr.name] = len(args)
+        keywords[expr.name()] = len(args)
         expr = self.expression(False)
       args.append(expr)
     if not self.token().is_delimiter(')'):

@@ -101,17 +101,20 @@ EMPTY_SIGNATURE = Signature([])
 
 class Selector(Object):
 
-  def __init__(self, name, argc):
+  def __init__(self, name, argc, keywords):
     super(Selector, self).__init__()
     assert not isinstance(name, String)
     assert not isinstance(argc, Smi)
     self.name_ = name
     self.argc_ = argc
+    self.keywords_ = keywords
 
   def allocate(self, heap):
     result = heap.allocate(fields.ImageSelector_Size, Smi(values.Selector.index))
     result[fields.ImageSelector_NameOffset] = String(self.name_)
     result[fields.ImageSelector_ArgcOffset] = Smi(self.argc_)
+    keywords = process_keywords(self.keywords_)
+    result[fields.ImageSelector_KeywordsOffset] = Tuple(entries = keywords)
     return result
 
 
@@ -364,6 +367,14 @@ class Symbol(SyntaxTree):
     return result
 
 
+def process_keywords(words):
+  keywords = [ ]
+  for key in words.keys():
+    keywords.append(String(key))
+    keywords.append(Smi(words[key]))
+  return keywords
+
+
 class Arguments(SyntaxTree):
 
   def __init__(self, args, keywords):
@@ -374,7 +385,8 @@ class Arguments(SyntaxTree):
   def allocate(self, heap):
     result = heap.allocate(fields.ImageArguments_Size, Smi(values.Arguments.index))
     result[fields.ImageArguments_ArgumentsOffset] = Tuple(entries = self.args_)
-    result[fields.ImageArguments_KeywordsOffset] = Tuple(entries = [])
+    keywords = process_keywords(self.keywords_)
+    result[fields.ImageArguments_KeywordsOffset] = Tuple(entries = keywords)
     return result
 
 

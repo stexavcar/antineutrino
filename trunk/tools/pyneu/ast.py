@@ -48,6 +48,9 @@ class Arguments(SyntaxTree):
 
   def accept(self, visitor):
     visitor.visit_arguments(self)
+  
+  def keywords(self):
+    return self.keywords_
 
   def traverse(self, visitor):
     for arg in self.args_:
@@ -55,7 +58,7 @@ class Arguments(SyntaxTree):
 
   def quote(self):
     args = [ s.quote() for s in self.args_ ]
-    return values.Arguments(args, None)
+    return values.Arguments(args, self.keywords_)
 
 
 class File(SyntaxTree):
@@ -117,13 +120,13 @@ class Method(Declaration):
 
   def quote(self):
     argc = len(self.lambda_.params())
-    selector = values.Selector(self.name_, argc)
+    selector = values.Selector(self.name_, argc, { })
     lam = self.lambda_.quote()
     return values.MethodExpression(selector, lam, values.FALSE)
 
   def evaluate(self):
     argc = len(self.lambda_.params())
-    selector = values.Selector(self.name_, argc)
+    selector = values.Selector(self.name_, argc, { })
     lam = self.lambda_.evaluate()
     return values.Method(selector, lam, self.is_static())
 
@@ -330,7 +333,7 @@ class Invoke(Expression):
   def quote(self):
     recv = self.recv_.quote()
     args = self.args_.quote()
-    sel = values.Selector(self.name_, len(self.args_))
+    sel = values.Selector(self.name_, len(self.args_), self.args_.keywords())
     return values.InvokeExpression(recv, sel, args)
 
 

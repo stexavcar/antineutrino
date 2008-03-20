@@ -23,21 +23,14 @@ def test_implicit_self() {
   assert_equals(8, 8·call_get_this());
 }
 
-def get_x(x:, y:) -> x;
-def get_y(x:, y:) -> y;
-
-def test_keywords() {
-  assert_equals(1, get_x(x: 1, y: 2));
-  assert_equals(4, get_x(y: 3, x: 4));
-  assert_equals(6, get_y(x: 5, y: 6));
-  assert_equals(7, get_y(y: 7, x: 8));
-}
-
 protocol X {
   static def argc() -> 0;
   static def argc(x) -> 1;
   static def argc(x, y) -> 2;
   static def argc(x, y, z) -> 3;
+  
+  static def get_x(x:, y:) -> x;
+  static def get_y(x:, y:) -> y;
 }
 
 def test_overloading() {
@@ -47,9 +40,16 @@ def test_overloading() {
   assert_equals(3, X.argc(0, 0, 0));  
 }
 
+def test_keywords() {
+  assert_equals(1, X.get_x(x: 1, y: 2));
+  assert_equals(4, X.get_x(y: 3, x: 4));
+  assert_equals(6, X.get_y(x: 5, y: 6));
+  assert_equals(7, X.get_y(y: 7, x: 8));
+}
+
 def main() {
   test_calls();
   test_implicit_self();
   test_overloading();
-  // test_keywords();
+  test_keywords();
 }

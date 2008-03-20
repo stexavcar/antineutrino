@@ -124,8 +124,21 @@ static void write_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
 
 static void write_selector_short_on(Selector *obj, string_buffer &buf) {
   obj->name()->write_short_on(buf, Data::UNQUOTED);
-  buf.append('/');
+  buf.append('(');
   obj->argc()->write_short_on(buf);
+  Tuple *keywords = obj->keywords();
+  if (!keywords->is_empty()) {
+    buf.append(" |");
+    for (uword i = 0; i < keywords->length(); i += 2) {
+      buf.append(" ");
+      Immediate *key = cast<Immediate>(keywords->get(i));
+      Smi *index = cast<Smi>(keywords->get(i + 1));
+      key->write_short_on(buf, Data::UNQUOTED);
+      buf.append(":");
+      index->write_short_on(buf);
+    }
+  }
+  buf.append(')');
 }
 
 static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
