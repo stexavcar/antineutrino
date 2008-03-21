@@ -1,5 +1,5 @@
 #summary How are invocation keywords implemented
-#labels Design,Reference,Featured
+#labels Design,Reference
 
 Invocation keywords allow method and function arguments to be given a tag or _keyword_.  For instance,
 
