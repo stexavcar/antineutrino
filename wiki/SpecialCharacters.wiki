@@ -1,4 +1,5 @@
 #summary How to produce the special characters
+#labels Development
 
 The core neutrino syntax uses a number of special non-ascii characters.  Ascii is just so 1960s.  This may cause problems on some platforms and in some editors.
 
