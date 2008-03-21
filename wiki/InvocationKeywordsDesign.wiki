@@ -49,3 +49,5 @@ call my_method(2, [x, y, z]) with arguments (3, 4, "y", "x", "z"), translating k
 }}}
 
 At runtime method lookup proceeds with simple selector equality so the method above will be found.  At runtime, all access to keyword arguments are translated through the keyword index map.  To access the keyword `z` the method takes the index of z in the list of sorted keywords, 2 (zero-indexed), indexes into the keyword index map to get `4`, and loads argument 4.  In this case argument 4 is "z" and we're good.
+
+The cost of this for a call is the cost to make the keyword index map available to the caller; typically a push.  The cost on each keyword argument access is loading the keyword index map, and reading one entry.
