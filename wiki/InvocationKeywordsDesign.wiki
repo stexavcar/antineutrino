@@ -1,0 +1,51 @@
+#summary How are invocation keywords implemented
+#labels Design,Reference
+
+Invocation keywords allow method and function arguments to be given a tag or _keyword_.  For instance,
+
+{{{
+def foo(a:, b:, c:) -> a + b + (2 × c);
+def foo(x:, y:, z:) -> (x - y) × z;
+
+foo(a: 1, b: 2, c: 3); // yields 9
+foo(c: 1, b: 2, a: 3); // yields 7
+foo(x: 2, y: 3, z: 4); // yields -4
+}}}
+
+Keyword arguments are implemented as follows.  Given a method declaration that contains keywords,
+
+{{{
+def my_method(c, a, z:, y:, x:) -> ...
+}}}
+
+the parser stores the number of non-keyword arguments (in this case 2) and sorts the keyword arguments alphabetically.  The order of arguments is not significant.  The name of the method, the number and the sorted keyword arguments are used to define the method's _selector_, in this case
+
+{{{
+my_method(2, [x, y, z])
+}}}
+
+At a call site that uses keywords,
+
+{{{
+my_method(3, 4, y: "y", x: "x", z: "z")
+}}}
+
+the call is split into three components: a selector, a list of arguments and a list of keyword indices.  The selector is formed the same way as above: the name of the method, the number of non-keyword arguments, and the sorted list of arguments, in this case the same as the previous method definition.  The arguments list is the list of all arguments, in the order in which they occur in the source, with the keywords removed: 
+
+{{{
+[3, 4, "y", "x", "z"]
+}}}
+
+Finally, the keyword indices is a list that gives for each member of the sorted list of keywords, which index in the arguments list holds the value of that keyword.  In this case
+
+{{{
+[3, 2, 4]
+}}}
+
+since the value of `x` is argument 3, `y` is argument 2 and `z` is argument 4.  Putting this all together, the call site is turned into
+
+{{{
+call my_method(2, [x, y, z]) with arguments (3, 4, "y", "x", "z"), translating keywords by [3, 2, 4]
+}}}
+
+At runtime method lookup proceeds with simple selector equality so the method above will be found.  At runtime, all access to keyword arguments are translated through the keyword index map.  To access the keyword `z` the method takes the index of z in the list of sorted keywords, 2 (zero-indexed), indexes into the keyword index map to get `4`, and loads argument 4.  In this case argument 4 is "z" and we're good.
