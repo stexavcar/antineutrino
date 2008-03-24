@@ -75,6 +75,14 @@ public:
    * objecs.
    */
   bool is_key();
+  
+  /**
+   * Returns true if this object can be compared with other objects,
+   * and equality of this object does not involve testing other
+   * objects for equality.  For instance, strings are atomic keys
+   * whereas tuples are not since the tuple elements must be compared.
+   */
+  bool is_atomic_key();
 
 };
 
@@ -433,7 +441,9 @@ public:
   inline vector<Value*> buffer();
   inline Value *&get(uword index);
   inline void set(uword index, Value *value);
+  
   inline bool is_empty();
+  bool tuple_equals(Tuple *that);
 
   static inline uword size_for(uword elms);
 
@@ -503,11 +513,11 @@ DEFINE_REF_CLASS(Dictionary);
 // -------------------
 
 #define FOR_EACH_LAMBDA_FIELD(VISIT, arg)                            \
-  VISIT(Value,   code,          Code,         arg)                   \
-  VISIT(Value,   constant_pool, ConstantPool, arg)                   \
-  VISIT(Value,   tree,          Tree,         arg)                   \
-  VISIT(Tuple,   outers,        Outers,       arg)                   \
-  VISIT(Context, context,       Context,      arg)
+  VISIT(Value,      code,          Code,         arg)                \
+  VISIT(Value,      constant_pool, ConstantPool, arg)                \
+  VISIT(Value,      tree,          Tree,         arg)                \
+  VISIT(Tuple,      outers,        Outers,       arg)                \
+  VISIT(Context,    context,       Context,      arg)
 
 class Lambda : public Object {
 public:

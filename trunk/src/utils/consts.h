@@ -97,7 +97,8 @@
   VISIT(76, EXTERNAL_CALL,          ExternalCall,          external_call)          \
   VISIT(78, TASK_EXPRESSION,        TaskExpression,        task_expression)        \
   VISIT(79, YIELD_EXPRESSION,       YieldExpression,       yield_expression)       \
-  VISIT(80, ASSIGNMENT,             Assignment,            assignment)
+  VISIT(80, ASSIGNMENT,             Assignment,            assignment)             \
+  VISIT(81, PARAMETERS,             Parameters,            parameters)
 
 
 #define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
@@ -183,7 +184,7 @@
   VISIT(1, QuoteExpression,       ValueOffset)                       \
   VISIT(2, QuoteExpression,       UnquotesOffset)                    \
   VISIT(3, QuoteExpression,       Size)                              \
-  VISIT(1, LambdaExpression,      ParamsOffset)                      \
+  VISIT(1, LambdaExpression,      ParametersOffset)                  \
   VISIT(2, LambdaExpression,      BodyOffset)                        \
   VISIT(3, LambdaExpression,      Size)                              \
   VISIT(1, BuiltinCall,           ArgcOffset)                        \
@@ -219,8 +220,11 @@
   VISIT(2, ForwarderDescriptor,   TargetOffset)                      \
   VISIT(3, ForwarderDescriptor,   Size)                              \
   VISIT(1, Arguments,             ArgumentsOffset)                   \
-  VISIT(2, Arguments,             KeywordsOffset)                    \
+  VISIT(2, Arguments,             KeywordIndicesOffset)              \
   VISIT(3, Arguments,             Size)                              \
+  VISIT(1, Parameters,            PositionCountOffset)               \
+  VISIT(2, Parameters,            ParametersOffset)                  \
+  VISIT(3, Parameters,            Size)                              \
   VISIT(1, ExternalCall,          ArgcOffset)                        \
   VISIT(2, ExternalCall,          NameOffset)                        \
   VISIT(3, ExternalCall,          Size)                              \
@@ -295,7 +299,8 @@
   VISIT(50, Layout,     selector_layout,               Selector,              allocate_empty_layout(SELECTOR_TYPE))               \
   VISIT(51, Layout,     task_expression_layout,        TaskExpression,        allocate_empty_layout(TASK_EXPRESSION_TYPE))        \
   VISIT(52, Layout,     yield_expression_layout,       YieldExpression,       allocate_empty_layout(YIELD_EXPRESSION_TYPE))       \
-  VISIT(53, Layout,     assignment_layout,             Assignment,            allocate_empty_layout(ASSIGNMENT_TYPE))
+  VISIT(53, Layout,     assignment_layout,             Assignment,            allocate_empty_layout(ASSIGNMENT_TYPE))             \
+  VISIT(54, Layout,     parameters_layout,             Parameters,            allocate_empty_layout(PARAMETERS_TYPE))
 
 
 #define FOR_EACH_ROOT(VISIT)                                         \

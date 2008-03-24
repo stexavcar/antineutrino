@@ -129,13 +129,11 @@ static void write_selector_short_on(Selector *obj, string_buffer &buf) {
   Tuple *keywords = obj->keywords();
   if (!keywords->is_empty()) {
     buf.append(" |");
-    for (uword i = 0; i < keywords->length(); i += 2) {
+    for (uword i = 0; i < keywords->length(); i++) {
       buf.append(" ");
       Immediate *key = cast<Immediate>(keywords->get(i));
-      Smi *index = cast<Smi>(keywords->get(i + 1));
       key->write_short_on(buf, Data::UNQUOTED);
       buf.append(":");
-      index->write_short_on(buf);
     }
   }
   buf.append(')');
@@ -596,9 +594,19 @@ Data *Lambda::clone(Heap &heap) {
 // -----------------------
 
 bool Value::is_key() {
+  if (is_atomic_key()) return true;
+  switch (type()) {
+  case SELECTOR_TYPE: case TUPLE_TYPE:
+    return true;
+  default:
+    return false;
+  }
+}
+
+bool Value::is_atomic_key() {
   switch (type()) {
     case STRING_TYPE: case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE:
-    case FALSE_TYPE: case SMI_TYPE: case SYMBOL_TYPE: case SELECTOR_TYPE:
+    case FALSE_TYPE: case SMI_TYPE: case SYMBOL_TYPE:
       return true;
     default:
       return false;
@@ -608,7 +616,7 @@ bool Value::is_key() {
 bool Value::is_identical(Value *that) {
   if (this == that) return true;
   if (this->type() != that->type()) return false;
-  if (this->is_key()) return this->equals(that);
+  if (this->is_atomic_key()) return this->equals(that);
   else return false;
 }
 
@@ -623,6 +631,8 @@ bool Value::equals(Value *that) {
     return cast<String>(this)->string_equals(cast<String>(that));
   case SELECTOR_TYPE:
     return cast<Selector>(this)->selector_equals(cast<Selector>(that));
+  case TUPLE_TYPE:
+    return cast<Tuple>(this)->tuple_equals(cast<Tuple>(that));
   case SMI_TYPE: case SYMBOL_TYPE:
     return this == that;
   case VOID_TYPE:
@@ -644,6 +654,16 @@ bool String::string_equals(String *that) {
     return false;
   for (uword i = 0; i < this->length(); i++) {
     if (this->at(i) != that->at(i))
+      return false;
+  }
+  return true;
+}
+
+bool Tuple::tuple_equals(Tuple *that) {
+  if (this->length() != that->length())
+    return false;
+  for (uword i = 0; i < this->length(); i++) {
+    if (!this->get(i)->equals(that->get(i)))
       return false;
   }
   return true;

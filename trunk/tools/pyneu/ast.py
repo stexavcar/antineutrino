@@ -50,7 +50,7 @@ class Arguments(SyntaxTree):
     visitor.visit_arguments(self)
   
   def keywords(self):
-    return self.keywords_
+    return self.keywords_.keys()
 
   def traverse(self, visitor):
     for arg in self.args_:
@@ -59,6 +59,27 @@ class Arguments(SyntaxTree):
   def quote(self):
     args = [ s.quote() for s in self.args_ ]
     return values.Arguments(args, self.keywords_)
+
+
+class Parameters(SyntaxTree):
+
+  def __init__(self, posc, params):
+    super(Parameters, self).__init__()
+    self.posc_ = posc
+    self.params_ = params
+
+  def params(self):
+    return self.params_
+  
+  def keywords(self):
+    return self.params_[self.posc_:]
+
+  def __len__(self):
+    return len(self.params_)
+  
+  def quote(self):
+    params = [ p.quote() for p in self.params_ ]
+    return values.Parameters(self.posc_, params)
 
 
 class File(SyntaxTree):
@@ -119,14 +140,18 @@ class Method(Declaration):
     return parser.STATIC in self.modifiers_
 
   def quote(self):
-    argc = len(self.lambda_.params())
-    selector = values.Selector(self.name_, argc, { })
+    params = self.lambda_.params()
+    argc = len(params)
+    keywords = [ k.name() for k in params.keywords() ]
+    selector = values.Selector(self.name_, argc, keywords)
     lam = self.lambda_.quote()
     return values.MethodExpression(selector, lam, values.FALSE)
 
   def evaluate(self):
-    argc = len(self.lambda_.params())
-    selector = values.Selector(self.name_, argc, { })
+    params = self.lambda_.params()
+    argc = len(params)
+    keywords = [ k.name() for k in params.keywords() ]
+    selector = values.Selector(self.name_, argc, keywords)
     lam = self.lambda_.evaluate()
     return values.Method(selector, lam, self.is_static())
 
@@ -176,14 +201,13 @@ class Lambda(Expression):
     return self.body_
 
   def quote(self):
-    params = [ p.quote() for p in self.params() ]
+    params = self.params().quote()
     body = self.body().quote()
     return values.LambdaExpression(params, body)
 
   def evaluate(self):
-    argc = len(self.params())
     body = self.quote()
-    return values.Lambda(argc, body)
+    return values.Lambda(len(self.params_), body)
 
 
 class Task(Expression):

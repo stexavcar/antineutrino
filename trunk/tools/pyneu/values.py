@@ -12,6 +12,9 @@ class Smi(Value):
   def __init__(self, value):
     super(Smi, self).__init__()
     self.value_ = value
+  
+  def __repr__(self):
+    return "smi %i" % self.value_
 
   def get_int_value(self, heap):
     return (self.value_ << 2)
@@ -107,13 +110,13 @@ class Selector(Object):
     assert not isinstance(argc, Smi)
     self.name_ = name
     self.argc_ = argc
-    self.keywords_ = keywords
+    self.keywords_ = sorted(keywords)
 
   def allocate(self, heap):
     result = heap.allocate(fields.ImageSelector_Size, Smi(values.Selector.index))
     result[fields.ImageSelector_NameOffset] = String(self.name_)
     result[fields.ImageSelector_ArgcOffset] = Smi(self.argc_)
-    keywords = process_keywords(self.keywords_)
+    keywords = [ String(w) for w in self.keywords_ ]
     result[fields.ImageSelector_KeywordsOffset] = Tuple(entries = keywords)
     return result
 
@@ -280,7 +283,7 @@ class LambdaExpression(SyntaxTree):
 
   def allocate(self, heap):
     result = heap.allocate(fields.ImageLambdaExpression_Size, Smi(values.LambdaExpression.index))
-    result[fields.ImageLambdaExpression_ParamsOffset] = Tuple(entries = self.params_)
+    result[fields.ImageLambdaExpression_ParametersOffset] = self.params_
     result[fields.ImageLambdaExpression_BodyOffset] = self.body_
     return result
 
@@ -367,14 +370,6 @@ class Symbol(SyntaxTree):
     return result
 
 
-def process_keywords(words):
-  keywords = [ ]
-  for key in words.keys():
-    keywords.append(String(key))
-    keywords.append(Smi(words[key]))
-  return keywords
-
-
 class Arguments(SyntaxTree):
 
   def __init__(self, args, keywords):
@@ -385,8 +380,25 @@ class Arguments(SyntaxTree):
   def allocate(self, heap):
     result = heap.allocate(fields.ImageArguments_Size, Smi(values.Arguments.index))
     result[fields.ImageArguments_ArgumentsOffset] = Tuple(entries = self.args_)
-    keywords = process_keywords(self.keywords_)
-    result[fields.ImageArguments_KeywordsOffset] = Tuple(entries = keywords)
+    posc = len(self.args_) - len(self.keywords_)
+    keyword_indices = [ ]
+    for key in sorted(self.keywords_.keys()):
+      keyword_indices.append(Smi(self.keywords_[key] - posc))
+    result[fields.ImageArguments_KeywordIndicesOffset] = Tuple(entries = keyword_indices)
+    return result
+
+
+class Parameters(SyntaxTree):
+
+  def __init__(self, posc, params):
+    super(Parameters, self).__init__()
+    self.posc_ = posc
+    self.params_ = params
+  
+  def allocate(self, heap):
+    result = heap.allocate(fields.ImageParameters_Size, Smi(values.Parameters.index))
+    result[fields.ImageParameters_PositionCountOffset] = Smi(self.posc_)
+    result[fields.ImageParameters_ParametersOffset] = Tuple(entries = self.params_)
     return result
 
 

@@ -60,9 +60,11 @@ public:
   Data *new_lambda(uword argc, Value *code, Value *literals, Value *tree,
       Context *context);
   
+  Data *new_parameters(Smi *position_count, Tuple *params);
+  
   Data *new_quote_template(SyntaxTree *body, Tuple *unquotes);
   
-  Data *new_lambda_expression(Tuple *params, SyntaxTree *body);
+  Data *new_lambda_expression(Parameters *params, SyntaxTree *body);
   
   Data *new_return_expression(SyntaxTree *value);
   

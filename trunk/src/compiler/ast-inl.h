@@ -29,6 +29,14 @@ ref<QuoteTemplate> Visitor::current_quote() {
   return quote_scope()->value();
 }
 
+bool Parameters::has_keywords() {
+  return static_cast<uword>(position_count()->value()) < length();
+}
+
+uword Parameters::length() {
+  return parameters()->length();
+}
+
 }
 
 #endif // _IO_AST_INL

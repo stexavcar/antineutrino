@@ -55,6 +55,16 @@ Data *Heap::new_lambda(uword argc, Value *code, Value *constant_pool,
   return result;
 }
 
+Data *Heap::new_parameters(Smi *position_count, Tuple *params) {
+  Data *val = allocate_object(Parameters::kSize, roots().parameters_layout());
+  if (is<AllocationFailed>(val)) return val;
+  Parameters *result = cast<Parameters>(val);
+  result->set_position_count(position_count);
+  result->set_parameters(params);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
 Data *Heap::new_quote_template(SyntaxTree *value, Tuple *unquotes) {
   Data *val = allocate_object(QuoteTemplate::kSize, roots().quote_template_layout());
   if (is<AllocationFailed>(val)) return val;
@@ -65,11 +75,11 @@ Data *Heap::new_quote_template(SyntaxTree *value, Tuple *unquotes) {
   return result;
 }
 
-Data *Heap::new_lambda_expression(Tuple *params, SyntaxTree *body) {
+Data *Heap::new_lambda_expression(Parameters *params, SyntaxTree *body) {
   Data *val = allocate_object(LambdaExpression::kSize, roots().lambda_expression_layout());
   if (is<AllocationFailed>(val)) return val;
   LambdaExpression *result = cast<LambdaExpression>(val);
-  result->set_params(params);
+  result->set_parameters(params);
   result->set_body(body);
   IF_PARANOID(result->validate());
   return result;

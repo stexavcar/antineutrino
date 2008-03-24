@@ -158,7 +158,7 @@ static void unparse_list_on(Tuple *objs, UnparseData &data) {
 
 static void unparse_lambda_expression(LambdaExpression *obj, UnparseData &data) {
   data->append("fn ");
-  unparse_list_on(obj->params(), data);
+  unparse_list_on(obj->parameters()->parameters(), data);
   data->append(" ");
   unparse_syntax_tree_on(obj->body(), data);
 }
@@ -202,6 +202,15 @@ static void unparse_sequence_expression(SequenceExpression *expr, UnparseData &d
     unparse_syntax_tree_on(cast<SyntaxTree>(exprs->get(i)), data);
   }
   data->append("}");
+}
+
+static void unparse_conditional_expression(ConditionalExpression *expr, UnparseData &data) {
+  data->append("if (");
+  unparse_syntax_tree_on(expr->condition(), data);
+  data->append(") ");
+  unparse_syntax_tree_on(expr->then_part(), data);
+  data->append(" else ");
+  unparse_syntax_tree_on(expr->else_part(), data);
 }
 
 static void unparse_assignment(Assignment *expr, UnparseData &data) {
@@ -260,6 +269,9 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
     break;
   case ASSIGNMENT_TYPE:
     unparse_assignment(cast<Assignment>(obj), data);
+    break;
+  case CONDITIONAL_EXPRESSION_TYPE:
+    unparse_conditional_expression(cast<ConditionalExpression>(obj), data);
     break;
   default:
     UNHANDLED(InstanceType, type);

@@ -60,6 +60,7 @@ class Method;
 class Mirror;
 class Null;
 class Object;
+class Parameters;
 template <class T> class persistent;
 class QuoteTemplate;
 template <class T> class ref;

@@ -135,7 +135,7 @@ class Parser(object):
     self.expect_keyword(DEF)
     name = self.expect_identifier()
     params = self.parameters()
-    self.resolver().push_scope(params)
+    self.resolver().push_scope(params.params())
     body = self.function_body(True)
     self.resolver().pop_scope()
     return ast.Definition(name, ast.Lambda(modifiers, name, params, body))
@@ -167,7 +167,7 @@ class Parser(object):
     else:
       params = ast.Null()
       has_params = False
-    if has_params: self.resolver().push_scope(params)
+    if has_params: self.resolver().push_scope(params.params())
     body = self.function_body(True)
     if has_params: self.resolver().pop_scope()
     return ast.Method(doc, modifiers, klass, name, params, body)
@@ -212,24 +212,29 @@ class Parser(object):
     return stmts
 
   def parameters(self):
-    result = [ ]
+    params = [ ]
+    keywords = [ ]
     self.expect_delimiter('(')
     if not self.token().is_delimiter(')'):
-      result.append(self.parameter())
+      self.parameter(params, keywords)
       while self.token().is_delimiter(','):
         self.expect_delimiter(',')
-        result.append(self.parameter())
+        self.parameter(params, keywords)
     self.expect_delimiter(')')
-    return result
+    all_params = params + sorted(keywords, key=ast.Symbol.name)
+    return ast.Parameters(len(params), all_params)
 
-  def parameter(self):
+  def parameter(self, params, keywords):
     if self.token().is_delimiter(u'‹'):
-      return self.unquote_expression()
+      params.append(self.unquote_expression())
     else:
       name = self.expect_identifier()
+      symbol = ast.Symbol(name)
       if self.token().is_delimiter(':'):
         self.expect_delimiter(':')
-      return ast.Symbol(name)
+        keywords.append(symbol)
+      else:
+        params.append(symbol)
 
   def expression(self, is_toplevel):
     return self.control_expression(is_toplevel)
@@ -268,14 +273,14 @@ class Parser(object):
     if self.token().is_keyword(FN):
       self.expect_keyword(FN)
       params = self.parameters()
-      self.resolver().push_scope(params)
+      self.resolver().push_scope(params.params())
       body = self.function_body(False)
       self.resolver().pop_scope()
       return ast.Lambda([], None, params, body)
     if self.token().is_keyword(TASK):
       self.expect_keyword(TASK)
-      params = [ ]
-      self.resolver().push_scope(params)
+      params = ast.Parameters(0, [ ])
+      self.resolver().push_scope(params.params())
       body = self.function_body(False)
       self.resolver().pop_scope()
       return ast.Task(ast.Lambda([], None, params, body))

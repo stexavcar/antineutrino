@@ -41,11 +41,16 @@ ref<Lambda> Factory::new_lambda(uword argc, ref<Value> code,
   ALLOCATE_CHECKED(Lambda, new_lambda(argc, *code, *literals, *tree, *context));
 }
 
+ref<Parameters> Factory::new_parameters(ref<Smi> position_count,
+    ref<Tuple> params) {
+  ALLOCATE_CHECKED(Parameters, new_parameters(*position_count, *params));
+}
+
 ref<QuoteTemplate> Factory::new_quote_template(ref<SyntaxTree> body, ref<Tuple> unquotes) {
   ALLOCATE_CHECKED(QuoteTemplate, new_quote_template(*body, *unquotes));
 }
 
-ref<LambdaExpression> Factory::new_lambda_expression(ref<Tuple> params,
+ref<LambdaExpression> Factory::new_lambda_expression(ref<Parameters> params,
     ref<SyntaxTree> body) {
   ALLOCATE_CHECKED(LambdaExpression, new_lambda_expression(*params, *body));
 }

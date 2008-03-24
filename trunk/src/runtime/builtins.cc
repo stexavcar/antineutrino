@@ -211,7 +211,7 @@ Data *Builtins::lambda_disassemble(BuiltinArguments &args) {
 // -----------------------------------------
 
 Data *Builtins::lambda_expression_params(BuiltinArguments &args) {
-  return cast<LambdaExpression>(args.self())->params();
+  return cast<LambdaExpression>(args.self())->parameters()->parameters();
 }
 
 Data *Builtins::lambda_expression_body(BuiltinArguments &args) {

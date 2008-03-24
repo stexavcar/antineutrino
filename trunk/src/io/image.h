@@ -109,6 +109,18 @@ class ImageContext : public ImageObject {
 public:
 };
 
+class ImageArguments : public ImageSyntaxTree {
+public:
+  DECLARE_IMAGE_FIELD(Tuple, arguments);
+  DECLARE_IMAGE_FIELD(Tuple, keyword_indices);
+};
+
+class ImageParameters : public ImageSyntaxTree {
+public:
+  DECLARE_IMAGE_FIELD(Smi, position_count);
+  DECLARE_IMAGE_FIELD(Tuple, parameters);
+};
+
 class ImageLambda : public ImageObject {
 public:
   inline uword argc();
@@ -165,12 +177,6 @@ public:
   DECLARE_IMAGE_FIELD(Value, value);
 };
 
-class ImageArguments : public ImageSyntaxTree {
-public:
-  DECLARE_IMAGE_FIELD(Tuple, arguments);
-  DECLARE_IMAGE_FIELD(Tuple, keywords);
-};
-
 class ImageInvokeExpression : public ImageSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, receiver);
@@ -194,7 +200,7 @@ public:
 
 class ImageLambdaExpression : public ImageSyntaxTree {
 public:
-  DECLARE_IMAGE_FIELD(Tuple, params);
+  DECLARE_IMAGE_FIELD(Parameters, parameters);
   DECLARE_IMAGE_FIELD(SyntaxTree, body);
 };
 

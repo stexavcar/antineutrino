@@ -40,16 +40,41 @@ def test_overloading() {
   assert_equals(3, X.argc(0, 0, 0));  
 }
 
-def test_keywords() {
+def test_simple_keywords() {
   assert_equals(1, X.get_x(x: 1, y: 2));
   assert_equals(4, X.get_x(y: 3, x: 4));
   assert_equals(6, X.get_y(x: 5, y: 6));
   assert_equals(7, X.get_y(y: 7, x: 8));
 }
 
+protocol X2 {
+  static def get_arg(i, a, b, c:, d:, e:) {
+    if (i = 0) return a;
+    else if (i = 1) return b;
+    else if (i = 2) return c;
+    else if (i = 3) return d;
+    else return e;
+  }
+}
+
+def test_mixed_keywords() {
+  assert_equals( 1, X2.get_arg(0,  1,  2, c:  3, d:  4, e:  5));
+  assert_equals( 7, X2.get_arg(1,  6,  7, c:  8, d:  9, e: 10));
+  assert_equals(13, X2.get_arg(2, 11, 12, c: 13, d: 14, e: 15));
+  assert_equals(19, X2.get_arg(3, 16, 17, c: 18, d: 19, e: 20));
+  assert_equals(25, X2.get_arg(4, 21, 22, c: 23, d: 24, e: 25));
+  
+  assert_equals( 1, X2.get_arg(0,  1,  2, c:  3, d:  4, e:  5));
+  assert_equals( 7, X2.get_arg(1,  6,  7, d:  8, e:  9, c: 10));
+  assert_equals(14, X2.get_arg(2, 11, 12, e: 13, c: 14, d: 15));
+  assert_equals(19, X2.get_arg(3, 16, 17, c: 18, d: 19, e: 20));
+  assert_equals(24, X2.get_arg(4, 21, 22, d: 23, e: 24, c: 25));
+}
+
 def main() {
   test_calls();
   test_implicit_self();
   test_overloading();
-  test_keywords();
+  test_simple_keywords();
+  test_mixed_keywords();
 }

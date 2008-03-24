@@ -158,13 +158,6 @@ void Image::copy_object_shallow(ImageObject *obj, ImageLoadInfo &info) {
       obj->point_forward(tuple);
       break;
     }
-    case LAMBDA_TYPE: {
-      ImageLambda *img = image_raw_cast<ImageLambda>(obj);
-      uword argc = img->argc();
-      Lambda *lambda = cast<Lambda>(heap.allocate_lambda(argc));
-      obj->point_forward(lambda);
-      break;
-    }
     case LAYOUT_TYPE: {
       // Because of the rule that layouts must be moved before their
       // instances this layout may already have been moved.
@@ -185,6 +178,13 @@ void Image::copy_object_shallow(ImageObject *obj, ImageLoadInfo &info) {
     case BUILTIN_CALL_TYPE: {
       BuiltinCall *heap_obj = cast<BuiltinCall>(heap.allocate_builtin_call());
       obj->point_forward(heap_obj);
+      break;
+    }
+    case LAMBDA_TYPE: {
+      ImageLambda *img = image_raw_cast<ImageLambda>(obj);
+      uword argc = img->argc();
+      Lambda *lambda = cast<Lambda>(heap.allocate_lambda(argc));
+      obj->point_forward(lambda);
       break;
     }
     case UNQUOTE_EXPRESSION_TYPE: {

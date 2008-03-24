@@ -259,6 +259,14 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc += OpcodeInfo<OC_ARGUMENT>::kSize;
       break;
     }
+    case OC_KEYWORD: {
+      uint16_t index = code[pc + 1];
+      Tuple *keymap = cast<Tuple>(frame.local(0));
+      uword offset = cast<Smi>(keymap->get(index))->value();
+      frame.push(frame.argument(offset));
+      pc += OpcodeInfo<OC_KEYWORD>::kSize;
+      break;
+    }
     case OC_IF_TRUE: {
       Value *value = frame.pop();
       if (is<True>(value)) {
@@ -277,6 +285,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     case OC_INVOKE: {
       uint16_t selector_index = code[pc + 1];
       Selector *selector = cast<Selector>(constant_pool[selector_index]);
+      Tuple *keymap = cast<Tuple>(constant_pool[code[pc + 3]]);
       uint16_t argc = code[pc + 2];
       Value *recv = frame[argc + 1];
       Layout *layout = get_layout(deref(recv));
@@ -294,6 +303,8 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       method->lambda()->ensure_compiled();
       code = cast<Code>(method->lambda()->code())->buffer();
       constant_pool = cast<Tuple>(method->lambda()->constant_pool())->buffer();
+      if (!keymap->is_empty())
+        frame.push(keymap);
       pc = 0;
       break;
     }

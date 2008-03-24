@@ -14,9 +14,10 @@ public:
   ref<String> new_string(string str);
   ref<String> new_string(uword length);
   ref<Tuple> new_tuple(uword size);
+  ref<Parameters> new_parameters(ref<Smi> position_count, ref<Tuple> params);
   ref<Lambda> new_lambda(uword argc, ref<Value> code,
       ref<Value> literals, ref<Value> tree, ref<Context> context);
-  ref<LambdaExpression> new_lambda_expression(ref<Tuple> params,
+  ref<LambdaExpression> new_lambda_expression(ref<Parameters> params,
       ref<SyntaxTree> body);
   ref<ReturnExpression> new_return_expression(ref<SyntaxTree> value);
   ref<QuoteTemplate> new_quote_template(ref<SyntaxTree> body, ref<Tuple> unquotes);

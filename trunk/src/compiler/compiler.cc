@@ -71,13 +71,14 @@ public:
   void slap(uint16_t height);
   void rethurn();
   void attach();
-  void invoke(ref<Selector> selector, uint16_t argc);
+  void invoke(ref<Selector> selector, uint16_t argc, ref<Tuple> keymap);
   void instantiate(ref<Layout> layout);
   void raise(ref<String> name, uint16_t argc);
   void call(uint16_t argc);
   void tuple(uint16_t size);
   void global(ref<Value> name);
   void argument(uint16_t index);
+  void keyword(uint16_t index);
   void load_local(uint16_t height);
   void store_local(uint16_t height);
   void outer(uint16_t index);
@@ -105,6 +106,7 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
 
   Factory &factory() { return runtime().factory(); }
+  void adjust_stack_height(word delta);
 
 private:
   friend class Scope;
@@ -112,7 +114,6 @@ private:
   Runtime &runtime() { return session().runtime(); }
   CompileSession &session() { return session_; }
   uword stack_height() { return stack_height_; }
-  void adjust_stack_height(word delta);
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }
   ref<LambdaExpression> lambda_;
@@ -175,13 +176,15 @@ void Assembler::adjust_stack_height(word delta) {
   IF_PARANOID(code().append(stack_height()));
 }
 
-void Assembler::invoke(ref<Selector> selector, uint16_t argc) {
-  STATIC_CHECK(OpcodeInfo<OC_INVOKE>::kArgc == 2);
-  selector.to_string().println();
+void Assembler::invoke(ref<Selector> selector, uint16_t argc,
+    ref<Tuple> keymap) {
+  STATIC_CHECK(OpcodeInfo<OC_INVOKE>::kArgc == 3);
   uint16_t selector_index = constant_pool_index(selector);
+  uint16_t keymap_index = constant_pool_index(keymap);
   code().append(OC_INVOKE);
   code().append(selector_index);
   code().append(argc);
+  code().append(keymap_index);
 }
 
 void Assembler::instantiate(ref<Layout> layout) {
@@ -225,6 +228,13 @@ void Assembler::global(ref<Value> value) {
 void Assembler::argument(uint16_t index) {
   STATIC_CHECK(OpcodeInfo<OC_ARGUMENT>::kArgc == 1);
   code().append(OC_ARGUMENT);
+  code().append(index);
+  adjust_stack_height(1);
+}
+
+void Assembler::keyword(uint16_t index) {
+  STATIC_CHECK(OpcodeInfo<OC_KEYWORD>::kArgc == 1);
+  code().append(OC_KEYWORD);
   code().append(index);
   adjust_stack_height(1);
 }
@@ -378,7 +388,8 @@ void Assembler::unmark() {
 // -----------------
 
 #define FOR_EACH_CATEGORY(VISIT)                                     \
-  VISIT(MISSING) VISIT(ARGUMENT) VISIT(LOCAL) VISIT(OUTER)
+  VISIT(MISSING)  VISIT(ARGUMENT) VISIT(LOCAL)    VISIT(OUTER)       \
+  VISIT(KEYWORD)
 
 enum Category {
   __first_category
@@ -401,6 +412,7 @@ struct Lookup {
     struct { uint16_t index; } argument_info;
     struct { uint16_t height; } local_info;
     struct { uint16_t index; } outer_info;
+    struct { uint16_t index; } keyword_info;
   };  
 };
 
@@ -438,26 +450,34 @@ void Scope::unlink() {
   }
 }
 
-class ArgumentScope : public Scope {
+class FunctionScope : public Scope {
 public:
-  ArgumentScope(Assembler &assembler, ref<Tuple> symbols)
+  FunctionScope(Assembler &assembler, ref<Parameters> params)
       : Scope(assembler)
-      , symbols_(symbols) { }
+      , params_(params) { }
   virtual void lookup(ref<Symbol> symbol, Lookup &result);
 private:
-  ref<Tuple> symbols() { return symbols_; }
-  ref<Tuple> symbols_;
+  ref<Parameters> params() { return params_; }
+  ref<Parameters> params_;
 };
 
-void ArgumentScope::lookup(ref<Symbol> symbol, Lookup &result) {
-  for (uword i = 0; i < symbols().length(); i++) {
-    Value *entry = symbols()->get(i);
+void FunctionScope::lookup(ref<Symbol> symbol, Lookup &result) {
+  Tuple *symbols = params()->parameters();
+  for (uword i = 0; i < symbols->length(); i++) {
+    Value *entry = symbols->get(i);
     if (is<UnquoteExpression>(entry))
       entry = result.assembler.resolve_unquote(cast<UnquoteExpression>(entry));
     if (symbol->equals(cast<Symbol>(entry))) {
-      result.category = ARGUMENT;
-      result.argument_info.index = symbols().length() - i - 1;
-      return;
+      uword posc = params()->position_count()->value();
+      if (i < posc) {
+        result.category = ARGUMENT;
+        result.argument_info.index = symbols->length() - i - 1;
+        return;
+      } else {
+        result.category = KEYWORD;
+        result.keyword_info.index = i - posc;
+        return;
+      }
     }
   }
   if (parent() != NULL) return parent()->lookup(symbol, result);
@@ -553,7 +573,20 @@ void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
   ref<Tuple> args = that.arguments().arguments();
   for (uword i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
-  __ invoke(that.selector(), args.length());
+  ref<Tuple> raw_keymap = that.arguments().keyword_indices();
+  ref<Tuple> keymap;
+  if (raw_keymap.is_empty()) {
+    keymap = raw_keymap;
+  } else {
+    keymap = runtime().factory().new_tuple(raw_keymap.length());
+    uword argc = args.length();
+    uword posc = args.length() - raw_keymap.length();
+    for (uword i = 0; i < keymap.length(); i++) {
+      uword index = cast<Smi>(raw_keymap->get(i))->value();
+      keymap->set(i, Smi::from_int(argc - index - 1 - posc));
+    }
+  }
+  __ invoke(that.selector(), args.length(), keymap);
   __ slap(args.length() + 1);
 }
 
@@ -604,6 +637,9 @@ void Assembler::load_symbol(ref<Symbol> that) {
       break;
     case OUTER:
       __ outer(lookup.outer_info.index);
+      break;
+    case KEYWORD:
+      __ keyword(lookup.keyword_info.index);
       break;
     default:
       UNHANDLED(Category, lookup.category);
@@ -658,7 +694,7 @@ void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
       __ push(runtime().vhoid());
       ref<String> name = factory().new_string("to_string");
       ref<Selector> selector = factory().new_selector(name, Smi::from_int(0));
-      __ invoke(selector, 0);
+      __ invoke(selector, 0, runtime().empty_tuple());
       __ slap(1);
     }
   }
@@ -694,7 +730,7 @@ void Assembler::visit_task_expression(ref<TaskExpression> that) {
 }
 
 void Assembler::visit_this_expression(ref<ThisExpression> that) {
-  __ argument(lambda()->params()->length() + 1);
+  __ argument(lambda()->parameters()->parameters()->length() + 1);
 }
 
 void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
@@ -801,6 +837,10 @@ void Assembler::visit_arguments(ref<Arguments> that) {
   UNREACHABLE();
 }
 
+void Assembler::visit_parameters(ref<Parameters> that) {
+  UNREACHABLE();
+}
+
 // -----------------------
 // --- B u i l t i n s ---
 // -----------------------
@@ -831,20 +871,23 @@ ref<Lambda> Compiler::compile(ref<LambdaExpression> expr, ref<Context> context) 
   Runtime &runtime = Runtime::current();
   ref<Smi> zero = new_ref(Smi::from_int(0));  
   ref<Lambda> lambda = runtime.factory().new_lambda(
-    expr->params()->length(), zero, zero, expr, context
+    expr->parameters()->parameters()->length(), zero, zero, expr, context
   );
   return lambda;
 }
 
 ref<Lambda> Compiler::compile(ref<SyntaxTree> tree, ref<Context> context) {
-  // TODO(2): Fix this once handles can be returned from scopes
   Lambda *result;
   Runtime &runtime = Runtime::current();
   {
     RefScope scope;
     ref<ReturnExpression> ret = runtime.factory().new_return_expression(tree);
+    ref<Parameters> params = runtime.factory().new_parameters(
+      new_ref(Smi::from_int(0)),
+      runtime.empty_tuple()
+    );
     ref<LambdaExpression> expr = runtime.factory().new_lambda_expression(
-      runtime.empty_tuple(),
+      params,
       ret
     );
     ref<Lambda> ref_result = compile(expr, context);
@@ -862,7 +905,8 @@ ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
     Assembler *enclosing) {
   ref<Smi> zero = new_ref(Smi::from_int(0));
   ref<Lambda> lambda = runtime().factory().new_lambda(
-      that->params()->length(), zero, zero, that, context()
+      that->parameters()->parameters()->length(), zero, zero, that,
+      context()
   );
   compile(lambda, enclosing);
   return lambda;
@@ -872,8 +916,12 @@ void CompileSession::compile(ref<Lambda> lambda, Assembler *enclosing) {
   GarbageCollectionMonitor monitor(Runtime::current().heap().memory());
   ref<LambdaExpression> tree = cast<LambdaExpression>(lambda.tree());
   Assembler assembler(tree, *this, enclosing);
-  ref<Tuple> params = tree.params();
-  ArgumentScope scope(assembler, params);
+  ref<Parameters> params = tree.parameters();
+  // If this is a keyword call the keyword map will be pushed as the
+  // first local variable by the caller
+  if (params->has_keywords())
+    assembler.adjust_stack_height(1);
+  FunctionScope scope(assembler, params);
   assembler.initialize();
   tree.body().accept(assembler);
   ref<Code> code = assembler.flush_code();

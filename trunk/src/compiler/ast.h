@@ -110,16 +110,16 @@ DEFINE_REF_CLASS(InvokeExpression);
 // -------------------------
 
 #define FOR_EACH_ARGUMENTS_FIELD(VISIT, arg)                         \
-  VISIT(Tuple, arguments, Arguments, arg)                            \
-  VISIT(Tuple, keywords,  Keywords,  arg)
+  VISIT(Tuple, arguments,        Arguments,       arg)               \
+  VISIT(Tuple, keyword_indices,  KeywordIndices,  arg)
 
 class Arguments : public SyntaxTree {
 public:
   FOR_EACH_ARGUMENTS_FIELD(DECLARE_OBJECT_FIELD, 0)
 
-  static const uword kArgumentsOffset = SyntaxTree::kHeaderSize;
-  static const uword kKeywordsOffset  = kArgumentsOffset + kPointerSize;
-  static const uword kSize            = kKeywordsOffset + kPointerSize;
+  static const uword kArgumentsOffset       = SyntaxTree::kHeaderSize;
+  static const uword kKeywordIndicesOffset  = kArgumentsOffset + kPointerSize;
+  static const uword kSize                  = kKeywordIndicesOffset + kPointerSize;
 };
 
 template <>
@@ -129,6 +129,35 @@ public:
 };
 
 DEFINE_REF_CLASS(Arguments);
+
+
+// ---------------------------
+// --- P a r a m e t e r s ---
+// ---------------------------
+
+#define FOR_EACH_PARAMETERS_FIELD(VISIT, arg)                        \
+  VISIT(Smi,   position_count, PositionCount, arg)                   \
+  VISIT(Tuple, parameters,     Parameters,    arg)
+
+class Parameters : public SyntaxTree {
+public:
+  FOR_EACH_PARAMETERS_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  inline bool has_keywords();
+  inline uword length();
+
+  static const uword kPositionCountOffset = SyntaxTree::kHeaderSize;
+  static const uword kParametersOffset    = kPositionCountOffset + kPointerSize;
+  static const uword kSize                = kParametersOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<Parameters> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_PARAMETERS_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(Parameters);
 
 
 // ---------------------------------------------------
@@ -546,16 +575,16 @@ DEFINE_REF_CLASS(UnquoteExpression);
 // -----------------------------------------
 
 #define FOR_EACH_LAMBDA_EXPRESSION_FIELD(VISIT, arg)                 \
-  VISIT(Tuple,      params, Params, arg)                             \
-  VISIT(SyntaxTree, body,   Body,   arg)
+  VISIT(Parameters, parameters, Parameters, arg)                     \
+  VISIT(SyntaxTree, body,       Body,       arg)
 
 class LambdaExpression : public SyntaxTree {
 public:
   FOR_EACH_LAMBDA_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
 
-  static const uword kParamsOffset = SyntaxTree::kHeaderSize;
-  static const uword kBodyOffset = kParamsOffset + kPointerSize;
-  static const uword kSize = kBodyOffset + kPointerSize;
+  static const uword kParametersOffset = SyntaxTree::kHeaderSize;
+  static const uword kBodyOffset       = kParametersOffset + kPointerSize;
+  static const uword kSize             = kBodyOffset + kPointerSize;
 };
 
 template <>
