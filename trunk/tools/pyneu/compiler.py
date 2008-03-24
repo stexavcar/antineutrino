@@ -79,10 +79,10 @@ class ResolveVisitor(ast.Visitor):
     if super_name:
       image.super_ = self.toplevel()[super_name]
     else:
-      if that.name() != "Object":
-        image.super_ = self.toplevel()["Object"]
-      else:
+      if that.name() == "Object":
         image.super_ = values.NULL
+      else:
+        image.super_ = self.toplevel()["Object"]
 
     # If this protocol is internal, install it in the root set
     if parser.INTERNAL in that.modifiers():
@@ -95,6 +95,9 @@ class ResolveVisitor(ast.Visitor):
       member.set_signature(image)
 
     static_protocol = image.static_protocol()
-    if static_protocol:
-      for method in static_protocol.methods():
-        method.set_signature(static_protocol)
+    for method in static_protocol.methods():
+      method.set_signature(static_protocol)
+    if that.name() == "Object":
+      static_protocol.set_super(self.toplevel()["Protocol"])
+    else:
+      static_protocol.set_super(image.super_.static_protocol())

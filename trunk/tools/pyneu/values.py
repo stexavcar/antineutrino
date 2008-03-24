@@ -193,21 +193,24 @@ class Lambda(Object):
 
 class Protocol(Object):
 
-  def __init__(self, name, methods, static_members, sup=None):
+  def __init__(self, name, methods, static_members, sup=None, is_static=False):
     super(Protocol, self).__init__()
     self.name_ = name
     self.methods_ = methods
     self.super_ = sup
-    if static_members:
-      self.static_protocol_ = Protocol(None, static_members, [], VOID)
-    else:
+    if is_static:
       self.static_protocol_ = None
+    else:
+      self.static_protocol_ = Protocol(None, static_members, [], VOID, True)
 
   def methods(self):
     return self.methods_
 
   def static_protocol(self):
     return self.static_protocol_
+  
+  def set_super(self, value):
+    self.super_ = value
 
   def allocate(self, heap):
     if self.static_protocol_:

@@ -1,0 +1,81 @@
+def simple_record_test() {
+  def x := new { a: 0, b: 1, c: 2 };
+  assert_equals(0, x.a);
+  assert_equals(1, x.b);
+  assert_equals(2, x.c);
+  def y := new { c: "x", b: "y", a: "z" };
+  assert_equals("z", y.a);
+  assert_equals("y", y.b);
+  assert_equals("x", y.c);
+}
+
+protocol A {
+  def x() -> 10;
+  def z() -> 11;
+}
+
+protocol B : A {
+  def x() -> 12;
+  def y() -> 13;
+}
+
+protocol C : B {
+  def y() -> 14;
+}
+
+def method_inheritance_test() {
+  def a := new A();
+  assert_equals(10, a.x());
+  assert_equals(11, a.z());
+  def b := new B();
+  assert_equals(12, b.x());
+  assert_equals(13, b.y());
+  assert_equals(11, b.z());
+  def c := new C();
+  assert_equals(12, c.x());
+  assert_equals(14, c.y());
+  assert_equals(11, c.z());
+}
+
+protocol AS {
+  static def x() -> 10;
+  static def z() -> 11;
+}
+
+protocol BS : AS {
+  static def x() -> 12;
+  static def y() -> 13;
+}
+
+protocol CS : BS {
+  static def y() -> 14;
+}
+
+def static_inheritance_test() {
+  assert_equals(10, AS.x());
+  assert_equals(11, AS.z());
+  assert_equals(12, BS.x());
+  assert_equals(13, BS.y());
+  assert_equals(11, BS.z());
+  assert_equals(12, CS.x());
+  assert_equals(14, CS.y());
+  assert_equals(11, CS.z());
+}
+
+protocol Fooable {
+  def foo() -> 13;
+}
+
+def protocol_test() {
+  def x := new Fooable() { a: 0, b: 1 };
+  assert_equals(0, x.a);
+  assert_equals(1, x.b);
+  assert_equals(13, x.foo());
+}
+
+def main() {
+  simple_record_test();
+  method_inheritance_test();
+  protocol_test();
+  static_inheritance_test();
+}
