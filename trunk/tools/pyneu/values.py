@@ -60,6 +60,11 @@ class String(Object):
     return result
 
 
+def to_tuple(elms):
+  if elms is None: return NULL
+  else: return Tuple(entries = elms)
+
+
 class Tuple(Object):
 
   def __init__(self, length = None, entries = None):
@@ -102,15 +107,21 @@ class Signature(Object):
 EMPTY_SIGNATURE = Signature([])
 
 
+def to_bool(self):
+  if self: return TRUE
+  else: return FALSE
+
+
 class Selector(Object):
 
-  def __init__(self, name, argc, keywords):
+  def __init__(self, name, argc, keywords, is_accessor):
     super(Selector, self).__init__()
     assert not isinstance(name, String)
     assert not isinstance(argc, Smi)
     self.name_ = name
     self.argc_ = argc
     self.keywords_ = sorted(keywords)
+    self.is_accessor_ = is_accessor
 
   def allocate(self, heap):
     result = heap.allocate(fields.ImageSelector_Size, Smi(values.Selector.index))
@@ -118,6 +129,7 @@ class Selector(Object):
     result[fields.ImageSelector_ArgcOffset] = Smi(self.argc_)
     keywords = [ String(w) for w in self.keywords_ ]
     result[fields.ImageSelector_KeywordsOffset] = Tuple(entries = keywords)
+    result[fields.ImageSelector_IsAccessorOffset] = to_bool(self.is_accessor_)
     return result
 
 

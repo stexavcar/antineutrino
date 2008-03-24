@@ -276,7 +276,7 @@ DEFINE_RAW_GETTER(uword,            Root,                  index,           Inde
 DEFINE_GETTER    (Value,            LiteralExpression,     value,           Value)
 DEFINE_GETTER    (SyntaxTree,       InvokeExpression,      receiver,        Receiver)
 DEFINE_GETTER    (Selector,         InvokeExpression,      selector,        Selector)
-DEFINE_GETTER    (Arguments,        InvokeExpression,      arguments,       Arguments)
+DEFINE_GETTER    (Value,            InvokeExpression,      arguments,       Arguments)
 DEFINE_GETTER    (SyntaxTree,       InstantiateExpression, receiver,        Receiver)
 DEFINE_GETTER    (String,           InstantiateExpression, name,            Name)
 DEFINE_GETTER    (Arguments,        InstantiateExpression, arguments,       Arguments)
@@ -331,6 +331,7 @@ DEFINE_GETTER    (Tuple,            Parameters,            parameters,      Para
 DEFINE_GETTER    (Value,            Selector,              name,            Name)
 DEFINE_GETTER    (Smi,              Selector,              argc,            Argc)
 DEFINE_GETTER    (Tuple,            Selector,              keywords,        Keywords)
+DEFINE_GETTER    (Value,            Selector,              is_accessor,     IsAccessor)
 DEFINE_GETTER    (LambdaExpression, TaskExpression,        lambda,          Lambda)
 
 #undef DEFINE_RAW_GETTER

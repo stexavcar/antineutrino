@@ -38,13 +38,17 @@ class Symbol(SyntaxTree):
 
 class Arguments(SyntaxTree):
 
-  def __init__(self, args, keywords):
+  def __init__(self, args, keywords, is_accessor):
     super(Arguments, self).__init__()
     self.args_ = args
     self.keywords_ = keywords
+    self.is_accessor_ = is_accessor
 
   def __len__(self):
     return len(self.args_)
+  
+  def is_accessor(self):
+    return self.is_accessor_
 
   def accept(self, visitor):
     visitor.visit_arguments(self)
@@ -63,16 +67,20 @@ class Arguments(SyntaxTree):
 
 class Parameters(SyntaxTree):
 
-  def __init__(self, posc, params):
+  def __init__(self, posc, params, is_accessor):
     super(Parameters, self).__init__()
     self.posc_ = posc
     self.params_ = params
+    self.is_accessor_ = is_accessor
 
   def params(self):
     return self.params_
   
   def keywords(self):
     return self.params_[self.posc_:]
+  
+  def is_accessor(self):
+    return self.is_accessor_
 
   def __len__(self):
     return len(self.params_)
@@ -142,16 +150,18 @@ class Method(Declaration):
   def quote(self):
     params = self.lambda_.params()
     argc = len(params)
+    is_accessor = params.is_accessor()
     keywords = [ k.name() for k in params.keywords() ]
-    selector = values.Selector(self.name_, argc, keywords)
+    selector = values.Selector(self.name_, argc, keywords, is_accessor)
     lam = self.lambda_.quote()
     return values.MethodExpression(selector, lam, values.FALSE)
 
   def evaluate(self):
     params = self.lambda_.params()
     argc = len(params)
+    is_accessor = params.is_accessor()
     keywords = [ k.name() for k in params.keywords() ]
-    selector = values.Selector(self.name_, argc, keywords)
+    selector = values.Selector(self.name_, argc, keywords, is_accessor)
     lam = self.lambda_.evaluate()
     return values.Method(selector, lam, self.is_static())
 
@@ -270,7 +280,7 @@ class Sequence(Expression):
     return False
 
   def make(exprs):
-    if len(exprs) == 0: return Void()
+    if len(exprs) == 0: return Literal(Void())
     elif len(exprs) == 1: return exprs[0]
     else: return Sequence(exprs)
   make = staticmethod(make)
@@ -357,7 +367,8 @@ class Invoke(Expression):
   def quote(self):
     recv = self.recv_.quote()
     args = self.args_.quote()
-    sel = values.Selector(self.name_, len(self.args_), self.args_.keywords())
+    is_accessor = self.args_.is_accessor()
+    sel = values.Selector(self.name_, len(self.args_), self.args_.keywords(), is_accessor)
     return values.InvokeExpression(recv, sel, args)
 
 

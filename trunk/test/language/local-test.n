@@ -21,6 +21,12 @@ def get_nine() {
   else return x;
 }
 
+def get_void() { }
+
+def single_definition() {
+  def x := 4;
+}
+
 def get_seventeen() -> def k := 17 in k;
 
 def local_test() {
@@ -29,6 +35,7 @@ def local_test() {
   assert_equals(8, get_eight());
   assert_equals(9, get_nine());
   assert_equals(17, get_seventeen());
+  assert_equals(get_void(), single_definition());
 }
 
 def main() {

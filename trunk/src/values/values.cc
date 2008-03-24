@@ -124,19 +124,21 @@ static void write_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
 
 static void write_selector_short_on(Selector *obj, string_buffer &buf) {
   obj->name()->write_short_on(buf, Data::UNQUOTED);
-  buf.append('(');
-  obj->argc()->write_short_on(buf);
-  Tuple *keywords = obj->keywords();
-  if (!keywords->is_empty()) {
-    buf.append(" |");
-    for (uword i = 0; i < keywords->length(); i++) {
-      buf.append(" ");
-      Immediate *key = cast<Immediate>(keywords->get(i));
-      key->write_short_on(buf, Data::UNQUOTED);
-      buf.append(":");
+  if (!obj->is_accessor()) {
+    buf.append('(');
+    obj->argc()->write_short_on(buf);
+    Tuple *keywords = obj->keywords();
+    if (!keywords->is_empty()) {
+      buf.append(" |");
+      for (uword i = 0; i < keywords->length(); i++) {
+        buf.append(" ");
+        Immediate *key = cast<Immediate>(keywords->get(i));
+        key->write_short_on(buf, Data::UNQUOTED);
+        buf.append(":");
+      }
     }
+    buf.append(')');
   }
-  buf.append(')');
 }
 
 static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
@@ -220,6 +222,8 @@ static void write_data_short_on(Data *obj, Data::WriteMode mode, string_buffer &
     write_object_short_on(cast<Object>(obj), mode, buf);
   } else if (is<Signal>(obj)) {
     write_signal_short_on(cast<Signal>(obj), buf);
+  } else if (is<Forwarder>(obj)) {
+    write_data_short_on(cast<Forwarder>(obj)->descriptor()->target(), mode, buf);
   } else {
     UNREACHABLE();
   }

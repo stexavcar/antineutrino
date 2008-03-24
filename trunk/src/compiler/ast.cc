@@ -93,10 +93,11 @@ static void unparse_invoke_expression_on(InvokeExpression *obj, UnparseData &dat
   obj->selector()->write_on(data.out(), Data::UNQUOTED);
   data->append('(');
   bool is_first = true;
-  for (uword i = 0; i < obj->arguments()->arguments()->length(); i++) {
+  Arguments *args = cast<Arguments>(obj->arguments());
+  for (uword i = 0; i < args->arguments()->length(); i++) {
     if (is_first) is_first = false;
     else data->append(", ");
-    unparse_syntax_tree_on(cast<SyntaxTree>(obj->arguments()->arguments()->get(i)), data);
+    unparse_syntax_tree_on(cast<SyntaxTree>(args->arguments()->get(i)), data);
   }
   data->append(')');
 }
@@ -158,7 +159,8 @@ static void unparse_list_on(Tuple *objs, UnparseData &data) {
 
 static void unparse_lambda_expression(LambdaExpression *obj, UnparseData &data) {
   data->append("fn ");
-  unparse_list_on(obj->parameters()->parameters(), data);
+  if (is<Parameters>(obj->parameters()))
+    unparse_list_on(cast<Parameters>(obj->parameters())->parameters(), data);
   data->append(" ");
   unparse_syntax_tree_on(obj->body(), data);
 }
@@ -322,7 +324,7 @@ static void traverse_tuple(Visitor &visitor, ref<Tuple> expressions) {
 }
 
 void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
-#define VISIT_FIELD(Type, field) cast<Type>(self).field().accept(visitor)
+#define VISIT_FIELD(Type, field) cast<SyntaxTree>(cast<Type>(self).field()).accept(visitor)
   ref<SyntaxTree> self = open(this);
   InstanceType type = self->type();
   switch (type) {
@@ -332,7 +334,8 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
   case INVOKE_EXPRESSION_TYPE: {
     RefScope scope;
     VISIT_FIELD(InvokeExpression, receiver);
-    VISIT_FIELD(InvokeExpression, arguments);
+    if (is<SyntaxTree>(cast<InvokeExpression>(self)->arguments()))
+      VISIT_FIELD(InvokeExpression, arguments);
     break;
   }
   case CALL_EXPRESSION_TYPE: {

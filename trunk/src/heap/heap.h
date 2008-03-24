@@ -93,7 +93,7 @@ FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
 
   Data *new_instance(Layout *layout);
   
-  Data *new_selector(Immediate *name, Smi *argc);
+  Data *new_selector(Immediate *name, Smi *argc, Bool *is_accessor);
   
   Data *new_transparent_forwarder(Value *target);
   Data *new_forwarder_descriptor(ForwarderType type, Value *target);

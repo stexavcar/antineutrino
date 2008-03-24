@@ -98,8 +98,9 @@ ref<Instance> Factory::new_instance(ref<Layout> layout) {
   ALLOCATE_CHECKED(Instance, new_instance(*layout));
 }
 
-ref<Selector> Factory::new_selector(ref<Immediate> name, Smi *argc) {
-  ALLOCATE_CHECKED(Selector, new_selector(*name, argc));
+ref<Selector> Factory::new_selector(ref<Immediate> name, Smi *argc,
+    ref<Bool> is_accessor) {
+  ALLOCATE_CHECKED(Selector, new_selector(*name, argc, *is_accessor));
 }
 
 }

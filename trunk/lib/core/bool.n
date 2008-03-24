@@ -1,13 +1,13 @@
-protocol Boolean {
+protocol Bool {
   
 }
 
 # The protocol of the singleton true value
-internal protocol True : Boolean {
+internal protocol True : Bool {
 
 }
 
 # The protocol of the singleton false value
-internal protocol False : Boolean {
+internal protocol False : Bool {
   
 }

@@ -231,11 +231,13 @@
   VISIT(1, Selector,              NameOffset)                        \
   VISIT(2, Selector,              ArgcOffset)                        \
   VISIT(3, Selector,              KeywordsOffset)                    \
-  VISIT(4, Selector,              Size)                              \
+  VISIT(4, Selector,              IsAccessorOffset)                  \
+  VISIT(5, Selector,              Size)                              \
   VISIT(1, TaskExpression,        LambdaOffset)                      \
   VISIT(2, TaskExpression,        Size)                              \
   VISIT(1, YieldExpression,       ValueOffset)                       \
   VISIT(2, YieldExpression,       Size)
+
 
 // -----------------
 // --- R o o t s ---

@@ -20,8 +20,7 @@ template <class T>
 inline bool is(ref<Value> val) { return is<T>(*val); }
 
 #ifdef DEBUG
-template <class C>
-inline bool gc_safe_is(Data *val) { return is<C>(val); }
+template <class C> inline bool gc_safe_is(Data *val);
 #endif
 
 template <class C>

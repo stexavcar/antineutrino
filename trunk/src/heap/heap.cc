@@ -314,13 +314,14 @@ Data *Heap::new_instance(Layout *layout) {
   return result;
 }
 
-Data *Heap::new_selector(Immediate *name, Smi *argc) {
+Data *Heap::new_selector(Immediate *name, Smi *argc, Bool *is_accessor) {
   Data *val = allocate_object(Selector::kSize, roots().selector_layout());
   if (is<AllocationFailed>(val)) return val;
   Selector *result = cast<Selector>(val);
   result->set_name(name);
   result->set_argc(argc);
   result->set_keywords(roots().empty_tuple());
+  result->set_is_accessor(is_accessor);
   IF_PARANOID(result->validate());
   return result;
 }

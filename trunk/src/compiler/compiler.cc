@@ -570,10 +570,11 @@ void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
   RefScope scope;
   __ codegen(that.receiver());
   __ push(runtime().vhoid());
-  ref<Tuple> args = that.arguments().arguments();
+  ref<Arguments> args_obj = cast<Arguments>(that.arguments());
+  ref<Tuple> args = args_obj.arguments();
   for (uword i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
-  ref<Tuple> raw_keymap = that.arguments().keyword_indices();
+  ref<Tuple> raw_keymap = args_obj.keyword_indices();
   ref<Tuple> keymap;
   if (raw_keymap.is_empty()) {
     keymap = raw_keymap;
@@ -693,7 +694,7 @@ void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
       __ codegen(cast<SyntaxTree>(entry));
       __ push(runtime().vhoid());
       ref<String> name = factory().new_string("to_string");
-      ref<Selector> selector = factory().new_selector(name, Smi::from_int(0));
+      ref<Selector> selector = factory().new_selector(name, Smi::from_int(0), runtime().fahlse());
       __ invoke(selector, 0, runtime().empty_tuple());
       __ slap(1);
     }
@@ -730,7 +731,12 @@ void Assembler::visit_task_expression(ref<TaskExpression> that) {
 }
 
 void Assembler::visit_this_expression(ref<ThisExpression> that) {
-  __ argument(lambda()->parameters()->parameters()->length() + 1);
+  uword argc;
+  if (is<Parameters>(lambda()->parameters()))
+    argc = cast<Parameters>(lambda()->parameters())->length();
+  else
+    argc = 0;
+  __ argument(argc + 1);
 }
 
 void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
@@ -798,7 +804,7 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
     code->at(3) = OC_RETURN;
     ref<Lambda> lambda = factory().new_lambda(0, code, runtime().empty_tuple(),
         runtime().nuhll(), session().context());
-    ref<Selector> selector = factory().new_selector(keyword, Smi::from_int(0));
+    ref<Selector> selector = factory().new_selector(keyword, Smi::from_int(0), runtime().thrue());
     methods.set(i, factory().new_method(selector, signature, lambda));
     ref<SyntaxTree> value = cast<SyntaxTree>(terms.get(2 * i + 1));
     __ codegen(value);

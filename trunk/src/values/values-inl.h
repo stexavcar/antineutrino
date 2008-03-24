@@ -107,6 +107,27 @@ FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
 #undef DEFINE_QUERY
 
 #ifdef DEBUG
+
+#define DELEGATE_GC_SAFE_IS(Type)                                    \
+  template <>                                                        \
+  inline bool gc_safe_is<Type>(Data *val) {                          \
+    return is<Type>(val);                                            \
+  }
+
+DELEGATE_GC_SAFE_IS(Immediate)
+DELEGATE_GC_SAFE_IS(Object)
+DELEGATE_GC_SAFE_IS(Value)
+DELEGATE_GC_SAFE_IS(Smi)
+
+#undef DELEGATE_GC_SAFE_IS
+
+template <>
+inline bool gc_safe_is<Bool>(Data *val) {
+  if (!gc_safe_is<Object>(val)) return false;
+  InstanceType type = gc_safe_cast<Object>(val)->gc_safe_type();
+  return (type == TRUE_TYPE) || (type == FALSE_TYPE);
+}
+
 template <>
 inline bool gc_safe_is<SyntaxTree>(Data *val) {
   if (!gc_safe_is<Object>(val)) return false;
@@ -126,6 +147,7 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
   }
 FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
 #undef DEFINE_QUERY
+
 #endif
 
 

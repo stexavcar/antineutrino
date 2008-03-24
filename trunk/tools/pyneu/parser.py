@@ -163,13 +163,11 @@ class Parser(object):
     name = self.method_name()
     if self.token().is_delimiter('('):
       params = self.parameters()
-      has_params = True
     else:
-      params = ast.Null()
-      has_params = False
-    if has_params: self.resolver().push_scope(params.params())
+      params = ast.Parameters(0, [], True)
+    self.resolver().push_scope(params.params())
     body = self.function_body(True)
-    if has_params: self.resolver().pop_scope()
+    self.resolver().pop_scope()
     return ast.Method(doc, modifiers, klass, name, params, body)
 
   def method_name(self):
@@ -222,7 +220,7 @@ class Parser(object):
         self.parameter(params, keywords)
     self.expect_delimiter(')')
     all_params = params + sorted(keywords, key=ast.Symbol.name)
-    return ast.Parameters(len(params), all_params)
+    return ast.Parameters(len(params), all_params, False)
 
   def parameter(self, params, keywords):
     if self.token().is_delimiter(u'‹'):
@@ -279,7 +277,7 @@ class Parser(object):
       return ast.Lambda([], None, params, body)
     if self.token().is_keyword(TASK):
       self.expect_keyword(TASK)
-      params = ast.Parameters(0, [ ])
+      params = ast.Parameters(0, [], False)
       self.resolver().push_scope(params.params())
       body = self.function_body(False)
       self.resolver().pop_scope()
@@ -384,7 +382,7 @@ class Parser(object):
     match = scanner.circumfix_match(value)
     expr = self.operator_expression(match)
     self.expect_operator(match)
-    return ast.Invoke(expr, value + match, ast.Arguments([], {}))
+    return ast.Invoke(expr, value + match, ast.Arguments([], {}, False))
 
   def operator_expression(self, match):
     exprs = [ self.call_expression() ]
@@ -397,14 +395,14 @@ class Parser(object):
       rest = exprs.pop()
       next = exprs.pop()
       op = ops.pop()
-      args = ast.Arguments([rest], {})
+      args = ast.Arguments([rest], {}, False)
       exprs.append(ast.Invoke(next, op, args))
     return exprs[0]
 
   def at_call_start(self):
     token = self.token()
     return (token.is_delimiter(scanner.DELEGATE_CALL_OPERATOR)
-         or token.is_delimiter(scanner.METHOD_CALL_OPERATOR)
+         or token.is_delimiter('.')
          or token.is_delimiter('('))
 
   def call_expression(self):
@@ -414,7 +412,10 @@ class Parser(object):
       if self.token().is_delimiter(scanner.METHOD_CALL_OPERATOR):
         self.expect_delimiter(scanner.METHOD_CALL_OPERATOR)
         name = self.expect_identifier()
-        args = self.arguments()
+        if self.token().is_delimiter('('):
+          args = self.arguments()
+        else:
+          args = ast.Arguments([], {}, True)
         expr = self.call_prefix(expr, name, args)
       elif self.token().is_delimiter(scanner.DELEGATE_CALL_OPERATOR):
         self.expect_delimiter(scanner.DELEGATE_CALL_OPERATOR)
@@ -430,7 +431,7 @@ class Parser(object):
     self.expect_keyword(NEW)
     if self.token().is_delimiter('{'):
       recv = ast.Global('Object')
-      args = ast.Arguments([], {})
+      args = ast.Arguments([], {}, False)
     else:
       recv = self.atomic_expression()
       args = self.arguments()
@@ -551,7 +552,7 @@ class Parser(object):
       self.advance()
       parse_argument()
     self.expect_delimiter(')')
-    return ast.Arguments(args, keywords)
+    return ast.Arguments(args, keywords, False)
 
   def documentation_opt(self):
     if self.token().is_documentation():

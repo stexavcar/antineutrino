@@ -138,8 +138,9 @@ public:
 class ImageSelector : public ImageObject {
 public:
   DECLARE_IMAGE_FIELD(Value, name);
-  DECLARE_IMAGE_FIELD(Smi, argc);
+  DECLARE_IMAGE_FIELD(Smi,   argc);
   DECLARE_IMAGE_FIELD(Tuple, keywords);
+  DECLARE_IMAGE_FIELD(Value, is_accessor);
 };
 
 class ImageMethod : public ImageObject {
@@ -181,7 +182,7 @@ class ImageInvokeExpression : public ImageSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, receiver);
   DECLARE_IMAGE_FIELD(Selector, selector);
-  DECLARE_IMAGE_FIELD(Arguments, arguments);
+  DECLARE_IMAGE_FIELD(Value, arguments);
 };
 
 class ImageInstantiateExpression : public ImageSyntaxTree {
