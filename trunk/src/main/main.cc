@@ -75,7 +75,7 @@ Image *Main::read_image(string name) {
   fseek(file, 0, SEEK_END);
   uword size = ftell(file);
   rewind(file);
-  own_vector<uword> buffer(ALLOCATE_VECTOR(uword, size));
+  own_vector<word> buffer(ALLOCATE_VECTOR(word, size));
   for (uword i = 0; i < size / kWordSize;) {
     const uword kSize = 256;
     uint8_t bytes[kSize];

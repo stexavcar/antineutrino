@@ -385,7 +385,7 @@ static inline C *image_cast(ImageData *val, ImageLoadInfo *info);
 
 class Image {
 public:
-  Image(uword size, uword *data);
+  Image(uword size, word *data);
   ~Image();
   void initialize(ImageLoadInfo &info);
   
@@ -396,7 +396,7 @@ public:
   Data *load(ImageLoadInfo &info);
   
   static inline Image &current();
-  uword *heap() { return heap_; }
+  word *heap() { return heap_; }
 
   class Scope {
   public:
@@ -416,12 +416,12 @@ private:
   uword heap_size() { return heap_size_; }
   
   uword size_, heap_size_;
-  uword *data_, *heap_;
+  word *data_, *heap_;
   static Image *current_;
   
-  static const uword kCurrentVersion    = 2;
-  
-  static const uword kMagicNumber       = 0xFABACEAE;
+  static const word kCurrentVersion    = 2;
+  static const word kMagicNumber       = 0xFABACEAE;
+
   static const uword kMagicNumberOffset = 0;
   static const uword kVersionOffset     = 1;
   static const uword kHeapSizeOffset    = 2;

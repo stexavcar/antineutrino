@@ -16,7 +16,7 @@ class Smi(Value):
   def __repr__(self):
     return "smi %i" % self.value_
 
-  def get_int_value(self, heap):
+  def get_int_value(self, anchor, heap):
     return (self.value_ << 2)
 
 
@@ -26,12 +26,12 @@ class Object(Value):
     super(Object, self).__init__()
     self.addresses = { }
 
-  def get_int_value(self, heap):
+  def get_int_value(self, anchor, heap):
     if not heap in self.addresses:
       obj = self.allocate(heap)
       assert isinstance(obj, image.Address)
       self.set_cache(heap, obj)
-    return self.addresses[heap].tag_as_object()
+    return self.addresses[heap].tag_as_object(anchor)
 
   def set_cache(self, heap, obj):
     self.addresses[heap] = obj

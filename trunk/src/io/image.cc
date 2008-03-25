@@ -19,7 +19,7 @@ namespace neutrino {
 
 Image *Image::current_ = NULL;
 
-Image::Image(uword size, uword *data)
+Image::Image(uword size, word *data)
     : size_(size)
     , data_(data)
     , heap_(NULL) { }
@@ -83,7 +83,7 @@ void Image::initialize(ImageLoadInfo &info) {
     info.invalid_version(data_[kVersionOffset]);
     return;
   }
-  if (data_[kRootCountOffset] != Roots::kCount) {
+  if (data_[kRootCountOffset] != static_cast<word>(Roots::kCount)) {
     info.invalid_root_count(Roots::kCount, data_[kRootCountOffset]);
     return;
   }
