@@ -3,8 +3,9 @@
 
 #include "heap/pointer-inl.h"
 #include "io/image.h"
-#include "runtime/runtime.h"
+#include "runtime/runtime-inl.h"
 #include "utils/types-inl.h"
+#include "values/values-inl.h"
 
 namespace neutrino {
 
@@ -206,6 +207,10 @@ ImageObject *ImageIterator::next() {
 
 ImageData *ImageData::from(uword addr) {
   return reinterpret_cast<ImageData*>(addr);
+}
+
+ImageData *ImageData::from(Immediate *obj) {
+  return reinterpret_cast<ImageData*>(obj);
 }
 
 word ImageSmi::value() {

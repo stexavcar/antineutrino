@@ -1,5 +1,6 @@
 buffer-test.cc
 builtin-string-test.cc
+channel-test.cc
 dictionary-test.cc
 equality-test.cc
 forwarder-test.cc

@@ -24,6 +24,7 @@ class ImageData {
 public:
   inline InstanceType type();
   static inline ImageData *from(uword value);
+  static inline ImageData *from(Immediate *obj);
 };
 
 class ImageForwardPointer : public ImageData {
@@ -34,7 +35,7 @@ public:
 
 class ImageValue : public ImageData {
 public:
-  Value *forward_pointer();
+  inline Value *forward_pointer();
 };
 
 class ImageSmi : public ImageValue {
@@ -59,7 +60,7 @@ class ImageObject : public ImageValue {
 public:
   InstanceType type();
   void type_info(TypeInfo *result);
-  void point_forward(Object *target);
+  inline void point_forward(Object *target);
   inline Object *forward_pointer();
   inline ImageData *header();
   inline bool has_been_migrated();
@@ -399,8 +400,8 @@ public:
 
   class Scope {
   public:
-    Scope(Image &image);
-    ~Scope();
+    inline Scope(Image &image);
+    inline ~Scope();
   private:
     Image *previous_;
   };

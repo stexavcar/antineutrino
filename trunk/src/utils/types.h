@@ -51,6 +51,7 @@ class GarbageCollectionMonitor;
 class Heap;
 class Image;
 class ImageLoadInfo;
+class ImageValue;
 class Immediate;
 class Instance;
 class Lambda;

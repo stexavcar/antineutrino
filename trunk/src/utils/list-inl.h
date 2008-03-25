@@ -3,6 +3,8 @@
 
 #include "utils/checks.h"
 #include "utils/list.h"
+#include "utils/vector-inl.h"
+
 
 namespace neutrino {
 
@@ -31,6 +33,11 @@ list<T> list<T>::sublist(uword start, uword length) {
 }
 
 template <typename T>
+vector<T> list_buffer<T>::data() {
+  return NEW_VECTOR(T, data_, length_);
+}
+
+template <typename T>
 list_buffer<T>::list_buffer() {
   data_ = new T[kInitialCapacity];
   length_ = 0;
@@ -39,7 +46,7 @@ list_buffer<T>::list_buffer() {
 
 template <typename T>
 list_buffer<T>::~list_buffer() {
-  delete[] data();
+  delete[] data_;
 }
 
 template <typename T>
@@ -90,7 +97,7 @@ void list_buffer<T>::extend_capacity() {
   T *new_data = new T[new_capacity];
   for (uword i = 0; i < capacity_; i++)
     new_data[i] = data()[i];
-  delete[] data();
+  delete[] data_;
   data_ = new_data;
   capacity_ = new_capacity;
 }

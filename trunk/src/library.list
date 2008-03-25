@@ -10,6 +10,7 @@ heap/ref.cc
 heap/roots.cc
 heap/space.cc
 io/image.cc
+io/out-stream.cc
 monitor/monitor.cc
 platform/<platform>/abort.cc
 platform/<platform>/dylib.cc
@@ -20,5 +21,6 @@ utils/conditions.cc
 utils/flags.cc
 utils/nonlocal.cc
 utils/string.cc
+values/channel.cc
 values/method.cc
 values/values.cc

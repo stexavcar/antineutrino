@@ -576,6 +576,10 @@ void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
     __ codegen(cast<SyntaxTree>(args.get(i)));
   ref<Tuple> raw_keymap = args_obj.keyword_indices();
   ref<Tuple> keymap;
+  // The construction of the concrete keymap will eventually be moved
+  // to runtime once we introduce optional keywords with default
+  // values, since then we won't know which arguments are expected
+  // by the method.
   if (raw_keymap.is_empty()) {
     keymap = raw_keymap;
   } else {

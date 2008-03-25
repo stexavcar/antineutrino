@@ -3,6 +3,7 @@
 
 #include "utils/misc.h"
 #include "utils/types.h"
+#include "utils/vector.h"
 
 namespace neutrino {
 
@@ -38,7 +39,7 @@ public:
   T remove_last();
   T pop();
   T peek();
-  T *data() { return data_; }
+  vector<T> data();
   T &operator[](uword index);
 
   /**
