@@ -2,12 +2,12 @@ import array
 
 class Address(object):
 
-  def __init__(self, heap, value):
+  def __init__(self, heap, value, size):
     self.heap_ = heap
     self.value_ = value
 
   def tag_as_object(self, anchor):
-    value = self.value_
+    value = self.value_ - anchor
     return (value << 2) | 0x1
 
   def heap(self):
@@ -46,24 +46,20 @@ class Heap(object):
     # negative numbers (which is a good thing, really) so we manually
     # overflow it so it will fit in the array
     magic = 0xFABACEAE - pow(2, 32)
-    self[Heap.kMagicNumberOffset] = Raw(magic)
-    self[Heap.kVersionOffset] = Raw(Heap.kCurrentVersion)
-    self[Heap.kRootCountOffset] = Raw(Heap.kRootCount)
-    self[Heap.kRootsOffset] = roots
+    self.set_item(0, Heap.kMagicNumberOffset, Raw(magic))
+    self.set_item(0, Heap.kVersionOffset, Raw(Heap.kCurrentVersion))
+    self.set_item(0, Heap.kRootCountOffset, Raw(Heap.kRootCount))
+    self.set_item(0, Heap.kRootsOffset, roots)
 
   def allocate(self, size, layout):
     addr = self.cursor_
     self.cursor_ += size
-    self[addr + Heap.kHeaderSize] = layout
-    return Address(self, addr)
+    self.set_item(addr, addr + Heap.kHeaderSize, layout)
+    return Address(self, addr, size)
 
   def data(self):
     return self.data_
 
-  def __setitem__(self, key, value):
-    if len(self.data()) <= key: self.extend_to(key + 1)
-    self.data()[key] = value.get_int_value(0, self)
-  
   def set_item(self, anchor, key, value):
     if len(self.data()) <= key: self.extend_to(key + 1)
     self.data()[key] = value.get_int_value(anchor, self)
@@ -73,7 +69,7 @@ class Heap(object):
       self.data().append(0)
 
   def store(self, name):
-    self[Heap.kHeapSizeOffset] = Raw(self.cursor_)
+    self.set_item(0, Heap.kHeapSizeOffset, Raw(self.cursor_))
     f = open(name, "w")
     self.data_.write(f)
     f.close()

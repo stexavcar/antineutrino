@@ -112,7 +112,8 @@ Data *Image::load(ImageLoadInfo &info) {
     if (info.has_error())
       return Nothing::make();
   }
-  ImageData *roots_val = ImageValue::from(data_[kRootsOffset]);
+  ImageObject *start = reinterpret_cast<ImageObject*>(ValuePointer::tag_as_object(heap()));
+  ImageData *roots_val = cook_value(start, data_[kRootsOffset]);
   ImageTuple *roots_img = image_cast<ImageTuple>(roots_val, info, "<roots>");
   if (info.has_error()) return Nothing::make();
   return safe_cast<Tuple>(roots_img->forward_pointer(), info, "<roots>");

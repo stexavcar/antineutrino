@@ -22,8 +22,9 @@ Object *ValuePointer::tag_as_object(address addr) {
   return reinterpret_cast<Object*>(reinterpret_cast<word>(addr) + kObjectTag);
 }
 
-uword ValuePointer::tag_offset_as_object(uword value) {
-  return (value << kObjectTagSize) + kObjectTag;
+uword ValuePointer::tag_as_object(word *addr) {
+  ASSERT_EQ(0, reinterpret_cast<word>(addr) & kObjectTagMask);
+  return reinterpret_cast<word>(addr) + kObjectTag;
 }
 
 bool ValuePointer::has_object_tag(void *val) {

@@ -438,10 +438,12 @@ public:
   inline ImageObject *next();
   inline void reset();
 private:
-  uword cursor() { return cursor_; }
-  uword limit() { return limit_; }
-  uword cursor_;
-  uword limit_;
+  word *cursor() { return cursor_; }
+  word *limit() { return limit_; }
+  Image &image() { return image_; }
+  Image &image_;
+  word *cursor_;
+  word *limit_;
 };
 
 }

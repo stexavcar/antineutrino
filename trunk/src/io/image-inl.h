@@ -117,20 +117,31 @@ inline To *safe_cast(From *from, ImageLoadInfo &info,
 }
 
 static inline word &access_field(ImageObject *obj, uword field_offset) {
-  uword offset = ValuePointer::offset_of(obj) + field_offset;
-  return Image::current().heap()[offset];
+  word *ptr = reinterpret_cast<word*>(ValuePointer::address_of(obj));
+  return ptr[field_offset];
+}
+
+static inline ImageData *cook_value(ImageObject *holder, word value) {
+  if (ValuePointer::has_object_tag(reinterpret_cast<void*>(value))) {
+    address addr = ValuePointer::address_of(holder);
+    return ImageData::from(reinterpret_cast<word>(addr + value));
+  } else {
+    return ImageData::from(value);
+  }
 }
 
 template <class C>
 static inline C *get_field(ImageObject *obj, uword field_offset,
     ImageLoadInfo &info, const char *location) {
-  ImageData *data = ImageData::from(access_field(obj, field_offset));
+  word value = access_field(obj, field_offset);
+  ImageData *data = cook_value(obj, value);
   return image_cast<C>(data, info, location);
 }
 
 template <class C>
 static inline C *get_raw_field(ImageObject *obj, uword field_offset) {
-  ImageData *data = ImageData::from(access_field(obj, field_offset));
+  word value = access_field(obj, field_offset);
+  ImageData *data = cook_value(obj, value);
   return image_raw_cast<C>(data);
 }
 
@@ -139,7 +150,8 @@ static inline C *get_raw_field(ImageObject *obj, uword field_offset) {
 // ---------------------------------------
 
 ImageData *ImageObject::header() {
-  return ImageData::from(access_field(this, ImageObject_LayoutOffset));
+  word value = access_field(this, ImageObject_LayoutOffset);
+  return cook_value(this, value);
 }
 
 bool ImageObject::has_been_migrated() {
@@ -201,8 +213,9 @@ Image::Scope::~Scope() {
 }
 
 ImageIterator::ImageIterator(Image &image)
-    : cursor_(0)
-    , limit_(image.heap_size()) {
+    : image_(image)
+    , cursor_(image.heap())
+    , limit_(image.heap() + image.heap_size()) {
 }
 
 bool ImageIterator::has_next() {
@@ -210,11 +223,11 @@ bool ImageIterator::has_next() {
 }
 
 void ImageIterator::reset() {
-  cursor_ = 0;
+  cursor_ = image().heap();
 }
 
 ImageObject *ImageIterator::next() {
-  uword object_ptr = ValuePointer::tag_offset_as_object(cursor());
+  uword object_ptr = ValuePointer::tag_as_object(cursor());
   ImageObject *obj = image_raw_cast<ImageObject>(ImageData::from(object_ptr));
   cursor_ += obj->size_in_image();
   return obj;
