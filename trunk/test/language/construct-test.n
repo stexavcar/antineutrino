@@ -23,5 +23,4 @@ def protocol_test() {
 def main() {
   simple_record_test();
   protocol_test();
-  constructor_call_test();
 }

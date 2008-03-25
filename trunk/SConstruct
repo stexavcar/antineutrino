@@ -140,6 +140,13 @@ def load_source_targets():
 def run_tests(target, source, env):
   testutils.run_neutrino_tests(config['tests'], common['progress'])
 
+if abspath('.') == abspath(root):
+  print """
+Because of the way scons works you should not build in the root
+directory.  Sorry for the inconvenience and have a nice day.
+"""
+  sys.exit(1)
+
 load_source_targets()
 
 Command('check', config['check-deps'], Action(run_tests, None))

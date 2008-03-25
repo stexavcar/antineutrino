@@ -77,7 +77,9 @@ void list_buffer<T>::push(T obj) {
 template <typename T>
 T list_buffer<T>::remove_last() {
   ASSERT(length() > 0);
-  return data()[--length_];
+  T result = data()[length_ - 1];
+  length_--;
+  return result;
 }
 
 template <typename T>
