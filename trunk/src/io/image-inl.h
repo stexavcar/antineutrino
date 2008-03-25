@@ -116,13 +116,30 @@ inline To *safe_cast(From *from, ImageLoadInfo &info,
   }
 }
 
+static inline word &access_field(ImageObject *obj, uword field_offset) {
+  uword offset = ValuePointer::offset_of(obj) + field_offset;
+  return Image::current().heap()[offset];
+}
+
+template <class C>
+static inline C *get_field(ImageObject *obj, uword field_offset,
+    ImageLoadInfo &info, const char *location) {
+  ImageData *data = ImageData::from(access_field(obj, field_offset));
+  return image_cast<C>(data, info, location);
+}
+
+template <class C>
+static inline C *get_raw_field(ImageObject *obj, uword field_offset) {
+  ImageData *data = ImageData::from(access_field(obj, field_offset));
+  return image_raw_cast<C>(data);
+}
+
 // ---------------------------------------
 // --- F o r w a r d   P o i n t e r s ---
 // ---------------------------------------
 
 ImageData *ImageObject::header() {
-  uword offset = ValuePointer::offset_of(this) + ImageObject_LayoutOffset;
-  return reinterpret_cast<ImageData*>(Image::current().heap()[offset]);
+  return ImageData::from(access_field(this, ImageObject_LayoutOffset));
 }
 
 bool ImageObject::has_been_migrated() {
@@ -131,9 +148,8 @@ bool ImageObject::has_been_migrated() {
 
 void ImageObject::point_forward(Object *obj) {
   ASSERT(!is<ImageForwardPointer>(header()));
-  uword offset = ValuePointer::offset_of(this) + ImageObject_LayoutOffset;
   ImageForwardPointer *pointer = ImageForwardPointer::to(obj);
-  Image::current().heap()[offset] = reinterpret_cast<uword>(pointer);
+  access_field(this, ImageObject_LayoutOffset) = reinterpret_cast<word>(pointer);
 }
 
 Value *ImageValue::forward_pointer() {
@@ -151,8 +167,7 @@ Smi *ImageSmi::forward_pointer() {
 }
 
 Object *ImageObject::forward_pointer() {
-  uword offset = ValuePointer::offset_of(this) + ImageObject_LayoutOffset;
-  ImageData *value = ImageData::from(Image::current().heap()[offset]);
+  ImageData *value = header();
   ImageForwardPointer *pointer = image_raw_cast<ImageForwardPointer>(value);
   return pointer->target();
 }
@@ -219,15 +234,12 @@ word ImageSmi::value() {
 
 #define DEFINE_RAW_GETTER(T, Class, name, Name)                      \
   T Image##Class::name() {                                           \
-    uword offset = ValuePointer::offset_of(this) + Image##Class##_##Name##Offset;\
-    return Image::current().heap()[offset];                          \
+    return access_field(this, Image##Class##_##Name##Offset);        \
   }
 
 #define DEFINE_GETTER(T, Class, name, Name)                          \
-  Image##T *Image##Class::name(ImageLoadInfo &info, const char *location) {\
-    uword offset = ValuePointer::offset_of(this) + Image##Class##_##Name##Offset;\
-    ImageData *data = ImageData::from(Image::current().heap()[offset]);\
-    return image_cast<Image##T>(data, info, location);               \
+  Image##T *Image##Class::name(ImageLoadInfo &info, const char *location) { \
+    return get_field<Image##T>(this, Image##Class##_##Name##Offset, info, location); \
   }
 
 // --- S t r i n g ---
@@ -236,8 +248,7 @@ DEFINE_RAW_GETTER(uword, String, length, Length)
 
 uword ImageString::at(uword index) {
   ASSERT(index < length());
-  uword offset = ValuePointer::offset_of(this) + ImageString_HeaderSize + index;
-  return Image::current().heap()[offset];
+  return access_field(this, ImageString_HeaderSize + index);
 }
 
 // --- T u p l e ---
@@ -246,9 +257,7 @@ DEFINE_RAW_GETTER(uword, Tuple, length, Length)
 
 ImageValue *ImageTuple::at(uword index) {
   ASSERT(index < length());
-  uword offset = ValuePointer::offset_of(this) + ImageCode_HeaderSize + index;
-  ImageData *data = ImageData::from(Image::current().heap()[offset]);
-  return image_raw_cast<ImageValue>(data);
+  return get_raw_field<ImageValue>(this, ImageCode_HeaderSize + index);
 }
 
 // --- C o d e ---
@@ -257,8 +266,7 @@ DEFINE_RAW_GETTER(uword, Code, length, Length)
 
 uword ImageCode::at(uword index) {
   ASSERT(index < length());
-  uword offset = ValuePointer::offset_of(this) + ImageCode_HeaderSize + index;
-  return Image::current().heap()[offset];
+  return access_field(this, ImageCode_HeaderSize + index);
 }
 
 DEFINE_GETTER    (Tuple,            Protocol,              methods,         Methods)

@@ -7,7 +7,8 @@ class Address(object):
     self.value_ = value
 
   def tag_as_object(self, anchor):
-    return (self.value_ << 2) | 0x1
+    value = self.value_
+    return (value << 2) | 0x1
 
   def heap(self):
     return self.heap_
