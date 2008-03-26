@@ -51,7 +51,7 @@ class GarbageCollectionMonitor;
 class Heap;
 class Image;
 class ImageLoadInfo;
-class ImageValue;
+class FImmediate;
 class Immediate;
 class Instance;
 class Lambda;
@@ -64,6 +64,7 @@ class Object;
 class Parameters;
 template <class T> class persistent;
 class QuoteTemplate;
+class RawFValue;
 template <class T> class ref;
 class ReturnExpression;
 class Roots;
@@ -85,7 +86,7 @@ class Symbol;
 class SyntaxTree;
 class Tuple;
 
-class ImageTuple;
+class FTuple;
 
 class AbstractEnumInfo;
 

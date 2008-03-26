@@ -2,6 +2,7 @@
 #include "heap/memory-inl.h"
 #include "heap/roots-inl.h"
 #include "io/image-inl.h"
+#include "io/in-stream-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/consts.h"
 #include "utils/globals.h"
@@ -112,22 +113,22 @@ Data *Image::load(ImageLoadInfo &info) {
     if (info.has_error())
       return Nothing::make();
   }
-  ImageObject *start = reinterpret_cast<ImageObject*>(ValuePointer::tag_as_object(heap()));
-  ImageData *roots_val = cook_value(start, data_[kRootsOffset]);
-  ImageTuple *roots_img = image_cast<ImageTuple>(roots_val, info, "<roots>");
+  FObject *start = reinterpret_cast<FObject*>(ValuePointer::tag_as_object(heap()));
+  FData *roots_val = cook_value(start, reinterpret_cast<RawFValue*>(data_[kRootsOffset]));
+  FTuple *roots_img = image_cast<FTuple>(roots_val, info, "<roots>");
   if (info.has_error()) return Nothing::make();
   return safe_cast<Tuple>(roots_img->forward_pointer(), info, "<roots>");
 }
 
-void Image::copy_object_shallow(ImageObject *obj, ImageLoadInfo &info) {
+void Image::copy_object_shallow(FObject *obj, ImageLoadInfo &info) {
   Heap &heap = Runtime::current().heap();
-  ImageData *header = obj->header();
+  FData *header = obj->header();
   // Always migrate layout objects before the objects they describe.
   // It is useful to be able to make the assumption that the layout
   // has been moved before any instances because the layout field in
   // the image will be overwritten with a forward pointer.
-  if (is<ImageLayout>(header) && !image_raw_cast<ImageLayout>(header)->has_been_migrated()) {
-    copy_object_shallow(image_raw_cast<ImageLayout>(header), info);
+  if (is<FLayout>(header) && !image_raw_cast<FLayout>(header)->has_been_migrated()) {
+    copy_object_shallow(image_raw_cast<FLayout>(header), info);
     if (info.has_error()) return;
   }
   TypeInfo type_info;
@@ -135,7 +136,7 @@ void Image::copy_object_shallow(ImageObject *obj, ImageLoadInfo &info) {
   InstanceType type = type_info.type;
   switch (type) {
     case STRING_TYPE: {
-      ImageString *img = image_raw_cast<ImageString>(obj);
+      FString *img = image_raw_cast<FString>(obj);
       uword length = img->length();
       String *str = cast<String>(heap.new_string(length));
       for (uword i = 0; i < length; i++)
@@ -144,7 +145,7 @@ void Image::copy_object_shallow(ImageObject *obj, ImageLoadInfo &info) {
       break;
     }
     case CODE_TYPE: {
-      ImageCode *img = image_raw_cast<ImageCode>(obj);
+      FCode *img = image_raw_cast<FCode>(obj);
       uword length = img->length();
       Code *code = cast<Code>(heap.new_code(length));
       for (uword i = 0; i < length; i++)
@@ -153,7 +154,7 @@ void Image::copy_object_shallow(ImageObject *obj, ImageLoadInfo &info) {
       break;
     }
     case TUPLE_TYPE: {
-      ImageTuple *img = image_raw_cast<ImageTuple>(obj);
+      FTuple *img = image_raw_cast<FTuple>(obj);
       uword length = img->length();
       Tuple *tuple = cast<Tuple>(heap.new_tuple(length));
       obj->point_forward(tuple);
@@ -163,14 +164,14 @@ void Image::copy_object_shallow(ImageObject *obj, ImageLoadInfo &info) {
       // Because of the rule that layouts must be moved before their
       // instances this layout may already have been moved.
       if (obj->has_been_migrated()) return;
-      ImageLayout *img = image_raw_cast<ImageLayout>(obj);
+      FLayout *img = image_raw_cast<FLayout>(obj);
       InstanceType instance_type = static_cast<InstanceType>(img->instance_type());
       Layout *layout = cast<Layout>(heap.allocate_empty_layout(instance_type));
       obj->point_forward(layout);
       break;
     }
     case CONTEXT_TYPE: {
-      ImageContext *img = image_raw_cast<ImageContext>(obj);
+      FContext *img = image_raw_cast<FContext>(obj);
       USE(img);
       Context *context = cast<Context>(heap.new_context());
       obj->point_forward(context);
@@ -182,7 +183,7 @@ void Image::copy_object_shallow(ImageObject *obj, ImageLoadInfo &info) {
       break;
     }
     case LAMBDA_TYPE: {
-      ImageLambda *img = image_raw_cast<ImageLambda>(obj);
+      FLambda *img = image_raw_cast<FLambda>(obj);
       uword argc = img->argc();
       Lambda *lambda = cast<Lambda>(heap.allocate_lambda(argc));
       obj->point_forward(lambda);
@@ -214,9 +215,9 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
     obj->forward_pointer()->set_layout(type_info.layout);
 }
 
-void Image::fixup_shallow_object(ImageObject *obj, ImageLoadInfo &info) {
+void Image::fixup_shallow_object(FObject *obj, ImageLoadInfo &info) {
 #define TRANSFER_FIELD(Type, field, Field, arg)                      \
-  ImageValue *field##_img = img->field(info, #arg "." #field);       \
+  FImmediate *field##_img = img->field(info, #arg "." #field);       \
   if (info.has_error()) return;                                      \
   Type *field##_value = safe_cast<Type>(field##_img->forward_pointer(), info, #arg "." #field); \
   if (info.has_error()) return;                                      \
@@ -224,7 +225,7 @@ void Image::fixup_shallow_object(ImageObject *obj, ImageLoadInfo &info) {
   InstanceType type = obj->type();
   switch (type) {
     case TUPLE_TYPE: {
-      ImageTuple *img = image_raw_cast<ImageTuple>(obj);
+      FTuple *img = image_raw_cast<FTuple>(obj);
       Tuple *tuple = cast<Tuple>(img->forward_pointer());
       uword length = tuple->length();
       for (uword i = 0; i < length; i++)
@@ -232,7 +233,7 @@ void Image::fixup_shallow_object(ImageObject *obj, ImageLoadInfo &info) {
       break;
     }
     case LAMBDA_TYPE: {
-      ImageLambda *img = image_raw_cast<ImageLambda>(obj);
+      FLambda *img = image_raw_cast<FLambda>(obj);
       Lambda *heap_obj = cast<Lambda>(img->forward_pointer());
       TRANSFER_FIELD(Value, code, Code, Lambda);
       TRANSFER_FIELD(LambdaExpression, tree, Tree, Lambda);
@@ -242,21 +243,21 @@ void Image::fixup_shallow_object(ImageObject *obj, ImageLoadInfo &info) {
       break;
     }
     case LAYOUT_TYPE: {
-      ImageLayout *img = image_raw_cast<ImageLayout>(obj);
+      FLayout *img = image_raw_cast<FLayout>(obj);
       Layout *layout = cast<Layout>(img->forward_pointer());
       layout->set_methods(cast<Tuple>(img->methods(info, "Layout.methods")->forward_pointer()));
       layout->set_protocol(cast<Immediate>(img->protocol(info, "Layout.protocol")->forward_pointer()));
       break;
     }
     case BUILTIN_CALL_TYPE: {
-      ImageBuiltinCall *img = image_raw_cast<ImageBuiltinCall>(obj);
+      FBuiltinCall *img = image_raw_cast<FBuiltinCall>(obj);
       BuiltinCall *expr = cast<BuiltinCall>(img->forward_pointer());
       expr->set_argc(img->argc());
       expr->set_index(img->index());
       break;
     }
     case UNQUOTE_EXPRESSION_TYPE: {
-      ImageUnquoteExpression *img = image_raw_cast<ImageUnquoteExpression>(obj);
+      FUnquoteExpression *img = image_raw_cast<FUnquoteExpression>(obj);
       UnquoteExpression *expr = cast<UnquoteExpression>(img->forward_pointer());
       expr->set_index(img->index());
       break;
@@ -269,7 +270,7 @@ void Image::fixup_shallow_object(ImageObject *obj, ImageLoadInfo &info) {
       break;
 #define MAKE_CASE(n, NAME, Name, name)                               \
     case NAME##_TYPE: {                                              \
-      Image##Name *img = image_cast<Image##Name>(obj, info, #Name);  \
+      F##Name *img = image_cast<F##Name>(obj, info, #Name);          \
       if (info.has_error()) return;                                  \
       Name *heap_obj = cast<Name>(img->forward_pointer());           \
       USE(heap_obj);                                                 \
@@ -286,23 +287,23 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
   IF_PARANOID(if (type != SINGLETON_TYPE) obj->forward_pointer()->validate());
 }
 
-InstanceType ImageObject::type() {
+InstanceType FObject::type() {
   TypeInfo type_info;
   this->type_info(&type_info);
   return type_info.type;
 }
 
-void ImageObject::type_info(TypeInfo *result) {
-  ImageData *data = header();
-  if (is<ImageSmi>(data)) {
-    word value = image_raw_cast<ImageSmi>(data)->value();
+void FObject::type_info(TypeInfo *result) {
+  FData *data = header();
+  if (is<FSmi>(data)) {
+    word value = image_raw_cast<FSmi>(data)->value();
     result->type = static_cast<InstanceType>(value);
-  } else if (is<ImageForwardPointer>(data)) {
-    Object *target = image_raw_cast<ImageForwardPointer>(data)->target();
+  } else if (is<FForwardPointer>(data)) {
+    Object *target = image_raw_cast<FForwardPointer>(data)->target();
     result->layout = target->layout();
     result->type = target->layout()->instance_type();
-  } else if (is<ImageLayout>(data)) {
-    ImageLayout *layout = image_raw_cast<ImageLayout>(data);
+  } else if (is<FLayout>(data)) {
+    FLayout *layout = image_raw_cast<FLayout>(data);
     word value = layout->instance_type();
     result->type = static_cast<InstanceType>(value);
     if (layout->has_been_migrated())
@@ -316,47 +317,47 @@ void ImageObject::type_info(TypeInfo *result) {
 // --- O b j e c t   s i z e ---
 // -----------------------------
 
-uword ImageObject::size_in_image() {
+uword FObject::size_in_image() {
   uword type = this->type();
   switch (type) {
     case LAMBDA_TYPE:
-      return ImageLambda_Size;
+      return FLambda_Size;
     case LAYOUT_TYPE:
-      return ImageLayout_Size;
+      return FLayout_Size;
     case CONTEXT_TYPE:
-      return ImageContext_Size;
+      return FContext_Size;
     case SINGLETON_TYPE:
-      return ImageRoot_Size;
+      return FRoot_Size;
     case BUILTIN_CALL_TYPE:
-      return ImageBuiltinCall_Size;
+      return FBuiltinCall_Size;
     case UNQUOTE_EXPRESSION_TYPE:
-      return ImageUnquoteExpression_Size;
+      return FUnquoteExpression_Size;
 #define MAKE_CASE(n, NAME, Name, name)                               \
-    case NAME##_TYPE: return Image##Name##_Size;
+    case NAME##_TYPE: return F##Name##_Size;
 FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 #undef MAKE_CASE
     case STRING_TYPE:
-      return image_raw_cast<ImageString>(this)->string_size_in_image();
+      return image_raw_cast<FString>(this)->string_size_in_image();
     case CODE_TYPE:
-      return image_raw_cast<ImageCode>(this)->code_size_in_image();
+      return image_raw_cast<FCode>(this)->code_size_in_image();
     case TUPLE_TYPE:
-      return image_raw_cast<ImageTuple>(this)->tuple_size_in_image();
+      return image_raw_cast<FTuple>(this)->tuple_size_in_image();
     default:
       UNHANDLED(InstanceType, type);
       return 0;
   }
 }
 
-uword ImageString::string_size_in_image() {
-  return ImageString_HeaderSize + length();
+uword FString::string_size_in_image() {
+  return FString_HeaderSize + length();
 }
 
-uword ImageCode::code_size_in_image() {
-  return ImageCode_HeaderSize + length();
+uword FCode::code_size_in_image() {
+  return FCode_HeaderSize + length();
 }
 
-uword ImageTuple::tuple_size_in_image() {
-  return ImageTuple_HeaderSize + length();
+uword FTuple::tuple_size_in_image() {
+  return FTuple_HeaderSize + length();
 }
 
 }

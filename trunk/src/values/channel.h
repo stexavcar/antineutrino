@@ -17,7 +17,7 @@ public:
   virtual IValue get(ITuple *that, int index);
 
   template <class C> C *open(IValue *obj);
-  void *close(ImageValue *value);
+  void *close(FImmediate *value);
   IValue new_value(void *origin);
 };
 

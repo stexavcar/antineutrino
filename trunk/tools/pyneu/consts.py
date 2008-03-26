@@ -35,7 +35,7 @@ def install_value_type(n, NAME, Name, name):
 
 (__image_map, fields) = new_namespace()
 def install_image_entry(n, Name, Field):
-  key = "Image%s_%s" % (Name, Field)
+  key = "F%s_%s" % (Name, Field)
   __image_map[key] = int(n)
 
 

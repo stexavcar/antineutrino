@@ -17,9 +17,9 @@ void walk_dont_run() {
 
 void Test::test_integer() {
   ImageOutputStream stream;
-  RawFrozenValue *obj = stream.marshal(Smi::from_int(10));
+  RawFValue *obj = stream.marshal(Smi::from_int(10));
   FrozenHeap heap(stream);
-  ImageValue *image_value = heap.cook(obj);
+  FImmediate *image_value = heap.cook(obj);
   MethodDictionaryImpl dict;
   IValue value = dict.new_value(image_value);
   CHECK_EQ(vtInteger, value.type());

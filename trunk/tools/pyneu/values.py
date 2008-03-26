@@ -51,12 +51,12 @@ class String(Object):
   def allocate(self, heap):
     (chars, _) = codecs.utf_8_encode(self.value_)
     length = len(chars)
-    size = fields.ImageString_HeaderSize + length
+    size = fields.FString_HeaderSize + length
     result = heap.allocate(size, Smi(values.String.index))
-    result[fields.ImageString_LengthOffset] = Raw(length)
+    result[fields.FString_LengthOffset] = Raw(length)
     for i in xrange(length):
       char = chars[i]
-      result[fields.ImageString_HeaderSize + i] = Raw(ord(char))
+      result[fields.FString_HeaderSize + i] = Raw(ord(char))
     return result
 
 
@@ -81,11 +81,11 @@ class Tuple(Object):
     self.entries_[index] = item
 
   def allocate(self, heap):
-    size = fields.ImageTuple_HeaderSize + len(self.entries_)
+    size = fields.FTuple_HeaderSize + len(self.entries_)
     result = heap.allocate(size, Smi(values.Tuple.index))
-    result[fields.ImageTuple_LengthOffset] = Raw(len(self.entries_))
+    result[fields.FTuple_LengthOffset] = Raw(len(self.entries_))
     for i in xrange(len(self.entries_)):
-      result[fields.ImageTuple_HeaderSize + i] = self.entries_[i]
+      result[fields.FTuple_HeaderSize + i] = self.entries_[i]
     return result
 
 
@@ -99,8 +99,8 @@ class Signature(Object):
     self.elements_ = elements
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageSignature_Size, Smi(values.Signature.index))
-    result[fields.ImageSignature_ParametersOffset] = Tuple(entries = self.elements_)
+    result = heap.allocate(fields.FSignature_Size, Smi(values.Signature.index))
+    result[fields.FSignature_ParametersOffset] = Tuple(entries = self.elements_)
     return result
 
 
@@ -124,12 +124,12 @@ class Selector(Object):
     self.is_accessor_ = is_accessor
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageSelector_Size, Smi(values.Selector.index))
-    result[fields.ImageSelector_NameOffset] = String(self.name_)
-    result[fields.ImageSelector_ArgcOffset] = Smi(self.argc_)
+    result = heap.allocate(fields.FSelector_Size, Smi(values.Selector.index))
+    result[fields.FSelector_NameOffset] = String(self.name_)
+    result[fields.FSelector_ArgcOffset] = Smi(self.argc_)
     keywords = [ String(w) for w in self.keywords_ ]
-    result[fields.ImageSelector_KeywordsOffset] = Tuple(entries = keywords)
-    result[fields.ImageSelector_IsAccessorOffset] = to_bool(self.is_accessor_)
+    result[fields.FSelector_KeywordsOffset] = Tuple(entries = keywords)
+    result[fields.FSelector_IsAccessorOffset] = to_bool(self.is_accessor_)
     return result
 
 
@@ -149,11 +149,11 @@ class Method(Object):
     return self.is_static_
 
   def allocate(self, heap):
-    size = fields.ImageMethod_Size
+    size = fields.FMethod_Size
     result = heap.allocate(size, Smi(values.Method.index))
-    result[fields.ImageMethod_SelectorOffset] = self.selector_
-    result[fields.ImageMethod_SignatureOffset] = self.signature_
-    result[fields.ImageMethod_LambdaOffset] = self.lam_
+    result[fields.FMethod_SelectorOffset] = self.selector_
+    result[fields.FMethod_SignatureOffset] = self.signature_
+    result[fields.FMethod_LambdaOffset] = self.lam_
     return result
 
 
@@ -165,8 +165,8 @@ class Root(Object):
 
   def allocate(self, heap):
     index = roots[self.name_].index
-    result = heap.allocate(fields.ImageRoot_Size, Smi(values.Singleton.index))
-    result[fields.ImageRoot_IndexOffset] = Raw(index)
+    result = heap.allocate(fields.FRoot_Size, Smi(values.Singleton.index))
+    result[fields.FRoot_IndexOffset] = Raw(index)
     return result
 
 
@@ -184,10 +184,10 @@ class Lambda(Object):
     self.body_ = body
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageLambda_Size, Smi(values.Lambda.index))
-    result[fields.ImageLambda_ArgcOffset] = Raw(self.argc_)
-    result[fields.ImageLambda_TreeOffset] = self.body_
-    result[fields.ImageLambda_ContextOffset] = Context()
+    result = heap.allocate(fields.FLambda_Size, Smi(values.Lambda.index))
+    result[fields.FLambda_ArgcOffset] = Raw(self.argc_)
+    result[fields.FLambda_TreeOffset] = self.body_
+    result[fields.FLambda_ContextOffset] = Context()
     return result
 
 
@@ -217,12 +217,12 @@ class Protocol(Object):
       layout = Layout(values.Protocol.index, self.static_protocol_)
     else:
       layout = Smi(values.Protocol.index)
-    result = heap.allocate(fields.ImageProtocol_Size, layout)
+    result = heap.allocate(fields.FProtocol_Size, layout)
     self.set_cache(heap, result)
     if self.name_:
-      result[fields.ImageProtocol_NameOffset] = String(self.name_)
-    result[fields.ImageProtocol_MethodsOffset] = Tuple(entries = self.methods_)
-    result[fields.ImageProtocol_SuperOffset] = self.super_
+      result[fields.FProtocol_NameOffset] = String(self.name_)
+    result[fields.FProtocol_MethodsOffset] = Tuple(entries = self.methods_)
+    result[fields.FProtocol_SuperOffset] = self.super_
     return result
 
 
@@ -234,10 +234,10 @@ class Layout(Object):
     self.protocol_ = protocol
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageLayout_Size, Smi(values.Layout.index))
-    result[fields.ImageLayout_InstanceTypeOffset] = Raw(self.instance_type_)
-    result[fields.ImageLayout_ProtocolOffset] = self.protocol_
-    result[fields.ImageLayout_MethodsOffset] = EMPTY_TUPLE
+    result = heap.allocate(fields.FLayout_Size, Smi(values.Layout.index))
+    result[fields.FLayout_InstanceTypeOffset] = Raw(self.instance_type_)
+    result[fields.FLayout_ProtocolOffset] = self.protocol_
+    result[fields.FLayout_MethodsOffset] = EMPTY_TUPLE
     return result
 
 
@@ -264,8 +264,8 @@ class Dictionary(Object):
       table[index] = String(key)
       table[index + 1] = value
       index += 2
-    result = heap.allocate(fields.ImageDictionary_Size, Smi(values.Dictionary.index))
-    result[fields.ImageDictionary_TableOffset] = table
+    result = heap.allocate(fields.FDictionary_Size, Smi(values.Dictionary.index))
+    result[fields.FDictionary_TableOffset] = table
     return result
 
   def __str__(self):
@@ -279,7 +279,7 @@ class Context(Object):
     super(Context, self).__init__()
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageContext_Size, Smi(values.Context.index))
+    result = heap.allocate(fields.FContext_Size, Smi(values.Context.index))
     return result
 
 
@@ -297,9 +297,9 @@ class LambdaExpression(SyntaxTree):
     self.body_ = body
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageLambdaExpression_Size, Smi(values.LambdaExpression.index))
-    result[fields.ImageLambdaExpression_ParametersOffset] = self.params_
-    result[fields.ImageLambdaExpression_BodyOffset] = self.body_
+    result = heap.allocate(fields.FLambdaExpression_Size, Smi(values.LambdaExpression.index))
+    result[fields.FLambdaExpression_ParametersOffset] = self.params_
+    result[fields.FLambdaExpression_BodyOffset] = self.body_
     return result
 
 
@@ -310,8 +310,8 @@ class TaskExpression(SyntaxTree):
     self.body_ = body
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageTaskExpression_Size, Smi(values.TaskExpression.index))
-    result[fields.ImageTaskExpression_LambdaOffset] = self.body_
+    result = heap.allocate(fields.FTaskExpression_Size, Smi(values.TaskExpression.index))
+    result[fields.FTaskExpression_LambdaOffset] = self.body_
     return result
 
 
@@ -324,10 +324,10 @@ class MethodExpression(SyntaxTree):
     self.is_static_ = is_static
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageMethodExpression_Size, Smi(values.MethodExpression.index))
-    result[fields.ImageMethodExpression_SelectorOffset] = self.selector_
-    result[fields.ImageMethodExpression_LambdaOffset] = self.body_
-    result[fields.ImageMethodExpression_IsStaticOffset] = self.is_static_
+    result = heap.allocate(fields.FMethodExpression_Size, Smi(values.MethodExpression.index))
+    result[fields.FMethodExpression_SelectorOffset] = self.selector_
+    result[fields.FMethodExpression_LambdaOffset] = self.body_
+    result[fields.FMethodExpression_IsStaticOffset] = self.is_static_
     return result
 
 
@@ -340,10 +340,10 @@ class ProtocolExpression(SyntaxTree):
     self.super_ = shuper
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageProtocolExpression_Size, Smi(values.ProtocolExpression.index))
-    result[fields.ImageProtocolExpression_NameOffset] = String(self.name_)
-    result[fields.ImageProtocolExpression_MethodsOffset] = Tuple(entries = self.methods_)
-    result[fields.ImageProtocolExpression_SuperOffset] = self.super_
+    result = heap.allocate(fields.FProtocolExpression_Size, Smi(values.ProtocolExpression.index))
+    result[fields.FProtocolExpression_NameOffset] = String(self.name_)
+    result[fields.FProtocolExpression_MethodsOffset] = Tuple(entries = self.methods_)
+    result[fields.FProtocolExpression_SuperOffset] = self.super_
     return result
 
 
@@ -355,9 +355,9 @@ class QuoteExpression(SyntaxTree):
     self.unquotes_ = unquotes
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageQuoteExpression_Size, Smi(values.QuoteExpression.index))
-    result[fields.ImageQuoteExpression_ValueOffset] = self.value_
-    result[fields.ImageQuoteExpression_UnquotesOffset] = Tuple(entries = self.unquotes_)
+    result = heap.allocate(fields.FQuoteExpression_Size, Smi(values.QuoteExpression.index))
+    result[fields.FQuoteExpression_ValueOffset] = self.value_
+    result[fields.FQuoteExpression_UnquotesOffset] = Tuple(entries = self.unquotes_)
     return result
 
 
@@ -368,8 +368,8 @@ class UnquoteExpression(SyntaxTree):
     self.index_ = index
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageUnquoteExpression_Size, Smi(values.UnquoteExpression.index))
-    result[fields.ImageUnquoteExpression_IndexOffset] = Raw(self.index_)
+    result = heap.allocate(fields.FUnquoteExpression_Size, Smi(values.UnquoteExpression.index))
+    result[fields.FUnquoteExpression_IndexOffset] = Raw(self.index_)
     return result
 
 
@@ -380,8 +380,8 @@ class Symbol(SyntaxTree):
     self.name_ = name
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageSymbol_Size, Smi(values.Symbol.index))
-    result[fields.ImageSymbol_NameOffset] = String(self.name_)
+    result = heap.allocate(fields.FSymbol_Size, Smi(values.Symbol.index))
+    result[fields.FSymbol_NameOffset] = String(self.name_)
     return result
 
 
@@ -393,13 +393,13 @@ class Arguments(SyntaxTree):
     self.keywords_ = keywords
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageArguments_Size, Smi(values.Arguments.index))
-    result[fields.ImageArguments_ArgumentsOffset] = Tuple(entries = self.args_)
+    result = heap.allocate(fields.FArguments_Size, Smi(values.Arguments.index))
+    result[fields.FArguments_ArgumentsOffset] = Tuple(entries = self.args_)
     posc = len(self.args_) - len(self.keywords_)
     keyword_indices = [ ]
     for key in sorted(self.keywords_.keys()):
       keyword_indices.append(Smi(self.keywords_[key] - posc))
-    result[fields.ImageArguments_KeywordIndicesOffset] = Tuple(entries = keyword_indices)
+    result[fields.FArguments_KeywordIndicesOffset] = Tuple(entries = keyword_indices)
     return result
 
 
@@ -411,9 +411,9 @@ class Parameters(SyntaxTree):
     self.params_ = params
   
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageParameters_Size, Smi(values.Parameters.index))
-    result[fields.ImageParameters_PositionCountOffset] = Smi(self.posc_)
-    result[fields.ImageParameters_ParametersOffset] = Tuple(entries = self.params_)
+    result = heap.allocate(fields.FParameters_Size, Smi(values.Parameters.index))
+    result[fields.FParameters_PositionCountOffset] = Smi(self.posc_)
+    result[fields.FParameters_ParametersOffset] = Tuple(entries = self.params_)
     return result
 
 
@@ -424,8 +424,8 @@ class ReturnExpression(SyntaxTree):
     self.value_ = value
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageReturnExpression_Size, Smi(values.ReturnExpression.index))
-    result[fields.ImageReturnExpression_ValueOffset] = self.value_
+    result = heap.allocate(fields.FReturnExpression_Size, Smi(values.ReturnExpression.index))
+    result[fields.FReturnExpression_ValueOffset] = self.value_
     return result
 
 
@@ -436,8 +436,8 @@ class YieldExpression(SyntaxTree):
     self.value_ = value
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageYieldExpression_Size, Smi(values.YieldExpression.index))
-    result[fields.ImageYieldExpression_ValueOffset] = self.value_
+    result = heap.allocate(fields.FYieldExpression_Size, Smi(values.YieldExpression.index))
+    result[fields.FYieldExpression_ValueOffset] = self.value_
     return result
 
 
@@ -449,9 +449,9 @@ class InternalCall(SyntaxTree):
     self.index_ = index
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageBuiltinCall_Size, Smi(values.BuiltinCall.index))
-    result[fields.ImageBuiltinCall_ArgcOffset] = Raw(self.argc_)
-    result[fields.ImageBuiltinCall_IndexOffset] = Raw(self.index_)
+    result = heap.allocate(fields.FBuiltinCall_Size, Smi(values.BuiltinCall.index))
+    result[fields.FBuiltinCall_ArgcOffset] = Raw(self.argc_)
+    result[fields.FBuiltinCall_IndexOffset] = Raw(self.index_)
     return result
 
 
@@ -463,9 +463,9 @@ class NativeCall(SyntaxTree):
     self.name_ = name
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageExternalCall_Size, Smi(values.ExternalCall.index))
-    result[fields.ImageExternalCall_ArgcOffset] = Smi(self.argc_)
-    result[fields.ImageExternalCall_NameOffset] = String(self.name_)
+    result = heap.allocate(fields.FExternalCall_Size, Smi(values.ExternalCall.index))
+    result[fields.FExternalCall_ArgcOffset] = Smi(self.argc_)
+    result[fields.FExternalCall_NameOffset] = String(self.name_)
     return result
 
 
@@ -478,10 +478,10 @@ class CallExpression(SyntaxTree):
     self.args_ = args
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageCallExpression_Size, Smi(values.CallExpression.index))
-    result[fields.ImageCallExpression_ReceiverOffset] = self.recv_
-    result[fields.ImageCallExpression_FunctionOffset] = self.fun_
-    result[fields.ImageCallExpression_ArgumentsOffset] = self.args_
+    result = heap.allocate(fields.FCallExpression_Size, Smi(values.CallExpression.index))
+    result[fields.FCallExpression_ReceiverOffset] = self.recv_
+    result[fields.FCallExpression_FunctionOffset] = self.fun_
+    result[fields.FCallExpression_ArgumentsOffset] = self.args_
     return result
 
 
@@ -494,10 +494,10 @@ class InvokeExpression(SyntaxTree):
     self.args_ = args
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageInvokeExpression_Size, Smi(values.InvokeExpression.index))
-    result[fields.ImageInvokeExpression_ReceiverOffset] = self.recv_
-    result[fields.ImageInvokeExpression_SelectorOffset] = self.selector_
-    result[fields.ImageInvokeExpression_ArgumentsOffset] = self.args_
+    result = heap.allocate(fields.FInvokeExpression_Size, Smi(values.InvokeExpression.index))
+    result[fields.FInvokeExpression_ReceiverOffset] = self.recv_
+    result[fields.FInvokeExpression_SelectorOffset] = self.selector_
+    result[fields.FInvokeExpression_ArgumentsOffset] = self.args_
     return result
 
 
@@ -511,15 +511,15 @@ class InstantiateExpression(SyntaxTree):
     self.terms_ = terms
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageInstantiateExpression_Size, Smi(values.InstantiateExpression.index))
-    result[fields.ImageInstantiateExpression_ReceiverOffset] = self.recv_
-    result[fields.ImageInstantiateExpression_NameOffset] = String(self.name_)
-    result[fields.ImageInstantiateExpression_ArgumentsOffset] = self.args_
+    result = heap.allocate(fields.FInstantiateExpression_Size, Smi(values.InstantiateExpression.index))
+    result[fields.FInstantiateExpression_ReceiverOffset] = self.recv_
+    result[fields.FInstantiateExpression_NameOffset] = String(self.name_)
+    result[fields.FInstantiateExpression_ArgumentsOffset] = self.args_
     terms = [ ]
     for (k, v) in self.terms_.items():
       terms.append(String(k))
       terms.append(v)
-    result[fields.ImageInstantiateExpression_TermsOffset] = Tuple(entries = terms)
+    result[fields.FInstantiateExpression_TermsOffset] = Tuple(entries = terms)
     return result
 
 
@@ -531,9 +531,9 @@ class RaiseExpression(SyntaxTree):
     self.args_ = args
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageRaiseExpression_Size, Smi(values.RaiseExpression.index))
-    result[fields.ImageRaiseExpression_NameOffset] = String(self.name_)
-    result[fields.ImageRaiseExpression_ArgumentsOffset] = self.args_
+    result = heap.allocate(fields.FRaiseExpression_Size, Smi(values.RaiseExpression.index))
+    result[fields.FRaiseExpression_NameOffset] = String(self.name_)
+    result[fields.FRaiseExpression_ArgumentsOffset] = self.args_
     return result
 
 
@@ -543,7 +543,7 @@ class ThisExpression(SyntaxTree):
     super(ThisExpression, self).__init__()
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageThisExpression_Size, Smi(values.ThisExpression.index))
+    result = heap.allocate(fields.FThisExpression_Size, Smi(values.ThisExpression.index))
     return result
 
 
@@ -554,8 +554,8 @@ class GlobalExpression(SyntaxTree):
     self.name_ = name
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageGlobalExpression_Size, Smi(values.GlobalExpression.index))
-    result[fields.ImageGlobalExpression_NameOffset] = String(self.name_)
+    result = heap.allocate(fields.FGlobalExpression_Size, Smi(values.GlobalExpression.index))
+    result[fields.FGlobalExpression_NameOffset] = String(self.name_)
     return result
 
 
@@ -566,8 +566,8 @@ class LiteralExpression(SyntaxTree):
     self.value_ = value
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageLiteralExpression_Size, Smi(values.LiteralExpression.index))
-    result[fields.ImageLiteralExpression_ValueOffset] = self.value_
+    result = heap.allocate(fields.FLiteralExpression_Size, Smi(values.LiteralExpression.index))
+    result[fields.FLiteralExpression_ValueOffset] = self.value_
     return result
 
 
@@ -578,8 +578,8 @@ class InterpolateExpression(SyntaxTree):
     self.terms_ = terms
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageInterpolateExpression_Size, Smi(values.InterpolateExpression.index))
-    result[fields.ImageInterpolateExpression_TermsOffset] = Tuple(entries = self.terms_)
+    result = heap.allocate(fields.FInterpolateExpression_Size, Smi(values.InterpolateExpression.index))
+    result[fields.FInterpolateExpression_TermsOffset] = Tuple(entries = self.terms_)
     return result
 
 
@@ -590,8 +590,8 @@ class SequenceExpression(SyntaxTree):
     self.exprs_ = exprs
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageSequenceExpression_Size, Smi(values.SequenceExpression.index))
-    result[fields.ImageSequenceExpression_ExpressionsOffset] = Tuple(entries = self.exprs_)
+    result = heap.allocate(fields.FSequenceExpression_Size, Smi(values.SequenceExpression.index))
+    result[fields.FSequenceExpression_ExpressionsOffset] = Tuple(entries = self.exprs_)
     return result
 
 
@@ -604,10 +604,10 @@ class ConditionalExpression(SyntaxTree):
     self.else_part_ = else_part
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageConditionalExpression_Size, Smi(values.ConditionalExpression.index))
-    result[fields.ImageConditionalExpression_ConditionOffset] = self.cond_
-    result[fields.ImageConditionalExpression_ThenPartOffset] = self.then_part_
-    result[fields.ImageConditionalExpression_ElsePartOffset] = self.else_part_
+    result = heap.allocate(fields.FConditionalExpression_Size, Smi(values.ConditionalExpression.index))
+    result[fields.FConditionalExpression_ConditionOffset] = self.cond_
+    result[fields.FConditionalExpression_ThenPartOffset] = self.then_part_
+    result[fields.FConditionalExpression_ElsePartOffset] = self.else_part_
     return result
 
 
@@ -618,8 +618,8 @@ class TupleExpression(SyntaxTree):
     self.values_ = values
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageTupleExpression_Size, Smi(values.TupleExpression.index))
-    result[fields.ImageTupleExpression_ValuesOffset] = Tuple(entries = self.values_)
+    result = heap.allocate(fields.FTupleExpression_Size, Smi(values.TupleExpression.index))
+    result[fields.FTupleExpression_ValuesOffset] = Tuple(entries = self.values_)
     return result
 
 
@@ -633,10 +633,10 @@ class LocalDefinition(SyntaxTree):
     self.body_ = body
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageLocalDefinition_Size, Smi(values.LocalDefinition.index))
-    result[fields.ImageLocalDefinition_SymbolOffset] = self.symbol_
-    result[fields.ImageLocalDefinition_ValueOffset] = self.value_
-    result[fields.ImageLocalDefinition_BodyOffset] = self.body_
+    result = heap.allocate(fields.FLocalDefinition_Size, Smi(values.LocalDefinition.index))
+    result[fields.FLocalDefinition_SymbolOffset] = self.symbol_
+    result[fields.FLocalDefinition_ValueOffset] = self.value_
+    result[fields.FLocalDefinition_BodyOffset] = self.body_
     return result
 
 
@@ -649,9 +649,9 @@ class Assignment(SyntaxTree):
     self.value_ = value
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageAssignment_Size, Smi(values.Assignment.index))
-    result[fields.ImageAssignment_SymbolOffset] = self.symbol_
-    result[fields.ImageAssignment_ValueOffset] = self.value_
+    result = heap.allocate(fields.FAssignment_Size, Smi(values.Assignment.index))
+    result[fields.FAssignment_SymbolOffset] = self.symbol_
+    result[fields.FAssignment_ValueOffset] = self.value_
     return result
 
 
@@ -663,9 +663,9 @@ class DoOnExpression(SyntaxTree):
     self.clauses_ = clauses
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageDoOnExpression_Size, Smi(values.DoOnExpression.index))
-    result[fields.ImageDoOnExpression_ValueOffset] = self.value_
-    result[fields.ImageDoOnExpression_ClausesOffset] = Tuple(entries = self.clauses_)
+    result = heap.allocate(fields.FDoOnExpression_Size, Smi(values.DoOnExpression.index))
+    result[fields.FDoOnExpression_ValueOffset] = self.value_
+    result[fields.FDoOnExpression_ClausesOffset] = Tuple(entries = self.clauses_)
     return result
 
 
@@ -677,7 +677,7 @@ class OnClause(SyntaxTree):
     self.body_ = body
 
   def allocate(self, heap):
-    result = heap.allocate(fields.ImageOnClause_Size, Smi(values.OnClause.index))
-    result[fields.ImageOnClause_NameOffset] = String(self.name_)
-    result[fields.ImageOnClause_LambdaOffset] = self.body_
+    result = heap.allocate(fields.FOnClause_Size, Smi(values.OnClause.index))
+    result[fields.FOnClause_NameOffset] = String(self.name_)
+    result[fields.FOnClause_LambdaOffset] = self.body_
     return result

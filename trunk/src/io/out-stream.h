@@ -7,16 +7,9 @@
 namespace neutrino {
 
 
-/**
- * An opaque datatype used to identify pointers that have been
- * serialized but not yet converted to real frozen heap pointers.
- */
-struct RawFrozenValue;
-
-
 class ImageOutputStream {
 public:
-  RawFrozenValue *marshal(Immediate *value);
+  RawFValue *marshal(Immediate *value);
   vector<uword> data() { return buffer().data(); }
 private:
   list_buffer<uword> &buffer() { return buffer_; }
@@ -27,7 +20,7 @@ private:
 class FrozenHeap {
 public:
   FrozenHeap(ImageOutputStream &stream);
-  ImageValue *cook(RawFrozenValue *obj);
+  FImmediate *cook(RawFValue *obj);
 private:
   vector<uword> data_;
 };

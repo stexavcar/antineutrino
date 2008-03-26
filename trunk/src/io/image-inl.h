@@ -9,11 +9,11 @@
 
 namespace neutrino {
 
-template <class C> class ImageValueInfo { };
+template <class C> class FImmediateInfo { };
 
 #define SPECIALIZE_VALUE_INFO(n, NAME, Name, info)                   \
-class Image##Name;                                                   \
-template <> class ImageValueInfo<Image##Name> {                      \
+class F##Name;                                                       \
+template <> class FImmediateInfo<F##Name> {                          \
 public:                                                              \
   static const InstanceType kTag = NAME##_TYPE;                      \
 };
@@ -25,35 +25,35 @@ FOR_EACH_DECLARED_TYPE(SPECIALIZE_VALUE_INFO)
 // ---------------------
 
 template <class C>
-static inline C *image_raw_cast(ImageData *val) {
+static inline C *image_raw_cast(FData *val) {
   ASSERT(is<C>(val));
   return reinterpret_cast<C*>(val);
 }
 
 template <>
-static inline bool is<ImageObject>(ImageData *value) {
+static inline bool is<FObject>(FData *value) {
   return ValuePointer::has_object_tag(value);
 }
 
 template <>
-static inline bool is<ImageSmi>(ImageData *value) {
+static inline bool is<FSmi>(FData *value) {
   return ValuePointer::has_smi_tag(value);
 }
 
 template <>
-static inline bool is<ImageValue>(ImageData *value) {
-  return is<ImageSmi>(value) || is<ImageObject>(value);
+static inline bool is<FImmediate>(FData *value) {
+  return is<FSmi>(value) || is<FObject>(value);
 }
 
 template <>
-static inline bool is<ImageForwardPointer>(ImageData *data) {
+static inline bool is<FForwardPointer>(FData *data) {
   return ValuePointer::has_signal_tag(data);
 }
 
 template <>
-static inline bool is<ImageSyntaxTree>(ImageData *data) {
-  if (!is<ImageObject>(data)) return false;
-  switch (image_raw_cast<ImageObject>(data)->type()) {
+static inline bool is<FSyntaxTree>(FData *data) {
+  if (!is<FObject>(data)) return false;
+  switch (image_raw_cast<FObject>(data)->type()) {
 #define MAKE_CASE(n, NAME, Name, info) case NAME##_TYPE: return true;
 FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 #undef MAKE_CASE
@@ -65,9 +65,9 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 
 #define DEFINE_IMAGE_OBJECT_QUERY(Class, CLASS)                      \
   template <>                                                        \
-  static inline bool is<Image##Class>(ImageData *value) {            \
-    return is<ImageObject>(value)                                    \
-        && image_raw_cast<ImageObject>(value)->type() == CLASS##_TYPE;\
+  static inline bool is<F##Class>(FData *value) {                    \
+    return is<FObject>(value)                                        \
+        && image_raw_cast<FObject>(value)->type() == CLASS##_TYPE;   \
   }
 
 DEFINE_IMAGE_OBJECT_QUERY(String,              STRING)
@@ -89,16 +89,16 @@ DEFINE_IMAGE_OBJECT_QUERY(Selector,            SELECTOR)
 FOR_EACH_SYNTAX_TREE_TYPE(DEFINE_SYNTAX_TREE_QUERY)
 #undef DEFINE_SYNTAX_TREE_QUERY
 
-InstanceType ImageData::type() {
-  if (is<ImageSmi>(this)) return SMI_TYPE;
-  else return image_raw_cast<ImageObject>(this)->type();
+InstanceType FData::type() {
+  if (is<FSmi>(this)) return SMI_TYPE;
+  else return image_raw_cast<FObject>(this)->type();
 }
 
 template <class C>
-static inline C *image_cast(ImageData *val, ImageLoadInfo &info,
+static inline C *image_cast(FData *val, ImageLoadInfo &info,
     const char *location) {
   if (!is<C>(val)) {
-    info.type_mismatch(ImageValueInfo<C>::kTag, val->type(), location);
+    info.type_mismatch(FImmediateInfo<C>::kTag, val->type(), location);
     return 0;
   } else {
     return image_raw_cast<C>(val);
@@ -116,32 +116,36 @@ inline To *safe_cast(From *from, ImageLoadInfo &info,
   }
 }
 
-static inline word &access_field(ImageObject *obj, uword field_offset) {
-  word *ptr = reinterpret_cast<word*>(ValuePointer::address_of(obj));
+static inline RawFValue *&access_field(FObject *obj, uword field_offset) {
+  RawFValue **ptr = reinterpret_cast<RawFValue**>(ValuePointer::address_of(obj));
   return ptr[field_offset];
 }
 
-static inline ImageData *cook_value(ImageObject *holder, word value) {
-  if (ValuePointer::has_object_tag(reinterpret_cast<void*>(value))) {
+static inline FData *cook_value(FObject *holder, RawFValue *value) {
+  if (ValuePointer::has_object_tag(value)) {
     address addr = ValuePointer::address_of(holder);
-    return ImageData::from(reinterpret_cast<word>(addr + value));
+    word offset = reinterpret_cast<word>(value);
+    // We add the offset directly since both addr and offset are
+    // word size aligned and offset is object tagged which means that
+    // the result will also be object tagged
+    return FData::from(reinterpret_cast<word>(addr + offset));
   } else {
-    return ImageData::from(value);
+    return FData::from(reinterpret_cast<word>(value));
   }
 }
 
 template <class C>
-static inline C *get_field(ImageObject *obj, uword field_offset,
+static inline C *get_field(FObject *obj, uword field_offset,
     ImageLoadInfo &info, const char *location) {
-  word value = access_field(obj, field_offset);
-  ImageData *data = cook_value(obj, value);
+  RawFValue *value = access_field(obj, field_offset);
+  FData *data = cook_value(obj, value);
   return image_cast<C>(data, info, location);
 }
 
 template <class C>
-static inline C *get_raw_field(ImageObject *obj, uword field_offset) {
-  word value = access_field(obj, field_offset);
-  ImageData *data = cook_value(obj, value);
+static inline C *get_raw_field(FObject *obj, uword field_offset) {
+  RawFValue *value = access_field(obj, field_offset);
+  FData *data = cook_value(obj, value);
   return image_raw_cast<C>(data);
 }
 
@@ -149,47 +153,47 @@ static inline C *get_raw_field(ImageObject *obj, uword field_offset) {
 // --- F o r w a r d   P o i n t e r s ---
 // ---------------------------------------
 
-ImageData *ImageObject::header() {
-  word value = access_field(this, ImageObject_LayoutOffset);
+FData *FObject::header() {
+  RawFValue *value = access_field(this, FObject_LayoutOffset);
   return cook_value(this, value);
 }
 
-bool ImageObject::has_been_migrated() {
-  return is<ImageForwardPointer>(header());
+bool FObject::has_been_migrated() {
+  return is<FForwardPointer>(header());
 }
 
-void ImageObject::point_forward(Object *obj) {
-  ASSERT(!is<ImageForwardPointer>(header()));
-  ImageForwardPointer *pointer = ImageForwardPointer::to(obj);
-  access_field(this, ImageObject_LayoutOffset) = reinterpret_cast<word>(pointer);
+void FObject::point_forward(Object *obj) {
+  ASSERT(!is<FForwardPointer>(header()));
+  FForwardPointer *pointer = FForwardPointer::to(obj);
+  access_field(this, FObject_LayoutOffset) = reinterpret_cast<RawFValue*>(pointer);
 }
 
-Value *ImageValue::forward_pointer() {
-  if (is<ImageSmi>(this)) {
-    return image_raw_cast<ImageSmi>(this)->forward_pointer();
-  } else if (is<ImageRoot>(this)) {
-    return Runtime::current().roots().get(image_raw_cast<ImageRoot>(this)->index());
+Value *FImmediate::forward_pointer() {
+  if (is<FSmi>(this)) {
+    return image_raw_cast<FSmi>(this)->forward_pointer();
+  } else if (is<FRoot>(this)) {
+    return Runtime::current().roots().get(image_raw_cast<FRoot>(this)->index());
   } else {
-    return image_raw_cast<ImageObject>(this)->forward_pointer();
+    return image_raw_cast<FObject>(this)->forward_pointer();
   }
 }
 
-Smi *ImageSmi::forward_pointer() {
+Smi *FSmi::forward_pointer() {
   return Smi::from_int(value());
 }
 
-Object *ImageObject::forward_pointer() {
-  ImageData *value = header();
-  ImageForwardPointer *pointer = image_raw_cast<ImageForwardPointer>(value);
+Object *FObject::forward_pointer() {
+  FData *value = header();
+  FForwardPointer *pointer = image_raw_cast<FForwardPointer>(value);
   return pointer->target();
 }
 
-ImageForwardPointer *ImageForwardPointer::to(Object *obj) {
+FForwardPointer *FForwardPointer::to(Object *obj) {
   uword value = ValuePointer::tag_as_signal(ValuePointer::address_of(obj));
-  return reinterpret_cast<ImageForwardPointer*>(value);
+  return reinterpret_cast<FForwardPointer*>(value);
 }
 
-Object *ImageForwardPointer::target() {
+Object *FForwardPointer::target() {
   return ValuePointer::tag_as_object(reinterpret_cast<address>(ValuePointer::un_signal_tag(this)));
 }
 
@@ -212,85 +216,64 @@ Image::Scope::~Scope() {
   current_ = previous_;
 }
 
-ImageIterator::ImageIterator(Image &image)
-    : image_(image)
-    , cursor_(image.heap())
-    , limit_(image.heap() + image.heap_size()) {
+FData *FData::from(uword addr) {
+  return reinterpret_cast<FData*>(addr);
 }
 
-bool ImageIterator::has_next() {
-  return cursor() < limit();
+FData *FData::from(Immediate *obj) {
+  return reinterpret_cast<FData*>(obj);
 }
 
-void ImageIterator::reset() {
-  cursor_ = image().heap();
-}
-
-ImageObject *ImageIterator::next() {
-  uword object_ptr = ValuePointer::tag_as_object(cursor());
-  ImageObject *obj = image_raw_cast<ImageObject>(ImageData::from(object_ptr));
-  cursor_ += obj->size_in_image();
-  return obj;
-}
-
-ImageData *ImageData::from(uword addr) {
-  return reinterpret_cast<ImageData*>(addr);
-}
-
-ImageData *ImageData::from(Immediate *obj) {
-  return reinterpret_cast<ImageData*>(obj);
-}
-
-word ImageSmi::value() {
+word FSmi::value() {
   return ValuePointer::value_of(this);
 }
 
 #define DEFINE_RAW_GETTER(T, Class, name, Name)                      \
-  T Image##Class::name() {                                           \
-    return access_field(this, Image##Class##_##Name##Offset);        \
+  T F##Class::name() {                                               \
+    return reinterpret_cast<word>(access_field(this, F##Class##_##Name##Offset)); \
   }
 
 #define DEFINE_GETTER(T, Class, name, Name)                          \
-  Image##T *Image##Class::name(ImageLoadInfo &info, const char *location) { \
-    return get_field<Image##T>(this, Image##Class##_##Name##Offset, info, location); \
+  F##T *F##Class::name(ImageLoadInfo &info, const char *location) {  \
+    return get_field<F##T>(this, F##Class##_##Name##Offset, info, location); \
   }
 
 // --- S t r i n g ---
 
 DEFINE_RAW_GETTER(uword, String, length, Length)
 
-uword ImageString::at(uword index) {
+uword FString::at(uword index) {
   ASSERT(index < length());
-  return access_field(this, ImageString_HeaderSize + index);
+  return reinterpret_cast<word>(access_field(this, FString_HeaderSize + index));
 }
 
 // --- T u p l e ---
 
 DEFINE_RAW_GETTER(uword, Tuple, length, Length)
 
-ImageValue *ImageTuple::at(uword index) {
+FImmediate *FTuple::at(uword index) {
   ASSERT(index < length());
-  return get_raw_field<ImageValue>(this, ImageCode_HeaderSize + index);
+  return get_raw_field<FImmediate>(this, FCode_HeaderSize + index);
 }
 
 // --- C o d e ---
 
 DEFINE_RAW_GETTER(uword, Code, length, Length)
 
-uword ImageCode::at(uword index) {
+uword FCode::at(uword index) {
   ASSERT(index < length());
-  return access_field(this, ImageCode_HeaderSize + index);
+  return reinterpret_cast<word>(access_field(this, FCode_HeaderSize + index));
 }
 
 DEFINE_GETTER    (Tuple,            Protocol,              methods,         Methods)
-DEFINE_GETTER    (Value,            Protocol,              name,            Name)
-DEFINE_GETTER    (Value,            Protocol,              super,           Super)
+DEFINE_GETTER    (Immediate,        Protocol,              name,            Name)
+DEFINE_GETTER    (Immediate,        Protocol,              super,           Super)
 DEFINE_RAW_GETTER(uword,            Layout,                instance_type,   InstanceType)
 DEFINE_GETTER    (Tuple,            Layout,                methods,         Methods)
-DEFINE_GETTER    (Value,            Layout,                protocol,        Protocol)
+DEFINE_GETTER    (Immediate,        Layout,                protocol,        Protocol)
 DEFINE_RAW_GETTER(uword,            Lambda,                argc,            Argc)
-DEFINE_GETTER    (Value,            Lambda,                code,            Code)
-DEFINE_GETTER    (Value,            Lambda,                literals,        Literals)
+DEFINE_GETTER    (Immediate,        Lambda,                code,            Code)
+DEFINE_GETTER    (Immediate,        Lambda,                literals,        Literals)
 DEFINE_GETTER    (SyntaxTree,       Lambda,                tree,            Tree)
 DEFINE_GETTER    (Context,          Lambda,                context,         Context)
 DEFINE_GETTER    (Selector,         Method,                selector,        Selector)
@@ -299,10 +282,10 @@ DEFINE_GETTER    (Lambda,           Method,                lambda,          Lamb
 DEFINE_GETTER    (Tuple,            Signature,             parameters,      Parameters)
 DEFINE_GETTER    (Tuple,            Dictionary,            table,           Table)
 DEFINE_RAW_GETTER(uword,            Root,                  index,           Index)
-DEFINE_GETTER    (Value,            LiteralExpression,     value,           Value)
+DEFINE_GETTER    (Immediate,        LiteralExpression,     value,           Value)
 DEFINE_GETTER    (SyntaxTree,       InvokeExpression,      receiver,        Receiver)
 DEFINE_GETTER    (Selector,         InvokeExpression,      selector,        Selector)
-DEFINE_GETTER    (Value,            InvokeExpression,      arguments,       Arguments)
+DEFINE_GETTER    (Immediate,        InvokeExpression,      arguments,       Arguments)
 DEFINE_GETTER    (SyntaxTree,       InstantiateExpression, receiver,        Receiver)
 DEFINE_GETTER    (String,           InstantiateExpression, name,            Name)
 DEFINE_GETTER    (Arguments,        InstantiateExpression, arguments,       Arguments)
@@ -321,17 +304,17 @@ DEFINE_GETTER    (SyntaxTree,       ConditionalExpression, then_part,       Then
 DEFINE_GETTER    (SyntaxTree,       ConditionalExpression, else_part,       ElsePart)
 DEFINE_GETTER    (String,           ProtocolExpression,    name,            Name)
 DEFINE_GETTER    (Tuple,            ProtocolExpression,    methods,         Methods)
-DEFINE_GETTER    (Value,            ProtocolExpression,    super,           Super)
+DEFINE_GETTER    (Immediate,        ProtocolExpression,    super,           Super)
 DEFINE_GETTER    (SyntaxTree,       ReturnExpression,      value,           Value)
 DEFINE_GETTER    (SyntaxTree,       YieldExpression,       value,           Value)
 DEFINE_GETTER    (Selector,         MethodExpression,      selector,        Selector)
 DEFINE_GETTER    (LambdaExpression, MethodExpression,      lambda,          Lambda)
-DEFINE_GETTER    (Value,            MethodExpression,      is_static,       IsStatic)
+DEFINE_GETTER    (Immediate,        MethodExpression,      is_static,       IsStatic)
 DEFINE_GETTER    (Parameters,       LambdaExpression,      parameters,      Parameters)
 DEFINE_GETTER    (SyntaxTree,       LambdaExpression,      body,            Body)
 DEFINE_GETTER    (Tuple,            SequenceExpression,    expressions,     Expressions)
 DEFINE_GETTER    (Tuple,            TupleExpression,       values,          Values)
-DEFINE_GETTER    (Value,            Symbol,                name,            Name)
+DEFINE_GETTER    (Immediate,        Symbol,                name,            Name)
 DEFINE_GETTER    (SyntaxTree,       QuoteExpression,       value,           Value)
 DEFINE_GETTER    (Tuple,            QuoteExpression,       unquotes,        Unquotes)
 DEFINE_GETTER    (SyntaxTree,       QuoteTemplate,         value,           Value)
@@ -349,15 +332,15 @@ DEFINE_GETTER    (SyntaxTree,       LocalDefinition,       body,            Body
 DEFINE_GETTER    (Symbol,           Assignment,            symbol,          Symbol)
 DEFINE_GETTER    (SyntaxTree,       Assignment,            value,           Value)
 DEFINE_GETTER    (Stack,            Task,                  stack,           Stack)
-DEFINE_GETTER    (Value,            ForwarderDescriptor,   target,          Target)
+DEFINE_GETTER    (Immediate,        ForwarderDescriptor,   target,          Target)
 DEFINE_GETTER    (Tuple,            Arguments,             arguments,       Arguments)
 DEFINE_GETTER    (Tuple,            Arguments,             keyword_indices, KeywordIndices)
 DEFINE_GETTER    (Smi,              Parameters,            position_count,  PositionCount)
 DEFINE_GETTER    (Tuple,            Parameters,            parameters,      Parameters)
-DEFINE_GETTER    (Value,            Selector,              name,            Name)
+DEFINE_GETTER    (Immediate,        Selector,              name,            Name)
 DEFINE_GETTER    (Smi,              Selector,              argc,            Argc)
 DEFINE_GETTER    (Tuple,            Selector,              keywords,        Keywords)
-DEFINE_GETTER    (Value,            Selector,              is_accessor,     IsAccessor)
+DEFINE_GETTER    (Immediate,        Selector,              is_accessor,     IsAccessor)
 DEFINE_GETTER    (LambdaExpression, TaskExpression,        lambda,          Lambda)
 
 #undef DEFINE_RAW_GETTER

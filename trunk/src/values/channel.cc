@@ -7,7 +7,7 @@ template <class C> C *MethodDictionaryImpl::open(IValue *obj) {
   return static_cast<C*>(obj->origin());
 }
 
-void *MethodDictionaryImpl::close(ImageValue *obj) {
+void *MethodDictionaryImpl::close(FImmediate *obj) {
   return static_cast<void*>(obj);
 }
 
@@ -16,7 +16,7 @@ IValue MethodDictionaryImpl::new_value(void *origin) {
 }
 
 ValueType MethodDictionaryImpl::type(IValue *that) {
-  InstanceType type = open<ImageValue>(that)->type();
+  InstanceType type = open<FImmediate>(that)->type();
   switch (type) {
     case STRING_TYPE:
       return vtString;
@@ -30,11 +30,11 @@ ValueType MethodDictionaryImpl::type(IValue *that) {
 }
 
 int MethodDictionaryImpl::value(IInteger *that) {
-  return open<ImageSmi>(that)->value();
+  return open<FSmi>(that)->value();
 }
 
 int MethodDictionaryImpl::length(IString *that) {
-  return open<ImageString>(that)->length();
+  return open<FString>(that)->length();
 }
 
 const char *MethodDictionaryImpl::c_str(IString *that) {
@@ -42,11 +42,11 @@ const char *MethodDictionaryImpl::c_str(IString *that) {
 }
 
 int MethodDictionaryImpl::length(ITuple *that) {
-  return open<ImageTuple>(that)->length();
+  return open<FTuple>(that)->length();
 }
 
 IValue MethodDictionaryImpl::get(ITuple *that, int index) {
-  ImageValue *result = open<ImageTuple>(that)->at(index);
+  FImmediate *result = open<FTuple>(that)->at(index);
   return new_value(result);
 }
 

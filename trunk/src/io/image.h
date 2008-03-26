@@ -9,36 +9,36 @@
 
 namespace neutrino {
 
-class ImageLayout;
+class FLayout;
 class ImageLoadInfo;
 
 #define DECLARE_IMAGE_OBJECT_CONST(n, Type, Const)                   \
-  static const uword Image##Type##_##Const = n;
+  static const uword F##Type##_##Const = n;
 FOR_EACH_IMAGE_OBJECT_CONST(DECLARE_IMAGE_OBJECT_CONST)
 #undef DECLARE_IMAGE_OBJECT_CONST
 
 #define DECLARE_IMAGE_FIELD(Type, name)                              \
-  inline Image##Type *name(ImageLoadInfo &info, const char *location)
+  inline F##Type *name(ImageLoadInfo &info, const char *location)
 
-class ImageData {
+class FData {
 public:
   inline InstanceType type();
-  static inline ImageData *from(uword value);
-  static inline ImageData *from(Immediate *obj);
+  static inline FData *from(uword value);
+  static inline FData *from(Immediate *obj);
 };
 
-class ImageForwardPointer : public ImageData {
+class FForwardPointer : public FData {
 public:
   inline Object *target();
-  static inline ImageForwardPointer *to(Object *obj);
+  static inline FForwardPointer *to(Object *obj);
 };
 
-class ImageValue : public ImageData {
+class FImmediate : public FData {
 public:
   inline Value *forward_pointer();
 };
 
-class ImageSmi : public ImageValue {
+class FSmi : public FImmediate {
 public:
   inline word value();
   inline Smi *forward_pointer();
@@ -56,116 +56,116 @@ public:
   Layout *layout;
 };
 
-class ImageObject : public ImageValue {
+class FObject : public FImmediate {
 public:
   InstanceType type();
   void type_info(TypeInfo *result);
   inline void point_forward(Object *target);
   inline Object *forward_pointer();
-  inline ImageData *header();
+  inline FData *header();
   inline bool has_been_migrated();
   uword size_in_image();
 };
 
-class ImageSyntaxTree : public ImageObject {
+class FSyntaxTree : public FObject {
   
 };
 
-class ImageLayout : public ImageObject {
+class FLayout : public FObject {
 public:
   inline uword instance_type();
-  DECLARE_IMAGE_FIELD(Value, protocol);
+  DECLARE_IMAGE_FIELD(Immediate, protocol);
   DECLARE_IMAGE_FIELD(Tuple, methods);
 };
 
-class ImageProtocol : public ImageObject {
+class FProtocol : public FObject {
 public:
   DECLARE_IMAGE_FIELD(Tuple, methods);
-  DECLARE_IMAGE_FIELD(Value, name);
-  DECLARE_IMAGE_FIELD(Value, super);
+  DECLARE_IMAGE_FIELD(Immediate, name);
+  DECLARE_IMAGE_FIELD(Immediate, super);
 };
 
-class ImageString : public ImageObject {
+class FString : public FObject {
 public:
   inline uword length();
   inline uword at(uword offset);
   uword string_size_in_image();
 };
 
-class ImageTuple : public ImageObject {
+class FTuple : public FObject {
 public:
   inline uword length();
-  inline ImageValue *at(uword offset);
+  inline FImmediate *at(uword offset);
   uword tuple_size_in_image();
 };
 
-class ImageCode : public ImageObject {
+class FCode : public FObject {
 public:
   inline uword length();
   inline uword at(uword offset);
   uword code_size_in_image();
 };
 
-class ImageContext : public ImageObject {
+class FContext : public FObject {
 public:
 };
 
-class ImageArguments : public ImageSyntaxTree {
+class FArguments : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(Tuple, arguments);
   DECLARE_IMAGE_FIELD(Tuple, keyword_indices);
 };
 
-class ImageParameters : public ImageSyntaxTree {
+class FParameters : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(Smi, position_count);
   DECLARE_IMAGE_FIELD(Tuple, parameters);
 };
 
-class ImageLambda : public ImageObject {
+class FLambda : public FObject {
 public:
   inline uword argc();
-  DECLARE_IMAGE_FIELD(Value, code);
-  DECLARE_IMAGE_FIELD(Value, literals);
+  DECLARE_IMAGE_FIELD(Immediate, code);
+  DECLARE_IMAGE_FIELD(Immediate, literals);
   DECLARE_IMAGE_FIELD(SyntaxTree, tree);
   DECLARE_IMAGE_FIELD(Context, context);
 };
 
-class ImageSignature : public ImageObject {
+class FSignature : public FObject {
 public:
   DECLARE_IMAGE_FIELD(Tuple, parameters);
 };
 
-class ImageSelector : public ImageObject {
+class FSelector : public FObject {
 public:
-  DECLARE_IMAGE_FIELD(Value, name);
+  DECLARE_IMAGE_FIELD(Immediate, name);
   DECLARE_IMAGE_FIELD(Smi,   argc);
   DECLARE_IMAGE_FIELD(Tuple, keywords);
-  DECLARE_IMAGE_FIELD(Value, is_accessor);
+  DECLARE_IMAGE_FIELD(Immediate, is_accessor);
 };
 
-class ImageMethod : public ImageObject {
+class FMethod : public FObject {
 public:
   DECLARE_IMAGE_FIELD(Selector, selector);
   DECLARE_IMAGE_FIELD(Signature, signature);
   DECLARE_IMAGE_FIELD(Lambda, lambda);
 };
 
-class ImageDictionary : public ImageObject {
+class FDictionary : public FObject {
 public:
   DECLARE_IMAGE_FIELD(Tuple, table);
 };
 
-class ImageStack : public ImageObject {
+class FStack : public FObject {
 public:
 };
 
-class ImageTask : public ImageObject {
+class FTask : public FObject {
 public:
   DECLARE_IMAGE_FIELD(Stack, stack);
 };
 
-class ImageRoot : public ImageObject {
+class FRoot : public FObject {
 public:
   inline uword index();
 };
@@ -174,19 +174,19 @@ public:
 // --- S y n t a x   T r e e s ---
 // -------------------------------
 
-class ImageLiteralExpression : public ImageSyntaxTree {
+class FLiteralExpression : public FSyntaxTree {
 public:
-  DECLARE_IMAGE_FIELD(Value, value);
+  DECLARE_IMAGE_FIELD(Immediate, value);
 };
 
-class ImageInvokeExpression : public ImageSyntaxTree {
+class FInvokeExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, receiver);
   DECLARE_IMAGE_FIELD(Selector, selector);
-  DECLARE_IMAGE_FIELD(Value, arguments);
+  DECLARE_IMAGE_FIELD(Immediate, arguments);
 };
 
-class ImageInstantiateExpression : public ImageSyntaxTree {
+class FInstantiateExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, receiver);
   DECLARE_IMAGE_FIELD(String, name);
@@ -194,146 +194,146 @@ public:
   DECLARE_IMAGE_FIELD(Tuple, terms);
 };
 
-class ImageRaiseExpression : public ImageSyntaxTree {
+class FRaiseExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(String, name);
   DECLARE_IMAGE_FIELD(Arguments, arguments);
 };
 
-class ImageLambdaExpression : public ImageSyntaxTree {
+class FLambdaExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(Parameters, parameters);
   DECLARE_IMAGE_FIELD(SyntaxTree, body);
 };
 
-class ImageTaskExpression : public ImageSyntaxTree {
+class FTaskExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(LambdaExpression, lambda);
 };
 
-class ImageDoOnExpression : public ImageSyntaxTree {
+class FDoOnExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, value);
   DECLARE_IMAGE_FIELD(Tuple, clauses);
 };
 
-class ImageOnClause : public ImageSyntaxTree {
+class FOnClause : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(String, name);
   DECLARE_IMAGE_FIELD(LambdaExpression, lambda);
 };
 
-class ImageCallExpression : public ImageSyntaxTree {
+class FCallExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, receiver);
   DECLARE_IMAGE_FIELD(SyntaxTree, function);
   DECLARE_IMAGE_FIELD(Arguments, arguments);
 };
 
-class ImageConditionalExpression : public ImageSyntaxTree {
+class FConditionalExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, condition);
   DECLARE_IMAGE_FIELD(SyntaxTree, then_part);
   DECLARE_IMAGE_FIELD(SyntaxTree, else_part);
 };
 
-class ImageProtocolExpression : public ImageSyntaxTree {
+class FProtocolExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(String, name);
   DECLARE_IMAGE_FIELD(Tuple, methods);
-  DECLARE_IMAGE_FIELD(Value, super);
+  DECLARE_IMAGE_FIELD(Immediate, super);
 };
 
-class ImageReturnExpression : public ImageSyntaxTree {
+class FReturnExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, value);
 };
 
-class ImageYieldExpression : public ImageSyntaxTree {
+class FYieldExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, value);
 };
 
-class ImageMethodExpression : public ImageSyntaxTree {
+class FMethodExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(Selector, selector);
   DECLARE_IMAGE_FIELD(LambdaExpression, lambda);
-  DECLARE_IMAGE_FIELD(Value, is_static);
+  DECLARE_IMAGE_FIELD(Immediate, is_static);
 };
 
-class ImageSequenceExpression : public ImageSyntaxTree {
+class FSequenceExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(Tuple, expressions);
 };
 
-class ImageTupleExpression : public ImageSyntaxTree {
+class FTupleExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(Tuple, values);
 };
 
-class ImageSymbol : public ImageSyntaxTree {
+class FSymbol : public FSyntaxTree {
 public:
-  DECLARE_IMAGE_FIELD(Value, name);
+  DECLARE_IMAGE_FIELD(Immediate, name);
 };
 
-class ImageGlobalExpression : public ImageSyntaxTree {
+class FGlobalExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(String, name);
 };
 
-class ImageQuoteExpression : public ImageSyntaxTree {
+class FQuoteExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, value);
   DECLARE_IMAGE_FIELD(Tuple, unquotes);
 };
 
-class ImageQuoteTemplate : public ImageSyntaxTree {
+class FQuoteTemplate : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(SyntaxTree, value);
   DECLARE_IMAGE_FIELD(Tuple, unquotes);
 };
 
-class ImageUnquoteExpression : public ImageSyntaxTree {
+class FUnquoteExpression : public FSyntaxTree {
 public:
   inline uword index();
 };
 
-class ImageThisExpression : public ImageSyntaxTree {
+class FThisExpression : public FSyntaxTree {
 };
 
-class ImageBuiltinCall : public ImageSyntaxTree {
+class FBuiltinCall : public FSyntaxTree {
 public:
   inline uword argc();
   inline uword index();
 };
 
-class ImageExternalCall : public ImageSyntaxTree {
+class FExternalCall : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(Smi, argc);
   DECLARE_IMAGE_FIELD(String, name);
 };
 
-class ImageInterpolateExpression : public ImageSyntaxTree {
+class FInterpolateExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(Tuple, terms);
 };
 
-class ImageLocalDefinition : public ImageSyntaxTree {
+class FLocalDefinition : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(Symbol, symbol);
   DECLARE_IMAGE_FIELD(SyntaxTree, value);
   DECLARE_IMAGE_FIELD(SyntaxTree, body);
 };
 
-class ImageAssignment : public ImageSyntaxTree {
+class FAssignment : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(Symbol, symbol);
   DECLARE_IMAGE_FIELD(SyntaxTree, value);
 };
 
-class ImageForwarderDescriptor : public ImageObject {
+class FForwarderDescriptor : public FObject {
 public:
-  DECLARE_IMAGE_FIELD(Value, target);
+  DECLARE_IMAGE_FIELD(Immediate, target);
 };
 
 #define FOR_EACH_IMAGE_LOAD_STATUS(VISIT)                            \
@@ -378,10 +378,10 @@ public:
 };
 
 template <class C>
-static inline bool is(ImageData *val);
+static inline bool is(FData *val);
 
 template <class C>
-static inline C *image_cast(ImageData *val, ImageLoadInfo *info);
+static inline C *image_cast(FData *val, ImageLoadInfo *info);
 
 class Image {
 public:
@@ -410,9 +410,9 @@ private:
   friend class ImageIterator;
   friend class Runtime;
   
-  typedef void (ObjectCallback)(ImageObject *obj);
-  static void copy_object_shallow(ImageObject *obj, ImageLoadInfo &load_info);
-  static void fixup_shallow_object(ImageObject *obj, ImageLoadInfo &load_info);
+  typedef void (ObjectCallback)(FObject *obj);
+  static void copy_object_shallow(FObject *obj, ImageLoadInfo &load_info);
+  static void fixup_shallow_object(FObject *obj, ImageLoadInfo &load_info);
   uword heap_size() { return heap_size_; }
   
   uword size_, heap_size_;
@@ -429,21 +429,6 @@ private:
   static const uword kRootsOffset       = 4;
   static const uword kHeaderSize        = 5;
 
-};
-
-class ImageIterator {
-public:
-  inline ImageIterator(Image &image);
-  inline bool has_next();
-  inline ImageObject *next();
-  inline void reset();
-private:
-  word *cursor() { return cursor_; }
-  word *limit() { return limit_; }
-  Image &image() { return image_; }
-  Image &image_;
-  word *cursor_;
-  word *limit_;
 };
 
 }
