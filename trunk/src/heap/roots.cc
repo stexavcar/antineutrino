@@ -18,7 +18,7 @@ Roots::Roots() {
 
 bool Roots::initialize(Heap& heap) {
   // Complicated roots
-  Data *layout_layout_val = heap.allocate_layout(LAYOUT_TYPE);
+  Data *layout_layout_val = heap.allocate_layout(tLayout);
   if (is<AllocationFailed>(layout_layout_val)) return false;
   Layout *layout_layout_obj = reinterpret_cast<Layout*>(layout_layout_val);
   layout_layout_obj->set_layout(layout_layout_obj);

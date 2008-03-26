@@ -302,7 +302,7 @@ Data *Heap::new_dictionary(Tuple *table) {
 }
 
 Data *Heap::new_instance(Layout *layout) {
-  ASSERT_EQ(INSTANCE_TYPE, layout->instance_type());
+  ASSERT_EQ(tInstance, layout->instance_type());
   uword field_count = layout->instance_field_count();
   uword size = Instance::size_for(field_count);
   Data *val = allocate_object(size, layout);

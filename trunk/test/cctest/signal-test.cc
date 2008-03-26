@@ -9,7 +9,7 @@ void Test::signals() {
   CHECK(!is<Object>(val));
   CHECK(is<Signal>(val));
   Signal *signal = cast<Signal>(val);
-  CHECK_EQ(Signal::ALLOCATION_FAILED, signal->type());
+  CHECK_EQ(Signal::sAllocationFailed, signal->type());
   CHECK(is<AllocationFailed>(signal));
   CHECK(!is<InternalError>(signal));
   CHECK_EQ(100, cast<AllocationFailed>(signal)->payload());

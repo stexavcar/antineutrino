@@ -164,7 +164,7 @@ Data *Builtins::protocol_new(BuiltinArguments &args) {
   if (protocol == runtime.roots().symbol_layout()->protocol()) {
     return runtime.heap().new_symbol(runtime.roots().vhoid());
   } else {
-    Data *layout_val = runtime.heap().new_layout(INSTANCE_TYPE, 0, protocol, runtime.roots().empty_tuple());
+    Data *layout_val = runtime.heap().new_layout(tInstance, 0, protocol, runtime.roots().empty_tuple());
     if (is<AllocationFailed>(layout_val)) return layout_val;
     Layout *layout = cast<Layout>(layout_val);
     return runtime.heap().new_instance(layout);

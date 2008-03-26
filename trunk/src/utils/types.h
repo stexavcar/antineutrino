@@ -67,6 +67,7 @@ class QuoteTemplate;
 class RawFValue;
 template <class T> class ref;
 class ReturnExpression;
+class Root;
 class Roots;
 class Runtime;
 class Selector;

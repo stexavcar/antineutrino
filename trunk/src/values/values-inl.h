@@ -26,7 +26,7 @@ template <class C> class ValueInfo { };
 #define SPECIALIZE_VALUE_INFO(n, NAME, Name, info)                   \
 template <> class ValueInfo<Name> {                                  \
 public:                                                              \
-  static const InstanceType kTag = NAME##_TYPE;                      \
+  static const InstanceType kTag = t##Name;                          \
 };
 FOR_EACH_DECLARED_TYPE(SPECIALIZE_VALUE_INFO)
 #undef SPECIALIZE_VALUE_INFO
@@ -90,7 +90,7 @@ template <>
 inline bool is<SyntaxTree>(Data *val) {
   if (!is<Object>(val)) return false;
   switch (cast<Object>(val)->type()) {
-#define MAKE_CASE(n, NAME, Name, info) case NAME##_TYPE: return true;
+#define MAKE_CASE(n, NAME, Name, info) case t##Name: return true;
 FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 #undef MAKE_CASE
     default: return false;
@@ -101,7 +101,7 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
     return is<Object>(val)                                           \
-        && cast<Object>(val)->layout()->instance_type() == NAME##_TYPE; \
+        && cast<Object>(val)->layout()->instance_type() == t##Name;  \
   }
 FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
 #undef DEFINE_QUERY
@@ -125,14 +125,14 @@ template <>
 inline bool gc_safe_is<Bool>(Data *val) {
   if (!gc_safe_is<Object>(val)) return false;
   InstanceType type = gc_safe_cast<Object>(val)->gc_safe_type();
-  return (type == TRUE_TYPE) || (type == FALSE_TYPE);
+  return (type == tTrue) || (type == tFalse);
 }
 
 template <>
 inline bool gc_safe_is<SyntaxTree>(Data *val) {
   if (!gc_safe_is<Object>(val)) return false;
   switch (gc_safe_cast<Object>(val)->gc_safe_type()) {
-#define MAKE_CASE(n, NAME, Name, info) case NAME##_TYPE: return true;
+#define MAKE_CASE(n, NAME, Name, info) case t##Name: return true;
 FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 #undef MAKE_CASE
     default: return false;
@@ -143,7 +143,7 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
   template <>                                                        \
   inline bool gc_safe_is<Name>(Data *val) {                          \
     return is<Object>(val)                                           \
-        && cast<Object>(val)->gc_safe_layout()->instance_type() == NAME##_TYPE; \
+        && cast<Object>(val)->gc_safe_layout()->instance_type() == t##Name; \
   }
 FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
 #undef DEFINE_QUERY
@@ -163,10 +163,16 @@ inline bool is<Singleton>(Data *val) {
 }
 
 template <>
+inline bool is<Root>(Data *val) {
+  UNREACHABLE();
+  return false;
+}
+
+template <>
 inline bool is<Bool>(Data *val) {
   if (!is<Object>(val)) return false;
   InstanceType type = cast<Object>(val)->type();
-  return (type == TRUE_TYPE) || (type == FALSE_TYPE);
+  return (type == tTrue) || (type == tFalse);
 }
 
 template <>
@@ -183,7 +189,7 @@ inline bool is<ForwardPointer>(Data *val) {
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
     return is<Signal>(val)                                           \
-        && cast<Signal>(val)->type() == Signal::NAME;          \
+        && cast<Signal>(val)->type() == Signal::s##Name;             \
   }
 FOR_EACH_SIGNAL_TYPE(DEFINE_SIGNAL_QUERY)
 #undef DEFINE_SIGNAL_QUERY
@@ -226,9 +232,9 @@ inline Immediate *deref(Value *value) {
 
 InstanceType Value::type() {
   if (is<Smi>(this)) {
-    return SMI_TYPE;
+    return tSmi;
   } else if (is<Forwarder>(this)) {
-    return FORWARDER_TYPE;
+    return tForwarder;
   } else {
     uword result = cast<Object>(this)->layout()->instance_type();
     return static_cast<InstanceType>(result);
@@ -240,7 +246,7 @@ InstanceType Data::gc_safe_type() {
   if (is<ForwardPointer>(this)) {
     return cast<ForwardPointer>(this)->target()->type();
   } else if (is<Smi>(this)) {
-    return SMI_TYPE;
+    return tSmi;
   } else {
     uword result = cast<Object>(this)->gc_safe_layout()->instance_type();
     return static_cast<InstanceType>(result);
@@ -565,17 +571,17 @@ uword Signal::payload() {
 }
 
 AllocationFailed *AllocationFailed::make(int size) {
-  Signal *result = ValuePointer::tag_as_signal(ALLOCATION_FAILED, size);
+  Signal *result = ValuePointer::tag_as_signal(sAllocationFailed, size);
   return cast<AllocationFailed>(result);
 }
 
 InternalError *InternalError::make(int code) {
-  Signal *result = ValuePointer::tag_as_signal(INTERNAL_ERROR, code);
+  Signal *result = ValuePointer::tag_as_signal(sInternalError, code);
   return cast<InternalError>(result);
 }
 
 Nothing *Nothing::make() {
-  Signal *result = ValuePointer::tag_as_signal(NOTHING, 0);
+  Signal *result = ValuePointer::tag_as_signal(sNothing, 0);
   return cast<Nothing>(result);
 }
 

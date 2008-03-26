@@ -224,55 +224,55 @@ static void unparse_assignment(Assignment *expr, UnparseData &data) {
 static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
   InstanceType type = obj->type();
   switch (type) {
-  case LITERAL_EXPRESSION_TYPE:
+  case tLiteralExpression:
     unparse_literal_expression_on(cast<LiteralExpression>(obj), data);
     break;
-  case INVOKE_EXPRESSION_TYPE:
+  case tInvokeExpression:
     unparse_invoke_expression_on(cast<InvokeExpression>(obj), data);
     break;
-  case PROTOCOL_EXPRESSION_TYPE:
+  case tProtocolExpression:
     unparse_protocol_expression(cast<ProtocolExpression>(obj), data);
     break;
-  case METHOD_EXPRESSION_TYPE:
+  case tMethodExpression:
     unparse_method_expression(cast<MethodExpression>(obj), data);
     break;
-  case RETURN_EXPRESSION_TYPE:
+  case tReturnExpression:
     unparse_return_expression(cast<ReturnExpression>(obj), data);
     break;
-  case UNQUOTE_EXPRESSION_TYPE:
+  case tUnquoteExpression:
     unparse_unquote_expression(cast<UnquoteExpression>(obj), data);
     break;
-  case GLOBAL_EXPRESSION_TYPE:
+  case tGlobalExpression:
     unparse_global_expression(cast<GlobalExpression>(obj), data);
     break;
-  case LOCAL_DEFINITION_TYPE:
+  case tLocalDefinition:
     unparse_local_definition(cast<LocalDefinition>(obj), data);
     break;
-  case LAMBDA_EXPRESSION_TYPE:
+  case tLambdaExpression:
     unparse_lambda_expression(cast<LambdaExpression>(obj), data);
     break;
-  case SYMBOL_TYPE:
+  case tSymbol:
     unparse_symbol(cast<Symbol>(obj), data);
     break;
-  case THIS_EXPRESSION_TYPE:
+  case tThisExpression:
     data->append("this");
     break;
-  case CALL_EXPRESSION_TYPE:
+  case tCallExpression:
     unparse_call_expression(cast<CallExpression>(obj), data);
     break;
-  case QUOTE_TEMPLATE_TYPE:
+  case tQuoteTemplate:
     unparse_quote_template(cast<QuoteTemplate>(obj), data);
     break;
-  case BUILTIN_CALL_TYPE:
+  case tBuiltinCall:
     unparse_builtin_call(cast<BuiltinCall>(obj), data);
     break;
-  case SEQUENCE_EXPRESSION_TYPE:
+  case tSequenceExpression:
     unparse_sequence_expression(cast<SequenceExpression>(obj), data);
     break;
-  case ASSIGNMENT_TYPE:
+  case tAssignment:
     unparse_assignment(cast<Assignment>(obj), data);
     break;
-  case CONDITIONAL_EXPRESSION_TYPE:
+  case tConditionalExpression:
     unparse_conditional_expression(cast<ConditionalExpression>(obj), data);
     break;
   default:
@@ -294,21 +294,21 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
   ref<SyntaxTree> self = open(this);
   InstanceType type = self->type();
   switch (type) {
-  case QUOTE_TEMPLATE_TYPE: {
+  case tQuoteTemplate: {
     QuoteTemplateScope scope(visitor, cast<QuoteTemplate>(self));
     return cast<QuoteTemplate>(self).value().accept(visitor);
   }
-  case UNQUOTE_EXPRESSION_TYPE: {
+  case tUnquoteExpression: {
     ref<QuoteTemplate> templ = visitor.current_quote();
     uword index = cast<UnquoteExpression>(self)->index();
     Value *term = templ->unquotes()->get(index);
     ref<SyntaxTree> value = new_ref(cast<SyntaxTree>(term));
     return value.accept(visitor);
   }
-  case BUILTIN_CALL_TYPE:
+  case tBuiltinCall:
     return visitor.visit_builtin_call(cast<BuiltinCall>(self));
 #define MAKE_VISIT(n, NAME, Name, name)                              \
-  case NAME##_TYPE:                                                  \
+  case t##Name:                                                      \
     return visitor.visit_##name(cast<Name>(self));
 FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(MAKE_VISIT)
 #undef MAKE_VISIT
@@ -328,40 +328,39 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
   ref<SyntaxTree> self = open(this);
   InstanceType type = self->type();
   switch (type) {
-  case RETURN_EXPRESSION_TYPE:
+  case tReturnExpression:
     VISIT_FIELD(ReturnExpression, value);
     break;
-  case INVOKE_EXPRESSION_TYPE: {
+  case tInvokeExpression: {
     RefScope scope;
     VISIT_FIELD(InvokeExpression, receiver);
     if (is<SyntaxTree>(cast<InvokeExpression>(self)->arguments()))
       VISIT_FIELD(InvokeExpression, arguments);
     break;
   }
-  case CALL_EXPRESSION_TYPE: {
+  case tCallExpression: {
     RefScope scope;
     VISIT_FIELD(CallExpression, receiver);
     VISIT_FIELD(CallExpression, function);
     VISIT_FIELD(CallExpression, arguments);
     break;
   }
-  case CONDITIONAL_EXPRESSION_TYPE: {
+  case tConditionalExpression: {
     RefScope scope;
     VISIT_FIELD(ConditionalExpression, condition);
     VISIT_FIELD(ConditionalExpression, then_part);
     VISIT_FIELD(ConditionalExpression, else_part);
     break;
   }
-  case SEQUENCE_EXPRESSION_TYPE: {
+  case tSequenceExpression: {
     traverse_tuple(visitor, cast<SequenceExpression>(self).expressions());
     break;
   }
-  case TUPLE_EXPRESSION_TYPE: {
+  case tTupleExpression: {
     traverse_tuple(visitor, cast<TupleExpression>(self).values());
     break;
   }
-  case LITERAL_EXPRESSION_TYPE: case GLOBAL_EXPRESSION_TYPE:
-  case THIS_EXPRESSION_TYPE:
+  case tLiteralExpression: case tGlobalExpression: case tThisExpression:
     break;
   default:
     UNHANDLED(InstanceType, type);

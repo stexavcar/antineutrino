@@ -15,7 +15,7 @@ template <class C> class FImmediateInfo { };
 class F##Name;                                                       \
 template <> class FImmediateInfo<F##Name> {                          \
 public:                                                              \
-  static const InstanceType kTag = NAME##_TYPE;                      \
+  static const InstanceType kTag = t##Name;                          \
 };
 FOR_EACH_DECLARED_TYPE(SPECIALIZE_VALUE_INFO)
 #undef SPECIALIZE_VALUE_INFO
@@ -54,7 +54,7 @@ template <>
 static inline bool is<FSyntaxTree>(FData *data) {
   if (!is<FObject>(data)) return false;
   switch (image_raw_cast<FObject>(data)->type()) {
-#define MAKE_CASE(n, NAME, Name, info) case NAME##_TYPE: return true;
+#define MAKE_CASE(n, NAME, Name, info) case t##Name: return true;
 FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 #undef MAKE_CASE
       return true;
@@ -63,11 +63,11 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
   }
 }
 
-#define DEFINE_IMAGE_OBJECT_QUERY(Class, CLASS)                      \
+#define DEFINE_IMAGE_OBJECT_QUERY(Name, NAME)                        \
   template <>                                                        \
-  static inline bool is<F##Class>(FData *value) {                    \
+  static inline bool is<F##Name>(FData *value) {                     \
     return is<FObject>(value)                                        \
-        && image_raw_cast<FObject>(value)->type() == CLASS##_TYPE;   \
+        && image_raw_cast<FObject>(value)->type() == t##Name;        \
   }
 
 DEFINE_IMAGE_OBJECT_QUERY(String,              STRING)
@@ -82,7 +82,7 @@ DEFINE_IMAGE_OBJECT_QUERY(Protocol,            PROTOCOL)
 DEFINE_IMAGE_OBJECT_QUERY(Context,             CONTEXT)
 DEFINE_IMAGE_OBJECT_QUERY(Method,              METHOD)
 DEFINE_IMAGE_OBJECT_QUERY(Signature,           SIGNATURE)
-DEFINE_IMAGE_OBJECT_QUERY(Root,                SINGLETON)
+DEFINE_IMAGE_OBJECT_QUERY(Root,                ROOT)
 DEFINE_IMAGE_OBJECT_QUERY(ForwarderDescriptor, FORWARDER_DESCRIPTOR)
 DEFINE_IMAGE_OBJECT_QUERY(Selector,            SELECTOR)
 #define DEFINE_SYNTAX_TREE_QUERY(n, NAME, Name, info) DEFINE_IMAGE_OBJECT_QUERY(Name, NAME)
@@ -90,7 +90,7 @@ FOR_EACH_SYNTAX_TREE_TYPE(DEFINE_SYNTAX_TREE_QUERY)
 #undef DEFINE_SYNTAX_TREE_QUERY
 
 InstanceType FData::type() {
-  if (is<FSmi>(this)) return SMI_TYPE;
+  if (is<FSmi>(this)) return tSmi;
   else return image_raw_cast<FObject>(this)->type();
 }
 

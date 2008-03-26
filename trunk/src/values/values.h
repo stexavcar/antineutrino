@@ -12,7 +12,7 @@ namespace neutrino {
 enum InstanceType {
   __illegal_instance_type = -1,
   __first_instance_type = 0
-#define DECLARE_INSTANCE_TYPE(n, NAME, Name, info) , NAME##_TYPE = n
+#define DECLARE_INSTANCE_TYPE(n, NAME, Name, info) , t##Name = n
 FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
 #undef DECLARE_INSTANCE_TYPE
 };
@@ -652,7 +652,7 @@ public:
   inline uword payload();
   enum Type {
     FIRST_SIGNAL_TYPE = -1
-#define DECLARE_SIGNAL_TYPE(n, NAME, Name, info) , NAME
+#define DECLARE_SIGNAL_TYPE(n, NAME, Name, info) , s##Name
 FOR_EACH_SIGNAL_TYPE(DECLARE_SIGNAL_TYPE)
 #undef DECLARE_SIGNAL_TYPE
   };

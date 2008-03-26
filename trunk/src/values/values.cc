@@ -12,10 +12,10 @@ namespace neutrino {
 uword Layout::tag_of(Data *value) {
   if (is<Signal>(value)) {
     switch (cast<Signal>(value)->type()) {
-#define MAKE_SIGNAL_TYPE_CASE(n, NAME, Name, info) case Signal::NAME: return NAME##_TYPE;
+#define MAKE_SIGNAL_TYPE_CASE(n, NAME, Name, info) case Signal::s##Name: return t##Name;
 FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
 #undef MAKE_SIGNAL_TYPE_CASE
-      default: UNREACHABLE(); return SIGNAL_TYPE;
+      default: UNREACHABLE(); return tSignal;
     }
   } else {
     return cast<Value>(value)->gc_safe_type();
@@ -24,7 +24,7 @@ FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
 
 const char *Layout::tag_name(uword tag) {
   switch (tag) {
-#define MAKE_TYPE_CASE(n, NAME, Name, info) case NAME##_TYPE: return #NAME;
+#define MAKE_TYPE_CASE(n, NAME, Name, info) case t##Name: return #NAME;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 #undef MAKE_TYPE_CASE
     default: return "<illegal>";
@@ -34,20 +34,20 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 #endif // DEBUG
 
 MAKE_ENUM_INFO_HEADER(InstanceType)
-#define MAKE_ENTRY(n, NAME, Name, info) MAKE_ENUM_INFO_ENTRY(NAME##_TYPE)
+#define MAKE_ENTRY(n, NAME, Name, info) MAKE_ENUM_INFO_ENTRY(t##Name)
 FOR_EACH_DECLARED_TYPE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
 MAKE_ENUM_INFO_HEADER(Signal::Type)
-#define MAKE_ENTRY(n, NAME, Name, info) MAKE_ENUM_INFO_ENTRY(Signal::NAME)
+#define MAKE_ENTRY(n, NAME, Name, info) MAKE_ENUM_INFO_ENTRY(Signal::s##Name)
 FOR_EACH_SIGNAL_TYPE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
 const char *Layout::layout_name(uword tag) {
   switch (tag) {
-#define MAKE_TYPE_CASE(n, NAME, Name, info) case NAME##_TYPE: return #Name;
+#define MAKE_TYPE_CASE(n, NAME, Name, info) case t##Name: return #Name;
 FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 #undef MAKE_TYPE_CASE
     default: return "<illegal>";
@@ -144,52 +144,52 @@ static void write_selector_short_on(Selector *obj, string_buffer &buf) {
 static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
   uword instance_type = obj->layout()->instance_type();
   switch (instance_type) {
-  case STRING_TYPE:
+  case tString:
     write_string_short_on(cast<String>(obj), mode, buf);
     break;
-  case TUPLE_TYPE:
+  case tTuple:
     buf.append("#<tuple>");
     break;
-  case LAMBDA_TYPE:
+  case tLambda:
     buf.append("#<lambda>");
     break;
-  case TASK_TYPE:
+  case tTask:
     buf.append("#<task>");
     break;
-  case VOID_TYPE:
+  case tVoid:
     buf.append("void");
     break;
-  case NULL_TYPE:
+  case tNull:
     buf.append("null");
     break;
-  case TRUE_TYPE:
+  case tTrue:
     buf.append("true");
     break;
-  case FALSE_TYPE:
+  case tFalse:
     buf.append("false");
     break;
-  case DICTIONARY_TYPE:
+  case tDictionary:
     buf.append("#<dictionary>");
     break;
-  case CODE_TYPE:
+  case tCode:
     buf.append("#<code>");
     break;
-  case PROTOCOL_TYPE:
+  case tProtocol:
     write_protocol_short_on(cast<Protocol>(obj), buf);
     break;
-  case LAYOUT_TYPE:
+  case tLayout:
     write_layout_short_on(cast<Layout>(obj), buf);
     break;
-  case SELECTOR_TYPE:
+  case tSelector:
     write_selector_short_on(cast<Selector>(obj), buf);
     break;
-  case METHOD_TYPE:
+  case tMethod:
     buf.append("#<method>");
     break;
-  case INSTANCE_TYPE:
+  case tInstance:
     write_instance_short_on(cast<Instance>(obj), buf);
     break;
-#define MAKE_CASE(n, NAME, Name, info) case NAME##_TYPE:
+#define MAKE_CASE(n, NAME, Name, info) case t##Name:
 FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 #undef MAKE_CASE
     write_syntax_tree_on(cast<SyntaxTree>(obj), buf);
@@ -201,13 +201,13 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
 
 static void write_signal_short_on(Signal *obj, string_buffer &buf) {
   switch (obj->type()) {
-  case Signal::NOTHING:
+  case Signal::sNothing:
     buf.append("@<nothing>");
     break;
-  case Signal::ALLOCATION_FAILED:
+  case Signal::sAllocationFailed:
     buf.append("@<allocation failed>");
     break;
-  case Signal::INTERNAL_ERROR:
+  case Signal::sInternalError:
     buf.append("@<internal error>");
     break;
   default:
@@ -267,16 +267,16 @@ static void write_method_on(Method *obj, string_buffer &buf) {
 
 static void write_object_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
   switch (obj->type()) {
-  case TUPLE_TYPE:
+  case tTuple:
     write_tuple_on(cast<Tuple>(obj), buf);
     break;
-  case LAMBDA_TYPE:
+  case tLambda:
     write_lambda_on(cast<Lambda>(obj), buf);
     break;
-  case DICTIONARY_TYPE:
+  case tDictionary:
     write_dictionary_on(cast<Dictionary>(obj), buf);
     break;
-  case METHOD_TYPE:
+  case tMethod:
     write_method_on(cast<Method>(obj), buf);
   default:
     write_object_short_on(obj, mode, buf);
@@ -426,25 +426,25 @@ string Lambda::disassemble() {
 uword Object::size_in_memory() {
   InstanceType instance_type = type();
   switch (instance_type) {
-  case TRUE_TYPE: case FALSE_TYPE: case VOID_TYPE: case NULL_TYPE:
+  case tTrue: case tFalse: case tVoid: case tNull:
     return Singleton::kSize;
-  case LAMBDA_TYPE:
+  case tLambda:
     return Lambda::kSize;
-  case BUILTIN_CALL_TYPE:
+  case tBuiltinCall:
     return BuiltinCall::kSize;
-  case LAYOUT_TYPE:
+  case tLayout:
     return Layout::kSize;
-  case CONTEXT_TYPE:
+  case tContext:
     return Context::kSize;
-  case TUPLE_TYPE:
+  case tTuple:
     return Tuple::size_for(cast<Tuple>(this)->length());
-  case STRING_TYPE:
+  case tString:
     return String::size_for(cast<String>(this)->length());
-  case STACK_TYPE:
+  case tStack:
     return Stack::size_for(cast<Stack>(this)->height());
-  case CODE_TYPE: case BUFFER_TYPE:
+  case tCode: case tBuffer:
     return AbstractBuffer::size_for(cast<AbstractBuffer>(this)->size<uint8_t>());
-#define MAKE_CASE(n, NAME, Name, name) case NAME##_TYPE: return Name::kSize;
+#define MAKE_CASE(n, NAME, Name, name) case t##Name: return Name::kSize;
 FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 #undef MAKE_CASE
   default:
@@ -482,38 +482,37 @@ static void validate_object(Object *obj) {
   GC_SAFE_CHECK_IS_C(VALIDATION, Layout, obj->layout());
   InstanceType type = obj->gc_safe_type();
   switch (type) {
-    case TUPLE_TYPE:
+    case tTuple:
       validate_tuple(cast<Tuple>(obj));
       break;
-    case INSTANCE_TYPE:
+    case tInstance:
       validate_instance(cast<Instance>(obj));
       break;
-    case STACK_TYPE:
+    case tStack:
       cast<Stack>(obj)->validate_stack();
       break;
-    case LAMBDA_TYPE:
+    case tLambda:
       FOR_EACH_LAMBDA_FIELD(VALIDATE_FIELD, Lambda)
       if (!is<Smi>(cast<Lambda>(obj)->code())) {
         GC_SAFE_CHECK_IS_C(VALIDATION, Code, cast<Lambda>(obj)->code());
         GC_SAFE_CHECK_IS_C(VALIDATION, Tuple, cast<Lambda>(obj)->constant_pool());
       }
       break;
-    case LAYOUT_TYPE:
+    case tLayout:
       FOR_EACH_LAYOUT_FIELD(VALIDATE_FIELD, Layout)
       break;
-    case CONTEXT_TYPE:
+    case tContext:
       FOR_EACH_CONTEXT_FIELD(VALIDATE_FIELD, Context)
       break;
-    case QUOTE_TEMPLATE_TYPE:
+    case tQuoteTemplate:
       FOR_EACH_QUOTE_TEMPLATE_FIELD(VALIDATE_FIELD, QuoteTemplate)
       break;
-    case BUILTIN_CALL_TYPE:
-    case UNQUOTE_EXPRESSION_TYPE:
-    case CODE_TYPE: case STRING_TYPE: case VOID_TYPE: case TRUE_TYPE:
-    case FALSE_TYPE: case NULL_TYPE: case BUFFER_TYPE:
+    case tBuiltinCall: case tUnquoteExpression: case tCode:
+    case tString: case tVoid: case tTrue: case tFalse: case tNull:
+    case tBuffer:
       break;
 #define MAKE_CASE(n, NAME, Name, name)                               \
-    case NAME##_TYPE:                                                \
+    case t##Name:                                                    \
       FOR_EACH_##NAME##_FIELD(VALIDATE_FIELD, Name);                 \
       break;
 FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
@@ -544,29 +543,27 @@ void Object::for_each_field(FieldVisitor &visitor) {
   InstanceType type = this->type();
   visitor.visit_field(reinterpret_cast<Value**>(&header()));
   switch (type) {
-    case STRING_TYPE: case CODE_TYPE: case TRUE_TYPE: case FALSE_TYPE:
-    case VOID_TYPE: case NULL_TYPE:
-      return;
-    case CONTEXT_TYPE:
+    case tString: case tCode: case tTrue: case tFalse: case tVoid:
+    case tNull: case tContext:
       break;
-    case TUPLE_TYPE:
+    case tTuple:
       for (uword i = 0; i < cast<Tuple>(this)->length(); i++)
         VISIT(cast<Tuple>(this)->get(i));
       break;
-    case BUILTIN_CALL_TYPE:
+    case tBuiltinCall:
       FOR_EACH_BUILTIN_CALL_FIELD(VISIT_FIELD, BuiltinCall);
       break;
-    case LAMBDA_TYPE:
+    case tLambda:
       FOR_EACH_LAMBDA_FIELD(VISIT_FIELD, Lambda)
       break;
-    case LAYOUT_TYPE:
+    case tLayout:
       FOR_EACH_LAYOUT_FIELD(VISIT_FIELD, Layout)
       break;
-    case STACK_TYPE:
+    case tStack:
       cast<Stack>(this)->for_each_stack_field(visitor);
       break;
 #define MAKE_CASE(n, NAME, Name, name)                               \
-    case NAME##_TYPE:                                                \
+    case t##Name:                                                    \
       FOR_EACH_##NAME##_FIELD(VISIT_FIELD, Name);                    \
       break;
 FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
@@ -600,7 +597,7 @@ Data *Lambda::clone(Heap &heap) {
 bool Value::is_key() {
   if (is_atomic_key()) return true;
   switch (type()) {
-  case SELECTOR_TYPE: case TUPLE_TYPE:
+  case tSelector: case tTuple:
     return true;
   default:
     return false;
@@ -609,8 +606,8 @@ bool Value::is_key() {
 
 bool Value::is_atomic_key() {
   switch (type()) {
-    case STRING_TYPE: case VOID_TYPE: case NULL_TYPE: case TRUE_TYPE:
-    case FALSE_TYPE: case SMI_TYPE: case SYMBOL_TYPE:
+    case tString: case tVoid: case tNull: case tTrue: case tFalse:
+    case tSmi: case tSymbol:
       return true;
     default:
       return false;
@@ -631,21 +628,21 @@ bool Value::equals(Value *that) {
   if (this->type() != that->type()) return false;
   InstanceType type = this->type();
   switch (type) {
-  case STRING_TYPE:
+  case tString:
     return cast<String>(this)->string_equals(cast<String>(that));
-  case SELECTOR_TYPE:
+  case tSelector:
     return cast<Selector>(this)->selector_equals(cast<Selector>(that));
-  case TUPLE_TYPE:
+  case tTuple:
     return cast<Tuple>(this)->tuple_equals(cast<Tuple>(that));
-  case SMI_TYPE: case SYMBOL_TYPE:
+  case tSmi: case tSymbol:
     return this == that;
-  case VOID_TYPE:
+  case tVoid:
     return is<Void>(that);
-  case NULL_TYPE:
+  case tNull:
     return is<Null>(that);
-  case TRUE_TYPE:
+  case tTrue:
     return is<True>(that);
-  case FALSE_TYPE:
+  case tFalse:
     return is<False>(that);
   default:
     UNHANDLED(InstanceType, type);

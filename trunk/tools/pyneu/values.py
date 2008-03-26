@@ -165,7 +165,7 @@ class Root(Object):
 
   def allocate(self, heap):
     index = roots[self.name_].index
-    result = heap.allocate(fields.FRoot_Size, Smi(values.Singleton.index))
+    result = heap.allocate(fields.FRoot_Size, Smi(values.Root.index))
     result[fields.FRoot_IndexOffset] = Raw(index)
     return result
 

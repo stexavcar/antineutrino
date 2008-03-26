@@ -18,11 +18,11 @@ IValue MethodDictionaryImpl::new_value(void *origin) {
 ValueType MethodDictionaryImpl::type(IValue *that) {
   InstanceType type = open<FImmediate>(that)->type();
   switch (type) {
-    case STRING_TYPE:
+    case tString:
       return vtString;
-    case SMI_TYPE:
+    case tSmi:
       return vtInteger;
-    case TUPLE_TYPE:
+    case tTuple:
       return vtTuple;
     default:
       return vtUnknown;

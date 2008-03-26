@@ -813,7 +813,7 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
     ref<SyntaxTree> value = cast<SyntaxTree>(terms.get(2 * i + 1));
     __ codegen(value);
   }
-  ref<Layout> layout = factory().new_layout(INSTANCE_TYPE, term_count,
+  ref<Layout> layout = factory().new_layout(tInstance, term_count,
       runtime().vhoid(), methods);
   __ instantiate(layout);
 }

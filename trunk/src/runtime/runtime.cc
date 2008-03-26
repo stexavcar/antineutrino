@@ -121,9 +121,9 @@ bool Runtime::install_loaded_roots(ref<Tuple> roots) {
 bool Runtime::install_object(ref<Object> root, ref<Object> changes) {
   InstanceType type = root.type();
   switch (type) {
-    case DICTIONARY_TYPE:
+    case tDictionary:
       return install_dictionary(cast<Dictionary>(root), cast<Dictionary>(changes));
-    case LAYOUT_TYPE:
+    case tLayout:
       return install_layout(cast<Layout>(root), cast<Protocol>(changes));
     default:
       UNHANDLED(InstanceType, type);
