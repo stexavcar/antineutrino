@@ -18,7 +18,8 @@ FOR_EACH_IMAGE_OBJECT_CONST(DECLARE_IMAGE_OBJECT_CONST)
 #undef DECLARE_IMAGE_OBJECT_CONST
 
 #define DECLARE_IMAGE_FIELD(Type, name)                              \
-  inline F##Type *name(ImageLoadInfo &info, const char *location)
+  inline F##Type *name(ImageLoadInfo &info, const char *location);   \
+  inline void set_##name(F##Type *value)
 
 class FData {
 public:
@@ -58,11 +59,13 @@ public:
 
 class FObject : public FImmediate {
 public:
+  inline FData *header();
+  inline void set_header(FData *type);
+  
   InstanceType type();
   void type_info(TypeInfo *result);
   inline void point_forward(Object *target);
   inline Object *forward_pointer();
-  inline FData *header();
   inline bool has_been_migrated();
   uword size_in_image();
 };
@@ -88,14 +91,24 @@ public:
 class FString : public FObject {
 public:
   inline uword length();
+  inline void set_length(uword value);
+
   inline uword at(uword offset);
+  inline void set(uword offset, uword value);
+
+  static uword size_for(uword chars);
   uword string_size_in_image();
 };
 
 class FTuple : public FObject {
 public:
   inline uword length();
+  inline void set_length(uword value);
+  
   inline FImmediate *at(uword offset);
+  inline void set(uword offset, FImmediate *value);
+  
+  static uword size_for(uword chars);
   uword tuple_size_in_image();
 };
 

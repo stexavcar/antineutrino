@@ -134,6 +134,11 @@ static inline FData *cook_value(FObject *holder, RawFValue *value) {
   }
 }
 
+static inline RawFValue *uncook_value(FObject *holder, FData *data) {
+  ASSERT(ValuePointer::has_smi_tag(data));
+  return reinterpret_cast<RawFValue*>(data);
+}
+
 template <class C>
 static inline C *get_field(FObject *obj, uword field_offset,
     ImageLoadInfo &info, const char *location) {
@@ -156,6 +161,10 @@ static inline C *get_raw_field(FObject *obj, uword field_offset) {
 FData *FObject::header() {
   RawFValue *value = access_field(this, FObject_LayoutOffset);
   return cook_value(this, value);
+}
+
+void FObject::set_header(FData *type) {
+  access_field(this, FObject_LayoutOffset) = uncook_value(this, type);
 }
 
 bool FObject::has_been_migrated() {
@@ -233,6 +242,11 @@ word FSmi::value() {
     return reinterpret_cast<word>(access_field(this, F##Class##_##Name##Offset)); \
   }
 
+#define DEFINE_RAW_SETTER(T, Class, name, Name)                      \
+  void F##Class::set_##name(T value) {                               \
+    access_field(this, F##Class##_##Name##Offset) = reinterpret_cast<RawFValue*>(value); \
+  }
+
 #define DEFINE_GETTER(T, Class, name, Name)                          \
   F##T *F##Class::name(ImageLoadInfo &info, const char *location) {  \
     return get_field<F##T>(this, F##Class##_##Name##Offset, info, location); \
@@ -241,15 +255,22 @@ word FSmi::value() {
 // --- S t r i n g ---
 
 DEFINE_RAW_GETTER(uword, String, length, Length)
+DEFINE_RAW_SETTER(uword, String, length, Length)
 
 uword FString::at(uword index) {
   ASSERT(index < length());
   return reinterpret_cast<word>(access_field(this, FString_HeaderSize + index));
 }
 
+void FString::set(uword index, uword value) {
+  ASSERT(index < length());
+  access_field(this, FString_HeaderSize + index) = reinterpret_cast<RawFValue*>(value);
+}
+
 // --- T u p l e ---
 
 DEFINE_RAW_GETTER(uword, Tuple, length, Length)
+DEFINE_RAW_SETTER(uword, Tuple, length, Length)
 
 FImmediate *FTuple::at(uword index) {
   ASSERT(index < length());

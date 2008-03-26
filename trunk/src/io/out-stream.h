@@ -7,13 +7,23 @@
 namespace neutrino {
 
 
+class heap_buffer : public list_buffer<word> {
+public:
+  template <class C>
+  C *allocate(InstanceType type, uword size);
+  word *cursor() { return data().data() + length(); }
+private:
+};
+
+
 class ImageOutputStream {
 public:
   RawFValue *marshal(Immediate *value);
-  vector<uword> data() { return buffer().data(); }
+  RawFValue *marshal_object_shallow(Object *obj);
+  vector<word> data() { return buffer().data(); }
 private:
-  list_buffer<uword> &buffer() { return buffer_; }
-  list_buffer<uword> buffer_;
+  heap_buffer &buffer() { return buffer_; }
+  heap_buffer buffer_;
 };
 
 
@@ -22,7 +32,8 @@ public:
   FrozenHeap(ImageOutputStream &stream);
   FImmediate *cook(RawFValue *obj);
 private:
-  vector<uword> data_;
+  vector<word> &data() { return data_; }
+  vector<word> data_;
 };
 
 

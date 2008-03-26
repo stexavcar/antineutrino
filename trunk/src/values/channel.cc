@@ -37,8 +37,18 @@ int MethodDictionaryImpl::length(IString *that) {
   return open<FString>(that)->length();
 }
 
+char MethodDictionaryImpl::get(IString *that, int index) {
+  return open<FString>(that)->at(index);
+}
+
 const char *MethodDictionaryImpl::c_str(IString *that) {
-  return NULL;
+  FString *str = open<FString>(that);
+  uword length = str->length();
+  char *result = new char[length + 1];
+  for (uword i = 0; i < length; i++)
+    result[i] = str->at(i);
+  result[length] = '\0';
+  return result;
 }
 
 int MethodDictionaryImpl::length(ITuple *that) {

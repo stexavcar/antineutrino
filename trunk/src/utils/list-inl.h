@@ -57,7 +57,7 @@ T &list_buffer<T>::operator[](uword index) {
 
 template <typename T>
 void list_buffer<T>::append(T obj) {
-  if (length() >= capacity_) extend_capacity();
+  ensure_capacity(length_ + 1);
   data()[length_++] = obj;
 }
 
@@ -94,10 +94,22 @@ T list_buffer<T>::pop() {
 }
 
 template <typename T>
-void list_buffer<T>::extend_capacity() {
-  uword new_capacity = grow_value(capacity_);
+void list_buffer<T>::ensure_capacity(uword length) {
+  if (length > capacity_)
+    extend_capacity(length);
+}
+
+template <typename T>
+void list_buffer<T>::ensure_length(uword length) {
+  ensure_capacity(length);
+  length_ = length;
+}
+
+template <typename T>
+void list_buffer<T>::extend_capacity(uword required) {
+  uword new_capacity = grow_value(required);
   T *new_data = new T[new_capacity];
-  for (uword i = 0; i < capacity_; i++)
+  for (uword i = 0; i < length_; i++)
     new_data[i] = data()[i];
   delete[] data_;
   data_ = new_data;

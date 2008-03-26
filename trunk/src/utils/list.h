@@ -50,8 +50,13 @@ public:
   list<T> to_list();
   
   uword length() { return length_; }
+
+protected:
+  T *raw_data() { return data_; }
+  void ensure_length(uword length);
 private:
-  void extend_capacity();
+  void ensure_capacity(uword length);
+  void extend_capacity(uword required);
   static const uword kInitialCapacity = 4;
   T *data_;
   uword length_;

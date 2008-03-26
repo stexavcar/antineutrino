@@ -29,7 +29,9 @@ public:
    */
   static inline Object *tag_as_object(address addr);
   
-  static inline uword tag_as_object(word *addr);
+  static inline void *tag_offset_as_object(word addr);
+  
+  static inline uword tag_as_object(void *addr);
 
   static inline bool has_object_tag(void *val);
   

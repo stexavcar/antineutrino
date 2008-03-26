@@ -347,15 +347,23 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 }
 
 uword FString::string_size_in_image() {
-  return FString_HeaderSize + length();
+  return size_for(length());
+}
+
+uword FString::size_for(uword chars) {
+  return FString_HeaderSize + chars;
 }
 
 uword FCode::code_size_in_image() {
   return FCode_HeaderSize + length();
 }
 
+uword FTuple::size_for(uword elms) {
+  return FTuple_HeaderSize + elms;
+}
+
 uword FTuple::tuple_size_in_image() {
-  return FTuple_HeaderSize + length();
+  return size_for(length());
 }
 
 }

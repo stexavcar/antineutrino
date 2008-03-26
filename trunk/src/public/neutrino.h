@@ -46,6 +46,7 @@ class IString : public IValue {
 public:
   inline int length();
   inline const char *c_str();
+  inline char operator[](int index);
 };
 
 
@@ -73,6 +74,7 @@ public:
   virtual ValueType type(IValue *that) = 0;
   virtual int value(IInteger *that) = 0;
   virtual int length(IString *that) = 0;
+  virtual char get(IString *that, int index) = 0;
   virtual const char *c_str(IString *that) = 0;
   virtual int length(ITuple *that) = 0;
   virtual IValue get(ITuple *that, int index) = 0;
@@ -106,6 +108,11 @@ int IString::length() {
 
 const char *IString::c_str() {
   return methods().c_str(this);
+}
+
+
+char IString::operator[](int index) {
+  return methods().get(this, index);
 }
 
 
