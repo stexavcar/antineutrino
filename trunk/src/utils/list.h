@@ -16,10 +16,12 @@ template <typename T>
 class list {
 public:
   list();
-  list(T *elms, uword length);
+  list(T *elms, uword length) : elms_(elms), length_(length) { }
   uword length() { return length_; }
   T operator[](uword index);
   list<T> sublist(uword start, uword length);
+  T *start() { return elms_; }
+  T *end() { return elms_ + length_; }
   void dispose();
 private:
   T *elms_;
@@ -41,6 +43,7 @@ public:
   T peek();
   vector<T> data();
   T &operator[](uword index);
+  T *start() { return data_; }
 
   /**
    * Creates a list containing a copy of the contents of this list
@@ -52,7 +55,6 @@ public:
   uword length() { return length_; }
 
 protected:
-  T *raw_data() { return data_; }
   void ensure_length(uword length);
 private:
   void ensure_capacity(uword length);

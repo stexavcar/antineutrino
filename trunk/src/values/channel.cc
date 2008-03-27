@@ -3,7 +3,42 @@
 
 namespace neutrino {
 
-template <class C> C *MethodDictionaryImpl::open(IValue *obj) {
+static MethodDictionaryImpl kInstance;
+
+class IValueImpl : public IValue {
+public:
+  ValueType type();
+};
+
+class IIntegerImpl : public IInteger {
+public:
+  int value();
+};
+
+class IStringImpl : public IString {
+public:
+  int length();
+  char get(int index);
+  const char *c_str();
+};
+
+class ITupleImpl : public ITuple {
+public:
+  int length();
+  IValue get(int index);
+};
+
+MethodDictionaryImpl::MethodDictionaryImpl() {
+  value_type_ = static_cast<ValueType (IValue::*)()>(&IValueImpl::type);
+  integer_value_ = static_cast<int (IInteger::*)()>(&IIntegerImpl::value);
+  string_length_ = static_cast<int (IString::*)()>(&IStringImpl::length);
+  string_get_ = static_cast<char (IString::*)(int)>(&IStringImpl::get);
+  string_c_str_ = static_cast<const char *(IString::*)()>(&IStringImpl::c_str);
+  tuple_length_ = static_cast<int (ITuple::*)()>(&ITupleImpl::length);
+  tuple_get_ = static_cast<IValue (ITuple::*)(int)>(&ITupleImpl::get);
+}
+
+template <class C> C *open(IValue *obj) {
   return static_cast<C*>(obj->origin());
 }
 
@@ -15,8 +50,8 @@ IValue MethodDictionaryImpl::new_value(void *origin) {
   return IValue(*this, origin);
 }
 
-ValueType MethodDictionaryImpl::type(IValue *that) {
-  InstanceType type = open<FImmediate>(that)->type();
+ValueType IValueImpl::type() {
+  InstanceType type = open<FImmediate>(this)->type();
   switch (type) {
     case tString:
       return vtString;
@@ -29,20 +64,20 @@ ValueType MethodDictionaryImpl::type(IValue *that) {
   }
 }
 
-int MethodDictionaryImpl::value(IInteger *that) {
-  return open<FSmi>(that)->value();
+int IIntegerImpl::value() {
+  return open<FSmi>(this)->value();
 }
 
-int MethodDictionaryImpl::length(IString *that) {
-  return open<FString>(that)->length();
+int IStringImpl::length() {
+  return open<FString>(this)->length();
 }
 
-char MethodDictionaryImpl::get(IString *that, int index) {
-  return open<FString>(that)->at(index);
+char IStringImpl::get(int index) {
+  return open<FString>(this)->at(index);
 }
 
-const char *MethodDictionaryImpl::c_str(IString *that) {
-  FString *str = open<FString>(that);
+const char *IStringImpl::c_str() {
+  FString *str = open<FString>(this);
   uword length = str->length();
   char *result = new char[length + 1];
   for (uword i = 0; i < length; i++)
@@ -51,13 +86,13 @@ const char *MethodDictionaryImpl::c_str(IString *that) {
   return result;
 }
 
-int MethodDictionaryImpl::length(ITuple *that) {
-  return open<FTuple>(that)->length();
+int ITupleImpl::length() {
+  return open<FTuple>(this)->length();
 }
 
-IValue MethodDictionaryImpl::get(ITuple *that, int index) {
-  FImmediate *result = open<FTuple>(that)->at(index);
-  return new_value(result);
+IValue ITupleImpl::get(int index) {
+  FImmediate *result = open<FTuple>(this)->at(index);
+  return kInstance.new_value(result);
 }
 
 } // neutrino

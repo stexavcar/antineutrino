@@ -3,19 +3,31 @@
 
 namespace neutrino {
 
+template <class Provider, class Data>
 class ImageIterator {
 public:
-  inline ImageIterator(Image &image);
+  inline ImageIterator(Data &heap);
   inline bool has_next();
   inline FObject *next();
   inline void reset();
 private:
-  word *cursor() { return cursor_; }
-  word *limit() { return limit_; }
-  Image &image() { return image_; }
-  Image &image_;
-  word *cursor_;
-  word *limit_;
+  uword cursor() { return cursor_; }
+  Data &heap_;
+  uword cursor_;
+};
+
+class FixedHeap {
+public:
+  typedef list<word> Data;
+  static inline word *address(Data &data, uword cursor);
+  static inline bool has_more(Data &data, uword cursor);
+};
+
+class ExtensibleHeap {
+public:
+  typedef list_buffer<word> Data;
+  static inline word *address(Data &data, uword cursor);
+  static inline bool has_more(Data &data, uword cursor);
 };
 
 } // neutrino

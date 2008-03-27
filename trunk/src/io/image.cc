@@ -20,13 +20,11 @@ namespace neutrino {
 
 Image *Image::current_ = NULL;
 
-Image::Image(uword size, word *data)
-    : size_(size)
-    , data_(data)
-    , heap_(NULL) { }
+Image::Image(list<word> data)
+    : data_(data) { }
 
 Image::~Image() {
-  delete[] data_;
+  data().dispose();
 }
 
 // -------------------------------------
@@ -72,7 +70,7 @@ MAKE_ENUM_INFO_FOOTER()
 // ---------------------
 
 void Image::initialize(ImageLoadInfo &info) {
-  if (size_ < kHeaderSize) {
+  if (data().length() < kHeaderSize) {
     info.invalid_image();
     return;
   }
@@ -88,19 +86,20 @@ void Image::initialize(ImageLoadInfo &info) {
     info.invalid_root_count(Roots::kCount, data_[kRootCountOffset]);
     return;
   }
-  heap_size_ = data_[kHeapSizeOffset];
-  if (heap_size_ > size_) {
+  uword heap_size = data_[kHeapSizeOffset];
+  if (heap_size > data().length() - kHeaderSize) {
     info.invalid_image();
     return;
   }
-  heap_ = data_ + kHeaderSize;
+  word *heap_start = data().start() + kHeaderSize;
+  heap_ = list<word>(heap_start, heap_size);
 }
 
 Data *Image::load(ImageLoadInfo &info) {
   DisallowGarbageCollection disallow(Runtime::current().heap().memory());
   Image::Scope scope(*this);
   // Make shallow copies in heap
-  ImageIterator iter(*this);
+  ImageIterator<FixedHeap, FixedHeap::Data> iter(heap());
   while (iter.has_next()) {
     copy_object_shallow(iter.next(), info);
     if (info.has_error())
@@ -113,7 +112,7 @@ Data *Image::load(ImageLoadInfo &info) {
     if (info.has_error())
       return Nothing::make();
   }
-  FObject *start = reinterpret_cast<FObject*>(ValuePointer::tag_as_object(heap()));
+  FObject *start = reinterpret_cast<FObject*>(ValuePointer::tag_as_object(heap().start()));
   FData *roots_val = cook_value(start, reinterpret_cast<RawFValue*>(data_[kRootsOffset]));
   FTuple *roots_img = image_cast<FTuple>(roots_val, info, "<roots>");
   if (info.has_error()) return Nothing::make();

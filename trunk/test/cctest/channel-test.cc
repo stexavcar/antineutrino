@@ -17,6 +17,21 @@ void walk_dont_run() {
   cast<ITuple>(value);
 }
 
+void Test::tuple() {
+  LocalRuntime runtime;
+  
+  String *str1 = cast<String>(runtime.heap().new_string("one"));
+  String *str2 = cast<String>(runtime.heap().new_string("two"));
+  Tuple *tup = cast<Tuple>(runtime.heap().new_tuple(2));
+  tup->set(0, str1);
+  tup->set(1, str2);
+  
+  Serializer stream;
+  RawFValue *raw_tup = stream.marshal(tup);
+  stream.flush();
+  USE(raw_tup);
+}
+
 void Test::simple_objects() {
   LocalRuntime runtime;
   Smi *smi_obj = Smi::from_int(10);
@@ -24,10 +39,11 @@ void Test::simple_objects() {
   String *str_obj = cast<String>(runtime.heap().new_string(knirk));
   Tuple *emp_obj = cast<Tuple>(runtime.heap().new_tuple(0));
 
-  ImageOutputStream stream;
+  Serializer stream;
   RawFValue *raw_smi = stream.marshal(smi_obj);
   RawFValue *raw_str = stream.marshal(str_obj);
   RawFValue *raw_emp = stream.marshal(emp_obj);
+  stream.flush();
   FrozenHeap heap(stream);
   FImmediate *f_smi = heap.cook(raw_smi);
   FImmediate *f_str = heap.cook(raw_str);

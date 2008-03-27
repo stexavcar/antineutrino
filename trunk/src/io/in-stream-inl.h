@@ -5,27 +5,47 @@
 
 namespace neutrino {
 
-ImageIterator::ImageIterator(Image &image)
-    : image_(image)
-    , cursor_(image.heap())
-    , limit_(image.heap() + image.heap_size()) {
+template <class P, class D>
+ImageIterator<P, D>::ImageIterator(D &heap)
+    : heap_(heap)
+    , cursor_(0) {
 }
 
-bool ImageIterator::has_next() {
-  return cursor() < limit();
+template <class P, class D>
+bool ImageIterator<P, D>::has_next() {
+  return P::has_more(heap_, cursor_);
 }
 
-void ImageIterator::reset() {
-  cursor_ = image().heap();
+template <class P, class D>
+void ImageIterator<P, D>::reset() {
+  cursor_ = 0;
 }
 
-FObject *ImageIterator::next() {
-  uword object_ptr = ValuePointer::tag_as_object(cursor());
+template <class P, class D>
+FObject *ImageIterator<P, D>::next() {
+  word *addr = P::address(heap_, cursor_);
+  uword object_ptr = ValuePointer::tag_as_object(addr);
   FObject *obj = image_raw_cast<FObject>(FData::from(object_ptr));
   cursor_ += obj->size_in_image();
   return obj;
 }
 
+word *FixedHeap::address(FixedHeap::Data &data, uword cursor) {
+  return data.start() + cursor;
 }
+  
+bool FixedHeap::has_more(FixedHeap::Data &data, uword cursor) {
+  return cursor < data.length();
+}
+  
+word *ExtensibleHeap::address(ExtensibleHeap::Data &data, uword cursor) {
+  return data.start() + cursor;
+}
+  
+bool ExtensibleHeap::has_more(ExtensibleHeap::Data &data, uword cursor) {
+  return cursor < data.length();
+}
+
+} // neutrino
 
 #endif // _IO_IN_STREAM_INL

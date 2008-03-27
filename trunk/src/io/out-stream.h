@@ -1,6 +1,7 @@
 #ifndef _IO_OUT_STREAM
 #define _IO_OUT_STREAM
 
+#include "io/image.h"
 #include "utils/list-inl.h"
 #include "values/values.h"
 
@@ -16,20 +17,25 @@ private:
 };
 
 
-class ImageOutputStream {
+class Serializer {
 public:
+  Serializer();
   RawFValue *marshal(Immediate *value);
   RawFValue *marshal_object_shallow(Object *obj);
+  void marshal_object_deep(FObject *obj);
+  void flush();
+  bool has_been_flushed() { return has_been_flushed_; }
   vector<word> data() { return buffer().data(); }
 private:
   heap_buffer &buffer() { return buffer_; }
   heap_buffer buffer_;
+  bool has_been_flushed_;
 };
 
 
 class FrozenHeap {
 public:
-  FrozenHeap(ImageOutputStream &stream);
+  FrozenHeap(Serializer &stream);
   FImmediate *cook(RawFValue *obj);
 private:
   vector<word> &data() { return data_; }

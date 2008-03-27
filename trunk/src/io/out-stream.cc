@@ -1,12 +1,15 @@
 #include "io/image-inl.h"
+#include "io/in-stream-inl.h"
 #include "io/out-stream-inl.h"
 #include "values/values-inl.h"
 
 namespace neutrino {
 
 
-FrozenHeap::FrozenHeap(ImageOutputStream &stream) 
-  : data_(stream.data()) { }
+FrozenHeap::FrozenHeap(Serializer &stream) 
+  : data_(stream.data()) {
+  ASSERT(stream.has_been_flushed());
+}
 
 
 FImmediate *FrozenHeap::cook(RawFValue *obj) {
@@ -29,7 +32,11 @@ static inline RawFValue *freeze(void *obj) {
 }
 
 
-RawFValue *ImageOutputStream::marshal_object_shallow(Object *obj) {
+Serializer::Serializer()
+  : has_been_flushed_(false) { }
+
+
+RawFValue *Serializer::marshal_object_shallow(Object *obj) {
   RawFValue *result = freeze(ValuePointer::tag_offset_as_object(buffer().length()));
   InstanceType type = obj->type();
   switch (type) {
@@ -44,9 +51,12 @@ RawFValue *ImageOutputStream::marshal_object_shallow(Object *obj) {
     }
     case tTuple: {
       Tuple *that = cast<Tuple>(obj);
-      uword size = FTuple::size_for(that->length());
+      uword length = that->length();
+      uword size = FTuple::size_for(length);
       FTuple *img = buffer().allocate<FTuple>(tTuple, size);
-      img->set_length(that->length());
+      img->set_length(length);
+      for (uword i = 0; i < length; i++)
+        img->set_raw(i, that->get(i));
       break;
     }
     default:
@@ -56,7 +66,27 @@ RawFValue *ImageOutputStream::marshal_object_shallow(Object *obj) {
 }
 
 
-RawFValue *ImageOutputStream::marshal(Immediate *obj) {
+void Serializer::marshal_object_deep(FObject *obj) {
+  InstanceType type = obj->type();
+  switch (type) {
+    case tString:
+      break;
+    case tTuple: {
+      FTuple *that = image_raw_cast<FTuple>(obj);
+      uword length = that->length();
+      for (uword i = 0; i < length; i++) {
+        Value *elm = that->get_raw(i);
+        USE(elm);
+      }
+      break;
+    }
+    default:
+      UNHANDLED(InstanceType, type);
+  }
+}
+
+
+RawFValue *Serializer::marshal(Immediate *obj) {
   if (is<Smi>(obj)) {
     return freeze(obj);
   } else if (is<Object>(obj)) {
@@ -65,6 +95,16 @@ RawFValue *ImageOutputStream::marshal(Immediate *obj) {
     UNREACHABLE();
   }
   return 0;
+}
+
+
+void Serializer::flush() {
+  has_been_flushed_ = true;
+  ImageIterator<ExtensibleHeap, ExtensibleHeap::Data> iter(buffer());
+  while (iter.has_next()) {
+    FObject *next = iter.next();
+    marshal_object_deep(next);
+  }
 }
 
 

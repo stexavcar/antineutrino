@@ -7,16 +7,10 @@
 
 namespace neutrino {
 
-class MethodDictionaryImpl : public IMethodDictionary {
+class MethodDictionaryImpl : public MethodDictionary {
 public:
-  virtual ValueType type(IValue *that);
-  virtual int value(IInteger *that);
-  virtual int length(IString *that);
-  virtual char get(IString *that, int index);
-  virtual const char *c_str(IString *that);
-  virtual int length(ITuple *that);
-  virtual IValue get(ITuple *that, int index);
-
+  MethodDictionaryImpl();
+  
   template <class C> C *open(IValue *obj);
   void *close(FImmediate *value);
   IValue new_value(void *origin);

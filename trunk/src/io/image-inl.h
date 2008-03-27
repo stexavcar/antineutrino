@@ -121,6 +121,12 @@ static inline RawFValue *&access_field(FObject *obj, uword field_offset) {
   return ptr[field_offset];
 }
 
+template <typename T>
+static inline T *&access_field(FObject *obj, uword field_offset) {
+  T **ptr = reinterpret_cast<T**>(ValuePointer::address_of(obj));
+  return ptr[field_offset];
+}
+
 static inline FData *cook_value(FObject *holder, RawFValue *value) {
   if (ValuePointer::has_object_tag(value)) {
     address addr = ValuePointer::address_of(holder);
@@ -274,7 +280,15 @@ DEFINE_RAW_SETTER(uword, Tuple, length, Length)
 
 FImmediate *FTuple::at(uword index) {
   ASSERT(index < length());
-  return get_raw_field<FImmediate>(this, FCode_HeaderSize + index);
+  return get_raw_field<FImmediate>(this, FTuple_HeaderSize + index);
+}
+
+void FTuple::set_raw(uword index, Value *value) {
+  access_field<Value>(this, FTuple_HeaderSize + index) = value;
+}
+
+Value *FTuple::get_raw(uword index) {
+  return access_field<Value>(this, FTuple_HeaderSize + index);
 }
 
 // --- C o d e ---

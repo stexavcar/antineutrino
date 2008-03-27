@@ -7,7 +7,7 @@ namespace neutrino {
 class IString;
 class ITuple;
 class IValue;
-class IMethodDictionary;
+class MethodDictionary;
 
 
 enum ValueType {
@@ -25,13 +25,14 @@ class IValue {
 public:
   inline ValueType type();
   inline IValue nothing();
-protected:
-  IMethodDictionary &methods() { return *methods_; }
+
+  MethodDictionary &methods() { return *methods_; }
   void *origin() { return origin_; }
+
 private:
-  inline IValue(IMethodDictionary &methods, void *origin);
+  inline IValue(MethodDictionary &methods, void *origin);
   friend class MethodDictionaryImpl;
-  IMethodDictionary *methods_;
+  MethodDictionary *methods_;
   void *origin_;
 };
 
@@ -69,25 +70,24 @@ public:
  * still being able to pass objects around by value.  As a user of
  * this api you don't need to know that this class exists.
  */
-class IMethodDictionary {
-public:
-  virtual ValueType type(IValue *that) = 0;
-  virtual int value(IInteger *that) = 0;
-  virtual int length(IString *that) = 0;
-  virtual char get(IString *that, int index) = 0;
-  virtual const char *c_str(IString *that) = 0;
-  virtual int length(ITuple *that) = 0;
-  virtual IValue get(ITuple *that, int index) = 0;
+struct MethodDictionary {
+  ValueType (IValue::*value_type_)();
+  int (IInteger::*integer_value_)();
+  int (IString::*string_length_)();
+  char (IString::*string_get_)(int index);
+  const char *(IString::*string_c_str_)();
+  int (ITuple::*tuple_length_)();
+  IValue (ITuple::*tuple_get_)(int index);
 };
 
 
-IValue::IValue(IMethodDictionary &methods, void *origin)
+IValue::IValue(MethodDictionary &methods, void *origin)
   : methods_(&methods)
   , origin_(origin) { }
 
 
 ValueType IValue::type() {
-  return methods().type(this);
+  return (this->*(methods().value_type_))();
 }
 
 
@@ -97,32 +97,32 @@ IValue IValue::nothing() {
 
 
 int IInteger::value() {
-  return methods().value(this);
+  return (this->*(methods().integer_value_))();
 }
 
 
 int IString::length() {
-  return methods().length(this);
+  return (this->*(methods().string_length_))();
 }
 
 
 const char *IString::c_str() {
-  return methods().c_str(this);
+  return (this->*(methods().string_c_str_))();
 }
 
 
 char IString::operator[](int index) {
-  return methods().get(this, index);
+  return ((this->*(methods().string_get_)))(index);
 }
 
 
 int ITuple::length() {
-  return methods().length(this);
+  return ((this->*(methods().tuple_length_)))();
 }
 
 
 IValue ITuple::operator[](int index) {
-  return methods().get(this, index);
+  return ((this->*(methods().tuple_get_)))(index);
 }
 
 
@@ -132,9 +132,19 @@ template <class C> C cast(IValue obj) {
 }
 
 
-template <> inline bool is<IString>(IValue obj) { return obj.type() == vtString; }
-template <> inline bool is<ITuple>(IValue obj) { return obj.type() == vtTuple; }
-template <> inline bool is<IInteger>(IValue obj) { return obj.type() == vtInteger; }
+template <> inline bool is<IString>(IValue obj) {
+  return obj.type() == vtString;
+}
+
+
+template <> inline bool is<ITuple>(IValue obj) {
+  return obj.type() == vtTuple;
+}
+
+
+template <> inline bool is<IInteger>(IValue obj) {
+  return obj.type() == vtInteger;
+}
 
 
 } // neutrino

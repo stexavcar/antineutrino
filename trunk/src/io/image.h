@@ -105,8 +105,9 @@ public:
   inline uword length();
   inline void set_length(uword value);
   
-  inline FImmediate *at(uword offset);
-  inline void set(uword offset, FImmediate *value);
+  inline FImmediate *at(uword index);
+  inline Value *get_raw(uword index);
+  inline void set_raw(uword index, Value *value);
   
   static uword size_for(uword chars);
   uword tuple_size_in_image();
@@ -398,7 +399,7 @@ static inline C *image_cast(FData *val, ImageLoadInfo *info);
 
 class Image {
 public:
-  Image(uword size, word *data);
+  Image(list<word> data);
   ~Image();
   void initialize(ImageLoadInfo &info);
   
@@ -409,7 +410,6 @@ public:
   Data *load(ImageLoadInfo &info);
   
   static inline Image &current();
-  word *heap() { return heap_; }
 
   class Scope {
   public:
@@ -420,16 +420,19 @@ public:
   };
 
 private:
-  friend class ImageIterator;
+  template <class P, class D> friend class ImageIterator;
   friend class Runtime;
   
   typedef void (ObjectCallback)(FObject *obj);
   static void copy_object_shallow(FObject *obj, ImageLoadInfo &load_info);
   static void fixup_shallow_object(FObject *obj, ImageLoadInfo &load_info);
-  uword heap_size() { return heap_size_; }
   
-  uword size_, heap_size_;
-  word *data_, *heap_;
+  list<word> &heap() { return heap_; }
+  list<word> &data() { return data_; }
+  
+  list<word> heap_;
+  list<word> data_;
+
   static Image *current_;
   
   static const word kCurrentVersion    = 2;

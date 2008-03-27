@@ -14,10 +14,9 @@ list<T>::list()
     , length_(0) { }
 
 template <typename T>
-list<T>::list(T elms[], uword length)
-    : elms_(elms)
-    , length_(length) { }
-
+void list<T>::dispose() {
+  delete[] elms_;
+}
 
 template <typename T>
 T list<T>::operator[](uword index) {
