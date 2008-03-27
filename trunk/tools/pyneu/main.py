@@ -1,13 +1,13 @@
 #!/usr/bin/python
 
-
 import codecs
-import compiler
-import consts
 import optparse
 import os
-import scanner
 import sys
+
+from internal import consts
+from internal import compiler
+from internal import scanner
 
 
 SYNTAX_ERROR_TEMPLATE = """\

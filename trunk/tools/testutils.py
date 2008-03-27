@@ -81,7 +81,8 @@ def truncate(str, length):
   if len(str) > (length - 3): return str[:length] + "..."
   else: return str
 
-status_line = "[%(mins)02i:%(secs)02i|\033[34m%%%(remaining) 4d\033[0m|\033[32m+%(passed) 4d\033[0m|\033[31m-%(failed) 4d\033[0m]: %(test)s"
+color_status_line = "[%(mins)02i:%(secs)02i|\033[34m%%%(remaining) 4d\033[0m|\033[32m+%(passed) 4d\033[0m|\033[31m-%(failed) 4d\033[0m]: %(test)s"
+mono_status_line = "[%(mins)02i:%(secs)02i|%%%(remaining) 4d|+%(passed) 4d|-%(failed) 4d]: %(test)s"
 
 class ProgressIndicator:
   def __init__(self, count):
@@ -123,7 +124,7 @@ class ColorProgressIndicator(ProgressIndicator):
   def print_progress(self, name):
     self.clear_line()
     elapsed = time.time() - self.start_time
-    print status_line % {
+    print mono_status_line % {
       'passed':    self.passed,
       'remaining': (((self.total - self.remaining) * 100) // self.total),
       'failed':    self.failed,

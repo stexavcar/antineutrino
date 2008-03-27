@@ -3,12 +3,12 @@
 # scripts know that they have to rebuild if the file is changed.
 
 __init__.py
-ast.py
-compiler.py
-consts.py
-image.py
 main.py
-parser.py
-reader.py
-scanner.py
-values.py
+internal/ast.py
+internal/compiler.py
+internal/consts.py
+internal/image.py
+internal/parser.py
+internal/reader.py
+internal/scanner.py
+internal/values.py
