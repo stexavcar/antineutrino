@@ -52,8 +52,11 @@ class LoadVisitor(ast.Visitor):
     that.traverse(self)
 
   def visit_definition(self, that):
-    value = that.value().evaluate()
-    self.toplevel()[that.name()] = value
+    if parser.CHANNEL in that.modifiers():
+      self.toplevel()[that.name()] = values.Channel(that.name())
+    else:
+      value = that.value().evaluate()
+      self.toplevel()[that.name()] = value
 
 
 class ResolveVisitor(ast.Visitor):

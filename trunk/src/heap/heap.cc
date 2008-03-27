@@ -111,6 +111,15 @@ Data *Heap::allocate_lambda(uword argc) {
   return result;
 }
 
+Data *Heap::allocate_channel() {
+  Data *val = allocate_object(Channel::kSize, roots().channel_layout());
+  if (is<AllocationFailed>(val)) return val;
+  Channel *result = cast<Channel>(val);
+  result->set_is_connected(roots().fahlse());
+  result->set_proxy(NULL);
+  return result;
+}
+
 Data *Heap::allocate_builtin_call() {
   return allocate_object(BuiltinCall::kSize, roots().builtin_call_layout());
 }

@@ -145,6 +145,11 @@ public:
   DECLARE_IMAGE_FIELD(Context, context);
 };
 
+class FChannel : public FObject {
+public:
+  DECLARE_IMAGE_FIELD(String, name);
+};
+
 class FSignature : public FObject {
 public:
   DECLARE_IMAGE_FIELD(Tuple, parameters);

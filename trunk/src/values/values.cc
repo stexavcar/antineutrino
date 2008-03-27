@@ -141,6 +141,12 @@ static void write_selector_short_on(Selector *obj, string_buffer &buf) {
   }
 }
 
+static void write_channel_short_on(Channel *obj, string_buffer &buf) {
+  buf.append("#<channel ");
+  obj->name()->write_short_on(buf, Data::UNQUOTED);
+  buf.append(">");
+}
+
 static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buffer &buf) {
   uword instance_type = obj->layout()->instance_type();
   switch (instance_type) {
@@ -185,6 +191,9 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
     break;
   case tMethod:
     buf.append("#<method>");
+    break;
+  case tChannel:
+    write_channel_short_on(cast<Channel>(obj), buf);
     break;
   case tInstance:
     write_instance_short_on(cast<Instance>(obj), buf);
@@ -497,6 +506,9 @@ static void validate_object(Object *obj) {
         GC_SAFE_CHECK_IS_C(VALIDATION, Code, cast<Lambda>(obj)->code());
         GC_SAFE_CHECK_IS_C(VALIDATION, Tuple, cast<Lambda>(obj)->constant_pool());
       }
+      break;
+    case tChannel:
+      FOR_EACH_CHANNEL_FIELD(VALIDATE_FIELD, Channel)
       break;
     case tLayout:
       FOR_EACH_LAYOUT_FIELD(VALIDATE_FIELD, Layout)

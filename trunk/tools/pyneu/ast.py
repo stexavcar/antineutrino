@@ -106,10 +106,14 @@ class File(SyntaxTree):
 
 class Definition(SyntaxTree):
 
-  def __init__(self, name, value):
+  def __init__(self, modifiers, name, value):
     assert type(name) is unicode
+    self.modifiers_ = modifiers
     self.name_ = name
     self.value_ = value
+
+  def modifiers(self):
+    return self.modifiers_
 
   def name(self):
     return self.name_
@@ -121,7 +125,8 @@ class Definition(SyntaxTree):
     visitor.visit_definition(self)
 
   def traverse(self, visitor):
-    self.value_.accept(visitor)
+    if self.value_:
+      self.value_.accept(visitor)
 
 
 # --- D e c l a r a t i o n s ---

@@ -693,6 +693,7 @@ class ForwardPointer : public Data {
 
 } // neutrino
 
+#include "values/channel.h"
 #include "values/method.h"
 
 #endif // _VALUES

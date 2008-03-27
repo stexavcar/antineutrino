@@ -50,16 +50,16 @@ Data *Builtins::string_eq(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(String, self, to<String>(args.self()));
   Data *other = to<String>(args[0]);
-  if (is<Nothing>(other)) return Runtime::current().roots().fahlse();
+  if (is<Nothing>(other)) return args.runtime().roots().fahlse();
   String *that = cast<String>(other);
   uword length = self->length();
   if (length != that->length())
-    return Runtime::current().roots().fahlse();
+    return args.runtime().roots().fahlse();
   for (uword i = 0; i < length; i++) {
     if (self->at(i) != that->at(i))
-      return Runtime::current().roots().fahlse();
+      return args.runtime().roots().fahlse();
   }
-  return Runtime::current().roots().thrue();
+  return args.runtime().roots().thrue();
 }
 
 Data *Builtins::string_plus(BuiltinArguments &args) {
@@ -243,6 +243,18 @@ Data *Builtins::compile_expression(BuiltinArguments &args) {
 Data *Builtins::lift(BuiltinArguments &args) {
   Value *value = args[0];
   return Runtime::current().heap().new_literal_expression(value);
+}
+
+
+// ---------------------
+// --- C h a n n e l ---
+// ---------------------
+
+Data *Builtins::channel_send(BuiltinArguments &args) {
+  ASSERT_EQ(1, args.count());
+  SIGNAL_CHECK(Channel, self, to<Channel>(args.self()));
+  SIGNAL_CHECK(Immediate, message, to<Immediate>(args[0]));
+  return self->send(args.runtime(), message);
 }
 
 

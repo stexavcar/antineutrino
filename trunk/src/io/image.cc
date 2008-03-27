@@ -188,6 +188,11 @@ void Image::copy_object_shallow(FObject *obj, ImageLoadInfo &info) {
       obj->point_forward(lambda);
       break;
     }
+    case tChannel: {
+      Channel *heap_obj = cast<Channel>(heap.allocate_channel());
+      obj->point_forward(heap_obj);
+      break;
+    }
     case tUnquoteExpression: {
       UnquoteExpression *heap_obj = cast<UnquoteExpression>(heap.allocate_unquote_expression());
       obj->point_forward(heap_obj);
@@ -237,6 +242,12 @@ void Image::fixup_shallow_object(FObject *obj, ImageLoadInfo &info) {
       TRANSFER_FIELD(Context, context, Context, Lambda);
       heap_obj->set_constant_pool(img->literals(info, "Lambda.constant_pool")->forward_pointer());
       heap_obj->set_outers(Runtime::current().heap().roots().empty_tuple());
+      break;
+    }
+    case tChannel: {
+      FChannel *img = image_raw_cast<FChannel>(obj);
+      Channel *heap_obj = cast<Channel>(img->forward_pointer());
+      TRANSFER_FIELD(String, name, Name, Channel);
       break;
     }
     case tLayout: {
@@ -329,6 +340,8 @@ uword FObject::size_in_image() {
       return FBuiltinCall_Size;
     case tUnquoteExpression:
       return FUnquoteExpression_Size;
+    case tChannel:
+      return FChannel_Size;
 #define MAKE_CASE(n, NAME, Name, name)                               \
     case t##Name: return F##Name##_Size;
 FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)

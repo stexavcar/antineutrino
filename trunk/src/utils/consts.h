@@ -37,6 +37,7 @@
   VISIT(15, INSTANCE,               Instance,              instance)               \
   VISIT(16, STACK,                  Stack,                 stack)                  \
   VISIT(17, CONTEXT,                Context,               context)                \
+  VISIT(83, CHANNEL,                Channel,               channel)                \
   FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
   FOR_EACH_SYNTAX_TREE_TYPE(VISIT)
 
@@ -237,7 +238,9 @@
   VISIT(1, TaskExpression,        LambdaOffset)                      \
   VISIT(2, TaskExpression,        Size)                              \
   VISIT(1, YieldExpression,       ValueOffset)                       \
-  VISIT(2, YieldExpression,       Size)
+  VISIT(2, YieldExpression,       Size)                              \
+  VISIT(1, Channel,               NameOffset)                        \
+  VISIT(2, Channel,               Size)
 
 
 // -----------------
@@ -303,7 +306,8 @@
   VISIT(51, Layout,     task_expression_layout,        TaskExpression,        allocate_empty_layout(tTaskExpression))        \
   VISIT(52, Layout,     yield_expression_layout,       YieldExpression,       allocate_empty_layout(tYieldExpression))       \
   VISIT(53, Layout,     assignment_layout,             Assignment,            allocate_empty_layout(tAssignment))            \
-  VISIT(54, Layout,     parameters_layout,             Parameters,            allocate_empty_layout(tParameters))
+  VISIT(54, Layout,     parameters_layout,             Parameters,            allocate_empty_layout(tParameters))            \
+  VISIT(55, Layout,     channel_layout,                Channel,               allocate_empty_layout(tChannel))
 
 
 #define FOR_EACH_ROOT(VISIT)                                         \
@@ -344,7 +348,8 @@
   VISIT(41, tuple,               eq,          "=")                   \
   VISIT(42, lambda,              disassemble, "disassemble")         \
   VISIT(43, lambda_expression,   params,      "parameters")          \
-  VISIT(44, lambda_expression,   body,        "body")
+  VISIT(44, lambda_expression,   body,        "body")                \
+  VISIT(45, channel,             send,        "send")
 
 
 // ---------------------------------------

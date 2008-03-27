@@ -11,7 +11,7 @@ for word in scanner.KEYWORDS.keys():
   globals()[word.upper()] = word
 
 
-MODIFIERS = [ INTERNAL, NATIVE, STATIC ]
+MODIFIERS = [ INTERNAL, NATIVE, STATIC, CHANNEL ]
 
 
 class Parser(object):
@@ -127,18 +127,22 @@ class Parser(object):
       return self.definition(modifiers)
     elif self.token().is_keyword(PROTOCOL):
       protocol = self.protocol(modifiers)
-      return ast.Definition(protocol.name(), protocol)
+      return ast.Definition(modifiers, protocol.name(), protocol)
     else:
       self.unexpected_token()
 
   def definition(self, modifiers):
     self.expect_keyword(DEF)
     name = self.expect_identifier()
-    params = self.parameters()
-    self.resolver().push_scope(params.params())
-    body = self.function_body(True)
-    self.resolver().pop_scope()
-    return ast.Definition(name, ast.Lambda(modifiers, name, params, body))
+    if self.token().is_delimiter(';'):
+      self.expect_delimiter(';')
+      return ast.Definition(modifiers, name, None)
+    else:
+      params = self.parameters()
+      self.resolver().push_scope(params.params())
+      body = self.function_body(True)
+      self.resolver().pop_scope()
+      return ast.Definition(modifiers, name, ast.Lambda(modifiers, name, params, body))
 
   def protocol(self, modifiers):
     self.expect_keyword(PROTOCOL)

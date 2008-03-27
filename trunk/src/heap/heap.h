@@ -72,6 +72,8 @@ public:
   
   Data *allocate_lambda(uword argc);
   
+  Data *allocate_channel();
+  
   Data *allocate_builtin_call();
   
   Data *allocate_unquote_expression();

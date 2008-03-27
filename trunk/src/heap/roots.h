@@ -28,7 +28,7 @@ public:
    */
   bool initialize(Heap& heap);
 
-  static const uword kCount = 55;
+  static const uword kCount = 56;
 
 // Declare root field accessors
 #define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, allocator) \

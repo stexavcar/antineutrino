@@ -297,6 +297,7 @@ FOR_EACH_GENERATABLE_TYPE(DEFINE_ALL_ACCESSORS)
 
 FOR_EACH_LAYOUT_FIELD(DEFINE_FIELD_ACCESSORS, Layout)
 FOR_EACH_LAMBDA_FIELD(DEFINE_FIELD_ACCESSORS, Lambda)
+FOR_EACH_CHANNEL_FIELD(DEFINE_FIELD_ACCESSORS, Channel)
 
 // ---------------------------------
 // --- S m a l l   I n t e g e r ---
@@ -483,6 +484,13 @@ bool Dictionary::Iterator::next(Dictionary::Iterator::Entry *entry) {
 // -------------------
 
 DEFINE_ACCESSORS(uword, Lambda, argc, Argc)
+
+
+// ---------------------
+// --- C h a n n e l ---
+// ---------------------
+
+DEFINE_ACCESSORS(void*, Channel, proxy, Proxy)
 
 
 // -----------------------------------------------

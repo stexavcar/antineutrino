@@ -196,7 +196,7 @@ void string_buffer::printf(string format, uword argc, element argv[]) {
 void string_buffer::element::print_on(string_buffer &buf, char *params,
     int offset) {
   switch (tag_) {
-  case INT_TAG: {
+  case eInt: {
     word value = value_.u_int;
     const char kTempSize = 24;
     char temp[kTempSize];
@@ -213,7 +213,7 @@ void string_buffer::element::print_on(string_buffer &buf, char *params,
     buf.append(temp);
     break;
   }
-  case DOUBLE_TAG: {
+  case eDouble: {
     double value = value_.u_double;
     const char kTempSize = 24;
     char temp[kTempSize];
@@ -230,9 +230,14 @@ void string_buffer::element::print_on(string_buffer &buf, char *params,
     buf.append(temp);
     break;
   }
-  case STRING_TAG: {
+  case eString: {
     const char *value = value_.u_string;
     buf.append(value);
+    break;
+  }
+  case eObject: {
+    Data *data = value_.u_object;
+    data->write_on(buf, Data::UNQUOTED);
     break;
   }
   default:

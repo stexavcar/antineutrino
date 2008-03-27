@@ -10,11 +10,11 @@ using namespace neutrino;
 
 // This test is not for running, only compiling
 void walk_dont_run() {
-  IValue value = *((IValue*) 0);
-  is<IString>(value);
-  is<ITuple>(value);
-  cast<IString>(value);
-  cast<ITuple>(value);
+  NValue value = *static_cast<NValue*>(NULL);
+  is<NString>(value);
+  is<NTuple>(value);
+  cast<NString>(value);
+  cast<NTuple>(value);
 }
 
 void Test::tuple() {
@@ -48,22 +48,22 @@ void Test::simple_objects() {
   FImmediate *f_smi = heap.cook(raw_smi);
   FImmediate *f_str = heap.cook(raw_str);
   FImmediate *f_emp = heap.cook(raw_emp);
-  MethodDictionaryImpl dict;
+  ValueDTable &dict = FrozenValueDTableImpl::instance();
   
-  IValue smi_val = dict.new_value(f_smi);
+  NValue smi_val = ApiUtils::new_value(dict, f_smi);
   CHECK_EQ(vtInteger, smi_val.type());
-  CHECK(is<IInteger>(smi_val));
-  CHECK(!is<IString>(smi_val));
-  CHECK(!is<ITuple>(smi_val));
-  IInteger smi = cast<IInteger>(smi_val);
+  CHECK(is<NInteger>(smi_val));
+  CHECK(!is<NString>(smi_val));
+  CHECK(!is<NTuple>(smi_val));
+  NInteger smi = cast<NInteger>(smi_val);
   CHECK_EQ(10, smi.value());
   
-  IValue str_val = dict.new_value(f_str);
+  NValue str_val = ApiUtils::new_value(dict, f_str);
   CHECK_EQ(vtString, str_val.type());
-  CHECK(!is<IInteger>(str_val));
-  CHECK(is<IString>(str_val));
-  CHECK(!is<ITuple>(str_val));
-  IString str = cast<IString>(str_val);
+  CHECK(!is<NInteger>(str_val));
+  CHECK(is<NString>(str_val));
+  CHECK(!is<NTuple>(str_val));
+  NString str = cast<NString>(str_val);
   CHECK_EQ(knirk.length(), str.length());
   const char *c_str = str.c_str();
   for (int i = 0; i < str.length(); i++) {
@@ -72,11 +72,11 @@ void Test::simple_objects() {
   }
   CHECK_EQ(0, c_str[str.length()]);
   
-  IValue emp_val = dict.new_value(f_emp);
+  NValue emp_val = ApiUtils::new_value(dict, f_emp);
   CHECK_EQ(vtTuple, emp_val.type());
-  CHECK(!is<IInteger>(emp_val));
-  CHECK(!is<IString>(emp_val));
-  CHECK(is<ITuple>(emp_val));
-  ITuple emp = cast<ITuple>(emp_val);
+  CHECK(!is<NInteger>(emp_val));
+  CHECK(!is<NString>(emp_val));
+  CHECK(is<NTuple>(emp_val));
+  NTuple emp = cast<NTuple>(emp_val);
   CHECK_EQ(0, emp.length());
 }

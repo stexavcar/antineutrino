@@ -31,6 +31,11 @@ typedef uint64_t uword;
 
 #define TYPE_CHECK(S, T) while (false) { *(static_cast<S*>(0)) = static_cast<T>(0); }
 
+template <typename T>
+static inline T function_cast(void *obj) {
+  return reinterpret_cast<T>(reinterpret_cast<uword>(obj));
+}
+
 // Forward declarations
 namespace neutrino {
 

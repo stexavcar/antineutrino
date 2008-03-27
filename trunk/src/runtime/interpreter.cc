@@ -426,7 +426,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       void *result = dylibs->lookup(name.data());
       ASSERT(result != NULL);
       typedef Value *(*External)(BuiltinArguments &);
-      External external = reinterpret_cast<External>(reinterpret_cast<uword>(result));
+      External external = function_cast<External>(result);
       BuiltinArguments args(runtime(), argc, frame);
       Value *value = cast<Value>(external(args));
       frame.push(value);

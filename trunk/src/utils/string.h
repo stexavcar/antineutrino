@@ -75,14 +75,15 @@ public:
 
   class element {
   public:
-    element(double value) : tag_(DOUBLE_TAG) { value_.u_double = value; }
-    element(uint16_t value) : tag_(INT_TAG) { value_.u_int = value; }
-    element(int16_t value) : tag_(INT_TAG) { value_.u_int = value; }
-    element(uint32_t value) : tag_(INT_TAG) { value_.u_int = value; }
-    element(int32_t value) : tag_(INT_TAG) { value_.u_int = value; }
-    element(uint64_t value) : tag_(INT_TAG) { value_.u_int = static_cast<word>(value); }
-    element(int64_t value) : tag_(INT_TAG) { value_.u_int = static_cast<word>(value); }
-    element(const char *value) : tag_(STRING_TAG) { value_.u_string = value; }
+    element(double value) : tag_(eDouble) { value_.u_double = value; }
+    element(uint16_t value) : tag_(eInt) { value_.u_int = value; }
+    element(int16_t value) : tag_(eInt) { value_.u_int = value; }
+    element(uint32_t value) : tag_(eInt) { value_.u_int = value; }
+    element(int32_t value) : tag_(eInt) { value_.u_int = value; }
+    element(uint64_t value) : tag_(eInt) { value_.u_int = static_cast<word>(value); }
+    element(int64_t value) : tag_(eInt) { value_.u_int = static_cast<word>(value); }
+    element(const char *value) : tag_(eString) { value_.u_string = value; }
+    element(Data *value) : tag_(eObject) { value_.u_object = value; }
     /**
      * Prints this element on the specified buffer.  If the params
      * string is non-null it will be used to configure how this
@@ -92,12 +93,13 @@ public:
      */
     void print_on(string_buffer &buf, char *params, int offset);
   private:
-    enum Tag { INT_TAG, STRING_TAG, DOUBLE_TAG };
+    enum Tag { eInt, eString, eDouble, eObject };
     Tag tag_;
     union {
       word u_int;
       const char *u_string;
       double u_double;
+      Data *u_object;
     } value_;
   };
 

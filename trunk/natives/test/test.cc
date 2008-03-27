@@ -1,19 +1,25 @@
 #include <stdio.h>
-#include "runtime/builtins-inl.h"
-#include "runtime/runtime.h"
-#include "values/values-inl.h"
+#include "public/neutrino.h"
 
 namespace neutrino {
 
-/*
- * Used by the natives test
- */
+class TestNativesChannel : public IExternalChannel {
+public:
+  virtual int receive(NValue value);
+};
 
-extern "C" Data *min(BuiltinArguments &args) {
-  ASSERT_EQ(2, args.count());
-  word first = cast<Smi>(to<Smi>(args[0]))->value();
-  word second = cast<Smi>(to<Smi>(args[1]))->value();
-  return (first < second) ? Smi::from_int(first) : Smi::from_int(second);
+int TestNativesChannel::receive(NValue value) {
+  NTuple args = cast<NTuple>(value);
+  NInteger a_obj = cast<NInteger>(args[1]);
+  int a = a_obj.value();
+  NInteger b_obj = cast<NInteger>(args[2]);
+  int b = b_obj.value();
+  return (a < b) ? a : b;
+}
+
+extern "C" void configure_neptune_test_natives_channel(IExternalChannelConfiguration &config) {
+  TestNativesChannel *channel = new TestNativesChannel();
+  config.bind(*channel);
 }
 
 } // neutrino

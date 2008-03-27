@@ -273,6 +273,18 @@ class Dictionary(Object):
     return "{%s}" % items
 
 
+class Channel(Object):
+
+  def __init__(self, name):
+    super(Channel, self).__init__()
+    self.name_ = name
+  
+  def allocate(self, heap):
+    result = heap.allocate(fields.FChannel_Size, Smi(values.Channel.index))
+    result[fields.FChannel_NameOffset] = String(self.name_)
+    return result
+
+
 class Context(Object):
 
   def __init__(self):
