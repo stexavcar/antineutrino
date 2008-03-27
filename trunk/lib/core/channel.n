@@ -1,0 +1,3 @@
+internal protocol Channel {
+  internal def send(obj);
+}
