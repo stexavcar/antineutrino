@@ -1,11 +1,8 @@
 #include <stdio.h>
 
-#include "runtime/builtins-inl.h"
-#include "runtime/runtime.h"
-#include "utils/scoped-ptrs.h"
-#include "values/values-inl.h"
-
 namespace neutrino {
+
+/*
 
 extern "C" Data *native_open_file(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
@@ -44,5 +41,7 @@ extern "C" Data *native_read_file(BuiltinArguments &args) {
   }
   return result;
 }
+
+*/
 
 } // neutrino
