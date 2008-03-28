@@ -47,7 +47,7 @@ public:
   own_vector(vector<T> value) : value_(value) { }
   ~own_vector();
 
-  inline T *data() { return value_.data(); }
+  inline T *start() { return value_.start(); }
   inline T &operator[](uword index) { return value_[index]; }
   inline vector<T> release();
 private:

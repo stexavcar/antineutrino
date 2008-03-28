@@ -12,7 +12,7 @@ class heap_buffer : public list_buffer<word> {
 public:
   template <class C>
   C *allocate(InstanceType type, uword size);
-  word *cursor() { return data().data() + length(); }
+  word *cursor() { return data().start() + length(); }
 private:
 };
 

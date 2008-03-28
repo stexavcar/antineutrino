@@ -124,7 +124,7 @@ class ColorProgressIndicator(ProgressIndicator):
   def print_progress(self, name):
     self.clear_line()
     elapsed = time.time() - self.start_time
-    print mono_status_line % {
+    print color_status_line % {
       'passed':    self.passed,
       'remaining': (((self.total - self.remaining) * 100) // self.total),
       'failed':    self.failed,

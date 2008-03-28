@@ -22,9 +22,7 @@ class ExternalChannelConfigurationImpl : public IExternalChannelConfiguration {
 public:
   ExternalChannelConfigurationImpl();
   virtual void bind(IExternalChannel &channel);
-  
   IExternalChannel *channel() { return channel_; }
-
 private:
   IExternalChannel *channel_;
 };
@@ -68,25 +66,97 @@ template <class C> C *ApiUtils::open(NValue *obj) {
   return static_cast<C*>(obj->origin());
 }
 
+
+template <class C> C ApiUtils::wrap(Value *obj) {
+  NValue val = new_value(LiveValueDTableImpl::instance(), obj);
+  return *reinterpret_cast<C*>(&val);
+}
+
+
 void *ApiUtils::close(FImmediate *obj) {
   return static_cast<void*>(obj);
 }
 
-NValue ApiUtils::new_value(ValueDTable &methods, void *origin) {
-  return NValue(methods, origin);
+
+NValue ApiUtils::new_value(ExtendedValueDTable &methods, void *origin) {
+  return NValue(&methods, origin);
 }
 
 
-NValue ApiUtils::new_value(NValue *source, void *origin) {
-  return NValue(source->methods(), origin);
+NValue ApiUtils::new_value_from(NValue *source, void *origin) {
+  return NValue(source->methods_, origin);
 }
+
+
+class ValueFactoryImpl : public IValueFactory {
+public:
+  ValueFactoryImpl(Runtime &runtime) : runtime_(runtime) { }
+  virtual NInteger new_integer(word value);
+  virtual NString new_string(const char *data, unsigned length);
+  virtual NNull get_null();
+  virtual NValue new_raw_buffer(unsigned total_size);
+private:
+  Runtime &runtime() { return runtime_; }
+  Runtime &runtime_;
+};
+
+
+class MessageContextImpl : public IMessageContext {
+public:
+  MessageContextImpl(IValueFactory &factory) : factory_(factory) { }
+  virtual IValueFactory &factory() { return factory_; }
+private:
+  IValueFactory &factory_;
+};
+
+
+class MessageImpl : public IMessage {
+public:
+  MessageImpl(NValue contents, IMessageContext &context)
+    : contents_(contents)
+    , context_(context) { }
+  virtual NValue contents() { return contents_; }
+  virtual IMessageContext &context() { return context_; }
+private:
+  NValue contents_;
+  IMessageContext &context_;
+};
 
 
 Data *ApiUtils::send_message(Runtime &runtime, IExternalChannel &channel,
-    Immediate *message) {
-  NValue value = new_value(LiveValueDTableImpl::instance(), message);
-  word result = channel.receive(value);
-  return Smi::from_int(result);
+    Immediate *contents) {
+  NValue value = new_value(LiveValueDTableImpl::instance(), contents);
+  ValueFactoryImpl factory(runtime);
+  MessageContextImpl context(factory);
+  MessageImpl message(value, context);
+  NValue result = channel.receive(message);
+  ExtendedValueDTable &methods = static_cast<ExtendedValueDTable&>(result.methods());
+  return (result.*(methods.value_to_data_))();
+}
+
+
+NInteger ValueFactoryImpl::new_integer(word value) {
+  Smi *obj = Smi::from_int(value);
+  return ApiUtils::wrap<NInteger>(obj);
+}
+
+
+NString ValueFactoryImpl::new_string(const char *data, unsigned length) {
+  Data *str = runtime().heap().new_string(string(data, length));
+  return ApiUtils::wrap<NString>(cast<String>(str));
+}
+
+
+NNull ValueFactoryImpl::get_null() {
+  Null *nuhll = runtime().roots().nuhll();
+  return ApiUtils::wrap<NNull>(nuhll);
+}
+
+
+NValue ValueFactoryImpl::new_raw_buffer(unsigned total_size) {
+  Data *result = cast<Value>(runtime().heap().new_buffer(total_size));
+  NValue val = ApiUtils::new_value(LiveValueDTableImpl::instance(), result);
+  return val;
 }
 
 
@@ -99,6 +169,8 @@ LiveValueDTableImpl LiveValueDTableImpl::instance_;
 class LiveNValue : public NValue {
 public:
   ValueType type();
+  void *buffer_get(int index);
+  Data *to_data();
 };
 
 class LiveNInteger : public NInteger {
@@ -125,10 +197,12 @@ LiveValueDTableImpl::LiveValueDTableImpl() {
 /*
   string_length_ = static_cast<int (NString::*)()>(&FrozenNString::length);
   string_get_ = static_cast<char (NString::*)(int)>(&FrozenNString::get);
-  string_c_str_ = static_cast<const char *(NString::*)()>(&FrozenNString::c_str);
   tuple_length_ = static_cast<int (NTuple::*)()>(&FrozenNTuple::length);
 */
+  string_c_str_ = static_cast<const char *(NString::*)()>(&LiveNString::c_str);
   tuple_get_ = static_cast<NValue (NTuple::*)(int)>(&LiveNTuple::get);
+  buffer_get_ = static_cast<void *(NValue::*)(int)>(&LiveNValue::buffer_get);
+  value_to_data_ = static_cast<Data *(NValue::*)()>(&LiveNValue::to_data);
 }
 
 ValueType LiveNValue::type() {
@@ -140,18 +214,34 @@ ValueType LiveNValue::type() {
       return vtInteger;
     case tTuple:
       return vtTuple;
+    case tBuffer:
+      return vtBuffer;
     default:
+      UNHANDLED(InstanceType, type);
       return vtUnknown;
   }
+}
+
+void *LiveNValue::buffer_get(int index) {
+  Buffer *obj = ApiUtils::open<Buffer>(this);
+  return obj->buffer<byte>().start() + index;
+}
+
+Data *LiveNValue::to_data() {
+  return ApiUtils::open<Immediate>(this);
 }
 
 int LiveNInteger::value() {
   return ApiUtils::open<Smi>(this)->value();
 }
 
+const char *LiveNString::c_str() {
+  return ApiUtils::open<String>(this)->c_str().start();
+}
+
 NValue LiveNTuple::get(int index) {
   Value *result = ApiUtils::open<Tuple>(this)->get(index);
-  return ApiUtils::new_value(this, result);
+  return ApiUtils::new_value_from(this, result);
 }
 
 
@@ -236,7 +326,7 @@ int FrozenNTuple::length() {
 
 NValue FrozenNTuple::get(int index) {
   FImmediate *result = ApiUtils::open<FTuple>(this)->at(index);
-  return ApiUtils::new_value(this, result);
+  return ApiUtils::new_value_from(this, result);
 }
 
 } // neutrino

@@ -467,20 +467,6 @@ class InternalCall(SyntaxTree):
     return result
 
 
-class NativeCall(SyntaxTree):
-
-  def __init__(self, argc, name):
-    super(NativeCall, self).__init__()
-    self.argc_ = argc
-    self.name_ = name
-
-  def allocate(self, heap):
-    result = heap.allocate(fields.FExternalCall_Size, Smi(values.ExternalCall.index))
-    result[fields.FExternalCall_ArgcOffset] = Smi(self.argc_)
-    result[fields.FExternalCall_NameOffset] = String(self.name_)
-    return result
-
-
 class CallExpression(SyntaxTree):
 
   def __init__(self, recv, fun, args):

@@ -18,7 +18,7 @@ FImmediate *FrozenHeap::cook(RawFValue *obj) {
     return raw_value;
   } else {
     ASSERT(is<FObject>(raw_value));
-    word *start = data().data();
+    word *start = data().start();
     uword offset = ValuePointer::offset_of(obj);
     uword val = ValuePointer::tag_as_object(start + offset);
     return reinterpret_cast<FImmediate*>(val);

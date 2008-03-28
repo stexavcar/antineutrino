@@ -4,6 +4,10 @@
 namespace neutrino {
 
 
+class IMessage;
+class IMessageContext;
+class IValueFactory;
+template <typename T> class NBuffer;
 class NInteger;
 class NString;
 class NTuple;
@@ -11,7 +15,7 @@ class NValue;
 
 
 enum ValueType {
-  vtInteger, vtString, vtTuple, vtUnknown
+  vtInteger, vtString, vtTuple, vtBuffer, vtUnknown
 };
 
 
@@ -29,21 +33,8 @@ struct ValueDTable {
   const char *(NString::*string_c_str_)();
   int (NTuple::*tuple_length_)();
   NValue (NTuple::*tuple_get_)(int index);
+  void *(NValue::*buffer_get_)(int raw_index);
 };
-
-
-/**
- * Type query operator.  Is<X>(o) return true if o is an X, false
- * otherwise.
- */
-template <class C> inline bool is(NValue obj);
-
-
-/**
- * Type conversion operator.  Cast<X>(o) returns o viewed as an X if
- * o is an X, otherwise the empty value.
- */
-template <class C> inline C cast(NValue obj);
 
 
 class NValue {
@@ -53,7 +44,7 @@ public:
 protected:
   ValueDTable &methods() { return *methods_; }
 private:
-  inline NValue(ValueDTable &methods, void *origin);
+  inline NValue(ValueDTable *methods, void *origin);
   void *origin() { return origin_; }
   
   friend class ApiUtils;
@@ -62,19 +53,36 @@ private:
 };
 
 
+/**
+ * Type query operator.  Is<X>(o) return true if o is an X, false
+ * otherwise.
+ */
+template <class C> inline bool is(NValue obj) {
+  return obj.type() == C::kTag;
+}
+
+
+template <class C> C cast(NValue obj) {
+  if (!is<C>(obj)) obj = obj.nothing();
+  return *reinterpret_cast<C*>(&obj);
+}
+
+
 NValue NValue::nothing() {
-  return NValue(methods(), 0);
+  return NValue(methods_, 0);
 }
 
 
 class NInteger : public NValue {
 public:
+  static const ValueType kTag = vtInteger;
   inline int value() { return (this->*(methods().integer_value_))(); }
 };
 
 
 class NString : public NValue {
 public:
+  static const ValueType kTag = vtString;
   inline int length() { return (this->*(methods().string_length_))(); }
   inline const char *c_str() { return (this->*(methods().string_c_str_))(); }
   inline char operator[](int index) { return ((this->*(methods().string_get_)))(index); }
@@ -83,14 +91,28 @@ public:
 
 class NTuple : public NValue {
 public:
+  static const ValueType kTag = vtTuple;
   inline int length() { return ((this->*(methods().tuple_length_)))(); }
   inline NValue operator[](int index) { return ((this->*(methods().tuple_get_)))(index); }
 };
 
 
+template <typename T>
+class NBuffer : public NValue {
+public:
+  static const ValueType kTag = vtBuffer;
+  inline T &operator[](int index) { return *static_cast<T*>(((this->*(methods().buffer_get_)))(sizeof(T) * index)); }
+};
+
+
+class NNull : public NValue {
+public:
+};
+
+
 class IExternalChannel {
 public:
-  virtual int receive(NValue message) = 0;
+  virtual NValue receive(IMessage &message) = 0;
 };
 
 
@@ -100,34 +122,42 @@ public:
 };
 
 
+class IMessage {
+public:
+  virtual NValue contents() = 0;
+  virtual IMessageContext &context() = 0;
+};
+
+
+class IMessageContext {
+public:
+  virtual IValueFactory &factory() = 0;
+};
+
+
+class IValueFactory {
+public:
+  virtual NInteger new_integer(int value) = 0;
+  virtual NNull get_null() = 0;
+  virtual NString new_string(const char *data, unsigned length) = 0;
+  template <typename T> NBuffer<T> new_buffer(unsigned elms);
+private:
+  virtual NValue new_raw_buffer(unsigned total_size) = 0;
+};
+
+
 // -------------------------------------
 // --- I m p l e m e n t a t i o n s ---
 // -------------------------------------
 
 
-NValue::NValue(ValueDTable &methods, void *origin)
-  : methods_(&methods)
+NValue::NValue(ValueDTable *methods, void *origin)
+  : methods_(methods)
   , origin_(origin) { }
 
 
-template <class C> C cast(NValue obj) {
-  if (!is<C>(obj)) obj = obj.nothing();
-  return *reinterpret_cast<C*>(&obj);
-}
-
-
-template <> inline bool is<NString>(NValue obj) {
-  return obj.type() == vtString;
-}
-
-
-template <> inline bool is<NTuple>(NValue obj) {
-  return obj.type() == vtTuple;
-}
-
-
-template <> inline bool is<NInteger>(NValue obj) {
-  return obj.type() == vtInteger;
+template <typename T> NBuffer<T> IValueFactory::new_buffer(unsigned elms) {
+  return cast< NBuffer<T> >(new_raw_buffer(sizeof(T) * elms));
 }
 
 

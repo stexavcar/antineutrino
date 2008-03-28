@@ -49,6 +49,7 @@ class Data;
 class Dictionary;
 class DoClause;
 class DoOnExpression;
+class ExtendedValueDTable;
 class Factory;
 class False;
 class ForwarderDescriptor;

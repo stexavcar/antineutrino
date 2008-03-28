@@ -197,9 +197,6 @@ class Lambda(Expression):
       if parser.INTERNAL in self.modifiers_:
         index = consts.builtin_functions[name].index
         self.body_ = Return(InternalCall(len(params), index))
-      else:
-        assert parser.NATIVE in self.modifiers_
-        self.body_ = Return(NativeCall(len(params), name))
     else:
       self.body_ = body
 
@@ -591,23 +588,6 @@ class InternalCall(Expression):
     return values.InternalCall(self.argc_, self.index_)
 
 
-class NativeCall(Expression):
-
-  def __init__(self, argc, name):
-    super(NativeCall, self).__init__()
-    self.argc_ = argc
-    self.name_ = name
-
-  def accept(self, visitor):
-    visitor.visit_native_call(self)
-
-  def traverse(self, visitor):
-    pass
-
-  def quote(self):
-    return values.NativeCall(self.argc_, self.name_)
-
-
 class LocalDefinition(Expression):
 
   def __init__(self, symbol, value, body):
@@ -786,9 +766,6 @@ class Visitor(object):
     self.visit_tree(that)
 
   def visit_interpolate(self, that):
-    self.visit_tree(that)
-
-  def visit_native_call(self, that):
     self.visit_tree(that)
 
   def visit_local_definition(self, that):

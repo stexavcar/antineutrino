@@ -19,7 +19,7 @@ inline T *own_ptr<T, D>::release() {
 
 template <typename T>
 own_vector<T>::~own_vector() {
-  delete[] value_.data();
+  delete[] value_.start();
 }
 
 template <typename T>

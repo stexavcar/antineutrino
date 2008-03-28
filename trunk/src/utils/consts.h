@@ -96,7 +96,6 @@
   VISIT(71, DO_ON_EXPRESSION,       DoOnExpression,        do_on_expression)       \
   VISIT(72, INSTANTIATE_EXPRESSION, InstantiateExpression, instantiate_expression) \
   VISIT(75, ARGUMENTS,              Arguments,             arguments)              \
-  VISIT(76, EXTERNAL_CALL,          ExternalCall,          external_call)          \
   VISIT(78, TASK_EXPRESSION,        TaskExpression,        task_expression)        \
   VISIT(79, YIELD_EXPRESSION,       YieldExpression,       yield_expression)       \
   VISIT(80, ASSIGNMENT,             Assignment,            assignment)             \
@@ -227,9 +226,6 @@
   VISIT(1, Parameters,            PositionCountOffset)               \
   VISIT(2, Parameters,            ParametersOffset)                  \
   VISIT(3, Parameters,            Size)                              \
-  VISIT(1, ExternalCall,          ArgcOffset)                        \
-  VISIT(2, ExternalCall,          NameOffset)                        \
-  VISIT(3, ExternalCall,          Size)                              \
   VISIT(1, Selector,              NameOffset)                        \
   VISIT(2, Selector,              ArgcOffset)                        \
   VISIT(3, Selector,              KeywordsOffset)                    \
@@ -301,7 +297,6 @@
   VISIT(46, Layout,     signature_layout,              Signature,             allocate_empty_layout(tSignature))             \
   VISIT(47, Layout,     forwarder_descriptor_layout,   ForwarderDescriptor,   allocate_empty_layout(tForwarderDescriptor))   \
   VISIT(48, Layout,     arguments_layout,              Arguments,             allocate_empty_layout(tArguments))             \
-  VISIT(49, Layout,     external_call_layout,          ExternalCall,          allocate_empty_layout(tExternalCall))          \
   VISIT(50, Layout,     selector_layout,               Selector,              allocate_empty_layout(tSelector))              \
   VISIT(51, Layout,     task_expression_layout,        TaskExpression,        allocate_empty_layout(tTaskExpression))        \
   VISIT(52, Layout,     yield_expression_layout,       YieldExpression,       allocate_empty_layout(tYieldExpression))       \

@@ -46,26 +46,36 @@ DEFINE_REF_CLASS(Channel);
 class ApiUtils {
 public:
   template <class C> static C *open(NValue *obj);
+  template <class C> static C wrap(Value *obj);
   static void *close(FImmediate *value);
-  static NValue new_value(ValueDTable &methods, void *origin);  
-  static NValue new_value(NValue *source, void *origin);
+  static NValue new_value(ExtendedValueDTable &methods, void *origin);  
+  static NValue new_value_from(NValue *source, void *origin);
   static Data *send_message(Runtime &runtime, IExternalChannel &channel,
       Immediate *message);
 };
 
 
-class FrozenValueDTableImpl : public ValueDTable {
+/**
+ * This d-table adds a few methods that we need internally.  Any
+ * d-table used with values must be a subclass of this.
+ */
+struct ExtendedValueDTable : public ValueDTable {
+  Data *(NValue::*value_to_data_)();
+};
+
+
+class FrozenValueDTableImpl : public ExtendedValueDTable {
 public:
-  static ValueDTable &instance() { return instance_; }
+  static ExtendedValueDTable &instance() { return instance_; }
 private:
   FrozenValueDTableImpl();
   static FrozenValueDTableImpl instance_;
 };
 
 
-class LiveValueDTableImpl : public ValueDTable {
+class LiveValueDTableImpl : public ExtendedValueDTable {
 public:
-  static ValueDTable &instance() { return instance_; }
+  static ExtendedValueDTable &instance() { return instance_; }
 private:
   LiveValueDTableImpl();
   static LiveValueDTableImpl instance_;

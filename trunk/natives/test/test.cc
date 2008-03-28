@@ -5,16 +5,17 @@ namespace neutrino {
 
 class TestNativesChannel : public IExternalChannel {
 public:
-  virtual int receive(NValue value);
+  virtual NValue receive(IMessage &value);
 };
 
-int TestNativesChannel::receive(NValue value) {
-  NTuple args = cast<NTuple>(value);
-  NInteger a_obj = cast<NInteger>(args[1]);
+NValue TestNativesChannel::receive(IMessage &message) {
+  NTuple args = cast<NTuple>(message.contents());
+  NInteger a_obj = cast<NInteger>(args[0]);
   int a = a_obj.value();
-  NInteger b_obj = cast<NInteger>(args[2]);
+  NInteger b_obj = cast<NInteger>(args[1]);
   int b = b_obj.value();
-  return (a < b) ? a : b;
+  int result = (a < b) ? a : b;
+  return message.context().factory().new_integer(result);
 }
 
 extern "C" void configure_neptune_test_natives_channel(IExternalChannelConfiguration &config) {

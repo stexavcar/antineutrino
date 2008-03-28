@@ -258,6 +258,10 @@ Data *Heap::new_code(uword size) {
   return result;
 }
 
+Data *Heap::new_buffer(uword total_size) {
+  return new_abstract_buffer(total_size, roots().buffer_layout());
+}
+
 Data *Heap::new_abstract_buffer(uword byte_count, Layout *type) {
   uword size = AbstractBuffer::size_for(byte_count);
   Data *val = allocate_object(size, type);

@@ -417,22 +417,6 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       }
       break;
     }
-    case OC_EXTERNAL: {
-      uint16_t argc = code[pc + 1];
-      String *name_obj = cast<String>(constant_pool[code[pc + 2]]);
-      own_vector<char> name(name_obj->c_str());
-      DynamicLibraryCollection *dylibs = runtime().dylibs();
-      ASSERT(dylibs != NULL);
-      void *result = dylibs->lookup(name.data());
-      ASSERT(result != NULL);
-      typedef Value *(*External)(BuiltinArguments &);
-      External external = function_cast<External>(result);
-      BuiltinArguments args(runtime(), argc, frame);
-      Value *value = cast<Value>(external(args));
-      frame.push(value);
-      pc += OpcodeInfo<OC_EXTERNAL>::kSize;
-      break;
-    }
     case OC_YIELD: case OC_RETURN: {
       Value *value = frame.pop();
       if (frame.is_bottom())

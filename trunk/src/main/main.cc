@@ -93,7 +93,7 @@ Image *Main::read_image(string name) {
     }
   }
   fclose(file);
-  return new Image(list<word>(buffer.release().data(), size));
+  return new Image(list<word>(buffer.release().start(), size));
 }
 
 }

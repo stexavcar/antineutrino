@@ -1,47 +1,67 @@
 #include <stdio.h>
+#include "public/neutrino.h"
 
 namespace neutrino {
 
-/*
+class FileNativesChannel : public IExternalChannel {
+public:
+  virtual NValue receive(IMessage &value);
+};
 
-extern "C" Data *native_open_file(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
-  String *name_obj = cast<String>(to<String>(args[0]));
-  own_vector<char> name(name_obj->c_str());
-  FILE *file = fopen(name.data(), "r");
-  if (file == NULL) return args.runtime().roots().nuhll();
-  uword ptr = reinterpret_cast<uword>(file);
-  ASSERT_EQ(0, ptr & 0x3);
-  return Smi::from_int(ptr >> 2);
+
+static NValue open_file(IValueFactory &factory, NValue name_val) {
+  const char *name = cast<NString>(name_val).c_str();
+  FILE *file = fopen(name, "r");
+  if (file == NULL) return factory.get_null();
+  NBuffer<FILE*> buffer = factory.new_buffer<FILE*>(1);
+  buffer[0] = file;
+  return buffer;
 }
 
-extern "C" Data *native_close_file(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
-  Smi *handle_obj = cast<Smi>(to<Smi>(args[0]));
-  FILE *file = reinterpret_cast<FILE*>(handle_obj->value());
-  fclose(file);
-  return args.runtime().roots().vhoid();
-}
 
-extern "C" Data *native_read_file(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
-  Smi *handle_obj = cast<Smi>(to<Smi>(args[0]));
-  FILE *file = reinterpret_cast<FILE*>(handle_obj->value() << 2);
+static NValue read_file(IValueFactory &factory, NValue file_obj) {
+  FILE *file = cast< NBuffer<FILE*> >(file_obj)[0];
   fseek(file, 0, SEEK_END);
-  uword size = ftell(file);
+  unsigned size = ftell(file);
   rewind(file);
-  String *result = cast<String>(args.runtime().heap().new_string(size));
-  uword offset = 0;
+  char *result = new char[size + 1];
+  unsigned offset = 0;
   while (offset < size) {
-    const uword kSize = 256;
-    uint8_t bytes[kSize];
-    uword count = fread(bytes, 1, kSize, file);
-    for (uword i = 0; i < count; i++, offset++)
-      result->set(offset, bytes[i]);
+    const unsigned kSize = 256;
+    unsigned char bytes[kSize];
+    unsigned count = fread(bytes, 1, kSize, file);
+    for (unsigned i = 0; i < count; i++, offset++)
+      result[offset] = bytes[i];
   }
-  return result;
+  result[size] = '\0';
+  return factory.new_string(result, size);
 }
 
-*/
+
+static NValue close_file(IValueFactory &factory, NValue file_obj) {
+  NBuffer<FILE*> buf = cast< NBuffer<FILE*> >(file_obj);
+  FILE *file = buf[0];
+  buf[0] = NULL;
+  fclose(file);
+  return factory.get_null();
+}
+
+
+NValue FileNativesChannel::receive(IMessage &message) {
+  NTuple args = cast<NTuple>(message.contents());
+  IValueFactory &factory = message.context().factory();
+  int operation = cast<NInteger>(args[0]).value();
+  switch (operation) {
+    case 0: return open_file(factory, args[1]);
+    case 1: return read_file(factory, args[1]);
+    case 2: return close_file(factory, args[1]);
+    default: return factory.get_null();
+  }
+}
+
+extern "C" void configure_neptune_file_natives_channel(IExternalChannelConfiguration &config) {
+  FileNativesChannel *channel = new FileNativesChannel();
+  config.bind(*channel);
+}
 
 } // neutrino

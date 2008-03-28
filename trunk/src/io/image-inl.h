@@ -360,8 +360,6 @@ DEFINE_RAW_GETTER(uword,            UnquoteExpression,     index,           Inde
 DEFINE_GETTER    (String,           GlobalExpression,      name,            Name)
 DEFINE_RAW_GETTER(uword,            BuiltinCall,           argc,            Argc)
 DEFINE_RAW_GETTER(uword,            BuiltinCall,           index,           Index)
-DEFINE_GETTER    (Smi,              ExternalCall,          argc,            Argc)
-DEFINE_GETTER    (String,           ExternalCall,          name,            Name)
 DEFINE_GETTER    (Tuple,            InterpolateExpression, terms,           Terms)
 DEFINE_GETTER    (Symbol,           LocalDefinition,       symbol,          Symbol)
 DEFINE_GETTER    (SyntaxTree,       LocalDefinition,       value,           Value)

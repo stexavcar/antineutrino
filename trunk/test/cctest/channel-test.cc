@@ -48,7 +48,7 @@ void Test::simple_objects() {
   FImmediate *f_smi = heap.cook(raw_smi);
   FImmediate *f_str = heap.cook(raw_str);
   FImmediate *f_emp = heap.cook(raw_emp);
-  ValueDTable &dict = FrozenValueDTableImpl::instance();
+  ExtendedValueDTable &dict = FrozenValueDTableImpl::instance();
   
   NValue smi_val = ApiUtils::new_value(dict, f_smi);
   CHECK_EQ(vtInteger, smi_val.type());

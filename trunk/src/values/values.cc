@@ -445,6 +445,8 @@ uword Object::size_in_memory() {
     return Layout::kSize;
   case tContext:
     return Context::kSize;
+  case tChannel:
+    return Channel::kSize;
   case tTuple:
     return Tuple::size_for(cast<Tuple>(this)->length());
   case tString:

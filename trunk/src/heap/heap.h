@@ -86,6 +86,8 @@ FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
   Data *new_abstract_buffer(uword size, Layout *layout);
   
   template <typename T> Data *new_buffer(uword size);
+  
+  Data *new_buffer(uword size);
 
   Data *new_code(uword size);
 
