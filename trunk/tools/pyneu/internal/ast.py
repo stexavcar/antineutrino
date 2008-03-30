@@ -43,6 +43,9 @@ class Arguments(SyntaxTree):
     self.args_ = args
     self.keywords_ = keywords
     self.is_accessor_ = is_accessor
+  
+  def extend(self, value):
+    return Arguments(self.args_ + [value], self.keywords_, self.is_accessor_)
 
   def __len__(self):
     return len(self.args_)
@@ -183,6 +186,9 @@ class Expression(SyntaxTree):
     return False
 
   def is_identifier(self):
+    return False
+  
+  def is_invoke(self):
     return False
 
 
@@ -358,9 +364,21 @@ class Invoke(Expression):
     self.recv_ = recv
     self.name_ = name
     self.args_ = args
+  
+  def is_invoke(self):
+    return True
 
   def accept(self, visitor):
     visitor.visit_invoke(self)
+  
+  def recv(self):
+    return self.recv_
+  
+  def name(self):
+    return self.name_
+  
+  def args(self):
+    return self.args_
 
   def traverse(self, visitor):
     self.recv_.accept(visitor)

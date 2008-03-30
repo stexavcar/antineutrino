@@ -384,12 +384,20 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc += OpcodeInfo<ocNew>::kSize;
       break;
     }
-    case ocField: {
+    case ocLdField: {
       uint16_t index = code[pc + 1];
       uint16_t argc = code[pc + 2];
       Value *value = cast<Instance>(to<Instance>(frame.self(argc)))->get_field(index);
       frame.push(value);
-      pc += OpcodeInfo<ocField>::kSize;
+      pc += OpcodeInfo<ocLdField>::kSize;
+      break;
+    }
+    case ocStField: {
+      uint16_t index = code[pc + 1];
+      uint16_t argc = code[pc + 2];
+      Value *value = frame[0];
+      cast<Instance>(to<Instance>(frame.self(argc)))->set_field(index, value);
+      pc += OpcodeInfo<ocStField>::kSize;
       break;
     }
     case ocMark: {

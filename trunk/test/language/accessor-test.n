@@ -1,0 +1,42 @@
+def test_getter() {
+  def x := new { a: 1, b: 2, c: 3 };
+  assert_equals(1, x.a);
+  assert_equals(2, x.b);
+  assert_equals(3, x.c);  
+}
+
+def test_setter() {
+  def x := new { a: 1, b: 2, c: 3 };
+  assert_equals(1, x.a);
+  assert_equals(2, x.b);
+  assert_equals(3, x.c);  
+  x.a := 4;
+  assert_equals(4, x.a);
+  assert_equals(2, x.b);
+  assert_equals(3, x.c);  
+  x.b := 5;
+  assert_equals(4, x.a);
+  assert_equals(5, x.b);
+  assert_equals(3, x.c); 
+  x.c := 6;
+  assert_equals(4, x.a);
+  assert_equals(5, x.b);
+  assert_equals(6, x.c);
+  x.a := 7;
+  assert_equals(7, x.a);
+  assert_equals(5, x.b);
+  assert_equals(6, x.c);  
+  x.b := 8;
+  assert_equals(7, x.a);
+  assert_equals(8, x.b);
+  assert_equals(6, x.c); 
+  x.c := 9;
+  assert_equals(7, x.a);
+  assert_equals(8, x.b);
+  assert_equals(9, x.c);
+}
+
+def main() {
+  test_getter();
+  test_setter();
+}

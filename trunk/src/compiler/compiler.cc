@@ -7,6 +7,7 @@
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
+#include "utils/scoped-ptrs-inl.h"
 
 namespace neutrino {
 
@@ -130,10 +131,10 @@ public:
   bool is_bound() { return is_bound_; }
   uword value() { return value_; }
   void set_value(uword addr) { ASSERT(addr != kNoTarget); value_ = addr; }
-  static const uword kNoTarget = 0;
+  static const uint16_t kNoTarget = -1;
 private:
   bool is_bound_;
-  uword value_;
+  uint16_t value_;
 };
 
 SyntaxTree *Assembler::resolve_unquote(UnquoteExpression *expr) {
@@ -802,21 +803,46 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
   RefScope scope;
   ref<Tuple> terms = that.terms();
   uword term_count = terms.length() / 2;
-  ref<Tuple> methods = factory().new_tuple(term_count);
+  ref<Tuple> methods = factory().new_tuple(2 * term_count);
   ref<Signature> signature = factory().new_signature(factory().new_tuple(0));
   __ codegen(that.receiver());
   for (uword i = 0; i < term_count; i++) {
-    ref<String> keyword = cast<String>(terms.get(2 * i));
-    ref<Code> code = factory().new_code(4);
-    STATIC_CHECK(OpcodeInfo<ocField>::kArgc == 2);
-    code->at(0) = ocField;
-    code->at(1) = i;
-    code->at(2) = 0;
-    code->at(3) = ocReturn;
-    ref<Lambda> lambda = factory().new_lambda(0, code, runtime().empty_tuple(),
-        runtime().nuhll(), session().context());
-    ref<Selector> selector = factory().new_selector(keyword, Smi::from_int(0), runtime().thrue());
-    methods.set(i, factory().new_method(selector, signature, lambda));
+    ref<String> ld_keyword = cast<String>(terms.get(2 * i));
+
+    // Construct getter method for this field
+    ref<Code> ld_code = factory().new_code(4);
+    STATIC_CHECK(OpcodeInfo<ocLdField>::kArgc == 2);
+    ld_code->at(0) = ocLdField;
+    ld_code->at(1) = i;
+    ld_code->at(2) = 0;
+    ld_code->at(3) = ocReturn;
+    ref<Lambda> ld_lambda = factory().new_lambda(0, ld_code,
+        runtime().empty_tuple(), runtime().nuhll(), session().context());
+    ref<Selector> ld_selector = factory().new_selector(ld_keyword,
+        Smi::from_int(0), runtime().thrue());
+    methods.set(2 * i, factory().new_method(ld_selector, signature, ld_lambda));
+    
+    // Construct setter method for this field
+    own_vector<char> raw_name(ld_keyword.c_str());
+    string_buffer st_name;
+    st_name.append(raw_name.start());
+    st_name.append(":=");
+    ref<String> st_keyword = runtime().factory().new_string(st_name.raw_string());
+    ref<Code> st_code = factory().new_code(6);
+    STATIC_CHECK(OpcodeInfo<ocStField>::kArgc == 2);
+    STATIC_CHECK(OpcodeInfo<ocArgument>::kArgc == 1);
+    st_code->at(0) = ocArgument;
+    st_code->at(1) = 0;
+    st_code->at(2) = ocStField;
+    st_code->at(3) = i;
+    st_code->at(4) = 1;
+    st_code->at(5) = ocReturn;
+    ref<Lambda> st_lambda = factory().new_lambda(1, st_code,
+        runtime().empty_tuple(), runtime().nuhll(), session().context());
+    ref<Selector> st_selector = factory().new_selector(st_keyword, Smi::from_int(1), runtime().thrue());
+    methods.set(2 * i + 1, factory().new_method(st_selector, signature, st_lambda));
+    
+    // Load (initial) value for the field
     ref<SyntaxTree> value = cast<SyntaxTree>(terms.get(2 * i + 1));
     __ codegen(value);
   }

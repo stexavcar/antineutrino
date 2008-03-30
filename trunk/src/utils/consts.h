@@ -378,7 +378,9 @@
   VISIT(102, compile_expression, "compile_expression")               \
   VISIT(103, lift,               "lift")                             \
   VISIT(104, make_forwarder,     "make_forwarder")                   \
-  VISIT(105, set_target,         "set_target")
+  VISIT(105, set_target,         "set_target")                       \
+  VISIT(106, is_whitespace,      "is_whitespace")                    \
+  VISIT(107, is_alpha,           "is_alpha")
 
 #define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
   FOR_EACH_SPECIAL_BUILTIN_FUNCTION(VISIT)                           \

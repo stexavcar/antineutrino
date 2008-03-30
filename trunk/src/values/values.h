@@ -397,6 +397,14 @@ public:
   static const int kHeaderSize   = kLengthOffset + kPointerSize;
 };
 
+template <>
+class ref_traits<String> : public ref_traits<AbstractBuffer> {
+public:
+  inline vector<char> c_str();
+};
+
+DEFINE_REF_CLASS(String);
+
 
 // -------------------
 // --- B u f f e r ---

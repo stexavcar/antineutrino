@@ -384,18 +384,31 @@ class Parser(object):
     return result
 
   def not_expression(self):
-    return self.assignment_expression()
+    if self.token().is_keyword(NOT):
+      self.expect_keyword(NOT)
+      expr = self.not_expression()
+      return ast.Conditional(expr, ast.Literal(ast.Fahlse()), ast.Literal(ast.Thrue()))
+    else:
+      return self.assignment_expression()
 
   def assignment_expression(self):
     value = self.operator_expression(None)
     if self.token().is_delimiter(':='):
-      if not value.is_identifier():
+      if value.is_identifier():
+        local = self.resolver().lookup(value.name())
+        symbol = local.symbol()
+        self.expect_delimiter(':=')
+        rvalue = self.assignment_expression()
+        return ast.Assignment(symbol, rvalue)
+      elif value.is_invoke():
+        recv = value.recv()
+        name = value.name() + ':='
+        args = value.args()
+        self.expect_delimiter(':=')
+        rvalue = self.assignment_expression()
+        return ast.Invoke(recv, name, args.extend(rvalue))
+      else:
         self.unexpected_token()
-      local = self.resolver().lookup(value.name())
-      symbol = local.symbol()
-      self.expect_delimiter(':=')
-      rvalue = self.assignment_expression()
-      return ast.Assignment(symbol, rvalue)
     else:
       return value
  

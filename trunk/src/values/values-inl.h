@@ -365,6 +365,10 @@ uword String::size_for(uword chars) {
   return ValuePointer::align(raw_size);
 }
 
+vector<char> ref_traits<String>::c_str() {
+  return open(this)->c_str();
+}
+
 
 // -----------------
 // --- S t a c k ---

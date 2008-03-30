@@ -24,9 +24,9 @@ namespace neutrino {
   VISIT(18, ChkHgt, 1)   VISIT(19, Outer,  1)   VISIT(20, Closure,  2) \
   VISIT(21, Quote,  1)   VISIT(22, Unquote, 1)  VISIT(23, Raise,    2) \
   VISIT(24, Mark,   1)   VISIT(25, Unmark, 0)   VISIT(26, New,      1) \
-  VISIT(27, Field,  2)   VISIT(28, IfFalse, 1)  VISIT(29, Task,     0) \
+  VISIT(27, LdField, 2)  VISIT(28, IfFalse, 1)  VISIT(29, Task,     0) \
   VISIT(30, Yield,  0)   VISIT(31, StLocal, 1)  VISIT(32, Attach,   0) \
-  VISIT(33, Keyword, 1)
+  VISIT(33, Keyword, 1)  VISIT(34, StField, 2)
 
 enum Opcode {
   __first_opcode = -1

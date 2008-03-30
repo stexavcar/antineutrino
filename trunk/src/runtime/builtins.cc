@@ -6,6 +6,8 @@
 #include "utils/globals.h"
 #include "values/values-inl.h"
 
+#include <ctype.h>
+
 namespace neutrino {
 
 // -----------------------------------
@@ -81,6 +83,26 @@ Data *Builtins::string_get(BuiltinArguments &args) {
   SIGNAL_CHECK(Smi, index, to<Smi>(args[0]));
   char c = self->at(index->value());
   return args.runtime().heap().new_string(string(&c, 1));
+}
+
+Data *Builtins::is_whitespace(BuiltinArguments &args) {
+  ASSERT_EQ(0, args.count());
+  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  for (uword i = 0; i < self->length(); i++) {
+    if (!isspace(self->at(i)))
+      return args.runtime().roots().fahlse();
+  }
+  return args.runtime().roots().thrue();
+}
+
+Data *Builtins::is_alpha(BuiltinArguments &args) {
+  ASSERT_EQ(0, args.count());
+  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  for (uword i = 0; i < self->length(); i++) {
+    if (!isalpha(self->at(i)))
+      return args.runtime().roots().fahlse();
+  }
+  return args.runtime().roots().thrue();
 }
 
 
