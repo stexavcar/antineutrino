@@ -10,7 +10,7 @@
 namespace neutrino {
 
 MAKE_ENUM_INFO_HEADER(Opcode)
-#define MAKE_ENTRY(n, NAME, argc) MAKE_ENUM_INFO_ENTRY(OC_##NAME)
+#define MAKE_ENTRY(n, Name, argc) MAKE_ENUM_INFO_ENTRY(oc##Name)
 FOR_EACH_OPCODE(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
@@ -213,21 +213,21 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     uint16_t oc = code[pc];
     Log::instruction(oc, frame);
     switch (oc) {
-    case OC_PUSH: {
+    case ocPush: {
       uint16_t index = code[pc + 1];
       Value *value = constant_pool[index];
       frame.push(value);
-      pc += OpcodeInfo<OC_PUSH>::kSize;
+      pc += OpcodeInfo<ocPush>::kSize;
       break;
     }
-    case OC_SLAP: {
+    case ocSlap: {
       uint16_t height = code[pc + 1];
       frame[height] = frame[0];
       frame.pop(height);
-      pc += OpcodeInfo<OC_SLAP>::kSize;
+      pc += OpcodeInfo<ocSlap>::kSize;
       break;
     }
-    case OC_GLOBAL: {
+    case ocGlobal: {
       uint16_t index = code[pc + 1];
       Value *name = constant_pool[index];
       Data *value = runtime().toplevel()->get(name);
@@ -236,53 +236,63 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       } else {
         frame.push(cast<Value>(value));
       }
-      pc += OpcodeInfo<OC_GLOBAL>::kSize;
+      pc += OpcodeInfo<ocGlobal>::kSize;
       break;
     }
-    case OC_LD_LOCAL: {
+    case ocLdLocal: {
       uint16_t index = code[pc + 1];
       Value *value = frame.local(index);
       frame.push(value);
-      pc += OpcodeInfo<OC_LD_LOCAL>::kSize;
+      pc += OpcodeInfo<ocLdLocal>::kSize;
       break;
     }
-    case OC_ST_LOCAL: {
+    case ocStLocal: {
       uint16_t index = code[pc + 1];
       frame.local(index) = frame[0];
-      pc += OpcodeInfo<OC_ST_LOCAL>::kSize;
+      pc += OpcodeInfo<ocStLocal>::kSize;
       break;
     }
-    case OC_ARGUMENT: {
+    case ocArgument: {
       uint16_t index = code[pc + 1];
       Value *value = frame.argument(index);
       frame.push(value);
-      pc += OpcodeInfo<OC_ARGUMENT>::kSize;
+      pc += OpcodeInfo<ocArgument>::kSize;
       break;
     }
-    case OC_KEYWORD: {
+    case ocKeyword: {
       uint16_t index = code[pc + 1];
       Tuple *keymap = cast<Tuple>(frame.local(0));
       uword offset = cast<Smi>(keymap->get(index))->value();
       frame.push(frame.argument(offset));
-      pc += OpcodeInfo<OC_KEYWORD>::kSize;
+      pc += OpcodeInfo<ocKeyword>::kSize;
       break;
     }
-    case OC_IF_TRUE: {
+    case ocIfTrue: {
       Value *value = frame.pop();
       if (is<True>(value)) {
         uint16_t index = code[pc + 1];
         pc = index;
       } else {
-        pc += OpcodeInfo<OC_IF_TRUE>::kSize;
+        pc += OpcodeInfo<ocIfTrue>::kSize;
       }
       break;
     }
-    case OC_GOTO: {
+    case ocIfFalse: {
+      Value *value = frame.pop();
+      if (is<False>(value)) {
+        uint16_t index = code[pc + 1];
+        pc = index;
+      } else {
+        pc += OpcodeInfo<ocIfFalse>::kSize;
+      }
+      break;
+    }
+    case ocGoto: {
       uint16_t address = code[pc + 1];
       pc = address;
       break;
     }
-    case OC_INVOKE: {
+    case ocInvoke: {
       uint16_t selector_index = code[pc + 1];
       Selector *selector = cast<Selector>(constant_pool[selector_index]);
       Tuple *keymap = cast<Tuple>(constant_pool[code[pc + 3]]);
@@ -298,7 +308,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       }
       Method *method = cast<Method>(lookup_result);
       frame.push_activation();
-      frame.prev_pc() = pc + OpcodeInfo<OC_INVOKE>::kSize;
+      frame.prev_pc() = pc + OpcodeInfo<ocInvoke>::kSize;
       frame.lambda() = method->lambda();
       method->lambda()->ensure_compiled();
       code = cast<Code>(method->lambda()->code())->buffer();
@@ -308,7 +318,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc = 0;
       break;
     }
-    case OC_RAISE: {
+    case ocRaise: {
       uint16_t name_index = code[pc + 1];
       Value *name = constant_pool[name_index];
       uint16_t argc = code[pc + 2];
@@ -321,7 +331,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
             Lambda *lambda = cast<Lambda>(handlers->get(i + 1));
             lambda->ensure_compiled();
             frame.push_activation();
-            frame.prev_pc() = pc + OpcodeInfo<OC_RAISE>::kSize;
+            frame.prev_pc() = pc + OpcodeInfo<ocRaise>::kSize;
             frame.lambda() = lambda;
             code = cast<Code>(lambda->code())->buffer();
             constant_pool = cast<Tuple>(lambda->constant_pool())->buffer();
@@ -334,28 +344,28 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       {
         BuiltinArguments args(runtime(), argc, frame);
         unhandled_condition(name, args);
-        pc += OpcodeInfo<OC_RAISE>::kSize;
+        pc += OpcodeInfo<ocRaise>::kSize;
       }
      end:
       break;
     }
-    case OC_CALL: {
+    case ocCall: {
       uint16_t argc = code[pc + 1];
       Value *value = frame[argc];
       Lambda *fun = cast<Lambda>(value);
       fun->ensure_compiled();
       frame.push_activation();
-      frame.prev_pc() = pc + OpcodeInfo<OC_CALL>::kSize;
+      frame.prev_pc() = pc + OpcodeInfo<ocCall>::kSize;
       frame.lambda() = fun;
       code = cast<Code>(fun->code())->buffer();
       constant_pool = cast<Tuple>(fun->constant_pool())->buffer();
       pc = 0;
       break;
     }
-    case OC_ATTACH: {
+    case ocAttach: {
       UNREACHABLE();
     }
-    case OC_NEW: {
+    case ocNew: {
       uint16_t layout_template_index = code[pc + 1];
       Layout *layout_template = cast<Layout>(constant_pool[layout_template_index]);
       uword field_count = layout_template->instance_field_count();
@@ -371,18 +381,18 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
         instance->set_field(i, frame.pop());
       frame.pop(); // Pop the protocol
       frame.push(instance);
-      pc += OpcodeInfo<OC_NEW>::kSize;
+      pc += OpcodeInfo<ocNew>::kSize;
       break;
     }
-    case OC_FIELD: {
+    case ocField: {
       uint16_t index = code[pc + 1];
       uint16_t argc = code[pc + 2];
       Value *value = cast<Instance>(to<Instance>(frame.self(argc)))->get_field(index);
       frame.push(value);
-      pc += OpcodeInfo<OC_FIELD>::kSize;
+      pc += OpcodeInfo<ocField>::kSize;
       break;
     }
-    case OC_MARK: {
+    case ocMark: {
       uint16_t data_index = code[pc + 1];
       Value *data = constant_pool[data_index];
       Marker mark = frame.push_marker();
@@ -390,20 +400,20 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       word *current_marker = stack->top_marker();
       mark.set_prev_mp(current_marker);
       stack->set_top_marker(mark.mp());
-      pc += OpcodeInfo<OC_MARK>::kSize;
+      pc += OpcodeInfo<ocMark>::kSize;
       break;
     }
-    case OC_UNMARK: {
+    case ocUnmark: {
       Value *value = frame.pop();
       Marker mark = frame.pop_marker();
       word *marker_value = mark.prev_mp();
       ASSERT(ValuePointer::has_smi_tag(marker_value));
       stack->set_top_marker(marker_value);
       frame.push(value);
-      pc += OpcodeInfo<OC_UNMARK>::kSize;
+      pc += OpcodeInfo<ocUnmark>::kSize;
       break;
     }
-    case OC_BUILTIN: {
+    case ocBuiltin: {
       uint16_t argc = code[pc + 1];
       uint16_t index = code[pc + 2];
       builtin *builtin = Builtins::get(index);
@@ -413,11 +423,11 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
         break;
       } else {
         frame.push(value);
-        pc += OpcodeInfo<OC_BUILTIN>::kSize;
+        pc += OpcodeInfo<ocBuiltin>::kSize;
       }
       break;
     }
-    case OC_YIELD: case OC_RETURN: {
+    case ocYield: case ocReturn: {
       Value *value = frame.pop();
       if (frame.is_bottom())
         return value;
@@ -428,33 +438,33 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       frame[0] = value;
       break;
     }
-    case OC_VOID: {
+    case ocVoid: {
       frame.push(runtime().roots().vhoid());
-      pc += OpcodeInfo<OC_VOID>::kSize;
+      pc += OpcodeInfo<ocVoid>::kSize;
       break;
     }
-    case OC_NULL: {
+    case ocNull: {
       frame.push(runtime().roots().nuhll());
-      pc += OpcodeInfo<OC_NULL>::kSize;
+      pc += OpcodeInfo<ocNull>::kSize;
       break;
     }
-    case OC_TRUE: {
+    case ocTrue: {
       frame.push(runtime().roots().thrue());
-      pc += OpcodeInfo<OC_TRUE>::kSize;
+      pc += OpcodeInfo<ocTrue>::kSize;
       break;
     }
-    case OC_FALSE: {
+    case ocFalse: {
       frame.push(runtime().roots().fahlse());
-      pc += OpcodeInfo<OC_FALSE>::kSize;
+      pc += OpcodeInfo<ocFalse>::kSize;
       break;
     }
-    case OC_POP: {
+    case ocPop: {
       uint16_t height = code[pc + 1];
       frame.pop(height);
-      pc += OpcodeInfo<OC_POP>::kSize;
+      pc += OpcodeInfo<ocPop>::kSize;
       break;
     }
-    case OC_TUPLE: {
+    case ocTuple: {
       uint16_t length = code[pc + 1];
       Data *val = runtime().heap().new_tuple(length);
       if (is<Signal>(val)) return val;
@@ -462,16 +472,16 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       for (word i = length - 1; i >= 0; i--)
         result->set(i, frame.pop());
       frame.push(result);
-      pc += OpcodeInfo<OC_TUPLE>::kSize;
+      pc += OpcodeInfo<ocTuple>::kSize;
       break;
     }
-    case OC_CHKHGT: {
+    case ocChkHgt: {
       uint16_t expected = code[pc + 1];
       CHECK_EQ(expected, frame.locals());
-      pc += OpcodeInfo<OC_CHKHGT>::kSize;
+      pc += OpcodeInfo<ocChkHgt>::kSize;
       break;
     }
-    case OC_CONCAT: {
+    case ocConcat: {
       uword terms = code[pc + 1];
       uword length = 0;
       for (uword i = 0; i < terms; i++)
@@ -488,10 +498,10 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       }
       frame.pop(terms);
       frame.push(result);
-      pc += OpcodeInfo<OC_CONCAT>::kSize;
+      pc += OpcodeInfo<ocConcat>::kSize;
       break;
     }
-    case OC_CLOSURE: {
+    case ocClosure: {
       uword index = code[pc + 1];
       Lambda *lambda = cast<Lambda>(constant_pool[index]);
       uword outer_count = cast<Code>(frame.lambda()->code())->at(pc + 2);
@@ -505,10 +515,10 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Lambda *clone = cast<Lambda>(clone_val);
       clone->set_outers(outers);
       frame.push(clone);
-      pc += OpcodeInfo<OC_CLOSURE>::kSize;
+      pc += OpcodeInfo<ocClosure>::kSize;
       break;
     }
-    case OC_TASK: {
+    case ocTask: {
       Lambda *lambda = cast<Lambda>(frame.pop());
       Data *task_val = runtime().heap().new_task();
       if (is<Signal>(task_val)) return task_val;
@@ -516,17 +526,17 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       RefScope scope;
       prepare_call(new_ref(task), new_ref(lambda), 0);
       frame.push(task);
-      pc += OpcodeInfo<OC_TASK>::kSize;
+      pc += OpcodeInfo<ocTask>::kSize;
       break;
     }
-    case OC_OUTER: {
+    case ocOuter: {
       uword index = code[pc + 1];
       Value *value = frame.lambda()->outers()->get(index);
       frame.push(value);
-      pc += OpcodeInfo<OC_OUTER>::kSize;
+      pc += OpcodeInfo<ocOuter>::kSize;
       break;
     }
-    case OC_QUOTE: {
+    case ocQuote: {
       uword unquote_count = code[pc + 1];
       Data *unquotes_val = runtime().heap().new_tuple(unquote_count);
       if (is<Signal>(unquotes_val)) return unquotes_val;
@@ -538,7 +548,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       if (is<Signal>(result_val)) return result_val;
       QuoteTemplate *result = cast<QuoteTemplate>(result_val);
       frame.push(result);
-      pc += OpcodeInfo<OC_QUOTE>::kSize;
+      pc += OpcodeInfo<ocQuote>::kSize;
       break;
     }
     default:

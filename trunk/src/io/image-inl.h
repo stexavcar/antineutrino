@@ -339,6 +339,8 @@ DEFINE_GETTER    (Arguments,        CallExpression,        arguments,       Argu
 DEFINE_GETTER    (SyntaxTree,       ConditionalExpression, condition,       Condition)
 DEFINE_GETTER    (SyntaxTree,       ConditionalExpression, then_part,       ThenPart)
 DEFINE_GETTER    (SyntaxTree,       ConditionalExpression, else_part,       ElsePart)
+DEFINE_GETTER    (SyntaxTree,       WhileExpression,       condition,       Condition)
+DEFINE_GETTER    (SyntaxTree,       WhileExpression,       body,            Body)
 DEFINE_GETTER    (String,           ProtocolExpression,    name,            Name)
 DEFINE_GETTER    (Tuple,            ProtocolExpression,    methods,         Methods)
 DEFINE_GETTER    (Immediate,        ProtocolExpression,    super,           Super)

@@ -320,96 +320,96 @@ static void disassemble_buffer(uint16_t *data, uword size,
   while (pc < size) {
     buf.printf("%{ 3} ", pc);
     switch (data[pc]) {
-      case OC_ARGUMENT:
+      case ocArgument:
         buf.printf("argument %", data[pc + 1]);
-        pc += OpcodeInfo<OC_ARGUMENT>::kSize;
+        pc += OpcodeInfo<ocArgument>::kSize;
         break;
-      case OC_LD_LOCAL:
+      case ocLdLocal:
         buf.printf("load local %", data[pc + 1]);
-        pc += OpcodeInfo<OC_LD_LOCAL>::kSize;
+        pc += OpcodeInfo<ocLdLocal>::kSize;
         break;
-      case OC_GLOBAL: {
+      case ocGlobal: {
         scoped_string name(literals->get(data[pc + 1])->to_string());
         buf.printf("global %", name.chars());
-        pc += OpcodeInfo<OC_GLOBAL>::kSize;
+        pc += OpcodeInfo<ocGlobal>::kSize;
         break;
       }
-      case OC_BUILTIN: {
+      case ocBuiltin: {
         buf.printf("built-in %", data[pc + 1]);
-        pc += OpcodeInfo<OC_BUILTIN>::kSize;
+        pc += OpcodeInfo<ocBuiltin>::kSize;
         break;
       }
-      case OC_PUSH: {
+      case ocPush: {
         scoped_string value(literals->get(data[pc + 1])->to_string());
         buf.printf("push %", value.chars());
-        pc += OpcodeInfo<OC_PUSH>::kSize;
+        pc += OpcodeInfo<ocPush>::kSize;
         break;
       }
-      case OC_SLAP:
+      case ocSlap:
         buf.printf("slap %", data[pc + 1]);
-        pc += OpcodeInfo<OC_SLAP>::kSize;
+        pc += OpcodeInfo<ocSlap>::kSize;
         break;
-      case OC_POP:
+      case ocPop:
         buf.printf("pop %", data[pc + 1]);
-        pc += OpcodeInfo<OC_POP>::kSize;
+        pc += OpcodeInfo<ocPop>::kSize;
         break;
-      case OC_CALL: {
+      case ocCall: {
         buf.printf("call %", data[pc + 1]);
-        pc += OpcodeInfo<OC_CALL>::kSize;
+        pc += OpcodeInfo<ocCall>::kSize;
         break;
       }
-      case OC_INVOKE: {
+      case ocInvoke: {
         scoped_string name(literals->get(data[pc + 1])->to_string());
         buf.printf("invoke %", name.chars());
-        pc += OpcodeInfo<OC_INVOKE>::kSize;
+        pc += OpcodeInfo<ocInvoke>::kSize;
         break;
       }
-      case OC_RAISE: {
+      case ocRaise: {
         scoped_string name(literals->get(data[pc + 1])->to_string());
         buf.printf("raise %", name.chars());
-        pc += OpcodeInfo<OC_RAISE>::kSize;
+        pc += OpcodeInfo<ocRaise>::kSize;
         break;
       }
-      case OC_NEW: {
+      case ocNew: {
         buf.append("new");
-        pc += OpcodeInfo<OC_NEW>::kSize;
+        pc += OpcodeInfo<ocNew>::kSize;
         break;
       }
-      case OC_CLOSURE:
+      case ocClosure:
         buf.printf("closure % %", data[pc + 1], data[pc + 2]);
-        pc += OpcodeInfo<OC_CLOSURE>::kSize;
+        pc += OpcodeInfo<ocClosure>::kSize;
         break;
-      case OC_IF_TRUE:
+      case ocIfTrue:
         buf.printf("if_true %", data[pc + 1]);
-        pc += OpcodeInfo<OC_IF_TRUE>::kSize;
+        pc += OpcodeInfo<ocIfTrue>::kSize;
         break;
-      case OC_GOTO:
+      case ocGoto:
         buf.printf("goto %", data[pc + 1]);
-        pc += OpcodeInfo<OC_GOTO>::kSize;
+        pc += OpcodeInfo<ocGoto>::kSize;
         break;
-      case OC_VOID:
+      case ocVoid:
         buf.append("void");
-        pc += OpcodeInfo<OC_VOID>::kSize;
+        pc += OpcodeInfo<ocVoid>::kSize;
         break;
-      case OC_NULL:
+      case ocNull:
         buf.append("null");
-        pc += OpcodeInfo<OC_NULL>::kSize;
+        pc += OpcodeInfo<ocNull>::kSize;
         break;
-      case OC_RETURN:
+      case ocReturn:
         buf.append("return");
-        pc += OpcodeInfo<OC_RETURN>::kSize;
+        pc += OpcodeInfo<ocReturn>::kSize;
         break;
-      case OC_CONCAT:
+      case ocConcat:
         buf.printf("concat %", data[pc + 1]);
-        pc += OpcodeInfo<OC_CONCAT>::kSize;
+        pc += OpcodeInfo<ocConcat>::kSize;
         break;
-      case OC_CHKHGT:
+      case ocChkHgt:
         buf.printf("check height %", data[pc + 1]);
-        pc += OpcodeInfo<OC_CHKHGT>::kSize;
+        pc += OpcodeInfo<ocChkHgt>::kSize;
         break;
-      case OC_TUPLE:
+      case ocTuple:
         buf.printf("tuple %", data[pc + 1]);
-        pc += OpcodeInfo<OC_TUPLE>::kSize;
+        pc += OpcodeInfo<ocTuple>::kSize;
         break;
       default:
         UNHANDLED(Opcode, data[pc]);

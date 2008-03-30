@@ -127,11 +127,11 @@ template <Opcode opcode>
 class OpcodeInfo { };
 
 // Generate specializations for the opcodes
-#define DECLARE_OPCODE_INFO(n, NAME, argc)                           \
-  template <> class OpcodeInfo<OC_##NAME> {                          \
+#define DECLARE_OPCODE_INFO(n, Name, argc)                           \
+  template <> class OpcodeInfo<oc##Name> {                           \
   public:                                                            \
-    static const uword kArgc = argc;                              \
-    static const uword kSize = argc + 1;                          \
+    static const uword kArgc = argc;                                 \
+    static const uword kSize = argc + 1;                             \
   };
 FOR_EACH_OPCODE(DECLARE_OPCODE_INFO)
 #undef DECLARE_OPCODE_INFO

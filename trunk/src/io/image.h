@@ -256,6 +256,12 @@ public:
   DECLARE_IMAGE_FIELD(SyntaxTree, else_part);
 };
 
+class FWhileExpression : public FSyntaxTree {
+public:
+  DECLARE_IMAGE_FIELD(SyntaxTree, condition);
+  DECLARE_IMAGE_FIELD(SyntaxTree, body);
+};
+
 class FProtocolExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(String, name);

@@ -75,7 +75,7 @@
   (regexp-opt
    '("def" "new" "internal" "and" "or" "not" "if" "else" "return" "fn"
      "in" "while" "do" "operator" "on" "raise" "protocol" "native"
-     "static" "task" "yield" "var" "channel")
+     "static" "task" "yield" "var" "channel" "while")
    'words))
 
 (defconst neutrino-constants-regexp

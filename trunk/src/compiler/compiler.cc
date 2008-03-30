@@ -86,6 +86,7 @@ public:
   void task();
   void yield();
   void if_true(Label &label);
+  void if_false(Label &label);
   void ghoto(Label &label);
   void bind(Label &label);
   void builtin(uint16_t argc, uint16_t index);
@@ -171,177 +172,184 @@ uint16_t Assembler::constant_pool_index(ref<Value> value) {
 void Assembler::adjust_stack_height(word delta) {
   ASSERT_GE(stack_height() + delta, 0);
   stack_height_ += delta;
-  IF_PARANOID(code().append(OC_CHKHGT));
+  IF_PARANOID(code().append(ocChkHgt));
   IF_PARANOID(code().append(stack_height()));
 }
 
 void Assembler::invoke(ref<Selector> selector, uint16_t argc,
     ref<Tuple> keymap) {
-  STATIC_CHECK(OpcodeInfo<OC_INVOKE>::kArgc == 3);
+  STATIC_CHECK(OpcodeInfo<ocInvoke>::kArgc == 3);
   uint16_t selector_index = constant_pool_index(selector);
   uint16_t keymap_index = constant_pool_index(keymap);
-  code().append(OC_INVOKE);
+  code().append(ocInvoke);
   code().append(selector_index);
   code().append(argc);
   code().append(keymap_index);
 }
 
 void Assembler::instantiate(ref<Layout> layout) {
-  STATIC_CHECK(OpcodeInfo<OC_NEW>::kArgc == 1);
+  STATIC_CHECK(OpcodeInfo<ocNew>::kArgc == 1);
   uint16_t layout_index = constant_pool_index(layout);
-  code().append(OC_NEW);
+  code().append(ocNew);
   code().append(layout_index);
   adjust_stack_height(-static_cast<word>(layout->instance_field_count()));
 }
 
 void Assembler::raise(ref<String> name, uint16_t argc) {
-  STATIC_CHECK(OpcodeInfo<OC_RAISE>::kArgc == 2);
+  STATIC_CHECK(OpcodeInfo<ocRaise>::kArgc == 2);
   uint16_t name_index = constant_pool_index(name);
-  code().append(OC_RAISE);
+  code().append(ocRaise);
   code().append(name_index);
   code().append(argc);
 }
 
 void Assembler::call(uint16_t argc) {
-  STATIC_CHECK(OpcodeInfo<OC_CALL>::kArgc == 1);
-  code().append(OC_CALL);
+  STATIC_CHECK(OpcodeInfo<ocCall>::kArgc == 1);
+  code().append(ocCall);
   code().append(argc);
 }
 
 void Assembler::push(ref<Value> value) {
-  STATIC_CHECK(OpcodeInfo<OC_PUSH>::kArgc == 1);
+  STATIC_CHECK(OpcodeInfo<ocPush>::kArgc == 1);
   uint16_t index = constant_pool_index(value);
-  code().append(OC_PUSH);
+  code().append(ocPush);
   code().append(index);
   adjust_stack_height(1);
 }
 
 void Assembler::global(ref<Value> value) {
-  STATIC_CHECK(OpcodeInfo<OC_GLOBAL>::kArgc == 1);
+  STATIC_CHECK(OpcodeInfo<ocGlobal>::kArgc == 1);
   uint16_t index = constant_pool_index(value);
-  code().append(OC_GLOBAL);
+  code().append(ocGlobal);
   code().append(index);
   adjust_stack_height(1);
 }
 
 void Assembler::argument(uint16_t index) {
-  STATIC_CHECK(OpcodeInfo<OC_ARGUMENT>::kArgc == 1);
-  code().append(OC_ARGUMENT);
+  STATIC_CHECK(OpcodeInfo<ocArgument>::kArgc == 1);
+  code().append(ocArgument);
   code().append(index);
   adjust_stack_height(1);
 }
 
 void Assembler::keyword(uint16_t index) {
-  STATIC_CHECK(OpcodeInfo<OC_KEYWORD>::kArgc == 1);
-  code().append(OC_KEYWORD);
+  STATIC_CHECK(OpcodeInfo<ocKeyword>::kArgc == 1);
+  code().append(ocKeyword);
   code().append(index);
   adjust_stack_height(1);
 }
 
 void Assembler::load_local(uint16_t height) {
-  STATIC_CHECK(OpcodeInfo<OC_LD_LOCAL>::kArgc == 1);
-  code().append(OC_LD_LOCAL);
+  STATIC_CHECK(OpcodeInfo<ocLdLocal>::kArgc == 1);
+  code().append(ocLdLocal);
   code().append(height);
   adjust_stack_height(1);
 }
 
 void Assembler::store_local(uint16_t height) {
-  STATIC_CHECK(OpcodeInfo<OC_ST_LOCAL>::kArgc == 1);
-  code().append(OC_ST_LOCAL);
+  STATIC_CHECK(OpcodeInfo<ocStLocal>::kArgc == 1);
+  code().append(ocStLocal);
   code().append(height);
 }
 
 void Assembler::outer(uint16_t index) {
-  STATIC_CHECK(OpcodeInfo<OC_OUTER>::kArgc == 1);
-  code().append(OC_OUTER);
+  STATIC_CHECK(OpcodeInfo<ocOuter>::kArgc == 1);
+  code().append(ocOuter);
   code().append(index);
   adjust_stack_height(1);
 }
 
 void Assembler::closure(ref<Lambda> lambda, uint16_t outers) {
-  STATIC_CHECK(OpcodeInfo<OC_CLOSURE>::kArgc == 2);
+  STATIC_CHECK(OpcodeInfo<ocClosure>::kArgc == 2);
   uint16_t index = constant_pool_index(lambda);
-  code().append(OC_CLOSURE);
+  code().append(ocClosure);
   code().append(index);
   code().append(outers);
 }
 
 void Assembler::task() {
-  STATIC_CHECK(OpcodeInfo<OC_TASK>::kArgc == 0);
-  code().append(OC_TASK);
+  STATIC_CHECK(OpcodeInfo<ocTask>::kArgc == 0);
+  code().append(ocTask);
 }
 
 void Assembler::yield() {
-  STATIC_CHECK(OpcodeInfo<OC_YIELD>::kArgc == 0);
-  code().append(OC_YIELD);
+  STATIC_CHECK(OpcodeInfo<ocYield>::kArgc == 0);
+  code().append(ocYield);
 }
 
 void Assembler::pop(uint16_t height) {
-  STATIC_CHECK(OpcodeInfo<OC_POP>::kArgc == 1);
-  code().append(OC_POP);
+  STATIC_CHECK(OpcodeInfo<ocPop>::kArgc == 1);
+  code().append(ocPop);
   code().append(height);
   adjust_stack_height(-height);
 }
 
 void Assembler::slap(uint16_t height) {
-  STATIC_CHECK(OpcodeInfo<OC_SLAP>::kArgc == 1);
-  code().append(OC_SLAP);
+  STATIC_CHECK(OpcodeInfo<ocSlap>::kArgc == 1);
+  code().append(ocSlap);
   code().append(height);
   adjust_stack_height(-height);
 }
 
 void Assembler::rethurn() {
-  STATIC_CHECK(OpcodeInfo<OC_RETURN>::kArgc == 0);
+  STATIC_CHECK(OpcodeInfo<ocReturn>::kArgc == 0);
   ASSERT(stack_height() > 0);
-  code().append(OC_RETURN);
+  code().append(ocReturn);
 }
 
 void Assembler::attach() {
-  STATIC_CHECK(OpcodeInfo<OC_ATTACH>::kArgc == 0);
-  code().append(OC_ATTACH);
+  STATIC_CHECK(OpcodeInfo<ocAttach>::kArgc == 0);
+  code().append(ocAttach);
   adjust_stack_height(1);
 }
 
 void Assembler::tuple(uint16_t size) {
-  STATIC_CHECK(OpcodeInfo<OC_TUPLE>::kArgc == 1);
-  code().append(OC_TUPLE);
+  STATIC_CHECK(OpcodeInfo<ocTuple>::kArgc == 1);
+  code().append(ocTuple);
   code().append(size);
   adjust_stack_height(-(size - 1));
 }
 
 void Assembler::concat(uint16_t terms) {
-  STATIC_CHECK(OpcodeInfo<OC_CONCAT>::kArgc == 1);
-  code().append(OC_CONCAT);
+  STATIC_CHECK(OpcodeInfo<ocConcat>::kArgc == 1);
+  code().append(ocConcat);
   code().append(terms);
   adjust_stack_height(-(terms - 1));
 }
 
 void Assembler::quote(uint16_t unquotes) {
-  STATIC_CHECK(OpcodeInfo<OC_QUOTE>::kArgc == 1);
+  STATIC_CHECK(OpcodeInfo<ocQuote>::kArgc == 1);
   ASSERT(unquotes > 0);
-  code().append(OC_QUOTE);
+  code().append(ocQuote);
   code().append(unquotes);
   adjust_stack_height(-unquotes);
 }
 
 void Assembler::builtin(uint16_t argc, uint16_t index) {
-  STATIC_CHECK(OpcodeInfo<OC_BUILTIN>::kArgc == 2);
-  code().append(OC_BUILTIN);
+  STATIC_CHECK(OpcodeInfo<ocBuiltin>::kArgc == 2);
+  code().append(ocBuiltin);
   code().append(argc);
   code().append(index);
   adjust_stack_height(1);
 }
 
 void Assembler::if_true(Label &label) {
-  STATIC_CHECK(OpcodeInfo<OC_IF_TRUE>::kArgc == 1);
-  code().append(OC_IF_TRUE);
+  STATIC_CHECK(OpcodeInfo<ocIfTrue>::kArgc == 1);
+  code().append(ocIfTrue);
+  code().append(label.value());
+  if (!label.is_bound()) label.set_value(code().length() - 1);
+}
+
+void Assembler::if_false(Label &label) {
+  STATIC_CHECK(OpcodeInfo<ocIfFalse>::kArgc == 1);
+  code().append(ocIfFalse);
   code().append(label.value());
   if (!label.is_bound()) label.set_value(code().length() - 1);
 }
 
 void Assembler::ghoto(Label &label) {
-  STATIC_CHECK(OpcodeInfo<OC_GOTO>::kArgc == 1);
-  code().append(OC_GOTO);
+  STATIC_CHECK(OpcodeInfo<ocGoto>::kArgc == 1);
+  code().append(ocGoto);
   code().append(label.value());
   if (!label.is_bound()) label.set_value(code().length() - 1);
 }
@@ -359,16 +367,16 @@ void Assembler::bind(Label &label) {
 }
 
 void Assembler::mark(ref<Value> data) {
-  STATIC_CHECK(OpcodeInfo<OC_MARK>::kArgc == 1);
+  STATIC_CHECK(OpcodeInfo<ocMark>::kArgc == 1);
   uint16_t index = constant_pool_index(data);
-  code().append(OC_MARK);
+  code().append(ocMark);
   code().append(index);
   adjust_stack_height(Marker::kSize);
 }
 
 void Assembler::unmark() {
-  STATIC_CHECK(OpcodeInfo<OC_UNMARK>::kArgc == 0);
-  code().append(OC_UNMARK);  
+  STATIC_CHECK(OpcodeInfo<ocUnmark>::kArgc == 0);
+  code().append(ocUnmark);  
   adjust_stack_height(-static_cast<word>(Marker::kSize));
 }
 
@@ -677,6 +685,19 @@ void Assembler::visit_conditional_expression(ref<ConditionalExpression> that) {
   __ bind(end);
 }
 
+void Assembler::visit_while_expression(ref<WhileExpression> that) {
+  Label start, end;
+  __ bind(start);
+  __ codegen(that.condition());
+  __ if_false(end);
+  adjust_stack_height(-1);
+  __ codegen(that.body());
+  __ pop();
+  __ ghoto(start);
+  __ bind(end);
+  __ push(runtime().vhoid());
+}
+
 void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
   RefScope scope;
   ref<Tuple> terms = that.terms();
@@ -787,11 +808,11 @@ void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
   for (uword i = 0; i < term_count; i++) {
     ref<String> keyword = cast<String>(terms.get(2 * i));
     ref<Code> code = factory().new_code(4);
-    STATIC_CHECK(OpcodeInfo<OC_FIELD>::kArgc == 2);
-    code->at(0) = OC_FIELD;
+    STATIC_CHECK(OpcodeInfo<ocField>::kArgc == 2);
+    code->at(0) = ocField;
     code->at(1) = i;
     code->at(2) = 0;
-    code->at(3) = OC_RETURN;
+    code->at(3) = ocReturn;
     ref<Lambda> lambda = factory().new_lambda(0, code, runtime().empty_tuple(),
         runtime().nuhll(), session().context());
     ref<Selector> selector = factory().new_selector(keyword, Smi::from_int(0), runtime().thrue());

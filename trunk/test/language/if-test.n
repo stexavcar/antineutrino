@@ -1,0 +1,8 @@
+def test_if_value() {
+  def x := (if (false) 3);
+  assert_equals(get_void(), x);
+}
+
+def main() {
+  test_if_value();
+}

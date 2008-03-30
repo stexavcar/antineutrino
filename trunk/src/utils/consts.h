@@ -99,7 +99,8 @@
   VISIT(78, TASK_EXPRESSION,        TaskExpression,        task_expression)        \
   VISIT(79, YIELD_EXPRESSION,       YieldExpression,       yield_expression)       \
   VISIT(80, ASSIGNMENT,             Assignment,            assignment)             \
-  VISIT(81, PARAMETERS,             Parameters,            parameters)
+  VISIT(81, PARAMETERS,             Parameters,            parameters)             \
+  VISIT(84, WHILE_EXPRESSION,       WhileExpression,       while_expression)
 
 
 #define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
@@ -181,6 +182,9 @@
   VISIT(2, ConditionalExpression, ThenPartOffset)                    \
   VISIT(3, ConditionalExpression, ElsePartOffset)                    \
   VISIT(4, ConditionalExpression, Size)                              \
+  VISIT(1, WhileExpression,       ConditionOffset)                   \
+  VISIT(2, WhileExpression,       BodyOffset)                        \
+  VISIT(3, WhileExpression,       Size)                              \
   VISIT(1, ThisExpression,        Size)                              \
   VISIT(1, QuoteExpression,       ValueOffset)                       \
   VISIT(2, QuoteExpression,       UnquotesOffset)                    \
@@ -302,7 +306,8 @@
   VISIT(52, Layout,     yield_expression_layout,       YieldExpression,       allocate_empty_layout(tYieldExpression))       \
   VISIT(53, Layout,     assignment_layout,             Assignment,            allocate_empty_layout(tAssignment))            \
   VISIT(54, Layout,     parameters_layout,             Parameters,            allocate_empty_layout(tParameters))            \
-  VISIT(55, Layout,     channel_layout,                Channel,               allocate_empty_layout(tChannel))
+  VISIT(55, Layout,     channel_layout,                Channel,               allocate_empty_layout(tChannel))               \
+  VISIT(56, Layout,     while_expression_layout,       WhileExpression,       allocate_empty_layout(tWhileExpression))
 
 
 #define FOR_EACH_ROOT(VISIT)                                         \
@@ -337,6 +342,7 @@
   VISIT(12, smi,                 times,       "×")                   \
   VISIT(13, smi,                 divide,      "÷")                   \
   VISIT(14, smi,                 abs,         "||")                  \
+  VISIT(15, smi,                 less,        "<")                   \
   VISIT(20, object,              eq,          "=")                   \
   VISIT(21, object,              to_string,   "to_string")           \
   VISIT(30, protocol_expression, evaluate,    "evaluate")            \

@@ -571,6 +571,26 @@ class Conditional(Expression):
     return values.ConditionalExpression(cond, then_part, else_part)
 
 
+class While(Expression):
+
+  def __init__(self, cond, body):
+    super(Expression, self).__init__()
+    self.cond_ = cond
+    self.body_ = body
+  
+  def accept(self, visitor):
+    visitor.visit_while(self)
+  
+  def traverse(self, visitor):
+    self.cond_.accept(visitor)
+    self.body_.accept(visitor)
+  
+  def quote(self):
+    cond = self.cond_.quote()
+    body = self.body_.quote()
+    return values.WhileExpression(cond, body)
+
+
 class InternalCall(Expression):
 
   def __init__(self, argc, index):

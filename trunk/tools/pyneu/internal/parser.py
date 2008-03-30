@@ -250,6 +250,8 @@ class Parser(object):
       return self.local_definition(is_toplevel)
     elif self.token().is_keyword(IF):
       return self.conditional_expression(is_toplevel)
+    elif self.token().is_keyword(WHILE):
+      return self.while_expression(is_toplevel)
     elif self.token().is_keyword(RETURN):
       return self.return_expression(is_toplevel)
     elif self.token().is_keyword(YIELD):
@@ -258,6 +260,8 @@ class Parser(object):
       return self.do_on_expression(is_toplevel)
     elif self.token().is_keyword(RAISE):
       return self.raise_expression(is_toplevel)
+    elif self.token().is_delimiter('{'):
+      return self.sequence_expression()
     else:
       value = self.lambda_expression()
       if is_toplevel: self.expect_delimiter(';')
@@ -324,6 +328,20 @@ class Parser(object):
     else:
       else_part = ast.Literal(ast.Void())
     return ast.Conditional(cond, then_part, else_part)
+  
+  def while_expression(self, is_toplevel):
+    self.expect_keyword(WHILE)
+    self.expect_delimiter('(')
+    cond = self.expression(False)
+    self.expect_delimiter(')')
+    body = self.expression(is_toplevel)
+    return ast.While(cond, body)
+  
+  def sequence_expression(self):
+    self.expect_delimiter('{')
+    result = self.statements()
+    self.expect_delimiter('}')
+    return ast.Sequence.make(result)
 
   def local_definition(self, is_toplevel):
     is_var = self.token().is_keyword(VAR)

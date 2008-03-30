@@ -15,22 +15,22 @@ namespace neutrino {
  * arguments they expect.
  */
 #define FOR_EACH_OPCODE(VISIT)                                         \
-  VISIT(0,  PUSH,   1)   VISIT(1,  RETURN, 0)   VISIT(2,  GLOBAL,   1) \
-  VISIT(3,  CALL,   1)   VISIT(4,  SLAP,   1)   VISIT(5,  ARGUMENT, 1) \
-  VISIT(6,  VOID,   0)   VISIT(7,  NULL,   0)   VISIT(8,  TRUE,     0) \
-  VISIT(9,  FALSE,  0)   VISIT(10, POP,    1)   VISIT(11, IF_TRUE,  1) \
-  VISIT(12, GOTO,   1)   VISIT(13, INVOKE, 3)   VISIT(14, BUILTIN,  2) \
-  VISIT(15, TUPLE,  1)   VISIT(16, CONCAT, 1)   VISIT(17, LD_LOCAL, 1) \
-  VISIT(18, CHKHGT, 1)   VISIT(19, OUTER,  1)   VISIT(20, CLOSURE,  2) \
-  VISIT(21, QUOTE,  1)   VISIT(22, UNQUOTE, 1)  VISIT(23, RAISE,    2) \
-  VISIT(24, MARK,   1)   VISIT(25, UNMARK, 0)   VISIT(26, NEW,      1) \
-  VISIT(27, FIELD,  2)   /* extern was here */  VISIT(29, TASK,     0) \
-  VISIT(30, YIELD,  0)   VISIT(31, ST_LOCAL, 1) VISIT(32, ATTACH,   0) \
-  VISIT(33, KEYWORD, 1)
+  VISIT(0,  Push,   1)   VISIT(1,  Return, 0)   VISIT(2,  Global,   1) \
+  VISIT(3,  Call,   1)   VISIT(4,  Slap,   1)   VISIT(5,  Argument, 1) \
+  VISIT(6,  Void,   0)   VISIT(7,  Null,   0)   VISIT(8,  True,     0) \
+  VISIT(9,  False,  0)   VISIT(10, Pop,    1)   VISIT(11, IfTrue,  1)  \
+  VISIT(12, Goto,   1)   VISIT(13, Invoke, 3)   VISIT(14, Builtin,  2) \
+  VISIT(15, Tuple,  1)   VISIT(16, Concat, 1)   VISIT(17, LdLocal, 1)  \
+  VISIT(18, ChkHgt, 1)   VISIT(19, Outer,  1)   VISIT(20, Closure,  2) \
+  VISIT(21, Quote,  1)   VISIT(22, Unquote, 1)  VISIT(23, Raise,    2) \
+  VISIT(24, Mark,   1)   VISIT(25, Unmark, 0)   VISIT(26, New,      1) \
+  VISIT(27, Field,  2)   VISIT(28, IfFalse, 1)  VISIT(29, Task,     0) \
+  VISIT(30, Yield,  0)   VISIT(31, StLocal, 1)  VISIT(32, Attach,   0) \
+  VISIT(33, Keyword, 1)
 
 enum Opcode {
   __first_opcode = -1
-#define DECLARE_OPCODE(n, NAME, argc) , OC_##NAME = n
+#define DECLARE_OPCODE(n, Name, argc) , oc##Name = n
 FOR_EACH_OPCODE(DECLARE_OPCODE)
 #undef DECLARE_OPCODE
 };

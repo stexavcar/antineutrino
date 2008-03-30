@@ -12,5 +12,7 @@ internal protocol Smi {
   internal def ÷(that);
 
   internal def ×(that);
+  
+  internal def <(that);
 
 }

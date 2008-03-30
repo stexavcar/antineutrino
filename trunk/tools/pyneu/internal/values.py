@@ -610,6 +610,20 @@ class ConditionalExpression(SyntaxTree):
     return result
 
 
+class WhileExpression(SyntaxTree):
+
+  def __init__(self, cond, body):
+    super(WhileExpression, self).__init__()
+    self.cond_ = cond
+    self.body_ = body
+  
+  def allocate(self, heap):
+    result = heap.allocate(fields.FWhileExpression_Size, Smi(values.WhileExpression.index))
+    result[fields.FWhileExpression_ConditionOffset] = self.cond_
+    result[fields.FWhileExpression_BodyOffset] = self.body_
+    return result
+
+
 class TupleExpression(SyntaxTree):
 
   def __init__(self, values):

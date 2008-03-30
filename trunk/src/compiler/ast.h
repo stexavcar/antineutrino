@@ -325,6 +325,32 @@ DEFINE_REF_CLASS(ConditionalExpression);
 
 
 // ---------------------------------------
+// --- W h i l e   E x p r e s s i o n ---
+// ---------------------------------------
+
+#define FOR_EACH_WHILE_EXPRESSION_FIELD(VISIT, arg)                  \
+  VISIT(SyntaxTree, condition, Condition,  arg)                      \
+  VISIT(SyntaxTree, body,      Body,  arg)
+
+class WhileExpression : public SyntaxTree {
+public:
+  FOR_EACH_WHILE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+
+  static const uword kConditionOffset = SyntaxTree::kHeaderSize;
+  static const uword kBodyOffset      = kConditionOffset + kPointerSize;
+  static const uword kSize            = kBodyOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<WhileExpression> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_WHILE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(WhileExpression);
+
+
+// ---------------------------------------
 // --- C l a s s   E x p r e s s i o n ---
 // ---------------------------------------
 

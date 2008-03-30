@@ -39,7 +39,7 @@ KEYWORDS = to_map([
   'def', 'this', 'is', 'if', 'else', 'while', 'do', 'return', 'null',
   'true', 'false', 'internal', 'operator', 'new', 'in', 'fn', 'and',
   'or', 'not', 'on', 'raise', 'protocol', 'native', 'static', 'task',
-  'yield', 'var', 'channel'
+  'yield', 'var', 'channel', 'while'
 ])
 
 
