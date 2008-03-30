@@ -573,6 +573,9 @@ void Object::for_each_field(FieldVisitor &visitor) {
     case tLayout:
       FOR_EACH_LAYOUT_FIELD(VISIT_FIELD, Layout)
       break;
+    case tChannel:
+      FOR_EACH_CHANNEL_FIELD(VISIT_FIELD, Channel)
+      break;
     case tStack:
       cast<Stack>(this)->for_each_stack_field(visitor);
       break;

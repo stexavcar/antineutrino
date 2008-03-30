@@ -62,7 +62,8 @@ class Heap(object):
 
   def set_item(self, anchor, key, value):
     if len(self.data()) <= key: self.extend_to(key + 1)
-    self.data()[key] = value.get_int_value(anchor, self)
+    raw_value = value.get_int_value(anchor, self)
+    self.data()[key] = raw_value
 
   def extend_to(self, size):
     while len(self.data()) < size:
@@ -70,6 +71,6 @@ class Heap(object):
 
   def store(self, name):
     self.set_item(0, Heap.kHeapSizeOffset, Raw(self.cursor_))
-    f = open(name, "w")
-    self.data_.write(f)
+    f = open(name, "wb")
+    self.data_.tofile(f)
     f.close()

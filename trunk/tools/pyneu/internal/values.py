@@ -260,7 +260,7 @@ class Dictionary(Object):
     length = len(self.map_)
     table = Tuple(length = length * 2)
     index = 0
-    for (key, value) in self.map().items():
+    for (key, value) in sorted(self.map().items()):
       table[index] = String(key)
       table[index + 1] = value
       index += 2
@@ -514,7 +514,7 @@ class InstantiateExpression(SyntaxTree):
     result[fields.FInstantiateExpression_NameOffset] = String(self.name_)
     result[fields.FInstantiateExpression_ArgumentsOffset] = self.args_
     terms = [ ]
-    for (k, v) in self.terms_.items():
+    for (k, v) in sorted(self.terms_.items()):
       terms.append(String(k))
       terms.append(v)
     result[fields.FInstantiateExpression_TermsOffset] = Tuple(entries = terms)

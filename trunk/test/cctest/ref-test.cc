@@ -43,7 +43,7 @@ static void test_deep(uword n) {
 }
 
 void Test::deep() {
-  test_deep(1234);
+  test_deep(500);
 }
 
 static void count_refs(uword expected) {

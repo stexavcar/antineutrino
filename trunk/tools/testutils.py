@@ -16,12 +16,17 @@ def relative(base, str):
   prefix = commonprefix([base, str])
   return str[len(prefix)+1:]
 
+
+TEST_PART = re.compile("-+test")
 def is_selected(config, test):
   if not config['test']: return True
   selected = config['test']
   base = basename(test)
   if selected == base: return True
-  if selected == base[:base.find('.')]: return True
+  no_ext = base[:base.find('.')]
+  if selected == no_ext: return True
+  no_test = re.sub(TEST_PART, "", no_ext)
+  if selected == no_test: return True
   return False
 
 class Result:
@@ -67,32 +72,38 @@ class PyNeutrinoTestCase:
     else: return Result(Result.FAILED, output=output, error=errors)
 
 class CustomTestCase:
+
   def __init__(self, name, fun):
     self.name = name
     self.fun = fun
+
   def __str__(self):
     return self.name
+  
   def command(self):
     return None
+  
   def run(self):
     return self.fun();
+
 
 def truncate(str, length):
   if len(str) > (length - 3): return str[:length] + "..."
   else: return str
 
+
 color_templates = {
   'status_line': "[%(mins)02i:%(secs)02i|\033[34m%%%(remaining) 4d\033[0m|\033[32m+%(passed) 4d\033[0m|\033[31m-%(failed) 4d\033[0m]: %(test)s",
   'stdout': "\033[1m%s\033[0m",
   'stderr': "\033[31m%s\033[0m",
-  'clear': "\033[1K\r"
+  'clear': lambda x: "\033[1K\r"
 }
 
 mono_templates = {
   'status_line': "[%(mins)02i:%(secs)02i|%%%(remaining) 4d|+%(passed) 4d|-%(failed) 4d]: %(test)s",
   'stdout': '%s',
   'stderr': '%s',
-  'clear': "\r"
+  'clear': lambda x: ("\r" + (" " * x) + "\r")
 }
 
 class ProgressIndicator:
@@ -125,32 +136,38 @@ class DotsProgressIndicator(ProgressIndicator):
     else:
       print "Ran", self.remaining, "tests, all passed"
 
+
 class CompactProgressIndicator(ProgressIndicator):
   
   def __init__(self, count, templates):
     ProgressIndicator.__init__(self, count)
     self.templates_ = templates
+    self.last_status_length_ = 0
 
   def clear_line(self):
-    print self.templates()['clear'],
+    print self.templates()['clear'](self.last_status_length_),
   
   def templates(self):
     return self.templates_
   
   def start_test(self, test):
-    self.print_progress(truncate(str(test), 40))
+    self.print_progress(str(test))
 
   def print_progress(self, name):
     self.clear_line()
     elapsed = time.time() - self.start_time
-    print self.templates()['status_line'] % {
+    status = self.templates()['status_line'] % {
       'passed':    self.passed,
       'remaining': (((self.total - self.remaining) * 100) // self.total),
       'failed':    self.failed,
       'test':      name,
       'mins':      int(elapsed) / 60,
       'secs':      int(elapsed) % 60
-    },
+    }
+    status = truncate(status, 70)
+    self.last_status_length_ = len(status)
+    print status,
+
   def test_failed(self, test):
     self.clear_line()
     print "--- Failed: " + str(test) + " ---"
@@ -158,22 +175,28 @@ class CompactProgressIndicator(ProgressIndicator):
     if command: print "Command: " + command
     self.failed = self.failed + 1
     self.remaining = self.remaining - 1
+
   def test_passed(self, test):
     self.passed = self.passed + 1
     self.remaining = self.remaining - 1
+
   def test_had_output(self, test):
     self.clear_line()
     print "--- " + str(test) + " ---"
+
   def show_output(self, stdout, stderr):
     if len(stdout) > 0:
       print self.templates()['stdout'] % stdout
     if len(stderr) > 0:
       print self.templates()['stderr'] % stderr
+  
   def tests_done(self):
     self.print_progress('Done')
 
+
 def strip_newlines(str):
   return str.rstrip()
+
 
 def run_neutrino_tests(all_tests, output):
   if output == 'color':
