@@ -88,22 +88,26 @@ class CustomTestCase:
 
 
 def truncate(str, length):
-  if len(str) > (length - 3): return str[:length] + "..."
-  else: return str
+  if length and (len(str) > (length - 3)):
+    return str[:(length-3)] + "..."
+  else:
+    return str
 
 
 color_templates = {
   'status_line': "[%(mins)02i:%(secs)02i|\033[34m%%%(remaining) 4d\033[0m|\033[32m+%(passed) 4d\033[0m|\033[31m-%(failed) 4d\033[0m]: %(test)s",
   'stdout': "\033[1m%s\033[0m",
   'stderr': "\033[31m%s\033[0m",
-  'clear': lambda x: "\033[1K\r"
+  'clear': lambda last_line_length: "\033[1K\r",
+  'max_length': None
 }
 
 mono_templates = {
   'status_line': "[%(mins)02i:%(secs)02i|%%%(remaining) 4d|+%(passed) 4d|-%(failed) 4d]: %(test)s",
   'stdout': '%s',
   'stderr': '%s',
-  'clear': lambda x: ("\r" + (" " * x) + "\r")
+  'clear': lambda last_line_length: ("\r" + (" " * last_line_length) + "\r"),
+  'max_length': 78
 }
 
 class ProgressIndicator:
@@ -164,7 +168,7 @@ class CompactProgressIndicator(ProgressIndicator):
       'mins':      int(elapsed) / 60,
       'secs':      int(elapsed) % 60
     }
-    status = truncate(status, 70)
+    status = truncate(status, self.templates()['max_length'])
     self.last_status_length_ = len(status)
     print status,
 

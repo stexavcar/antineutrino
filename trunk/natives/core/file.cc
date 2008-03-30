@@ -60,7 +60,7 @@ NValue FileNativesChannel::receive(IMessage &message) {
   }
 }
 
-extern "C" void configure_neptune_file_natives_channel(IExternalChannelConfiguration &config) {
+SETUP_NEPTUNE_CHANNEL(file_natives)(IExternalChannelConfiguration &config) {
   FileNativesChannel *channel = new FileNativesChannel();
   config.bind(*channel);
 }

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "public/neutrino.h"
+#include "platform/stdc-inl.h"
 
 namespace neutrino {
 
@@ -18,7 +19,7 @@ NValue TestNativesChannel::receive(IMessage &message) {
   return message.context().factory().new_integer(result);
 }
 
-extern "C" void configure_neptune_test_natives_channel(IExternalChannelConfiguration &config) {
+SETUP_NEPTUNE_CHANNEL(test_natives)(IExternalChannelConfiguration &config) {
   TestNativesChannel *channel = new TestNativesChannel();
   config.bind(*channel);
 }
