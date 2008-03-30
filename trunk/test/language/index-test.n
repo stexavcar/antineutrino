@@ -1,0 +1,32 @@
+protocol Matrix {
+
+  def to_string() -> "#<a Matrix: ${this.objs}>";
+  
+  def [row, col] -> this.objs[row][col];
+  
+  static def make(objs) {
+    return new Matrix() { objs: objs };
+  }
+
+}
+
+def test_multi_index() {
+  def m := Matrix.make([
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9]
+  ]);
+  assert_equals(1, m[0, 0]);
+  assert_equals(2, m[0, 1]);
+  assert_equals(3, m[0, 2]);
+  assert_equals(4, m[1, 0]);
+  assert_equals(5, m[1, 1]);
+  assert_equals(6, m[1, 2]);
+  assert_equals(7, m[2, 0]);
+  assert_equals(8, m[2, 1]);
+  assert_equals(9, m[2, 2]);
+}
+
+def main() {
+  test_multi_index();
+}

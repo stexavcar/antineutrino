@@ -124,7 +124,7 @@ static void write_syntax_tree_on(SyntaxTree *obj, string_buffer &buf) {
 
 static void write_selector_short_on(Selector *obj, string_buffer &buf) {
   obj->name()->write_short_on(buf, Data::UNQUOTED);
-  if (!obj->is_accessor()) {
+  if (!is<True>(obj->is_accessor())) {
     buf.append('(');
     obj->argc()->write_short_on(buf);
     Tuple *keywords = obj->keywords();

@@ -292,7 +292,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Data *lookup_result = lookup_method(layout, selector);
       if (is<Nothing>(lookup_result)) {
         scoped_string selector_str(selector->to_string());
-        scoped_string recv_str(recv->to_string());
+        scoped_string recv_str(recv->to_short_string());
         Conditions::get().error_occurred("Lookup failure: %s::%s",
             recv_str.chars(), selector_str.chars());
       }

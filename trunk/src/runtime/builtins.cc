@@ -75,6 +75,14 @@ Data *Builtins::string_plus(BuiltinArguments &args) {
   return result;
 }
 
+Data *Builtins::string_get(BuiltinArguments &args) {
+  ASSERT_EQ(1, args.count());
+  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  SIGNAL_CHECK(Smi, index, to<Smi>(args[0]));
+  char c = self->at(index->value());
+  return args.runtime().heap().new_string(string(&c, 1));
+}
+
 
 // ---------------------------------
 // --- S m a l l   I n t e g e r ---
@@ -190,6 +198,19 @@ Data *Builtins::tuple_eq(BuiltinArguments &args) {
       return Runtime::current().roots().fahlse();
   }
   return Runtime::current().roots().thrue();
+}
+
+Data *Builtins::tuple_get(BuiltinArguments &args) {
+  ASSERT_EQ(1, args.count());
+  SIGNAL_CHECK(Tuple, self, to<Tuple>(args.self()));
+  SIGNAL_CHECK(Smi, index, to<Smi>(args[0]));
+  return self->get(index->value());
+}
+
+Data *Builtins::tuple_length(BuiltinArguments &args) {
+  ASSERT_EQ(0, args.count());
+  SIGNAL_CHECK(Tuple, self, to<Tuple>(args.self()));
+  return Smi::from_int(self->length());
 }
 
 

@@ -1,5 +1,19 @@
 def get_tuple() -> [1, 2, 3];
 
+def syntax_test() {
+  def t := [1, 2, 3];
+  assert_equals([1, 2, 3], t);
+}
+
+def index_test() {
+  def t := [1, 2, 3];
+  assert_equals(3, |t|);
+  assert_equals(1, t[0]);
+  assert_equals(2, t[1]);
+  assert_equals(3, t[2]);
+}
+
 def main() {
-  get_tuple();
+  syntax_test();
+  index_test();
 }

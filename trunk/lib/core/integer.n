@@ -3,7 +3,7 @@
 # you're dealing with small or big integers.
 internal protocol Smi {
 
-  internal def | |();
+  internal def | |;
   
   internal def +(that);
 

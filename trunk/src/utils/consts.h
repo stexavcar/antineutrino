@@ -331,6 +331,7 @@
   VISIT(0,  string,              length,      "||")                  \
   VISIT(1,  string,              eq,          "=")                   \
   VISIT(2,  string,              plus,        "+")                   \
+  VISIT(3,  string,              get,         "[]")                  \
   VISIT(10, smi,                 plus,        "+")                   \
   VISIT(11, smi,                 minus,       "-")                   \
   VISIT(12, smi,                 times,       "×")                   \
@@ -341,6 +342,8 @@
   VISIT(30, protocol_expression, evaluate,    "evaluate")            \
   VISIT(40, protocol,            new,         "new")                 \
   VISIT(41, tuple,               eq,          "=")                   \
+  VISIT(46, tuple,               get,         "[]")                  \
+  VISIT(47, tuple,               length,      "||")                  \
   VISIT(42, lambda,              disassemble, "disassemble")         \
   VISIT(43, lambda_expression,   params,      "parameters")          \
   VISIT(44, lambda_expression,   body,        "body")                \

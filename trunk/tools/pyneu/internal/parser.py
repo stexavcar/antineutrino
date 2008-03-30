@@ -164,11 +164,12 @@ class Parser(object):
     doc = self.documentation_opt()
     modifiers = self.modifiers()
     self.expect_keyword(DEF)
-    name = self.method_name()
-    if self.token().is_delimiter('('):
-      params = self.parameters()
-    else:
-      params = ast.Parameters(0, [], True)
+    (name, params) = self.method_name()
+    if params is None:
+      if self.token().is_delimiter('('):
+        params = self.parameters()
+      else:
+        params = ast.Parameters(0, [], True)
     self.resolver().push_scope(params.params())
     body = self.function_body(True)
     self.resolver().pop_scope()
@@ -176,15 +177,18 @@ class Parser(object):
 
   def method_name(self):
     if self.token().is_identifier():
-      return self.expect_identifier()
+      return (self.expect_identifier(), None)
+    elif self.token().is_delimiter('['):
+      params = self.parameters('[', ']')
+      return ("[]", params)
     elif self.token().is_operator():
       value = self.expect_operator()
       if scanner.is_circumfix_operator(value):
         match = self.expect_operator(scanner.circumfix_match(value))
-        return value + match
-      return value
+        return (value + match, ast.Parameters(0, [], False))
+      return (value, None)
     elif self.token().is_keyword():
-      return self.expect_keyword()
+      return (self.expect_keyword(), None)
     else:
       self.unexpected_token()
 
@@ -213,16 +217,16 @@ class Parser(object):
       stmts.append(stmt)
     return stmts
 
-  def parameters(self):
+  def parameters(self, start = '(', end = ')'):
     params = [ ]
     keywords = [ ]
-    self.expect_delimiter('(')
-    if not self.token().is_delimiter(')'):
+    self.expect_delimiter(start)
+    if not self.token().is_delimiter(end):
       self.parameter(params, keywords)
       while self.token().is_delimiter(','):
         self.expect_delimiter(',')
         self.parameter(params, keywords)
-    self.expect_delimiter(')')
+    self.expect_delimiter(end)
     all_params = params + sorted(keywords, key=ast.Symbol.name)
     return ast.Parameters(len(params), all_params, False)
 
@@ -407,14 +411,15 @@ class Parser(object):
     token = self.token()
     return (token.is_delimiter(scanner.DELEGATE_CALL_OPERATOR)
          or token.is_delimiter('.')
-         or token.is_delimiter('('))
+         or token.is_delimiter('(')
+         or token.is_delimiter('['))
 
   def call_expression(self):
     expr = self.unary_expression()
     while self.at_call_start():
       start_token = self.token()
-      if self.token().is_delimiter(scanner.METHOD_CALL_OPERATOR):
-        self.expect_delimiter(scanner.METHOD_CALL_OPERATOR)
+      if self.token().is_delimiter('.'):
+        self.expect_delimiter('.')
         name = self.expect_identifier()
         if self.token().is_delimiter('('):
           args = self.arguments()
@@ -426,6 +431,9 @@ class Parser(object):
         fun = self.atomic_expression()
         args = self.arguments()
         expr = ast.Call(expr, fun, args)
+      elif self.token().is_delimiter('['):
+        args = self.arguments('[', ']')
+        expr = self.call_prefix(expr, "[]", args)
       else:
         args = self.arguments()
         expr = ast.Call(ast.This(), expr, args)
@@ -539,8 +547,8 @@ class Parser(object):
     self.expect_delimiter(']')
     return ast.Tuple(elms)
 
-  def arguments(self):
-    self.expect_delimiter('(')
+  def arguments(self, start='(', end=')'):
+    self.expect_delimiter(start)
     args = [ ]
     keywords = { }
     def parse_argument():
@@ -550,12 +558,12 @@ class Parser(object):
         keywords[expr.name()] = len(args)
         expr = self.expression(False)
       args.append(expr)
-    if not self.token().is_delimiter(')'):
+    if not self.token().is_delimiter(end):
       parse_argument()
     while self.token().is_delimiter(','):
       self.advance()
       parse_argument()
-    self.expect_delimiter(')')
+    self.expect_delimiter(end)
     return ast.Arguments(args, keywords, False)
 
   def documentation_opt(self):

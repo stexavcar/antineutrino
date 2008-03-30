@@ -123,6 +123,7 @@ class Selector(Object):
     self.keywords_ = sorted(keywords)
     self.is_accessor_ = is_accessor
 
+
   def allocate(self, heap):
     result = heap.allocate(fields.FSelector_Size, Smi(values.Selector.index))
     result[fields.FSelector_NameOffset] = String(self.name_)
