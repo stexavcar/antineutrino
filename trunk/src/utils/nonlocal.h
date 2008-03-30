@@ -31,8 +31,8 @@ class NonLocal {
   int __exception__ = setjmp((non_local).jump_buffer());             \
   if (__exception__ == NonLocal::kNoException) {
 
-#define CATCH(cases) } else {                                        \
-      switch (__exception__) { cases }                               \
+#define CATCH(body) } else {                                         \
+      body                                                           \
     }                                                                \
   } while (false);  
 

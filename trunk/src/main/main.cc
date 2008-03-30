@@ -4,6 +4,7 @@
 #include "main/options.h"
 #include "monitor/monitor.h"
 #include "platform/abort.h"
+#include "platform/stdc-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
 #include "utils/flags.h"
@@ -67,7 +68,7 @@ void Main::main(list<char*> &args) {
  * Reads the contents of the specified file into a string.
  */
 Image *Main::read_image(string name) {
-  FILE *file = fopen(name.chars(), "rb");
+  FILE *file = stdc_fopen(name.chars(), "rb");
   if (file == NULL) {
     printf("Unable to open %s.\n", name.chars());
     exit(1);

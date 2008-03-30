@@ -81,8 +81,19 @@ def truncate(str, length):
   if len(str) > (length - 3): return str[:length] + "..."
   else: return str
 
-color_status_line = "[%(mins)02i:%(secs)02i|\033[34m%%%(remaining) 4d\033[0m|\033[32m+%(passed) 4d\033[0m|\033[31m-%(failed) 4d\033[0m]: %(test)s"
-mono_status_line = "[%(mins)02i:%(secs)02i|%%%(remaining) 4d|+%(passed) 4d|-%(failed) 4d]: %(test)s"
+color_templates = {
+  'status_line': "[%(mins)02i:%(secs)02i|\033[34m%%%(remaining) 4d\033[0m|\033[32m+%(passed) 4d\033[0m|\033[31m-%(failed) 4d\033[0m]: %(test)s",
+  'stdout': "\033[1m%s\033[0m",
+  'stderr': "\033[31m%s\033[0m",
+  'clear': "\033[1K\r"
+}
+
+mono_templates = {
+  'status_line': "[%(mins)02i:%(secs)02i|%%%(remaining) 4d|+%(passed) 4d|-%(failed) 4d]: %(test)s",
+  'stdout': '%s',
+  'stderr': '%s',
+  'clear': "\r"
+}
 
 class ProgressIndicator:
   def __init__(self, count):
@@ -114,17 +125,25 @@ class DotsProgressIndicator(ProgressIndicator):
     else:
       print "Ran", self.remaining, "tests, all passed"
 
-class ColorProgressIndicator(ProgressIndicator):
-  def __init__(self, count):
+class CompactProgressIndicator(ProgressIndicator):
+  
+  def __init__(self, count, templates):
     ProgressIndicator.__init__(self, count)
+    self.templates_ = templates
+
   def clear_line(self):
-    print "\033[1K\r",
+    print self.templates()['clear'],
+  
+  def templates(self):
+    return self.templates_
+  
   def start_test(self, test):
     self.print_progress(truncate(str(test), 40))
+
   def print_progress(self, name):
     self.clear_line()
     elapsed = time.time() - self.start_time
-    print color_status_line % {
+    print self.templates()['status_line'] % {
       'passed':    self.passed,
       'remaining': (((self.total - self.remaining) * 100) // self.total),
       'failed':    self.failed,
@@ -147,9 +166,9 @@ class ColorProgressIndicator(ProgressIndicator):
     print "--- " + str(test) + " ---"
   def show_output(self, stdout, stderr):
     if len(stdout) > 0:
-      print "\033[1m" + stdout + "\033[0m"
+      print self.templates()['stdout'] % stdout
     if len(stderr) > 0:
-      print "\033[31m" + stderr + "\033[0m"
+      print self.templates()['stderr'] % stderr
   def tests_done(self):
     self.print_progress('Done')
 
@@ -158,7 +177,9 @@ def strip_newlines(str):
 
 def run_neutrino_tests(all_tests, output):
   if output == 'color':
-    progress = ColorProgressIndicator(len(all_tests))
+    progress = CompactProgressIndicator(len(all_tests), color_templates)
+  elif output == 'mono':
+    progress = CompactProgressIndicator(len(all_tests), mono_templates)
   elif output == 'dots':
     progress = DotsProgressIndicator(len(all_tests))
   else:

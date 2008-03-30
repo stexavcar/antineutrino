@@ -35,10 +35,10 @@ static void test_deep(uword n) {
   static const int kCount = 300;
   ref<Smi> refs[kCount];
   for (int i = 0; i < kCount; i++)
-    refs[i] = new_ref(Smi::from_int(n + i << 16));
+    refs[i] = new_ref(Smi::from_int(n + (i << 16)));
   test_deep(n - 1);
   for (int i = 0; i < kCount; i++) {
-    CHECK_EQ(refs[i]->value(), n + i << 16);
+    CHECK_EQ(refs[i]->value(), n + (i << 16));
   }
 }
 

@@ -35,16 +35,14 @@ public:
 #define CHECK_ABORTS(TYPE, operation)                                \
   do {                                                               \
     bool __has_aborted__ = false;                                    \
-    uword __type__;                                               \
+    uword __type__;                                                  \
     {                                                                \
       ConditionCatcher __catcher__;                                  \
       TRY (__catcher__) {                                            \
         (void) (operation);                                          \
       } CATCH (                                                      \
-          default:                                                   \
-            __has_aborted__ = true;                                  \
-            __type__ = TRY_CATCH_EXCEPTION();                        \
-            break;                                                   \
+          __has_aborted__ = true;                                    \
+          __type__ = TRY_CATCH_EXCEPTION();                          \
       );                                                             \
     }                                                                \
     CHECK(__has_aborted__);                                          \

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "public/neutrino.h"
+#include "platform/stdc-inl.h"
 
 namespace neutrino {
 
@@ -11,7 +12,7 @@ public:
 
 static NValue open_file(IValueFactory &factory, NValue name_val) {
   const char *name = cast<NString>(name_val).c_str();
-  FILE *file = fopen(name, "r");
+  FILE *file = stdc_fopen(name, "r");
   if (file == NULL) return factory.get_null();
   NBuffer<FILE*> buffer = factory.new_buffer<FILE*>(1);
   buffer[0] = file;

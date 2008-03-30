@@ -24,10 +24,10 @@ void Test::builtin_string_equality() {
 // Tests that the extended_size computation stays within 1% of the
 // golden ratio for a range of large values
 void Test::grow_factor() {
-  static const float kGoldenRatio = 1.6180339887;
-  static const float kDeviation = 0.01;
-  static const float kLowerRatio = kGoldenRatio * (1 - kDeviation);
-  static const float kUpperRatio = kGoldenRatio * (1 + kDeviation);
+  static const double kGoldenRatio = 1.6180339887;
+  static const double kDeviation = 0.01;
+  static const double kLowerRatio = kGoldenRatio * (1 - kDeviation);
+  static const double kUpperRatio = kGoldenRatio * (1 + kDeviation);
   for (uword i = 100; i < 100000000; i = static_cast<uword>(i * 1.1)) {
     uword size = grow_value(i);
     uword lower_limit = static_cast<uword>(kLowerRatio * i);

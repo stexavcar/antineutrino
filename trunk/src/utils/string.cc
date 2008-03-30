@@ -1,12 +1,9 @@
 #include "utils/string-inl.h"
+#include "platform/stdc-inl.h"
 
 #include <string.h>
 
 using namespace neutrino;
-
-#ifdef MSVC
-#define snprintf sprintf_s
-#endif
 
 // --- S t r i n g ---
 
@@ -206,9 +203,9 @@ void string_buffer::element::print_on(string_buffer &buf, char *params,
       params[-1] = '%';
       params[offset] = 'i';
       params[offset + 1] = '\0';
-      snprintf(temp, kTempSize, params - 1, value);
+      stdc_snprintf(temp, kTempSize, params - 1, value);
     } else {
-      snprintf(temp, kTempSize, "%i", value);
+      stdc_snprintf(temp, kTempSize, "%i", value);
     }
     buf.append(temp);
     break;
@@ -223,9 +220,9 @@ void string_buffer::element::print_on(string_buffer &buf, char *params,
       params[-1] = '%';
       params[offset] = 'g';
       params[offset + 1] = '\0';
-      snprintf(temp, kTempSize, params - 1, value);
+      stdc_snprintf(temp, kTempSize, params - 1, value);
     } else {
-      snprintf(temp, kTempSize, "%g", value);
+      stdc_snprintf(temp, kTempSize, "%g", value);
     }
     buf.append(temp);
     break;
