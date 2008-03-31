@@ -10,6 +10,17 @@ internal protocol String {
   internal def | |;
   
   internal def [index];
+
+  def substring(interval) {
+    def result := "";
+    var i := interval.from;
+    while (i < interval.to) {
+      result := result + this[i];
+      i := i + 1;
+    }
+    return result;
+  }
+  
   internal def =(that);
   internal def +(that);
   

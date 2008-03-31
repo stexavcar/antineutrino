@@ -1,0 +1,7 @@
+protocol Interval {
+
+  static def make(from, to) -> new Interval() {
+    from: from, to: to
+  };
+
+}

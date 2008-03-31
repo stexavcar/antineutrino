@@ -342,9 +342,10 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
         marker.unwind();
       }
       {
+        frame.push_activation();
         BuiltinArguments args(runtime(), argc, frame);
         unhandled_condition(name, args);
-        pc += OpcodeInfo<ocRaise>::kSize;
+        UNREACHABLE();
       }
      end:
       break;
@@ -426,11 +427,12 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       uint16_t index = code[pc + 2];
       builtin *builtin = Builtins::get(index);
       BuiltinArguments args(runtime(), argc, frame);
-      Value *value = cast<Value>(builtin(args));
+      Data *value = builtin(args);
       if (is<Signal>(value)) {
-        break;
+        printf("Problem executing builtin\n");
+        exit(1);
       } else {
-        frame.push(value);
+        frame.push(cast<Value>(value));
         pc += OpcodeInfo<ocBuiltin>::kSize;
       }
       break;

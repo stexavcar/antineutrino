@@ -105,6 +105,16 @@ Data *Builtins::is_alpha(BuiltinArguments &args) {
   return args.runtime().roots().thrue();
 }
 
+Data *Builtins::is_digit(BuiltinArguments &args) {
+  ASSERT_EQ(0, args.count());
+  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  for (uword i = 0; i < self->length(); i++) {
+    if (!isdigit(self->at(i)))
+      return args.runtime().roots().fahlse();
+  }
+  return args.runtime().roots().thrue();
+}
+
 
 // ---------------------------------
 // --- S m a l l   I n t e g e r ---

@@ -1,25 +1,67 @@
 internal def is_whitespace();
 internal def is_alpha();
+internal def is_digit();
 
-def is_ident_start() -> is_alpha() or (this == "_");
+def is_ident_start() -> is_alpha() or (this = "_");
+def is_ident_part() -> is_ident_start() or is_digit();
+
+(* --- T o k e n s --- *)
 
 protocol Token {
-
+  def is_identifier() -> false;
+  def is_keyword(name) -> false;
 }
 
-protocol Scanner {
+
+protocol Identifier : Token {
   
-  def to_string() -> "#<a Scanner: ${this.pos}>";
+  def to_string() -> "#<identifier '${this.name}'>";
+
+  def is_identifier() -> true;
+  
+  static def make(name) -> new Identifier() { name: name };
+  
+}
+
+
+protocol Keyword : Token {
+  
+  def to_string() -> "#<keyword ${this.name}>";
+  
+  def is_keyword(name) -> (name = this.name);
+  
+  static def make(name) -> new Keyword() { name: name };
+  
+}
+
+
+protocol Delimiter : Token {
+  
+  def to_string() -> "#<delimiter ${this.name}>";
+  
+  static def make(name) -> new Delimiter() { name: name };
+  
+}
+
+(* ---K e y w o r d s --- *)
+
+def keywords := ["def"];
+
+def delimiters := ["(", ")", "{", "}", "[", "]"];
+
+(* --- S c a n n e r --- *)
+
+protocol Scanner {
   
   def has_more() -> (this.pos < |this.input|);
   
   def current -> this.input[this.pos];
   
-  def advance() {
-    this.pos := this.pos + 1;
-  }
+  def advance() -> (this.pos := this.pos + 1);
   
-  def skip_spaces() {
+  def substring(range) -> this.input.substring(range);
+  
+  def skip_whitespace() {
     while (this.has_more() and this.current·is_whitespace())
       this.advance();
   }
@@ -29,19 +71,39 @@ protocol Scanner {
     if (not this.has_more()) return null;
     if (this.current·is_ident_start()) {
       result := this.scan_identifier();
+    } else if (delimiters ∋ this.current) {
+      result := this.scan_delimiter();
     } else {
-      raise unexpected_character(this.current);
+      def char := this.current;
+      raise unexpected_character(char);
     }
+    this.skip_whitespace();
     return result;
+  }
+  
+  def scan_delimiter() {
+    var value := "";
+    while (this.has_more()) {
+      def prev_value := value;
+      value := value + this.current;
+      if (not delimiters ∋ value)
+        return Delimiter.make(prev_value);
+      else
+        this.advance();
+    }
+    // At this point we must have looped at least once and, since we
+    // looped again, the delimiters list must contain the value.
+    return Delimiter.make(value);
   }
   
   def scan_identifier() {
     def start := this.pos;
-    while (this.current·is_ident_start())
+    while (this.current·is_ident_part())
       this.advance();
     def end := this.pos;
-    print("[${start} -> ${end}]");
-    return null;
+    def value := this.substring(start..end);
+    if (keywords ∋ value) return Keyword.make(value);
+    else return Identifier.make(value);
   }
   
   # Factory methods for creating scanners processing the specified
@@ -51,19 +113,20 @@ protocol Scanner {
       input: input,
       pos: 0
     };
-    scan.skip_spaces();
+    scan.skip_whitespace();
     return scan;
   }
   
 }
 
+(* --- M a i n --- *)
+
 def main() {
-  def input := "def main() { }";
+  def input := "def main() { } def main2() { }";
   def scan := Scanner.make(input);
   var i := 0;
-  while (scan.has_more() and (i < 10)) {
+  while (scan.has_more() and (i < 100)) {
     print(scan.next_token());
     i := i + 1;
   }
-  print(scan);
 }

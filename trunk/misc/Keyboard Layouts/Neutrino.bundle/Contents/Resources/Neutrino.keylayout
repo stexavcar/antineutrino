@@ -551,11 +551,11 @@
 			<key code="40" output="&#xF8FF;" />
 			<key code="41" output="&#xB7;" />
 			<key code="42" output="&#xBB;" />
-			<key code="43" output="&#xAF;" />
+			<key code="43" output="&#x2208;" />
 			<key code="44" output="&#xBF;" />
 			<key code="45" output="&#x2DC;" />
 			<key code="46" output="&#xC2;" />
-			<key code="47" output="&#x2D8;" />
+			<key code="47" output="&#x220B;" />
 			<key code="48" output="&#x9;" />
 			<key code="49" output="&#xA0;" />
 			<key code="50" output="`" />

@@ -45,7 +45,7 @@ KEYWORDS = to_map([
 
 # The set of delimiters
 DELIMITERS = to_map([
-  '(', ')', ';', ':', ':=', '{', '}', u'·', '.', ',', '[', ']',
+  '(', ')', ';', ':', ':=', '{', '}', u'·', ',', '[', ']',
   u'«', u'»', u'‹', u'›'
 ])
 
@@ -67,16 +67,16 @@ CIRCUMFIXES = {
 
 
 OPERATOR_CHARS = to_map([
-  '+', '-', '%', '~', u'÷', u'×',
-  '<', '>', '=', '≠', '≥', '≡', '≤', '∈', '∉',
-  '⊂', '⊄', '⊃', '⊅', '⊆', '⊈', '⊇', '⊉'
+  '+', '-', '%', '~', u'÷', u'×', '.',
+  '<', '>', '=', '≠', '≥', '≡', '≤', u'∈', u'∉',
+  u'∋', u'⊂', u'⊄', u'⊃', u'⊅', u'⊆', u'⊈', u'⊇', u'⊉'
 ])
 OPERATOR_CHARS.update(CIRCUMFIXES)
 
 
 # The operators that are actually delimiters
 RESERVED = to_map([
-  '->'
+  '->', '.'
 ])
 
 
@@ -245,6 +245,7 @@ class Scanner(object):
     self.reader = reader
     self.skip_whitespace()
     self.parser_ = None
+    self.whitespace_start_ = 0
   
   def set_parser(self, parser):
     self.parser_ = parser
@@ -300,6 +301,7 @@ class Scanner(object):
           self.reader.advance()
           self.advance()
           expr = self.parser().expression(False)
+          self.unskip_whitespace()
           terms.append(expr)
         else:
           raise SyntaxError(self.new_position(self.reader.position(), 0),
@@ -365,8 +367,12 @@ class Scanner(object):
     if value in KEYWORDS: return Keyword(value, pos)
     else: return Ident(value, pos)
 
+  def unskip_whitespace(self):
+    self.reader.set_position(self.whitespace_start_)
+
   def skip_whitespace(self):
     """Skip whitespace and comments until the next "hard" token"""
+    self.whitespace_start_ = self.reader.position()
     keep_going = True
     while keep_going:
       # This variable is later set to true if we need to go again

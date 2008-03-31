@@ -62,6 +62,9 @@ class Reader(object):
   def position(self):
     return self.cursor
   
+  def set_position(self, value):
+    self.cursor = value
+  
   def current(self):
     return self.doc[self.cursor]
   

@@ -137,6 +137,11 @@ class Parser(object):
     if self.token().is_delimiter(';'):
       self.expect_delimiter(';')
       return ast.Definition(modifiers, name, None)
+    elif self.token().is_delimiter(':='):
+      self.expect_delimiter(':=')
+      value = self.expression(False)
+      self.expect_delimiter(';')
+      return ast.Definition(modifiers, name, value)
     else:
       params = self.parameters()
       self.resolver().push_scope(params.params())

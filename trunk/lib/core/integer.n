@@ -14,5 +14,7 @@ internal protocol Smi {
   internal def ×(that);
   
   internal def <(that);
+  
+  def ..(that) -> Interval.make(this, that);
 
 }

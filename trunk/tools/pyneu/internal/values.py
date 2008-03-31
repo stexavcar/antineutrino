@@ -75,7 +75,7 @@ class Tuple(Object):
       self.entries_ = entries
     else:
       assert False
-
+  
   def __setitem__(self, index, item):
     assert isinstance(item, Value)
     self.entries_[index] = item

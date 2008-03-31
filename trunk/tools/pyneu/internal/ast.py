@@ -424,6 +424,13 @@ class Tuple(Expression):
   def __init__(self, exprs):
     super(Tuple, self).__init__()
     self.exprs_ = exprs
+  
+  def accept(self, visitor):
+    pass
+  
+  def evaluate(self):
+    vals = [ e.evaluate() for e in self.exprs_ ]
+    return values.Tuple(entries = vals)
 
   def quote(self):
     expr = [ e.quote() for e in self.exprs_ ]
@@ -679,6 +686,9 @@ class Literal(Expression):
 
   def traverse(self, visitor):
     pass
+  
+  def evaluate(self):
+    return to_literal(self.value_)
 
   def quote(self):
     return values.LiteralExpression(to_literal(self.value_))
