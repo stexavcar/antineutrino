@@ -35,12 +35,12 @@ def check_keywords():
     seen_begin_marker = False
     for line in open(join(config['root'], name)):
       if seen_begin_marker:
-        if "--- end keywords ---" in line:
+        if "-- end keywords --" in line:
           seen_begin_marker = False
           break
         else:
           lines.append(line)
-      elif "--- begin keywords ---" in line:
+      elif "-- begin keywords --" in line:
         seen_begin_marker = True
     assert not seen_begin_marker
     block = ''.join(lines)

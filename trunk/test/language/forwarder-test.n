@@ -3,23 +3,23 @@ internal def set_target(value);
 
 def simple_forwarder() {
   def x := "foo"·make_forwarder();
-  assert_equals("foo", x);
-  assert_equals(3, |x|);
-  assert_equals("foobar", x + "bar");
+  assert x = "foo";
+  assert |x| = 3;
+  assert (x + "bar") = "foobar";
   x·set_target("nirk");
-  assert_equals("nirk", x);
-  assert_equals(4, |x|);
-  assert_equals("nirkbar", x + "bar");
+  assert x = "nirk";
+  assert |x| = 4;
+  assert (x + "bar") = "nirkbar";
 }
 
 def record_forwarder() {
   def r := new { x: 2, y: 3 };
   def f := r·make_forwarder();
-  assert_equals(r, f);
-  assert_equals(2, f.x);
-  assert_equals(3, f.y);
+  assert f = r;
+  assert f.x = 2;
+  assert f.y = 3;
   f·set_target(null);
-  assert_equals(null, f);
+  assert f = null;
 }
 
 def main() {

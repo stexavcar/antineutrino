@@ -69,13 +69,13 @@
 ;; All the language's keywords have to occur between the begin and
 ;; end markers or a build check will fail.
 
-;; --- begin keywords ---
+;; -- begin keywords --
 
 (defconst neutrino-keywords-regexp
   (regexp-opt
    '("def" "new" "internal" "and" "or" "not" "if" "else" "return" "fn"
      "in" "while" "do" "operator" "on" "raise" "protocol" "native"
-     "static" "task" "yield" "var" "channel" "while")
+     "static" "task" "yield" "var" "channel" "while" "assert")
    'words))
 
 (defconst neutrino-constants-regexp
@@ -83,7 +83,7 @@
    '("this" "true" "false" "null")
    'words))
 
-;; --- end keywords ---
+;; -- end keywords --
 
 (defvar neutrino-font-lock-keywords
   `(("\\<def\\>\\ +\\<\\(\\w+\\)\\>\\ *(" 1 font-lock-function-name-face nil)

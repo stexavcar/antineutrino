@@ -5,12 +5,12 @@ def factorial_code(n) {
 
 def simple_unquote_test() {
   def x := «3»;
-  assert_equals(5, «2 + ‹x›».evaluate());
+  assert «2 + ‹x›».evaluate() = 5;
 }
 
 def lift_test() {
   def code := factorial_code(6);
-  assert_equals(720, code.evaluate());
+  assert code.evaluate() = 720;
 }
 
 def make_power(s, n) {
@@ -23,7 +23,7 @@ def make_power_test() {
   def body := make_power(s, 8);
   def fun := «fn (‹s›) -> ‹body›»;
   def power := fun.evaluate();
-  assert_equals(256, power(2));
+  assert power(2) = 256;
 }
 
 def main() {

@@ -47,6 +47,9 @@ class Arguments(SyntaxTree):
   def extend(self, value):
     return Arguments(self.args_ + [value], self.keywords_, self.is_accessor_)
 
+  def clone_with_args(self, args):
+    return Arguments(args, self.keywords_, self.is_accessor_)
+
   def __len__(self):
     return len(self.args_)
   
@@ -58,6 +61,9 @@ class Arguments(SyntaxTree):
   
   def keywords(self):
     return self.keywords_.keys()
+  
+  def arguments(self):
+    return self.args_
 
   def traverse(self, visitor):
     for arg in self.args_:

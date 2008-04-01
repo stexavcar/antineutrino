@@ -317,6 +317,7 @@ public:
   inline Value *&get_field(uword index);
   inline void set_field(uword index, Value *value);
 
+  void for_each_instance_field(FieldVisitor &visitor);
   static inline uword size_for(uword elms);
 
   static const uword kHeaderSize = Object::kHeaderSize;

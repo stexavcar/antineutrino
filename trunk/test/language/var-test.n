@@ -1,17 +1,17 @@
 def simple_test() {
   var x := 9;
-  assert_equals(9, x);
+  assert x = 9;
   x := 3;
-  assert_equals(3, x); 
+  assert x = 3; 
   var y := 4;
-  assert_equals(3, x);
-  assert_equals(4, y);
+  assert x = 3;
+  assert y = 4;
   y := 7;
-  assert_equals(3, x);
-  assert_equals(7, y);
+  assert x = 3;
+  assert y = 7;
   x := 6;
-  assert_equals(6, x);
-  assert_equals(7, y);
+  assert x = 6;
+  assert y = 7;
 }
 
 def main() {

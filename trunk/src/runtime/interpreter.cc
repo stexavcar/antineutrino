@@ -429,8 +429,12 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       BuiltinArguments args(runtime(), argc, frame);
       Data *value = builtin(args);
       if (is<Signal>(value)) {
-        printf("Problem executing builtin\n");
-        exit(1);
+        if (is<AllocationFailed>(value)) {
+          return value;
+        } else {
+          printf("Problem executing builtin\n");
+          exit(1);
+        }
       } else {
         frame.push(cast<Value>(value));
         pc += OpcodeInfo<ocBuiltin>::kSize;

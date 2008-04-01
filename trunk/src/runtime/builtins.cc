@@ -69,7 +69,7 @@ Data *Builtins::string_plus(BuiltinArguments &args) {
   SIGNAL_CHECK(String, self, to<String>(args.self()));
   SIGNAL_CHECK(String, that, to<String>(args[0]));
   uword length = self->length() + that->length();
-  String *result = cast<String>(Runtime::current().heap().new_string(length));
+  SIGNAL_CHECK(String, result, Runtime::current().heap().new_string(length));
   for (uword i = 0; i < self->length(); i++)
     result->at(i) = self->at(i);
   for (uword i = 0; i < that->length(); i++)

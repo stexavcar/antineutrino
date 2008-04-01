@@ -5,14 +5,4 @@ def fail(message) {
   raise failure(message);
 }
 
-def assert(value) {
-  if (value) return null;
-  fail(value);
-}
-
-def assert_equals(expected, value) {
-  if (expected = value) return null;
-  fail("Expected [${expected}], found [${value}]");
-}
-
 def get_void() { }

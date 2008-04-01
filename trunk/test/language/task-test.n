@@ -4,9 +4,9 @@ def test_simple_task() {
     yield 2;
     yield 3;
   };
-  assert_equals(1, t.attach());
-  assert_equals(2, t.attach());
-  assert_equals(3, t.attach());
+  assert t.attach() = 1;
+  assert t.attach() = 2;
+  assert t.attach() = 3;
 }
 
 def main() {

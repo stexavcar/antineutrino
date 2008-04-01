@@ -131,7 +131,7 @@ public:
   bool is_bound() { return is_bound_; }
   uword value() { return value_; }
   void set_value(uword addr) { ASSERT(addr != kNoTarget); value_ = addr; }
-  static const uint16_t kNoTarget = -1;
+  static const uint16_t kNoTarget = ~0;
 private:
   bool is_bound_;
   uint16_t value_;

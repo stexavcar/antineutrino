@@ -1,16 +1,16 @@
 def interpolation_test() {
-  assert_equals("abc", "${"a"}${"b"}${"c"}");
-  assert_equals("aabb", "a${"a${"b${"b"}"}"}");
+  assert "${"a"}${"b"}${"c"}" = "abc";
+  assert "a${"a${"b${"b"}"}"}" = "aabb";
 }
 
 def local_test(a, b, c) {
-  assert_equals("[1]", "[${a}]");
-  assert_equals("3-2-1", "${c}-${b}-${a}");
+  assert "[${a}]" = "[1]";
+  assert "${c}-${b}-${a}" = "3-2-1";
 }
 
 def trailing_whitespace_test() {
   def x := 4;
-  assert_equals("[ 4 ]", "[ ${x} ]");
+  assert "[ ${x} ]" = "[ 4 ]";
 }
 
 def main() {

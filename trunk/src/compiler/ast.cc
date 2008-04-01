@@ -221,6 +221,11 @@ static void unparse_assignment(Assignment *expr, UnparseData &data) {
   unparse_syntax_tree_on(expr->value(), data);
 }
 
+static void unparse_interpolate_expression(InterpolateExpression *expr,
+    UnparseData &data) {
+  data->append("#<interpolate>");
+}
+
 static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
   InstanceType type = obj->type();
   switch (type) {
@@ -274,6 +279,9 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
     break;
   case tConditionalExpression:
     unparse_conditional_expression(cast<ConditionalExpression>(obj), data);
+    break;
+  case tInterpolateExpression:
+    unparse_interpolate_expression(cast<InterpolateExpression>(obj), data);
     break;
   default:
     UNHANDLED(InstanceType, type);

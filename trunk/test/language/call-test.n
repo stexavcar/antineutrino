@@ -1,9 +1,9 @@
 def fun(a, b, c, d, e) {
-  assert_equals(3, a);
-  assert_equals(6, b);
-  assert_equals(10, c);
-  assert_equals(1, d);
-  assert_equals(7, e);
+  assert a = 3;
+  assert b = 6;
+  assert c = 10;
+  assert d = 1;
+  assert e = 7;
   return a + b + c + d + e;
 }
 
@@ -12,15 +12,15 @@ def get_void() { }
 def get_this() -> this;
 
 def test_calls() {
-  assert_equals(27, fun(3, 6, 10, 1, 7));
-  assert_equals(get_void(), get_this());
-  assert_equals("foo", "foo"·get_this());
+  assert fun(3, 6, 10, 1, 7) = 27;
+  assert get_this() = get_void();
+  assert "foo"·get_this() = "foo";
 }
 
 def call_get_this() -> get_this();
 
 def test_implicit_self() {
-  assert_equals(8, 8·call_get_this());
+  assert 8·call_get_this() = 8;
 }
 
 protocol X {
@@ -34,17 +34,17 @@ protocol X {
 }
 
 def test_overloading() {
-  assert_equals(0, X.argc());
-  assert_equals(1, X.argc(0));
-  assert_equals(2, X.argc(0, 0));
-  assert_equals(3, X.argc(0, 0, 0));  
+  assert X.argc() = 0;
+  assert X.argc(0) = 1;
+  assert X.argc(0, 0) = 2;
+  assert X.argc(0, 0, 0) = 3;  
 }
 
 def test_simple_keywords() {
-  assert_equals(1, X.get_x(x: 1, y: 2));
-  assert_equals(4, X.get_x(y: 3, x: 4));
-  assert_equals(6, X.get_y(x: 5, y: 6));
-  assert_equals(7, X.get_y(y: 7, x: 8));
+  assert X.get_x(x: 1, y: 2) = 1;
+  assert X.get_x(y: 3, x: 4) = 4;
+  assert X.get_y(x: 5, y: 6) = 6;
+  assert X.get_y(y: 7, x: 8) = 7;
 }
 
 protocol X2 {
@@ -58,17 +58,17 @@ protocol X2 {
 }
 
 def test_mixed_keywords() {
-  assert_equals( 1, X2.get_arg(0,  1,  2, c:  3, d:  4, e:  5));
-  assert_equals( 7, X2.get_arg(1,  6,  7, c:  8, d:  9, e: 10));
-  assert_equals(13, X2.get_arg(2, 11, 12, c: 13, d: 14, e: 15));
-  assert_equals(19, X2.get_arg(3, 16, 17, c: 18, d: 19, e: 20));
-  assert_equals(25, X2.get_arg(4, 21, 22, c: 23, d: 24, e: 25));
+  assert X2.get_arg(0,  1,  2, c:  3, d:  4, e:  5) =  1;
+  assert X2.get_arg(1,  6,  7, c:  8, d:  9, e: 10) =  7;
+  assert X2.get_arg(2, 11, 12, c: 13, d: 14, e: 15) = 13;
+  assert X2.get_arg(3, 16, 17, c: 18, d: 19, e: 20) = 19;
+  assert X2.get_arg(4, 21, 22, c: 23, d: 24, e: 25) = 25;
   
-  assert_equals( 1, X2.get_arg(0,  1,  2, c:  3, d:  4, e:  5));
-  assert_equals( 7, X2.get_arg(1,  6,  7, d:  8, e:  9, c: 10));
-  assert_equals(14, X2.get_arg(2, 11, 12, e: 13, c: 14, d: 15));
-  assert_equals(19, X2.get_arg(3, 16, 17, c: 18, d: 19, e: 20));
-  assert_equals(24, X2.get_arg(4, 21, 22, d: 23, e: 24, c: 25));
+  assert X2.get_arg(0,  1,  2, c:  3, d:  4, e:  5) =  1;
+  assert X2.get_arg(1,  6,  7, d:  8, e:  9, c: 10) =  7;
+  assert X2.get_arg(2, 11, 12, e: 13, c: 14, d: 15) = 14;
+  assert X2.get_arg(3, 16, 17, c: 18, d: 19, e: 20) = 19;
+  assert X2.get_arg(4, 21, 22, d: 23, e: 24, c: 25) = 24;
 }
 
 def main() {

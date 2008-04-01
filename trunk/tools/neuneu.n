@@ -5,11 +5,14 @@ internal def is_digit();
 def is_ident_start() -> is_alpha() or (this = "_");
 def is_ident_part() -> is_ident_start() or is_digit();
 
+
 (* --- T o k e n s --- *)
+
 
 protocol Token {
   def is_identifier() -> false;
   def is_keyword(name) -> false;
+  def is_delimiter(name) -> false;
 }
 
 
@@ -43,13 +46,18 @@ protocol Delimiter : Token {
   
 }
 
+
 (* ---K e y w o r d s --- *)
+
 
 def keywords := ["def"];
 
+
 def delimiters := ["(", ")", "{", "}", "[", "]"];
 
+
 (* --- S c a n n e r --- *)
+
 
 protocol Scanner {
   
@@ -119,14 +127,58 @@ protocol Scanner {
   
 }
 
+
+(* --- G r a m m a r --- *)
+
+protocol Grammar {
+  static def make(terms) -> new Grammar() { terms: terms };
+}
+
+protocol Term {
+  def to_string() -> this.value;
+}
+
+protocol Value {
+  def to_string() -> "%";
+}
+
+protocol Delim {
+  def to_string() -> this.value;
+}
+
+protocol Sequence {
+  def to_string() {
+    var result := "";
+    var i := 0;
+    while (i < |this.elms|) {
+      if (not i = 0) result := result + " ";
+      result := result + this.elms[i].to_string();
+      i := i + 1;
+    }
+    return result;
+  }
+}
+
+def term(value) -> new Term() { value: value };
+
+def value() -> new Value();
+
+def delim(value) -> new Delim() { value: value };
+
+def seq(elms) -> new Sequence() { elms: elms };
+
 (* --- M a i n --- *)
+
+
+def get_grammar() {
+  def program := seq([term("def"), value(), delim("("), delim(")"), delim("{"), delim("}")]);
+  return Grammar.make(program);
+}
+
 
 def main() {
   def input := "def main() { } def main2() { }";
   def scan := Scanner.make(input);
-  var i := 0;
-  while (scan.has_more() and (i < 100)) {
-    print(scan.next_token());
-    i := i + 1;
-  }
+  def gram := get_grammar();
+  print(gram);
 }

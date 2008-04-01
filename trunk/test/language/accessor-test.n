@@ -1,39 +1,39 @@
 def test_getter() {
   def x := new { a: 1, b: 2, c: 3 };
-  assert_equals(1, x.a);
-  assert_equals(2, x.b);
-  assert_equals(3, x.c);  
+  assert x.a = 1;
+  assert x.b = 2;
+  assert x.c = 3;  
 }
 
 def test_setter() {
   def x := new { a: 1, b: 2, c: 3 };
-  assert_equals(1, x.a);
-  assert_equals(2, x.b);
-  assert_equals(3, x.c);  
+  assert x.a = 1;
+  assert x.b = 2;
+  assert x.c = 3;
   x.a := 4;
-  assert_equals(4, x.a);
-  assert_equals(2, x.b);
-  assert_equals(3, x.c);  
+  assert x.a = 4;
+  assert x.b = 2;
+  assert x.c = 3;  
   x.b := 5;
-  assert_equals(4, x.a);
-  assert_equals(5, x.b);
-  assert_equals(3, x.c); 
+  assert x.a = 4;
+  assert x.b = 5;
+  assert x.c = 3; 
   x.c := 6;
-  assert_equals(4, x.a);
-  assert_equals(5, x.b);
-  assert_equals(6, x.c);
+  assert x.a = 4;
+  assert x.b = 5;
+  assert x.c = 6;
   x.a := 7;
-  assert_equals(7, x.a);
-  assert_equals(5, x.b);
-  assert_equals(6, x.c);  
+  assert x.a = 7;
+  assert x.b = 5;
+  assert x.c = 6;  
   x.b := 8;
-  assert_equals(7, x.a);
-  assert_equals(8, x.b);
-  assert_equals(6, x.c); 
+  assert x.a = 7;
+  assert x.b = 8;
+  assert x.c = 6; 
   x.c := 9;
-  assert_equals(7, x.a);
-  assert_equals(8, x.b);
-  assert_equals(9, x.c);
+  assert x.a = 7;
+  assert x.b = 8;
+  assert x.c = 9;
 }
 
 def main() {

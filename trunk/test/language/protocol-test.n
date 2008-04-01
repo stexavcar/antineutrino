@@ -9,8 +9,8 @@ protocol B : A {
 def test_inheritance() {
   def a := new A();
   def b := new B();
-  assert_equals(4, a.x());
-  assert_equals(7, b.x());
+  assert a.x() = 4;
+  assert b.x() = 7;
 }
 
 protocol X {
@@ -18,7 +18,7 @@ protocol X {
 }
 
 def test_statics() {
-  assert_equals(8, X.foo());
+  assert X.foo() = 8;
 }
 
 def main() {

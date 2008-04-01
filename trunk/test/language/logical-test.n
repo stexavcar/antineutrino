@@ -1,48 +1,48 @@
 def truth_table_test_and() {
-  assert_equals(false, false and false and false);
-  assert_equals(false, false and false and true);
-  assert_equals(false, false and true  and false);
-  assert_equals(false, false and true  and true);
-  assert_equals(false, true  and false and false);
-  assert_equals(false, true  and false and true);
-  assert_equals(false, true  and true  and false);
-  assert_equals(true,  true  and true  and true);
+  assert (false and false and false) = false;
+  assert (false and false and true) = false;
+  assert (false and true  and false) = false;
+  assert (false and true  and true) = false;
+  assert (true  and false and false) = false;
+  assert (true  and false and true) = false;
+  assert (true  and true  and false) = false;
+  assert (true  and true  and true) = true;
 }
 
 def truth_table_test_or() {
-  assert_equals(false, false or false or false);
-  assert_equals(true,  false or false or true);
-  assert_equals(true,  false or true  or false);
-  assert_equals(true,  false or true  or true);
-  assert_equals(true,  true  or false or false);
-  assert_equals(true,  true  or false or true);
-  assert_equals(true,  true  or true  or false);
-  assert_equals(true,  true  or true  or true);
+  assert (false or false or false) = false;
+  assert (false or false or true) = true;
+  assert (false or true  or false) = true;
+  assert (false or true  or true) = true;
+  assert (true  or false or false) = true;
+  assert (true  or false or true) = true;
+  assert (true  or true  or false) = true;
+  assert (true  or true  or true) = true;
 }
 
 def truth_table_test_and_or() {
-  assert_equals(false, false or false and false);
-  assert_equals(false, false or false and true);
-  assert_equals(false, false or true  and false);
-  assert_equals(true,  false or true  and true);
-  assert_equals(true,  true  or false and false);
-  assert_equals(true,  true  or false and true);
-  assert_equals(true,  true  or true  and false);
-  assert_equals(true,  true  or true  and true);
+  assert (false or false and false) = false;
+  assert (false or false and true) = false;
+  assert (false or true  and false) = false;
+  assert (false or true  and true) = true;
+  assert (true  or false and false) = true;
+  assert (true  or false and true) = true;
+  assert (true  or true  and false) = true;
+  assert (true  or true  and true) = true;
   
-  assert_equals(false, false and false or false);
-  assert_equals(true,  false and false or true);
-  assert_equals(false, false and true  or false);
-  assert_equals(true,  false and true  or true);
-  assert_equals(false, true  and false or false);
-  assert_equals(true,  true  and false or true);
-  assert_equals(true,  true  and true  or false);
-  assert_equals(true,  true  and true  or true);
+  assert (false and false or false) = false;
+  assert (false and false or true) = true;
+  assert (false and true  or false) = false;
+  assert (false and true  or true) = true;
+  assert (true  and false or false) = false;
+  assert (true  and false or true) = true;
+  assert (true  and true  or false) = true;
+  assert (true  and true  or true) = true;
 }
 
 def lazy_evaluation_test () {
-  assert_equals(true,  true  or  fail("1"));
-  assert_equals(false, false and fail("2"));
+  assert (true  or  fail("1")) = true;
+  assert (false and fail("2")) = false;
 }
 
 def main() {

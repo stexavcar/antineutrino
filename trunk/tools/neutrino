@@ -1,4 +1,4 @@
 #!/bin/sh
 
 python ../tools/pyneu/main.py ../lib/ $1 -c ../src/utils/consts.h -o temp.nc \
-  && ./bin/paranoid/neutrino --images[ temp.nc ] --libs[ ./bin/paranoid-natives/libcore.dylib ]
+  && ./bin/paranoid/neutrino --images[ temp.nc ] 

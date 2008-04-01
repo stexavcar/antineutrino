@@ -265,6 +265,8 @@ class Parser(object):
       return self.do_on_expression(is_toplevel)
     elif self.token().is_keyword(RAISE):
       return self.raise_expression(is_toplevel)
+    elif self.token().is_keyword(ASSERT):
+      return self.assert_expression(is_toplevel)
     elif self.token().is_delimiter('{'):
       return self.sequence_expression()
     else:
@@ -313,6 +315,35 @@ class Parser(object):
     value = self.expression(False)
     if is_toplevel: self.expect_delimiter(';')
     return ast.Return(value)
+  
+  def assert_expression(self, is_toplevel):
+    self.expect_keyword(ASSERT)
+    value = self.expression(False)
+    if is_toplevel: self.expect_delimiter(';')
+    if value.is_invoke():
+      defs = [ ]
+      recv_sym = ast.Symbol("")
+      raise_args = [ ]
+      defs.append((recv_sym, value.recv()))
+      raise_args.append(recv_sym)
+      name = value.name()
+      args = value.args()
+      argsyms = [ ]
+      for arg in args.arguments():
+        argsym = ast.Symbol("")
+        argsyms.append(argsym)
+        defs.append((argsym, arg))
+        raise_args.append(argsym)
+      condition = ast.Invoke(recv_sym, name, args.clone_with_args(argsyms))
+      error = ast.Raise("assertion_failure", ast.Arguments(raise_args, {}, False))
+      result = ast.Conditional(condition, ast.Literal(ast.Void()), error)
+      defs.reverse()
+      for (sym, value) in defs:
+        result = ast.LocalDefinition(sym, value, result)
+      return result
+    else:
+      error = ast.Raise("assertion_failure", ast.Arguments([], {}, False))
+      return ast.Conditional(value, ast.Literal(ast.Void()), error)
 
   def raise_expression(self, is_toplevel):
     self.expect_keyword(RAISE)

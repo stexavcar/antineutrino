@@ -457,6 +457,8 @@ uword Object::size_in_memory() {
     return String::size_for(cast<String>(this)->length());
   case tStack:
     return Stack::size_for(cast<Stack>(this)->height());
+  case tInstance:
+    return Instance::size_for(cast<Instance>(this)->layout()->instance_field_count());
   case tCode: case tBuffer:
     return AbstractBuffer::size_for(cast<AbstractBuffer>(this)->size<uint8_t>());
 #define MAKE_CASE(n, NAME, Name, name) case t##Name: return Name::kSize;
@@ -583,6 +585,9 @@ void Object::for_each_field(FieldVisitor &visitor) {
     case tStack:
       cast<Stack>(this)->for_each_stack_field(visitor);
       break;
+    case tInstance:
+      cast<Instance>(this)->for_each_instance_field(visitor);
+      break;
 #define MAKE_CASE(n, NAME, Name, name)                               \
     case t##Name:                                                    \
       FOR_EACH_##NAME##_FIELD(VISIT_FIELD, Name);                    \
@@ -592,6 +597,12 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
     default:
       UNHANDLED(InstanceType, type);
   }
+}
+
+void Instance::for_each_instance_field(FieldVisitor &visitor) {
+  uword count = layout()->instance_field_count();
+  for (uword i = 0; i < count; i++)
+    visitor.visit_field(&get_field(i));
 }
 
 #undef VISIT
