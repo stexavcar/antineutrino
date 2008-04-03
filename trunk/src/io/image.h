@@ -353,6 +353,7 @@ public:
   DECLARE_IMAGE_FIELD(Symbol, symbol);
   DECLARE_IMAGE_FIELD(SyntaxTree, value);
   DECLARE_IMAGE_FIELD(SyntaxTree, body);
+  DECLARE_IMAGE_FIELD(Smi, type);
 };
 
 class FAssignment : public FSyntaxTree {

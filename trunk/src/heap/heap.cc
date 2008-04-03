@@ -339,14 +339,14 @@ Data *Heap::new_selector(Immediate *name, Smi *argc, Bool *is_accessor) {
   return result;
 }
 
-Data *Heap::new_transparent_forwarder(Value *target) {
-  Data *val = new_forwarder_descriptor(TRANSPARENT_FORWARDER, target);
+Data *Heap::new_forwarder(Forwarder::Type type, Value *target) {
+  Data *val = new_forwarder_descriptor(type, target);
   if (is<AllocationFailed>(val)) return val;
   ForwarderDescriptor *desc = cast<ForwarderDescriptor>(val);
   return Forwarder::to(desc);
 }
 
-Data *Heap::new_forwarder_descriptor(ForwarderType type, Value *target) {
+Data *Heap::new_forwarder_descriptor(Forwarder::Type type, Value *target) {
   Data *val = allocate_object(ForwarderDescriptor::kSize, roots().forwarder_descriptor_layout());
   if (is<AllocationFailed>(val)) return val;
   ForwarderDescriptor *result = cast<ForwarderDescriptor>(val);

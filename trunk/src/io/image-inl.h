@@ -366,6 +366,7 @@ DEFINE_GETTER    (Tuple,            InterpolateExpression, terms,           Term
 DEFINE_GETTER    (Symbol,           LocalDefinition,       symbol,          Symbol)
 DEFINE_GETTER    (SyntaxTree,       LocalDefinition,       value,           Value)
 DEFINE_GETTER    (SyntaxTree,       LocalDefinition,       body,            Body)
+DEFINE_GETTER    (Smi,              LocalDefinition,       type,            Type)
 DEFINE_GETTER    (Symbol,           Assignment,            symbol,          Symbol)
 DEFINE_GETTER    (SyntaxTree,       Assignment,            value,           Value)
 DEFINE_GETTER    (Stack,            Task,                  stack,           Stack)

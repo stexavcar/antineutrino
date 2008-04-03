@@ -179,6 +179,7 @@ def get_grammar() {
 def main() {
   def input := "def main() { } def main2() { }";
   def scan := Scanner.make(input);
+  while (scan.has_more()) print(scan.next_token());
   def gram := get_grammar();
   print(gram);
 }

@@ -69,7 +69,7 @@ Data *Builtins::string_plus(BuiltinArguments &args) {
   SIGNAL_CHECK(String, self, to<String>(args.self()));
   SIGNAL_CHECK(String, that, to<String>(args[0]));
   uword length = self->length() + that->length();
-  SIGNAL_CHECK(String, result, Runtime::current().heap().new_string(length));
+  SIGNAL_CHECK(String, result, args.runtime().heap().new_string(length));
   for (uword i = 0; i < self->length(); i++)
     result->at(i) = self->at(i);
   for (uword i = 0; i < that->length(); i++)
@@ -175,14 +175,14 @@ Data *Builtins::object_eq(BuiltinArguments &args) {
   Immediate *self = deref(args.self());
   Immediate *other = deref(args[0]);
   return (self == other)
-       ? static_cast<Value*>(Runtime::current().roots().thrue())
-       : static_cast<Value*>(Runtime::current().roots().fahlse());
+       ? static_cast<Value*>(args.runtime().roots().thrue())
+       : static_cast<Value*>(args.runtime().roots().fahlse());
 }
 
 Data *Builtins::object_to_string(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   scoped_string str(args.self()->to_string());
-  return Runtime::current().heap().new_string(*str);
+  return args.runtime().heap().new_string(*str);
 }
 
 
@@ -208,7 +208,7 @@ Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
 Data *Builtins::protocol_new(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   ref_scope scope;
-  Runtime &runtime = Runtime::current();
+  Runtime &runtime = args.runtime();
   SIGNAL_CHECK(Protocol, protocol, to<Protocol>(args.self()));
   if (protocol == runtime.roots().symbol_layout()->protocol()) {
     return runtime.heap().new_symbol(runtime.roots().vhoid());
@@ -229,16 +229,17 @@ Data *Builtins::tuple_eq(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(Tuple, self, to<Tuple>(args.self()));
   Data *other = to<Tuple>(args[0]);
+  if (self == other) return args.runtime().roots().thrue();
   if (is<Nothing>(other))
-    return Runtime::current().roots().fahlse();
+    return args.runtime().roots().fahlse();
   Tuple *that = cast<Tuple>(other);
   if (self->length() != that->length())
-    return Runtime::current().roots().fahlse();
+    return args.runtime().roots().fahlse();
   for (uword i = 0; i < self->length(); i++) {
     if (!self->get(i)->equals(that->get(i)))
-      return Runtime::current().roots().fahlse();
+      return args.runtime().roots().fahlse();
   }
-  return Runtime::current().roots().thrue();
+  return args.runtime().roots().thrue();
 }
 
 Data *Builtins::tuple_get(BuiltinArguments &args) {
@@ -264,7 +265,7 @@ Data *Builtins::lambda_disassemble(BuiltinArguments &args) {
   self.ensure_compiled(ref<Method>());
   scoped_string str(self->disassemble());
   str->println();
-  return Runtime::current().roots().vhoid();
+  return args.runtime().roots().vhoid();
 }
 
 
@@ -291,7 +292,7 @@ Data *Builtins::raw_print(BuiltinArguments &args) {
   for (uword i = 0; i < str_obj->length(); i++)
     putc(str_obj->at(i), stdout);
   putc('\n', stdout);
-  return Runtime::current().roots().vhoid();
+  return args.runtime().roots().vhoid();
 }
 
 Data *Builtins::compile_expression(BuiltinArguments &args) {
@@ -304,7 +305,7 @@ Data *Builtins::compile_expression(BuiltinArguments &args) {
 
 Data *Builtins::lift(BuiltinArguments &args) {
   Value *value = args[0];
-  return Runtime::current().heap().new_literal_expression(value);
+  return args.runtime().heap().new_literal_expression(value);
 }
 
 
@@ -326,7 +327,7 @@ Data *Builtins::channel_send(BuiltinArguments &args) {
 
 Data *Builtins::make_forwarder(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  return args.runtime().heap().new_transparent_forwarder(args.self());
+  return args.runtime().heap().new_forwarder(Forwarder::fwTransparent, args.self());
 }
 
 Data *Builtins::set_target(BuiltinArguments &args) {

@@ -389,6 +389,23 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc += OpcodeInfo<ocUnmark>::kSize;
       break;
     }
+    case ocForward: {
+      Value *value = constant_pool[code[pc + 1]];
+      Data *forw = runtime().heap().new_forwarder(Forwarder::fwUnbound, value);
+      if (is<AllocationFailed>(forw)) return forw;
+      frame.push(cast<Value>(forw));
+      pc += OpcodeInfo<ocForward>::kSize;
+      break;
+    }
+    case ocBindFor: {
+      Value *value = frame.pop();
+      Forwarder *forw = cast<Forwarder>(frame.pop());
+      forw->descriptor()->set_type(Forwarder::fwTransparent);
+      forw->descriptor()->set_target(value);
+      frame.push(value);
+      pc += OpcodeInfo<ocBindFor>::kSize;
+      break;
+    }
     case ocBuiltin: {
       uint16_t argc = code[pc + 1];
       uint16_t index = code[pc + 2];

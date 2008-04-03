@@ -59,6 +59,8 @@
     <keyword>channel</keyword>
     <keyword>assert</keyword>
     <keyword>super</keyword>
+    <keyword>factory</keyword>
+    <keyword>rec</keyword>
   </keyword-list>
 
 <!-- end keywords -->

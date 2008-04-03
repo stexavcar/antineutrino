@@ -7,7 +7,7 @@ using namespace neutrino;
 void Test::simple_forwarder() {
   LocalRuntime runtime;
   Tuple *empty = runtime.roots().empty_tuple();
-  Forwarder *forwarder = cast<Forwarder>(runtime.heap().new_transparent_forwarder(empty));
+  Forwarder *forwarder = cast<Forwarder>(runtime.heap().new_forwarder(Forwarder::fwTransparent, empty));
   CHECK(!is<Smi>(forwarder));
   CHECK(!is<Object>(forwarder));
   CHECK(!is<Signal>(forwarder));
@@ -24,7 +24,7 @@ void Test::simple_forwarder() {
 void Test::smi_forwarder() {
   LocalRuntime runtime;
   Value *obj = Smi::from_int(17);
-  Forwarder *forwarder = cast<Forwarder>(runtime.heap().new_transparent_forwarder(obj));
+  Forwarder *forwarder = cast<Forwarder>(runtime.heap().new_forwarder(Forwarder::fwTransparent, obj));
   CHECK(!is<Smi>(forwarder));
   CHECK(!is<Object>(forwarder));
   CHECK(!is<Signal>(forwarder));

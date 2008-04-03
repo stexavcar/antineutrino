@@ -203,7 +203,8 @@
   VISIT(1, LocalDefinition,       SymbolOffset)                      \
   VISIT(2, LocalDefinition,       ValueOffset)                       \
   VISIT(3, LocalDefinition,       BodyOffset)                        \
-  VISIT(4, LocalDefinition,       Size)                              \
+  VISIT(4, LocalDefinition,       TypeOffset)                        \
+  VISIT(5, LocalDefinition,       Size)                              \
   VISIT(1, Assignment,            SymbolOffset)                      \
   VISIT(2, Assignment,            ValueOffset)                       \
   VISIT(3, Assignment,            Size)                              \

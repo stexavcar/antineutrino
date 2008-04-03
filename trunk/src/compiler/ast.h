@@ -739,16 +739,24 @@ DEFINE_REF_CLASS(BuiltinCall);
 #define FOR_EACH_LOCAL_DEFINITION_FIELD(VISIT, arg)                  \
   VISIT(Symbol,     symbol, Symbol, arg)                             \
   VISIT(SyntaxTree, value,  Value,  arg)                             \
-  VISIT(SyntaxTree, body,   Body,   arg)
+  VISIT(SyntaxTree, body,   Body,   arg)                             \
+  VISIT(Smi,        type,   Type,   arg)
 
 class LocalDefinition : public SyntaxTree {
 public:
   FOR_EACH_LOCAL_DEFINITION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  enum Type {
+    ldDef = 1,
+    ldVar = 2,
+    ldRec = 3
+  };
 
   static const uword kSymbolOffset = SyntaxTree::kHeaderSize;
-  static const uword kValueOffset = kSymbolOffset + kPointerSize;
-  static const uword kBodyOffset = kValueOffset + kPointerSize;
-  static const uword kSize = kBodyOffset + kPointerSize;
+  static const uword kValueOffset  = kSymbolOffset + kPointerSize;
+  static const uword kBodyOffset   = kValueOffset + kPointerSize;
+  static const uword kTypeOffset   = kBodyOffset + kPointerSize;
+  static const uword kSize         = kTypeOffset + kPointerSize;
 };
 
 template <>

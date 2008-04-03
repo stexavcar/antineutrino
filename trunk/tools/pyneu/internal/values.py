@@ -650,18 +650,20 @@ class TupleExpression(SyntaxTree):
 
 class LocalDefinition(SyntaxTree):
 
-  def __init__(self, symbol, value, body):
+  def __init__(self, symbol, value, body, type):
     super(LocalDefinition, self).__init__()
     assert isinstance(symbol, Symbol)
     self.symbol_ = symbol
     self.value_ = value
     self.body_ = body
+    self.type_ = type
 
   def allocate(self, heap):
     result = heap.allocate(fields.FLocalDefinition_Size, Smi(values.LocalDefinition.index))
     result[fields.FLocalDefinition_SymbolOffset] = self.symbol_
     result[fields.FLocalDefinition_ValueOffset] = self.value_
     result[fields.FLocalDefinition_BodyOffset] = self.body_
+    result[fields.FLocalDefinition_TypeOffset] = Smi(self.type_)
     return result
 
 

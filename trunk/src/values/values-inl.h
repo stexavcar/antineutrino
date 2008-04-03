@@ -501,7 +501,7 @@ DEFINE_ACCESSORS(void*, Channel, proxy, Proxy)
 // --- F o r w a r d e r   D e s c r i p t o r ---
 // -----------------------------------------------
 
-DEFINE_ACCESSORS(ForwarderType, ForwarderDescriptor, type, Type)
+DEFINE_ACCESSORS(Forwarder::Type, ForwarderDescriptor, type, Type)
 
 
 // -------------------

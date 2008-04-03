@@ -658,11 +658,12 @@ class InternalCall(Expression):
 
 class LocalDefinition(Expression):
 
-  def __init__(self, symbol, value, body):
+  def __init__(self, symbol, value, body, type):
     super(LocalDefinition, self).__init__()
     self.symbol_ = symbol
     self.value_ = value
     self.body_ = body
+    self.type_ = type
 
   def accept(self, visitor):
     visitor.visit_local_definition(self)
@@ -675,7 +676,7 @@ class LocalDefinition(Expression):
     symbol = self.symbol_.quote()
     value = self.value_.quote()
     body = self.body_.quote()
-    return values.LocalDefinition(symbol, value, body)
+    return values.LocalDefinition(symbol, value, body, self.type_)
 
 
 class Assignment(Expression):

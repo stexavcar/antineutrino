@@ -37,9 +37,14 @@ def to_map(list):
 # The set of keywords
 KEYWORDS = to_map([
   'def', 'this', 'is', 'if', 'else', 'while', 'do', 'return', 'null',
-  'true', 'false', 'internal', 'operator', 'new', 'in', 'fn', 'and',
-  'or', 'not', 'on', 'raise', 'protocol', 'native', 'static', 'task',
-  'yield', 'var', 'channel', 'while', 'assert', 'super'
+  'true', 'false', 'new', 'in', 'fn', 'and', 'or', 'not', 'on',
+  'raise', 'protocol', 'task', 'yield', 'var', 'while', 'assert',
+  'super', 'rec'
+])
+
+
+MODIFIERS = to_map([
+  'static', 'internal', 'channel', 'native', 'factory'
 ])
 
 
@@ -142,7 +147,15 @@ class Keyword(Token):
     super(Keyword, self).__init__(pos, value)
   
   def is_keyword(self, value = None):
-    return (not value) or (self.value() == value)
+    if not value:
+      return True
+    elif type(value) is list:
+      for word in value:
+        if self.is_keyword(word):
+          return True
+      return False
+    else:
+      return self.value() == value
   
   def __str__(self):
     return "keyword %s" % self.value()

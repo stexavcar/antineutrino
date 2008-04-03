@@ -187,12 +187,11 @@ class Forwarder : public Value {
 public:
   inline ForwarderDescriptor *descriptor();
 
+  enum Type {
+    fwTransparent, fwUnbound
+  };
+
   static inline Forwarder *to(ForwarderDescriptor *obj);
-};
-
-
-enum ForwarderType {
-  TRANSPARENT_FORWARDER
 };
 
 #define FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(VISIT, arg)              \
@@ -200,8 +199,8 @@ enum ForwarderType {
 
 class ForwarderDescriptor : public Object {
 public:
-  inline ForwarderType &type();
-  inline void set_type(ForwarderType value);
+  inline Forwarder::Type &type();
+  inline void set_type(Forwarder::Type value);
 
   FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(DECLARE_OBJECT_FIELD, 0)
 

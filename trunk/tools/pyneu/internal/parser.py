@@ -7,11 +7,8 @@ import scanner
 
 # Install the keywords as global variables, so 'this' can be accessed
 # through THIS and so forth.
-for word in scanner.KEYWORDS.keys():
+for word in scanner.KEYWORDS.keys() + scanner.MODIFIERS.keys():
   globals()[word.upper()] = word
-
-
-MODIFIERS = [ INTERNAL, NATIVE, STATIC, CHANNEL ]
 
 
 class Parser(object):
@@ -99,18 +96,11 @@ class Parser(object):
     pos = self.token().position()
     raise scanner.SyntaxError(pos, 'Unexpected token')
 
-  def is_modifier(self, token):
-    for modifier in MODIFIERS:
-      if token.is_keyword(modifier):
-        return True
-    return False
-
   def modifiers(self):
     result = [ ]
-    while self.is_modifier(self.token()):
-      modifier = self.token().value()
+    while self.token().is_identifier():
+      modifier = self.expect_identifier()
       result.append(modifier)
-      self.expect_keyword(modifier)
     return result
 
   def program(self):
@@ -251,8 +241,10 @@ class Parser(object):
     return self.control_expression(is_toplevel)
 
   def control_expression(self, is_toplevel):
-    if self.token().is_keyword(DEF) or self.token().is_keyword(VAR):
+    if self.token().is_keyword([DEF, VAR]):
       return self.local_definition(is_toplevel)
+    elif self.token().is_keyword(REC):
+      return self.recursive_definition(is_toplevel)
     elif self.token().is_keyword(IF):
       return self.conditional_expression(is_toplevel)
     elif self.token().is_keyword(WHILE):
@@ -339,7 +331,7 @@ class Parser(object):
       result = ast.Conditional(condition, ast.Literal(ast.Void()), error)
       defs.reverse()
       for (sym, value) in defs:
-        result = ast.LocalDefinition(sym, value, result)
+        result = ast.LocalDefinition(sym, value, result, 1)
       return result
     else:
       error = ast.Raise("assertion_failure", ast.Arguments([], {}, False))
@@ -395,7 +387,25 @@ class Parser(object):
       stmts = self.statements()
       body = ast.Sequence.make(stmts)
     self.resolver().pop_scope()
-    return ast.LocalDefinition(name, value, body)
+    if is_var: type = 2
+    else: type = 1
+    return ast.LocalDefinition(name, value, body, type)
+
+  def recursive_definition(self, is_toplevel):
+    self.expect_keyword(REC)
+    name = ast.Symbol(self.expect_identifier())
+    self.resolver().push_scope([ name ])
+    self.expect_delimiter(':=')
+    value = self.expression(False)
+    if self.token().is_keyword(IN):
+      self.expect_keyword(IN)
+      body = self.expression(is_toplevel)
+    elif is_toplevel:
+      self.expect_delimiter(';')
+      stmts = self.statements()
+      body = ast.Sequence.make(stmts)
+    self.resolver().pop_scope()
+    return ast.LocalDefinition(name, value, body, 3)
 
   def logical_expression(self):
     exprs = [ self.and_expression() ]
