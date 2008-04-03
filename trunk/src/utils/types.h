@@ -37,7 +37,8 @@ static inline T function_cast(void *obj) {
 }
 
 template <typename T>
-class TypeConsts { };
+class TypeConsts {
+};
 
 template <>
 class TypeConsts<uword> {
@@ -48,7 +49,7 @@ public:
 template <>
 class TypeConsts<uint16_t> {
 public:
-  static const uword kMax = ~0;
+  static const uint16_t kMax = ~0;
 };
 
 // Forward declarations
