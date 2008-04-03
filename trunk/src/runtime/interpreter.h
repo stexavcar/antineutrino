@@ -26,7 +26,7 @@ namespace neutrino {
   VISIT(24, Mark,   1)   VISIT(25, Unmark, 0)   VISIT(26, New,      1) \
   VISIT(27, LdField, 2)  VISIT(28, IfFalse, 1)  VISIT(29, Task,     0) \
   VISIT(30, Yield,  0)   VISIT(31, StLocal, 1)  VISIT(32, Attach,   0) \
-  VISIT(33, Keyword, 1)  VISIT(34, StField, 2)
+  VISIT(33, Keyword, 1)  VISIT(34, StField, 2)  VISIT(35, InvSup,   4)
 
 enum Opcode {
   __first_opcode = -1
@@ -153,6 +153,8 @@ private:
   Data *interpret(Stack *stack, Frame &frame, uword *pc_ptr);
   Layout *get_layout(Immediate *val);
   Data *lookup_method(Layout *layout, Selector *selector);
+  Data *lookup_super_method(Layout *layout, Selector *selector,
+      Signature *current);
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
 };

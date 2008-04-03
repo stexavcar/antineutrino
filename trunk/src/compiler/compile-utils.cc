@@ -15,7 +15,7 @@ heap_list::~heap_list() {
 }
 
 void heap_list::extend_capacity() {
-  RefScope scope;
+  ref_scope scope;
   uword capacity = data().length();
   uword new_capacity = grow_value(capacity);
   ref<Tuple> new_data = factory().new_tuple(new_capacity);

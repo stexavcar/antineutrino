@@ -558,6 +558,18 @@ class GlobalExpression(SyntaxTree):
     return result
 
 
+class SuperExpression(SyntaxTree):
+
+  def __init__(self, value):
+    super(SuperExpression, self).__init__()
+    self.value_ = value
+  
+  def allocate(self, heap):
+    result = heap.allocate(fields.FSuperExpression_Size, Smi(values.SuperExpression.index))
+    result[fields.FSuperExpression_ValueOffset] = self.value_
+    return result
+
+
 class LiteralExpression(SyntaxTree):
 
   def __init__(self, value):

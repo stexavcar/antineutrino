@@ -5,7 +5,7 @@
 #include "utils/checks.h"
 #include "utils/scoped-ptrs-inl.h"
 #include "utils/vector-inl.h"
-#include "values/values-inl.h"
+#include "values/method-inl.h"
 
 namespace neutrino {
 
@@ -31,7 +31,7 @@ private:
 // -----------------------------
 
 Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
-  RefScope scope;
+  ref_scope scope;
   ref<Task> task = new_ref(initial_task);
   ref<Lambda> lambda = new_ref(initial_lambda);
   Frame frame = prepare_call(task, lambda, 0);
@@ -63,7 +63,7 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
 }
 
 Frame Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc) {
-  lambda.ensure_compiled();
+  lambda.ensure_compiled(NULL);
   ASSERT(task->stack()->status().is_empty);
   task->stack()->status().is_empty = false;
   Frame frame(task->stack()->bottom() + Frame::accessible_below_fp(argc));
@@ -89,84 +89,24 @@ Layout *Interpreter::get_layout(Immediate *value) {
 }
 
 
-class MethodLookup {
-public:
-  MethodLookup()
-    : score_(static_cast<uword>(-1))
-    , method_(Nothing::make())
-    , is_ambiguous_(false) { }
-  void score_method(Method *method, Layout *reciever);
-  void lookup_in_dictionary(Tuple *methods, Selector *name, Layout *reciever);
-  Data *method() { return method_; }
-  bool is_ambiguous() { return is_ambiguous_; }
-private:
-  uword score_;
-  Data *method_;
-  bool is_ambiguous_;
-};
-
-
-static inline word get_distance(Layout *layout, Protocol *target) {
-  Value *current = layout->protocol();
-  word distance = 0;
-  while (is<Protocol>(current)) {
-    if (current == target) return distance;
-    distance++;
-    current = cast<Protocol>(current)->super();
-  }
-  return -1;
-}
-
-
-void MethodLookup::score_method(Method *method, Layout *reciever) {
-  uword score = 0;
-  Signature *signature = method->signature();
-  for (uword i = 0; i < signature->parameters()->length(); i++) {
-    Value *param = signature->parameters()->get(i);
-    if (is<Protocol>(param)) {
-      word distance = get_distance(reciever, cast<Protocol>(param));
-      if (distance >= 0) score += distance;
-      else return;
-    }
-  }
-  if (score < score_) {
-    score_ = score;
-    method_ = method;
-    is_ambiguous_ = false;
-  } else if (score == score_) {
-    is_ambiguous_ = true;
-  }
-}
-
-
-void MethodLookup::lookup_in_dictionary(Tuple *methods, Selector *selector,
-    Layout *reciever) {
-  for (uword i = 0; i < methods->length(); i++) {
-    Method *method = cast<Method>(methods->get(i));
-    if (method->selector()->equals(selector))
-      score_method(method, reciever);
-  }
-}
-
-
-/**
- * Returns the method with the specified name in the given class.  If
- * no method is found Nothing is returned.
- */
 Data *Interpreter::lookup_method(Layout *layout, Selector *selector) {
-  MethodLookup lookup;
-  // Look up any layout-local methods
-  lookup.lookup_in_dictionary(layout->methods(), selector, layout);
-  // Look up methods in protocols
-  Value *current = layout->protocol();
-  while (is<Protocol>(current)) {
-    Protocol *protocol = cast<Protocol>(current);
-    lookup.lookup_in_dictionary(protocol->methods(), selector, layout);
-    current = protocol->super();
-  }
+  MethodLookup lookup(0);
+  lookup.lookup_method(layout, selector);
   ASSERT(!lookup.is_ambiguous());
   return lookup.method();
 }
+
+
+Data *Interpreter::lookup_super_method(Layout *layout, Selector *selector,
+    Signature *current) {
+  uword prev_score = MethodLookup::get_method_score(current, layout);
+  ASSERT(prev_score != MethodLookup::kNoMatch);
+  MethodLookup lookup(prev_score + 1);
+  lookup.lookup_method(layout, selector);
+  ASSERT(!lookup.is_ambiguous());
+  return lookup.method();
+}
+
 
 static void unhandled_condition(Value *name, BuiltinArguments &args) {
   string_buffer buf;
@@ -310,7 +250,34 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       frame.push_activation();
       frame.prev_pc() = pc + OpcodeInfo<ocInvoke>::kSize;
       frame.lambda() = method->lambda();
-      method->lambda()->ensure_compiled();
+      method->lambda()->ensure_compiled(method);
+      code = cast<Code>(method->lambda()->code())->buffer();
+      constant_pool = cast<Tuple>(method->lambda()->constant_pool())->buffer();
+      if (!keymap->is_empty())
+        frame.push(keymap);
+      pc = 0;
+      break;
+    }
+    case ocInvSup: {
+      uint16_t selector_index = code[pc + 1];
+      Selector *selector = cast<Selector>(constant_pool[selector_index]);
+      Tuple *keymap = cast<Tuple>(constant_pool[code[pc + 3]]);
+      Signature *current = cast<Signature>(constant_pool[code[pc + 4]]);
+      uint16_t argc = code[pc + 2];
+      Value *recv = frame[argc + 1];
+      Layout *layout = get_layout(deref(recv));
+      Data *lookup_result = lookup_super_method(layout, selector, current);
+      if (is<Nothing>(lookup_result)) {
+        scoped_string selector_str(selector->to_string());
+        scoped_string recv_str(recv->to_short_string());
+        Conditions::get().error_occurred("Lookup failure: %s::%s",
+            recv_str.chars(), selector_str.chars());
+      }
+      Method *method = cast<Method>(lookup_result);
+      frame.push_activation();
+      frame.prev_pc() = pc + OpcodeInfo<ocInvSup>::kSize;
+      frame.lambda() = method->lambda();
+      method->lambda()->ensure_compiled(method);
       code = cast<Code>(method->lambda()->code())->buffer();
       constant_pool = cast<Tuple>(method->lambda()->constant_pool())->buffer();
       if (!keymap->is_empty())
@@ -329,7 +296,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
           String *handler = cast<String>(handlers->get(i));
           if (name->equals(handler)) {
             Lambda *lambda = cast<Lambda>(handlers->get(i + 1));
-            lambda->ensure_compiled();
+            lambda->ensure_compiled(NULL);
             frame.push_activation();
             frame.prev_pc() = pc + OpcodeInfo<ocRaise>::kSize;
             frame.lambda() = lambda;
@@ -354,7 +321,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       uint16_t argc = code[pc + 1];
       Value *value = frame[argc];
       Lambda *fun = cast<Lambda>(value);
-      fun->ensure_compiled();
+      fun->ensure_compiled(NULL);
       frame.push_activation();
       frame.prev_pc() = pc + OpcodeInfo<ocCall>::kSize;
       frame.lambda() = fun;
@@ -537,7 +504,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Data *task_val = runtime().heap().new_task();
       if (is<Signal>(task_val)) return task_val;
       Task *task = cast<Task>(task_val);
-      RefScope scope;
+      ref_scope scope;
       prepare_call(new_ref(task), new_ref(lambda), 0);
       frame.push(task);
       pc += OpcodeInfo<ocTask>::kSize;

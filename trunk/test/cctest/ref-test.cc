@@ -7,7 +7,7 @@
 using namespace neutrino;
 
 void Test::handles() {
-  RefScope scope;
+  ref_scope scope;
   Runtime runtime;
   runtime.initialize();
   Heap &heap = runtime.heap();
@@ -31,7 +31,7 @@ void Test::unscoped() {
 
 static void test_deep(uword n) {
   if (n == 0) return;
-  RefScope scope;
+  ref_scope scope;
   static const int kCount = 300;
   ref<Smi> refs[kCount];
   for (int i = 0; i < kCount; i++)
@@ -60,7 +60,7 @@ static void count_refs(uword expected) {
 }
 
 void Test::ref_iteration() {
-  RefScope scope;
+  ref_scope scope;
   const uword kRefCount = 1024;
   for (uword i = 0; i < kRefCount; i++) {
     count_refs(i);

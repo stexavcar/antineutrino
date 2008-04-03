@@ -193,7 +193,7 @@ Data *Builtins::object_to_string(BuiltinArguments &args) {
 Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   SIGNAL_CHECK(ProtocolExpression, raw_expr, to<ProtocolExpression>(args.self()));
-  RefScope scope;
+  ref_scope scope;
   ref<ProtocolExpression> expr = new_ref(raw_expr);
   ref<Context> context = new_ref(args.lambda()->context());
   ref<Protocol> result = expr.compile(context);
@@ -207,7 +207,7 @@ Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
 
 Data *Builtins::protocol_new(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  RefScope scope;
+  ref_scope scope;
   Runtime &runtime = Runtime::current();
   SIGNAL_CHECK(Protocol, protocol, to<Protocol>(args.self()));
   if (protocol == runtime.roots().symbol_layout()->protocol()) {
@@ -261,7 +261,7 @@ Data *Builtins::tuple_length(BuiltinArguments &args) {
 
 Data *Builtins::lambda_disassemble(BuiltinArguments &args) {
   ref<Lambda> self = new_ref(cast<Lambda>(args.self()));
-  self.ensure_compiled();
+  self.ensure_compiled(ref<Method>());
   scoped_string str(self->disassemble());
   str->println();
   return Runtime::current().roots().vhoid();

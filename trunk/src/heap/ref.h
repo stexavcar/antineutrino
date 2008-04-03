@@ -18,9 +18,9 @@ private:
   Value *entries_[kSize];
 };
 
-class RefScopeInfo {
+class ref_scopeInfo {
 public:
-  inline RefScopeInfo();
+  inline ref_scopeInfo();
   word block_count;
   Value **next_cell;
   Value **limit;
@@ -29,10 +29,10 @@ public:
 /**
  * A scope for allocating new refs.
  */
-class RefScope {
+class ref_scope {
 public:
-  inline RefScope();
-  inline ~RefScope();
+  inline ref_scope();
+  inline ~ref_scope();
   
   template <class C>
   static inline C **new_cell(C *value);
@@ -41,9 +41,9 @@ private:
   static void shrink();
   static Value **grow();
 
-  static RefScopeInfo &current() { return current_; }
-  static RefScopeInfo current_;
-  const RefScopeInfo previous_;
+  static ref_scopeInfo &current() { return current_; }
+  static ref_scopeInfo current_;
+  const ref_scopeInfo previous_;
   
   friend class RefIterator;
   static list_buffer<RefBlock*> &block_stack() { return block_stack_; }

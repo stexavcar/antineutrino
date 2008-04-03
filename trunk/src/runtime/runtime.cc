@@ -101,14 +101,14 @@ bool Runtime::load_image(Image &image) {
     return false;
   } else {
     Tuple *roots = cast<Tuple>(roots_val);
-    RefScope ref_scope;
+    ref_scope ref_scope;
     return install_loaded_roots(new_ref(roots));
   }
 }
 
 bool Runtime::install_loaded_roots(ref<Tuple> roots) {
   for (uword i = 0; i < roots.length(); i++) {
-    RefScope scope;
+    ref_scope scope;
     ref<Value> raw_changes = roots.get(i);
     if (is<Smi>(raw_changes)) continue;
     ref<Object> changes = cast<Object>(raw_changes);
@@ -149,7 +149,7 @@ bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) 
   ASSERT(!iter.next(&entry));
   // Then add the elements to the root object
   for (uword i = 0; i < length; i++) {
-    RefScope scope;
+    ref_scope scope;
     root.set(keys.get(i), values.get(i));
   }
   return true;

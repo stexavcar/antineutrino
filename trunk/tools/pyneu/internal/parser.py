@@ -539,6 +539,9 @@ class Parser(object):
     if self.token().is_keyword(THIS):
       self.expect_keyword(THIS)
       return ast.This()
+    if self.token().is_keyword(SUPER):
+      self.expect_keyword(SUPER)
+      return ast.Super(ast.This())
     elif self.token().is_keyword(NULL):
       self.expect_keyword(NULL)
       return ast.Literal(ast.Null())

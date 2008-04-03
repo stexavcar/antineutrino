@@ -50,7 +50,7 @@ void Main::main(list<char*> &args) {
   runtime.initialize();
   Runtime::Scope runtime_scope(runtime);
   for (uword i = 0; i < files.length(); i++) {
-    RefScope ref_scope;
+    ref_scope ref_scope;
     string file = files[i];
     own_ptr<Image> image(read_image(file));
     bool loaded = runtime.load_image(**image);

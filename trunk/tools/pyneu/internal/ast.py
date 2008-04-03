@@ -532,6 +532,23 @@ class This(Expression):
     return values.ThisExpression()
 
 
+class Super(Expression):
+  
+  def __init__(self, value):
+    super(Super, self).__init__()
+    self.value_ = value
+  
+  def accept(self, visitor):
+    visitor.visit_super(self)
+  
+  def traverse(self, visitor):
+    self.value_.accept(visitor)
+  
+  def quote(self):
+    value = self.value_.quote()
+    return values.SuperExpression(value)
+
+
 class Null(Expression):
 
   def __init__(self):

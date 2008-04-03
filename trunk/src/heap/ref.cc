@@ -4,12 +4,12 @@
 
 namespace neutrino {
 
-RefScopeInfo RefScope::current_;
-RefBlock *RefScope::spare_block_ = NULL;
-list_buffer<RefBlock*> RefScope::block_stack_;
-Watch<HighWaterMark> RefScope::block_count_("ref block count");
+ref_scopeInfo ref_scope::current_;
+RefBlock *ref_scope::spare_block_ = NULL;
+list_buffer<RefBlock*> ref_scope::block_stack_;
+Watch<HighWaterMark> ref_scope::block_count_("ref block count");
 
-Value **RefScope::grow() {
+Value **ref_scope::grow() {
   ASSERT_C(NO_REF_SCOPE, current().block_count >= 0);
   RefBlock *extension;
   if (spare_block() == NULL) {
@@ -27,7 +27,7 @@ Value **RefScope::grow() {
   return result;
 }
 
-void RefScope::shrink() {
+void ref_scope::shrink() {
   ASSERT(current().block_count != 0);
   uword blocks_to_delete = current().block_count;
   if (spare_block() == NULL) {

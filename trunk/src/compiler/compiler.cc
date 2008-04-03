@@ -25,7 +25,7 @@ class CompileSession {
 public:
   CompileSession(Runtime &runtime, ref<Context> context);
   ref<Lambda> compile(ref<LambdaExpression> that, Assembler *enclosing);
-  void compile(ref<Lambda> tree, Assembler *enclosing);
+  void compile(ref<Lambda> tree, ref<Method> holder, Assembler *enclosing);
   Runtime &runtime() { return runtime_; }
   ref<Context> context() { return context_; }
 private:
@@ -37,9 +37,10 @@ typedef void (Assembler::*special_builtin)();
 
 class Assembler : public Visitor {
 public:
-  Assembler(ref<LambdaExpression> lambda, CompileSession &session,
-      Assembler *enclosing)
+  Assembler(ref<LambdaExpression> lambda, ref<Method> method,
+      CompileSession &session, Assembler *enclosing)
       : lambda_(lambda)
+      , method_(method)
       , session_(session)
       , pool_(session.runtime().factory())
       , scope_(NULL) 
@@ -73,6 +74,7 @@ public:
   void rethurn();
   void attach();
   void invoke(ref<Selector> selector, uint16_t argc, ref<Tuple> keymap);
+  void invoke_super(ref<Selector> selector, uint16_t argc, ref<Tuple> keymap, ref<Signature> current);
   void instantiate(ref<Layout> layout);
   void raise(ref<String> name, uint16_t argc);
   void call(uint16_t argc);
@@ -107,6 +109,8 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
 
   Factory &factory() { return runtime().factory(); }
+  ref<Method> method() { return method_; }
+  
   void adjust_stack_height(word delta);
 
 private:
@@ -118,6 +122,7 @@ private:
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }
   ref<LambdaExpression> lambda_;
+  ref<Method> method_;
   CompileSession &session_;
   list_buffer<uint16_t> code_;
   heap_list pool_;
@@ -131,7 +136,7 @@ public:
   bool is_bound() { return is_bound_; }
   uword value() { return value_; }
   void set_value(uword addr) { ASSERT(addr != kNoTarget); value_ = addr; }
-  static const uint16_t kNoTarget = ~0;
+  static const uint16_t kNoTarget = TypeConsts<uint16_t>::kMax;
 private:
   bool is_bound_;
   uint16_t value_;
@@ -161,7 +166,7 @@ ref<Tuple> Assembler::flush_constant_pool() {
 uint16_t Assembler::constant_pool_index(ref<Value> value) {
   heap_list &pool = this->pool();
   for (uint16_t i = 0; i < pool.length(); i++) {
-    RefScope scope;
+    ref_scope scope;
     ref<Value> entry = pool[i];
     if (entry->is_identical(*value)) return i;
   }
@@ -186,6 +191,19 @@ void Assembler::invoke(ref<Selector> selector, uint16_t argc,
   code().append(selector_index);
   code().append(argc);
   code().append(keymap_index);
+}
+
+void Assembler::invoke_super(ref<Selector> selector, uint16_t argc,
+    ref<Tuple> keymap, ref<Signature> current) {
+  STATIC_CHECK(OpcodeInfo<ocInvSup>::kArgc == 4);
+  uint16_t selector_index = constant_pool_index(selector);
+  uint16_t keymap_index = constant_pool_index(keymap);
+  uint16_t current_index = constant_pool_index(current);
+  code().append(ocInvSup);
+  code().append(selector_index);
+  code().append(argc);
+  code().append(keymap_index);
+  code().append(current_index);
 }
 
 void Assembler::instantiate(ref<Layout> layout) {
@@ -556,7 +574,7 @@ void Assembler::visit_literal_expression(ref<LiteralExpression> that) {
 void Assembler::visit_quote_expression(ref<QuoteExpression> that) {
   __ push(that.value());
   if (that->unquotes()->length() > 0) {
-    RefScope scope;
+    ref_scope scope;
     ref<Tuple> unquotes = that.unquotes();
     for (uword i = 0; i < unquotes->length(); i++) {
       __ codegen(cast<SyntaxTree>(unquotes.get(i)));
@@ -566,8 +584,14 @@ void Assembler::visit_quote_expression(ref<QuoteExpression> that) {
 }
 
 void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
-  RefScope scope;
-  __ codegen(that.receiver());
+  ref_scope scope;
+  ref<SyntaxTree> recv = that.receiver();
+  bool is_super = is<SuperExpression>(recv);
+  if (is_super) {
+    __ codegen(cast<SuperExpression>(recv).value());
+  } else {
+    __ codegen(recv);
+  }
   __ push(runtime().vhoid());
   ref<Arguments> args_obj = cast<Arguments>(that.arguments());
   ref<Tuple> args = args_obj.arguments();
@@ -590,12 +614,17 @@ void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
       keymap->set(i, Smi::from_int(argc - index - 1 - posc));
     }
   }
-  __ invoke(that.selector(), args.length(), keymap);
+  if (is_super) {
+    ref<Signature> current = method().signature();
+    __ invoke_super(that.selector(), args.length(), keymap, current);
+  } else {
+    __ invoke(that.selector(), args.length(), keymap);
+  }
   __ slap(args.length() + 1);
 }
 
 void Assembler::visit_call_expression(ref<CallExpression> that) {
-  RefScope scope;
+  ref_scope scope;
   __ codegen(that.receiver());
   __ codegen(that.function());
   ref<Tuple> args = that.arguments().arguments();
@@ -606,7 +635,7 @@ void Assembler::visit_call_expression(ref<CallExpression> that) {
 }
 
 void Assembler::visit_sequence_expression(ref<SequenceExpression> that) {
-  RefScope scope;
+  ref_scope scope;
   ref<Tuple> expressions = that.expressions();
   ASSERT(expressions.length() > 1);
   bool is_first = true;
@@ -618,7 +647,7 @@ void Assembler::visit_sequence_expression(ref<SequenceExpression> that) {
 }
 
 void Assembler::visit_tuple_expression(ref<TupleExpression> that) {
-  RefScope scope;
+  ref_scope scope;
   ref<Tuple> values = that.values();
   for (uword i = 0; i < values.length(); i++)
     __ codegen(cast<SyntaxTree>(values.get(i)));
@@ -700,7 +729,7 @@ void Assembler::visit_while_expression(ref<WhileExpression> that) {
 }
 
 void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
-  RefScope scope;
+  ref_scope scope;
   ref<Tuple> terms = that.terms();
   for (uword i = 0; i < terms.length(); i++) {
     ref<Value> entry = terms.get(i);
@@ -755,6 +784,10 @@ void Assembler::visit_this_expression(ref<ThisExpression> that) {
   __ argument(argc + 1);
 }
 
+void Assembler::visit_super_expression(ref<SuperExpression> that) {
+  UNREACHABLE();
+}
+
 void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
   uword index = that->index();
   special_builtin special = get_special(index);
@@ -767,7 +800,7 @@ void Assembler::visit_builtin_call(ref<BuiltinCall> that) {
 }
 
 void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {
-  RefScope scope;
+  ref_scope scope;
   ref<Tuple> clauses = that.clauses();
   ref<Tuple> data = factory().new_tuple(2 * clauses.length());
   for (uword i = 0; i < clauses.length(); i++) {
@@ -789,7 +822,7 @@ void Assembler::visit_do_on_expression(ref<DoOnExpression> that) {
 }
 
 void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
-  RefScope scope;
+  ref_scope scope;
   ref<Tuple> args = that.arguments().arguments();
   __ push(runtime().vhoid()); // receiver
   __ push(runtime().vhoid()); // method
@@ -800,7 +833,7 @@ void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
 }
 
 void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
-  RefScope scope;
+  ref_scope scope;
   ref<Tuple> terms = that.terms();
   uword term_count = terms.length() / 2;
   ref<Tuple> methods = factory().new_tuple(2 * term_count);
@@ -923,7 +956,7 @@ ref<Lambda> Compiler::compile(ref<SyntaxTree> tree, ref<Context> context) {
   Lambda *result;
   Runtime &runtime = Runtime::current();
   {
-    RefScope scope;
+    ref_scope scope;
     ref<ReturnExpression> ret = runtime.factory().new_return_expression(tree);
     ref<Parameters> params = runtime.factory().new_parameters(
       new_ref(Smi::from_int(0)),
@@ -939,9 +972,9 @@ ref<Lambda> Compiler::compile(ref<SyntaxTree> tree, ref<Context> context) {
   return new_ref(result);
 }
 
-void Compiler::compile(ref<Lambda> lambda) {
+void Compiler::compile(ref<Lambda> lambda, ref<Method> holder) {
   CompileSession session(Runtime::current(), lambda.context());
-  session.compile(lambda, NULL);
+  session.compile(lambda, holder, NULL);
 }
 
 ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
@@ -951,14 +984,15 @@ ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
       that->parameters()->parameters()->length(), zero, zero, that,
       context()
   );
-  compile(lambda, enclosing);
+  compile(lambda, enclosing->method(), enclosing);
   return lambda;
 }
 
-void CompileSession::compile(ref<Lambda> lambda, Assembler *enclosing) {
+void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
+    Assembler *enclosing) {
   GarbageCollectionMonitor monitor(Runtime::current().heap().memory());
   ref<LambdaExpression> tree = cast<LambdaExpression>(lambda.tree());
-  Assembler assembler(tree, *this, enclosing);
+  Assembler assembler(tree, holder, *this, enclosing);
   ref<Parameters> params = tree.parameters();
   // If this is a keyword call the keyword map will be pushed as the
   // first local variable by the caller

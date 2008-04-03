@@ -9,7 +9,7 @@ using namespace neutrino;
 
 void Test::simple_migration() {
   LocalRuntime runtime;
-  RefScope scope;
+  ref_scope scope;
   ref<Tuple> tuple = runtime.factory().new_tuple(10);
   CHECK_IS(Tuple, *tuple);
   Tuple *old_tuple = *tuple;
@@ -31,7 +31,7 @@ void Test::garbage_removed() {
   SemiSpace &old_space = memory.young_space();
   for (uword i = 0; i < 10; i++)
     heap.new_tuple(10);
-  RefScope scope;
+  ref_scope scope;
   ref<True> value = runtime.thrue();
   CHECK_IS(True, *value);
   CHECK(old_space.contains(*value));
@@ -50,7 +50,7 @@ void Test::garbage_removed() {
 
 void Test::migrate_cycle() {
   LocalRuntime runtime;
-  RefScope scope;
+  ref_scope scope;
   Memory &memory = runtime.heap().memory();
   Factory &factory = runtime.factory();
   SemiSpace &old_space = memory.young_space();

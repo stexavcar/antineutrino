@@ -3,6 +3,50 @@
 
 namespace neutrino {
 
+
+class MethodLookup {
+public:
+  
+  /**
+   * Create a new method lookup object.  The min score parameter is
+   * the minimal score allowed for a method.  This is used when
+   * selecting super methods.
+   */
+  inline MethodLookup(uword min_score);
+
+  void lookup_method(Layout *layout, Selector *selector);
+  
+  Data *method() { return method_; }
+  
+  bool is_ambiguous() { return is_ambiguous_; }
+  
+  /**
+   * Returns the given method's score when applied to the specified
+   * receiver.
+   */
+  static inline uword get_method_score(Signature *signature,
+      Layout *receiver);
+
+  static const uword kNoMatch = TypeConsts<uword>::kMax;
+
+private:
+  
+  /**
+   * Scores the given method as applied to the specified receiver type
+   * and applies the score to this method lookup.
+   */
+  void score_method(Method *method, Layout *reciever);
+  
+  static inline uword get_distance(Layout *layout, Protocol *target);
+  void lookup_in_dictionary(Tuple *methods, Selector *name, Layout *receiver);
+
+  uword score_;
+  uword min_score_;
+  Data *method_;
+  bool is_ambiguous_;
+};
+
+
 // -------------------
 // --- M e t h o d ---
 // -------------------

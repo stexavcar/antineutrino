@@ -100,7 +100,8 @@
   VISIT(79, YIELD_EXPRESSION,       YieldExpression,       yield_expression)       \
   VISIT(80, ASSIGNMENT,             Assignment,            assignment)             \
   VISIT(81, PARAMETERS,             Parameters,            parameters)             \
-  VISIT(84, WHILE_EXPRESSION,       WhileExpression,       while_expression)
+  VISIT(84, WHILE_EXPRESSION,       WhileExpression,       while_expression)       \
+  VISIT(85, SUPER_EXPRESSION,       SuperExpression,       super_expression)
 
 
 #define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
@@ -186,6 +187,8 @@
   VISIT(2, WhileExpression,       BodyOffset)                        \
   VISIT(3, WhileExpression,       Size)                              \
   VISIT(1, ThisExpression,        Size)                              \
+  VISIT(1, SuperExpression,       ValueOffset)                       \
+  VISIT(2, SuperExpression,       Size)                              \
   VISIT(1, QuoteExpression,       ValueOffset)                       \
   VISIT(2, QuoteExpression,       UnquotesOffset)                    \
   VISIT(3, QuoteExpression,       Size)                              \
@@ -307,7 +310,8 @@
   VISIT(53, Layout,     assignment_layout,             Assignment,            allocate_empty_layout(tAssignment))            \
   VISIT(54, Layout,     parameters_layout,             Parameters,            allocate_empty_layout(tParameters))            \
   VISIT(55, Layout,     channel_layout,                Channel,               allocate_empty_layout(tChannel))               \
-  VISIT(56, Layout,     while_expression_layout,       WhileExpression,       allocate_empty_layout(tWhileExpression))
+  VISIT(56, Layout,     while_expression_layout,       WhileExpression,       allocate_empty_layout(tWhileExpression))       \
+  VISIT(57, Layout,     super_expression_layout,       SuperExpression,       allocate_empty_layout(tSuperExpression))
 
 
 #define FOR_EACH_ROOT(VISIT)                                         \

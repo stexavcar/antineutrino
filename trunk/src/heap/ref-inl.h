@@ -12,7 +12,7 @@ template <class C> static inline ref<C> open(ref_traits<C> *that) {
 }
 
 template <class T>
-T **RefScope::new_cell(T *value) {
+T **ref_scope::new_cell(T *value) {
   Value **result = current().next_cell;
   if (result == current().limit) result = grow();
   else current().next_cell = result + 1;
@@ -22,7 +22,7 @@ T **RefScope::new_cell(T *value) {
 
 template <class C>
 static inline ref<C> new_ref(C *obj) {
-  return RefScope::new_cell(obj);
+  return ref_scope::new_cell(obj);
 }
 
 template <class C>
@@ -48,39 +48,39 @@ ref<C> abstract_ref<C>::empty() {
   return ref<C>(static_cast<C**>(0));
 }
 
-RefScopeInfo::RefScopeInfo()
+ref_scopeInfo::ref_scopeInfo()
     : block_count(-1)
     , next_cell(NULL)
     , limit(NULL) { }
 
-RefScope::RefScope() : previous_(current_) {
+ref_scope::ref_scope() : previous_(current_) {
   current().block_count = 0;
 }
 
-RefScope::~RefScope() {
+ref_scope::~ref_scope() {
   if (current().block_count > 0) shrink();
   current_ = previous_;
 }
 
 RefIterator::RefIterator() {
   current_block_ = 0;
-  if (RefScope::block_stack().length() > 0) {
-    RefBlock *bottom = RefScope::block_stack()[0];
+  if (ref_scope::block_stack().length() > 0) {
+    RefBlock *bottom = ref_scope::block_stack()[0];
     current_ = bottom->first_cell();
     limit_ = bottom->limit();
   } else {
-    current_ = RefScope::current().next_cell;
+    current_ = ref_scope::current().next_cell;
     limit_ = current_;
   }
 }
 
 bool RefIterator::has_next() {
-  return current_ != RefScope::current().next_cell;
+  return current_ != ref_scope::current().next_cell;
 }
 
 Value *&RefIterator::next() {
   if (current_ == limit_) {
-    RefBlock *next = RefScope::block_stack()[++current_block_];
+    RefBlock *next = ref_scope::block_stack()[++current_block_];
     current_ = next->first_cell();
     limit_ = next->limit();
     ASSERT(current_ < limit_);

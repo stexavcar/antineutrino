@@ -593,8 +593,7 @@ InternalError *InternalError::make(int code) {
 }
 
 Nothing *Nothing::make() {
-  Signal *result = ValuePointer::tag_as_signal(sNothing, 0);
-  return cast<Nothing>(result);
+  return cast<Nothing>(ValuePointer::tag_as_signal(sNothing, 0));
 }
 
 ForwardPointer *ForwardPointer::make(Object *obj) {

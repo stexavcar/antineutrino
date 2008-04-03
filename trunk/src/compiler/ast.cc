@@ -14,7 +14,7 @@ ref<Protocol> ref_traits<ProtocolExpression>::compile(ref<Context> context) {
   ref<Tuple> method_asts = methods();
   ref<Tuple> methods = factory.new_tuple(method_asts.length());
   for (uword i = 0; i < method_asts.length(); i++) {
-    RefScope scope;
+    ref_scope scope;
     ref<MethodExpression> method_ast = cast<MethodExpression>(method_asts.get(i));
     ref<Method> method = method_ast.compile(context);
     methods.set(i, method);
@@ -31,16 +31,16 @@ ref<Method> ref_traits<MethodExpression>::compile(ref<Context> context) {
   return result;
 }
 
-void Lambda::ensure_compiled() {
+void Lambda::ensure_compiled(Method *holder) {
   if (is<Code>(code())) return;
-  RefScope scope;
-  new_ref(this).ensure_compiled();
+  ref_scope scope;
+  new_ref(this).ensure_compiled(new_ref(holder));
 }
 
-void ref_traits<Lambda>::ensure_compiled() {
+void ref_traits<Lambda>::ensure_compiled(ref<Method> holder) {
   ref<Lambda> self = open(this);
   if (is<Code>(self->code())) return;
-  Compiler::compile(self);
+  Compiler::compile(self, holder);
 }
 
 
@@ -326,7 +326,7 @@ FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(MAKE_VISIT)
 }
 
 static void traverse_tuple(Visitor &visitor, ref<Tuple> expressions) {
-  RefScope scope;
+  ref_scope scope;
   for (uword i = 0; i < expressions.length(); i++)
     cast<SyntaxTree>(expressions.get(i)).accept(visitor);
 }
@@ -340,21 +340,21 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
     VISIT_FIELD(ReturnExpression, value);
     break;
   case tInvokeExpression: {
-    RefScope scope;
+    ref_scope scope;
     VISIT_FIELD(InvokeExpression, receiver);
     if (is<SyntaxTree>(cast<InvokeExpression>(self)->arguments()))
       VISIT_FIELD(InvokeExpression, arguments);
     break;
   }
   case tCallExpression: {
-    RefScope scope;
+    ref_scope scope;
     VISIT_FIELD(CallExpression, receiver);
     VISIT_FIELD(CallExpression, function);
     VISIT_FIELD(CallExpression, arguments);
     break;
   }
   case tConditionalExpression: {
-    RefScope scope;
+    ref_scope scope;
     VISIT_FIELD(ConditionalExpression, condition);
     VISIT_FIELD(ConditionalExpression, then_part);
     VISIT_FIELD(ConditionalExpression, else_part);

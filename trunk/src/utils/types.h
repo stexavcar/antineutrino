@@ -36,6 +36,21 @@ static inline T function_cast(void *obj) {
   return reinterpret_cast<T>(reinterpret_cast<uword>(obj));
 }
 
+template <typename T>
+class TypeConsts { };
+
+template <>
+class TypeConsts<uword> {
+public:
+  static const uword kMax = ~0;
+};
+
+template <>
+class TypeConsts<uint16_t> {
+public:
+  static const uword kMax = ~0;
+};
+
 // Forward declarations
 namespace neutrino {
 

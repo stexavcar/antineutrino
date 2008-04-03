@@ -658,6 +658,30 @@ public:
 };
 
 
+// ---------------------------------------
+// --- S u p e r   E x p r e s s i o n ---
+// ---------------------------------------
+
+#define FOR_EACH_SUPER_EXPRESSION_FIELD(VISIT, arg)                  \
+  VISIT(SyntaxTree, value, Value, arg)
+
+class SuperExpression : public SyntaxTree {
+public:
+  FOR_EACH_SUPER_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uword kValueOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize        = kValueOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<SuperExpression> : public ref_traits<SyntaxTree> {
+public:
+  FOR_EACH_SUPER_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(SuperExpression);
+
+
 // ---------------------------------------------------
 // --- I n t e r p o l a t e   E x p r e s s i o n ---
 // ---------------------------------------------------

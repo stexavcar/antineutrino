@@ -535,7 +535,7 @@ public:
 
   Value *call(Task *task);
   Data *clone(Heap &heap);
-  void ensure_compiled();
+  void ensure_compiled(Method *holder);
 
   string disassemble();
 
@@ -551,7 +551,7 @@ public:
 template <> class ref_traits<Lambda> : public ref_traits<Object> {
 public:
   FOR_EACH_LAMBDA_FIELD(DECLARE_REF_FIELD, 0)
-  void ensure_compiled();
+  void ensure_compiled(ref<Method> holder);
 };
 
 DEFINE_REF_CLASS(Lambda);

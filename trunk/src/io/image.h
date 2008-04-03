@@ -326,6 +326,11 @@ public:
 class FThisExpression : public FSyntaxTree {
 };
 
+class FSuperExpression : public FSyntaxTree {
+public:
+  DECLARE_IMAGE_FIELD(SyntaxTree, value);
+};
+
 class FBuiltinCall : public FSyntaxTree {
 public:
   inline uword argc();

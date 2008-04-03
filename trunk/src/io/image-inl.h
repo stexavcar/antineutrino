@@ -379,6 +379,7 @@ DEFINE_GETTER    (Smi,              Selector,              argc,            Argc
 DEFINE_GETTER    (Tuple,            Selector,              keywords,        Keywords)
 DEFINE_GETTER    (Immediate,        Selector,              is_accessor,     IsAccessor)
 DEFINE_GETTER    (LambdaExpression, TaskExpression,        lambda,          Lambda)
+DEFINE_GETTER    (SyntaxTree,       SuperExpression,       value,           Value)
 
 #undef DEFINE_RAW_GETTER
 #undef DEFINE_GETTER
