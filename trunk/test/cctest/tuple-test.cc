@@ -11,13 +11,13 @@ void Test::tuples() {
   CHECK_EQ(0, tuple0->length());
   Tuple *tuple1 = cast<Tuple>(heap.new_tuple(1));
   CHECK_EQ(1, tuple1->length());
-  CHECK_IS(Void, tuple1->get(0));
+  CHECK_IS(Null, tuple1->get(0));
   tuple1->set(0, tuple0);
   CHECK(tuple1->get(0) == tuple0);
   static int kCount = 100;
   Tuple *long_tuple = cast<Tuple>(heap.new_tuple(kCount));
   for (int i = 0; i < kCount; i++)
-    CHECK_IS(Void, long_tuple->get(i));
+    CHECK_IS(Null, long_tuple->get(i));
   for (int i = 0; i < kCount; i++)
     long_tuple->set(i, Smi::from_int(i - 50));
   for (int i = 0; i < kCount; i++) {

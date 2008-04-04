@@ -1,0 +1,5 @@
+protocol List {
+
+  static def new() -> new ArrayList();
+
+}

@@ -156,6 +156,9 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
   case tTuple:
     buf.append("#<tuple>");
     break;
+  case tArray:
+    buf.append("#<array>");
+    break;
   case tLambda:
     buf.append("#<lambda>");
     break;
@@ -415,6 +418,14 @@ static void disassemble_buffer(uint16_t *data, uword size,
         buf.printf("tuple %", data[pc + 1]);
         pc += OpcodeInfo<ocTuple>::kSize;
         break;
+      case ocForward:
+        buf.printf("new forwarder %", data[pc + 1]);
+        pc += OpcodeInfo<ocForward>::kSize;
+        break;
+      case ocBindFor:
+        buf.append("bind forwarder");
+        pc += OpcodeInfo<ocBindFor>::kSize;
+        break;
       default:
         UNHANDLED(Opcode, data[pc]);
         return;
@@ -453,6 +464,8 @@ uword Object::size_in_memory() {
     return Channel::kSize;
   case tTuple:
     return Tuple::size_for(cast<Tuple>(this)->length());
+  case tArray:
+    return Array::size_for(cast<Array>(this)->length());
   case tString:
     return String::size_for(cast<String>(this)->length());
   case tStack:
@@ -482,7 +495,7 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 // required by those fields.  All fields whose value may change during
 // execution must hold valid non-signal pointers.
 
-static void validate_tuple(Tuple *obj) {
+static void validate_abstract_tuple(AbstractTuple *obj) {
   for (uword i = 0; i < obj->length(); i++)
     GC_SAFE_CHECK_IS_C(cnValidation, Value, obj->get(i));
 }
@@ -499,8 +512,8 @@ static void validate_object(Object *obj) {
   GC_SAFE_CHECK_IS_C(cnValidation, Layout, obj->layout());
   InstanceType type = obj->gc_safe_type();
   switch (type) {
-    case tTuple:
-      validate_tuple(cast<Tuple>(obj));
+    case tTuple: case tArray:
+      validate_abstract_tuple(cast<AbstractTuple>(obj));
       break;
     case tInstance:
       validate_instance(cast<Instance>(obj));
@@ -695,7 +708,7 @@ bool String::string_equals(String *that) {
   return true;
 }
 
-bool Tuple::tuple_equals(Tuple *that) {
+bool AbstractTuple::tuple_equals(Tuple *that) {
   if (this->length() != that->length())
     return false;
   for (uword i = 0; i < this->length(); i++) {

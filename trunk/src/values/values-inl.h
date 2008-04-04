@@ -153,7 +153,12 @@ FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
 
 template <>
 inline bool is<AbstractBuffer>(Data *val) {
-  return is<Object>(val) && (is<Code>(val) || is<Buffer>(val));
+  return is<Code>(val) || is<Buffer>(val);
+}
+
+template <>
+inline bool is<AbstractTuple>(Data *val) {
+  return is<Tuple>(val) || is<Array>(val);
 }
 
 template <>
@@ -411,39 +416,39 @@ uword Instance::size_for(uword fields) {
 // --- T u p l e ---
 // -----------------
 
-DEFINE_ACCESSORS(uword, Tuple, length, Length)
+DEFINE_ACCESSORS(uword, AbstractTuple, length, Length)
 
-Value *&Tuple::get(uword index) {
+Value *&AbstractTuple::get(uword index) {
   ASSERT_C(cnOutOfBounds, index < length());
-  return ValuePointer::access_field<Value*>(this, Tuple::kHeaderSize + kPointerSize * index);
+  return ValuePointer::access_field<Value*>(this, AbstractTuple::kHeaderSize + kPointerSize * index);
 }
 
-vector<Value*> Tuple::buffer() {
-  return NEW_VECTOR(Value*, &ValuePointer::access_direct<Value*>(this, Tuple::kHeaderSize), length());
+vector<Value*> AbstractTuple::buffer() {
+  return NEW_VECTOR(Value*, &ValuePointer::access_direct<Value*>(this, AbstractTuple::kHeaderSize), length());
 }
 
-void Tuple::set(uword index, Value *value) {
+void AbstractTuple::set(uword index, Value *value) {
   ASSERT_C(cnOutOfBounds, index < length());
-  return ValuePointer::set_field<Value*>(this, Tuple::kHeaderSize + kPointerSize * index, value);
+  return ValuePointer::set_field<Value*>(this, AbstractTuple::kHeaderSize + kPointerSize * index, value);
 }
 
-uword Tuple::size_for(uword elms) {
+uword AbstractTuple::size_for(uword elms) {
   return Tuple::kHeaderSize + elms * kPointerSize;
 }
 
-bool Tuple::is_empty() {
+bool AbstractTuple::is_empty() {
   return length() == 0;
 }
 
-uword ref_traits<Tuple>::length() {
+uword ref_traits<AbstractTuple>::length() {
   return open(this)->length();
 }
 
-ref<Value> ref_traits<Tuple>::get(uword index) {
+ref<Value> ref_traits<AbstractTuple>::get(uword index) {
   return new_ref(open(this)->get(index));
 }
 
-void ref_traits<Tuple>::set(uword index, ref<Value> value) {
+void ref_traits<AbstractTuple>::set(uword index, ref<Value> value) {
   open(this)->set(index, *value);
 }
 

@@ -37,7 +37,7 @@ class Heap(object):
   kHeaderSize        = 5
 
   kCurrentVersion    = 2
-  kRootCount         = 58
+  kRootCount         = 59
   
   def __init__(self, roots):
     self.data_ = array.array('l')

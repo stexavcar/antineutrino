@@ -26,6 +26,7 @@
   VISIT(5,  LAYOUT,                 Layout,                layout)                 \
   VISIT(6,  STRING,                 String,                string)                 \
   VISIT(7,  TUPLE,                  Tuple,                 tuple)                  \
+  VISIT(86, ARRAY,                  Array,                 array)                  \
   VISIT(8,  VOID,                   Void,                  void)                   \
   VISIT(9,  NULL,                   Null,                  null)                   \
   VISIT(10, TRUE,                   True,                  true)                   \
@@ -45,6 +46,7 @@
   VISIT(20, OBJECT,                 Object,                object)                 \
   VISIT(21, VALUE,                  Value,                 0)                      \
   VISIT(22, ABSTRACT_BUFFER,        AbstractBuffer,        0)                      \
+  VISIT(87, ABSTRACT_TUPLE,         AbstractTuple,         0)                      \
   VISIT(23, SINGLETON,              Singleton,             0)                      \
   VISIT(24, SYNTAX_TREE,            SyntaxTree,            0)                      \
   VISIT(25, IMMEDIATE,              Immediate,             0)                      \
@@ -312,7 +314,8 @@
   VISIT(54, Layout,     parameters_layout,             Parameters,            allocate_empty_layout(tParameters))            \
   VISIT(55, Layout,     channel_layout,                Channel,               allocate_empty_layout(tChannel))               \
   VISIT(56, Layout,     while_expression_layout,       WhileExpression,       allocate_empty_layout(tWhileExpression))       \
-  VISIT(57, Layout,     super_expression_layout,       SuperExpression,       allocate_empty_layout(tSuperExpression))
+  VISIT(57, Layout,     super_expression_layout,       SuperExpression,       allocate_empty_layout(tSuperExpression))       \
+  VISIT(58, Layout,     array_layout,                  Array,                 allocate_empty_layout(tArray))
 
 
 #define FOR_EACH_ROOT(VISIT)                                         \
@@ -358,7 +361,9 @@
   VISIT(42, lambda,              disassemble, "disassemble")         \
   VISIT(43, lambda_expression,   params,      "parameters")          \
   VISIT(44, lambda_expression,   body,        "body")                \
-  VISIT(45, channel,             send,        "send")
+  VISIT(45, channel,             send,        "send")                \
+  VISIT(48, array,               set,         "set")                 \
+  VISIT(49, array,               get,         "[]")
 
 
 // ---------------------------------------
@@ -387,7 +392,8 @@
   VISIT(109, close,              "close")                            \
   VISIT(106, is_whitespace,      "is_whitespace")                    \
   VISIT(107, is_alpha,           "is_alpha")                         \
-  VISIT(108, is_digit,           "is_digit")
+  VISIT(108, is_digit,           "is_digit")                         \
+  VISIT(110, new_array,          "new_array")
 
 #define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
   FOR_EACH_SPECIAL_BUILTIN_FUNCTION(VISIT)                           \

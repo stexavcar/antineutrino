@@ -1,0 +1,10 @@
+internal def new_array(size);
+
+internal protocol Array : Tuple {
+
+  static def new(size:) -> new_array(size);
+
+  internal def [index];
+  internal def set(index, value);
+
+}

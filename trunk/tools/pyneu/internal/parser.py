@@ -149,7 +149,7 @@ class Parser(object):
       self.resolver().push_scope(params.params())
       body = self.function_body(True)
       self.resolver().pop_scope()
-      return ast.Definition(modifiers, name, ast.Lambda(modifiers, name, params, body))
+      return ast.Definition(modifiers, name, ast.Lambda(modifiers, name, params, body, False))
 
   def protocol(self, modifiers):
     self.expect_keyword(PROTOCOL)
@@ -278,7 +278,7 @@ class Parser(object):
     elif self.token().is_delimiter('{'):
       return self.sequence_expression()
     else:
-      value = self.lambda_expression()
+      value = self.lambda_expression(modifiers)
       if is_toplevel: self.expect_delimiter(';')
       return value
 
@@ -291,24 +291,27 @@ class Parser(object):
       name = self.expect_identifier()
       params = self.parameters()
       body = self.function_body(is_toplevel)
-      clauses.append(ast.OnClause(name, ast.Lambda([], None, params, ast.Return(body))))
+      clauses.append(ast.OnClause(name, ast.Lambda([], None, params, ast.Return(body), False)))
     return ast.DoOnExpression(value, clauses)
 
-  def lambda_expression(self):
+  def lambda_expression(self, modifiers):
     if self.token().is_keyword(FN):
       self.expect_keyword(FN)
       params = self.parameters()
       self.resolver().push_scope(params.params())
       body = self.function_body(False)
       self.resolver().pop_scope()
-      return ast.Lambda([], None, params, body)
+      if 'local' in modifiers:
+        return ast.Lambda([], None, params, body, True)
+      else:
+        return ast.Lambda([], None, params, body, False)
     if self.token().is_keyword(TASK):
       self.expect_keyword(TASK)
       params = ast.Parameters(0, [], False)
       self.resolver().push_scope(params.params())
       body = self.function_body(False)
       self.resolver().pop_scope()
-      return ast.Task(ast.Lambda([], None, params, body))
+      return ast.Task(ast.Lambda([], None, params, body, False))
     else:
       return self.logical_expression()
 

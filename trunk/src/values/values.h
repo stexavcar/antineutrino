@@ -454,11 +454,11 @@ public:
 DEFINE_REF_CLASS(Code);
 
 
-// -----------------
-// --- T u p l e ---
-// -----------------
+// -----------------------------------
+// --- A b s t r a c t   T u p l e ---
+// -----------------------------------
 
-class Tuple : public Object {
+class AbstractTuple : public Object {
 public:
   DECLARE_FIELD(uword, length);
   inline vector<Value*> buffer();
@@ -474,14 +474,44 @@ public:
   static const int kHeaderSize   = kLengthOffset + kPointerSize;
 };
 
-template <> class ref_traits<Tuple> : public ref_traits<Object> {
+template <> class ref_traits<AbstractTuple> : public ref_traits<Object> {
 public:
   inline uword length();
   inline ref<Value> get(uword index);
   inline void set(uword index, ref<Value> value);
 };
 
+DEFINE_REF_CLASS(AbstractTuple);
+
+
+// -----------------
+// --- T u p l e ---
+// -----------------
+
+class Tuple : public AbstractTuple { };
+
+template <> class ref_traits<Tuple> : public ref_traits<AbstractTuple> {
+public:
+};
+
 DEFINE_REF_CLASS(Tuple);
+
+
+// -----------------
+// --- A r r a y ---
+// -----------------
+
+/**
+ * An array is exactly the same as a tuple except that it has a
+ * different layout which allows code to write entries.
+ */
+class Array : public AbstractTuple { };
+
+template <> class ref_traits<Array> : public ref_traits<AbstractTuple> {
+public:
+};
+
+DEFINE_REF_CLASS(Array);
 
 
 // ---------------------------

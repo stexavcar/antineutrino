@@ -1,0 +1,7 @@
+def simple_block_test() {
+  @local fn (x) -> x;
+}
+
+def main() {
+  simple_block_test();
+}

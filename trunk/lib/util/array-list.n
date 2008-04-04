@@ -1,0 +1,15 @@
+protocol ArrayList : List {
+
+  def [index] -> this.elms[index];
+
+  def add(elm) {
+    this.elms.set(this.size, elm);
+    this.size := this.size + 1;
+  }
+
+  static def new() -> new ArrayList() {
+    size: 0,
+    elms: new Array(size: 16)
+  };
+
+}

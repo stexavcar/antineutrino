@@ -49,6 +49,8 @@ public:
 
   Data *new_tuple(uword length);
   
+  Data *new_array(uword length);
+  
   Data *new_singleton(Layout *layout);
   
   Data *new_symbol(Value *name);

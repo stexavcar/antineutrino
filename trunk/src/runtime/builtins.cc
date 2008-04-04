@@ -256,6 +256,33 @@ Data *Builtins::tuple_length(BuiltinArguments &args) {
 }
 
 
+// -----------------
+// --- A r r a y ---
+// -----------------
+
+Data *Builtins::array_set(BuiltinArguments &args) {
+  ASSERT_EQ(2, args.count());
+  SIGNAL_CHECK(Array, self, to<Array>(args.self()));
+  SIGNAL_CHECK(Smi, index, to<Smi>(args[0]));
+  Value *value = args[1];
+  self->set(index->value(), value);
+  return value;
+}
+
+Data *Builtins::array_get(BuiltinArguments &args) {
+  ASSERT_EQ(1, args.count());
+  SIGNAL_CHECK(Array, self, to<Array>(args.self()));
+  SIGNAL_CHECK(Smi, index, to<Smi>(args[0]));
+  return self->get(index->value());
+}
+
+Data *Builtins::new_array(BuiltinArguments &args) {
+  ASSERT_EQ(1, args.count());
+  SIGNAL_CHECK(Smi, size, to<Smi>(args[0]));
+  return args.runtime().heap().new_array(size->value());
+}
+
+
 // -------------------
 // --- L a m b d a ---
 // -------------------

@@ -280,7 +280,20 @@ Data *Heap::new_tuple(uword length) {
   Tuple *result = cast<Tuple>(val);
   result->set_length(length);
   for (uword i = 0; i < length; i++)
-    result->set(i, roots().vhoid());
+    result->set(i, roots().nuhll());
+  ASSERT_EQ(size, result->size_in_memory());
+  IF_PARANOID(result->validate());
+  return result;
+}
+
+Data *Heap::new_array(uword length) {
+  uword size = Array::size_for(length);
+  Data *val = allocate_object(size, roots().array_layout());
+  if (is<AllocationFailed>(val)) return val;
+  Array *result = cast<Array>(val);
+  result->set_length(length);
+  for (uword i = 0; i < length; i++)
+    result->set(i, roots().nuhll());
   ASSERT_EQ(size, result->size_in_memory());
   IF_PARANOID(result->validate());
   return result;

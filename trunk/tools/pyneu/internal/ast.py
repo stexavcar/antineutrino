@@ -156,7 +156,7 @@ class Method(Declaration):
     assert not name is None
     self.modifiers_ = modifiers
     full_name = "%s.%s" % (klass, name)
-    self.lambda_ = Lambda(modifiers, full_name, params, body)
+    self.lambda_ = Lambda(modifiers, full_name, params, body, False)
 
   def is_static(self):
     return parser.STATIC in self.modifiers_
@@ -200,11 +200,12 @@ class Expression(SyntaxTree):
 
 class Lambda(Expression):
 
-  def __init__(self, modifiers, name, params, body):
+  def __init__(self, modifiers, name, params, body, is_local):
     super(Lambda, self).__init__()
     self.modifiers_ = modifiers
     self.name_ = name
     self.params_ = params
+    self.is_local = is_local
     if body is None:
       if parser.INTERNAL in self.modifiers_:
         index = consts.builtin_functions[name].index

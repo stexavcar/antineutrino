@@ -1,0 +1,22 @@
+def simple_array_test() {
+  def a := new Array(size: 3);
+  assert a[0] = null;
+  assert a[1] = null;
+  assert a[2] = null;  
+  a.set(0, "a");
+  assert a[0] = "a";
+  assert a[1] = null;
+  assert a[2] = null;  
+  a.set(1, "b");
+  assert a[0] = "a";
+  assert a[1] = "b";
+  assert a[2] = null;  
+  a.set(2, "c");
+  assert a[0] = "a";
+  assert a[1] = "b";
+  assert a[2] = "c";  
+}
+
+def main() {
+  simple_array_test();
+}
