@@ -73,10 +73,15 @@
 
 (defconst neutrino-keywords-regexp
   (regexp-opt
-   '("def" "new" "internal" "and" "or" "not" "if" "else" "return" "fn"
+   '("def" "new" "and" "or" "not" "if" "else" "return" "fn"
      "in" "while" "do" "operator" "on" "raise" "protocol" "native"
-     "static" "task" "yield" "var" "channel" "while" "assert" "super"
-     "factory" "rec")
+     "task" "yield" "var" "while" "assert" "super"
+     "rec")
+   'words))
+
+(defconst neutrino-modifiers-regexp
+  (regexp-opt
+   '("internal" "channel" "static" "factory")
    'words))
 
 (defconst neutrino-constants-regexp
@@ -88,10 +93,13 @@
 
 (defvar neutrino-font-lock-keywords
   `(("\\<def\\>\\ +\\<\\(\\w+\\)\\>\\ *(" 1 font-lock-function-name-face nil)
-    ("\\<def\\>\\ +\\<\\(\\w+\\)\\>" 1 font-lock-variable-name-face nil)
+    ("\\<\\(def\\|var\\|rec\\)\\>\\ +\\<\\(\\w+\\)\\>" 2 font-lock-variable-name-face nil)
     (,neutrino-keywords-regexp 0 font-lock-keyword-face nil)
     (,neutrino-constants-regexp 0 font-lock-constant-face nil)
-    ("[A-Z]\\w+" 0 font-lock-type-face nil)))
+    ("[A-Z]\\w+" 0 font-lock-type-face nil)
+    ("@\\w+" 0 font-lock-constant-face nil)
+    (,neutrino-modifiers-regexp 0 font-lock-constant-face nil)))
+
 
 (define-derived-mode neutrino-mode fundamental-mode "Neutrino"
   "Major mode for editing Neutrino code"

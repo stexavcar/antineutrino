@@ -10,7 +10,7 @@ list_buffer<RefBlock*> ref_scope::block_stack_;
 Watch<HighWaterMark> ref_scope::block_count_("ref block count");
 
 Value **ref_scope::grow() {
-  ASSERT_C(NO_REF_SCOPE, current().block_count >= 0);
+  ASSERT_C(cnNoRefScope, current().block_count >= 0);
   RefBlock *extension;
   if (spare_block() == NULL) {
     block_count()->increment();

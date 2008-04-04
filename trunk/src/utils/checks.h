@@ -22,7 +22,7 @@ class Checks {
 public:
 
   static inline void check(const char *file_name, int line_number,
-      const char *source, bool value, Condition cause = UNKNOWN) {
+      const char *source, bool value, Condition cause = cnUnknown) {
     if (!value) {
       Conditions::get().check_failed(file_name, line_number,
           source, value, cause);
@@ -31,7 +31,7 @@ public:
   
   static inline void check_eq(const char* file_name, int line_number,
       int expected, const char *expected_source, int value,
-      const char *value_source, Condition cause = UNKNOWN) {
+      const char *value_source, Condition cause = cnUnknown) {
     if (expected != value) {
       Conditions::get().check_eq_failed(file_name, line_number,
           expected, expected_source, value, value_source, cause);
@@ -40,7 +40,7 @@ public:
 
   static inline void check_ge(const char* file_name, int line_number,
       word value, const char *value_source, word limit,
-      const char *limit_source, Condition cause = UNKNOWN) {
+      const char *limit_source, Condition cause = cnUnknown) {
     if (value < limit) {
       Conditions::get().check_ge_failed(file_name, line_number,
           value, value_source, limit, limit_source, cause);
@@ -49,7 +49,7 @@ public:
   
   static inline void check_lt(const char* file_name, int line_number,
       int value, const char *value_source, int limit,
-      const char *limit_source, Condition cause = UNKNOWN) {
+      const char *limit_source, Condition cause = cnUnknown) {
     if (value >= limit) {
       Conditions::get().check_lt_failed(file_name, line_number,
           value, value_source, limit, limit_source, cause);
@@ -58,7 +58,7 @@ public:
     
   static inline void check_eq(const char* file_name, int line_number,
       Value *expected, const char *expected_source, Value *value,
-      const char *value_source, Condition cause = UNKNOWN) {
+      const char *value_source, Condition cause = cnUnknown) {
     if (!expected->equals(value)) {
       Conditions::get().check_eq_failed(file_name, line_number,
           expected, expected_source, value, value_source, cause);
@@ -67,7 +67,7 @@ public:
 
   static inline void check_is(const char *file_name, int line_number,
       const char *type_name, uword type_tag, Data *data,
-      const char *value_source, bool holds, Condition cause = UNKNOWN) {
+      const char *value_source, bool holds, Condition cause = cnUnknown) {
     if (!holds) {
       Conditions::get().check_is_failed(file_name, line_number,
           type_name, type_tag, data, value_source, cause);
@@ -87,6 +87,9 @@ public:
 #define CHECK_EQ(expected, value) neutrino::Checks::check_eq(        \
     __FILE__, __LINE__, expected, #expected, value, #value)
 
+#define CHECK_EQ_C(COND, expected, value) neutrino::Checks::check_eq(\
+    __FILE__, __LINE__, expected, #expected, value, #value, COND)
+
 #define CHECK_GE(value, limit) neutrino::Checks::check_ge(           \
     __FILE__, __LINE__, value, #value, limit, #limit)
 
@@ -105,7 +108,7 @@ public:
         ValueInfo<Type>::kTag, value, #value, is<Type>(value), COND)
 
 #define UNREACHABLE() neutrino::Conditions::get().unreachable(       \
-    __FILE__, __LINE__, neutrino::UNKNOWN)
+    __FILE__, __LINE__, neutrino::cnUnknown)
 
 // --- E n u m   a s s e r t i o n s ---
 
@@ -119,7 +122,7 @@ public:
 #define UNHANDLED(Enum, value) do {                                  \
     neutrino::EnumInfo<Enum> enum_info;                              \
     neutrino::Conditions::get().unhandled(__FILE__, __LINE__, #Enum, \
-        (value), enum_info, neutrino::UNKNOWN);                      \
+        (value), enum_info, neutrino::cnUnknown);                    \
   } while (false)
 
 /**
@@ -162,11 +165,12 @@ public:
 #define ASSERT(value)                      IF_DEBUG(CHECK(value))
 #define ASSERT_C(cond, value)              IF_DEBUG(CHECK_C(cond, value))
 #define ASSERT_EQ(expected, value)         IF_DEBUG(CHECK_EQ(expected, value))
+#define ASSERT_EQ_C(COND, expected, value) IF_DEBUG(CHECK_EQ_C(COND, expected, value))
 #define ASSERT_GE(expected, value)         IF_DEBUG(CHECK_GE(expected, value))
 #define ASSERT_LT(expected, value)         IF_DEBUG(CHECK_LT(expected, value))
-#define ASSERT_LT_C(cond, expected, value) IF_DEBUG(CHECK_LT_C(cond, expected, value))
+#define ASSERT_LT_C(COND, expected, value) IF_DEBUG(CHECK_LT_C(COND, expected, value))
 #define ASSERT_IS(Type, value)             IF_DEBUG(CHECK_IS(Type, value))
-#define ASSERT_IS_C(cond, Type, value)     IF_DEBUG(CHECK_IS_C(cond, Type, value))
+#define ASSERT_IS_C(COND, Type, value)     IF_DEBUG(CHECK_IS_C(COND, Type, value))
 
 
 // -----------------------------------------

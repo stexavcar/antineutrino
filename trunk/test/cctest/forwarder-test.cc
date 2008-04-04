@@ -7,7 +7,7 @@ using namespace neutrino;
 void Test::simple_forwarder() {
   LocalRuntime runtime;
   Tuple *empty = runtime.roots().empty_tuple();
-  Forwarder *forwarder = cast<Forwarder>(runtime.heap().new_forwarder(Forwarder::fwTransparent, empty));
+  Forwarder *forwarder = cast<Forwarder>(runtime.heap().new_forwarder(Forwarder::fwOpen, empty));
   CHECK(!is<Smi>(forwarder));
   CHECK(!is<Object>(forwarder));
   CHECK(!is<Signal>(forwarder));
@@ -24,7 +24,7 @@ void Test::simple_forwarder() {
 void Test::smi_forwarder() {
   LocalRuntime runtime;
   Value *obj = Smi::from_int(17);
-  Forwarder *forwarder = cast<Forwarder>(runtime.heap().new_forwarder(Forwarder::fwTransparent, obj));
+  Forwarder *forwarder = cast<Forwarder>(runtime.heap().new_forwarder(Forwarder::fwOpen, obj));
   CHECK(!is<Smi>(forwarder));
   CHECK(!is<Object>(forwarder));
   CHECK(!is<Signal>(forwarder));
@@ -33,4 +33,24 @@ void Test::smi_forwarder() {
   CHECK(to<Smi>(forwarder) == obj);
   CHECK(to<Immediate>(forwarder) == obj);
   CHECK_IS(Nothing, to<String>(forwarder));
+}
+
+void Test::check_closed_immutable() {
+#ifdef DEBUG
+  LocalRuntime runtime;
+  Value *obj = Smi::from_int(17);
+  Forwarder *forwarder = cast<Forwarder>(runtime.heap().new_forwarder(Forwarder::fwOpen, obj));
+  forwarder->descriptor()->set_type(Forwarder::fwClosed);
+  CHECK_ABORTS(cnForwarderState, forwarder->descriptor()->set_target(Smi::from_int(19)));
+#endif // DEBUG
+}
+
+void Test::check_stay_closed() {
+#ifdef DEBUG
+  LocalRuntime runtime;
+  Value *obj = Smi::from_int(17);
+  Forwarder *forwarder = cast<Forwarder>(runtime.heap().new_forwarder(Forwarder::fwOpen, obj));
+  forwarder->descriptor()->set_type(Forwarder::fwClosed);
+  CHECK_ABORTS(cnForwarderState, forwarder->descriptor()->set_type(Forwarder::fwOpen));
+#endif // DEBUG
 }

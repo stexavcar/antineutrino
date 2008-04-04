@@ -401,8 +401,8 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     case ocBindFor: {
       Value *value = frame.pop();
       Forwarder *forw = cast<Forwarder>(frame.pop());
-      forw->descriptor()->set_type(Forwarder::fwTransparent);
       forw->descriptor()->set_target(value);
+      forw->descriptor()->set_type(Forwarder::fwClosed);
       frame.push(value);
       pc += OpcodeInfo<ocBindFor>::kSize;
       break;
@@ -563,11 +563,11 @@ void Stack::validate_stack() {
   ASSERT(status().is_cooked);
   Frame frame(bottom() + fp());
   while (true) {
-    GC_SAFE_CHECK_IS_C(VALIDATION, Lambda, frame.lambda());
+    GC_SAFE_CHECK_IS_C(cnValidation, Lambda, frame.lambda());
     if (frame.is_bottom()) break;
     uword local_count = frame.locals();
     for (uword i = 0; i < local_count; i++)
-      GC_SAFE_CHECK_IS_C(VALIDATION, Value, frame[i]);
+      GC_SAFE_CHECK_IS_C(cnValidation, Value, frame[i]);
     frame.unwind();
   }
 }

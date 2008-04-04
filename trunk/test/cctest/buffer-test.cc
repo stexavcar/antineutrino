@@ -23,7 +23,7 @@ void Test::bounds_check() {
 #ifdef DEBUG
   LocalRuntime runtime;
   Buffer *buffer = cast<Buffer>(runtime.heap().new_buffer<uint8_t>(128));
-  CHECK_ABORTS(OUT_OF_BOUNDS, buffer->at<uint8_t>(128));
+  CHECK_ABORTS(cnOutOfBounds, buffer->at<uint8_t>(128));
 #endif
 }
 
@@ -32,6 +32,6 @@ void Test::bounds_check_partial() {
   LocalRuntime runtime;
   Buffer *buffer = cast<Buffer>(runtime.heap().new_buffer<uint8_t>(129));
   buffer->at<uint8_t>(128);
-  CHECK_ABORTS(OUT_OF_BOUNDS, buffer->at<uword>(128 / sizeof(uword)));
+  CHECK_ABORTS(cnOutOfBounds, buffer->at<uword>(128 / sizeof(uword)));
 #endif
 }

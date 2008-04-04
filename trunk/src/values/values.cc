@@ -484,19 +484,19 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
 
 static void validate_tuple(Tuple *obj) {
   for (uword i = 0; i < obj->length(); i++)
-    GC_SAFE_CHECK_IS_C(VALIDATION, Value, obj->get(i));
+    GC_SAFE_CHECK_IS_C(cnValidation, Value, obj->get(i));
 }
 
 static void validate_instance(Instance *obj) {
   for (uword i = 0; i < obj->gc_safe_layout()->instance_field_count(); i++)
-    GC_SAFE_CHECK_IS_C(VALIDATION, Value, obj->get_field(i));
+    GC_SAFE_CHECK_IS_C(cnValidation, Value, obj->get_field(i));
 }
 
 #define VALIDATE_FIELD(Type, name, Name, Class)                      \
-  GC_SAFE_CHECK_IS_C(VALIDATION, Type, cast<Class>(obj)->name());
+  GC_SAFE_CHECK_IS_C(cnValidation, Type, cast<Class>(obj)->name());
 
 static void validate_object(Object *obj) {
-  GC_SAFE_CHECK_IS_C(VALIDATION, Layout, obj->layout());
+  GC_SAFE_CHECK_IS_C(cnValidation, Layout, obj->layout());
   InstanceType type = obj->gc_safe_type();
   switch (type) {
     case tTuple:
@@ -511,8 +511,8 @@ static void validate_object(Object *obj) {
     case tLambda:
       FOR_EACH_LAMBDA_FIELD(VALIDATE_FIELD, Lambda)
       if (!is<Smi>(cast<Lambda>(obj)->code())) {
-        GC_SAFE_CHECK_IS_C(VALIDATION, Code, cast<Lambda>(obj)->code());
-        GC_SAFE_CHECK_IS_C(VALIDATION, Tuple, cast<Lambda>(obj)->constant_pool());
+        GC_SAFE_CHECK_IS_C(cnValidation, Code, cast<Lambda>(obj)->code());
+        GC_SAFE_CHECK_IS_C(cnValidation, Tuple, cast<Lambda>(obj)->constant_pool());
       }
       break;
     case tChannel:
@@ -526,6 +526,9 @@ static void validate_object(Object *obj) {
       break;
     case tQuoteTemplate:
       FOR_EACH_QUOTE_TEMPLATE_FIELD(VALIDATE_FIELD, QuoteTemplate)
+      break;
+    case tForwarderDescriptor:
+      FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(VALIDATE_FIELD, ForwarderDescriptor)
       break;
     case tBuiltinCall: case tUnquoteExpression: case tCode:
     case tString: case tVoid: case tTrue: case tFalse: case tNull:

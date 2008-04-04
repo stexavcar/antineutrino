@@ -54,6 +54,6 @@ FOR_EACH_ROOT(DECLARE_ROOT_CASE)
 void Test::cast_failure() {
 #ifdef DEBUG
   Value *value = Smi::from_int(0);
-  CHECK_ABORTS(CAST_ERROR, cast<Tuple>(value));
+  CHECK_ABORTS(cnCastError, cast<Tuple>(value));
 #endif
 }

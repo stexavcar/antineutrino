@@ -25,7 +25,7 @@ void Test::handles() {
 void Test::unscoped() {
 #ifdef DEBUG
   Value *value = Smi::from_int(0);
-  CHECK_ABORTS(NO_REF_SCOPE, new_ref(value));
+  CHECK_ABORTS(cnNoRefScope, new_ref(value));
 #endif // DEBUG
 }
 

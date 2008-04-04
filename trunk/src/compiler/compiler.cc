@@ -766,7 +766,7 @@ void Assembler::visit_local_definition(ref<LocalDefinition> that) {
   if (type == Smi::from_int(LocalDefinition::ldRec)) {
     uword height = stack_height();
     __ push(runtime().vhoid());
-    __ new_forwarder(Forwarder::fwUnbound);
+    __ new_forwarder(Forwarder::fwOpen);
     LocalScope scope(*this, that.symbol(), height);
     __ codegen(that.value());
     __ bind_forwarder();
@@ -775,7 +775,7 @@ void Assembler::visit_local_definition(ref<LocalDefinition> that) {
   } else if (type == Smi::from_int(LocalDefinition::ldLoc)) {
     uword height = stack_height();
     __ codegen(that.value());
-    __ new_forwarder(Forwarder::fwLocal);
+    __ new_forwarder(Forwarder::fwOpen);
     LocalScope scope(*this, that.symbol(), height);
     __ codegen(that.body());
     __ load_local(height);

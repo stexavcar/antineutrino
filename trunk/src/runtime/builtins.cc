@@ -325,15 +325,22 @@ Data *Builtins::channel_send(BuiltinArguments &args) {
 // --- T e s t ---
 // ---------------
 
-Data *Builtins::make_forwarder(BuiltinArguments &args) {
+Data *Builtins::new_forwarder(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  return args.runtime().heap().new_forwarder(Forwarder::fwTransparent, args.self());
+  return args.runtime().heap().new_forwarder(Forwarder::fwOpen, args.self());
 }
 
 Data *Builtins::set_target(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   Forwarder *forwarder = cast<Forwarder>(args.self());
   forwarder->descriptor()->set_target(args[0]);
+  return args.runtime().roots().vhoid();
+}
+
+Data *Builtins::close(BuiltinArguments &args) {
+  ASSERT_EQ(0, args.count());
+  Forwarder *forwarder = cast<Forwarder>(args.self());
+  forwarder->descriptor()->set_type(Forwarder::fwClosed);
   return args.runtime().roots().vhoid();
 }
 

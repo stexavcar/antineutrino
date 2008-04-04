@@ -6,12 +6,13 @@
 namespace neutrino {
 
 #define FOR_EACH_CONDITION(VISIT)                                    \
-  VISIT(UNKNOWN)         VISIT(OUT_OF_BOUNDS)   VISIT(NO_REF_SCOPE)  \
-  VISIT(CAST_ERROR)      VISIT(VALIDATION)      VISIT(DISALLOWED)
+  VISIT(Unknown)         VISIT(OutOfBounds)   VISIT(NoRefScope)      \
+  VISIT(CastError)       VISIT(Validation)    VISIT(Disallowed)      \
+  VISIT(ForwarderState)
 
 enum Condition {
-  NO_PROBLEM = 0
-#define DECLARE_ENUM(NAME) , NAME
+  cnNoProblem = 0
+#define DECLARE_ENUM(Name) , cn##Name
 FOR_EACH_CONDITION(DECLARE_ENUM)
 #undef DECLARE_ENUM
 };

@@ -38,21 +38,21 @@ FOR_EACH_DECLARED_TYPE(SPECIALIZE_VALUE_INFO)
 
 template <class To, class From>
 inline To *cast(From *from) {
-  ASSERT_IS_C(CAST_ERROR, To, from);
+  ASSERT_IS_C(cnCastError, To, from);
   return static_cast<To*>(from);
 }
 
 #ifdef DEBUG
 template <class To, class From>
 inline To *gc_safe_cast(From *from) {
-  GC_SAFE_CHECK_IS_C(CAST_ERROR, To, from);
+  GC_SAFE_CHECK_IS_C(cnCastError, To, from);
   return static_cast<To*>(from);
 }
 #endif
 
 template <class To, class From>
 inline ref<To> cast(ref<From> from) {
-  ASSERT_IS_C(CAST_ERROR, To, *from);
+  ASSERT_IS_C(cnCastError, To, *from);
   return ref<To>(reinterpret_cast<To**>(from.cell()));
 }
 
@@ -351,12 +351,12 @@ DEFINE_ACCESSORS(Data*, Object, header, Header)
 DEFINE_ACCESSORS(uword, String, length, Length)
 
 char &String::at(uword index) {
-  ASSERT_C(OUT_OF_BOUNDS, index < length());
+  ASSERT_C(cnOutOfBounds, index < length());
   return ValuePointer::access_direct<char>(this, String::kHeaderSize + sizeof(char) * index);
 }
 
 void String::set(uword index, char value) {
-  ASSERT_C(OUT_OF_BOUNDS, index < length());
+  ASSERT_C(cnOutOfBounds, index < length());
   return ValuePointer::set_field<char>(this, String::kHeaderSize + sizeof(char) * index, value);
 }
 
@@ -414,7 +414,7 @@ uword Instance::size_for(uword fields) {
 DEFINE_ACCESSORS(uword, Tuple, length, Length)
 
 Value *&Tuple::get(uword index) {
-  ASSERT_C(OUT_OF_BOUNDS, index < length());
+  ASSERT_C(cnOutOfBounds, index < length());
   return ValuePointer::access_field<Value*>(this, Tuple::kHeaderSize + kPointerSize * index);
 }
 
@@ -423,7 +423,7 @@ vector<Value*> Tuple::buffer() {
 }
 
 void Tuple::set(uword index, Value *value) {
-  ASSERT_C(OUT_OF_BOUNDS, index < length());
+  ASSERT_C(cnOutOfBounds, index < length());
   return ValuePointer::set_field<Value*>(this, Tuple::kHeaderSize + kPointerSize * index, value);
 }
 
@@ -501,7 +501,27 @@ DEFINE_ACCESSORS(void*, Channel, proxy, Proxy)
 // --- F o r w a r d e r   D e s c r i p t o r ---
 // -----------------------------------------------
 
-DEFINE_ACCESSORS(Forwarder::Type, ForwarderDescriptor, type, Type)
+Forwarder::Type &ForwarderDescriptor::type() {
+  return ValuePointer::access_field<Forwarder::Type>(this, ForwarderDescriptor::kTypeOffset);
+}
+
+void ForwarderDescriptor::set_type(Forwarder::Type value) {
+  ASSERT_EQ_C(cnForwarderState, Forwarder::fwOpen, type());
+  set_raw_type(value);
+}
+
+void ForwarderDescriptor::set_raw_type(Forwarder::Type value) {
+  ValuePointer::set_field<Forwarder::Type>(this, ForwarderDescriptor::kTypeOffset, value);
+}
+
+Value *&ForwarderDescriptor::target() {
+  return ValuePointer::access_field<Value*>(this, ForwarderDescriptor::kTargetOffset);
+}
+
+void ForwarderDescriptor::set_target(Value *value) {
+  ASSERT_EQ_C(cnForwarderState, Forwarder::fwOpen, type());
+  ValuePointer::set_field<Value*>(this, ForwarderDescriptor::kTargetOffset, value);
+}
 
 
 // -------------------
@@ -522,7 +542,7 @@ void AbstractBuffer::set_size(uword size) {
 
 template <typename T>
 T &AbstractBuffer::at(uword index) {
-  ASSERT_C(OUT_OF_BOUNDS, index < size<T>());
+  ASSERT_C(cnOutOfBounds, index < size<T>());
   return ValuePointer::access_direct<T>(this, kHeaderSize + index * sizeof(T));
 }
 

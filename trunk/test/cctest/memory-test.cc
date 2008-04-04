@@ -98,5 +98,5 @@ void Test::disallow_garbage_collection() {
       DisallowGarbageCollection double_nested_disallow(memory);
     }
   }
-  ASSERT_ABORTS(DISALLOWED, memory.collect_garbage());
+  ASSERT_ABORTS(cnDisallowed, memory.collect_garbage());
 }

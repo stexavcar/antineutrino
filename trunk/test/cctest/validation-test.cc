@@ -14,5 +14,5 @@ void Test::validation() {
   Method *method = cast<Method>(runtime.heap().new_method(selector, signature, lambda));
   ASSERT(method->validate());
   method->set_lambda(reinterpret_cast<Lambda*>(name));
-  ASSERT_ABORTS(VALIDATION, method->validate());
+  ASSERT_ABORTS(cnValidation, method->validate());
 }

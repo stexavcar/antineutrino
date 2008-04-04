@@ -20,7 +20,6 @@
   VISIT(3,  PROTOCOL,               Protocol,              protocol)               \
   VISIT(4,  TASK,                   Task,                  task)                   \
   VISIT(73, SIGNATURE,              Signature,             signature)              \
-  VISIT(74, FORWARDER_DESCRIPTOR,   ForwarderDescriptor,   forwarder_descriptor)   \
   VISIT(77, SELECTOR,               Selector,              selector)
 
 #define FOR_EACH_OBJECT_TYPE(VISIT)                                                \
@@ -37,6 +36,7 @@
   VISIT(15, INSTANCE,               Instance,              instance)               \
   VISIT(16, STACK,                  Stack,                 stack)                  \
   VISIT(17, CONTEXT,                Context,               context)                \
+  VISIT(74, FORWARDER_DESCRIPTOR,   ForwarderDescriptor,   forwarder_descriptor)   \
   VISIT(83, CHANNEL,                Channel,               channel)                \
   FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
   FOR_EACH_SYNTAX_TREE_TYPE(VISIT)
@@ -382,8 +382,9 @@
   VISIT(101, raw_print,          "raw_print")                        \
   VISIT(102, compile_expression, "compile_expression")               \
   VISIT(103, lift,               "lift")                             \
-  VISIT(104, make_forwarder,     "make_forwarder")                   \
+  VISIT(104, new_forwarder,      "new_forwarder")                    \
   VISIT(105, set_target,         "set_target")                       \
+  VISIT(109, close,              "close")                            \
   VISIT(106, is_whitespace,      "is_whitespace")                    \
   VISIT(107, is_alpha,           "is_alpha")                         \
   VISIT(108, is_digit,           "is_digit")

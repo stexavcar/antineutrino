@@ -29,7 +29,7 @@ vector<T>::vector() : data_(NULL) { }
 
 template <typename T>
 T &vector<T>::operator[](uword index) {
-  ASSERT_LT_C(OUT_OF_BOUNDS, index, length_);
+  ASSERT_LT_C(cnOutOfBounds, index, length_);
   return data_[index];
 }
 

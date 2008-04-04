@@ -30,6 +30,6 @@ void Test::bounds_check() {
 #ifdef DEBUG
   LocalRuntime runtime;
   Tuple *tuple = cast<Tuple>(runtime.heap().new_tuple(10));
-  CHECK_ABORTS(OUT_OF_BOUNDS, tuple->get(10));
+  CHECK_ABORTS(cnOutOfBounds, tuple->get(10));
 #endif  
 }

@@ -14,5 +14,5 @@ void Test::vector() {
   // Check that there is no bounds check in non-debug mode
   IF_NOT_DEBUG(CHECK_EQ(4, ints[3]));
   // Check that there is a bounds check in debug mode
-  IF_DEBUG(CHECK_ABORTS(OUT_OF_BOUNDS, ints[3]));
+  IF_DEBUG(CHECK_ABORTS(cnOutOfBounds, ints[3]));
 }

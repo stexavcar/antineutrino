@@ -79,7 +79,7 @@ void FieldMigrator::visit_field(Value **field) {
 }
 
 void Memory::collect_garbage() {
-  ASSERT_C(DISALLOWED, allow_garbage_collection());
+  ASSERT_C(cnDisallowed, allow_garbage_collection());
   SemiSpace &from_space = young_space();
   SemiSpace *to_space = new SemiSpace(kSize);
   FieldMigrator migrator(from_space, *to_space);

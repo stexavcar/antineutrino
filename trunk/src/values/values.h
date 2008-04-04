@@ -188,7 +188,21 @@ public:
   inline ForwarderDescriptor *descriptor();
 
   enum Type {
-    fwTransparent, fwUnbound, fwLocal
+
+    /**
+     * An open forwarder is one whose value may change.  It is not
+     * safe to replace an open forwarder with its value.
+     */
+    fwOpen,
+    
+    /**
+     * A closed forwarder is one whose value is fixed.  It is safe
+     * to replace it with its value, and indeed the garbage collector
+     * should eventually replace all instances of the forwarder with
+     * their values.
+     */
+    fwClosed
+
   };
 
   static inline Forwarder *to(ForwarderDescriptor *obj);
@@ -201,6 +215,7 @@ class ForwarderDescriptor : public Object {
 public:
   inline Forwarder::Type &type();
   inline void set_type(Forwarder::Type value);
+  inline void set_raw_type(Forwarder::Type value);
 
   FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(DECLARE_OBJECT_FIELD, 0)
 

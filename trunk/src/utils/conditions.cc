@@ -19,7 +19,9 @@ void Conditions::notify(Condition cause) {
 }
 
 MAKE_ENUM_INFO_HEADER(Condition)
-FOR_EACH_CONDITION(MAKE_ENUM_INFO_ENTRY)
+#define MAKE_ENTRY(Name) MAKE_ENUM_INFO_ENTRY(cn##Name)
+FOR_EACH_CONDITION(MAKE_ENTRY)
+#undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
 void Conditions::check_is_failed(const char *file_name, int line_number,
