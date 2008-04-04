@@ -749,7 +749,8 @@ public:
   enum Type {
     ldDef = 1,
     ldVar = 2,
-    ldRec = 3
+    ldRec = 3,
+    ldLoc = 4
   };
 
   static const uword kSymbolOffset = SyntaxTree::kHeaderSize;

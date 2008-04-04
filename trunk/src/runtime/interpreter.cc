@@ -390,8 +390,9 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       break;
     }
     case ocForward: {
-      Value *value = constant_pool[code[pc + 1]];
-      Data *forw = runtime().heap().new_forwarder(Forwarder::fwUnbound, value);
+      Forwarder::Type type = static_cast<Forwarder::Type>(code[pc + 1]);
+      Value *value = frame.pop();
+      Data *forw = runtime().heap().new_forwarder(type, value);
       if (is<AllocationFailed>(forw)) return forw;
       frame.push(cast<Value>(forw));
       pc += OpcodeInfo<ocForward>::kSize;

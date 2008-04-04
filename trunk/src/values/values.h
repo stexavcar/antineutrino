@@ -188,7 +188,7 @@ public:
   inline ForwarderDescriptor *descriptor();
 
   enum Type {
-    fwTransparent, fwUnbound
+    fwTransparent, fwUnbound, fwLocal
   };
 
   static inline Forwarder *to(ForwarderDescriptor *obj);

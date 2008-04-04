@@ -96,10 +96,22 @@ class Parser(object):
     pos = self.token().position()
     raise scanner.SyntaxError(pos, 'Unexpected token')
 
-  def modifiers(self):
+  def at_modifier(self, allow_idents):
+    if allow_idents and self.token().is_identifier():
+      return True
+    return self.token().is_delimiter('@')
+
+  def modifier(self, allow_idents):
+    if allow_idents and self.token().is_identifier():
+      return self.expect_identifier()
+    else:
+      self.expect_delimiter('@')
+      return self.expect_identifier();
+
+  def modifiers(self, allow_idents):
     result = [ ]
-    while self.token().is_identifier():
-      modifier = self.expect_identifier()
+    while self.at_modifier(allow_idents):
+      modifier = self.modifier(allow_idents)
       result.append(modifier)
     return result
 
@@ -112,7 +124,7 @@ class Parser(object):
 
   def toplevel_definition(self):
     doc = self.documentation_opt()
-    modifiers = self.modifiers()
+    modifiers = self.modifiers(True)
     if self.token().is_keyword(DEF):
       return self.definition(modifiers)
     elif self.token().is_keyword(PROTOCOL):
@@ -157,7 +169,7 @@ class Parser(object):
 
   def member_declaration(self, klass):
     doc = self.documentation_opt()
-    modifiers = self.modifiers()
+    modifiers = self.modifiers(True)
     self.expect_keyword(DEF)
     (name, params) = self.method_name()
     if params is None:
@@ -208,7 +220,7 @@ class Parser(object):
   def statements(self):
     stmts = [ ]
     while self.has_more() and not self.token().is_delimiter('}'):
-      stmt = self.control_expression(True)
+      stmt = self.expression(True)
       stmts.append(stmt)
     return stmts
 
@@ -238,11 +250,15 @@ class Parser(object):
         params.append(symbol)
 
   def expression(self, is_toplevel):
-    return self.control_expression(is_toplevel)
+    return self.annotated_expression(is_toplevel)
+  
+  def annotated_expression(self, is_toplevel):
+    modifiers = self.modifiers(False)
+    return self.control_expression(modifiers, is_toplevel)
 
-  def control_expression(self, is_toplevel):
+  def control_expression(self, modifiers, is_toplevel):
     if self.token().is_keyword([DEF, VAR]):
-      return self.local_definition(is_toplevel)
+      return self.local_definition(modifiers, is_toplevel)
     elif self.token().is_keyword(REC):
       return self.recursive_definition(is_toplevel)
     elif self.token().is_keyword(IF):
@@ -371,7 +387,7 @@ class Parser(object):
     self.expect_delimiter('}')
     return ast.Sequence.make(result)
 
-  def local_definition(self, is_toplevel):
+  def local_definition(self, modifiers, is_toplevel):
     is_var = self.token().is_keyword(VAR)
     if is_var: self.expect_keyword(VAR)
     else: self.expect_keyword(DEF)
@@ -382,13 +398,17 @@ class Parser(object):
     if self.token().is_keyword(IN):
       self.expect_keyword(IN)
       body = self.expression(is_toplevel)
+      if is_toplevel: self.expect_delimiter(';')
     elif is_toplevel:
       self.expect_delimiter(';')
       stmts = self.statements()
       body = ast.Sequence.make(stmts)
     self.resolver().pop_scope()
-    if is_var: type = 2
-    else: type = 1
+    if 'local' in modifiers:
+      type = 4
+    else:
+      if is_var: type = 2
+      else: type = 1
     return ast.LocalDefinition(name, value, body, type)
 
   def recursive_definition(self, is_toplevel):

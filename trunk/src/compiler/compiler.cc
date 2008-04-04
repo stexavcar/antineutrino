@@ -97,7 +97,7 @@ public:
   void quote(uint16_t unquotes);
   void mark(ref<Value> data);
   void unmark();
-  void new_forwarder(ref<Value> value);
+  void new_forwarder(uint16_t type);
   void bind_forwarder();
   
 #define MAKE_CASE(n, name, str) void name();
@@ -401,12 +401,10 @@ void Assembler::unmark() {
   adjust_stack_height(-static_cast<word>(Marker::kSize));
 }
 
-void Assembler::new_forwarder(ref<Value> value) {
+void Assembler::new_forwarder(uint16_t type) {
   STATIC_CHECK(OpcodeInfo<ocForward>::kArgc == 1);
-  uint16_t index = constant_pool_index(value);
   code().append(ocForward);
-  code().append(index);
-  adjust_stack_height(1);
+  code().append(type);
 }
 
 void Assembler::bind_forwarder() {
@@ -764,15 +762,29 @@ void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
 }
 
 void Assembler::visit_local_definition(ref<LocalDefinition> that) {
-  if (that->type() == Smi::from_int(LocalDefinition::ldRec)) {
+  Smi *type = that->type();
+  if (type == Smi::from_int(LocalDefinition::ldRec)) {
     uword height = stack_height();
-    __ new_forwarder(runtime().vhoid());
+    __ push(runtime().vhoid());
+    __ new_forwarder(Forwarder::fwUnbound);
     LocalScope scope(*this, that.symbol(), height);
     __ codegen(that.value());
     __ bind_forwarder();
     __ codegen(that.body());
     __ slap(1);
+  } else if (type == Smi::from_int(LocalDefinition::ldLoc)) {
+    uword height = stack_height();
+    __ codegen(that.value());
+    __ new_forwarder(Forwarder::fwLocal);
+    LocalScope scope(*this, that.symbol(), height);
+    __ codegen(that.body());
+    __ load_local(height);
+    __ push(runtime().nuhll());
+    __ bind_forwarder();
+    __ pop(1);
+    __ slap(1);
   } else {
+    ASSERT(type == Smi::from_int(LocalDefinition::ldDef) || type == Smi::from_int(LocalDefinition::ldVar));
     uword height = stack_height();
     __ codegen(that.value());
     LocalScope scope(*this, that.symbol(), height);

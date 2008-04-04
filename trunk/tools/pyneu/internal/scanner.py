@@ -51,7 +51,7 @@ MODIFIERS = to_map([
 # The set of delimiters
 DELIMITERS = to_map([
   '(', ')', ';', ':', ':=', '{', '}', u'·', ',', '[', ']',
-  u'«', u'»', u'‹', u'›'
+  u'«', u'»', u'‹', u'›', '@'
 ])
 
 
@@ -186,6 +186,9 @@ class Delimiter(Token):
   
   def is_delimiter(self, value):
     return self.value() == value
+  
+  def __str__(self):
+    return "delimiter %s" % self.value()
 
 
 class Documentation(Token):
