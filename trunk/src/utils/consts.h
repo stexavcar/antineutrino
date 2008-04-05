@@ -362,8 +362,9 @@
   VISIT(43, lambda_expression,   params,      "parameters")          \
   VISIT(44, lambda_expression,   body,        "body")                \
   VISIT(45, channel,             send,        "send")                \
-  VISIT(48, array,               set,         "set")                 \
-  VISIT(49, array,               get,         "[]")
+  VISIT(49, array,               get,         "[]")                  \
+  VISIT(51, array,               length,      "||")                  \
+  VISIT(52, array,               set,         "[]:=")
 
 
 // ---------------------------------------

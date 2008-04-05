@@ -417,8 +417,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
         if (is<AllocationFailed>(value)) {
           return value;
         } else {
-          printf("Problem executing builtin\n");
-          exit(1);
+          Conditions::get().error_occurred("Problem executing builtin %i", index);
         }
       } else {
         frame.push(cast<Value>(value));

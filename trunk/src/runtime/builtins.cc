@@ -282,6 +282,12 @@ Data *Builtins::new_array(BuiltinArguments &args) {
   return args.runtime().heap().new_array(size->value());
 }
 
+Data *Builtins::array_length(BuiltinArguments &args) {
+  ASSERT_EQ(0, args.count());
+  SIGNAL_CHECK(Array, self, to<Array>(args.self()));
+  return Smi::from_int(self->length());
+}
+
 
 // -------------------
 // --- L a m b d a ---

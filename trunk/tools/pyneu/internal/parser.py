@@ -187,7 +187,12 @@ class Parser(object):
       return (self.expect_identifier(), None)
     elif self.token().is_delimiter('['):
       params = self.parameters('[', ']')
-      return ("[]", params)
+      if self.token().is_delimiter(':='):
+        self.expect_delimiter(':=')
+        set_params = self.parameters()
+        return ("[]:=", params.extend(set_params))
+      else:
+        return ("[]", params)
     elif self.token().is_operator():
       value = self.expect_operator()
       if scanner.is_circumfix_operator(value):

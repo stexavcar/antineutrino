@@ -85,6 +85,13 @@ class Parameters(SyntaxTree):
   def params(self):
     return self.params_
   
+  def extend(self, that):
+    return Parameters(
+        self.posc_ + that.posc_,
+        self.params_ + that.params_,
+        self.is_accessor_ and that.is_accessor_
+    )
+  
   def keywords(self):
     return self.params_[self.posc_:]
   

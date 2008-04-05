@@ -4,8 +4,24 @@ protocol Matrix {
   
   def [row, col] -> this.objs[row][col];
   
+  def [row, col]:=(val) -> this.objs[row][col] := val;
+  
   static def make(objs) {
-    return new Matrix() { objs: objs };
+    // Create a copy of the objects given as arguments to make this
+    // matrix mutable.
+    def backbone := new Array(size: |objs|);
+    var i := 0;
+    while (i < |objs|) {
+      def row := new Array(size: |objs[i]|);
+      backbone[i] := row;
+      var j := 0;
+      while (j < |row|) {
+        row[j] := objs[i][j];
+        j := j + 1;
+      }
+      i := i + 1;
+    }
+    return new Matrix() { objs: backbone };
   }
 
 }
@@ -25,6 +41,16 @@ def test_multi_index() {
   assert m[2, 0] = 7;
   assert m[2, 1] = 8;
   assert m[2, 2] = 9;
+  m[1, 1] := 100;
+  assert m[0, 0] = 1;
+  assert m[0, 1] = 2;
+  assert m[0, 2] = 3;
+  assert m[1, 0] = 4;
+  assert m[1, 1] = 100;
+  assert m[1, 2] = 6;
+  assert m[2, 0] = 7;
+  assert m[2, 1] = 8;
+  assert m[2, 2] = 9;  
 }
 
 def main() {

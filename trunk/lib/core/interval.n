@@ -1,7 +1,19 @@
 protocol Interval {
 
-  static def make(from, to) -> new Interval() {
-    from: from, to: to
-  };
+  def | | -> (this.to - this.from);
+  
+  def [index] -> index + this.from;
+  
+  def for(f) {
+    var i := this.from;
+    while (i < this.to) {
+      f(i);
+      i := i + 1;
+    }
+  }
+
+  def to_string() -> "[${this.from}..${this.to}]";
+
+  static def new(from:, to:) -> new Interval() { from: from, to: to };
 
 }

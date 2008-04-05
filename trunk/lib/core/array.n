@@ -4,7 +4,8 @@ internal protocol Array : Tuple {
 
   static def new(size:) -> new_array(size);
 
+  internal def | |;
   internal def [index];
-  internal def set(index, value);
+  internal def [index]:=(value);
 
 }

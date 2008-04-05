@@ -17,8 +17,20 @@ def test_multiplication() {
   assert (50 × 2) = 100;
 }
 
+def test_interval() {
+  def inter := 7 .. 13;
+  assert |inter| = 6;
+  assert inter[0] = 7;
+  assert inter[1] = 8;
+  assert inter[2] = 9;
+  assert inter[3] = 10;
+  assert inter[4] = 11;
+  assert inter[5] = 12;
+}
+
 def main() {
   test_number_syntax();
   test_addition();
   test_multiplication();
+  test_interval();
 }

@@ -1,9 +1,23 @@
+def ensure_capacity() {
+  if (this.size < |this.elms|) return null;
+  def new_elms := new Array(size: |this.elms| × 2);
+  var i := 0;
+  while (i < |this.elms|) {
+    new_elms[i] := this.elms[i];
+    i := i + 1;
+  }
+  this.elms := new_elms;
+}
+
 protocol ArrayList : List {
 
   def [index] -> this.elms[index];
 
+  def | | -> this.size;
+
   def add(elm) {
-    this.elms.set(this.size, elm);
+    ensure_capacity();
+    this.elms[this.size] := elm;
     this.size := this.size + 1;
   }
 
