@@ -7,7 +7,7 @@ namespace neutrino {
 
 class heap_list {
 public:
-  inline heap_list(Factory &factory);
+  inline heap_list(Runtime &runtime);
   void initialize();
   ~heap_list();
   uword length() { return length_; }
@@ -16,10 +16,10 @@ public:
   void append(ref<Value> value);
   void extend_capacity();
 private:
-  Factory &factory() { return factory_; }
+  Runtime &runtime() { return runtime_; }
   persistent<Tuple> data() { return data_; }
   void set_data(persistent<Tuple> value) { data_ = value; }
-  Factory &factory_;
+  Runtime &runtime_;
   persistent<Tuple> data_;
   uword length_;
 };

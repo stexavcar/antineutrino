@@ -31,36 +31,36 @@ Image::~Image() {
 // --- I m a g e   L o a d   I n f o ---
 // -------------------------------------
 
-void ImageLoadInfo::type_mismatch(InstanceType expected, InstanceType found,
+void ImageLoadStatus::type_mismatch(InstanceType expected, InstanceType found,
     const char *location) {
-  status = TYPE_MISMATCH;
+  status = lsTypeMismatch;
   error_info.type_mismatch.expected = expected;
   error_info.type_mismatch.found = found;
   error_info.type_mismatch.location = location;
 }
 
-void ImageLoadInfo::invalid_image() {
-  status = INVALID_IMAGE;
+void ImageLoadStatus::invalid_image() {
+  status = lsInvalidImage;
 }
 
-void ImageLoadInfo::invalid_root_count(word expected, word found) {
-  status = ROOT_COUNT;
+void ImageLoadStatus::invalid_root_count(word expected, word found) {
+  status = lsRootCount;
   error_info.root_count.expected = expected;
   error_info.root_count.found = found;
 }
 
-void ImageLoadInfo::invalid_magic_number(uword found) {
-  status = INVALID_MAGIC;
+void ImageLoadStatus::invalid_magic_number(uword found) {
+  status = lsInvalidMagic;
   error_info.magic.found = found;
 }
 
-void ImageLoadInfo::invalid_version(uword found) {
-  status = INVALID_VERSION;
+void ImageLoadStatus::invalid_version(uword found) {
+  status = lsInvalidVersion;
   error_info.version.found = found;
 }
 
-MAKE_ENUM_INFO_HEADER(ImageLoadInfo::Status)
-#define MAKE_ENTRY(NAME) MAKE_ENUM_INFO_ENTRY(ImageLoadInfo::NAME)
+MAKE_ENUM_INFO_HEADER(ImageLoadStatus::Status)
+#define MAKE_ENTRY(Name) MAKE_ENUM_INFO_ENTRY(ImageLoadStatus::ls##Name)
 FOR_EACH_IMAGE_LOAD_STATUS(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
@@ -69,35 +69,34 @@ MAKE_ENUM_INFO_FOOTER()
 // --- L o a d i n g ---
 // ---------------------
 
-void Image::initialize(ImageLoadInfo &info) {
+void Image::initialize(ImageContext &context) {
   if (data().length() < kHeaderSize) {
-    info.invalid_image();
+    context.status().invalid_image();
     return;
   }
   if (data_[kMagicNumberOffset] != kMagicNumber) {
-    info.invalid_magic_number(data_[kMagicNumberOffset]);
+    context.status().invalid_magic_number(data_[kMagicNumberOffset]);
     return;
   }
   if (data_[kVersionOffset] != Image::kCurrentVersion) {
-    info.invalid_version(data_[kVersionOffset]);
+    context.status().invalid_version(data_[kVersionOffset]);
     return;
   }
   if (data_[kRootCountOffset] != static_cast<word>(Roots::kCount)) {
-    info.invalid_root_count(Roots::kCount, data_[kRootCountOffset]);
+    context.status().invalid_root_count(Roots::kCount, data_[kRootCountOffset]);
     return;
   }
   uword heap_size = data_[kHeapSizeOffset];
   if (heap_size > data().length() - kHeaderSize) {
-    info.invalid_image();
+    context.status().invalid_image();
     return;
   }
   word *heap_start = data().start() + kHeaderSize;
   heap_ = list<word>(heap_start, heap_size);
 }
 
-Data *Image::load(ImageLoadInfo &info) {
-  DisallowGarbageCollection disallow(Runtime::current().heap().memory());
-  Image::Scope scope(*this);
+Data *Image::load(ImageContext &info) {
+  DisallowGarbageCollection disallow(info.runtime().heap().memory());
   // Make shallow copies in heap
   ImageIterator<FixedHeap, FixedHeap::Data> iter(heap());
   while (iter.has_next()) {
@@ -119,8 +118,8 @@ Data *Image::load(ImageLoadInfo &info) {
   return safe_cast<Tuple>(roots_img->forward_pointer(), info, "<roots>");
 }
 
-void Image::copy_object_shallow(FObject *obj, ImageLoadInfo &info) {
-  Heap &heap = Runtime::current().heap();
+void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
+  Heap &heap = info.runtime().heap();
   FData *header = obj->header();
   // Always migrate layout objects before the objects they describe.
   // It is useful to be able to make the assumption that the layout
@@ -217,11 +216,11 @@ FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
     obj->forward_pointer()->set_layout(type_info.layout);
 }
 
-void Image::fixup_shallow_object(FObject *obj, ImageLoadInfo &info) {
+void Image::fixup_shallow_object(FObject *obj, ImageContext &info) {
 #define TRANSFER_FIELD(Type, field, Field, arg)                      \
   FImmediate *field##_img = img->field(info, #arg "." #field);       \
   if (info.has_error()) return;                                      \
-  Type *field##_value = safe_cast<Type>(field##_img->forward_pointer(), info, #arg "." #field); \
+  Type *field##_value = safe_cast<Type>(field##_img->forward_pointer(info), info, #arg "." #field); \
   if (info.has_error()) return;                                      \
   heap_obj->set_##field(field##_value);
   InstanceType type = obj->type();
@@ -231,7 +230,7 @@ void Image::fixup_shallow_object(FObject *obj, ImageLoadInfo &info) {
       Tuple *tuple = cast<Tuple>(img->forward_pointer());
       uword length = tuple->length();
       for (uword i = 0; i < length; i++)
-        tuple->set(i, img->at(i)->forward_pointer());
+        tuple->set(i, img->at(i)->forward_pointer(info));
       break;
     }
     case tLambda: {
@@ -240,8 +239,8 @@ void Image::fixup_shallow_object(FObject *obj, ImageLoadInfo &info) {
       TRANSFER_FIELD(Value, code, Code, Lambda);
       TRANSFER_FIELD(LambdaExpression, tree, Tree, Lambda);
       TRANSFER_FIELD(Context, context, Context, Lambda);
-      heap_obj->set_constant_pool(img->literals(info, "Lambda.constant_pool")->forward_pointer());
-      heap_obj->set_outers(Runtime::current().heap().roots().empty_tuple());
+      heap_obj->set_constant_pool(img->literals(info, "Lambda.constant_pool")->forward_pointer(info));
+      heap_obj->set_outers(info.runtime().heap().roots().empty_tuple());
       break;
     }
     case tChannel: {
@@ -254,7 +253,7 @@ void Image::fixup_shallow_object(FObject *obj, ImageLoadInfo &info) {
       FLayout *img = image_raw_cast<FLayout>(obj);
       Layout *layout = cast<Layout>(img->forward_pointer());
       layout->set_methods(cast<Tuple>(img->methods(info, "Layout.methods")->forward_pointer()));
-      layout->set_protocol(cast<Immediate>(img->protocol(info, "Layout.protocol")->forward_pointer()));
+      layout->set_protocol(cast<Immediate>(img->protocol(info, "Layout.protocol")->forward_pointer(info)));
       break;
     }
     case tBuiltinCall: {

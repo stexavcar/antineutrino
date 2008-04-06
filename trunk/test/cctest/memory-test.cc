@@ -9,14 +9,14 @@ using namespace neutrino;
 
 void Test::simple_migration() {
   LocalRuntime runtime;
-  ref_scope scope;
+  ref_scope scope(runtime.refs());
   ref<Tuple> tuple = runtime.factory().new_tuple(10);
   CHECK_IS(Tuple, *tuple);
   Tuple *old_tuple = *tuple;
   Memory &memory = runtime.heap().memory();
   SemiSpace &old_space = memory.young_space();
   CHECK(old_space.contains(*tuple));
-  memory.collect_garbage();
+  memory.collect_garbage(runtime);
   SemiSpace &new_space = memory.young_space();
   CHECK(&old_space != &new_space);
   CHECK(*tuple != old_tuple);
@@ -31,26 +31,26 @@ void Test::garbage_removed() {
   SemiSpace &old_space = memory.young_space();
   for (uword i = 0; i < 10; i++)
     heap.new_tuple(10);
-  ref_scope scope;
+  ref_scope scope(runtime.refs());
   ref<True> value = runtime.thrue();
   CHECK_IS(True, *value);
   CHECK(old_space.contains(*value));
   uword space_before = old_space.bytes_allocated();
-  memory.collect_garbage();
+  memory.collect_garbage(runtime);
   SemiSpace &new_space = memory.young_space();
   CHECK(&old_space != &new_space);
   uword space_after = new_space.bytes_allocated();
   CHECK_IS(True, *value);
   CHECK(new_space.contains(*value));
   CHECK(space_before > space_after);
-  memory.collect_garbage();
+  memory.collect_garbage(runtime);
   uword space_after_after = memory.young_space().bytes_allocated();
   CHECK_EQ(space_after, space_after_after);
 }
 
 void Test::migrate_cycle() {
   LocalRuntime runtime;
-  ref_scope scope;
+  ref_scope scope(runtime.refs());
   Memory &memory = runtime.heap().memory();
   Factory &factory = runtime.factory();
   SemiSpace &old_space = memory.young_space();
@@ -60,7 +60,7 @@ void Test::migrate_cycle() {
   value->set(1, *value);
   value->set(2, *value);
   CHECK(old_space.contains(*value));
-  memory.collect_garbage();
+  memory.collect_garbage(runtime);
   CHECK_IS(Tuple, *value);
   CHECK(value->get(0) == *value);
   CHECK(value->get(1) == *value);
@@ -84,7 +84,7 @@ void Test::garbage_collector_monitor() {
     }
   }
   CHECK(!monitor.has_collected_garbage());
-  memory.collect_garbage();
+  memory.collect_garbage(runtime);
   CHECK(monitor.has_collected_garbage());
 }
 
@@ -98,5 +98,5 @@ void Test::disallow_garbage_collection() {
       DisallowGarbageCollection double_nested_disallow(memory);
     }
   }
-  ASSERT_ABORTS(cnDisallowed, memory.collect_garbage());
+  ASSERT_ABORTS(cnDisallowed, memory.collect_garbage(runtime));
 }

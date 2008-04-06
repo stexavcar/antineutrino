@@ -1,12 +1,13 @@
 #include "compiler/compile-utils-inl.h"
 #include "heap/factory.h"
 #include "heap/ref-inl.h"
+#include "runtime/runtime-inl.h"
 #include "values/values-inl.h"
 
 namespace neutrino {
 
 void heap_list::initialize() {
-  ref<Tuple> tuple = factory().new_tuple(16);
+  ref<Tuple> tuple = runtime().factory().new_tuple(16);
   data_ = new_persistent(*tuple);
 }
 
@@ -15,12 +16,12 @@ heap_list::~heap_list() {
 }
 
 void heap_list::extend_capacity() {
-  ref_scope scope;
+  ref_scope scope(runtime().refs());
   uword capacity = data().length();
   uword new_capacity = grow_value(capacity);
-  ref<Tuple> new_data = factory().new_tuple(new_capacity);
+  ref<Tuple> new_data = runtime().factory().new_tuple(new_capacity);
   for (uword i = 0; i < capacity; i++)
-    new_data.set(i, data().get(i));
+    new_data.set(i, data().get(runtime().refs(), i));
   data().dispose();
   set_data(new_persistent(*new_data));
 }

@@ -193,10 +193,10 @@ Data *Builtins::object_to_string(BuiltinArguments &args) {
 Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   SIGNAL_CHECK(ProtocolExpression, raw_expr, to<ProtocolExpression>(args.self()));
-  ref_scope scope;
-  ref<ProtocolExpression> expr = new_ref(raw_expr);
-  ref<Context> context = new_ref(args.lambda()->context());
-  ref<Protocol> result = expr.compile(context);
+  ref_scope scope(args.runtime().refs());
+  ref<ProtocolExpression> expr = args.runtime().refs().new_ref(raw_expr);
+  ref<Context> context = args.runtime().refs().new_ref(args.lambda()->context());
+  ref<Protocol> result = expr.compile(args.runtime(), context);
   return *result;
 }
 
@@ -207,7 +207,7 @@ Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
 
 Data *Builtins::protocol_new(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  ref_scope scope;
+  ref_scope scope(args.runtime().refs());
   Runtime &runtime = args.runtime();
   SIGNAL_CHECK(Protocol, protocol, to<Protocol>(args.self()));
   if (protocol == runtime.roots().symbol_layout()->protocol()) {
@@ -294,8 +294,8 @@ Data *Builtins::array_length(BuiltinArguments &args) {
 // -------------------
 
 Data *Builtins::lambda_disassemble(BuiltinArguments &args) {
-  ref<Lambda> self = new_ref(cast<Lambda>(args.self()));
-  self.ensure_compiled(ref<Method>());
+  ref<Lambda> self = args.runtime().refs().new_ref(cast<Lambda>(args.self()));
+  self.ensure_compiled(args.runtime(), ref<Method>());
   scoped_string str(self->disassemble());
   str->println();
   return args.runtime().roots().vhoid();
@@ -330,9 +330,9 @@ Data *Builtins::raw_print(BuiltinArguments &args) {
 
 Data *Builtins::compile_expression(BuiltinArguments &args) {
   SIGNAL_CHECK(SyntaxTree, raw_self, to<SyntaxTree>(args.self()));
-  ref<SyntaxTree> self = new_ref(raw_self);
-  ref<Context> context = new_ref(args.lambda()->context());
-  ref<Lambda> code = Compiler::compile(self, context);
+  ref<SyntaxTree> self = args.runtime().refs().new_ref(raw_self);
+  ref<Context> context = args.runtime().refs().new_ref(args.lambda()->context());
+  ref<Lambda> code = Compiler::compile(args.runtime(), self, context);
   return *code;
 }
 

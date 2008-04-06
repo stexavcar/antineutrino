@@ -8,39 +8,43 @@ namespace neutrino {
 // --- C o m p i l i n g ---
 // -------------------------
 
-ref<Protocol> ref_traits<ProtocolExpression>::compile(ref<Context> context) {
+ref<Protocol> ref_traits<ProtocolExpression>::compile(Runtime &runtime,
+    ref<Context> context) {
   ref<ProtocolExpression> self = open(this);
-  Factory &factory = Runtime::current().factory();
-  ref<Tuple> method_asts = methods();
+  Factory &factory = runtime.factory();
+  ref<Tuple> method_asts = methods(runtime.refs());
   ref<Tuple> methods = factory.new_tuple(method_asts.length());
   for (uword i = 0; i < method_asts.length(); i++) {
-    ref_scope scope;
-    ref<MethodExpression> method_ast = cast<MethodExpression>(method_asts.get(i));
-    ref<Method> method = method_ast.compile(context);
+    ref_scope scope(runtime.refs());
+    ref<MethodExpression> method_ast = cast<MethodExpression>(method_asts.get(runtime.refs(), i));
+    ref<Method> method = method_ast.compile(runtime, context);
     methods.set(i, method);
   }
-  return factory.new_protocol(methods, super(), name());
+  return factory.new_protocol(methods, super(runtime.refs()), name(runtime.refs()));
 }
 
-ref<Method> ref_traits<MethodExpression>::compile(ref<Context> context) {
+ref<Method> ref_traits<MethodExpression>::compile(Runtime &runtime, 
+    ref<Context> context) {
   ref<MethodExpression> self = open(this);
-  ref<Lambda> code = Compiler::compile(self.lambda(), context);
-  Factory &factory = Runtime::current().factory();
+  ref<Lambda> code = Compiler::compile(runtime, self.lambda(runtime.refs()), context);
+  Factory &factory = runtime.factory();
   ref<Signature> signature = factory.new_signature(factory.new_tuple(0));
-  ref<Method> result = factory.new_method(selector(), signature, code);
+  ref<Method> result = factory.new_method(selector(runtime.refs()), signature, code);
   return result;
 }
 
-void Lambda::ensure_compiled(Method *holder) {
+void Lambda::ensure_compiled(Runtime &runtime, Method *holder) {
   if (is<Code>(code())) return;
-  ref_scope scope;
-  new_ref(this).ensure_compiled(new_ref(holder));
+  ref_scope scope(runtime.refs());
+  ref<Method> holder_ref = runtime.refs().new_ref(holder);
+  ref<Lambda> self_ref = runtime.refs().new_ref(this);
+  self_ref.ensure_compiled(runtime, holder_ref);
 }
 
-void ref_traits<Lambda>::ensure_compiled(ref<Method> holder) {
+void ref_traits<Lambda>::ensure_compiled(Runtime &runtime, ref<Method> holder) {
   ref<Lambda> self = open(this);
   if (is<Code>(self->code())) return;
-  Compiler::compile(self, holder);
+  Compiler::compile(runtime, self, holder);
 }
 
 
@@ -304,13 +308,13 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
   switch (type) {
   case tQuoteTemplate: {
     QuoteTemplateScope scope(visitor, cast<QuoteTemplate>(self));
-    return cast<QuoteTemplate>(self).value().accept(visitor);
+    return cast<QuoteTemplate>(self).value(visitor.refs()).accept(visitor);
   }
   case tUnquoteExpression: {
     ref<QuoteTemplate> templ = visitor.current_quote();
     uword index = cast<UnquoteExpression>(self)->index();
     Value *term = templ->unquotes()->get(index);
-    ref<SyntaxTree> value = new_ref(cast<SyntaxTree>(term));
+    ref<SyntaxTree> value = visitor.refs().new_ref(cast<SyntaxTree>(term));
     return value.accept(visitor);
   }
   case tBuiltinCall:
@@ -326,13 +330,13 @@ FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(MAKE_VISIT)
 }
 
 static void traverse_tuple(Visitor &visitor, ref<Tuple> expressions) {
-  ref_scope scope;
+  ref_scope scope(visitor.refs());
   for (uword i = 0; i < expressions.length(); i++)
-    cast<SyntaxTree>(expressions.get(i)).accept(visitor);
+    cast<SyntaxTree>(expressions.get(visitor.refs(), i)).accept(visitor);
 }
 
 void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
-#define VISIT_FIELD(Type, field) cast<SyntaxTree>(cast<Type>(self).field()).accept(visitor)
+#define VISIT_FIELD(Type, field) cast<SyntaxTree>(cast<Type>(self).field(visitor.refs())).accept(visitor)
   ref<SyntaxTree> self = open(this);
   InstanceType type = self->type();
   switch (type) {
@@ -340,32 +344,32 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
     VISIT_FIELD(ReturnExpression, value);
     break;
   case tInvokeExpression: {
-    ref_scope scope;
+    ref_scope scope(visitor.refs());
     VISIT_FIELD(InvokeExpression, receiver);
     if (is<SyntaxTree>(cast<InvokeExpression>(self)->arguments()))
       VISIT_FIELD(InvokeExpression, arguments);
     break;
   }
   case tCallExpression: {
-    ref_scope scope;
+    ref_scope scope(visitor.refs());
     VISIT_FIELD(CallExpression, receiver);
     VISIT_FIELD(CallExpression, function);
     VISIT_FIELD(CallExpression, arguments);
     break;
   }
   case tConditionalExpression: {
-    ref_scope scope;
+    ref_scope scope(visitor.refs());
     VISIT_FIELD(ConditionalExpression, condition);
     VISIT_FIELD(ConditionalExpression, then_part);
     VISIT_FIELD(ConditionalExpression, else_part);
     break;
   }
   case tSequenceExpression: {
-    traverse_tuple(visitor, cast<SequenceExpression>(self).expressions());
+    traverse_tuple(visitor, cast<SequenceExpression>(self).expressions(visitor.refs()));
     break;
   }
   case tTupleExpression: {
-    traverse_tuple(visitor, cast<TupleExpression>(self).values());
+    traverse_tuple(visitor, cast<TupleExpression>(self).values(visitor.refs()));
     break;
   }
   case tLiteralExpression: case tGlobalExpression: case tThisExpression:

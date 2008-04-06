@@ -9,7 +9,7 @@ namespace neutrino {
 
 // --- R e f   S c o p e ---
 
-class RefBlock {
+class ref_block {
 public:
   Value **first_cell() { return &entries_[0]; }
   Value **limit() { return &entries_[kSize]; }
@@ -18,9 +18,9 @@ private:
   Value *entries_[kSize];
 };
 
-class ref_scopeInfo {
+class ref_scope_info {
 public:
-  inline ref_scopeInfo();
+  inline ref_scope_info();
   word block_count;
   Value **next_cell;
   Value **limit;
@@ -31,35 +31,50 @@ public:
  */
 class ref_scope {
 public:
-  inline ref_scope();
+  inline ref_scope(RefStack &manager);
   inline ~ref_scope();
-  
-  template <class C>
-  static inline C **new_cell(C *value);
-
 private:
-  static void shrink();
-  static Value **grow();
-
-  static ref_scopeInfo &current() { return current_; }
-  static ref_scopeInfo current_;
-  const ref_scopeInfo previous_;
-  
-  friend class RefIterator;
-  static list_buffer<RefBlock*> &block_stack() { return block_stack_; }
-  static list_buffer<RefBlock*> block_stack_;
-  static RefBlock *spare_block() { return spare_block_; }
-  static RefBlock *spare_block_;
-  static Watch<HighWaterMark> &block_count() { return block_count_; }
-  static Watch<HighWaterMark> block_count_;
+  RefStack &manager() { return manager_; }
+  ref_scope_info previous_;
+  RefStack &manager_;
 };
 
-class RefIterator {
+
+/**
+ * A stack of references.
+ */
+class RefStack {
 public:
-  inline RefIterator();
+  RefStack();
+  
+  template <class C> inline C **new_cell(C *value);
+  template <class C> inline ref<C> new_ref(C *value);
+  
+private:
+  friend class ref_iterator;
+  friend class ref_scope;
+
+  void shrink();
+  Value **grow();
+
+  ref_scope_info &current() { return current_; }
+  ref_scope_info current_;
+  
+  list_buffer<ref_block*> &block_stack() { return block_stack_; }
+  list_buffer<ref_block*> block_stack_;
+  ref_block *spare_block() { return spare_block_; }
+  ref_block *spare_block_;  
+};
+
+
+class ref_iterator {
+public:
+  inline ref_iterator(RefStack &manager);
   inline bool has_next();
   inline Value *&next();
 private:
+  RefStack &manager() { return manager_; }
+  RefStack &manager_;
   uword current_block_;
   Value **current_, **limit_;
 };
@@ -129,7 +144,6 @@ public:
   inline void dispose() { delete this->cell(); }
 };
 
-template <class C> static inline ref<C> new_ref(C *obj);
 template <class C> static inline persistent<C> new_persistent(C *obj);
 
 }

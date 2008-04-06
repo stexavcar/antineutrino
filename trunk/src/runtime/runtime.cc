@@ -6,8 +6,6 @@
 
 namespace neutrino {
 
-Runtime *Runtime::current_ = NULL;
-
 Runtime::Runtime(DynamicLibraryCollection *dylibs)
   : heap_(roots_)
   , factory_(*this)
@@ -21,7 +19,6 @@ bool Runtime::initialize() {
 }
 
 void Runtime::start() {
-  Runtime::Scope runtime_scope(*this);
   Data *value = roots().toplevel()->get(cast<String>(heap().new_string("main")));
   if (is<Nothing>(value)) {
     Conditions::get().error_occurred("Error: no function 'main' was defined.");
@@ -29,12 +26,12 @@ void Runtime::start() {
     Conditions::get().error_occurred("Value 'main' is not a function.");
   }
   Task *task = cast<Task>(heap().new_task());
-  cast<Lambda>(value)->call(task);
+  cast<Lambda>(value)->call(*this, task);
 }
 
-void Runtime::report_load_error(ImageLoadInfo &info) {
+void Runtime::report_load_error(ImageLoadStatus &info) {
   switch (info.status) {
-    case ImageLoadInfo::TYPE_MISMATCH: {
+    case ImageLoadStatus::lsTypeMismatch: {
       static const char *kErrorMessage =
         "Type mismatch while loading image (%s)\n"
         "  Expected: %s\n"
@@ -46,12 +43,12 @@ void Runtime::report_load_error(ImageLoadInfo &info) {
           expected_str, found_str);
       return;
     }
-    case ImageLoadInfo::INVALID_IMAGE: {
+    case ImageLoadStatus::lsInvalidImage: {
       static const char *kErrorMessage = "Invalid image";
       Conditions::get().error_occurred(kErrorMessage);
       return;
     }
-    case ImageLoadInfo::ROOT_COUNT: {
+    case ImageLoadStatus::lsRootCount: {
       static const char *kErrorMessage = 
         "Invalid root count\n"
         "  Expected: %i\n"
@@ -61,7 +58,7 @@ void Runtime::report_load_error(ImageLoadInfo &info) {
           info.error_info.root_count.found);
       return;
     }
-    case ImageLoadInfo::INVALID_MAGIC: {
+    case ImageLoadStatus::lsInvalidMagic: {
       static const char *kErrorMessage =
         "Invalid image\n"
         "  Expected magic number: 0x%08X\n"
@@ -71,7 +68,7 @@ void Runtime::report_load_error(ImageLoadInfo &info) {
           info.error_info.magic.found);
       return;
     }
-    case ImageLoadInfo::INVALID_VERSION: {
+    case ImageLoadStatus::lsInvalidVersion: {
       static const char *kErrorMessage =
         "Invalid image\n"
         "  Expected version: %i\n"
@@ -82,34 +79,33 @@ void Runtime::report_load_error(ImageLoadInfo &info) {
       return;
     }
     default:
-      UNHANDLED(ImageLoadInfo::Status, info.status);
+      UNHANDLED(ImageLoadStatus::Status, info.status);
       break;
   }
 }
 
 bool Runtime::load_image(Image &image) {
-  ImageLoadInfo info;
+  ImageContext info(*this);
   image.initialize(info);
   if (info.has_error()) {
-    report_load_error(info);
+    report_load_error(info.status());
     return false;    
   }
-  Runtime::Scope runtime_scope(*this);
   Data *roots_val = image.load(info);
   if (info.has_error()) {
-    report_load_error(info);
+    report_load_error(info.status());
     return false;
   } else {
     Tuple *roots = cast<Tuple>(roots_val);
-    ref_scope ref_scope;
-    return install_loaded_roots(new_ref(roots));
+    ref_scope ref_scope(refs());
+    return install_loaded_roots(refs().new_ref(roots));
   }
 }
 
 bool Runtime::install_loaded_roots(ref<Tuple> roots) {
   for (uword i = 0; i < roots.length(); i++) {
-    ref_scope scope;
-    ref<Value> raw_changes = roots.get(i);
+    ref_scope scope(refs());
+    ref<Value> raw_changes = roots.get(refs(), i);
     if (is<Smi>(raw_changes)) continue;
     ref<Object> changes = cast<Object>(raw_changes);
     ref<Object> root = get_root(i);
@@ -149,15 +145,15 @@ bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) 
   ASSERT(!iter.next(&entry));
   // Then add the elements to the root object
   for (uword i = 0; i < length; i++) {
-    ref_scope scope;
-    root.set(keys.get(i), values.get(i));
+    ref_scope scope(refs());
+    root.set(heap(), keys.get(refs(), i), values.get(refs(), i));
   }
   return true;
 }
 
 bool Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
   if (!root->is_empty()) {
-    scoped_string str(changes.name().to_string());
+    scoped_string str(changes.name(refs()).to_string());
     Conditions::get().error_occurred("Root class %s is not empty.", str.chars());
     return false;
   }

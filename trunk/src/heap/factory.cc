@@ -11,13 +11,13 @@ Factory::Factory(Runtime &runtime)
 #define ALLOCATE_CHECKED(Type, operation) do {                       \
   Data *result = runtime().heap().operation;                         \
   if (is<AllocationFailed>(result)) {                                \
-    runtime().heap().memory().collect_garbage();                     \
+    runtime().heap().memory().collect_garbage(runtime());            \
     result = runtime().heap().operation;                             \
     if (is<AllocationFailed>(result)) {                              \
       UNREACHABLE();                                                 \
     }                                                                \
   }                                                                  \
-  return new_ref(cast<Type>(result));                                \
+  return runtime().refs().new_ref(cast<Type>(result));               \
 } while (false)
 
 ref<String> Factory::new_string(string str) {

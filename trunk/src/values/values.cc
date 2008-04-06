@@ -628,8 +628,8 @@ void Instance::for_each_instance_field(FieldVisitor &visitor) {
 // --- L a m b d a ---
 // -------------------
 
-Value *Lambda::call(Task *task) {
-  Interpreter &interpreter = Runtime::current().interpreter();
+Value *Lambda::call(Runtime &runtime, Task *task) {
+  Interpreter &interpreter = runtime.interpreter();
   return interpreter.call(this, task);
 }
 
@@ -772,7 +772,7 @@ Data *Dictionary::get(Value *key) {
   else return Nothing::make();  
 }
 
-bool Dictionary::set(Value *key, Value *value) {
+bool Dictionary::set(Heap &heap, Value *key, Value *value) {
   DictionaryLookup lookup;
   if (lookup_key(this->table(), key, lookup)) {
     *lookup.value = value;
@@ -780,7 +780,7 @@ bool Dictionary::set(Value *key, Value *value) {
     // Extend table with the new pair
     Tuple *table = this->table();
     uword length = table->length();
-    Data *new_table_val = Runtime::current().heap().new_tuple(length + 2);
+    Data *new_table_val = heap.new_tuple(length + 2);
     if (is<AllocationFailed>(new_table_val)) return false;
     Tuple *new_table = cast<Tuple>(new_table_val);
     for (uword i = 0; i < length; i++)

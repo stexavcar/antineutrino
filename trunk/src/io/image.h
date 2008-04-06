@@ -10,7 +10,7 @@
 namespace neutrino {
 
 class FLayout;
-class ImageLoadInfo;
+class ImageContext;
 
 #define DECLARE_IMAGE_OBJECT_CONST(n, Type, Const)                   \
   static const uword F##Type##_##Const = n;
@@ -18,7 +18,7 @@ FOR_EACH_IMAGE_OBJECT_CONST(DECLARE_IMAGE_OBJECT_CONST)
 #undef DECLARE_IMAGE_OBJECT_CONST
 
 #define DECLARE_IMAGE_FIELD(Type, name)                              \
-  inline F##Type *name(ImageLoadInfo &info, const char *location);   \
+  inline F##Type *name(ImageContext &info, const char *location);    \
   inline void set_##name(F##Type *value)
 
 class FData {
@@ -36,7 +36,7 @@ public:
 
 class FImmediate : public FData {
 public:
-  inline Value *forward_pointer();
+  inline Value *forward_pointer(ImageContext &info);
 };
 
 class FSmi : public FImmediate {
@@ -368,26 +368,28 @@ public:
 };
 
 #define FOR_EACH_IMAGE_LOAD_STATUS(VISIT)                            \
-  VISIT(TYPE_MISMATCH) VISIT(FINE)          VISIT(INVALID_IMAGE)     \
-  VISIT(ROOT_COUNT)    VISIT(INVALID_MAGIC) VISIT(INVALID_VERSION)
+  VISIT(TypeMismatch) VISIT(Fine)          VISIT(InvalidImage)       \
+  VISIT(RootCount)    VISIT(InvalidMagic)  VISIT(InvalidVersion)
 
-struct ImageLoadInfo {
-public:
+
+struct ImageLoadStatus {
+
   enum Status { 
     __first_image_load_info_status
-#define MAKE_ENUM(NAME) , NAME
+#define MAKE_ENUM(Name) , ls##Name
     FOR_EACH_IMAGE_LOAD_STATUS(MAKE_ENUM)
 #undef MAKE_ENUM
   };
-  ImageLoadInfo() : status(FINE) { }
-  void type_mismatch(InstanceType expected, InstanceType found,
-      const char *location);
+  
+  ImageLoadStatus() : status(lsFine) { }
+  
+  void type_mismatch(InstanceType expected, InstanceType found, const char *location);
   void invalid_image();
   void invalid_root_count(word expected, word found);
   void invalid_magic_number(uword found);
   void invalid_version(uword found);
-  bool has_error() { return status != FINE; }
-public:
+  bool has_error() { return status != lsFine; }
+
   Status status;
   union {
     struct {
@@ -406,43 +408,52 @@ public:
       uword found;
     } version;
   } error_info;
+  
+};
+
+
+/**
+ * Information about the context in which an image is being loaded.
+ */
+class ImageContext {
+public:
+
+  ImageContext(Runtime &runtime) : runtime_(runtime) { }
+  
+  Runtime &runtime() { return runtime_; }
+  ImageLoadStatus &status() { return status_; }
+  bool has_error() { return status().has_error(); }
+  
+private:
+  Runtime &runtime_;
+  ImageLoadStatus status_;
 };
 
 template <class C>
 static inline bool is(FData *val);
 
 template <class C>
-static inline C *image_cast(FData *val, ImageLoadInfo *info);
+static inline C *image_cast(FData *val, ImageContext *info);
 
 class Image {
 public:
   Image(list<word> data);
   ~Image();
-  void initialize(ImageLoadInfo &info);
+  void initialize(ImageContext &info);
   
   /**
    * Loads this image into the heap.  Returns a tuple containing the
    * roots if successful, Nothing if unsuccessful.
    */
-  Data *load(ImageLoadInfo &info);
-  
-  static inline Image &current();
-
-  class Scope {
-  public:
-    inline Scope(Image &image);
-    inline ~Scope();
-  private:
-    Image *previous_;
-  };
+  Data *load(ImageContext &info);
 
 private:
   template <class P, class D> friend class ImageIterator;
   friend class Runtime;
   
   typedef void (ObjectCallback)(FObject *obj);
-  static void copy_object_shallow(FObject *obj, ImageLoadInfo &load_info);
-  static void fixup_shallow_object(FObject *obj, ImageLoadInfo &load_info);
+  static void copy_object_shallow(FObject *obj, ImageContext &load_info);
+  static void fixup_shallow_object(FObject *obj, ImageContext &load_info);
   
   list<word> &heap() { return heap_; }
   list<word> &data() { return data_; }

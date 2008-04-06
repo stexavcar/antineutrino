@@ -96,10 +96,10 @@ InstanceType FData::type() {
 }
 
 template <class C>
-static inline C *image_cast(FData *val, ImageLoadInfo &info,
+static inline C *image_cast(FData *val, ImageContext &context,
     const char *location) {
   if (!is<C>(val)) {
-    info.type_mismatch(FImmediateInfo<C>::kTag, val->type(), location);
+    context.status().type_mismatch(FImmediateInfo<C>::kTag, val->type(), location);
     return 0;
   } else {
     return image_raw_cast<C>(val);
@@ -107,10 +107,10 @@ static inline C *image_cast(FData *val, ImageLoadInfo &info,
 }
 
 template <class To, class From>
-inline To *safe_cast(From *from, ImageLoadInfo &info,
+inline To *safe_cast(From *from, ImageContext &context,
     const char *location) {
   if (!is<To>(from)) {
-    info.type_mismatch(ValueInfo<To>::kTag, from->type(), location);
+    context.status().type_mismatch(ValueInfo<To>::kTag, from->type(), location);
     return 0;
   } else {
     return cast<To>(from);
@@ -148,7 +148,7 @@ static inline RawFValue *uncook_value(FObject *holder, FData *data) {
 
 template <class C>
 static inline C *get_field(FObject *obj, uword field_offset,
-    ImageLoadInfo &info, const char *location) {
+    ImageContext &info, const char *location) {
   RawFValue *value = access_field(obj, field_offset);
   FData *data = cook_value(obj, value);
   return image_cast<C>(data, info, location);
@@ -184,11 +184,11 @@ void FObject::point_forward(Object *obj) {
   access_field(this, FObject_LayoutOffset) = reinterpret_cast<RawFValue*>(pointer);
 }
 
-Value *FImmediate::forward_pointer() {
+Value *FImmediate::forward_pointer(ImageContext &info) {
   if (is<FSmi>(this)) {
     return image_raw_cast<FSmi>(this)->forward_pointer();
   } else if (is<FRoot>(this)) {
-    return Runtime::current().roots().get(image_raw_cast<FRoot>(this)->index());
+    return info.runtime().roots().get(image_raw_cast<FRoot>(this)->index());
   } else {
     return image_raw_cast<FObject>(this)->forward_pointer();
   }
@@ -218,20 +218,6 @@ Object *FForwardPointer::target() {
 // --- I m a g e ---
 // -----------------
 
-Image &Image::current() {
-  ASSERT(current_ != NULL);
-  return *current_;
-}
-
-Image::Scope::Scope(Image &image)
-    : previous_(current_) {
-  current_ = &image;
-}
-
-Image::Scope::~Scope() {
-  current_ = previous_;
-}
-
 FData *FData::from(uword addr) {
   return reinterpret_cast<FData*>(addr);
 }
@@ -255,7 +241,7 @@ word FSmi::value() {
   }
 
 #define DEFINE_GETTER(T, Class, name, Name)                          \
-  F##T *F##Class::name(ImageLoadInfo &info, const char *location) {  \
+  F##T *F##Class::name(ImageContext &info, const char *location) {  \
     return get_field<F##T>(this, F##Class##_##Name##Offset, info, location); \
   }
 

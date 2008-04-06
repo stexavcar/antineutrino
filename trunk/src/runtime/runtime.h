@@ -21,7 +21,7 @@ public:
   Heap &heap() { return heap_; }
   Roots &roots() { return roots_; }
   bool load_image(Image &image);
-  void report_load_error(ImageLoadInfo &info);
+  void report_load_error(ImageLoadStatus &info);
   bool install_loaded_roots(ref<Tuple> roots);
   bool install_object(ref<Object> root, ref<Object> changes);
   bool install_dictionary(ref<Dictionary> root, ref<Dictionary> changes);
@@ -37,28 +37,16 @@ public:
   
   inline ref<Object> get_root(uword index);
   
-  /**
-   * Stack-allocated class that sets the given runtime as the current
-   * one and reestablishes the previous one when exiting the scope.
-   */
-  class Scope {
-  public:
-    inline Scope(Runtime &runtime);
-    inline ~Scope();
-  private:
-    Runtime *previous_;
-  };
-  
-  static inline Runtime &current();
   DynamicLibraryCollection *dylibs() { return dylibs_; }
+  RefStack &refs() { return refs_; }
   
 private:
-  static Runtime *current_;
   Roots roots_;
   Heap heap_;
   Factory factory_;
   Interpreter interpreter_;
   DynamicLibraryCollection *dylibs_;
+  RefStack refs_;
 };
 
 } // neutrino

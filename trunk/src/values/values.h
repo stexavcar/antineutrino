@@ -140,7 +140,7 @@ public:
 };
 
 #define DECLARE_OBJECT_FIELD(Type, name, Name, arg) DECLARE_FIELD(Type*, name);
-#define DECLARE_REF_FIELD(Type, name, Name, arg) inline ref<Type> name();
+#define DECLARE_REF_FIELD(Type, name, Name, arg) inline ref<Type> name(RefStack &refs);
 
 class Object : public Immediate {
 public:
@@ -166,7 +166,7 @@ public:
 
 template <> class ref_traits<Object> : public ref_traits<Immediate> {
 public:
-  inline ref<Layout> layout();
+  inline ref<Layout> layout(RefStack &refs);
 };
 
 DEFINE_REF_CLASS(Object);
@@ -477,7 +477,7 @@ public:
 template <> class ref_traits<AbstractTuple> : public ref_traits<Object> {
 public:
   inline uword length();
-  inline ref<Value> get(uword index);
+  inline ref<Value> get(RefStack &refs, uword index);
   inline void set(uword index, ref<Value> value);
 };
 
@@ -528,7 +528,7 @@ public:
   uword size();
 
   Data *get(Value *key);
-  bool set(Value *key, Value *value);
+  bool set(Heap &heap, Value *key, Value *value);
 
   class Iterator {
   public:
@@ -553,8 +553,8 @@ public:
 template <> class ref_traits<Dictionary> : public ref_traits<Object> {
 public:
   FOR_EACH_DICTIONARY_FIELD(DECLARE_REF_FIELD, 0)
-  inline ref<Value> get(ref<Value> key);
-  inline void set(ref<Value> key, ref<Value> value);
+  inline ref<Value> get(RefStack &refs, ref<Value> key);
+  inline void set(Heap &heap, ref<Value> key, ref<Value> value);
   inline uword size();
 };
 
@@ -577,9 +577,9 @@ public:
   DECLARE_FIELD(uword, argc);
   FOR_EACH_LAMBDA_FIELD(DECLARE_OBJECT_FIELD, 0)
 
-  Value *call(Task *task);
+  Value *call(Runtime &runtime, Task *task);
   Data *clone(Heap &heap);
-  void ensure_compiled(Method *holder);
+  void ensure_compiled(Runtime &runtime, Method *holder);
 
   string disassemble();
 
@@ -595,7 +595,7 @@ public:
 template <> class ref_traits<Lambda> : public ref_traits<Object> {
 public:
   FOR_EACH_LAMBDA_FIELD(DECLARE_REF_FIELD, 0)
-  void ensure_compiled(ref<Method> holder);
+  void ensure_compiled(Runtime &runtime, ref<Method> holder);
 };
 
 DEFINE_REF_CLASS(Lambda);

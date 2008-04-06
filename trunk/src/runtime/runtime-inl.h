@@ -9,25 +9,11 @@
 
 namespace neutrino {
 
-Runtime &Runtime::current() {
-  ASSERT(current_ != NULL);
-  return *current_;
-}
-
 ref<Object> Runtime::get_root(uword n) {
   ASSERT(is<Object>(roots().get(n)));
   return ref<Object>(reinterpret_cast<Object**>(&roots().get(n)));
 }
 
-Runtime::Scope::Scope(Runtime &runtime)
-    : previous_(Runtime::current_) {
-  current_ = &runtime;
-}
-
-Runtime::Scope::~Scope() {
-  Runtime::current_ = previous_;
-}
-
-}
+} // neutrino
 
 #endif // _RUNTIME_RUNTIME_INL

@@ -78,7 +78,7 @@ void FieldMigrator::visit_field(Value **field) {
   migrate_field(field);
 }
 
-void Memory::collect_garbage() {
+void Memory::collect_garbage(Runtime &runtime) {
   ASSERT_C(cnDisallowed, allow_garbage_collection());
   SemiSpace &from_space = young_space();
   SemiSpace *to_space = new SemiSpace(kSize);
@@ -88,7 +88,7 @@ void Memory::collect_garbage() {
   while (root_iter.has_next())
     migrator.migrate_field(&root_iter.next());
   // Migrate local refs (shallow)
-  RefIterator ref_iter;
+  ref_iterator ref_iter(runtime.refs());
   while (ref_iter.has_next())
     migrator.migrate_field(&ref_iter.next());
   // Do deep migration of shallowly migrated objects

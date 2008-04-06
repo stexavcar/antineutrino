@@ -373,7 +373,7 @@ template <>
 class ref_traits<ProtocolExpression> : public ref_traits<SyntaxTree> {
 public:
   FOR_EACH_PROTOCOL_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
-  ref<Protocol> compile(ref<Context> context);
+  ref<Protocol> compile(Runtime &runtime, ref<Context> context);
 };
 
 DEFINE_REF_CLASS(ProtocolExpression);
@@ -450,7 +450,7 @@ template <>
 class ref_traits<MethodExpression> : public ref_traits<SyntaxTree> {
 public:
   FOR_EACH_METHOD_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
-  ref<Method> compile(ref<Context> context);
+  ref<Method> compile(Runtime &runtime, ref<Context> context);
 };
 
 DEFINE_REF_CLASS(MethodExpression);
@@ -812,7 +812,7 @@ private:
 
 class Visitor {
 public:
-  Visitor() : quote_scope_(NULL) { }
+  Visitor(RefStack &refs) : quote_scope_(NULL), refs_(refs) { }
   ~Visitor();
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
 #define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
@@ -822,8 +822,10 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
   inline ref<QuoteTemplate> current_quote();
   void set_quote_scope(QuoteTemplateScope *scope) { quote_scope_ = scope; }
   QuoteTemplateScope *quote_scope() { return quote_scope_; }
+  RefStack &refs() { return refs_; }
 private:
   QuoteTemplateScope *quote_scope_;
+  RefStack &refs_;
 };
 
 }

@@ -48,9 +48,8 @@ void Main::main(list<char*> &args) {
   list<string> files = Options::images;
   Runtime runtime(*dylibs);
   runtime.initialize();
-  Runtime::Scope runtime_scope(runtime);
   for (uword i = 0; i < files.length(); i++) {
-    ref_scope ref_scope;
+    ref_scope ref_scope(runtime.refs());
     string file = files[i];
     own_ptr<Image> image(read_image(file));
     bool loaded = runtime.load_image(**image);

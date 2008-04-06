@@ -11,7 +11,7 @@ public:
   Memory(Heap &heap);
   ~Memory();
   inline address allocate(uword size);
-  void collect_garbage();
+  void collect_garbage(Runtime &runtime);
   SemiSpace &young_space() { return *young_space_; }
 private:
   void notify_monitors();

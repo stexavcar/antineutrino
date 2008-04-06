@@ -31,9 +31,9 @@ private:
 // -----------------------------
 
 Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
-  ref_scope scope;
-  ref<Task> task = new_ref(initial_task);
-  ref<Lambda> lambda = new_ref(initial_lambda);
+  ref_scope scope(runtime().refs());
+  ref<Task> task = runtime().refs().new_ref(initial_task);
+  ref<Lambda> lambda = runtime().refs().new_ref(initial_lambda);
   Frame frame = prepare_call(task, lambda, 0);
   uword pc = 0;
   Data *value;
@@ -47,7 +47,7 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
       IF_DEBUG(task->stack()->status().is_parked = true);
       if (is<AllocationFailed>(value)) {
         Stack *old_stack = task->stack();
-        Runtime::current().heap().memory().collect_garbage();
+        runtime().heap().memory().collect_garbage(runtime());
         frame.reset(old_stack, task->stack());
       } else {
         UNREACHABLE();
@@ -63,7 +63,7 @@ Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
 }
 
 Frame Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc) {
-  lambda.ensure_compiled(NULL);
+  lambda.ensure_compiled(runtime(), NULL);
   ASSERT(task->stack()->status().is_empty);
   task->stack()->status().is_empty = false;
   Frame frame(task->stack()->bottom() + Frame::accessible_below_fp(argc));
@@ -257,7 +257,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       frame.push_activation();
       frame.prev_pc() = pc + OpcodeInfo<ocInvoke>::kSize;
       frame.lambda() = method->lambda();
-      method->lambda()->ensure_compiled(method);
+      method->lambda()->ensure_compiled(runtime(), method);
       code = cast<Code>(method->lambda()->code())->buffer();
       constant_pool = cast<Tuple>(method->lambda()->constant_pool())->buffer();
       if (!keymap->is_empty())
@@ -284,7 +284,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       frame.push_activation();
       frame.prev_pc() = pc + OpcodeInfo<ocInvSup>::kSize;
       frame.lambda() = method->lambda();
-      method->lambda()->ensure_compiled(method);
+      method->lambda()->ensure_compiled(runtime(), method);
       code = cast<Code>(method->lambda()->code())->buffer();
       constant_pool = cast<Tuple>(method->lambda()->constant_pool())->buffer();
       if (!keymap->is_empty())
@@ -303,7 +303,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
           String *handler = cast<String>(handlers->get(i));
           if (name->equals(handler)) {
             Lambda *lambda = cast<Lambda>(handlers->get(i + 1));
-            lambda->ensure_compiled(NULL);
+            lambda->ensure_compiled(runtime(), NULL);
             frame.push_activation();
             frame.prev_pc() = pc + OpcodeInfo<ocRaise>::kSize;
             frame.lambda() = lambda;
@@ -328,7 +328,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       uint16_t argc = code[pc + 1];
       Value *value = frame[argc + 1];
       Lambda *fun = cast<Lambda>(value);
-      fun->ensure_compiled(NULL);
+      fun->ensure_compiled(runtime(), NULL);
       frame.push_activation();
       frame.prev_pc() = pc + OpcodeInfo<ocCall>::kSize;
       frame.lambda() = fun;
@@ -528,8 +528,8 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Data *task_val = runtime().heap().new_task();
       if (is<Signal>(task_val)) return task_val;
       Task *task = cast<Task>(task_val);
-      ref_scope scope;
-      prepare_call(new_ref(task), new_ref(lambda), 0);
+      ref_scope scope(runtime().refs());
+      prepare_call(runtime().refs().new_ref(task), runtime().refs().new_ref(lambda), 0);
       frame.push(task);
       pc += OpcodeInfo<ocTask>::kSize;
       break;
