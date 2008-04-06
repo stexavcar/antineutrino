@@ -79,7 +79,7 @@ Value *&Frame::local(uword index) {
 }
 
 Value *&Frame::self(uword argc) {
-  return argument(argc + 1);
+  return argument(argc);
 }
 
 void Frame::push(Value *value) {

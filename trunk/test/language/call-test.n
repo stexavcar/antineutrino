@@ -7,8 +7,6 @@ def fun(a, b, c, d, e) {
   return a + b + c + d + e;
 }
 
-def get_void() { }
-
 def get_this() -> this;
 
 def test_calls() {
@@ -71,10 +69,28 @@ def test_mixed_keywords() {
   assert X2.get_arg(4, 21, 22, d: 23, e: 24, c: 25) = 24;
 }
 
+protocol Counter {
+  def get(expected_value, result) {
+    assert this.value = expected_value;
+    this.value := this.value + 1;
+    return result;
+  }
+  static def new() -> new Counter() { value: 0 };
+}
+
+def id(a, b, c) -> "${this} ${a} ${b} ${c}";
+
+def test_call_order() {
+  def c := new Counter();
+  def r := (c.get(0, "foo"))·(c.get(1, id))(c.get(2, "x"), c.get(3, "y"), c.get(4, "z"));
+  assert r = "foo x y z";
+}
+
 def main() {
   test_calls();
   test_implicit_self();
   test_overloading();
   test_simple_keywords();
   test_mixed_keywords();
+  test_call_order();
 }

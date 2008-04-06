@@ -167,6 +167,13 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc += OpcodeInfo<ocSlap>::kSize;
       break;
     }
+    case ocSwap: {
+      Value *temp = frame[0];
+      frame[0] = frame[1];
+      frame[1] = temp;
+      pc += OpcodeInfo<ocSwap>::kSize;
+      break;
+    }
     case ocGlobal: {
       uint16_t index = code[pc + 1];
       Value *name = constant_pool[index];
@@ -237,7 +244,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Selector *selector = cast<Selector>(constant_pool[selector_index]);
       Tuple *keymap = cast<Tuple>(constant_pool[code[pc + 3]]);
       uint16_t argc = code[pc + 2];
-      Value *recv = frame[argc + 1];
+      Value *recv = frame[argc];
       Layout *layout = get_layout(deref(recv));
       Data *lookup_result = lookup_method(layout, selector);
       if (is<Nothing>(lookup_result)) {
@@ -264,7 +271,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Tuple *keymap = cast<Tuple>(constant_pool[code[pc + 3]]);
       Signature *current = cast<Signature>(constant_pool[code[pc + 4]]);
       uint16_t argc = code[pc + 2];
-      Value *recv = frame[argc + 1];
+      Value *recv = frame[argc];
       Layout *layout = get_layout(deref(recv));
       Data *lookup_result = lookup_super_method(layout, selector, current);
       if (is<Nothing>(lookup_result)) {
@@ -319,7 +326,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     }
     case ocCall: {
       uint16_t argc = code[pc + 1];
-      Value *value = frame[argc];
+      Value *value = frame[argc + 1];
       Lambda *fun = cast<Lambda>(value);
       fun->ensure_compiled(NULL);
       frame.push_activation();

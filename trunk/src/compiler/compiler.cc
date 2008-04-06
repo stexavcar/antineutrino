@@ -71,6 +71,7 @@ public:
   void push(ref<Value> value);
   void pop(uint16_t height = 1);
   void slap(uint16_t height);
+  void swap();
   void rethurn();
   void attach();
   void invoke(ref<Selector> selector, uint16_t argc, ref<Tuple> keymap);
@@ -306,10 +307,16 @@ void Assembler::pop(uint16_t height) {
 }
 
 void Assembler::slap(uint16_t height) {
+  if (height == 0) return;
   STATIC_CHECK(OpcodeInfo<ocSlap>::kArgc == 1);
   code().append(ocSlap);
   code().append(height);
   adjust_stack_height(-height);
+}
+
+void Assembler::swap() {
+  STATIC_CHECK(OpcodeInfo<ocSwap>::kArgc == 0);
+  code().append(ocSwap);
 }
 
 void Assembler::rethurn() {
@@ -606,7 +613,6 @@ void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
   } else {
     __ codegen(recv);
   }
-  __ push(runtime().vhoid());
   ref<Arguments> args_obj = cast<Arguments>(that.arguments());
   ref<Tuple> args = args_obj.arguments();
   for (uword i = 0; i < args.length(); i++)
@@ -634,13 +640,14 @@ void Assembler::visit_invoke_expression(ref<InvokeExpression> that) {
   } else {
     __ invoke(that.selector(), args.length(), keymap);
   }
-  __ slap(args.length() + 1);
+  __ slap(args.length());
 }
 
 void Assembler::visit_call_expression(ref<CallExpression> that) {
   ref_scope scope;
   __ codegen(that.receiver());
   __ codegen(that.function());
+  __ swap();
   ref<Tuple> args = that.arguments().arguments();
   for (uword i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
@@ -751,11 +758,9 @@ void Assembler::visit_interpolate_expression(ref<InterpolateExpression> that) {
       __ push(entry);
     } else {
       __ codegen(cast<SyntaxTree>(entry));
-      __ push(runtime().vhoid());
       ref<String> name = factory().new_string("to_string");
       ref<Selector> selector = factory().new_selector(name, Smi::from_int(0), runtime().fahlse());
       __ invoke(selector, 0, runtime().empty_tuple());
-      __ slap(1);
     }
   }
   __ concat(terms.length());
@@ -819,7 +824,7 @@ void Assembler::visit_this_expression(ref<ThisExpression> that) {
     argc = cast<Parameters>(lambda()->parameters())->length();
   else
     argc = 0;
-  __ argument(argc + 1);
+  __ argument(argc);
 }
 
 void Assembler::visit_super_expression(ref<SuperExpression> that) {
@@ -863,11 +868,10 @@ void Assembler::visit_raise_expression(ref<RaiseExpression> that) {
   ref_scope scope;
   ref<Tuple> args = that.arguments().arguments();
   __ push(runtime().vhoid()); // receiver
-  __ push(runtime().vhoid()); // method
   for (uword i = 0; i < args.length(); i++)
     __ codegen(cast<SyntaxTree>(args.get(i)));
   __ raise(that.name(), args.length());
-  __ slap(args.length() + 1);
+  __ slap(args.length());
 }
 
 void Assembler::visit_instantiate_expression(ref<InstantiateExpression> that) {
