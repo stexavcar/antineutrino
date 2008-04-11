@@ -11,13 +11,13 @@ namespace neutrino {
 
 template <class C> class FImmediateInfo { };
 
-#define SPECIALIZE_VALUE_INFO(n, NAME, Name, info)                   \
+#define SPECIALIZE_VALUE_INFO(n, Name, info)                         \
 class F##Name;                                                       \
 template <> class FImmediateInfo<F##Name> {                          \
 public:                                                              \
   static const InstanceType kTag = t##Name;                          \
 };
-FOR_EACH_DECLARED_TYPE(SPECIALIZE_VALUE_INFO)
+eDeclaredTypes(SPECIALIZE_VALUE_INFO)
 #undef SPECIALIZE_VALUE_INFO
 
 // ---------------------
@@ -54,8 +54,8 @@ template <>
 static inline bool is<FSyntaxTree>(FData *data) {
   if (!is<FObject>(data)) return false;
   switch (image_raw_cast<FObject>(data)->type()) {
-#define MAKE_CASE(n, NAME, Name, info) case t##Name: return true;
-FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
+#define MAKE_CASE(n, Name, info) case t##Name: return true;
+eSyntaxTreeTypes(MAKE_CASE)
 #undef MAKE_CASE
       return true;
     default:
@@ -63,31 +63,31 @@ FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
   }
 }
 
-#define DEFINE_IMAGE_OBJECT_QUERY(Name, NAME)                        \
+#define DEFINE_IMAGE_OBJECT_QUERY(Name)                              \
   template <>                                                        \
   static inline bool is<F##Name>(FData *value) {                     \
     return is<FObject>(value)                                        \
         && image_raw_cast<FObject>(value)->type() == t##Name;        \
   }
 
-DEFINE_IMAGE_OBJECT_QUERY(String,              STRING)
-DEFINE_IMAGE_OBJECT_QUERY(Code,                CODE)
-DEFINE_IMAGE_OBJECT_QUERY(Tuple,               TUPLE)
-DEFINE_IMAGE_OBJECT_QUERY(Lambda,              LAMBDA)
-DEFINE_IMAGE_OBJECT_QUERY(Dictionary,          DICTIONARY)
-DEFINE_IMAGE_OBJECT_QUERY(Task,                TASK)
-DEFINE_IMAGE_OBJECT_QUERY(Stack,               STACK)
-DEFINE_IMAGE_OBJECT_QUERY(Layout,              LAYOUT)
-DEFINE_IMAGE_OBJECT_QUERY(Protocol,            PROTOCOL)
-DEFINE_IMAGE_OBJECT_QUERY(Context,             CONTEXT)
-DEFINE_IMAGE_OBJECT_QUERY(Method,              METHOD)
-DEFINE_IMAGE_OBJECT_QUERY(Signature,           SIGNATURE)
-DEFINE_IMAGE_OBJECT_QUERY(Root,                ROOT)
-DEFINE_IMAGE_OBJECT_QUERY(ForwarderDescriptor, FORWARDER_DESCRIPTOR)
-DEFINE_IMAGE_OBJECT_QUERY(Selector,            SELECTOR)
-DEFINE_IMAGE_OBJECT_QUERY(Channel,             CHANNEL)
-#define DEFINE_SYNTAX_TREE_QUERY(n, NAME, Name, info) DEFINE_IMAGE_OBJECT_QUERY(Name, NAME)
-FOR_EACH_SYNTAX_TREE_TYPE(DEFINE_SYNTAX_TREE_QUERY)
+DEFINE_IMAGE_OBJECT_QUERY(String)
+DEFINE_IMAGE_OBJECT_QUERY(Code)
+DEFINE_IMAGE_OBJECT_QUERY(Tuple)
+DEFINE_IMAGE_OBJECT_QUERY(Lambda)
+DEFINE_IMAGE_OBJECT_QUERY(Dictionary)
+DEFINE_IMAGE_OBJECT_QUERY(Task)
+DEFINE_IMAGE_OBJECT_QUERY(Stack)
+DEFINE_IMAGE_OBJECT_QUERY(Layout)
+DEFINE_IMAGE_OBJECT_QUERY(Protocol)
+DEFINE_IMAGE_OBJECT_QUERY(Context)
+DEFINE_IMAGE_OBJECT_QUERY(Method)
+DEFINE_IMAGE_OBJECT_QUERY(Signature)
+DEFINE_IMAGE_OBJECT_QUERY(Root)
+DEFINE_IMAGE_OBJECT_QUERY(ForwarderDescriptor)
+DEFINE_IMAGE_OBJECT_QUERY(Selector)
+DEFINE_IMAGE_OBJECT_QUERY(Channel)
+#define DEFINE_SYNTAX_TREE_QUERY(n, Name, info) DEFINE_IMAGE_OBJECT_QUERY(Name)
+eSyntaxTreeTypes(DEFINE_SYNTAX_TREE_QUERY)
 #undef DEFINE_SYNTAX_TREE_QUERY
 
 InstanceType FData::type() {

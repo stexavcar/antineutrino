@@ -22,10 +22,9 @@ def new_namespace(values = None):
 (__values_map, values) = new_namespace()
 (__lower_to_upper_map, lower_to_upper) = new_namespace()
 (__upper_to_lower_map, upper_to_lower) = new_namespace()
-def install_value_type(n, NAME, Name, name):
+def install_value_type(n, Name, name):
   (_, __values_map[Name]) = new_namespace({
     'index': int(n),
-    'NAME': NAME,
     'Name': Name,
     'name': name
   })
@@ -75,11 +74,11 @@ def install_builtin_method(n, klass, function_name, string_name):
 
 def initialize_from(name):
   consts = read_consts(name)
-  consts['FOR_EACH_DECLARED_TYPE'](install_value_type)
-  consts['FOR_EACH_IMAGE_OBJECT_CONST'](install_image_entry)
-  consts['FOR_EACH_ROOT'](install_root)
-  consts['FOR_EACH_BUILTIN_FUNCTION'](install_builtin_function)
-  consts['FOR_EACH_BUILTIN_METHOD'](install_builtin_method)
+  consts['eDeclaredTypes'](install_value_type)
+  consts['eImageObjectConsts'](install_image_entry)
+  consts['eRoots'](install_root)
+  consts['eBuiltinFunctions'](install_builtin_function)
+  consts['eBuiltinMethods'](install_builtin_method)
 
 
 # --- M a c r o   P a r s i n g ---

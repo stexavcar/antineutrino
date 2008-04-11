@@ -19,7 +19,7 @@ struct EnumValueInfo {
 static bool get_signal_info(int signum, EnumValueInfo *info) {
   switch (signum) {
 #define MAKE_CASE(SIG, str) case SIG: { info->name = #SIG; info->desc = str; return true; }
-FOR_EACH_SIGNAL(MAKE_CASE)
+eSignals(MAKE_CASE)
 #undef MAKE_CASE
 default:
     return false;
@@ -33,7 +33,7 @@ static bool get_code_info(int signum, int code, EnumValueInfo *info) {
     info->desc = str;                                                \
     return true;                                                     \
   }
-FOR_EACH_SIGNAL_CODE(MAKE_CASE)
+eSignalCodes(MAKE_CASE)
 #undef MAKE_CASE
   return false;
 }

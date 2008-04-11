@@ -6,7 +6,7 @@
 
 namespace neutrino {
 
-FOR_EACH_QUOTE_TEMPLATE_FIELD(DEFINE_FIELD_ACCESSORS, QuoteTemplate)
+eQuoteTemplateFields(DEFINE_FIELD_ACCESSORS, QuoteTemplate)
 
 DEFINE_ACCESSORS(uword, BuiltinCall, argc, Argc)
 DEFINE_ACCESSORS(uword, BuiltinCall, index, Index)

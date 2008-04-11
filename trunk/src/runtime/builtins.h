@@ -29,11 +29,11 @@ public:
 private:
 
 #define DECLARE_BUILTIN(n, layout, name, str) static Data *layout##_##name(BuiltinArguments&);
-FOR_EACH_BUILTIN_METHOD(DECLARE_BUILTIN)
+eBuiltinMethods(DECLARE_BUILTIN)
 #undef DECLARE_BUILTIN
 
 #define DECLARE_BUILTIN(n, name, str) static Data *name(BuiltinArguments&);
-FOR_EACH_PLAIN_BUILTIN_FUNCTION(DECLARE_BUILTIN)
+ePlainBuiltinFunctions(DECLARE_BUILTIN)
 #undef DECLARE_BUILTIN
 
 };

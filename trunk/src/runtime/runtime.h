@@ -32,7 +32,7 @@ public:
   // Declare root field ref accessors
   #define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, allocator)      \
     ref<Type> name() { return ref<Type>(&roots().name()); }
-  FOR_EACH_ROOT(DECLARE_ROOT_ACCESSOR)
+  eRoots(DECLARE_ROOT_ACCESSOR)
   #undef DECLARE_ROOT_ACCESSOR
   
   inline ref<Object> get_root(uword index);

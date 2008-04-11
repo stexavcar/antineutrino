@@ -14,7 +14,7 @@ namespace neutrino {
  * This index defines all opcodes, their index and the number of
  * arguments they expect.
  */
-#define FOR_EACH_OPCODE(VISIT)                                         \
+#define eOpcodes(VISIT)                                                \
   VISIT(0,  Push,   1)   VISIT(1,  Return, 0)   VISIT(2,  Global,   1) \
   VISIT(3,  Call,   1)   VISIT(4,  Slap,   1)   VISIT(5,  Argument, 1) \
   VISIT(6,  Void,   0)   VISIT(7,  Null,   0)   VISIT(8,  True,     0) \
@@ -32,7 +32,7 @@ namespace neutrino {
 enum Opcode {
   __first_opcode = -1
 #define DECLARE_OPCODE(n, Name, argc) , oc##Name = n
-FOR_EACH_OPCODE(DECLARE_OPCODE)
+eOpcodes(DECLARE_OPCODE)
 #undef DECLARE_OPCODE
 };
 

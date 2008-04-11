@@ -319,10 +319,10 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
   }
   case tBuiltinCall:
     return visitor.visit_builtin_call(cast<BuiltinCall>(self));
-#define MAKE_VISIT(n, NAME, Name, name)                              \
+#define MAKE_VISIT(n, Name, name)                                    \
   case t##Name:                                                      \
     return visitor.visit_##name(cast<Name>(self));
-FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(MAKE_VISIT)
+eSimpleSyntaxTreeTypes(MAKE_VISIT)
 #undef MAKE_VISIT
   default:
     UNHANDLED(InstanceType, type);
@@ -386,11 +386,11 @@ void Visitor::visit_syntax_tree(ref<SyntaxTree> that) {
   that.traverse(*this);
 }
 
-#define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
+#define MAKE_VISIT_METHOD(n, Name, name)                             \
   void Visitor::visit_##name(ref<Name> that) {                       \
     visit_syntax_tree(that);                                         \
   }
-FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
+eSyntaxTreeTypes(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
 
 }

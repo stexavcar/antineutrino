@@ -20,7 +20,7 @@ void Conditions::notify(Condition cause) {
 
 MAKE_ENUM_INFO_HEADER(Condition)
 #define MAKE_ENTRY(Name) MAKE_ENUM_INFO_ENTRY(cn##Name)
-FOR_EACH_CONDITION(MAKE_ENTRY)
+eConditions(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 

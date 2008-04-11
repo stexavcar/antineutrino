@@ -76,9 +76,9 @@ public:
   
   Data *allocate_channel();
   
-#define DECLARE_ALLOCATOR(n, NAME, Name, name)                       \
+#define DECLARE_ALLOCATOR(n, Name, name)                             \
   Data *allocate_##name();
-FOR_EACH_BOILERPLATE_ALLOCATOR(DECLARE_ALLOCATOR)
+eBoilerplateAllocator(DECLARE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
   
   Data *new_abstract_buffer(uword size, Layout *layout);

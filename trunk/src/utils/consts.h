@@ -4,7 +4,7 @@
 /**
  * This file contains a number of index tables mapping names and
  * properties to integer indices.  This file is written in a
- * particular style, with all values being defined through FOR_EACH
+ * particular style, with all values being defined through i...s
  * macros.  This is important because this file will be parsed by
  * the python compiler so that we only need to define the constants
  * in one place.
@@ -15,108 +15,108 @@
 // ---------------------------
 
 
-#define FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                    \
-  VISIT(1,  DICTIONARY,             Dictionary,            dictionary)             \
-  VISIT(2,  METHOD,                 Method,                method)                 \
-  VISIT(3,  PROTOCOL,               Protocol,              protocol)               \
-  VISIT(4,  TASK,                   Task,                  task)                   \
-  VISIT(73, SIGNATURE,              Signature,             signature)              \
-  VISIT(77, SELECTOR,               Selector,              selector)
+#define eGeneratableObjectTypes(VISIT)                     \
+  VISIT(1,  Dictionary,            dictionary)             \
+  VISIT(2,  Method,                method)                 \
+  VISIT(3,  Protocol,              protocol)               \
+  VISIT(4,  Task,                  task)                   \
+  VISIT(5,  Signature,             signature)              \
+  VISIT(6,  Selector,              selector)
 
 
-#define FOR_EACH_OBJECT_TYPE(VISIT)                                                \
-  VISIT(5,  LAYOUT,                 Layout,                layout)                 \
-  VISIT(6,  STRING,                 String,                string)                 \
-  VISIT(7,  TUPLE,                  Tuple,                 tuple)                  \
-  VISIT(86, ARRAY,                  Array,                 array)                  \
-  VISIT(8,  VOID,                   Void,                  void)                   \
-  VISIT(9,  NULL,                   Null,                  null)                   \
-  VISIT(10, TRUE,                   True,                  true)                   \
-  VISIT(11, FALSE,                  False,                 false)                  \
-  VISIT(12, LAMBDA,                 Lambda,                lambda)                 \
-  VISIT(13, BUFFER,                 Buffer,                buffer)                 \
-  VISIT(14, CODE,                   Code,                  code)                   \
-  VISIT(15, INSTANCE,               Instance,              instance)               \
-  VISIT(16, STACK,                  Stack,                 stack)                  \
-  VISIT(17, CONTEXT,                Context,               context)                \
-  VISIT(74, FORWARDER_DESCRIPTOR,   ForwarderDescriptor,   forwarder_descriptor)   \
-  VISIT(83, CHANNEL,                Channel,               channel)                \
-  FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
-  FOR_EACH_SYNTAX_TREE_TYPE(VISIT)
+#define eObjectTypes(VISIT)                                \
+  VISIT(7,  Layout,                layout)                 \
+  VISIT(8,  String,                string)                 \
+  VISIT(9,  Tuple,                 tuple)                  \
+  VISIT(10, Array,                 array)                  \
+  VISIT(11, Void,                  void)                   \
+  VISIT(12, Null,                  null)                   \
+  VISIT(13, True,                  true)                   \
+  VISIT(14, False,                 false)                  \
+  VISIT(15, Lambda,                lambda)                 \
+  VISIT(16, Buffer,                buffer)                 \
+  VISIT(17, Code,                  code)                   \
+  VISIT(18, Instance,              instance)               \
+  VISIT(19, Stack,                 stack)                  \
+  VISIT(20, Context,               context)                \
+  VISIT(21, ForwarderDescriptor,   forwarder_descriptor)   \
+  VISIT(22, Channel,               channel)                \
+  eGeneratableObjectTypes(VISIT)                           \
+  eSyntaxTreeTypes(VISIT)
 
 
-#define FOR_EACH_VIRTUAL_TYPE(VISIT)                                               \
-  VISIT(20, OBJECT,                 Object,                object)                 \
-  VISIT(21, VALUE,                  Value,                 0)                      \
-  VISIT(22, ABSTRACT_BUFFER,        AbstractBuffer,        0)                      \
-  VISIT(87, ABSTRACT_TUPLE,         AbstractTuple,         0)                      \
-  VISIT(23, SINGLETON,              Singleton,             0)                      \
-  VISIT(24, SYNTAX_TREE,            SyntaxTree,            0)                      \
-  VISIT(25, IMMEDIATE,              Immediate,             0)                      \
-  VISIT(26, BOOL,                   Bool,                  0)                      \
-  VISIT(82, ROOT,                   Root,                  0)
+#define eVirtualTypes(VISIT)                               \
+  VISIT(23, Object,                object)                 \
+  VISIT(24, Value,                 0)                      \
+  VISIT(25, AbstractBuffer,        0)                      \
+  VISIT(26, AbstractTuple,         0)                      \
+  VISIT(27, Singleton,             0)                      \
+  VISIT(28, SyntaxTree,            0)                      \
+  VISIT(29, Immediate,             0)                      \
+  VISIT(30, Bool,                  0)                      \
+  VISIT(31, Root,                  0)
 
 
-#define FOR_EACH_SIGNAL_TYPE(VISIT)                                                \
-  VISIT(30, ALLOCATION_FAILED,      AllocationFailed,      0)                      \
-  VISIT(31, INTERNAL_ERROR,         InternalError,         0)                      \
-  VISIT(32, NOTHING,                Nothing,               0)
+#define eSignalTypes(VISIT)                                \
+  VISIT(32, AllocationFailed,      0)                      \
+  VISIT(33, InternalError,         0)                      \
+  VISIT(34, Nothing,               0)
 
 
-#define FOR_EACH_VALUE_TYPE(VISIT)                                                 \
-  VISIT(40, SMI,                    Smi,                   smi)                    \
-  VISIT(41, SIGNAL,                 Signal,                0)                      \
-  VISIT(42, FORWARD_POINTER,        ForwardPointer,        0)                      \
-  VISIT(43, FORWARDER,              Forwarder,             0)                      \
-  FOR_EACH_SIGNAL_TYPE(VISIT)                                                      \
-  FOR_EACH_OBJECT_TYPE(VISIT)
+#define eValueTypes(VISIT)                                 \
+  VISIT(35, Smi,                   smi)                    \
+  VISIT(36, Signal,                0)                      \
+  VISIT(37, ForwardPointer,        0)                      \
+  VISIT(38, Forwarder,             0)                      \
+  eSignalTypes(VISIT)                                      \
+  eObjectTypes(VISIT)
 
 
-#define FOR_EACH_DECLARED_TYPE(VISIT)                                              \
-  FOR_EACH_VALUE_TYPE(VISIT)                                                       \
-  FOR_EACH_VIRTUAL_TYPE(VISIT)
+#define eDeclaredTypes(VISIT)                              \
+  eValueTypes(VISIT)                                       \
+  eVirtualTypes(VISIT)
 
 
-#define FOR_EACH_SYNTAX_TREE_TYPE(VISIT)                                           \
-  VISIT(50, BUILTIN_CALL,           BuiltinCall,           builtin_call)           \
-  VISIT(51, UNQUOTE_EXPRESSION,     UnquoteExpression,     unquote_expression)     \
-  VISIT(52, QUOTE_TEMPLATE,         QuoteTemplate,         quote_template)         \
-  FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)
+#define eSyntaxTreeTypes(VISIT)                            \
+  VISIT(39, BuiltinCall,           builtin_call)           \
+  VISIT(40, UnquoteExpression,     unquote_expression)     \
+  VISIT(41, QuoteTemplate,         quote_template)         \
+  eSimpleSyntaxTreeTypes(VISIT)
 
 
-#define FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)                               \
-  VISIT(53, LITERAL_EXPRESSION,     LiteralExpression,     literal_expression)     \
-  VISIT(54, INVOKE_EXPRESSION,      InvokeExpression,      invoke_expression)      \
-  VISIT(55, PROTOCOL_EXPRESSION,    ProtocolExpression,    protocol_expression)    \
-  VISIT(56, RETURN_EXPRESSION,      ReturnExpression,      return_expression)      \
-  VISIT(57, METHOD_EXPRESSION,      MethodExpression,      method_expression)      \
-  VISIT(58, SEQUENCE_EXPRESSION,    SequenceExpression,    sequence_expression)    \
-  VISIT(59, TUPLE_EXPRESSION,       TupleExpression,       tuple_expression)       \
-  VISIT(60, GLOBAL_EXPRESSION,      GlobalExpression,      global_expression)      \
-  VISIT(61, CALL_EXPRESSION,        CallExpression,        call_expression)        \
-  VISIT(62, SYMBOL,                 Symbol,                symbol)                 \
-  VISIT(63, CONDITIONAL_EXPRESSION, ConditionalExpression, conditional_expression) \
-  VISIT(64, QUOTE_EXPRESSION,       QuoteExpression,       quote_expression)       \
-  VISIT(65, THIS_EXPRESSION,        ThisExpression,        this_expression)        \
-  VISIT(66, LAMBDA_EXPRESSION,      LambdaExpression,      lambda_expression)      \
-  VISIT(67, INTERPOLATE_EXPRESSION, InterpolateExpression, interpolate_expression) \
-  VISIT(68, LOCAL_DEFINITION,       LocalDefinition,       local_definition)       \
-  VISIT(69, RAISE_EXPRESSION,       RaiseExpression,       raise_expression)       \
-  VISIT(70, ON_CLAUSE,              OnClause,              on_clause)              \
-  VISIT(71, DO_ON_EXPRESSION,       DoOnExpression,        do_on_expression)       \
-  VISIT(72, INSTANTIATE_EXPRESSION, InstantiateExpression, instantiate_expression) \
-  VISIT(75, ARGUMENTS,              Arguments,             arguments)              \
-  VISIT(78, TASK_EXPRESSION,        TaskExpression,        task_expression)        \
-  VISIT(79, YIELD_EXPRESSION,       YieldExpression,       yield_expression)       \
-  VISIT(80, ASSIGNMENT,             Assignment,            assignment)             \
-  VISIT(81, PARAMETERS,             Parameters,            parameters)             \
-  VISIT(84, WHILE_EXPRESSION,       WhileExpression,       while_expression)       \
-  VISIT(85, SUPER_EXPRESSION,       SuperExpression,       super_expression)
+#define eSimpleSyntaxTreeTypes(VISIT)                      \
+  VISIT(42, LiteralExpression,     literal_expression)     \
+  VISIT(43, InvokeExpression,      invoke_expression)      \
+  VISIT(44, ProtocolExpression,    protocol_expression)    \
+  VISIT(45, ReturnExpression,      return_expression)      \
+  VISIT(46, MethodExpression,      method_expression)      \
+  VISIT(47, SequenceExpression,    sequence_expression)    \
+  VISIT(48, TupleExpression,       tuple_expression)       \
+  VISIT(49, GlobalExpression,      global_expression)      \
+  VISIT(50, CallExpression,        call_expression)        \
+  VISIT(51, Symbol,                symbol)                 \
+  VISIT(52, ConditionalExpression, conditional_expression) \
+  VISIT(53, QuoteExpression,       quote_expression)       \
+  VISIT(54, ThisExpression,        this_expression)        \
+  VISIT(55, LambdaExpression,      lambda_expression)      \
+  VISIT(56, InterpolateExpression, interpolate_expression) \
+  VISIT(57, LocalDefinition,       local_definition)       \
+  VISIT(58, RaiseExpression,       raise_expression)       \
+  VISIT(59, OnClause,              on_clause)              \
+  VISIT(60, DoOnExpression,        do_on_expression)       \
+  VISIT(61, InstantiateExpression, instantiate_expression) \
+  VISIT(62, Arguments,             arguments)              \
+  VISIT(63, TaskExpression,        task_expression)        \
+  VISIT(64, YieldExpression,       yield_expression)       \
+  VISIT(65, Assignment,            assignment)             \
+  VISIT(66, Parameters,            parameters)             \
+  VISIT(67, WhileExpression,       while_expression)       \
+  VISIT(68, SuperExpression,       super_expression)
 
 
-#define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
-  FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
-  FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)
+#define eGeneratableTypes(VISIT)                           \
+  eGeneratableObjectTypes(VISIT)                           \
+  eSimpleSyntaxTreeTypes(VISIT)
 
 
 // -----------------------------------------
@@ -128,101 +128,101 @@
  * For each type for which a boilerplate allocator can be generated
  * in the heap.
  */
-#define FOR_EACH_BOILERPLATE_ALLOCATOR(VISIT)                        \
-  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
-  VISIT(0, 0, BuiltinCall, builtin_call)                             \
-  VISIT(0, 0, UnquoteExpression, unquote_expression)
+#define eBoilerplateAllocator(VISIT)                       \
+  eGeneratableTypes(VISIT)                                 \
+  VISIT(0, BuiltinCall, builtin_call)                      \
+  VISIT(0, UnquoteExpression, unquote_expression)
 
 
 /**
  * For each type for which a boilerplate shallow copy case can be
  * generated in image loading.
  */
-#define FOR_EACH_BOILERPLATE_SHALLOW_COPY(VISIT)                     \
-  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
-  VISIT(0, 0, BuiltinCall, builtin_call)                             \
-  VISIT(0, 0, UnquoteExpression, unquote_expression)                 \
-  VISIT(0, 0, Channel, channel)
+#define eBoilerplateShallowCopy(VISIT)                     \
+  eGeneratableTypes(VISIT)                                 \
+  VISIT(0, BuiltinCall, builtin_call)                      \
+  VISIT(0, UnquoteExpression, unquote_expression)          \
+  VISIT(0, Channel, channel)
 
 
 /**
  * For each type for which a boilerplate shallow fixup case can be
  * generated in image loading.
  */
-#define FOR_EACH_BOILERPLATE_FIXUP_SHALLOW(VISIT)                    \
-  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
-  VISIT(0, LAYOUT, Layout, 0)
+#define eBoilerplateFixupShallow(VISIT)                    \
+  eGeneratableTypes(VISIT)                                 \
+  VISIT(0, Layout, 0)
 
 
 /**
  * For each type for which a boilerplate size_in_image case can be
  * generated in image loading.
  */
-#define FOR_EACH_BOILERPLATE_SIZE_IN_IMAGE(VISIT)                    \
-  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
-  VISIT(0, 0, Lambda, 0)                                             \
-  VISIT(0, 0, Layout, 0)                                             \
-  VISIT(0, 0, Context, 0)                                            \
-  VISIT(0, 0, Root, 0)                                               \
-  VISIT(0, 0, BuiltinCall, 0)                                        \
-  VISIT(0, 0, UnquoteExpression, 0)                                  \
-  VISIT(0, 0, Channel, 0)
+#define eBoilerplateSizeInImage(VISIT)                     \
+  eGeneratableTypes(VISIT)                                 \
+  VISIT(0, Lambda, 0)                                      \
+  VISIT(0, Layout, 0)                                      \
+  VISIT(0, Context, 0)                                     \
+  VISIT(0, Root, 0)                                        \
+  VISIT(0, BuiltinCall, 0)                                 \
+  VISIT(0, UnquoteExpression, 0)                           \
+  VISIT(0, Channel, 0)
 
 
 /**
  * For each type for which a boilerplate size_in_heap case can be
  * generated in image loading.
  */
-#define FOR_EACH_BOILERPLATE_SIZE_IN_HEAP(VISIT)                     \
-  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
-  VISIT(0, 0, Lambda, 0)                                             \
-  VISIT(0, 0, Layout, 0)                                             \
-  VISIT(0, 0, Context, 0)                                            \
-  VISIT(0, 0, BuiltinCall, 0)                                        \
-  VISIT(0, 0, UnquoteExpression, 0)                                  \
-  VISIT(0, 0, Channel, 0)
+#define eBoilerplateSizeInHeap(VISIT)                      \
+  eGeneratableTypes(VISIT)                                 \
+  VISIT(0, Lambda, 0)                                      \
+  VISIT(0, Layout, 0)                                      \
+  VISIT(0, Context, 0)                                     \
+  VISIT(0, BuiltinCall, 0)                                 \
+  VISIT(0, UnquoteExpression, 0)                           \
+  VISIT(0, Channel, 0)
 
 
 /**
  * For each type for which boilerplate accessors should be generated
  */
-#define FOR_EACH_BOILERPLATE_ACCESSORS(VISIT)                        \
-  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
-  VISIT(0, LAYOUT, Layout, 0)                                        \
-  VISIT(0, LAMBDA, Lambda, 0)                                        \
-  VISIT(0, CHANNEL, Channel, 0)
+#define eBoilerplateAccessors(VISIT)                       \
+  eGeneratableTypes(VISIT)                                 \
+  VISIT(0, Layout, 0)                                      \
+  VISIT(0, Lambda, 0)                                      \
+  VISIT(0, Channel, 0)
 
 
 /**
  * For each type for which a boilerplate validation case can be
  * generated.
  */
-#define FOR_EACH_BOILERPLATE_VALIDATE(VISIT)                         \
-  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
-  VISIT(0, CHANNEL, Channel, 0)                                      \
-  VISIT(0, LAYOUT, Layout, 0)                                        \
-  VISIT(0, CONTEXT, Context, 0)                                      \
-  VISIT(0, QUOTE_TEMPLATE, QuoteTemplate, 0)                         \
-  VISIT(0, FORWARDER_DESCRIPTOR, ForwarderDescriptor, 0)
+#define eBoilerplateValidate(VISIT)                        \
+  eGeneratableTypes(VISIT)                                 \
+  VISIT(0, Channel, 0)                                     \
+  VISIT(0, Layout, 0)                                      \
+  VISIT(0, Context, 0)                                     \
+  VISIT(0, QuoteTemplate, 0)                               \
+  VISIT(0, ForwarderDescriptor, 0)
 
 
 /**
  * For each type for which a boilerplate iterator case can be
  * generated in for_each_field.
  */
-#define FOR_EACH_BOILERPLATE_ITERATOR(VISIT)                         \
-  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
-  VISIT(0, BUILTIN_CALL, BuiltinCall, 0)                             \
-  VISIT(0, LAMBDA, Lambda, 0)                                        \
-  VISIT(0, LAYOUT, Layout, 0)                                        \
-  VISIT(0, CHANNEL, Channel, 0)
+#define eBoilerplateIterator(VISIT)                        \
+  eGeneratableTypes(VISIT)                                 \
+  VISIT(0, BuiltinCall, 0)                                 \
+  VISIT(0, Lambda, 0)                                      \
+  VISIT(0, Layout, 0)                                      \
+  VISIT(0, Channel, 0)
 
 
 // -------------------------------------
 // --- I m a g e   C o n s t a n t s ---
 // -------------------------------------
 
-#define FOR_EACH_IMAGE_OBJECT_CONST(VISIT)                           \
+#define eImageObjectConsts(VISIT)                                    \
   VISIT(0, Object,                LayoutOffset)                      \
   VISIT(1, Object,                HeaderSize)                        \
   VISIT(1, Dictionary,            TableOffset)                       \
@@ -361,7 +361,7 @@
 // --- R o o t s ---
 // -----------------
 
-#define FOR_EACH_SIMPLE_ROOT_OBJECT(VISIT)                                                                                   \
+#define eSimpleRootObjects(VISIT)                                                                                            \
   VISIT(0,  Void,       vhoid,                         VoidValue,             new_singleton(void_layout()))                  \
   VISIT(1,  Null,       nuhll,                         NullValue,             new_singleton(null_layout()))                  \
   VISIT(2,  True,       thrue,                         TrueValue,             new_singleton(true_layout()))                  \
@@ -369,10 +369,10 @@
   VISIT(4,  Dictionary, toplevel,                      Toplevel,              new_dictionary())                              \
   VISIT(5,  Tuple,      empty_tuple,                   EmptyTuple,            new_tuple(0))
 
-#define FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                                                                              \
+#define eComplicatedRootLayouts(VISIT)                                                                                       \
   VISIT(6,  Layout,     layout_layout,                 Layout,                0)
 
-#define FOR_EACH_SIMPLE_ROOT_LAYOUT(VISIT)                                                                                   \
+#define eSimpleRootLayouts(VISIT)                                                                                            \
   VISIT(7,  Layout,     protocol_layout,               Protocol,              allocate_empty_layout(tProtocol))              \
   VISIT(8,  Layout,     string_layout,                 String,                allocate_empty_layout(tString))                \
   VISIT(9,  Layout,     tuple_layout,                  Tuple,                 allocate_empty_layout(tTuple))                 \
@@ -426,17 +426,17 @@
   VISIT(58, Layout,     array_layout,                  Array,                 allocate_empty_layout(tArray))
 
 
-#define FOR_EACH_ROOT(VISIT)                                         \
-  FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                            \
-  FOR_EACH_SIMPLE_ROOT(VISIT)
+#define eRoots(VISIT)                                                \
+  eComplicatedRootLayouts(VISIT)                                     \
+  eSimpleRoots(VISIT)
 
-#define FOR_EACH_SIMPLE_ROOT(VISIT)                                  \
-  FOR_EACH_SIMPLE_ROOT_LAYOUT(VISIT)                                 \
-  FOR_EACH_SIMPLE_ROOT_OBJECT(VISIT)
+#define eSimpleRoots(VISIT)                                          \
+  eSimpleRootLayouts(VISIT)                                          \
+  eSimpleRootObjects(VISIT)
 
-#define FOR_EACH_ROOT_LAYOUT(VISIT)                                  \
-  FOR_EACH_COMPLICATED_ROOT_LAYOUT(VISIT)                            \
-  FOR_EACH_SIMPLE_ROOT_LAYOUT(VISIT)
+#define eRootLayouts(VISIT)                                          \
+  eComplicatedRootLayouts(VISIT)                                     \
+  eSimpleRootLayouts(VISIT)
 
 
 // ---------------------------------------
@@ -448,7 +448,7 @@
  * internal methods.  Whenever a method is added here an associated
  * implementation must be added in builtins.cc.
  */
-#define FOR_EACH_BUILTIN_METHOD(VISIT)                               \
+#define eBuiltinMethods(VISIT)                                       \
   VISIT(0,  string,              length,      "||")                  \
   VISIT(1,  string,              eq,          "=")                   \
   VISIT(2,  string,              plus,        "+")                   \
@@ -479,7 +479,7 @@
 // --- S p e c i a l   B u i l t i n s ---
 // ---------------------------------------
 
-#define FOR_EACH_SPECIAL_BUILTIN_FUNCTION(VISIT)                     \
+#define eSpecialBuiltinFunctions(VISIT)                              \
   VISIT(50, attach_task, "attach_task")
 
 
@@ -492,7 +492,7 @@
  * functions.  Whenever a method is added here an associated
  * implementation must be added in builtins.cc.
  */
-#define FOR_EACH_PLAIN_BUILTIN_FUNCTION(VISIT)                       \
+#define ePlainBuiltinFunctions(VISIT)                                \
   VISIT(101, raw_print,          "raw_print")                        \
   VISIT(102, compile_expression, "compile_expression")               \
   VISIT(103, lift,               "lift")                             \
@@ -504,8 +504,10 @@
   VISIT(108, is_digit,           "is_digit")                         \
   VISIT(110, new_array,          "new_array")
 
-#define FOR_EACH_BUILTIN_FUNCTION(VISIT)                             \
-  FOR_EACH_SPECIAL_BUILTIN_FUNCTION(VISIT)                           \
-  FOR_EACH_PLAIN_BUILTIN_FUNCTION(VISIT)
+
+#define eBuiltinFunctions(VISIT)                                     \
+  eSpecialBuiltinFunctions(VISIT)                                    \
+  ePlainBuiltinFunctions(VISIT)
+
 
 #endif // _UTILS_CONSTS

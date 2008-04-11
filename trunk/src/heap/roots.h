@@ -11,7 +11,7 @@ namespace neutrino {
 enum RootName {
   __first_root_tag
 #define DECLARE_ROOT_ENUM(n, Type, name, Name, allocator) , Name##_ROOT
-FOR_EACH_ROOT(DECLARE_ROOT_ENUM)
+eRoots(DECLARE_ROOT_ENUM)
 #undef DECLARE_ROOT_ENUM
 };
 
@@ -33,7 +33,7 @@ public:
 // Declare root field accessors
 #define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, allocator) \
   Type *&name() { return reinterpret_cast<Type**>(entries_)[n]; }
-FOR_EACH_ROOT(DECLARE_ROOT_ACCESSOR)
+eRoots(DECLARE_ROOT_ACCESSOR)
 #undef DECLARE_ROOT_ACCESSOR
 
   inline Value *&get(uword index);

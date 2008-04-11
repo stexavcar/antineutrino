@@ -32,12 +32,12 @@ DEFINE_REF_CLASS(SyntaxTree);
 // --- L i t e r a l   E x p r e s s i o n ---
 // -------------------------------------------
 
-#define FOR_EACH_LITERAL_EXPRESSION_FIELD(VISIT, arg)                \
+#define eLiteralExpressionFields(VISIT, arg)                \
   VISIT(Value, value, Value, arg)
 
 class LiteralExpression : public SyntaxTree {
 public:
-  FOR_EACH_LITERAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eLiteralExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kValueOffset + kPointerSize;
@@ -46,7 +46,7 @@ public:
 template <>
 class ref_traits<LiteralExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_LITERAL_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eLiteralExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(LiteralExpression);
@@ -55,13 +55,13 @@ DEFINE_REF_CLASS(LiteralExpression);
 // --- Q u o t e ---
 // -----------------
 
-#define FOR_EACH_QUOTE_TEMPLATE_FIELD(VISIT, arg)                    \
+#define eQuoteTemplateFields(VISIT, arg)                    \
   VISIT(SyntaxTree, value,    Value,    arg)                         \
   VISIT(Tuple,      unquotes, Unquotes, arg)
 
 class QuoteTemplate : public SyntaxTree {
 public:
-  FOR_EACH_QUOTE_TEMPLATE_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eQuoteTemplateFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kUnquotesOffset = kValueOffset + kPointerSize;
@@ -71,7 +71,7 @@ public:
 template <>
 class ref_traits<QuoteTemplate> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_QUOTE_TEMPLATE_FIELD(DECLARE_REF_FIELD, 0)
+  eQuoteTemplateFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(QuoteTemplate);
@@ -81,14 +81,14 @@ DEFINE_REF_CLASS(QuoteTemplate);
 // --- I n v o k e   E x p r e s s i o n ---
 // -----------------------------------------
 
-#define FOR_EACH_INVOKE_EXPRESSION_FIELD(VISIT, arg)                 \
+#define eInvokeExpressionFields(VISIT, arg)                 \
   VISIT(SyntaxTree, receiver,  Receiver,  arg)                       \
   VISIT(Selector,   selector,  Selector,  arg)                       \
   VISIT(Arguments,  arguments, Arguments, arg)
 
 class InvokeExpression : public SyntaxTree {
 public:
-  FOR_EACH_INVOKE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eInvokeExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kReceiverOffset  = SyntaxTree::kHeaderSize;
   static const uword kSelectorOffset  = kReceiverOffset + kPointerSize;
@@ -99,7 +99,7 @@ public:
 template <>
 class ref_traits<InvokeExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_INVOKE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eInvokeExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(InvokeExpression);
@@ -109,13 +109,13 @@ DEFINE_REF_CLASS(InvokeExpression);
 // --- A r g u m e n t s ---
 // -------------------------
 
-#define FOR_EACH_ARGUMENTS_FIELD(VISIT, arg)                         \
+#define eArgumentsFields(VISIT, arg)                         \
   VISIT(Tuple, arguments,        Arguments,       arg)               \
   VISIT(Tuple, keyword_indices,  KeywordIndices,  arg)
 
 class Arguments : public SyntaxTree {
 public:
-  FOR_EACH_ARGUMENTS_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eArgumentsFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kArgumentsOffset       = SyntaxTree::kHeaderSize;
   static const uword kKeywordIndicesOffset  = kArgumentsOffset + kPointerSize;
@@ -125,7 +125,7 @@ public:
 template <>
 class ref_traits<Arguments> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_ARGUMENTS_FIELD(DECLARE_REF_FIELD, 0)
+  eArgumentsFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(Arguments);
@@ -135,13 +135,13 @@ DEFINE_REF_CLASS(Arguments);
 // --- P a r a m e t e r s ---
 // ---------------------------
 
-#define FOR_EACH_PARAMETERS_FIELD(VISIT, arg)                        \
+#define eParametersFields(VISIT, arg)                        \
   VISIT(Smi,   position_count, PositionCount, arg)                   \
   VISIT(Tuple, parameters,     Parameters,    arg)
 
 class Parameters : public SyntaxTree {
 public:
-  FOR_EACH_PARAMETERS_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eParametersFields(DECLARE_OBJECT_FIELD, 0)
   
   inline bool has_keywords();
   inline uword length();
@@ -154,7 +154,7 @@ public:
 template <>
 class ref_traits<Parameters> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_PARAMETERS_FIELD(DECLARE_REF_FIELD, 0)
+  eParametersFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(Parameters);
@@ -164,7 +164,7 @@ DEFINE_REF_CLASS(Parameters);
 // --- I n s t a n t i a t e   E x p r e s s i o n ---
 // ---------------------------------------------------
 
-#define FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(VISIT, arg)            \
+#define eInstantiateExpressionFields(VISIT, arg)            \
   VISIT(SyntaxTree, receiver,  Receiver,  arg)                       \
   VISIT(String,     name,      Name,      arg)                       \
   VISIT(Arguments,  arguments, Arguments, arg)                       \
@@ -172,7 +172,7 @@ DEFINE_REF_CLASS(Parameters);
 
 class InstantiateExpression : public SyntaxTree {
 public:
-  FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eInstantiateExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kReceiverOffset  = SyntaxTree::kHeaderSize;
   static const uword kNameOffset      = kReceiverOffset + kPointerSize;
@@ -184,7 +184,7 @@ public:
 template <>
 class ref_traits<InstantiateExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_INSTANTIATE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eInstantiateExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(InstantiateExpression);
@@ -194,13 +194,13 @@ DEFINE_REF_CLASS(InstantiateExpression);
 // --- R a i s e   E x p r e s s i o n ---
 // ---------------------------------------
 
-#define FOR_EACH_RAISE_EXPRESSION_FIELD(VISIT, arg)                  \
+#define eRaiseExpressionFields(VISIT, arg)                  \
   VISIT(String,     name,      Name,      arg)                       \
   VISIT(Arguments,  arguments, Arguments, arg)
 
 class RaiseExpression : public SyntaxTree {
 public:
-  FOR_EACH_RAISE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eRaiseExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kNameOffset = SyntaxTree::kHeaderSize;
   static const uword kArgumentsOffset = kNameOffset + kPointerSize;
@@ -210,7 +210,7 @@ public:
 template <>
 class ref_traits<RaiseExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_RAISE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eRaiseExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(RaiseExpression);
@@ -220,13 +220,13 @@ DEFINE_REF_CLASS(RaiseExpression);
 // --- O n   C l a u s e ---
 // -------------------------
 
-#define FOR_EACH_ON_CLAUSE_FIELD(VISIT, arg)                         \
+#define eOnClauseFields(VISIT, arg)                         \
   VISIT(String,           name,   Name,   arg)                       \
   VISIT(LambdaExpression, lambda, Lambda, arg)
 
 class OnClause : public SyntaxTree {
 public:
-  FOR_EACH_ON_CLAUSE_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eOnClauseFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kNameOffset = SyntaxTree::kHeaderSize;
   static const uword kLambdaOffset = kNameOffset + kPointerSize;
@@ -236,7 +236,7 @@ public:
 template <>
 class ref_traits<OnClause> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_ON_CLAUSE_FIELD(DECLARE_REF_FIELD, 0)
+  eOnClauseFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(OnClause);
@@ -246,13 +246,13 @@ DEFINE_REF_CLASS(OnClause);
 // --- D o   O n   E x p r e s s i o n ---
 // ---------------------------------------
 
-#define FOR_EACH_DO_ON_EXPRESSION_FIELD(VISIT, arg)                  \
+#define eDoOnExpressionFields(VISIT, arg)                  \
   VISIT(SyntaxTree, value,   Value,   arg)                           \
   VISIT(Tuple,      clauses, Clauses, arg)
 
 class DoOnExpression : public SyntaxTree {
 public:
-  FOR_EACH_DO_ON_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eDoOnExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kClausesOffset = kValueOffset + kPointerSize;
@@ -262,7 +262,7 @@ public:
 template <>
 class ref_traits<DoOnExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_DO_ON_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eDoOnExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(DoOnExpression);
@@ -272,14 +272,14 @@ DEFINE_REF_CLASS(DoOnExpression);
 // --- C a l l   E x p r e s s i o n ---
 // -------------------------------------
 
-#define FOR_EACH_CALL_EXPRESSION_FIELD(VISIT, arg)                   \
+#define eCallExpressionFields(VISIT, arg)                   \
   VISIT(SyntaxTree, receiver,  Receiver,  arg)                       \
   VISIT(SyntaxTree, function,  Function,  arg)                       \
   VISIT(Arguments,  arguments, Arguments, arg)
 
 class CallExpression : public SyntaxTree {
 public:
-  FOR_EACH_CALL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eCallExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kReceiverOffset = SyntaxTree::kHeaderSize;
   static const uword kFunctionOffset = kReceiverOffset + kPointerSize;
@@ -290,7 +290,7 @@ public:
 template <>
 class ref_traits<CallExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_CALL_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eCallExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(CallExpression);
@@ -300,14 +300,14 @@ DEFINE_REF_CLASS(CallExpression);
 // --- C o n d i t i o n a l   E x p r e s s i o n ---
 // ---------------------------------------------------
 
-#define FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(VISIT, arg)            \
+#define eConditionalExpressionFields(VISIT, arg)            \
   VISIT(SyntaxTree, condition, Condition, arg)                       \
   VISIT(SyntaxTree, then_part, ThenPart,  arg)                       \
   VISIT(SyntaxTree, else_part, ElsePart,  arg)
 
 class ConditionalExpression : public SyntaxTree {
 public:
-  FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eConditionalExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kConditionOffset = SyntaxTree::kHeaderSize;
   static const uword kThenPartOffset = kConditionOffset + kPointerSize;
@@ -318,7 +318,7 @@ public:
 template <>
 class ref_traits<ConditionalExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_CONDITIONAL_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eConditionalExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(ConditionalExpression);
@@ -328,13 +328,13 @@ DEFINE_REF_CLASS(ConditionalExpression);
 // --- W h i l e   E x p r e s s i o n ---
 // ---------------------------------------
 
-#define FOR_EACH_WHILE_EXPRESSION_FIELD(VISIT, arg)                  \
+#define eWhileExpressionFields(VISIT, arg)                  \
   VISIT(SyntaxTree, condition, Condition,  arg)                      \
   VISIT(SyntaxTree, body,      Body,  arg)
 
 class WhileExpression : public SyntaxTree {
 public:
-  FOR_EACH_WHILE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eWhileExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kConditionOffset = SyntaxTree::kHeaderSize;
   static const uword kBodyOffset      = kConditionOffset + kPointerSize;
@@ -344,7 +344,7 @@ public:
 template <>
 class ref_traits<WhileExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_WHILE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eWhileExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(WhileExpression);
@@ -354,14 +354,14 @@ DEFINE_REF_CLASS(WhileExpression);
 // --- C l a s s   E x p r e s s i o n ---
 // ---------------------------------------
 
-#define FOR_EACH_PROTOCOL_EXPRESSION_FIELD(VISIT, arg)               \
+#define eProtocolExpressionFields(VISIT, arg)               \
   VISIT(String, name,    Name,    arg)                               \
   VISIT(Tuple,  methods, Methods, arg)                               \
   VISIT(Value,  super,   Super,   arg)
 
 class ProtocolExpression : public SyntaxTree {
 public:
-  FOR_EACH_PROTOCOL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eProtocolExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kNameOffset = SyntaxTree::kHeaderSize;
   static const uword kMethodsOffset = kNameOffset + kPointerSize;
@@ -372,7 +372,7 @@ public:
 template <>
 class ref_traits<ProtocolExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_PROTOCOL_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eProtocolExpressionFields(DECLARE_REF_FIELD, 0)
   ref<Protocol> compile(Runtime &runtime, ref<Context> context);
 };
 
@@ -383,12 +383,12 @@ DEFINE_REF_CLASS(ProtocolExpression);
 // --- R e t u r n   E x p r e s s i o n ---
 // -----------------------------------------
 
-#define FOR_EACH_RETURN_EXPRESSION_FIELD(VISIT, arg)                 \
+#define eReturnExpressionFields(VISIT, arg)                 \
   VISIT(SyntaxTree, value, Value, arg)
 
 class ReturnExpression : public SyntaxTree {
 public:
-  FOR_EACH_RETURN_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eReturnExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kValueOffset + kPointerSize;
@@ -397,7 +397,7 @@ public:
 template <>
 class ref_traits<ReturnExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_RETURN_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eReturnExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(ReturnExpression);
@@ -407,12 +407,12 @@ DEFINE_REF_CLASS(ReturnExpression);
 // --- Y i e l d   E x p r e s s i o n ---
 // ---------------------------------------
 
-#define FOR_EACH_YIELD_EXPRESSION_FIELD(VISIT, arg)                 \
+#define eYieldExpressionFields(VISIT, arg)                 \
   VISIT(SyntaxTree, value, Value, arg)
 
 class YieldExpression : public SyntaxTree {
 public:
-  FOR_EACH_YIELD_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eYieldExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kValueOffset + kPointerSize;
@@ -421,7 +421,7 @@ public:
 template <>
 class ref_traits<YieldExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_YIELD_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eYieldExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(YieldExpression);
@@ -431,14 +431,14 @@ DEFINE_REF_CLASS(YieldExpression);
 // --- M e t h o d   E x p r e s s i o n ---
 // -----------------------------------------
 
-#define FOR_EACH_METHOD_EXPRESSION_FIELD(VISIT, arg)                 \
+#define eMethodExpressionFields(VISIT, arg)                 \
   VISIT(Selector,         selector,  Selector, arg)                  \
   VISIT(LambdaExpression, lambda,    Lambda,   arg)                  \
   VISIT(Bool,             is_static, IsStatic, arg)
 
 class MethodExpression : public SyntaxTree {
 public:
-  FOR_EACH_METHOD_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eMethodExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kSelectorOffset = SyntaxTree::kHeaderSize;
   static const uword kLambdaOffset   = kSelectorOffset + kPointerSize;
@@ -449,7 +449,7 @@ public:
 template <>
 class ref_traits<MethodExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_METHOD_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eMethodExpressionFields(DECLARE_REF_FIELD, 0)
   ref<Method> compile(Runtime &runtime, ref<Context> context);
 };
 
@@ -460,12 +460,12 @@ DEFINE_REF_CLASS(MethodExpression);
 // --- S e q u e n c e   E x p r e s s i o n ---
 // ---------------------------------------------
 
-#define FOR_EACH_SEQUENCE_EXPRESSION_FIELD(VISIT, arg)               \
+#define eSequenceExpressionFields(VISIT, arg)               \
   VISIT(Tuple, expressions, Expressions, arg)
 
 class SequenceExpression : public SyntaxTree {
 public:
-  FOR_EACH_SEQUENCE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eSequenceExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kExpressionsOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kExpressionsOffset + kPointerSize;
@@ -474,7 +474,7 @@ public:
 template <>
 class ref_traits<SequenceExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_SEQUENCE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eSequenceExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(SequenceExpression);
@@ -484,12 +484,12 @@ DEFINE_REF_CLASS(SequenceExpression);
 // --- T u p l e   E x p r e s s i o n ---
 // ---------------------------------------
 
-#define FOR_EACH_TUPLE_EXPRESSION_FIELD(VISIT, arg)                  \
+#define eTupleExpressionFields(VISIT, arg)                  \
   VISIT(Tuple, values, Values, arg)
 
 class TupleExpression : public SyntaxTree {
 public:
-  FOR_EACH_TUPLE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eTupleExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kValuesOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kValuesOffset + kPointerSize;
@@ -498,7 +498,7 @@ public:
 template <>
 class ref_traits<TupleExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_TUPLE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eTupleExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(TupleExpression);
@@ -508,12 +508,12 @@ DEFINE_REF_CLASS(TupleExpression);
 // --- G l o b a l   E x p r e s s i o n ---
 // -----------------------------------------
 
-#define FOR_EACH_GLOBAL_EXPRESSION_FIELD(VISIT, arg)                 \
+#define eGlobalExpressionFields(VISIT, arg)                 \
   VISIT(String, name, Name, arg)
 
 class GlobalExpression : public SyntaxTree {
 public:
-  FOR_EACH_GLOBAL_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eGlobalExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kNameOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kNameOffset + kPointerSize;
@@ -522,7 +522,7 @@ public:
 template <>
 class ref_traits<GlobalExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_GLOBAL_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eGlobalExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(GlobalExpression);
@@ -532,12 +532,12 @@ DEFINE_REF_CLASS(GlobalExpression);
 // --- S y m b o l ---
 // -------------------
 
-#define FOR_EACH_SYMBOL_FIELD(VISIT, arg)                            \
+#define eSymbolFields(VISIT, arg)                            \
   VISIT(Value, name, Name, arg)
 
 class Symbol : public SyntaxTree {
 public:
-  FOR_EACH_SYMBOL_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eSymbolFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kNameOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kNameOffset + kPointerSize;
@@ -546,7 +546,7 @@ public:
 template <>
 class ref_traits<Symbol> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_SYMBOL_FIELD(DECLARE_REF_FIELD, 0)
+  eSymbolFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(Symbol);
@@ -556,13 +556,13 @@ DEFINE_REF_CLASS(Symbol);
 // --- Q u o t e   E x p r e s s i o n ---
 // ---------------------------------------
 
-#define FOR_EACH_QUOTE_EXPRESSION_FIELD(VISIT, arg)                  \
+#define eQuoteExpressionFields(VISIT, arg)                  \
   VISIT(SyntaxTree, value,    Value,    arg)                         \
   VISIT(Tuple,      unquotes, Unquotes, arg)
 
 class QuoteExpression : public SyntaxTree {
 public:
-  FOR_EACH_QUOTE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eQuoteExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kUnquotesOffset = kValueOffset + kPointerSize;
@@ -572,7 +572,7 @@ public:
 template <>
 class ref_traits<QuoteExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_QUOTE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eQuoteExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(QuoteExpression);
@@ -600,13 +600,13 @@ DEFINE_REF_CLASS(UnquoteExpression);
 // --- L a m b d a   E x p r e s s i o n ---
 // -----------------------------------------
 
-#define FOR_EACH_LAMBDA_EXPRESSION_FIELD(VISIT, arg)                 \
+#define eLambdaExpressionFields(VISIT, arg)                 \
   VISIT(Parameters, parameters, Parameters, arg)                     \
   VISIT(SyntaxTree, body,       Body,       arg)
 
 class LambdaExpression : public SyntaxTree {
 public:
-  FOR_EACH_LAMBDA_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eLambdaExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kParametersOffset = SyntaxTree::kHeaderSize;
   static const uword kBodyOffset       = kParametersOffset + kPointerSize;
@@ -616,7 +616,7 @@ public:
 template <>
 class ref_traits<LambdaExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_LAMBDA_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eLambdaExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(LambdaExpression);
@@ -626,12 +626,12 @@ DEFINE_REF_CLASS(LambdaExpression);
 // --- T a s k   E x p r e s s i o n ---
 // -------------------------------------
 
-#define FOR_EACH_TASK_EXPRESSION_FIELD(VISIT, arg)                   \
+#define eTaskExpressionFields(VISIT, arg)                   \
   VISIT(LambdaExpression, lambda, Lambda, arg)
 
 class TaskExpression : public SyntaxTree {
 public:
-  FOR_EACH_TASK_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eTaskExpressionFields(DECLARE_OBJECT_FIELD, 0)
   
   static const uword kLambdaOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kLambdaOffset + kPointerSize;
@@ -640,7 +640,7 @@ public:
 template <>
 class ref_traits<TaskExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_TASK_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eTaskExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(TaskExpression);
@@ -650,7 +650,7 @@ DEFINE_REF_CLASS(TaskExpression);
 // --- T h i s   E x p r e s s i o n ---
 // -------------------------------------
 
-#define FOR_EACH_THIS_EXPRESSION_FIELD(VISIT, arg)
+#define eThisExpressionFields(VISIT, arg)
 
 class ThisExpression : public SyntaxTree {
 public:
@@ -662,12 +662,12 @@ public:
 // --- S u p e r   E x p r e s s i o n ---
 // ---------------------------------------
 
-#define FOR_EACH_SUPER_EXPRESSION_FIELD(VISIT, arg)                  \
+#define eSuperExpressionFields(VISIT, arg)                  \
   VISIT(SyntaxTree, value, Value, arg)
 
 class SuperExpression : public SyntaxTree {
 public:
-  FOR_EACH_SUPER_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eSuperExpressionFields(DECLARE_OBJECT_FIELD, 0)
   
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kSize        = kValueOffset + kPointerSize;
@@ -676,7 +676,7 @@ public:
 template <>
 class ref_traits<SuperExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_SUPER_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eSuperExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(SuperExpression);
@@ -686,12 +686,12 @@ DEFINE_REF_CLASS(SuperExpression);
 // --- I n t e r p o l a t e   E x p r e s s i o n ---
 // ---------------------------------------------------
 
-#define FOR_EACH_INTERPOLATE_EXPRESSION_FIELD(VISIT, arg)            \
+#define eInterpolateExpressionFields(VISIT, arg)            \
   VISIT(Tuple, terms, Terms, arg)
 
 class InterpolateExpression : public SyntaxTree {
 public:
-  FOR_EACH_INTERPOLATE_EXPRESSION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eInterpolateExpressionFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kTermsOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kTermsOffset + kPointerSize;
@@ -700,7 +700,7 @@ public:
 template <>
 class ref_traits<InterpolateExpression> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_INTERPOLATE_EXPRESSION_FIELD(DECLARE_REF_FIELD, 0)
+  eInterpolateExpressionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(InterpolateExpression);
@@ -710,7 +710,7 @@ DEFINE_REF_CLASS(InterpolateExpression);
 // --- B u i l t i n   C a l l ---
 // -------------------------------
 
-#define FOR_EACH_BUILTIN_CALL_FIELD(VISIT, arg)
+#define eBuiltinCallFields(VISIT, arg)
 
 class BuiltinCall : public SyntaxTree {
 public:
@@ -736,7 +736,7 @@ DEFINE_REF_CLASS(BuiltinCall);
 // --- L o c a l   D e f i n i t i o n ---
 // ---------------------------------------
 
-#define FOR_EACH_LOCAL_DEFINITION_FIELD(VISIT, arg)                  \
+#define eLocalDefinitionFields(VISIT, arg)                  \
   VISIT(Symbol,     symbol, Symbol, arg)                             \
   VISIT(SyntaxTree, value,  Value,  arg)                             \
   VISIT(SyntaxTree, body,   Body,   arg)                             \
@@ -744,7 +744,7 @@ DEFINE_REF_CLASS(BuiltinCall);
 
 class LocalDefinition : public SyntaxTree {
 public:
-  FOR_EACH_LOCAL_DEFINITION_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eLocalDefinitionFields(DECLARE_OBJECT_FIELD, 0)
   
   enum Type {
     ldDef = 1,
@@ -763,7 +763,7 @@ public:
 template <>
 class ref_traits<LocalDefinition> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_LOCAL_DEFINITION_FIELD(DECLARE_REF_FIELD, 0)
+  eLocalDefinitionFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(LocalDefinition);
@@ -773,13 +773,13 @@ DEFINE_REF_CLASS(LocalDefinition);
 // --- A s s i g n m e n t ---
 // ---------------------------
 
-#define FOR_EACH_ASSIGNMENT_FIELD(VISIT, arg)                        \
+#define eAssignmentFields(VISIT, arg)                        \
   VISIT(Symbol,     symbol, Symbol, arg)                             \
   VISIT(SyntaxTree, value,  Value,  arg)
 
 class Assignment : public SyntaxTree {
 public:
-  FOR_EACH_ASSIGNMENT_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eAssignmentFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kSymbolOffset = SyntaxTree::kHeaderSize;
   static const uword kValueOffset = kSymbolOffset + kPointerSize;
@@ -789,7 +789,7 @@ public:
 template <>
 class ref_traits<Assignment> : public ref_traits<SyntaxTree> {
 public:
-  FOR_EACH_ASSIGNMENT_FIELD(DECLARE_REF_FIELD, 0)
+  eAssignmentFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(Assignment);
@@ -815,9 +815,9 @@ public:
   Visitor(RefStack &refs) : quote_scope_(NULL), refs_(refs) { }
   ~Visitor();
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
-#define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
+#define MAKE_VISIT_METHOD(n, Name, name)                             \
   virtual void visit_##name(ref<Name> that);
-FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
+eSyntaxTreeTypes(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
   inline ref<QuoteTemplate> current_quote();
   void set_quote_scope(QuoteTemplateScope *scope) { quote_scope_ = scope; }

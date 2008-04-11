@@ -133,7 +133,7 @@ class OpcodeInfo { };
     static const uword kArgc = argc;                                 \
     static const uword kSize = argc + 1;                             \
   };
-FOR_EACH_OPCODE(DECLARE_OPCODE_INFO)
+eOpcodes(DECLARE_OPCODE_INFO)
 #undef DECLARE_OPCODE_INFO
 
 } // namespace neutrino

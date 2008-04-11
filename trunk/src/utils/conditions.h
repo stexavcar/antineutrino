@@ -5,7 +5,7 @@
 
 namespace neutrino {
 
-#define FOR_EACH_CONDITION(VISIT)                                    \
+#define eConditions(VISIT)                                           \
   VISIT(Unknown)         VISIT(OutOfBounds)   VISIT(NoRefScope)      \
   VISIT(CastError)       VISIT(Validation)    VISIT(Disallowed)      \
   VISIT(ForwarderState)
@@ -13,7 +13,7 @@ namespace neutrino {
 enum Condition {
   cnNoProblem = 0
 #define DECLARE_ENUM(Name) , cn##Name
-FOR_EACH_CONDITION(DECLARE_ENUM)
+eConditions(DECLARE_ENUM)
 #undef DECLARE_ENUM
 };
 

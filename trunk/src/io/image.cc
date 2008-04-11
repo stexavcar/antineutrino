@@ -61,7 +61,7 @@ void ImageLoadStatus::invalid_version(uword found) {
 
 MAKE_ENUM_INFO_HEADER(ImageLoadStatus::Status)
 #define MAKE_ENTRY(Name) MAKE_ENUM_INFO_ENTRY(ImageLoadStatus::ls##Name)
-FOR_EACH_IMAGE_LOAD_STATUS(MAKE_ENTRY)
+eImageLoadStatuses(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
@@ -185,13 +185,13 @@ void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
     case tRoot: {
       break;
     }
-#define MAKE_CASE(n, NAME, Name, name)                               \
+#define MAKE_CASE(n, Name, name)                                     \
     case t##Name: {                                                  \
       Name *heap_obj = cast<Name>(heap.allocate_##name());           \
       obj->point_forward(heap_obj);                                  \
       break;                                                         \
     }
-FOR_EACH_BOILERPLATE_SHALLOW_COPY(MAKE_CASE)
+eBoilerplateShallowCopy(MAKE_CASE)
 #undef MAKE_CASE
     default:
       UNHANDLED(InstanceType, type);
@@ -253,16 +253,16 @@ void Image::fixup_shallow_object(FObject *obj, ImageContext &info) {
     case tString: case tCode: case tRoot:
       // Nothing to fix
       break;
-#define MAKE_CASE(n, NAME, Name, name)                               \
+#define MAKE_CASE(n, Name, name)                                     \
     case t##Name: {                                                  \
       F##Name *img = image_cast<F##Name>(obj, info, #Name);          \
       if (info.has_error()) return;                                  \
       Name *heap_obj = cast<Name>(img->forward_pointer());           \
       USE(heap_obj);                                                 \
-      FOR_EACH_##NAME##_FIELD(TRANSFER_FIELD, Name)                  \
+      e##Name##Fields(TRANSFER_FIELD, Name)                          \
       break;                                                         \
     }
-FOR_EACH_BOILERPLATE_FIXUP_SHALLOW(MAKE_CASE)
+eBoilerplateFixupShallow(MAKE_CASE)
 #undef MAKE_CASE
 #undef TRANSFER_FIELD
     default:
@@ -305,9 +305,8 @@ void FObject::type_info(TypeInfo *result) {
 uword FObject::size_in_image() {
   uword type = this->type();
   switch (type) {
-#define MAKE_CASE(n, NAME, Name, name)                               \
-    case t##Name: return F##Name##_Size;
-FOR_EACH_BOILERPLATE_SIZE_IN_IMAGE(MAKE_CASE)
+#define MAKE_CASE(n, Name, name) case t##Name: return F##Name##_Size;
+eBoilerplateSizeInImage(MAKE_CASE)
 #undef MAKE_CASE
     case tString:
       return image_raw_cast<FString>(this)->string_size_in_image();

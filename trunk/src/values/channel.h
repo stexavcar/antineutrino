@@ -12,14 +12,14 @@ namespace neutrino {
 // --- C h a n n e l ---
 // ---------------------
 
-#define FOR_EACH_CHANNEL_FIELD(VISIT, arg)                           \
+#define eChannelFields(VISIT, arg)                           \
   VISIT(String, name,         Name,        arg)                      \
   VISIT(Bool,   is_connected, IsConnected, arg)
 
 class Channel : public Object {
 public:
   DECLARE_FIELD(void*, proxy);
-  FOR_EACH_CHANNEL_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eChannelFields(DECLARE_OBJECT_FIELD, 0)
   
   Data *send(Runtime &runtime, Immediate *message);
   IExternalChannel *ensure_proxy(Runtime &runtime);
@@ -32,7 +32,7 @@ public:
 
 template <> class ref_traits<Channel> : public ref_traits<Object> {
 public:
-  FOR_EACH_CHANNEL_FIELD(DECLARE_REF_FIELD, 0)
+  eChannelFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(Channel);

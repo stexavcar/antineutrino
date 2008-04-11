@@ -11,7 +11,7 @@ namespace neutrino {
 
 MAKE_ENUM_INFO_HEADER(Opcode)
 #define MAKE_ENTRY(n, Name, argc) MAKE_ENUM_INFO_ENTRY(oc##Name)
-FOR_EACH_OPCODE(MAKE_ENTRY)
+eOpcodes(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 

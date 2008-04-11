@@ -23,12 +23,12 @@ namespace neutrino {
  */
 template <class C> class ValueInfo { };
 
-#define SPECIALIZE_VALUE_INFO(n, NAME, Name, info)                   \
+#define SPECIALIZE_VALUE_INFO(n, Name, info)                         \
 template <> class ValueInfo<Name> {                                  \
 public:                                                              \
   static const InstanceType kTag = t##Name;                          \
 };
-FOR_EACH_DECLARED_TYPE(SPECIALIZE_VALUE_INFO)
+eDeclaredTypes(SPECIALIZE_VALUE_INFO)
 #undef SPECIALIZE_VALUE_INFO
 
 
@@ -90,20 +90,20 @@ template <>
 inline bool is<SyntaxTree>(Data *val) {
   if (!is<Object>(val)) return false;
   switch (cast<Object>(val)->type()) {
-#define MAKE_CASE(n, NAME, Name, info) case t##Name: return true;
-FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
+#define MAKE_CASE(n, Name, info) case t##Name: return true;
+eSyntaxTreeTypes(MAKE_CASE)
 #undef MAKE_CASE
     default: return false;
   }
 }
 
-#define DEFINE_QUERY(n, NAME, Name, info)                            \
+#define DEFINE_QUERY(n, Name, info)                                  \
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
     return is<Object>(val)                                           \
         && cast<Object>(val)->layout()->instance_type() == t##Name;  \
   }
-FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
+eObjectTypes(DEFINE_QUERY)
 #undef DEFINE_QUERY
 
 #ifdef DEBUG
@@ -132,20 +132,20 @@ template <>
 inline bool gc_safe_is<SyntaxTree>(Data *val) {
   if (!gc_safe_is<Object>(val)) return false;
   switch (gc_safe_cast<Object>(val)->gc_safe_type()) {
-#define MAKE_CASE(n, NAME, Name, info) case t##Name: return true;
-FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
+#define MAKE_CASE(n, Name, info) case t##Name: return true;
+eSyntaxTreeTypes(MAKE_CASE)
 #undef MAKE_CASE
     default: return false;
   }
 }
 
-#define DEFINE_QUERY(n, NAME, Name, info)                            \
+#define DEFINE_QUERY(n, Name, info)                                  \
   template <>                                                        \
   inline bool gc_safe_is<Name>(Data *val) {                          \
     return is<Object>(val)                                           \
         && cast<Object>(val)->gc_safe_layout()->instance_type() == t##Name; \
   }
-FOR_EACH_OBJECT_TYPE(DEFINE_QUERY)
+eObjectTypes(DEFINE_QUERY)
 #undef DEFINE_QUERY
 
 #endif
@@ -190,13 +190,13 @@ inline bool is<ForwardPointer>(Data *val) {
   return ValuePointer::has_signal_tag(val);
 }
 
-#define DEFINE_SIGNAL_QUERY(n, NAME, Name, info)                     \
+#define DEFINE_SIGNAL_QUERY(n, Name, info)                           \
   template <>                                                        \
   inline bool is<Name>(Data *val) {                                  \
     return is<Signal>(val)                                           \
         && cast<Signal>(val)->type() == Signal::s##Name;             \
   }
-FOR_EACH_SIGNAL_TYPE(DEFINE_SIGNAL_QUERY)
+eSignalTypes(DEFINE_SIGNAL_QUERY)
 #undef DEFINE_SIGNAL_QUERY
 
 
@@ -217,12 +217,12 @@ template <class C> Data *convert_object(Value *obj) {
   }
 }
 
-#define DEFINE_CONVERTER(n, NAME, Name, info)                        \
+#define DEFINE_CONVERTER(n, Name, info)                              \
   template <>                                                        \
   inline Data *to<Name>(Value *val) {                                \
     return is<Name>(val) ? val : convert_object<Name>(val);          \
   }
-FOR_EACH_DECLARED_TYPE(DEFINE_CONVERTER)
+eDeclaredTypes(DEFINE_CONVERTER)
 #undef DEFINE_CONVERTER
 
 // All values can be converted to immediates so to<Immediate> can't
@@ -295,9 +295,9 @@ void Class::set_##name(T value) {                                    \
   DEFINE_SETTER(T*, Class, name, Name)                               \
   DEFINE_REF_GETTER(T, Class, name)
 
-#define DEFINE_ALL_ACCESSORS(n, NAME, Name, name)                    \
-  FOR_EACH_##NAME##_FIELD(DEFINE_FIELD_ACCESSORS, Name)
-FOR_EACH_BOILERPLATE_ACCESSORS(DEFINE_ALL_ACCESSORS)
+#define DEFINE_ALL_ACCESSORS(n, Name, name)                          \
+  e##Name##Fields(DEFINE_FIELD_ACCESSORS, Name)
+eBoilerplateAccessors(DEFINE_ALL_ACCESSORS)
 #undef DEFINE_ALL_ACCESSORS
 
 

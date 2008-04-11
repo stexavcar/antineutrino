@@ -45,7 +45,7 @@ void Test::to_string() {
 void Test::roots() {
   switch (0) {
 #define DECLARE_ROOT_CASE(n, Type, name, Name, allocator) case n:
-FOR_EACH_ROOT(DECLARE_ROOT_CASE)
+eRoots(DECLARE_ROOT_CASE)
 #undef DECLARE_ROOT_CASE
     return;
   }

@@ -20,7 +20,7 @@ STATIC_CHECK(sizeof(__u64) == 8);
 
 namespace neutrino {
 
-#define FOR_EACH_SIGNAL(VISIT)                                       \
+#define eSignals(VISIT)                                              \
   VISIT(SIGHUP,    "terminal line hangup")                           \
   VISIT(SIGINT,    "interrupt program")                              \
   VISIT(SIGQUIT,   "quit program")                                   \
@@ -51,7 +51,7 @@ namespace neutrino {
   VISIT(SIGUSR1,   "User defined signal 1")                          \
   VISIT(SIGUSR2,   "User defined signal 2")
 
-#define FOR_EACH_SIGNAL_CODE(VISIT)                                  \
+#define eSignalCodes(VISIT)                                          \
   VISIT(0,       SI_USER,     "User signal")                         \
   VISIT(SIGILL,  ILL_ILLOPC,  "Illegal opcode")                      \
   VISIT(SIGILL,  ILL_ILLOPN,  "Illegal operand")                     \

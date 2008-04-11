@@ -12,8 +12,8 @@ namespace neutrino {
 uword Layout::tag_of(Data *value) {
   if (is<Signal>(value)) {
     switch (cast<Signal>(value)->type()) {
-#define MAKE_SIGNAL_TYPE_CASE(n, NAME, Name, info) case Signal::s##Name: return t##Name;
-FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
+#define MAKE_SIGNAL_TYPE_CASE(n, Name, info) case Signal::s##Name: return t##Name;
+eSignalTypes(MAKE_SIGNAL_TYPE_CASE)
 #undef MAKE_SIGNAL_TYPE_CASE
       default: UNREACHABLE(); return tSignal;
     }
@@ -24,8 +24,8 @@ FOR_EACH_SIGNAL_TYPE(MAKE_SIGNAL_TYPE_CASE)
 
 const char *Layout::tag_name(uword tag) {
   switch (tag) {
-#define MAKE_TYPE_CASE(n, NAME, Name, info) case t##Name: return #NAME;
-FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
+#define MAKE_TYPE_CASE(n, Name, info) case t##Name: return #Name;
+eDeclaredTypes(MAKE_TYPE_CASE)
 #undef MAKE_TYPE_CASE
     default: return "<illegal>";
   }
@@ -34,21 +34,21 @@ FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
 #endif // DEBUG
 
 MAKE_ENUM_INFO_HEADER(InstanceType)
-#define MAKE_ENTRY(n, NAME, Name, info) MAKE_ENUM_INFO_ENTRY(t##Name)
-FOR_EACH_DECLARED_TYPE(MAKE_ENTRY)
+#define MAKE_ENTRY(n, Name, info) MAKE_ENUM_INFO_ENTRY(t##Name)
+eDeclaredTypes(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
 MAKE_ENUM_INFO_HEADER(Signal::Type)
-#define MAKE_ENTRY(n, NAME, Name, info) MAKE_ENUM_INFO_ENTRY(Signal::s##Name)
-FOR_EACH_SIGNAL_TYPE(MAKE_ENTRY)
+#define MAKE_ENTRY(n, Name, info) MAKE_ENUM_INFO_ENTRY(Signal::s##Name)
+eSignalTypes(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
 const char *Layout::layout_name(uword tag) {
   switch (tag) {
-#define MAKE_TYPE_CASE(n, NAME, Name, info) case t##Name: return #Name;
-FOR_EACH_DECLARED_TYPE(MAKE_TYPE_CASE)
+#define MAKE_TYPE_CASE(n, Name, info) case t##Name: return #Name;
+eDeclaredTypes(MAKE_TYPE_CASE)
 #undef MAKE_TYPE_CASE
     default: return "<illegal>";
   }
@@ -201,8 +201,8 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
   case tInstance:
     write_instance_short_on(cast<Instance>(obj), buf);
     break;
-#define MAKE_CASE(n, NAME, Name, info) case t##Name:
-FOR_EACH_SYNTAX_TREE_TYPE(MAKE_CASE)
+#define MAKE_CASE(n, Name, info) case t##Name:
+eSyntaxTreeTypes(MAKE_CASE)
 #undef MAKE_CASE
     write_syntax_tree_on(cast<SyntaxTree>(obj), buf);
     break;
@@ -464,8 +464,8 @@ uword Object::size_in_memory() {
     return Instance::size_for(cast<Instance>(this)->layout()->instance_field_count());
   case tCode: case tBuffer:
     return AbstractBuffer::size_for(cast<AbstractBuffer>(this)->size<uint8_t>());
-#define MAKE_CASE(n, NAME, Name, name) case t##Name: return Name::kSize;
-FOR_EACH_BOILERPLATE_SIZE_IN_HEAP(MAKE_CASE)
+#define MAKE_CASE(n, Name, name) case t##Name: return Name::kSize;
+eBoilerplateSizeInHeap(MAKE_CASE)
 #undef MAKE_CASE
   default:
     UNHANDLED(InstanceType, instance_type);
@@ -512,7 +512,7 @@ static void validate_object(Object *obj) {
       cast<Stack>(obj)->validate_stack();
       break;
     case tLambda:
-      FOR_EACH_LAMBDA_FIELD(VALIDATE_FIELD, Lambda)
+      eLambdaFields(VALIDATE_FIELD, Lambda)
       if (!is<Smi>(cast<Lambda>(obj)->code())) {
         GC_SAFE_CHECK_IS_C(cnValidation, Code, cast<Lambda>(obj)->code());
         GC_SAFE_CHECK_IS_C(cnValidation, Tuple, cast<Lambda>(obj)->constant_pool());
@@ -522,11 +522,11 @@ static void validate_object(Object *obj) {
     case tString: case tVoid: case tTrue: case tFalse: case tNull:
     case tBuffer:
       break;
-#define MAKE_CASE(n, NAME, Name, name)                               \
+#define MAKE_CASE(n, Name, name)                                     \
     case t##Name:                                                    \
-      FOR_EACH_##NAME##_FIELD(VALIDATE_FIELD, Name);                 \
+      e##Name##Fields(VALIDATE_FIELD, Name);                         \
       break;
-FOR_EACH_BOILERPLATE_VALIDATE(MAKE_CASE)
+eBoilerplateValidate(MAKE_CASE)
 #undef MAKE_CASE
     default:
       UNHANDLED(InstanceType, type);
@@ -567,11 +567,11 @@ void Object::for_each_field(FieldVisitor &visitor) {
     case tInstance:
       cast<Instance>(this)->for_each_instance_field(visitor);
       break;
-#define MAKE_CASE(n, NAME, Name, name)                               \
+#define MAKE_CASE(n, Name, name)                                     \
     case t##Name:                                                    \
-      FOR_EACH_##NAME##_FIELD(VISIT_FIELD, Name);                    \
+      e##Name##Fields(VISIT_FIELD, Name);                            \
       break;
-FOR_EACH_BOILERPLATE_ITERATOR(MAKE_CASE)
+eBoilerplateIterator(MAKE_CASE)
 #undef MAKE_CASE
     default:
       UNHANDLED(InstanceType, type);

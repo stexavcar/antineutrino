@@ -121,11 +121,11 @@ Data *Heap::allocate_channel() {
 }
 
 
-#define MAKE_ALLOCATOR(n, NAME, Name, name)                          \
+#define MAKE_ALLOCATOR(n, Name, name)                                \
 Data *Heap::allocate_##name() {                                      \
   return allocate_object(Name::kSize, roots().name##_layout());      \
 }
-FOR_EACH_BOILERPLATE_ALLOCATOR(MAKE_ALLOCATOR)
+eBoilerplateAllocator(MAKE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
 
 

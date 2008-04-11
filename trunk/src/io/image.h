@@ -14,7 +14,7 @@ class ImageContext;
 
 #define DECLARE_IMAGE_OBJECT_CONST(n, Type, Const)                   \
   static const uword F##Type##_##Const = n;
-FOR_EACH_IMAGE_OBJECT_CONST(DECLARE_IMAGE_OBJECT_CONST)
+eImageObjectConsts(DECLARE_IMAGE_OBJECT_CONST)
 #undef DECLARE_IMAGE_OBJECT_CONST
 
 #define DECLARE_IMAGE_FIELD(Type, name)                              \
@@ -367,7 +367,7 @@ public:
   DECLARE_IMAGE_FIELD(Immediate, target);
 };
 
-#define FOR_EACH_IMAGE_LOAD_STATUS(VISIT)                            \
+#define eImageLoadStatuses(VISIT)                                    \
   VISIT(TypeMismatch) VISIT(Fine)          VISIT(InvalidImage)       \
   VISIT(RootCount)    VISIT(InvalidMagic)  VISIT(InvalidVersion)
 
@@ -377,7 +377,7 @@ struct ImageLoadStatus {
   enum Status { 
     __first_image_load_info_status
 #define MAKE_ENUM(Name) , ls##Name
-    FOR_EACH_IMAGE_LOAD_STATUS(MAKE_ENUM)
+eImageLoadStatuses(MAKE_ENUM)
 #undef MAKE_ENUM
   };
   

@@ -18,11 +18,11 @@ builtin *Builtins::get(uword index) {
   switch (index) {
 
 #define MAKE_CASE(n, type, name, str) case n: return &Builtins::type##_##name;
-FOR_EACH_BUILTIN_METHOD(MAKE_CASE)
+eBuiltinMethods(MAKE_CASE)
 #undef MAKE_CASE
 
 #define MAKE_CASE(n, name, str) case n: return &Builtins::name;
-FOR_EACH_PLAIN_BUILTIN_FUNCTION(MAKE_CASE)
+ePlainBuiltinFunctions(MAKE_CASE)
 #undef MAKE_CASE
 
     default:

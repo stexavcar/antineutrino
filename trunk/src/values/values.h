@@ -12,8 +12,8 @@ namespace neutrino {
 enum InstanceType {
   __illegal_instance_type = -1,
   __first_instance_type = 0
-#define DECLARE_INSTANCE_TYPE(n, NAME, Name, info) , t##Name = n
-FOR_EACH_DECLARED_TYPE(DECLARE_INSTANCE_TYPE)
+#define DECLARE_INSTANCE_TYPE(n, Name, info) , t##Name = n
+eDeclaredTypes(DECLARE_INSTANCE_TYPE)
 #undef DECLARE_INSTANCE_TYPE
 };
 
@@ -208,7 +208,7 @@ public:
   static inline Forwarder *to(ForwarderDescriptor *obj);
 };
 
-#define FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(VISIT, arg)              \
+#define eForwarderDescriptorFields(VISIT, arg)                       \
   VISIT(Value, target, Target, arg)
 
 class ForwarderDescriptor : public Object {
@@ -217,7 +217,7 @@ public:
   inline void set_type(Forwarder::Type value);
   inline void set_raw_type(Forwarder::Type value);
 
-  FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eForwarderDescriptorFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kTypeOffset   = Object::kHeaderSize;
   static const uword kTargetOffset = kTypeOffset + kPointerSize;
@@ -226,7 +226,7 @@ public:
 
 template <> class ref_traits<ForwarderDescriptor> : public ref_traits<Object> {
 public:
-  FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(DECLARE_REF_FIELD, 0)
+  eForwarderDescriptorFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(ForwarderDescriptor);
@@ -303,12 +303,12 @@ DEFINE_REF_CLASS(Stack);
 // --- T a s k ---
 // ---------------
 
-#define FOR_EACH_TASK_FIELD(VISIT, arg)                              \
+#define eTaskFields(VISIT, arg)                              \
   VISIT(Stack, stack, Stack, arg)
 
 class Task : public Object {
 public:
-  FOR_EACH_TASK_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eTaskFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kStackOffset = Object::kHeaderSize;
   static const uword kSize = kStackOffset + kPointerSize;
@@ -316,7 +316,7 @@ public:
 
 template <> class ref_traits<Task> : public ref_traits<Object> {
 public:
-  FOR_EACH_TASK_FIELD(DECLARE_REF_FIELD, 0)
+  eTaskFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(Task);
@@ -518,12 +518,12 @@ DEFINE_REF_CLASS(Array);
 // --- D i c t i o n a r y ---
 // ---------------------------
 
-#define FOR_EACH_DICTIONARY_FIELD(VISIT, arg)                        \
+#define eDictionaryFields(VISIT, arg)                        \
   VISIT(Tuple, table, Table, arg)
 
 class Dictionary : public Object {
 public:
-  FOR_EACH_DICTIONARY_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eDictionaryFields(DECLARE_OBJECT_FIELD, 0)
 
   uword size();
 
@@ -552,7 +552,7 @@ public:
 
 template <> class ref_traits<Dictionary> : public ref_traits<Object> {
 public:
-  FOR_EACH_DICTIONARY_FIELD(DECLARE_REF_FIELD, 0)
+  eDictionaryFields(DECLARE_REF_FIELD, 0)
   inline ref<Value> get(RefStack &refs, ref<Value> key);
   inline void set(Heap &heap, ref<Value> key, ref<Value> value);
   inline uword size();
@@ -565,7 +565,7 @@ DEFINE_REF_CLASS(Dictionary);
 // --- L a m b d a ---
 // -------------------
 
-#define FOR_EACH_LAMBDA_FIELD(VISIT, arg)                            \
+#define eLambdaFields(VISIT, arg)                            \
   VISIT(Value,      code,          Code,         arg)                \
   VISIT(Value,      constant_pool, ConstantPool, arg)                \
   VISIT(Value,      tree,          Tree,         arg)                \
@@ -575,7 +575,7 @@ DEFINE_REF_CLASS(Dictionary);
 class Lambda : public Object {
 public:
   DECLARE_FIELD(uword, argc);
-  FOR_EACH_LAMBDA_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eLambdaFields(DECLARE_OBJECT_FIELD, 0)
 
   Value *call(Runtime &runtime, Task *task);
   Data *clone(Heap &heap);
@@ -594,7 +594,7 @@ public:
 
 template <> class ref_traits<Lambda> : public ref_traits<Object> {
 public:
-  FOR_EACH_LAMBDA_FIELD(DECLARE_REF_FIELD, 0)
+  eLambdaFields(DECLARE_REF_FIELD, 0)
   void ensure_compiled(Runtime &runtime, ref<Method> holder);
 };
 
@@ -615,16 +615,16 @@ public:
   static const uword kSize = Singleton::kSize;
 };
 
-#define FOR_EACH_VOID_FIELD(VISIT, arg)
+#define eVoidFields(VISIT, arg)
 class Void : public Singleton { };
 
-#define FOR_EACH_NULL_FIELD(VISIT, arg)
+#define eNullFields(VISIT, arg)
 class Null : public Singleton { };
 
-#define FOR_EACH_TRUE_FIELD(VISIT, arg)
+#define eTrueFields(VISIT, arg)
 class True : public Bool { };
 
-#define FOR_EACH_FALSE_FIELD(VISIT, arg)
+#define eFalseFields(VISIT, arg)
 class False : public Bool { };
 
 
@@ -632,14 +632,14 @@ class False : public Bool { };
 // --- P r o t o c o l ---
 // -----------------------
 
-#define FOR_EACH_PROTOCOL_FIELD(VISIT, arg)                          \
+#define eProtocolFields(VISIT, arg)                          \
   VISIT(Immediate, name,    Name,    arg)                            \
   VISIT(Tuple,     methods, Methods, arg)                            \
   VISIT(Value,     super,   Super,   arg)
 
 class Protocol : public Object {
 public:
-  FOR_EACH_PROTOCOL_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eProtocolFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kNameOffset    = Object::kHeaderSize;
   static const uword kMethodsOffset = kNameOffset + kPointerSize;
@@ -649,7 +649,7 @@ public:
 
 template <> class ref_traits<Protocol> : public ref_traits<Object> {
 public:
-  FOR_EACH_PROTOCOL_FIELD(DECLARE_REF_FIELD, 0)
+  eProtocolFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(Protocol);
@@ -659,7 +659,7 @@ DEFINE_REF_CLASS(Protocol);
 // --- C l a s s ---
 // -----------------
 
-#define FOR_EACH_LAYOUT_FIELD(VISIT, arg)                            \
+#define eLayoutFields(VISIT, arg)                            \
   VISIT(Immediate, protocol, Protocol, arg)                          \
   VISIT(Tuple,     methods,  Methods,  arg)
 
@@ -667,7 +667,7 @@ class Layout : public Object {
 public:
   DECLARE_FIELD(InstanceType, instance_type);
   DECLARE_FIELD(uword, instance_field_count);
-  FOR_EACH_LAYOUT_FIELD(DECLARE_OBJECT_FIELD, 0)
+  eLayoutFields(DECLARE_OBJECT_FIELD, 0)
 
   bool is_empty();
   Data *clone(Heap &heap);
@@ -685,7 +685,7 @@ public:
 
 template <> class ref_traits<Layout> {
 public:
-  FOR_EACH_LAYOUT_FIELD(DECLARE_REF_FIELD, 0)
+  eLayoutFields(DECLARE_REF_FIELD, 0)
 };
 
 DEFINE_REF_CLASS(Layout);
@@ -705,8 +705,8 @@ public:
   inline uword payload();
   enum Type {
     FIRST_SIGNAL_TYPE = -1
-#define DECLARE_SIGNAL_TYPE(n, NAME, Name, info) , s##Name
-FOR_EACH_SIGNAL_TYPE(DECLARE_SIGNAL_TYPE)
+#define DECLARE_SIGNAL_TYPE(n, Name, info) , s##Name
+eSignalTypes(DECLARE_SIGNAL_TYPE)
 #undef DECLARE_SIGNAL_TYPE
   };
 };

@@ -103,13 +103,13 @@ public:
   void bind_forwarder();
   
 #define MAKE_CASE(n, name, str) void name();
-FOR_EACH_SPECIAL_BUILTIN_FUNCTION(MAKE_CASE)
+eSpecialBuiltinFunctions(MAKE_CASE)
 #undef MAKE_CASE
 
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
-#define MAKE_VISIT_METHOD(n, NAME, Name, name)                       \
+#define MAKE_VISIT_METHOD(n, Name, name)                             \
   virtual void visit_##name(ref<Name> that);
-FOR_EACH_SYNTAX_TREE_TYPE(MAKE_VISIT_METHOD)
+eSyntaxTreeTypes(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
 
   Factory &factory() { return runtime().factory(); }
@@ -426,24 +426,26 @@ void Assembler::bind_forwarder() {
 // --- S c o p e ---
 // -----------------
 
-#define FOR_EACH_CATEGORY(VISIT)                                     \
-  VISIT(MISSING)  VISIT(ARGUMENT) VISIT(LOCAL)    VISIT(OUTER)       \
-  VISIT(KEYWORD)
+#define eCategories(VISIT)                                           \
+  VISIT(Missing)  VISIT(Argument) VISIT(Local)    VISIT(Outer)       \
+  VISIT(Keyword)
 
 enum Category {
   __first_category
-#define MAKE_ENUM_ENTRY(NAME) , NAME
-FOR_EACH_CATEGORY(MAKE_ENUM_ENTRY)
+#define MAKE_ENUM_ENTRY(Name) , c##Name
+eCategories(MAKE_ENUM_ENTRY)
 #undef MAKE_ENUM_ENTRY
 };
 
 MAKE_ENUM_INFO_HEADER(Category)
-FOR_EACH_CATEGORY(MAKE_ENUM_INFO_ENTRY)
+#define MAKE_ENTRY(Name) MAKE_ENUM_INFO_ENTRY(c##Name)
+eCategories(MAKE_ENTRY)
+#undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
 struct Lookup {
   Lookup(Assembler &assm)
-      : category(MISSING)
+      : category(cMissing)
       , assembler(assm) { }
   Category category;
   Assembler &assembler;
@@ -509,11 +511,11 @@ void FunctionScope::lookup(ref<Symbol> symbol, Lookup &result) {
     if (symbol->equals(cast<Symbol>(entry))) {
       uword posc = params()->position_count()->value();
       if (i < posc) {
-        result.category = ARGUMENT;
+        result.category = cArgument;
         result.argument_info.index = symbols->length() - i - 1;
         return;
       } else {
-        result.category = KEYWORD;
+        result.category = cKeyword;
         result.keyword_info.index = i - posc;
         return;
       }
@@ -538,7 +540,7 @@ private:
 
 void LocalScope::lookup(ref<Symbol> name, Lookup &result) {
   if (name->equals(*symbol())) {
-    result.category = LOCAL;
+    result.category = cLocal;
     result.local_info.height = height();
   } else if (parent() != NULL) {
     return parent()->lookup(name, result);
@@ -561,12 +563,12 @@ private:
 void ClosureScope::lookup(ref<Symbol> symbol, Lookup &result) {
   for (uword i = 0; i < outers().length(); i++) {
     if (outers().get(i)->equals(*symbol)) {
-      result.category = OUTER;
+      result.category = cOuter;
       result.outer_info.index = i;
       return;
     }
   }
-  result.category = OUTER;
+  result.category = cOuter;
   result.outer_info.index = outers().length();
   outers().append(symbol);
 }
@@ -684,16 +686,16 @@ void Assembler::load_symbol(ref<Symbol> that) {
   Lookup lookup(*this);
   scope().lookup(that, lookup);
   switch (lookup.category) {
-    case ARGUMENT:
+    case cArgument:
       __ argument(lookup.argument_info.index);
       break;
-    case LOCAL:
+    case cLocal:
       __ load_local(lookup.local_info.height);
       break;
-    case OUTER:
+    case cOuter:
       __ outer(lookup.outer_info.index);
       break;
-    case KEYWORD:
+    case cKeyword:
       __ keyword(lookup.keyword_info.index);
       break;
     default:
@@ -705,7 +707,7 @@ void Assembler::store_symbol(ref<Symbol> that) {
   Lookup lookup(*this);
   scope().lookup(that, lookup);
   switch (lookup.category) {
-    case LOCAL:
+    case cLocal:
       __ store_local(lookup.local_info.height);
       break;
     default:
@@ -971,7 +973,7 @@ void Assembler::attach_task() {
 special_builtin Assembler::get_special(uword index) {
   switch (index) {
 #define MAKE_CASE(n, name, str) case n: return &Assembler::name;
-FOR_EACH_SPECIAL_BUILTIN_FUNCTION(MAKE_CASE)
+eSpecialBuiltinFunctions(MAKE_CASE)
 #undef MAKE_CASE
     default:
       return NULL;
