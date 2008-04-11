@@ -452,16 +452,6 @@ uword Object::size_in_memory() {
   switch (instance_type) {
   case tTrue: case tFalse: case tVoid: case tNull:
     return Singleton::kSize;
-  case tLambda:
-    return Lambda::kSize;
-  case tBuiltinCall:
-    return BuiltinCall::kSize;
-  case tLayout:
-    return Layout::kSize;
-  case tContext:
-    return Context::kSize;
-  case tChannel:
-    return Channel::kSize;
   case tTuple:
     return Tuple::size_for(cast<Tuple>(this)->length());
   case tArray:
@@ -475,7 +465,7 @@ uword Object::size_in_memory() {
   case tCode: case tBuffer:
     return AbstractBuffer::size_for(cast<AbstractBuffer>(this)->size<uint8_t>());
 #define MAKE_CASE(n, NAME, Name, name) case t##Name: return Name::kSize;
-FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
+FOR_EACH_BOILERPLATE_SIZE_IN_HEAP(MAKE_CASE)
 #undef MAKE_CASE
   default:
     UNHANDLED(InstanceType, instance_type);
@@ -528,21 +518,6 @@ static void validate_object(Object *obj) {
         GC_SAFE_CHECK_IS_C(cnValidation, Tuple, cast<Lambda>(obj)->constant_pool());
       }
       break;
-    case tChannel:
-      FOR_EACH_CHANNEL_FIELD(VALIDATE_FIELD, Channel)
-      break;
-    case tLayout:
-      FOR_EACH_LAYOUT_FIELD(VALIDATE_FIELD, Layout)
-      break;
-    case tContext:
-      FOR_EACH_CONTEXT_FIELD(VALIDATE_FIELD, Context)
-      break;
-    case tQuoteTemplate:
-      FOR_EACH_QUOTE_TEMPLATE_FIELD(VALIDATE_FIELD, QuoteTemplate)
-      break;
-    case tForwarderDescriptor:
-      FOR_EACH_FORWARDER_DESCRIPTOR_FIELD(VALIDATE_FIELD, ForwarderDescriptor)
-      break;
     case tBuiltinCall: case tUnquoteExpression: case tCode:
     case tString: case tVoid: case tTrue: case tFalse: case tNull:
     case tBuffer:
@@ -551,7 +526,7 @@ static void validate_object(Object *obj) {
     case t##Name:                                                    \
       FOR_EACH_##NAME##_FIELD(VALIDATE_FIELD, Name);                 \
       break;
-FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
+FOR_EACH_BOILERPLATE_VALIDATE(MAKE_CASE)
 #undef MAKE_CASE
     default:
       UNHANDLED(InstanceType, type);
@@ -586,18 +561,6 @@ void Object::for_each_field(FieldVisitor &visitor) {
       for (uword i = 0; i < cast<Tuple>(this)->length(); i++)
         VISIT(cast<Tuple>(this)->get(i));
       break;
-    case tBuiltinCall:
-      FOR_EACH_BUILTIN_CALL_FIELD(VISIT_FIELD, BuiltinCall);
-      break;
-    case tLambda:
-      FOR_EACH_LAMBDA_FIELD(VISIT_FIELD, Lambda)
-      break;
-    case tLayout:
-      FOR_EACH_LAYOUT_FIELD(VISIT_FIELD, Layout)
-      break;
-    case tChannel:
-      FOR_EACH_CHANNEL_FIELD(VISIT_FIELD, Channel)
-      break;
     case tStack:
       cast<Stack>(this)->for_each_stack_field(visitor);
       break;
@@ -608,7 +571,7 @@ void Object::for_each_field(FieldVisitor &visitor) {
     case t##Name:                                                    \
       FOR_EACH_##NAME##_FIELD(VISIT_FIELD, Name);                    \
       break;
-FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
+FOR_EACH_BOILERPLATE_ITERATOR(MAKE_CASE)
 #undef MAKE_CASE
     default:
       UNHANDLED(InstanceType, type);

@@ -76,13 +76,9 @@ public:
   
   Data *allocate_channel();
   
-  Data *allocate_builtin_call();
-  
-  Data *allocate_unquote_expression();
-  
 #define DECLARE_ALLOCATOR(n, NAME, Name, name)                       \
   Data *allocate_##name();
-FOR_EACH_GENERATABLE_TYPE(DECLARE_ALLOCATOR)
+FOR_EACH_BOILERPLATE_ALLOCATOR(DECLARE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
   
   Data *new_abstract_buffer(uword size, Layout *layout);

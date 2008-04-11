@@ -175,26 +175,11 @@ void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
       obj->point_forward(context);
       break;
     }
-    case tBuiltinCall: {
-      BuiltinCall *heap_obj = cast<BuiltinCall>(heap.allocate_builtin_call());
-      obj->point_forward(heap_obj);
-      break;
-    }
     case tLambda: {
       FLambda *img = image_raw_cast<FLambda>(obj);
       uword argc = img->argc();
       Lambda *lambda = cast<Lambda>(heap.allocate_lambda(argc));
       obj->point_forward(lambda);
-      break;
-    }
-    case tChannel: {
-      Channel *heap_obj = cast<Channel>(heap.allocate_channel());
-      obj->point_forward(heap_obj);
-      break;
-    }
-    case tUnquoteExpression: {
-      UnquoteExpression *heap_obj = cast<UnquoteExpression>(heap.allocate_unquote_expression());
-      obj->point_forward(heap_obj);
       break;
     }
     case tRoot: {
@@ -206,7 +191,7 @@ void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
       obj->point_forward(heap_obj);                                  \
       break;                                                         \
     }
-FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
+FOR_EACH_BOILERPLATE_SHALLOW_COPY(MAKE_CASE)
 #undef MAKE_CASE
     default:
       UNHANDLED(InstanceType, type);
@@ -249,13 +234,6 @@ void Image::fixup_shallow_object(FObject *obj, ImageContext &info) {
       TRANSFER_FIELD(String, name, Name, Channel);
       break;
     }
-    case tLayout: {
-      FLayout *img = image_raw_cast<FLayout>(obj);
-      Layout *layout = cast<Layout>(img->forward_pointer());
-      layout->set_methods(cast<Tuple>(img->methods(info, "Layout.methods")->forward_pointer()));
-      layout->set_protocol(cast<Immediate>(img->protocol(info, "Layout.protocol")->forward_pointer(info)));
-      break;
-    }
     case tBuiltinCall: {
       FBuiltinCall *img = image_raw_cast<FBuiltinCall>(obj);
       BuiltinCall *expr = cast<BuiltinCall>(img->forward_pointer());
@@ -284,7 +262,7 @@ void Image::fixup_shallow_object(FObject *obj, ImageContext &info) {
       FOR_EACH_##NAME##_FIELD(TRANSFER_FIELD, Name)                  \
       break;                                                         \
     }
-FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
+FOR_EACH_BOILERPLATE_FIXUP_SHALLOW(MAKE_CASE)
 #undef MAKE_CASE
 #undef TRANSFER_FIELD
     default:
@@ -327,23 +305,9 @@ void FObject::type_info(TypeInfo *result) {
 uword FObject::size_in_image() {
   uword type = this->type();
   switch (type) {
-    case tLambda:
-      return FLambda_Size;
-    case tLayout:
-      return FLayout_Size;
-    case tContext:
-      return FContext_Size;
-    case tRoot:
-      return FRoot_Size;
-    case tBuiltinCall:
-      return FBuiltinCall_Size;
-    case tUnquoteExpression:
-      return FUnquoteExpression_Size;
-    case tChannel:
-      return FChannel_Size;
 #define MAKE_CASE(n, NAME, Name, name)                               \
     case t##Name: return F##Name##_Size;
-FOR_EACH_GENERATABLE_TYPE(MAKE_CASE)
+FOR_EACH_BOILERPLATE_SIZE_IN_IMAGE(MAKE_CASE)
 #undef MAKE_CASE
     case tString:
       return image_raw_cast<FString>(this)->string_size_in_image();

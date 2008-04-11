@@ -14,6 +14,7 @@
 // --- C l a s s   T a g s ---
 // ---------------------------
 
+
 #define FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                    \
   VISIT(1,  DICTIONARY,             Dictionary,            dictionary)             \
   VISIT(2,  METHOD,                 Method,                method)                 \
@@ -21,6 +22,7 @@
   VISIT(4,  TASK,                   Task,                  task)                   \
   VISIT(73, SIGNATURE,              Signature,             signature)              \
   VISIT(77, SELECTOR,               Selector,              selector)
+
 
 #define FOR_EACH_OBJECT_TYPE(VISIT)                                                \
   VISIT(5,  LAYOUT,                 Layout,                layout)                 \
@@ -42,6 +44,7 @@
   FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
   FOR_EACH_SYNTAX_TREE_TYPE(VISIT)
 
+
 #define FOR_EACH_VIRTUAL_TYPE(VISIT)                                               \
   VISIT(20, OBJECT,                 Object,                object)                 \
   VISIT(21, VALUE,                  Value,                 0)                      \
@@ -53,10 +56,12 @@
   VISIT(26, BOOL,                   Bool,                  0)                      \
   VISIT(82, ROOT,                   Root,                  0)
 
+
 #define FOR_EACH_SIGNAL_TYPE(VISIT)                                                \
   VISIT(30, ALLOCATION_FAILED,      AllocationFailed,      0)                      \
   VISIT(31, INTERNAL_ERROR,         InternalError,         0)                      \
   VISIT(32, NOTHING,                Nothing,               0)
+
 
 #define FOR_EACH_VALUE_TYPE(VISIT)                                                 \
   VISIT(40, SMI,                    Smi,                   smi)                    \
@@ -66,15 +71,18 @@
   FOR_EACH_SIGNAL_TYPE(VISIT)                                                      \
   FOR_EACH_OBJECT_TYPE(VISIT)
 
+
 #define FOR_EACH_DECLARED_TYPE(VISIT)                                              \
   FOR_EACH_VALUE_TYPE(VISIT)                                                       \
   FOR_EACH_VIRTUAL_TYPE(VISIT)
+
 
 #define FOR_EACH_SYNTAX_TREE_TYPE(VISIT)                                           \
   VISIT(50, BUILTIN_CALL,           BuiltinCall,           builtin_call)           \
   VISIT(51, UNQUOTE_EXPRESSION,     UnquoteExpression,     unquote_expression)     \
   VISIT(52, QUOTE_TEMPLATE,         QuoteTemplate,         quote_template)         \
   FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)
+
 
 #define FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)                               \
   VISIT(53, LITERAL_EXPRESSION,     LiteralExpression,     literal_expression)     \
@@ -109,6 +117,106 @@
 #define FOR_EACH_GENERATABLE_TYPE(VISIT)                                           \
   FOR_EACH_GENERATABLE_OBJECT_TYPE(VISIT)                                          \
   FOR_EACH_GENERATABLE_SYNTAX_TREE_TYPE(VISIT)
+
+
+// -----------------------------------------
+// --- B o i l e r p l a t e   l i s t s ---
+// -----------------------------------------
+
+
+/**
+ * For each type for which a boilerplate allocator can be generated
+ * in the heap.
+ */
+#define FOR_EACH_BOILERPLATE_ALLOCATOR(VISIT)                        \
+  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
+  VISIT(0, 0, BuiltinCall, builtin_call)                             \
+  VISIT(0, 0, UnquoteExpression, unquote_expression)
+
+
+/**
+ * For each type for which a boilerplate shallow copy case can be
+ * generated in image loading.
+ */
+#define FOR_EACH_BOILERPLATE_SHALLOW_COPY(VISIT)                     \
+  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
+  VISIT(0, 0, BuiltinCall, builtin_call)                             \
+  VISIT(0, 0, UnquoteExpression, unquote_expression)                 \
+  VISIT(0, 0, Channel, channel)
+
+
+/**
+ * For each type for which a boilerplate shallow fixup case can be
+ * generated in image loading.
+ */
+#define FOR_EACH_BOILERPLATE_FIXUP_SHALLOW(VISIT)                    \
+  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
+  VISIT(0, LAYOUT, Layout, 0)
+
+
+/**
+ * For each type for which a boilerplate size_in_image case can be
+ * generated in image loading.
+ */
+#define FOR_EACH_BOILERPLATE_SIZE_IN_IMAGE(VISIT)                    \
+  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
+  VISIT(0, 0, Lambda, 0)                                             \
+  VISIT(0, 0, Layout, 0)                                             \
+  VISIT(0, 0, Context, 0)                                            \
+  VISIT(0, 0, Root, 0)                                               \
+  VISIT(0, 0, BuiltinCall, 0)                                        \
+  VISIT(0, 0, UnquoteExpression, 0)                                  \
+  VISIT(0, 0, Channel, 0)
+
+
+/**
+ * For each type for which a boilerplate size_in_heap case can be
+ * generated in image loading.
+ */
+#define FOR_EACH_BOILERPLATE_SIZE_IN_HEAP(VISIT)                     \
+  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
+  VISIT(0, 0, Lambda, 0)                                             \
+  VISIT(0, 0, Layout, 0)                                             \
+  VISIT(0, 0, Context, 0)                                            \
+  VISIT(0, 0, BuiltinCall, 0)                                        \
+  VISIT(0, 0, UnquoteExpression, 0)                                  \
+  VISIT(0, 0, Channel, 0)
+
+
+/**
+ * For each type for which boilerplate accessors should be generated
+ */
+#define FOR_EACH_BOILERPLATE_ACCESSORS(VISIT)                        \
+  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
+  VISIT(0, LAYOUT, Layout, 0)                                        \
+  VISIT(0, LAMBDA, Lambda, 0)                                        \
+  VISIT(0, CHANNEL, Channel, 0)
+
+
+/**
+ * For each type for which a boilerplate validation case can be
+ * generated.
+ */
+#define FOR_EACH_BOILERPLATE_VALIDATE(VISIT)                         \
+  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
+  VISIT(0, CHANNEL, Channel, 0)                                      \
+  VISIT(0, LAYOUT, Layout, 0)                                        \
+  VISIT(0, CONTEXT, Context, 0)                                      \
+  VISIT(0, QUOTE_TEMPLATE, QuoteTemplate, 0)                         \
+  VISIT(0, FORWARDER_DESCRIPTOR, ForwarderDescriptor, 0)
+
+
+/**
+ * For each type for which a boilerplate iterator case can be
+ * generated in for_each_field.
+ */
+#define FOR_EACH_BOILERPLATE_ITERATOR(VISIT)                         \
+  FOR_EACH_GENERATABLE_TYPE(VISIT)                                   \
+  VISIT(0, BUILTIN_CALL, BuiltinCall, 0)                             \
+  VISIT(0, LAMBDA, Lambda, 0)                                        \
+  VISIT(0, LAYOUT, Layout, 0)                                        \
+  VISIT(0, CHANNEL, Channel, 0)
+
 
 // -------------------------------------
 // --- I m a g e   C o n s t a n t s ---

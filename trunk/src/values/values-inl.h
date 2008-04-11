@@ -297,12 +297,9 @@ void Class::set_##name(T value) {                                    \
 
 #define DEFINE_ALL_ACCESSORS(n, NAME, Name, name)                    \
   FOR_EACH_##NAME##_FIELD(DEFINE_FIELD_ACCESSORS, Name)
-FOR_EACH_GENERATABLE_TYPE(DEFINE_ALL_ACCESSORS)
+FOR_EACH_BOILERPLATE_ACCESSORS(DEFINE_ALL_ACCESSORS)
 #undef DEFINE_ALL_ACCESSORS
 
-FOR_EACH_LAYOUT_FIELD(DEFINE_FIELD_ACCESSORS, Layout)
-FOR_EACH_LAMBDA_FIELD(DEFINE_FIELD_ACCESSORS, Lambda)
-FOR_EACH_CHANNEL_FIELD(DEFINE_FIELD_ACCESSORS, Channel)
 
 // ---------------------------------
 // --- S m a l l   I n t e g e r ---

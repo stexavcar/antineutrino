@@ -120,20 +120,14 @@ Data *Heap::allocate_channel() {
   return result;
 }
 
-Data *Heap::allocate_builtin_call() {
-  return allocate_object(BuiltinCall::kSize, roots().builtin_call_layout());
-}
-
-Data *Heap::allocate_unquote_expression() {
-  return allocate_object(UnquoteExpression::kSize, roots().unquote_expression_layout());
-}
 
 #define MAKE_ALLOCATOR(n, NAME, Name, name)                          \
 Data *Heap::allocate_##name() {                                      \
   return allocate_object(Name::kSize, roots().name##_layout());      \
 }
-FOR_EACH_GENERATABLE_TYPE(MAKE_ALLOCATOR)
+FOR_EACH_BOILERPLATE_ALLOCATOR(MAKE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
+
 
 Data *Heap::allocate_empty_layout(InstanceType instance_type) {
   Data *val = allocate_layout(instance_type);
@@ -146,6 +140,7 @@ Data *Heap::allocate_empty_layout(InstanceType instance_type) {
   return result;
 }
 
+
 Data *Heap::new_context() {
   Data *val = allocate_object(Context::kSize, roots().context_layout());
   if (is<AllocationFailed>(val)) return val;
@@ -153,6 +148,7 @@ Data *Heap::new_context() {
   IF_PARANOID(result->validate());
   return result;
 }
+
 
 Data *Heap::new_layout(InstanceType instance_type, 
     uword instance_field_count, Immediate *protocol, Tuple *methods) {
