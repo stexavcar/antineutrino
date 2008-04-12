@@ -4,7 +4,6 @@
 #include "heap/memory-inl.h"
 #include "heap/ref-inl.h"
 #include "runtime/builtins.h"
-#include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
 #include "utils/scoped-ptrs-inl.h"
@@ -12,14 +11,15 @@
 namespace neutrino {
 
 class Scope;
-class Label;
 
 
 // -------------------------
 // --- A s s e m b l e r ---
 // -------------------------
 
-#define __ this->
+
+#define __ backend().
+
 
 class CompileSession {
 public:
@@ -68,81 +68,30 @@ private:
 };
 
 
-class InterpreterAssemblerConfig {
-  
-};
-
-
-template <class C>
+template <class Config>
 class Assembler : public CodeGenerator {
 public:
   Assembler(ref<LambdaExpression> lambda, ref<Method> method,
-      CompileSession &session, CodeGenerator *enclosing)
+      CompileSession &session, typename Config::Backend &backend,
+      CodeGenerator *enclosing)
       : CodeGenerator(lambda, method, session, enclosing)
-      , pool_(session.runtime())
-      , stack_height_(0) {
+      , backend_(backend) {
   }
-  typedef void (Assembler<C>::*special_builtin)();
 
-  void initialize() { pool().initialize(); }
-  
-  ref<Code> flush_code();
-  ref<Tuple> flush_constant_pool();
-  
-  uint16_t constant_pool_index(ref<Value> value);
+  typedef void (Assembler<Config>::*special_builtin)();
+  typedef typename Config::Label Label;
+  typedef typename Config::Backend Backend;
+
   void load_symbol(ref<Symbol> sym);
   void store_symbol(ref<Symbol> sym);
   
   void codegen(ref<SyntaxTree> that) {
-    IF_DEBUG(uword height_before = stack_height());
+    IF_DEBUG(uword height_before = backend().stack_height());
     that.accept(*this);
-    ASSERT_EQ(height_before + 1, stack_height());
+    ASSERT_EQ(height_before + 1, backend().stack_height());
   }
 
-  special_builtin get_special(uword index) {
-    // This method is defined within the class because I don't know
-    // how to declare the return type outside the class declaration
-    switch (index) {
-    #define MAKE_CASE(n, name, str) case n: return &Assembler::name;
-    eSpecialBuiltinFunctions(MAKE_CASE)
-    #undef MAKE_CASE
-        default:
-          return NULL;
-      }
-  }
-  
-  void push(ref<Value> value);
-  void pop(uint16_t height = 1);
-  void slap(uint16_t height);
-  void swap();
-  void rethurn();
-  void attach();
-  void invoke(ref<Selector> selector, uint16_t argc, ref<Tuple> keymap);
-  void invoke_super(ref<Selector> selector, uint16_t argc, ref<Tuple> keymap, ref<Signature> current);
-  void instantiate(ref<Layout> layout);
-  void raise(ref<String> name, uint16_t argc);
-  void call(uint16_t argc);
-  void tuple(uint16_t size);
-  void global(ref<Value> name);
-  void argument(uint16_t index);
-  void keyword(uint16_t index);
-  void load_local(uint16_t height);
-  void store_local(uint16_t height);
-  void outer(uint16_t index);
-  void closure(ref<Lambda> lambda, uint16_t outers);
-  void task();
-  void yield();
-  void if_true(Label &label);
-  void if_false(Label &label);
-  void ghoto(Label &label);
-  void bind(Label &label);
-  void builtin(uint16_t argc, uint16_t index);
-  void concat(uint16_t terms);
-  void quote(uint16_t unquotes);
-  void mark(ref<Value> data);
-  void unmark();
-  void new_forwarder(uint16_t type);
-  void bind_forwarder();
+  special_builtin get_special(uword index);
   
 #define MAKE_CASE(n, name, str) void name();
 eSpecialBuiltinFunctions(MAKE_CASE)
@@ -155,29 +104,10 @@ eSyntaxTreeTypes(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
 
   Factory &factory() { return runtime().factory(); }
-  
-  void adjust_stack_height(word delta);
+  Backend &backend() { return backend_; }
 
 private:
-  uword stack_height() { return stack_height_; }
-  heap_list &pool() { return pool_; }
-  list_buffer<uint16_t> &code() { return code_; }
-  list_buffer<uint16_t> code_;
-  heap_list pool_;
-  uword stack_height_;
-};
-
-
-class Label {
-public:
-  Label() : is_bound_(false) , value_(kNoTarget) { }
-  bool is_bound() { return is_bound_; }
-  uword value() { return value_; }
-  void set_value(uword addr) { ASSERT(addr != kNoTarget); value_ = addr; }
-  static const uint16_t kNoTarget = TypeConsts<uint16_t>::kMax;
-private:
-  bool is_bound_;
-  uint16_t value_;
+  Backend &backend_;
 };
 
 
@@ -189,349 +119,10 @@ SyntaxTree *CodeGenerator::resolve_unquote(UnquoteExpression *expr) {
 }
 
 
-template <class C>
-ref<Code> Assembler<C>::flush_code() {
-  ref<Code> result = factory().new_code(code().length());
-  for (uword i = 0; i < result.length(); i++)
-    result.at(i) = code()[i];
-  return result;
-}
-
-
-template <class C>
-ref<Tuple> Assembler<C>::flush_constant_pool() {
-  ref<Tuple> result = factory().new_tuple(pool().length());
-  for (uword i = 0; i < result.length(); i++)
-    result->set(i, pool().get(i));
-  return result;
-}
-
-
-template <class C>
-uint16_t Assembler<C>::constant_pool_index(ref<Value> value) {
-  heap_list &pool = this->pool();
-  for (uint16_t i = 0; i < pool.length(); i++) {
-    ref_scope scope(refs());
-    ref<Value> entry = pool[i];
-    if (entry->is_identical(*value)) return i;
-  }
-  uint16_t result = pool.length();
-  pool.append(value);
-  return result;
-}
-
-
-template <class C>
-void Assembler<C>::adjust_stack_height(word delta) {
-  ASSERT_GE(stack_height() + delta, 0);
-  stack_height_ += delta;
-  IF_PARANOID(code().append(ocChkHgt));
-  IF_PARANOID(code().append(stack_height()));
-}
-
-
-template <class C>
-void Assembler<C>::invoke(ref<Selector> selector, uint16_t argc,
-    ref<Tuple> keymap) {
-  STATIC_CHECK(OpcodeInfo<ocInvoke>::kArgc == 3);
-  uint16_t selector_index = constant_pool_index(selector);
-  uint16_t keymap_index = constant_pool_index(keymap);
-  code().append(ocInvoke);
-  code().append(selector_index);
-  code().append(argc);
-  code().append(keymap_index);
-}
-
-
-template <class C>
-void Assembler<C>::invoke_super(ref<Selector> selector, uint16_t argc,
-    ref<Tuple> keymap, ref<Signature> current) {
-  STATIC_CHECK(OpcodeInfo<ocInvSup>::kArgc == 4);
-  uint16_t selector_index = constant_pool_index(selector);
-  uint16_t keymap_index = constant_pool_index(keymap);
-  uint16_t current_index = constant_pool_index(current);
-  code().append(ocInvSup);
-  code().append(selector_index);
-  code().append(argc);
-  code().append(keymap_index);
-  code().append(current_index);
-}
-
-
-template <class C>
-void Assembler<C>::instantiate(ref<Layout> layout) {
-  STATIC_CHECK(OpcodeInfo<ocNew>::kArgc == 1);
-  uint16_t layout_index = constant_pool_index(layout);
-  code().append(ocNew);
-  code().append(layout_index);
-  adjust_stack_height(-static_cast<word>(layout->instance_field_count()));
-}
-
-
-template <class C>
-void Assembler<C>::raise(ref<String> name, uint16_t argc) {
-  STATIC_CHECK(OpcodeInfo<ocRaise>::kArgc == 2);
-  uint16_t name_index = constant_pool_index(name);
-  code().append(ocRaise);
-  code().append(name_index);
-  code().append(argc);
-}
-
-
-template <class C>
-void Assembler<C>::call(uint16_t argc) {
-  STATIC_CHECK(OpcodeInfo<ocCall>::kArgc == 1);
-  code().append(ocCall);
-  code().append(argc);
-}
-
-
-template <class C>
-void Assembler<C>::push(ref<Value> value) {
-  STATIC_CHECK(OpcodeInfo<ocPush>::kArgc == 1);
-  uint16_t index = constant_pool_index(value);
-  code().append(ocPush);
-  code().append(index);
-  adjust_stack_height(1);
-}
-
-
-template <class C>
-void Assembler<C>::global(ref<Value> value) {
-  STATIC_CHECK(OpcodeInfo<ocGlobal>::kArgc == 1);
-  uint16_t index = constant_pool_index(value);
-  code().append(ocGlobal);
-  code().append(index);
-  adjust_stack_height(1);
-}
-
-
-template <class C>
-void Assembler<C>::argument(uint16_t index) {
-  STATIC_CHECK(OpcodeInfo<ocArgument>::kArgc == 1);
-  code().append(ocArgument);
-  code().append(index);
-  adjust_stack_height(1);
-}
-
-
-template <class C>
-void Assembler<C>::keyword(uint16_t index) {
-  STATIC_CHECK(OpcodeInfo<ocKeyword>::kArgc == 1);
-  code().append(ocKeyword);
-  code().append(index);
-  adjust_stack_height(1);
-}
-
-
-template <class C>
-void Assembler<C>::load_local(uint16_t height) {
-  STATIC_CHECK(OpcodeInfo<ocLdLocal>::kArgc == 1);
-  code().append(ocLdLocal);
-  code().append(height);
-  adjust_stack_height(1);
-}
-
-
-template <class C>
-void Assembler<C>::store_local(uint16_t height) {
-  STATIC_CHECK(OpcodeInfo<ocStLocal>::kArgc == 1);
-  code().append(ocStLocal);
-  code().append(height);
-}
-
-
-template <class C>
-void Assembler<C>::outer(uint16_t index) {
-  STATIC_CHECK(OpcodeInfo<ocOuter>::kArgc == 1);
-  code().append(ocOuter);
-  code().append(index);
-  adjust_stack_height(1);
-}
-
-
-template <class C>
-void Assembler<C>::closure(ref<Lambda> lambda, uint16_t outers) {
-  STATIC_CHECK(OpcodeInfo<ocClosure>::kArgc == 2);
-  uint16_t index = constant_pool_index(lambda);
-  code().append(ocClosure);
-  code().append(index);
-  code().append(outers);
-}
-
-
-template <class C>
-void Assembler<C>::task() {
-  STATIC_CHECK(OpcodeInfo<ocTask>::kArgc == 0);
-  code().append(ocTask);
-}
-
-
-template <class C>
-void Assembler<C>::yield() {
-  STATIC_CHECK(OpcodeInfo<ocYield>::kArgc == 0);
-  code().append(ocYield);
-}
-
-
-template <class C>
-void Assembler<C>::pop(uint16_t height) {
-  STATIC_CHECK(OpcodeInfo<ocPop>::kArgc == 1);
-  code().append(ocPop);
-  code().append(height);
-  adjust_stack_height(-height);
-}
-
-
-template <class C>
-void Assembler<C>::slap(uint16_t height) {
-  if (height == 0) return;
-  STATIC_CHECK(OpcodeInfo<ocSlap>::kArgc == 1);
-  code().append(ocSlap);
-  code().append(height);
-  adjust_stack_height(-height);
-}
-
-
-template <class C>
-void Assembler<C>::swap() {
-  STATIC_CHECK(OpcodeInfo<ocSwap>::kArgc == 0);
-  code().append(ocSwap);
-}
-
-
-template <class C>
-void Assembler<C>::rethurn() {
-  STATIC_CHECK(OpcodeInfo<ocReturn>::kArgc == 0);
-  ASSERT(stack_height() > 0);
-  code().append(ocReturn);
-}
-
-
-template <class C>
-void Assembler<C>::attach() {
-  STATIC_CHECK(OpcodeInfo<ocAttach>::kArgc == 0);
-  code().append(ocAttach);
-  adjust_stack_height(1);
-}
-
-
-template <class C>
-void Assembler<C>::tuple(uint16_t size) {
-  STATIC_CHECK(OpcodeInfo<ocTuple>::kArgc == 1);
-  code().append(ocTuple);
-  code().append(size);
-  adjust_stack_height(-(size - 1));
-}
-
-
-template <class C>
-void Assembler<C>::concat(uint16_t terms) {
-  STATIC_CHECK(OpcodeInfo<ocConcat>::kArgc == 1);
-  code().append(ocConcat);
-  code().append(terms);
-  adjust_stack_height(-(terms - 1));
-}
-
-
-template <class C>
-void Assembler<C>::quote(uint16_t unquotes) {
-  STATIC_CHECK(OpcodeInfo<ocQuote>::kArgc == 1);
-  ASSERT(unquotes > 0);
-  code().append(ocQuote);
-  code().append(unquotes);
-  adjust_stack_height(-unquotes);
-}
-
-
-template <class C>
-void Assembler<C>::builtin(uint16_t argc, uint16_t index) {
-  STATIC_CHECK(OpcodeInfo<ocBuiltin>::kArgc == 2);
-  code().append(ocBuiltin);
-  code().append(argc);
-  code().append(index);
-  adjust_stack_height(1);
-}
-
-
-template <class C>
-void Assembler<C>::if_true(Label &label) {
-  STATIC_CHECK(OpcodeInfo<ocIfTrue>::kArgc == 1);
-  code().append(ocIfTrue);
-  code().append(label.value());
-  if (!label.is_bound()) label.set_value(code().length() - 1);
-}
-
-
-template <class C>
-void Assembler<C>::if_false(Label &label) {
-  STATIC_CHECK(OpcodeInfo<ocIfFalse>::kArgc == 1);
-  code().append(ocIfFalse);
-  code().append(label.value());
-  if (!label.is_bound()) label.set_value(code().length() - 1);
-}
-
-
-template <class C>
-void Assembler<C>::ghoto(Label &label) {
-  STATIC_CHECK(OpcodeInfo<ocGoto>::kArgc == 1);
-  code().append(ocGoto);
-  code().append(label.value());
-  if (!label.is_bound()) label.set_value(code().length() - 1);
-}
-
-
-template <class C>
-void Assembler<C>::bind(Label &label) {
-  ASSERT(!label.is_bound());
-  uword value = code().length();
-  uword current = label.value();
-  label.set_value(value);
-  while (current != Label::kNoTarget) {
-    uword next = code()[current];
-    code()[current] = value;
-    current = next;
-  }
-}
-
-
-template <class C>
-void Assembler<C>::mark(ref<Value> data) {
-  STATIC_CHECK(OpcodeInfo<ocMark>::kArgc == 1);
-  uint16_t index = constant_pool_index(data);
-  code().append(ocMark);
-  code().append(index);
-  adjust_stack_height(Marker::kSize);
-}
-
-
-template <class C>
-void Assembler<C>::unmark() {
-  STATIC_CHECK(OpcodeInfo<ocUnmark>::kArgc == 0);
-  code().append(ocUnmark);  
-  adjust_stack_height(-static_cast<word>(Marker::kSize));
-}
-
-
-template <class C>
-void Assembler<C>::new_forwarder(uint16_t type) {
-  STATIC_CHECK(OpcodeInfo<ocForward>::kArgc == 1);
-  code().append(ocForward);
-  code().append(type);
-}
-
-
-template <class C>
-void Assembler<C>::bind_forwarder() {
-  STATIC_CHECK(OpcodeInfo<ocBindFor>::kArgc == 0);
-  code().append(ocBindFor);
-  adjust_stack_height(-1);
-}
-
-
 // -----------------
 // --- S c o p e ---
 // -----------------
+
 
 #define eCategories(VISIT)                                           \
   VISIT(Missing)  VISIT(Argument) VISIT(Local)    VISIT(Outer)       \
@@ -549,6 +140,7 @@ MAKE_ENUM_INFO_HEADER(Category)
 eCategories(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
+
 
 struct Lookup {
   Lookup(CodeGenerator &cg)
@@ -702,13 +294,13 @@ void Assembler<C>::visit_syntax_tree(ref<SyntaxTree> that) {
 
 template <class C>
 void Assembler<C>::visit_return_expression(ref<ReturnExpression> that) {
-  __ codegen(that.value(refs()));
+  codegen(that.value(refs()));
   __ rethurn();
 }
 
 template <class C>
 void Assembler<C>::visit_yield_expression(ref<YieldExpression> that) {
-  __ codegen(that.value(refs()));
+  codegen(that.value(refs()));
   __ yield();
 }
 
@@ -724,7 +316,7 @@ void Assembler<C>::visit_quote_expression(ref<QuoteExpression> that) {
     ref_scope scope(refs());
     ref<Tuple> unquotes = that.unquotes(refs());
     for (uword i = 0; i < unquotes->length(); i++) {
-      __ codegen(cast<SyntaxTree>(unquotes.get(refs(), i)));
+      codegen(cast<SyntaxTree>(unquotes.get(refs(), i)));
     }
     __ quote(unquotes->length());
   }
@@ -736,14 +328,14 @@ void Assembler<C>::visit_invoke_expression(ref<InvokeExpression> that) {
   ref<SyntaxTree> recv = that.receiver(refs());
   bool is_super = is<SuperExpression>(recv);
   if (is_super) {
-    __ codegen(cast<SuperExpression>(recv).value(refs()));
+    codegen(cast<SuperExpression>(recv).value(refs()));
   } else {
-    __ codegen(recv);
+    codegen(recv);
   }
   ref<Arguments> args_obj = cast<Arguments>(that.arguments(refs()));
   ref<Tuple> args = args_obj.arguments(refs());
   for (uword i = 0; i < args.length(); i++)
-    __ codegen(cast<SyntaxTree>(args.get(refs(), i)));
+    codegen(cast<SyntaxTree>(args.get(refs(), i)));
   ref<Tuple> raw_keymap = args_obj.keyword_indices(refs());
   ref<Tuple> keymap;
   // The construction of the concrete keymap will eventually be moved
@@ -773,12 +365,12 @@ void Assembler<C>::visit_invoke_expression(ref<InvokeExpression> that) {
 template <class C>
 void Assembler<C>::visit_call_expression(ref<CallExpression> that) {
   ref_scope scope(refs());
-  __ codegen(that.receiver(refs()));
-  __ codegen(that.function(refs()));
+  codegen(that.receiver(refs()));
+  codegen(that.function(refs()));
   __ swap();
   ref<Tuple> args = that.arguments(refs()).arguments(refs());
   for (uword i = 0; i < args.length(); i++)
-    __ codegen(cast<SyntaxTree>(args.get(refs(), i)));
+    codegen(cast<SyntaxTree>(args.get(refs(), i)));
   __ call(args.length());
   __ slap(args.length() + 1);
 }
@@ -792,23 +384,26 @@ void Assembler<C>::visit_sequence_expression(ref<SequenceExpression> that) {
   for (uword i = 0; i < expressions.length(); i++) {
     if (is_first) is_first = false;
     else __ pop();
-    __ codegen(cast<SyntaxTree>(expressions.get(refs(), i)));
+    codegen(cast<SyntaxTree>(expressions.get(refs(), i)));
   }
 }
+
 
 template <class C>
 void Assembler<C>::visit_tuple_expression(ref<TupleExpression> that) {
   ref_scope scope(refs());
   ref<Tuple> values = that.values(refs());
   for (uword i = 0; i < values.length(); i++)
-    __ codegen(cast<SyntaxTree>(values.get(refs(), i)));
+    codegen(cast<SyntaxTree>(values.get(refs(), i)));
   __ tuple(values.length());
 }
+
 
 template <class C>
 void Assembler<C>::visit_global_expression(ref<GlobalExpression> that) {
   __ global(that.name(refs()));
 }
+
 
 template <class C>
 void Assembler<C>::load_symbol(ref<Symbol> that) {
@@ -832,6 +427,7 @@ void Assembler<C>::load_symbol(ref<Symbol> that) {
   }
 }
 
+
 template <class C>
 void Assembler<C>::store_symbol(ref<Symbol> that) {
   Lookup lookup(*this);
@@ -845,46 +441,51 @@ void Assembler<C>::store_symbol(ref<Symbol> that) {
   }
 }
 
+
 template <class C>
 void Assembler<C>::visit_symbol(ref<Symbol> that) {
   load_symbol(that);
 }
 
+
 template <class C>
 void Assembler<C>::visit_assignment(ref<Assignment> that) {
-  __ codegen(that.value(refs()));
+  codegen(that.value(refs()));
   store_symbol(that.symbol(refs()));
 }
+
 
 template <class C>
 void Assembler<C>::visit_conditional_expression(ref<ConditionalExpression> that) {
   Label then, end;
-  __ codegen(that.condition(refs()));
+  codegen(that.condition(refs()));
   __ if_true(then);
-  adjust_stack_height(-1);
-  IF_DEBUG(uword height_before = stack_height());
-  __ codegen(that.else_part(refs()));
+  backend().adjust_stack_height(-1);
+  IF_DEBUG(uword height_before = backend().stack_height());
+  codegen(that.else_part(refs()));
   __ ghoto(end);
   __ bind(then);
-  adjust_stack_height(-1);
-  ASSERT_EQ(height_before, stack_height());
-  __ codegen(that.then_part(refs()));
+  backend().adjust_stack_height(-1);
+  ASSERT_EQ(height_before, backend().stack_height());
+  codegen(that.then_part(refs()));
   __ bind(end);
 }
+
 
 template <class C>
 void Assembler<C>::visit_while_expression(ref<WhileExpression> that) {
   Label start, end;
   __ bind(start);
-  __ codegen(that.condition(refs()));
+  codegen(that.condition(refs()));
   __ if_false(end);
-  adjust_stack_height(-1);
-  __ codegen(that.body(refs()));
+  backend().adjust_stack_height(-1);
+  codegen(that.body(refs()));
   __ pop();
   __ ghoto(start);
   __ bind(end);
   __ push(runtime().vhoid());
 }
+
 
 template <class C>
 void Assembler<C>::visit_interpolate_expression(ref<InterpolateExpression> that) {
@@ -895,7 +496,7 @@ void Assembler<C>::visit_interpolate_expression(ref<InterpolateExpression> that)
     if (is<String>(entry)) {
       __ push(entry);
     } else {
-      __ codegen(cast<SyntaxTree>(entry));
+      codegen(cast<SyntaxTree>(entry));
       ref<String> name = factory().new_string("to_string");
       ref<Selector> selector = factory().new_selector(name, Smi::from_int(0), runtime().fahlse());
       __ invoke(selector, 0, runtime().empty_tuple());
@@ -904,24 +505,25 @@ void Assembler<C>::visit_interpolate_expression(ref<InterpolateExpression> that)
   __ concat(terms.length());
 }
 
+
 template <class C>
 void Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
   Smi *type = that->type();
   if (type == Smi::from_int(LocalDefinition::ldRec)) {
-    uword height = stack_height();
+    uword height = backend().stack_height();
     __ push(runtime().vhoid());
     __ new_forwarder(Forwarder::fwOpen);
     LocalScope scope(*this, that.symbol(refs()), height);
-    __ codegen(that.value(refs()));
+    codegen(that.value(refs()));
     __ bind_forwarder();
-    __ codegen(that.body(refs()));
+    codegen(that.body(refs()));
     __ slap(1);
   } else if (type == Smi::from_int(LocalDefinition::ldLoc)) {
-    uword height = stack_height();
-    __ codegen(that.value(refs()));
+    uword height = backend().stack_height();
+    codegen(that.value(refs()));
     __ new_forwarder(Forwarder::fwOpen);
     LocalScope scope(*this, that.symbol(refs()), height);
-    __ codegen(that.body(refs()));
+    codegen(that.body(refs()));
     __ load_local(height);
     __ push(runtime().nuhll());
     __ bind_forwarder();
@@ -929,13 +531,14 @@ void Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
     __ slap(1);
   } else {
     ASSERT(type == Smi::from_int(LocalDefinition::ldDef) || type == Smi::from_int(LocalDefinition::ldVar));
-    uword height = stack_height();
-    __ codegen(that.value(refs()));
+    uword height = backend().stack_height();
+    codegen(that.value(refs()));
     LocalScope scope(*this, that.symbol(refs()), height);
-    __ codegen(that.body(refs()));
+    codegen(that.body(refs()));
     __ slap(1);
   }
 }
+
 
 template <class C>
 void Assembler<C>::visit_lambda_expression(ref<LambdaExpression> that) {
@@ -953,11 +556,13 @@ void Assembler<C>::visit_lambda_expression(ref<LambdaExpression> that) {
   }
 }
 
+
 template <class C>
 void Assembler<C>::visit_task_expression(ref<TaskExpression> that) {
-  __ codegen(that.lambda(refs()));
+  codegen(that.lambda(refs()));
   __ task();
 }
+
 
 template <class C>
 void Assembler<C>::visit_this_expression(ref<ThisExpression> that) {
@@ -969,10 +574,12 @@ void Assembler<C>::visit_this_expression(ref<ThisExpression> that) {
   __ argument(argc);
 }
 
+
 template <class C>
 void Assembler<C>::visit_super_expression(ref<SuperExpression> that) {
   UNREACHABLE();
 }
+
 
 template <class C>
 void Assembler<C>::visit_builtin_call(ref<BuiltinCall> that) {
@@ -985,6 +592,7 @@ void Assembler<C>::visit_builtin_call(ref<BuiltinCall> that) {
     (this->*special)();
   }
 }
+
 
 template <class C>
 void Assembler<C>::visit_do_on_expression(ref<DoOnExpression> that) {
@@ -1005,9 +613,10 @@ void Assembler<C>::visit_do_on_expression(ref<DoOnExpression> that) {
     data.set(2 * i + 1, lambda);
   }
   __ mark(data);
-  __ codegen(that.value(refs()));
+  codegen(that.value(refs()));
   __ unmark();
 }
+
 
 template <class C>
 void Assembler<C>::visit_raise_expression(ref<RaiseExpression> that) {
@@ -1015,10 +624,11 @@ void Assembler<C>::visit_raise_expression(ref<RaiseExpression> that) {
   ref<Tuple> args = that.arguments(refs()).arguments(refs());
   __ push(runtime().vhoid()); // receiver
   for (uword i = 0; i < args.length(); i++)
-    __ codegen(cast<SyntaxTree>(args.get(refs(), i)));
+    codegen(cast<SyntaxTree>(args.get(refs(), i)));
   __ raise(that.name(refs()), args.length());
   __ slap(args.length());
 }
+
 
 template <class C>
 void Assembler<C>::visit_instantiate_expression(ref<InstantiateExpression> that) {
@@ -1027,22 +637,15 @@ void Assembler<C>::visit_instantiate_expression(ref<InstantiateExpression> that)
   uword term_count = terms.length() / 2;
   ref<Tuple> methods = factory().new_tuple(2 * term_count);
   ref<Signature> signature = factory().new_signature(factory().new_tuple(0));
-  __ codegen(that.receiver(refs()));
+  codegen(that.receiver(refs()));
   for (uword i = 0; i < term_count; i++) {
     ref<String> ld_keyword = cast<String>(terms.get(refs(), 2 * i));
 
     // Construct getter method for this field
-    ref<Code> ld_code = factory().new_code(4);
-    STATIC_CHECK(OpcodeInfo<ocLdField>::kArgc == 2);
-    ld_code->at(0) = ocLdField;
-    ld_code->at(1) = i;
-    ld_code->at(2) = 0;
-    ld_code->at(3) = ocReturn;
-    ref<Lambda> ld_lambda = factory().new_lambda(0, ld_code,
-        runtime().empty_tuple(), runtime().nuhll(), session().context());
-    ref<Selector> ld_selector = factory().new_selector(ld_keyword,
+    ref<Selector> get_selector = factory().new_selector(ld_keyword,
         Smi::from_int(0), runtime().thrue());
-    methods.set(2 * i, factory().new_method(ld_selector, signature, ld_lambda));
+    ref<Method> getter = backend().field_getter(i, get_selector, signature, session().context());
+    methods.set(2 * i, getter);
     
     // Construct setter method for this field
     own_vector<char> raw_name(ld_keyword.c_str());
@@ -1050,44 +653,38 @@ void Assembler<C>::visit_instantiate_expression(ref<InstantiateExpression> that)
     st_name.append(raw_name.start());
     st_name.append(":=");
     ref<String> st_keyword = runtime().factory().new_string(st_name.raw_string());
-    ref<Code> st_code = factory().new_code(6);
-    STATIC_CHECK(OpcodeInfo<ocStField>::kArgc == 2);
-    STATIC_CHECK(OpcodeInfo<ocArgument>::kArgc == 1);
-    st_code->at(0) = ocArgument;
-    st_code->at(1) = 0;
-    st_code->at(2) = ocStField;
-    st_code->at(3) = i;
-    st_code->at(4) = 1;
-    st_code->at(5) = ocReturn;
-    ref<Lambda> st_lambda = factory().new_lambda(1, st_code,
-        runtime().empty_tuple(), runtime().nuhll(), session().context());
-    ref<Selector> st_selector = factory().new_selector(st_keyword, Smi::from_int(1), runtime().thrue());
-    methods.set(2 * i + 1, factory().new_method(st_selector, signature, st_lambda));
+    ref<Selector> set_selector = factory().new_selector(st_keyword, Smi::from_int(1), runtime().thrue());
+    ref<Method> setter = backend().field_setter(i, set_selector, signature, session().context());
+    methods.set(2 * i + 1, setter);
     
     // Load (initial) value for the field
     ref<SyntaxTree> value = cast<SyntaxTree>(terms.get(refs(), 2 * i + 1));
-    __ codegen(value);
+    codegen(value);
   }
   ref<Layout> layout = factory().new_layout(tInstance, term_count,
       runtime().vhoid(), methods);
   __ instantiate(layout);
 }
 
+
 template <class C>
 void Assembler<C>::visit_protocol_expression(ref<ProtocolExpression> that) {
   visit_syntax_tree(that);
 }
+
 
 template <class C>
 void Assembler<C>::visit_method_expression(ref<MethodExpression> that) {
   visit_syntax_tree(that);
 }
 
+
 template <class C>
 void Assembler<C>::visit_on_clause(ref<OnClause> that) {
   // This type of node is handled by the enclosing do-on expression.
   UNREACHABLE();
 }
+
 
 template <class C>
 void Assembler<C>::visit_unquote_expression(ref<UnquoteExpression> that) {
@@ -1096,6 +693,7 @@ void Assembler<C>::visit_unquote_expression(ref<UnquoteExpression> that) {
   UNREACHABLE();
 }
 
+
 template <class C>
 void Assembler<C>::visit_quote_template(ref<QuoteTemplate> that) {
   // This is handled specially by the visitor and should never be
@@ -1103,23 +701,41 @@ void Assembler<C>::visit_quote_template(ref<QuoteTemplate> that) {
   UNREACHABLE();
 }
 
+
 template <class C>
 void Assembler<C>::visit_arguments(ref<Arguments> that) {
   UNREACHABLE();
 }
+
 
 template <class C>
 void Assembler<C>::visit_parameters(ref<Parameters> that) {
   UNREACHABLE();
 }
 
+
 // -----------------------
 // --- B u i l t i n s ---
 // -----------------------
 
+
 template <class C>
 void Assembler<C>::attach_task() {
   __ attach();
+}
+
+
+template <class C>
+typename Assembler<C>::special_builtin Assembler<C>::get_special(uword index) {
+  // This method is defined within the class because I don't know
+  // how to declare the return type outside the class declaration
+  switch (index) {
+  #define MAKE_CASE(n, name, str) case n: return &Assembler::name;
+  eSpecialBuiltinFunctions(MAKE_CASE)
+  #undef MAKE_CASE
+      default:
+        return NULL;
+    }
 }
 
 
@@ -1130,6 +746,7 @@ void Assembler<C>::attach_task() {
 CompileSession::CompileSession(Runtime &runtime, ref<Context> context)
     : runtime_(runtime), context_(context) { }
 
+
 ref<Lambda> Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
     ref<Context> context) {
   ref<Smi> zero = runtime.refs().new_ref(Smi::from_int(0));  
@@ -1138,6 +755,7 @@ ref<Lambda> Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
   );
   return lambda;
 }
+
 
 ref<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
     ref<Context> context) {
@@ -1159,10 +777,12 @@ ref<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
   return runtime.refs().new_ref(result);
 }
 
+
 void Compiler::compile(Runtime &runtime, ref<Lambda> lambda, ref<Method> holder) {
   CompileSession session(runtime, lambda.context(runtime.refs()));
   session.compile(lambda, holder, NULL);
 }
+
 
 ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
     CodeGenerator *enclosing) {
@@ -1175,24 +795,35 @@ ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
   return lambda;
 }
 
+} // neutrino
+
+
+#include "backends/interpret.h"
+
+
+namespace neutrino {
+
+
 void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
     CodeGenerator *enclosing) {
   GarbageCollectionMonitor monitor(runtime().heap().memory());
   ref<LambdaExpression> tree = cast<LambdaExpression>(lambda.tree(runtime().refs()));
-  Assembler<void> assembler(tree, holder, *this, enclosing);
+  InterpretBackend backend(runtime());
+  backend.initialize();
+  Assembler<InterpretCodegenConfig> assembler(tree, holder, *this, backend, enclosing);
   ref<Parameters> params = tree.parameters(runtime().refs());
   // If this is a keyword call the keyword map will be pushed as the
   // first local variable by the caller
   if (params->has_keywords())
-    assembler.adjust_stack_height(1);
+    backend.adjust_stack_height(1);
   FunctionScope scope(assembler, params);
-  assembler.initialize();
   tree.body(runtime().refs()).accept(assembler);
-  ref<Code> code = assembler.flush_code();
-  ref<Tuple> constant_pool = assembler.flush_constant_pool();
+  ref<Code> code = backend.flush_code();
+  ref<Tuple> constant_pool = backend.flush_constant_pool();
   lambda->set_code(*code);
   lambda->set_constant_pool(*constant_pool);
   ASSERT(!monitor.has_collected_garbage());
 }
+
 
 } // neutrino

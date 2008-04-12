@@ -1,5 +1,6 @@
 # These are the files that make up the neutrino library.
 
+backends/interpret.cc
 compiler/ast.cc
 compiler/compiler.cc
 compiler/compile-utils.cc
