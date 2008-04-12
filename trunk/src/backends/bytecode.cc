@@ -1,4 +1,4 @@
-#include "backends/interpret.h"
+#include "backends/bytecode.h"
 #include "compiler/compile-utils-inl.h"
 #include "runtime/interpreter-inl.h"
 #include "values/values-inl.h"
@@ -7,13 +7,13 @@
 namespace neutrino {
 
 
-InterpretBackend::InterpretBackend(Runtime &runtime)
+BytecodeBackend::BytecodeBackend(Runtime &runtime)
   : AbstractBackend(runtime)
   , pool_(runtime)
   , stack_height_(0) { }
 
 
-void InterpretBackend::invoke(ref<Selector> selector, uint16_t argc,
+void BytecodeBackend::invoke(ref<Selector> selector, uint16_t argc,
     ref<Tuple> keymap) {
   STATIC_CHECK(OpcodeInfo<ocInvoke>::kArgc == 3);
   uint16_t selector_index = constant_pool_index(selector);
@@ -25,7 +25,7 @@ void InterpretBackend::invoke(ref<Selector> selector, uint16_t argc,
 }
 
 
-void InterpretBackend::invoke_super(ref<Selector> selector, uint16_t argc,
+void BytecodeBackend::invoke_super(ref<Selector> selector, uint16_t argc,
     ref<Tuple> keymap, ref<Signature> current) {
   STATIC_CHECK(OpcodeInfo<ocInvSup>::kArgc == 4);
   uint16_t selector_index = constant_pool_index(selector);
@@ -39,7 +39,7 @@ void InterpretBackend::invoke_super(ref<Selector> selector, uint16_t argc,
 }
 
 
-void InterpretBackend::instantiate(ref<Layout> layout) {
+void BytecodeBackend::instantiate(ref<Layout> layout) {
   STATIC_CHECK(OpcodeInfo<ocNew>::kArgc == 1);
   uint16_t layout_index = constant_pool_index(layout);
   code().append(ocNew);
@@ -48,7 +48,7 @@ void InterpretBackend::instantiate(ref<Layout> layout) {
 }
 
 
-void InterpretBackend::raise(ref<String> name, uint16_t argc) {
+void BytecodeBackend::raise(ref<String> name, uint16_t argc) {
   STATIC_CHECK(OpcodeInfo<ocRaise>::kArgc == 2);
   uint16_t name_index = constant_pool_index(name);
   code().append(ocRaise);
@@ -57,14 +57,14 @@ void InterpretBackend::raise(ref<String> name, uint16_t argc) {
 }
 
 
-void InterpretBackend::call(uint16_t argc) {
+void BytecodeBackend::call(uint16_t argc) {
   STATIC_CHECK(OpcodeInfo<ocCall>::kArgc == 1);
   code().append(ocCall);
   code().append(argc);
 }
 
 
-void InterpretBackend::push(ref<Value> value) {
+void BytecodeBackend::push(ref<Value> value) {
   STATIC_CHECK(OpcodeInfo<ocPush>::kArgc == 1);
   uint16_t index = constant_pool_index(value);
   code().append(ocPush);
@@ -73,7 +73,7 @@ void InterpretBackend::push(ref<Value> value) {
 }
 
 
-void InterpretBackend::global(ref<Value> value) {
+void BytecodeBackend::global(ref<Value> value) {
   STATIC_CHECK(OpcodeInfo<ocGlobal>::kArgc == 1);
   uint16_t index = constant_pool_index(value);
   code().append(ocGlobal);
@@ -82,7 +82,7 @@ void InterpretBackend::global(ref<Value> value) {
 }
 
 
-void InterpretBackend::argument(uint16_t index) {
+void BytecodeBackend::argument(uint16_t index) {
   STATIC_CHECK(OpcodeInfo<ocArgument>::kArgc == 1);
   code().append(ocArgument);
   code().append(index);
@@ -90,7 +90,7 @@ void InterpretBackend::argument(uint16_t index) {
 }
 
 
-void InterpretBackend::keyword(uint16_t index) {
+void BytecodeBackend::keyword(uint16_t index) {
   STATIC_CHECK(OpcodeInfo<ocKeyword>::kArgc == 1);
   code().append(ocKeyword);
   code().append(index);
@@ -98,7 +98,7 @@ void InterpretBackend::keyword(uint16_t index) {
 }
 
 
-void InterpretBackend::load_local(uint16_t height) {
+void BytecodeBackend::load_local(uint16_t height) {
   STATIC_CHECK(OpcodeInfo<ocLdLocal>::kArgc == 1);
   code().append(ocLdLocal);
   code().append(height);
@@ -106,14 +106,14 @@ void InterpretBackend::load_local(uint16_t height) {
 }
 
 
-void InterpretBackend::store_local(uint16_t height) {
+void BytecodeBackend::store_local(uint16_t height) {
   STATIC_CHECK(OpcodeInfo<ocStLocal>::kArgc == 1);
   code().append(ocStLocal);
   code().append(height);
 }
 
 
-void InterpretBackend::outer(uint16_t index) {
+void BytecodeBackend::outer(uint16_t index) {
   STATIC_CHECK(OpcodeInfo<ocOuter>::kArgc == 1);
   code().append(ocOuter);
   code().append(index);
@@ -121,7 +121,7 @@ void InterpretBackend::outer(uint16_t index) {
 }
 
 
-void InterpretBackend::closure(ref<Lambda> lambda, uint16_t outers) {
+void BytecodeBackend::closure(ref<Lambda> lambda, uint16_t outers) {
   STATIC_CHECK(OpcodeInfo<ocClosure>::kArgc == 2);
   uint16_t index = constant_pool_index(lambda);
   code().append(ocClosure);
@@ -130,19 +130,19 @@ void InterpretBackend::closure(ref<Lambda> lambda, uint16_t outers) {
 }
 
 
-void InterpretBackend::task() {
+void BytecodeBackend::task() {
   STATIC_CHECK(OpcodeInfo<ocTask>::kArgc == 0);
   code().append(ocTask);
 }
 
 
-void InterpretBackend::yield() {
+void BytecodeBackend::yield() {
   STATIC_CHECK(OpcodeInfo<ocYield>::kArgc == 0);
   code().append(ocYield);
 }
 
 
-void InterpretBackend::pop(uint16_t height) {
+void BytecodeBackend::pop(uint16_t height) {
   STATIC_CHECK(OpcodeInfo<ocPop>::kArgc == 1);
   code().append(ocPop);
   code().append(height);
@@ -150,7 +150,7 @@ void InterpretBackend::pop(uint16_t height) {
 }
 
 
-void InterpretBackend::slap(uint16_t height) {
+void BytecodeBackend::slap(uint16_t height) {
   if (height == 0) return;
   STATIC_CHECK(OpcodeInfo<ocSlap>::kArgc == 1);
   code().append(ocSlap);
@@ -159,27 +159,27 @@ void InterpretBackend::slap(uint16_t height) {
 }
 
 
-void InterpretBackend::swap() {
+void BytecodeBackend::swap() {
   STATIC_CHECK(OpcodeInfo<ocSwap>::kArgc == 0);
   code().append(ocSwap);
 }
 
 
-void InterpretBackend::rethurn() {
+void BytecodeBackend::rethurn() {
   STATIC_CHECK(OpcodeInfo<ocReturn>::kArgc == 0);
   ASSERT(stack_height() > 0);
   code().append(ocReturn);
 }
 
 
-void InterpretBackend::attach() {
+void BytecodeBackend::attach() {
   STATIC_CHECK(OpcodeInfo<ocAttach>::kArgc == 0);
   code().append(ocAttach);
   adjust_stack_height(1);
 }
 
 
-void InterpretBackend::tuple(uint16_t size) {
+void BytecodeBackend::tuple(uint16_t size) {
   STATIC_CHECK(OpcodeInfo<ocTuple>::kArgc == 1);
   code().append(ocTuple);
   code().append(size);
@@ -187,7 +187,7 @@ void InterpretBackend::tuple(uint16_t size) {
 }
 
 
-void InterpretBackend::concat(uint16_t terms) {
+void BytecodeBackend::concat(uint16_t terms) {
   STATIC_CHECK(OpcodeInfo<ocConcat>::kArgc == 1);
   code().append(ocConcat);
   code().append(terms);
@@ -195,7 +195,7 @@ void InterpretBackend::concat(uint16_t terms) {
 }
 
 
-void InterpretBackend::quote(uint16_t unquotes) {
+void BytecodeBackend::quote(uint16_t unquotes) {
   STATIC_CHECK(OpcodeInfo<ocQuote>::kArgc == 1);
   ASSERT(unquotes > 0);
   code().append(ocQuote);
@@ -204,7 +204,7 @@ void InterpretBackend::quote(uint16_t unquotes) {
 }
 
 
-void InterpretBackend::builtin(uint16_t argc, uint16_t index) {
+void BytecodeBackend::builtin(uint16_t argc, uint16_t index) {
   STATIC_CHECK(OpcodeInfo<ocBuiltin>::kArgc == 2);
   code().append(ocBuiltin);
   code().append(argc);
@@ -213,7 +213,7 @@ void InterpretBackend::builtin(uint16_t argc, uint16_t index) {
 }
 
 
-void InterpretBackend::if_true(InterpretLabel &label) {
+void BytecodeBackend::if_true(BytecodeLabel &label) {
   STATIC_CHECK(OpcodeInfo<ocIfTrue>::kArgc == 1);
   code().append(ocIfTrue);
   code().append(label.value());
@@ -221,7 +221,7 @@ void InterpretBackend::if_true(InterpretLabel &label) {
 }
 
 
-void InterpretBackend::if_false(InterpretLabel &label) {
+void BytecodeBackend::if_false(BytecodeLabel &label) {
   STATIC_CHECK(OpcodeInfo<ocIfFalse>::kArgc == 1);
   code().append(ocIfFalse);
   code().append(label.value());
@@ -229,7 +229,7 @@ void InterpretBackend::if_false(InterpretLabel &label) {
 }
 
 
-void InterpretBackend::ghoto(InterpretLabel &label) {
+void BytecodeBackend::ghoto(BytecodeLabel &label) {
   STATIC_CHECK(OpcodeInfo<ocGoto>::kArgc == 1);
   code().append(ocGoto);
   code().append(label.value());
@@ -237,12 +237,12 @@ void InterpretBackend::ghoto(InterpretLabel &label) {
 }
 
 
-void InterpretBackend::bind(InterpretLabel &label) {
+void BytecodeBackend::bind(BytecodeLabel &label) {
   ASSERT(!label.is_bound());
   uword value = code().length();
   uword current = label.value();
   label.set_value(value);
-  while (current != InterpretLabel::kNoTarget) {
+  while (current != BytecodeLabel::kNoTarget) {
     uword next = code()[current];
     code()[current] = value;
     current = next;
@@ -250,7 +250,7 @@ void InterpretBackend::bind(InterpretLabel &label) {
 }
 
 
-void InterpretBackend::mark(ref<Value> data) {
+void BytecodeBackend::mark(ref<Value> data) {
   STATIC_CHECK(OpcodeInfo<ocMark>::kArgc == 1);
   uint16_t index = constant_pool_index(data);
   code().append(ocMark);
@@ -259,28 +259,28 @@ void InterpretBackend::mark(ref<Value> data) {
 }
 
 
-void InterpretBackend::unmark() {
+void BytecodeBackend::unmark() {
   STATIC_CHECK(OpcodeInfo<ocUnmark>::kArgc == 0);
   code().append(ocUnmark);  
   adjust_stack_height(-static_cast<word>(Marker::kSize));
 }
 
 
-void InterpretBackend::new_forwarder(uint16_t type) {
+void BytecodeBackend::new_forwarder(uint16_t type) {
   STATIC_CHECK(OpcodeInfo<ocForward>::kArgc == 1);
   code().append(ocForward);
   code().append(type);
 }
 
 
-void InterpretBackend::bind_forwarder() {
+void BytecodeBackend::bind_forwarder() {
   STATIC_CHECK(OpcodeInfo<ocBindFor>::kArgc == 0);
   code().append(ocBindFor);
   adjust_stack_height(-1);
 }
 
 
-ref<Code> InterpretBackend::flush_code() {
+ref<Code> BytecodeBackend::flush_code() {
   ref<Code> result = factory().new_code(code().length());
   for (uword i = 0; i < result.length(); i++)
     result.at(i) = code()[i];
@@ -288,7 +288,7 @@ ref<Code> InterpretBackend::flush_code() {
 }
 
 
-ref<Tuple> InterpretBackend::flush_constant_pool() {
+ref<Tuple> BytecodeBackend::flush_constant_pool() {
   ref<Tuple> result = factory().new_tuple(pool().length());
   for (uword i = 0; i < result.length(); i++)
     result->set(i, pool().get(i));
@@ -296,7 +296,7 @@ ref<Tuple> InterpretBackend::flush_constant_pool() {
 }
 
 
-uint16_t InterpretBackend::constant_pool_index(ref<Value> value) {
+uint16_t BytecodeBackend::constant_pool_index(ref<Value> value) {
   heap_list &pool = this->pool();
   for (uint16_t i = 0; i < pool.length(); i++) {
     ref_scope scope(refs());
@@ -309,7 +309,7 @@ uint16_t InterpretBackend::constant_pool_index(ref<Value> value) {
 }
 
 
-ref<Method> InterpretBackend::field_getter(uword index, 
+ref<Method> BytecodeBackend::field_getter(uword index, 
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref<Code> ld_code = factory().new_code(4);
@@ -324,7 +324,7 @@ ref<Method> InterpretBackend::field_getter(uword index,
 }
 
 
-ref<Method> InterpretBackend::field_setter(uword index, 
+ref<Method> BytecodeBackend::field_setter(uword index, 
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref<Code> st_code = factory().new_code(6);
@@ -342,7 +342,7 @@ ref<Method> InterpretBackend::field_setter(uword index,
 }
 
 
-void InterpretBackend::adjust_stack_height(word delta) {
+void BytecodeBackend::adjust_stack_height(word delta) {
   ASSERT_GE(stack_height() + delta, 0);
   stack_height_ += delta;
   IF_PARANOID(code().append(ocChkHgt));

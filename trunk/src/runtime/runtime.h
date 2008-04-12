@@ -15,9 +15,9 @@ public:
   virtual void run(ref<Lambda> lambda, ref<Task> task) = 0;
 };
 
-class InterpretArchitecture : public Architecture {
+class BytecodeArchitecture : public Architecture {
 public:
-  InterpretArchitecture(Runtime &runtime) : interpreter_(runtime) { }
+  BytecodeArchitecture(Runtime &runtime) : interpreter_(runtime) { }
   virtual void run(ref<Lambda> lambda, ref<Task> task);
 private:
   Interpreter &interpreter() { return interpreter_; }

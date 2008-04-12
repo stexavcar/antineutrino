@@ -27,7 +27,7 @@ private:
 };
 
 
-void InterpretArchitecture::run(ref<Lambda> lambda, ref<Task> task) {
+void BytecodeArchitecture::run(ref<Lambda> lambda, ref<Task> task) {
   interpreter().call(lambda, task);
 }
 

@@ -9,9 +9,9 @@
 namespace neutrino {
 
 
-class InterpretLabel {
+class BytecodeLabel {
 public:
-  InterpretLabel() : is_bound_(false) , value_(kNoTarget) { }
+  BytecodeLabel() : is_bound_(false) , value_(kNoTarget) { }
   bool is_bound() { return is_bound_; }
   uword value() { return value_; }
   void set_value(uword addr) { ASSERT(addr != kNoTarget); value_ = addr; }
@@ -22,9 +22,9 @@ private:
 };
 
 
-class InterpretBackend : public AbstractBackend {
+class BytecodeBackend : public AbstractBackend {
 public:
-  InterpretBackend(Runtime &runtime);
+  BytecodeBackend(Runtime &runtime);
   void push(ref<Value> value);
   void pop(uint16_t height = 1);
   void slap(uint16_t height);
@@ -46,10 +46,10 @@ public:
   void closure(ref<Lambda> lambda, uint16_t outers);
   void task();
   void yield();
-  void if_true(InterpretLabel &label);
-  void if_false(InterpretLabel &label);
-  void ghoto(InterpretLabel &label);
-  void bind(InterpretLabel &label);
+  void if_true(BytecodeLabel &label);
+  void if_false(BytecodeLabel &label);
+  void ghoto(BytecodeLabel &label);
+  void bind(BytecodeLabel &label);
   void builtin(uint16_t argc, uint16_t index);
   void concat(uint16_t terms);
   void quote(uint16_t unquotes);
@@ -80,10 +80,10 @@ private:
 };
 
 
-class InterpretCodegenConfig {
+class BytecodeCodeGeneratorConfig {
 public:
-  typedef InterpretLabel Label;
-  typedef InterpretBackend Backend;
+  typedef BytecodeLabel Label;
+  typedef BytecodeBackend Backend;
 };
 
 

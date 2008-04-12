@@ -798,7 +798,7 @@ ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
 } // neutrino
 
 
-#include "backends/interpret.h"
+#include "backends/bytecode.h"
 
 
 namespace neutrino {
@@ -808,9 +808,9 @@ void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
     CodeGenerator *enclosing) {
   GarbageCollectionMonitor monitor(runtime().heap().memory());
   ref<LambdaExpression> tree = cast<LambdaExpression>(lambda.tree(runtime().refs()));
-  InterpretBackend backend(runtime());
+  BytecodeBackend backend(runtime());
   backend.initialize();
-  Assembler<InterpretCodegenConfig> assembler(tree, holder, *this, backend, enclosing);
+  Assembler<BytecodeCodeGeneratorConfig> assembler(tree, holder, *this, backend, enclosing);
   ref<Parameters> params = tree.parameters(runtime().refs());
   // If this is a keyword call the keyword map will be pushed as the
   // first local variable by the caller

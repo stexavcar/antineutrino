@@ -48,7 +48,7 @@ void Main::main(list<char*> &args) {
   if (*dylibs == NULL) return;
   list<string> files = Options::images;
   Runtime runtime(*dylibs);
-  InterpretArchitecture arch(runtime);
+  BytecodeArchitecture arch(runtime);
   runtime.initialize(&arch);
   for (uword i = 0; i < files.length(); i++) {
     ref_scope ref_scope(runtime.refs());
