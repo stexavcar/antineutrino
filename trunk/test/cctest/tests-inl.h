@@ -24,7 +24,7 @@ public:
 
 class LocalRuntime : public Runtime {
 public:
-  LocalRuntime() { initialize(); }
+  LocalRuntime() { initialize(NULL); }
 };
 
 /**

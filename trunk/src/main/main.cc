@@ -40,6 +40,7 @@ DynamicLibraryCollection *Main::load_dynamic_libraries() {
   return result.release();
 }
 
+
 void Main::main(list<char*> &args) {
   if (!Abort::setup_signal_handler()) return;
   FlagParser::parse_flags(args, on_option_error);
@@ -47,7 +48,8 @@ void Main::main(list<char*> &args) {
   if (*dylibs == NULL) return;
   list<string> files = Options::images;
   Runtime runtime(*dylibs);
-  runtime.initialize();
+  InterpretArchitecture arch(runtime);
+  runtime.initialize(&arch);
   for (uword i = 0; i < files.length(); i++) {
     ref_scope ref_scope(runtime.refs());
     string file = files[i];

@@ -12,8 +12,7 @@ void Test::integers() {
 }
 
 void Test::simple_string_operations() {
-  Runtime runtime;
-  runtime.initialize();
+  LocalRuntime runtime;
   Heap &heap = runtime.heap();
   String *str = cast<String>(heap.new_string("fop"));
   CHECK_IS(String, str);
@@ -24,8 +23,7 @@ void Test::simple_string_operations() {
 }
 
 void Test::to_string() {
-  Runtime runtime;
-  runtime.initialize();
+  LocalRuntime runtime;
   Heap &heap = runtime.heap();
   CHECK(Smi::from_int(123)->to_string() == "123");
   CHECK(heap.new_string("knallert")->to_string() == "\"knallert\"");

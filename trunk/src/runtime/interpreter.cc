@@ -26,14 +26,17 @@ private:
   static const bool kTraceInstructions = false;
 };
 
+
+void InterpretArchitecture::run(ref<Lambda> lambda, ref<Task> task) {
+  interpreter().call(lambda, task);
+}
+
+
 // -----------------------------
 // --- I n t e r p r e t e r ---
 // -----------------------------
 
-Value *Interpreter::call(Lambda *initial_lambda, Task *initial_task) {
-  ref_scope scope(runtime().refs());
-  ref<Task> task = runtime().refs().new_ref(initial_task);
-  ref<Lambda> lambda = runtime().refs().new_ref(initial_lambda);
+Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
   Frame frame = prepare_call(task, lambda, 0);
   uword pc = 0;
   Data *value;

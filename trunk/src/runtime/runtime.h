@@ -10,13 +10,27 @@
 
 namespace neutrino {
 
+class Architecture {
+public:
+  virtual void run(ref<Lambda> lambda, ref<Task> task) = 0;
+};
+
+class InterpretArchitecture : public Architecture {
+public:
+  InterpretArchitecture(Runtime &runtime) : interpreter_(runtime) { }
+  virtual void run(ref<Lambda> lambda, ref<Task> task);
+private:
+  Interpreter &interpreter() { return interpreter_; }
+  Interpreter interpreter_;
+};
+
 /**
  * A neutrino runtime encapsulated in a single object.
  */
-class Runtime {
+class Runtime : public nocopy {
 public:
   Runtime(DynamicLibraryCollection *dylibs = 0);
-  bool initialize();
+  bool initialize(Architecture *arch);
   Factory &factory() { return factory_; }
   Heap &heap() { return heap_; }
   Roots &roots() { return roots_; }
@@ -26,7 +40,6 @@ public:
   bool install_object(ref<Object> root, ref<Object> changes);
   bool install_dictionary(ref<Dictionary> root, ref<Dictionary> changes);
   bool install_layout(ref<Layout> root, ref<Protocol> changes);
-  Interpreter &interpreter() { return interpreter_; }
   void start();
 
   // Declare root field ref accessors
@@ -39,12 +52,13 @@ public:
   
   DynamicLibraryCollection *dylibs() { return dylibs_; }
   RefStack &refs() { return refs_; }
+  Architecture &architecture() { return *architecture_; }
   
 private:
   Roots roots_;
   Heap heap_;
   Factory factory_;
-  Interpreter interpreter_;
+  Architecture *architecture_;
   DynamicLibraryCollection *dylibs_;
   RefStack refs_;
 };

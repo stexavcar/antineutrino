@@ -577,7 +577,6 @@ public:
   DECLARE_FIELD(uword, argc);
   eLambdaFields(DECLARE_OBJECT_FIELD, 0)
 
-  Value *call(Runtime &runtime, Task *task);
   Data *clone(Heap &heap);
   void ensure_compiled(Runtime &runtime, Method *holder);
 

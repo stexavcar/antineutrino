@@ -1,11 +1,11 @@
+#include "cctest/tests-inl.h"
 #include "runtime/runtime-inl.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
 
 void Test::dictionary_simple() {
-  Runtime runtime;
-  runtime.initialize();
+  LocalRuntime runtime;
   Heap &heap = runtime.heap();
   Dictionary *dict = cast<Dictionary>(heap.new_dictionary());
   // { }
@@ -40,8 +40,7 @@ void Test::dictionary_simple() {
 }
 
 void Test::dictionary_iterator() {
-  Runtime runtime;
-  runtime.initialize();
+  LocalRuntime runtime;
   Heap &heap = runtime.heap();
   Dictionary *dict = cast<Dictionary>(heap.new_dictionary());
   const int kCount = 100;

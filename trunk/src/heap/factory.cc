@@ -41,6 +41,10 @@ ref<Lambda> Factory::new_lambda(uword argc, ref<Value> code,
   ALLOCATE_CHECKED(Lambda, new_lambda(argc, *code, *literals, *tree, *context));
 }
 
+ref<Task> Factory::new_task() {
+  ALLOCATE_CHECKED(Task, new_task());
+}
+
 ref<Parameters> Factory::new_parameters(ref<Smi> position_count,
     ref<Tuple> params) {
   ALLOCATE_CHECKED(Parameters, new_parameters(*position_count, *params));

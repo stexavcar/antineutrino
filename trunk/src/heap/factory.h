@@ -17,6 +17,7 @@ public:
   ref<Parameters> new_parameters(ref<Smi> position_count, ref<Tuple> params);
   ref<Lambda> new_lambda(uword argc, ref<Value> code,
       ref<Value> literals, ref<Value> tree, ref<Context> context);
+  ref<Task> new_task();
   ref<LambdaExpression> new_lambda_expression(ref<Parameters> params,
       ref<SyntaxTree> body);
   ref<ReturnExpression> new_return_expression(ref<SyntaxTree> value);

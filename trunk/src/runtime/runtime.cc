@@ -9,12 +9,13 @@ namespace neutrino {
 Runtime::Runtime(DynamicLibraryCollection *dylibs)
   : heap_(roots_)
   , factory_(*this)
-  , interpreter_(*this)
+  , architecture_(NULL)
   , dylibs_(dylibs) {
 }
 
-bool Runtime::initialize() {
+bool Runtime::initialize(Architecture *arch) {
   if (!roots().initialize(heap())) return false;
+  architecture_ = arch;
   return true;
 }
 
@@ -25,8 +26,10 @@ void Runtime::start() {
   } else if (!is<Lambda>(value)) {
     Conditions::get().error_occurred("Value 'main' is not a function.");
   }
-  Task *task = cast<Task>(heap().new_task());
-  cast<Lambda>(value)->call(*this, task);
+  ref_scope scope(refs());
+  ref<Lambda> lambda = refs().new_ref(cast<Lambda>(value));
+  ref<Task> task = factory().new_task();
+  architecture().run(lambda, task);
 }
 
 void Runtime::report_load_error(ImageLoadStatus &info) {

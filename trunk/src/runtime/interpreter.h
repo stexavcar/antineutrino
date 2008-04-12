@@ -148,7 +148,7 @@ private:
 class Interpreter {
 public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
-  Value *call(Lambda *lambda, Task *task);
+  Value *call(ref<Lambda> lambda, ref<Task> task);
 private:
   Frame prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc);
   Data *interpret(Stack *stack, Frame &frame, uword *pc_ptr);

@@ -1,7 +1,7 @@
+#include "cctest/tests-inl.h"
 #include "heap/ref-inl.h"
 #include "heap/heap.h"
 #include "runtime/runtime.h"
-#include "cctest/tests-inl.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
@@ -9,8 +9,7 @@ using namespace neutrino;
 void Test::handles() {
   RefStack refs;
   ref_scope scope(refs);
-  Runtime runtime;
-  runtime.initialize();
+  LocalRuntime runtime;
   Heap &heap = runtime.heap();
   Tuple *tuple = cast<Tuple>(heap.new_tuple(10));
   ref<Tuple> tuple_ref = refs.new_ref(tuple);

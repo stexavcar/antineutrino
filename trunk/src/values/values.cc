@@ -591,11 +591,6 @@ void Instance::for_each_instance_field(FieldVisitor &visitor) {
 // --- L a m b d a ---
 // -------------------
 
-Value *Lambda::call(Runtime &runtime, Task *task) {
-  Interpreter &interpreter = runtime.interpreter();
-  return interpreter.call(this, task);
-}
-
 Data *Lambda::clone(Heap &heap) {
   return heap.new_lambda(argc(), code(), constant_pool(), tree(), context());
 }

@@ -1,11 +1,11 @@
+#include "cctest/tests-inl.h"
 #include "runtime/runtime.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
 
 void Test::singletons() {
-  Runtime runtime;
-  runtime.initialize();
+  LocalRuntime runtime;
   Roots &roots = runtime.roots();
 
   CHECK_IS(Void, roots.vhoid());
