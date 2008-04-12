@@ -3,6 +3,7 @@
 #include "heap/ref-inl.h"
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
+#include "utils/string-inl.h"
 #include "values/values-inl.h"
 
 namespace neutrino {
@@ -322,115 +323,34 @@ static void disassemble_buffer(uint16_t *data, uword size,
   uword pc = 0;
   while (pc < size) {
     buf.printf("%{ 3} ", pc);
-    switch (data[pc]) {
-      case ocArgument:
-        buf.printf("argument %", data[pc + 1]);
-        pc += OpcodeInfo<ocArgument>::kSize;
-        break;
-      case ocLdLocal:
-        buf.printf("load local %", data[pc + 1]);
-        pc += OpcodeInfo<ocLdLocal>::kSize;
-        break;
-      case ocStLocal:
-        buf.printf("store local %", data[pc  + 1]);
-        pc += OpcodeInfo<ocStLocal>::kSize;
-        break;
-      case ocGlobal: {
-        scoped_string name(literals->get(data[pc + 1])->to_string());
-        buf.printf("global %", name.chars());
-        pc += OpcodeInfo<ocGlobal>::kSize;
-        break;
+    OpcodeData opcode_data;
+    opcode_data.load(data[pc]);
+    ASSERT(opcode_data.is_resolved());
+    buf.printf("%", opcode_data.name().chars());
+    string format = opcode_data.format();
+    for (uword i = 0; i < format.length(); i++) {
+      buf.append(" ");
+      uint16_t arg = data[pc + 1 + i];
+      switch (format[i]) {
+        case 'i':
+          buf.printf("%", arg);
+          break;
+        case '@':
+          buf.printf("@%", arg);
+          break;
+        case 'p':
+          Value *value = literals->get(arg);
+          value->write_on(buf);
+          break;
+        case '?':
+          buf.append("?");
+          break;
+        default:
+          UNREACHABLE();
       }
-      case ocBuiltin: {
-        buf.printf("built-in %", data[pc + 1]);
-        pc += OpcodeInfo<ocBuiltin>::kSize;
-        break;
-      }
-      case ocPush: {
-        scoped_string value(literals->get(data[pc + 1])->to_string());
-        buf.printf("push %", value.chars());
-        pc += OpcodeInfo<ocPush>::kSize;
-        break;
-      }
-      case ocSlap:
-        buf.printf("slap %", data[pc + 1]);
-        pc += OpcodeInfo<ocSlap>::kSize;
-        break;
-      case ocPop:
-        buf.printf("pop %", data[pc + 1]);
-        pc += OpcodeInfo<ocPop>::kSize;
-        break;
-      case ocCall: {
-        buf.printf("call %", data[pc + 1]);
-        pc += OpcodeInfo<ocCall>::kSize;
-        break;
-      }
-      case ocInvoke: {
-        scoped_string name(literals->get(data[pc + 1])->to_string());
-        buf.printf("invoke %", name.chars());
-        pc += OpcodeInfo<ocInvoke>::kSize;
-        break;
-      }
-      case ocRaise: {
-        scoped_string name(literals->get(data[pc + 1])->to_string());
-        buf.printf("raise %", name.chars());
-        pc += OpcodeInfo<ocRaise>::kSize;
-        break;
-      }
-      case ocNew: {
-        buf.append("new");
-        pc += OpcodeInfo<ocNew>::kSize;
-        break;
-      }
-      case ocClosure:
-        buf.printf("closure % %", data[pc + 1], data[pc + 2]);
-        pc += OpcodeInfo<ocClosure>::kSize;
-        break;
-      case ocIfTrue:
-        buf.printf("if_true %", data[pc + 1]);
-        pc += OpcodeInfo<ocIfTrue>::kSize;
-        break;
-      case ocGoto:
-        buf.printf("goto %", data[pc + 1]);
-        pc += OpcodeInfo<ocGoto>::kSize;
-        break;
-      case ocVoid:
-        buf.append("void");
-        pc += OpcodeInfo<ocVoid>::kSize;
-        break;
-      case ocNull:
-        buf.append("null");
-        pc += OpcodeInfo<ocNull>::kSize;
-        break;
-      case ocReturn:
-        buf.append("return");
-        pc += OpcodeInfo<ocReturn>::kSize;
-        break;
-      case ocConcat:
-        buf.printf("concat %", data[pc + 1]);
-        pc += OpcodeInfo<ocConcat>::kSize;
-        break;
-      case ocChkHgt:
-        buf.printf("check height %", data[pc + 1]);
-        pc += OpcodeInfo<ocChkHgt>::kSize;
-        break;
-      case ocTuple:
-        buf.printf("tuple %", data[pc + 1]);
-        pc += OpcodeInfo<ocTuple>::kSize;
-        break;
-      case ocForward:
-        buf.printf("new forwarder %", data[pc + 1]);
-        pc += OpcodeInfo<ocForward>::kSize;
-        break;
-      case ocBindFor:
-        buf.append("bind forwarder");
-        pc += OpcodeInfo<ocBindFor>::kSize;
-        break;
-      default:
-        UNHANDLED(Opcode, data[pc]);
-        return;
     }
     buf.append("\n");
+    pc += opcode_data.length();
   }
 }
 

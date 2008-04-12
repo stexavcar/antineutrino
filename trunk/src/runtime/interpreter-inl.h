@@ -127,7 +127,7 @@ template <Opcode opcode>
 class OpcodeInfo { };
 
 // Generate specializations for the opcodes
-#define DECLARE_OPCODE_INFO(n, Name, argc)                           \
+#define DECLARE_OPCODE_INFO(n, Name, argc, argf)                     \
   template <> class OpcodeInfo<oc##Name> {                           \
   public:                                                            \
     static const uword kArgc = argc;                                 \

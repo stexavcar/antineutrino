@@ -15,23 +15,30 @@ namespace neutrino {
  * arguments they expect.
  */
 #define eOpcodes(VISIT)                                                \
-  VISIT(0,  Push,   1)   VISIT(1,  Return, 0)   VISIT(2,  Global,   1) \
-  VISIT(3,  Call,   1)   VISIT(4,  Slap,   1)   VISIT(5,  Argument, 1) \
-  VISIT(6,  Void,   0)   VISIT(7,  Null,   0)   VISIT(8,  True,     0) \
-  VISIT(9,  False,  0)   VISIT(10, Pop,    1)   VISIT(11, IfTrue,  1)  \
-  VISIT(12, Goto,   1)   VISIT(13, Invoke, 3)   VISIT(14, Builtin,  2) \
-  VISIT(15, Tuple,  1)   VISIT(16, Concat, 1)   VISIT(17, LdLocal, 1)  \
-  VISIT(18, ChkHgt, 1)   VISIT(19, Outer,  1)   VISIT(20, Closure,  2) \
-  VISIT(21, Quote,  1)   VISIT(22, Unquote, 1)  VISIT(23, Raise,    2) \
-  VISIT(24, Mark,   1)   VISIT(25, Unmark, 0)   VISIT(26, New,      1) \
-  VISIT(27, LdField, 2)  VISIT(28, IfFalse, 1)  VISIT(29, Task,     0) \
-  VISIT(30, Yield,  0)   VISIT(31, StLocal, 1)  VISIT(32, Attach,   0) \
-  VISIT(33, Keyword, 1)  VISIT(34, StField, 2)  VISIT(35, InvSup,   4) \
-  VISIT(36, Forward, 1)  VISIT(37, BindFor, 0)  VISIT(38, Swap,     0)
+  VISIT(0,  Push,        1, "p")   VISIT(1,  Return,        0, "")     \
+  VISIT(2,  Global,      1, "p")   VISIT(3,  Call,          1, "?")    \
+  VISIT(4,  Slap,        1, "i")   VISIT(5,  Argument,      1, "i")    \
+  VISIT(6,  Void,        0, "")    VISIT(7,  Null,          0, "")     \
+  VISIT(8,  True,        0, "")    VISIT(9,  False,         0, "")     \
+  VISIT(10, Pop,         1, "i")   VISIT(11, IfTrue,        1, "@")    \
+  VISIT(12, Goto,        1, "@")   VISIT(13, Invoke,        3, "???")  \
+  VISIT(14, Builtin,     2, "i")   VISIT(15, Tuple,         1, "i")    \
+  VISIT(16, Concat,      1, "i")   VISIT(17, LoadLocal,     1, "i")    \
+  VISIT(18, CheckHeight, 1, "i")   VISIT(19, Outer,         1, "i")    \
+  VISIT(20, Closure,     2, "??")  VISIT(21, Quote,         1, "i")    \
+  VISIT(22, Unquote,     1, "?")   VISIT(23, Raise,         2, "??")   \
+  VISIT(24, Mark,        1, "?")   VISIT(25, Unmark,        0, "")     \
+  VISIT(26, New,         1, "?")   VISIT(27, LoadField,     2, "??")   \
+  VISIT(28, IfFalse,     1, "@")   VISIT(29, Task,          0, "")     \
+  VISIT(30, Yield,       0, "")    VISIT(31, StoreLocal,    1, "i")    \
+  VISIT(32, Attach,      0, "")    VISIT(33, Keyword,       1, "?")    \
+  VISIT(34, StoreField,  2, "??")  VISIT(35, InvokeSuper,   4, "????") \
+  VISIT(36, Forward,     1, "?")   VISIT(37, BindForwarder, 0, "")     \
+  VISIT(38, Swap,        0, "")    VISIT(39, LazyCompile,   0, "")
 
 enum Opcode {
   __first_opcode = -1
-#define DECLARE_OPCODE(n, Name, argc) , oc##Name = n
+#define DECLARE_OPCODE(n, Name, argc, argf) , oc##Name = n
 eOpcodes(DECLARE_OPCODE)
 #undef DECLARE_OPCODE
 };
@@ -140,6 +147,20 @@ public:
 private:
   word *fp_;
   word *sp_;
+};
+
+class OpcodeData {
+public:
+  OpcodeData() : is_resolved_(false) { }
+  void load(uint16_t value);
+  bool is_resolved() { return is_resolved_; }
+  uword length() { return length_; }
+  string name() { return name_; }
+  string format() { return format_; }
+private:
+  bool is_resolved_;
+  string name_, format_;
+  uword length_;
 };
 
 /**

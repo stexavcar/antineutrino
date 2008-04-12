@@ -27,11 +27,11 @@ void BytecodeBackend::invoke(ref<Selector> selector, uint16_t argc,
 
 void BytecodeBackend::invoke_super(ref<Selector> selector, uint16_t argc,
     ref<Tuple> keymap, ref<Signature> current) {
-  STATIC_CHECK(OpcodeInfo<ocInvSup>::kArgc == 4);
+  STATIC_CHECK(OpcodeInfo<ocInvokeSuper>::kArgc == 4);
   uint16_t selector_index = constant_pool_index(selector);
   uint16_t keymap_index = constant_pool_index(keymap);
   uint16_t current_index = constant_pool_index(current);
-  code().append(ocInvSup);
+  code().append(ocInvokeSuper);
   code().append(selector_index);
   code().append(argc);
   code().append(keymap_index);
@@ -99,16 +99,16 @@ void BytecodeBackend::keyword(uint16_t index) {
 
 
 void BytecodeBackend::load_local(uint16_t height) {
-  STATIC_CHECK(OpcodeInfo<ocLdLocal>::kArgc == 1);
-  code().append(ocLdLocal);
+  STATIC_CHECK(OpcodeInfo<ocLoadLocal>::kArgc == 1);
+  code().append(ocLoadLocal);
   code().append(height);
   adjust_stack_height(1);
 }
 
 
 void BytecodeBackend::store_local(uint16_t height) {
-  STATIC_CHECK(OpcodeInfo<ocStLocal>::kArgc == 1);
-  code().append(ocStLocal);
+  STATIC_CHECK(OpcodeInfo<ocStoreLocal>::kArgc == 1);
+  code().append(ocStoreLocal);
   code().append(height);
 }
 
@@ -274,8 +274,8 @@ void BytecodeBackend::new_forwarder(uint16_t type) {
 
 
 void BytecodeBackend::bind_forwarder() {
-  STATIC_CHECK(OpcodeInfo<ocBindFor>::kArgc == 0);
-  code().append(ocBindFor);
+  STATIC_CHECK(OpcodeInfo<ocBindForwarder>::kArgc == 0);
+  code().append(ocBindForwarder);
   adjust_stack_height(-1);
 }
 
@@ -313,8 +313,8 @@ ref<Method> BytecodeBackend::field_getter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref<Code> ld_code = factory().new_code(4);
-  STATIC_CHECK(OpcodeInfo<ocLdField>::kArgc == 2);
-  ld_code->at(0) = ocLdField;
+  STATIC_CHECK(OpcodeInfo<ocLoadField>::kArgc == 2);
+  ld_code->at(0) = ocLoadField;
   ld_code->at(1) = index;
   ld_code->at(2) = 0;
   ld_code->at(3) = ocReturn;
@@ -328,11 +328,11 @@ ref<Method> BytecodeBackend::field_setter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref<Code> st_code = factory().new_code(6);
-  STATIC_CHECK(OpcodeInfo<ocStField>::kArgc == 2);
+  STATIC_CHECK(OpcodeInfo<ocStoreField>::kArgc == 2);
   STATIC_CHECK(OpcodeInfo<ocArgument>::kArgc == 1);
   st_code->at(0) = ocArgument;
   st_code->at(1) = 0;
-  st_code->at(2) = ocStField;
+  st_code->at(2) = ocStoreField;
   st_code->at(3) = index;
   st_code->at(4) = 1;
   st_code->at(5) = ocReturn;
@@ -345,7 +345,7 @@ ref<Method> BytecodeBackend::field_setter(uword index,
 void BytecodeBackend::adjust_stack_height(word delta) {
   ASSERT_GE(stack_height() + delta, 0);
   stack_height_ += delta;
-  IF_PARANOID(code().append(ocChkHgt));
+  IF_PARANOID(code().append(ocCheckHeight));
   IF_PARANOID(code().append(stack_height()));
 }
 

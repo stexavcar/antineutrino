@@ -10,11 +10,27 @@
 namespace neutrino {
 
 MAKE_ENUM_INFO_HEADER(Opcode)
-#define MAKE_ENTRY(n, Name, argc) MAKE_ENUM_INFO_ENTRY(oc##Name)
+#define MAKE_ENTRY(n, Name, argc, argf) MAKE_ENUM_INFO_ENTRY(oc##Name)
 eOpcodes(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
 
+
+void OpcodeData::load(uint16_t value) {
+  switch (value) {
+#define MAKE_CASE(n, Name, argc, argf)                               \
+    case oc##Name:                                                   \
+      name_ = #Name;                                                 \
+      format_ = argf;                                                \
+      length_ = argc + 1;                                            \
+      is_resolved_ = true;                                           \
+      break;
+eOpcodes(MAKE_CASE)
+#undef MAKE_CASE
+  }
+}
+
+  
 // -------------
 // --- L o g ---
 // -------------
@@ -189,17 +205,17 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc += OpcodeInfo<ocGlobal>::kSize;
       break;
     }
-    case ocLdLocal: {
+    case ocLoadLocal: {
       uint16_t index = code[pc + 1];
       Value *value = frame.local(index);
       frame.push(value);
-      pc += OpcodeInfo<ocLdLocal>::kSize;
+      pc += OpcodeInfo<ocLoadLocal>::kSize;
       break;
     }
-    case ocStLocal: {
+    case ocStoreLocal: {
       uint16_t index = code[pc + 1];
       frame.local(index) = frame[0];
-      pc += OpcodeInfo<ocStLocal>::kSize;
+      pc += OpcodeInfo<ocStoreLocal>::kSize;
       break;
     }
     case ocArgument: {
@@ -268,7 +284,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc = 0;
       break;
     }
-    case ocInvSup: {
+    case ocInvokeSuper: {
       uint16_t selector_index = code[pc + 1];
       Selector *selector = cast<Selector>(constant_pool[selector_index]);
       Tuple *keymap = cast<Tuple>(constant_pool[code[pc + 3]]);
@@ -285,7 +301,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       }
       Method *method = cast<Method>(lookup_result);
       frame.push_activation();
-      frame.prev_pc() = pc + OpcodeInfo<ocInvSup>::kSize;
+      frame.prev_pc() = pc + OpcodeInfo<ocInvokeSuper>::kSize;
       frame.lambda() = method->lambda();
       method->lambda()->ensure_compiled(runtime(), method);
       code = cast<Code>(method->lambda()->code())->buffer();
@@ -362,20 +378,20 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc += OpcodeInfo<ocNew>::kSize;
       break;
     }
-    case ocLdField: {
+    case ocLoadField: {
       uint16_t index = code[pc + 1];
       uint16_t argc = code[pc + 2];
       Value *value = cast<Instance>(to<Instance>(frame.self(argc)))->get_field(index);
       frame.push(value);
-      pc += OpcodeInfo<ocLdField>::kSize;
+      pc += OpcodeInfo<ocLoadField>::kSize;
       break;
     }
-    case ocStField: {
+    case ocStoreField: {
       uint16_t index = code[pc + 1];
       uint16_t argc = code[pc + 2];
       Value *value = frame[0];
       cast<Instance>(to<Instance>(frame.self(argc)))->set_field(index, value);
-      pc += OpcodeInfo<ocStField>::kSize;
+      pc += OpcodeInfo<ocStoreField>::kSize;
       break;
     }
     case ocMark: {
@@ -408,13 +424,13 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc += OpcodeInfo<ocForward>::kSize;
       break;
     }
-    case ocBindFor: {
+    case ocBindForwarder: {
       Value *value = frame.pop();
       Forwarder *forw = cast<Forwarder>(frame.pop());
       forw->descriptor()->set_target(value);
       forw->descriptor()->set_type(Forwarder::fwClosed);
       frame.push(value);
-      pc += OpcodeInfo<ocBindFor>::kSize;
+      pc += OpcodeInfo<ocBindForwarder>::kSize;
       break;
     }
     case ocBuiltin: {
@@ -483,10 +499,10 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       pc += OpcodeInfo<ocTuple>::kSize;
       break;
     }
-    case ocChkHgt: {
+    case ocCheckHeight: {
       uint16_t expected = code[pc + 1];
       CHECK_EQ(expected, frame.locals());
-      pc += OpcodeInfo<ocChkHgt>::kSize;
+      pc += OpcodeInfo<ocCheckHeight>::kSize;
       break;
     }
     case ocConcat: {
