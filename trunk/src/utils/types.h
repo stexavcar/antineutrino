@@ -57,9 +57,10 @@ namespace neutrino {
 
 class AbstractWatch;
 class Arguments;
-class Assembler;
+template <class Config> class Assembler;
 class Layout;
 class Code;
+class CodeGenerator;
 class Context;
 class Data;
 class Dictionary;
