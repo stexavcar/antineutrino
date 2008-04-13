@@ -1,3 +1,4 @@
+#include "utils/list-inl.h"
 #include "utils/string-inl.h"
 #include "platform/stdc-inl.h"
 
@@ -6,13 +7,6 @@
 using namespace neutrino;
 
 // --- S t r i n g ---
-
-uword string::length(const char* chars) {
-  int result = 0;
-  while (chars[result] != '\0')
-    result++;
-  return result;
-}
 
 string string::dup(string arg) {
   char *result = new char[arg.length() + 1];
@@ -43,8 +37,9 @@ void string::dispose() {
   delete[] chars_;
 }
 
-void string::println() {
-  printf("%s\n", chars());
+void string::println(FILE *out) {
+  if (out == NULL) ::printf("%s\n", chars());
+  else ::fprintf(out, "%s\n", chars());
 }
 
 // --- S t r i n g   b u f f e r ---
@@ -94,41 +89,45 @@ string string_buffer::raw_string() {
   return string(data_, cursor_);
 }
 
-void string_buffer::printf(string format, element arg1) {
+void string_buffer::printf(string format, fmt_elm arg1) {
   const int argc = 1;
-  element argv[argc] = { arg1 };
-  printf(format, argc, argv);
+  fmt_elm argv[argc] = { arg1 };
+  printf(format, list<fmt_elm>(argv, argc));
 }
 
-void string_buffer::printf(string format, element arg1,
-    element arg2) {
+void string_buffer::printf(string format, fmt_elm arg1, fmt_elm arg2) {
   const int argc = 2;
-  element argv[argc] = { arg1, arg2 };
-  printf(format, argc, argv);
+  fmt_elm argv[argc] = { arg1, arg2 };
+  printf(format, list<fmt_elm>(argv, argc));
 }
 
-void string_buffer::printf(string format, element arg1,
-    element arg2, element arg3) {
+void string_buffer::printf(string format, fmt_elm arg1,
+    fmt_elm arg2, fmt_elm arg3) {
   const int argc = 3;
-  element argv[argc] = { arg1, arg2, arg3 };
-  printf(format, argc, argv);
+  fmt_elm argv[argc] = { arg1, arg2, arg3 };
+  printf(format, list<fmt_elm>(argv, argc));
 }
 
-void string_buffer::printf(string format, element arg1,
-    element arg2, element arg3, element arg4) {
+void string_buffer::printf(string format, fmt_elm arg1,
+    fmt_elm arg2, fmt_elm arg3, fmt_elm arg4) {
   const int argc = 4;
-  element argv[argc] = { arg1, arg2, arg3, arg4 };
-  printf(format, argc, argv);
+  fmt_elm argv[argc] = { arg1, arg2, arg3, arg4 };
+  printf(format, list<fmt_elm>(argv, argc));
 }
 
-void string_buffer::printf(string format, uword argc, element argv[]) {
+void string_buffer::printf(string format, fmt_elm arg1, fmt_elm arg2,
+    fmt_elm arg3, fmt_elm arg4, fmt_elm arg5, fmt_elm arg6) {
+  const int argc = 6;
+  fmt_elm argv[argc] = { arg1, arg2, arg3, arg4, arg5, arg6 };
+  printf(format, list<fmt_elm>(argv, argc));  
+}
+
+void string_buffer::printf(string format, list<fmt_elm> args) {
   const int kMaxParamsLength = 16;
-  const int kPrefixLength = 2;
-  const int kSuffixLength = 2;
   // Make the params buffer large enough to allow changes before and
   // after the param string
-  char params_buffer[kMaxParamsLength + kPrefixLength + kSuffixLength];
-  char *params = params_buffer + kPrefixLength;
+  char params_buffer[kMaxParamsLength];
+  list<char> params(params_buffer, kMaxParamsLength);
   uword i = 0;
   uword cursor = 0;
   while (i < format.length()) {
@@ -150,81 +149,65 @@ void string_buffer::printf(string format, uword argc, element argv[]) {
       continue;
     }
     i++;
-    element *element;
+    fmt_elm *fmt_elm;
     if (is_positional) {
       ASSERT(i < format.length());
-      // Read the element from the specified position in the args
+      // Read the fmt_elm from the specified position in the args
       // array
       c = format[i++];
       ASSERT('0' <= c && c <= '9');
       uword index = c - '0';
-      ASSERT(index < argc);
-      element = &argv[index];
+      fmt_elm = &args[index];
     } else {
-      // Read the next element
-      ASSERT(cursor < argc);
-      element = &argv[cursor++];
+      // Read the next fmt_elm
+      fmt_elm = &args[cursor++];
     }
     int offset = -1;
     // If we're looking at a '{' we need to transfer the format
     // parameters between the braces to the params string
+    string str_params;
     if (i < format.length() && format[i] == '{') {
       i++;
       offset = 0;
       while (true) {
         // No format parameters should take more then a certain fixed
         // number of characters
-        ASSERT(i < format.length());
-        ASSERT(offset < kMaxParamsLength);
         c = format[i++];
         if (c == '}') {
           // Close the params string and stop when we reach the end
           params[offset] = '\0';
+          str_params = string(params.start(), offset);
           break;
         } else {
           params[offset++] = c;
         }
       }
     }
-    element->print_on(*this, (offset == -1) ? NULL : params, offset);
+    fmt_elm->print_on(*this, (offset == -1) ? string() : str_params);
   }
 }
 
-void string_buffer::element::print_on(string_buffer &buf, char *params,
-    int offset) {
+static bool is_digit(uword c) {
+  return '0' <= c && c <= '9';
+}
+
+static uword digit_to_char(uword digit) {
+  if (digit < 10) return '0' + digit;
+  else return 'a' + (digit - 10);
+}
+
+static uword char_to_digit(uword chr) {
+  ASSERT(is_digit(chr));
+  return chr - '0';
+}
+
+void fmt_elm::print_on(string_buffer &buf, string params) {
   switch (tag_) {
-  case eInt: {
-    word value = value_.u_int;
-    const char kTempSize = 24;
-    char temp[kTempSize];
-    if (params) {
-      // Use the space before and after the string in the params array
-      // to create a native printf format string.
-      params[-1] = '%';
-      params[offset] = 'i';
-      params[offset + 1] = '\0';
-      stdc_snprintf(temp, kTempSize, params - 1, value);
-    } else {
-      stdc_snprintf(temp, kTempSize, "%i", value);
-    }
-    buf.append(temp);
+  case eInt:
+    print_int_on(buf, params);
     break;
-  }
   case eDouble: {
-    double value = value_.u_double;
-    const char kTempSize = 24;
-    char temp[kTempSize];
-    if (params) {
-      // Use the space before and after the string in the params array
-      // to create a native printf format string.
-      params[-1] = '%';
-      params[offset] = 'g';
-      params[offset + 1] = '\0';
-      stdc_snprintf(temp, kTempSize, params - 1, value);
-    } else {
-      stdc_snprintf(temp, kTempSize, "%g", value);
-    }
-    buf.append(temp);
+    UNREACHABLE();
     break;
   }
   case eString: {
@@ -240,5 +223,66 @@ void string_buffer::element::print_on(string_buffer &buf, char *params,
   default:
     UNREACHABLE();
     break;
+  }
+}
+
+
+void fmt_elm::print_int_on(string_buffer &buf, string params) {
+  // Configuration parameters
+  bool flush_right = true;
+  uword min_length = 0;
+  uword pad_char = ' ';
+  uword radix = 10;
+  // Process parameter string and set above parameters
+  for (uword pos = 0; pos < params.length();) {
+    uword current = params[pos];
+    if (current == '0') {
+      pad_char = '0';
+      pos++;
+    } else if (is_digit(current)) {
+      while (pos < params.length() && is_digit(params[pos])) {
+        min_length = 10 * min_length + char_to_digit(params[pos]);
+        pos++;
+      }
+    } else if (current == '-') {
+      flush_right = false;
+      pos++;
+    } else if (current == 'x') {
+      radix = 16;
+      pos++;
+    } else {
+      UNREACHABLE();
+    }
+  }
+
+  // Convert the number to a string in a temporary buffer
+  const char kTempSize = 24;
+  char temp_buffer[kTempSize];
+  list<char> temp(temp_buffer, kTempSize);
+  word value = value_.u_int;
+  bool is_negative = (value < 0);
+  if (is_negative) value = -value;
+  uword offset = 0;
+  if (value == 0) {
+    temp[offset] = '0';
+    offset++;
+  } else {
+    while (value > 0) {
+      temp[offset] = digit_to_char(value % radix);
+      value = value / radix;
+      offset = offset + 1;
+    }
+  }
+  word padding = min_length - (offset + (is_negative ? 1 : 0));
+  if (is_negative) buf.append("-");
+  if (flush_right) {
+    for (word i = 0; i < padding; i++)
+      buf.append(pad_char);
+  }
+  for (word i = offset - 1; i >= 0; i--)
+    buf.append(temp[i]);
+  if (!flush_right) {
+    for (word i = 0; i < padding; i++)
+      buf.append(pad_char);
   }
 }

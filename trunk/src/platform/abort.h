@@ -1,6 +1,8 @@
 #ifndef _PLATFORM_ABORT
 #define _PLATFORM_ABORT
 
+#include "utils/string.h"
+
 namespace neutrino {
 
 class Resource {
@@ -17,7 +19,7 @@ private:
 class Abort {
 public:
   static bool setup_signal_handler();
-  static void abort();
+  static void abort(string message);
   static void cleanup_resources();
 private:
   friend class Resource;

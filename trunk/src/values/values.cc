@@ -326,7 +326,7 @@ static void disassemble_buffer(uint16_t *data, uword size,
     OpcodeData opcode_data;
     opcode_data.load(data[pc]);
     ASSERT(opcode_data.is_resolved());
-    buf.printf("%", opcode_data.name().chars());
+    buf.printf("%", opcode_data.name());
     string format = opcode_data.format();
     for (uword i = 0; i < format.length(); i++) {
       buf.append(" ");

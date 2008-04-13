@@ -19,7 +19,7 @@ void list<T>::dispose() {
 }
 
 template <typename T>
-T list<T>::operator[](uword index) {
+T &list<T>::operator[](uword index) {
   ASSERT(index < length());
   return elms_[index];
 }

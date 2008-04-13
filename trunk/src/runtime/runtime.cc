@@ -35,47 +35,47 @@ void Runtime::start() {
 void Runtime::report_load_error(ImageLoadStatus &info) {
   switch (info.status) {
     case ImageLoadStatus::lsTypeMismatch: {
-      static const char *kErrorMessage =
+      static string kErrorMessage =
         "Type mismatch while loading image (%s)\n"
         "  Expected: %s\n"
         "  Found: %s";
-      const char *expected_str = Layout::layout_name(info.error_info.type_mismatch.expected);
-      const char *found_str = Layout::layout_name(info.error_info.type_mismatch.found);
+      string expected_str = Layout::layout_name(info.error_info.type_mismatch.expected);
+      string found_str = Layout::layout_name(info.error_info.type_mismatch.found);
       const char *location = info.error_info.type_mismatch.location;
       Conditions::get().error_occurred(kErrorMessage, location,
           expected_str, found_str);
       return;
     }
     case ImageLoadStatus::lsInvalidImage: {
-      static const char *kErrorMessage = "Invalid image";
+      static string kErrorMessage = "Invalid image";
       Conditions::get().error_occurred(kErrorMessage);
       return;
     }
     case ImageLoadStatus::lsRootCount: {
-      static const char *kErrorMessage = 
+      static string kErrorMessage = 
         "Invalid root count\n"
-        "  Expected: %i\n"
-        "  Found: %i";
+        "  Expected: %\n"
+        "  Found: %";
       Conditions::get().error_occurred(kErrorMessage,
           info.error_info.root_count.expected,
           info.error_info.root_count.found);
       return;
     }
     case ImageLoadStatus::lsInvalidMagic: {
-      static const char *kErrorMessage =
+      static string kErrorMessage =
         "Invalid image\n"
-        "  Expected magic number: 0x%08X\n"
-        "  Found: 0x%08X";
+        "  Expected magic number: 0x%{08X}\n"
+        "  Found: 0x%{08X}";
       Conditions::get().error_occurred(kErrorMessage,
           Image::kMagicNumber,
           info.error_info.magic.found);
       return;
     }
     case ImageLoadStatus::lsInvalidVersion: {
-      static const char *kErrorMessage =
+      static string kErrorMessage =
         "Invalid image\n"
-        "  Expected version: %i\n"
-        "  Found: %i";
+        "  Expected version: %\n"
+        "  Found: %";
       Conditions::get().error_occurred(kErrorMessage,
           Image::kCurrentVersion,
           info.error_info.version.found);
@@ -157,7 +157,7 @@ bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) 
 bool Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
   if (!root->is_empty()) {
     scoped_string str(changes.name(refs()).to_string());
-    Conditions::get().error_occurred("Root class %s is not empty.", str.chars());
+    Conditions::get().error_occurred("Root class % is not empty.", *str);
     return false;
   }
   root->set_protocol(*changes);

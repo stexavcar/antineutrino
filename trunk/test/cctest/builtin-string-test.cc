@@ -63,7 +63,7 @@ void Test::string_buffer_basic() {
 void Test::printf() {
   string_buffer buf;
   buf.printf("[$0 $1 $2]", "foo", "bar", "baz");
-  CHECK(buf.to_string() == "[foo bar baz]");
+  CHECK_EQ("[foo bar baz]", buf.to_string());
   buf.clear();
   buf.printf("[% % %]", "foo", "bar", "baz");
   CHECK(buf.to_string() == "[foo bar baz]");
@@ -74,12 +74,44 @@ void Test::printf() {
   buf.printf("$2-$1-$0", 6, 7, 8);
   CHECK(buf.to_string() == "8-7-6");
   buf.clear();
-  buf.printf("$0{4.}", 21);
-  CHECK(buf.to_string() == "  21");
-  buf.clear();
-  buf.printf("[$0{.4}]", 3.1415926);
-  CHECK(buf.to_string() == "[3.142]");
-  buf.clear();
   buf.printf("[%{04}]", 26);
   CHECK(buf.to_string() == "[0026]");
+}
+
+
+static string format(string form, fmt_elm arg) {
+  string_buffer buf;
+  buf.printf(form, arg);
+  return buf.to_string();
+}
+
+
+void Test::int_formats() {
+  CHECK_EQ("0", format("%", 0));
+  CHECK_EQ("10", format("%", 10));
+  CHECK_EQ("10", format("%{01}", 10));
+  CHECK_EQ("10", format("%{02}", 10));
+  CHECK_EQ("010", format("%{03}", 10));
+  CHECK_EQ("0010", format("%{04}", 10));
+  CHECK_EQ("0000000010", format("%{010}", 10));
+  CHECK_EQ("10", format("%{1}", 10));
+  CHECK_EQ("10", format("%{2}", 10));
+  CHECK_EQ(" 10", format("%{3}", 10));
+  CHECK_EQ("  10", format("%{4}", 10));
+  CHECK_EQ("        10", format("%{10}", 10));
+  CHECK_EQ("10", format("%{-1}", 10));
+  CHECK_EQ("10", format("%{-2}", 10));
+  CHECK_EQ("10 ", format("%{-3}", 10));
+  CHECK_EQ("10  ", format("%{-4}", 10));
+  CHECK_EQ("10        ", format("%{-10}", 10));
+  CHECK_EQ("a", format("%{x1}", 10));
+  CHECK_EQ(" a", format("%{x2}", 10));
+  CHECK_EQ("  a", format("%{x3}", 10));
+  CHECK_EQ("   a", format("%{x4}", 10));
+  CHECK_EQ("         a", format("%{x10}", 10));
+  CHECK_EQ("-10", format("%", -10));
+  CHECK_EQ("-10", format("%{01}", -10));
+  CHECK_EQ("-10", format("%{02}", -10));
+  CHECK_EQ("-10", format("%{03}", -10));
+  CHECK_EQ("-010", format("%{04}", -10));
 }

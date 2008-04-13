@@ -33,7 +33,7 @@ DynamicLibraryCollection *Main::load_dynamic_libraries() {
   list<string> &libs = Options::libs;
   for (uword i = 0; i < libs.length(); i++) {
     if (!result->load(libs[i])) {
-      Conditions::get().error_occurred("Error loading library %s", libs[i].chars());
+      Conditions::get().error_occurred("Error loading library %", libs[i]);
       return NULL;
     }
   }
@@ -61,7 +61,7 @@ void Main::main(list<char*> &args) {
   if (Options::print_stats_on_exit) {
     string_buffer stats;
     Monitor::write_on(stats);
-    printf("%s", stats.to_string().chars());
+    stats.to_string().println();
   }
 }
 
@@ -71,8 +71,7 @@ void Main::main(list<char*> &args) {
 Image *Main::read_image(string name) {
   FILE *file = stdc_fopen(name.chars(), "rb");
   if (file == NULL) {
-    printf("Unable to open %s.\n", name.chars());
-    exit(1);
+    Conditions::get().error_occurred("Unable to open %.\n", name);
   }
   fseek(file, 0, SEEK_END);
   uword size = ftell(file);

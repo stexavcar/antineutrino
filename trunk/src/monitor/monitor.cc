@@ -46,7 +46,7 @@ void Counter::clear() {
 }
 
 void Counter::write_on(string name, string_buffer &buf) {
-  buf.printf("%: %\n", name.chars(), count_);
+  buf.printf("%: %\n", name, count_);
 }
 
 void HighWaterMark::clear() {
@@ -56,7 +56,7 @@ void HighWaterMark::clear() {
 }
 
 void HighWaterMark::write_on(string name, string_buffer &buf) {
-  buf.printf("%: %, max: %\n", name.chars(), count_, high_water_mark_);
+  buf.printf("%: %, max: %\n", name, count_, high_water_mark_);
 }
 
 }

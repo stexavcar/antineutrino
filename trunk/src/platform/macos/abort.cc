@@ -6,7 +6,8 @@
 
 namespace neutrino {
 
-void Abort::abort() {
+void Abort::abort(string message) {
+  message.println(stderr);
   print_stack_trace(0, "neutrino::");
   ::abort();
 }

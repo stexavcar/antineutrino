@@ -139,9 +139,7 @@ static void unhandled_condition(Value *name, BuiltinArguments &args) {
     args[i]->write_on(buf);
   }
   buf.append(")");
-  scoped_string str(buf.to_string());
-  fprintf(stderr, "%s\n", str.chars());
-  exit(1);
+  Conditions::get().error_occurred("%", buf.raw_string());
 }
 
 /**
@@ -269,8 +267,8 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       if (is<Nothing>(lookup_result)) {
         scoped_string selector_str(selector->to_string());
         scoped_string recv_str(recv->to_short_string());
-        Conditions::get().error_occurred("Lookup failure: %s::%s",
-            recv_str.chars(), selector_str.chars());
+        Conditions::get().error_occurred("Lookup failure: %::%",
+            *recv_str, *selector_str);
       }
       Method *method = cast<Method>(lookup_result);
       frame.push_activation();
@@ -296,8 +294,8 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       if (is<Nothing>(lookup_result)) {
         scoped_string selector_str(selector->to_string());
         scoped_string recv_str(recv->to_short_string());
-        Conditions::get().error_occurred("Lookup failure: %s::%s",
-            recv_str.chars(), selector_str.chars());
+        Conditions::get().error_occurred("Lookup failure: %::%",
+            *recv_str, *selector_str);
       }
       Method *method = cast<Method>(lookup_result);
       frame.push_activation();

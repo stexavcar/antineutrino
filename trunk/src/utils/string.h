@@ -1,7 +1,10 @@
 #ifndef _UTILS_STRING
 #define _UTILS_STRING
 
+#include <string.h>
+
 #include "utils/globals.h"
+#include "utils/list.h"
 #include "utils/misc.h"
 #include "utils/types.h"
 
@@ -9,13 +12,16 @@ namespace neutrino {
 
 class string {
 public:
-  inline string(const char *chars)
-      : chars_(chars), length_(length(chars)) { }
+  inline string(const char chars[])
+      : chars_(chars), length_(IF_ELSE_DEBUG(kNoLength, ::strlen(chars))) { }
   inline string()
       : chars_(NULL), length_(0) { }
   inline string(const char *chars, uword length)
       : chars_(chars), length_(length) { }
-  inline uword length() { return length_; }
+  inline uword length() {
+    IF_DEBUG(if (length_ == kNoLength) length_ = ::strlen(chars_));
+    return length_;
+  }
   inline uword operator[](uword index);
   inline string substring(uword start);
   inline string substring(uword start, uword length);
@@ -28,12 +34,14 @@ public:
   inline const char *chars() { return chars_; }
   
   bool operator==(string that);
+  bool operator!=(string that) { return !(this->operator==(that)); }
   void dispose();
-  void println();
+  void println(FILE *out = NULL);
   bool is_empty() { return chars_ == NULL; }
-  static uword length(const char* chars);
   static string dup(string arg);
   static bool equals(const char* a, const char* b);
+  
+  static const uword kNoLength = ~0;
 private:
   const char *chars_;
   uword length_;
@@ -48,6 +56,41 @@ public:
   const char *chars() { return value_.chars(); }
 private:
   string value_;
+};
+
+
+/**
+ * Formatter element.  Utility class used to wrap an printf argument
+ * together with a type tag.
+ */
+class fmt_elm {
+public:
+  fmt_elm(double value) : tag_(eDouble) { value_.u_double = value; }
+  fmt_elm(uint16_t value) : tag_(eInt) { value_.u_int = value; }
+  fmt_elm(int16_t value) : tag_(eInt) { value_.u_int = value; }
+  fmt_elm(uint32_t value) : tag_(eInt) { value_.u_int = value; }
+  fmt_elm(int32_t value) : tag_(eInt) { value_.u_int = value; }
+  fmt_elm(uint64_t value) : tag_(eInt) { value_.u_int = static_cast<word>(value); }
+  fmt_elm(int64_t value) : tag_(eInt) { value_.u_int = static_cast<word>(value); }
+  fmt_elm(const char *value) : tag_(eString) { value_.u_string = value; }
+  fmt_elm(string value) : tag_(eString) { value_.u_string = value.chars(); }
+  fmt_elm(Data *value) : tag_(eObject) { value_.u_object = value; }
+  /**
+   * Prints this element on the specified buffer.  If the params
+   * string is non-null it will be used to configure how this
+   * element is printed.
+   */
+  void print_on(string_buffer &buf, string params);
+  void print_int_on(string_buffer &buf, string params);
+private:
+  enum Tag { eInt, eString, eDouble, eObject };
+  Tag tag_;
+  union {
+    word u_int;
+    const char *u_string;
+    double u_double;
+    Data *u_object;
+  } value_;
 };
 
 /**
@@ -73,53 +116,28 @@ public:
    */
   string raw_string();
 
-  class element {
-  public:
-    element(double value) : tag_(eDouble) { value_.u_double = value; }
-    element(uint16_t value) : tag_(eInt) { value_.u_int = value; }
-    element(int16_t value) : tag_(eInt) { value_.u_int = value; }
-    element(uint32_t value) : tag_(eInt) { value_.u_int = value; }
-    element(int32_t value) : tag_(eInt) { value_.u_int = value; }
-    element(uint64_t value) : tag_(eInt) { value_.u_int = static_cast<word>(value); }
-    element(int64_t value) : tag_(eInt) { value_.u_int = static_cast<word>(value); }
-    element(const char *value) : tag_(eString) { value_.u_string = value; }
-    element(Data *value) : tag_(eObject) { value_.u_object = value; }
-    /**
-     * Prints this element on the specified buffer.  If the params
-     * string is non-null it will be used to configure how this
-     * element is printed.  The string must have two characters
-     * available before index 0 for this element to override during
-     * printing.
-     */
-    void print_on(string_buffer &buf, char *params, int offset);
-  private:
-    enum Tag { eInt, eString, eDouble, eObject };
-    Tag tag_;
-    union {
-      word u_int;
-      const char *u_string;
-      double u_double;
-      Data *u_object;
-    } value_;
-  };
-
   /**
    * Writes the specified string to this buffer, formatted using the
    * specified elements.
    */
-  void printf(string format, uword argc, element argv[]);
+  void printf(string format, list<fmt_elm> args);
   
   /**
    * Convenience methods for calling printf.  These allow printf to be
    * called directly with integers, strings, and what have you,
    * because they are implicitly wrapped by the element constructors.
    */
-  void printf(string format, element arg1);
-  void printf(string format, element arg1, element arg2);
-  void printf(string format, element arg1, element arg2,
-      element arg3);
-  void printf(string format, element arg1, element arg2,
-      element arg3, element arg4);
+  void printf(string format, fmt_elm arg1);
+  void printf(string format, fmt_elm arg1, fmt_elm arg2);
+  void printf(string format, fmt_elm arg1, fmt_elm arg2, fmt_elm arg3);
+  void printf(string format, fmt_elm arg1, fmt_elm arg2, fmt_elm arg3,
+      fmt_elm arg4);
+  void printf(string format, fmt_elm arg1, fmt_elm arg2, fmt_elm arg3,
+      fmt_elm arg4, fmt_elm arg5);
+  void printf(string format, fmt_elm arg1, fmt_elm arg2, fmt_elm arg3,
+      fmt_elm arg4, fmt_elm arg5, fmt_elm arg6);
+  void printf(string format, fmt_elm arg1, fmt_elm arg2, fmt_elm arg3,
+      fmt_elm arg4, fmt_elm arg5, fmt_elm arg6, fmt_elm arg7);
 
 private:
   void ensure_capacity(int required);

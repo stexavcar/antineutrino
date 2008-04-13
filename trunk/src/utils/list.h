@@ -18,7 +18,7 @@ public:
   list();
   list(T *elms, uword length) : elms_(elms), length_(length) { }
   uword length() { return length_; }
-  T operator[](uword index);
+  T &operator[](uword index);
   list<T> sublist(uword start, uword length);
   T *start() { return elms_; }
   T *end() { return elms_ + length_; }

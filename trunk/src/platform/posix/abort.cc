@@ -86,6 +86,7 @@ void Resource::uninstall() {
 
 static void signal_cleanup_resources(int signum, siginfo_t *info, void *ptr) {
   Abort::cleanup_resources();
+  ::exit(signum);
 }
 
 static void print_error_report(int signum, siginfo_t *info, void *ptr) {
@@ -117,9 +118,11 @@ static bool install_handler(int signum, void (*handler)(int, siginfo_t*, void*))
 
 bool Abort::setup_signal_handler() {
   bool success = true;
+  // Dump information on crashes
   success = success && install_handler(SIGSEGV, print_error_report);
   success = success && install_handler(SIGFPE, print_error_report);
   success = success && install_handler(SIGBUS, print_error_report);
+  // Make sure to clean up nicely on interruption
   success = success && install_handler(SIGINT, signal_cleanup_resources);
   success = success && install_handler(SIGTERM, signal_cleanup_resources);
   atexit(cleanup_resources);
