@@ -339,8 +339,7 @@ static void disassemble_buffer(uint16_t *data, uword size,
           buf.printf("@%", arg);
           break;
         case 'p':
-          Value *value = literals->get(arg);
-          value->write_on(buf);
+          literals->get(arg)->write_on(buf);
           break;
         case '?':
           buf.append("?");

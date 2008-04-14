@@ -8,7 +8,8 @@ bool Abort::setup_signal_handler() {
   return true;
 }
 
-void Abort::abort() {
+void Abort::abort(string message) {
+  message.println(stderr);
   ::abort();
 }
 
