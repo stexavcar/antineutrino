@@ -399,7 +399,7 @@ DEFINE_REF_CLASS(AbstractBuffer);
 class String : public Object {
 public:
   DECLARE_FIELD(uword, length);
-  inline char &at(uword index);
+  inline char &get(uword index);
   inline void set(uword index, char value);
 
   bool string_equals(String *that);

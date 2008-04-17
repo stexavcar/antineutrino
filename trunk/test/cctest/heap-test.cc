@@ -17,9 +17,9 @@ void Test::simple_string_operations() {
   String *str = cast<String>(heap.new_string("fop"));
   CHECK_IS(String, str);
   CHECK_EQ(3, str->length());
-  CHECK_EQ('f', str->at(0));
-  CHECK_EQ('o', str->at(1));
-  CHECK_EQ('p', str->at(2));
+  CHECK_EQ('f', str->get(0));
+  CHECK_EQ('o', str->get(1));
+  CHECK_EQ('p', str->get(2));
 }
 
 void Test::to_string() {

@@ -352,7 +352,7 @@ DEFINE_ACCESSORS(Data*, Object, header, Header)
 
 DEFINE_ACCESSORS(uword, String, length, Length)
 
-char &String::at(uword index) {
+char &String::get(uword index) {
   ASSERT_C(cnOutOfBounds, index < length());
   return ValuePointer::access_direct<char>(this, String::kHeaderSize + sizeof(char) * index);
 }

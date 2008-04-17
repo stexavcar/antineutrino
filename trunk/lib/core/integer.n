@@ -15,6 +15,12 @@ internal protocol Smi {
   
   internal def <(that);
   
+  def >(that) -> that < this;
+  
+  internal def %(that);
+  
+  def hash() -> this;
+  
   def ..(that) -> new Interval(from: this, to: that);
 
 }

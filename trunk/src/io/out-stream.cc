@@ -46,7 +46,7 @@ RawFValue *Serializer::marshal_object_shallow(Object *obj) {
       FString *img = buffer().allocate<FString>(tString, size);
       img->set_length(that->length());
       for (uword i = 0; i < that->length(); i++)
-        img->set(i, that->at(i));
+        img->set(i, that->get(i));
       break;
     }
     case tTuple: {

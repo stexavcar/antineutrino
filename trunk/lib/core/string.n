@@ -21,8 +21,10 @@ internal protocol String {
     return result;
   }
   
+  
   internal def =(that);
   internal def +(that);
+  internal def hash();
   
   def to_string() -> this;
 

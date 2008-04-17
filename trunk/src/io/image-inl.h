@@ -250,7 +250,7 @@ word FSmi::value() {
 DEFINE_RAW_GETTER(uword, String, length, Length)
 DEFINE_RAW_SETTER(uword, String, length, Length)
 
-uword FString::at(uword index) {
+uword FString::get(uword index) {
   ASSERT(index < length());
   return reinterpret_cast<word>(access_field(this, FString_HeaderSize + index));
 }

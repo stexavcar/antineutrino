@@ -93,7 +93,7 @@ public:
   inline uword length();
   inline void set_length(uword value);
 
-  inline uword at(uword offset);
+  inline uword get(uword offset);
   inline void set(uword offset, uword value);
 
   static uword size_for(uword chars);

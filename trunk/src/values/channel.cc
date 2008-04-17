@@ -307,7 +307,7 @@ int FrozenNString::length() {
 }
 
 char FrozenNString::get(int index) {
-  return ApiUtils::open<FString>(this)->at(index);
+  return ApiUtils::open<FString>(this)->get(index);
 }
 
 const char *FrozenNString::c_str() {
@@ -315,7 +315,7 @@ const char *FrozenNString::c_str() {
   uword length = str->length();
   char *result = new char[length + 1];
   for (uword i = 0; i < length; i++)
-    result[i] = str->at(i);
+    result[i] = str->get(i);
   result[length] = '\0';
   return result;
 }

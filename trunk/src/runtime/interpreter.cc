@@ -515,7 +515,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       for (word i = terms - 1; i >= 0; i--) {
         String *term = cast<String>(frame[i]);
         for (uword j = 0; j < term->length(); j++)
-          result->set(cursor + j, term->at(j));
+          result->set(cursor + j, term->get(j));
         cursor += term->length();
       }
       frame.pop(terms);

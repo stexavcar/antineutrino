@@ -453,12 +453,14 @@
   VISIT(1,  string,              eq,          "=")                   \
   VISIT(2,  string,              plus,        "+")                   \
   VISIT(3,  string,              get,         "[]")                  \
+  VISIT(4,  string,              hash,        "hash")                \
   VISIT(10, smi,                 plus,        "+")                   \
   VISIT(11, smi,                 minus,       "-")                   \
   VISIT(12, smi,                 times,       "×")                   \
   VISIT(13, smi,                 divide,      "÷")                   \
   VISIT(14, smi,                 abs,         "||")                  \
   VISIT(15, smi,                 less,        "<")                   \
+  VISIT(16, smi,                 modulo,      "%")                   \
   VISIT(20, object,              eq,          "=")                   \
   VISIT(21, object,              to_string,   "to_string")           \
   VISIT(30, protocol_expression, evaluate,    "evaluate")            \

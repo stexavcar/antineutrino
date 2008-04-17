@@ -1,0 +1,47 @@
+def int_map_test() {
+  def m := new Map();
+  assert |m| = 0;
+  m[1] := "a";
+  assert |m| = 1;
+  m[2] := "b";
+  assert |m| = 2;
+  m[3] := "c";
+  assert |m| = 3;
+  assert m[1] = "a";
+  assert m[2] = "b";
+  assert m[3] = "c";
+}
+
+def string_map_test() {
+  def m := new Map();
+  assert |m| = 0;
+  m["a"] := 1;
+  assert |m| = 1;
+  m["b"] := 2;
+  assert |m| = 2;
+  m["c"] := 3;
+  assert |m| = 3;
+  assert m["a"] = 1;
+  assert m["b"] = 2;
+  assert m["c"] = 3;
+}
+
+def big_map_test() {
+  var i := 0;
+  def m := new Map();
+  while (i < 128) {
+    m[i.to_string()] := i;
+    i := i + 1;
+  }
+  i := 0;
+  while (i < 128) {
+    assert m[i.to_string()] = i;
+    i := i + 1;
+  }
+}
+
+def main() {
+  int_map_test();
+  string_map_test();
+  big_map_test();
+}

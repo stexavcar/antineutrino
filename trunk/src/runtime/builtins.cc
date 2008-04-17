@@ -48,6 +48,17 @@ Data *Builtins::string_length(BuiltinArguments &args) {
   return Smi::from_int(self->length());
 }
 
+Data *Builtins::string_hash(BuiltinArguments &args) {
+  ASSERT_EQ(0, args.count());
+  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  // TODO: This hash is exceedingly stupid.  Replace with something
+  //   that gives a better distribution.
+  uword value = 0;
+  for (uword i = 0; i < self->length(); i++)
+    value = (3 * value) + self->get(i);
+  return Smi::from_int(value);
+}
+
 Data *Builtins::string_eq(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(String, self, to<String>(args.self()));
@@ -58,7 +69,7 @@ Data *Builtins::string_eq(BuiltinArguments &args) {
   if (length != that->length())
     return args.runtime().roots().fahlse();
   for (uword i = 0; i < length; i++) {
-    if (self->at(i) != that->at(i))
+    if (self->get(i) != that->get(i))
       return args.runtime().roots().fahlse();
   }
   return args.runtime().roots().thrue();
@@ -71,9 +82,9 @@ Data *Builtins::string_plus(BuiltinArguments &args) {
   uword length = self->length() + that->length();
   SIGNAL_CHECK(String, result, args.runtime().heap().new_string(length));
   for (uword i = 0; i < self->length(); i++)
-    result->at(i) = self->at(i);
+    result->set(i, self->get(i));
   for (uword i = 0; i < that->length(); i++)
-    result->at(self->length() + i) = that->at(i);
+    result->set(self->length() + i, that->get(i));
   return result;
 }
 
@@ -81,7 +92,7 @@ Data *Builtins::string_get(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(String, self, to<String>(args.self()));
   SIGNAL_CHECK(Smi, index, to<Smi>(args[0]));
-  char c = self->at(index->value());
+  char c = self->get(index->value());
   return args.runtime().heap().new_string(string(&c, 1));
 }
 
@@ -89,7 +100,7 @@ Data *Builtins::is_whitespace(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   SIGNAL_CHECK(String, self, to<String>(args.self()));
   for (uword i = 0; i < self->length(); i++) {
-    if (!isspace(self->at(i)))
+    if (!isspace(self->get(i)))
       return args.runtime().roots().fahlse();
   }
   return args.runtime().roots().thrue();
@@ -99,7 +110,7 @@ Data *Builtins::is_alpha(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   SIGNAL_CHECK(String, self, to<String>(args.self()));
   for (uword i = 0; i < self->length(); i++) {
-    if (!isalpha(self->at(i)))
+    if (!isalpha(self->get(i)))
       return args.runtime().roots().fahlse();
   }
   return args.runtime().roots().thrue();
@@ -109,7 +120,7 @@ Data *Builtins::is_digit(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   SIGNAL_CHECK(String, self, to<String>(args.self()));
   for (uword i = 0; i < self->length(); i++) {
-    if (!isdigit(self->at(i)))
+    if (!isdigit(self->get(i)))
       return args.runtime().roots().fahlse();
   }
   return args.runtime().roots().thrue();
@@ -146,6 +157,13 @@ Data *Builtins::smi_divide(BuiltinArguments &args) {
   SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
   SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
   return Smi::from_int(self->value() / that->value());
+}
+
+Data *Builtins::smi_modulo(BuiltinArguments &args) {
+  ASSERT_EQ(1, args.count());
+  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
+  SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
+  return Smi::from_int(self->value() % that->value());
 }
 
 Data *Builtins::smi_less(BuiltinArguments &args) {
@@ -323,7 +341,7 @@ Data *Builtins::raw_print(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(String, str_obj, to<String>(args[0]));
   for (uword i = 0; i < str_obj->length(); i++)
-    putc(str_obj->at(i), stdout);
+    putc(str_obj->get(i), stdout);
   putc('\n', stdout);
   return args.runtime().roots().vhoid();
 }

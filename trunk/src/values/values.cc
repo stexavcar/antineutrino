@@ -78,7 +78,7 @@ static void write_smi_short_on(Smi *obj, string_buffer &buf) {
 static void write_string_short_on(String *obj, Data::WriteMode mode, string_buffer &buf) {
   if (mode != Data::UNQUOTED) buf.append('"');
   for (uword i = 0; i < obj->length(); i++)
-    buf.append(obj->at(i));
+    buf.append(obj->get(i));
   if (mode != Data::UNQUOTED) buf.append('"');
 }
 
@@ -579,7 +579,7 @@ bool String::string_equals(String *that) {
   if (this->length() != that->length())
     return false;
   for (uword i = 0; i < this->length(); i++) {
-    if (this->at(i) != that->at(i))
+    if (this->get(i) != that->get(i))
       return false;
   }
   return true;
@@ -603,7 +603,7 @@ bool AbstractTuple::tuple_equals(Tuple *that) {
 // TODO(1): Implement proper unicode vowel/consonant predicate
 bool String::starts_with_vowel() {
   if (length() == 0) return false;
-  uword chr = at(0);
+  uword chr = get(0);
   if ('A' <= chr && chr <= 'Z') chr += 'a' - 'A';
   switch (chr) {
   case 'a': case 'e': case 'i': case 'o': case 'u':
@@ -617,7 +617,7 @@ vector<char> String::c_str() {
   uword length = this->length();
   vector<char> result = ALLOCATE_VECTOR(char, length + 1);
   for (uword i = 0; i < length; i++)
-    result[i] = at(i);
+    result[i] = get(i);
   result[length] = '\0';
   return result;
 }
