@@ -476,9 +476,9 @@ void Object::for_each_field(FieldVisitor &visitor) {
     case tString: case tCode: case tTrue: case tFalse: case tVoid:
     case tNull: case tContext:
       break;
-    case tTuple:
-      for (uword i = 0; i < cast<Tuple>(this)->length(); i++)
-        VISIT(cast<Tuple>(this)->get(i));
+    case tTuple: case tArray:
+      for (uword i = 0; i < cast<AbstractTuple>(this)->length(); i++)
+        VISIT(cast<AbstractTuple>(this)->get(i));
       break;
     case tStack:
       cast<Stack>(this)->for_each_stack_field(visitor);

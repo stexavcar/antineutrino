@@ -25,5 +25,18 @@ protocol ArrayList : List {
     size: 0,
     elms: new Array(size: 16)
   };
+  
+  def to_string() {
+    var result := "[";
+    var i := 0;
+    var first := true;
+    while (i < |this|) {
+      if (first) first := false;
+      else result := result + ", ";
+      result := result + this[i].to_string();
+      i := i + 1;
+    }
+    return result + "]";
+  }
 
 }

@@ -18,11 +18,11 @@ protocol Token {
 
 protocol Identifier : Token {
   
-  def to_string() -> "#<identifier '${this.name}'>";
+  def to_string() -> "#<identifier '${this.value}'>";
 
-  def is_identifier() -> true;
+  def is_value() -> true;
   
-  static def make(name) -> new Identifier() { name: name };
+  static def make(value) -> new Identifier() { value: value };
   
 }
 
@@ -31,7 +31,7 @@ protocol Keyword : Token {
   
   def to_string() -> "#<keyword ${this.name}>";
   
-  def is_keyword(name) -> (name = this.name);
+  def is_term(name) -> (name = this.name);
   
   static def make(name) -> new Keyword() { name: name };
   
@@ -41,6 +41,8 @@ protocol Keyword : Token {
 protocol Delimiter : Token {
   
   def to_string() -> "#<delimiter ${this.name}>";
+  
+  def is_term(name) -> this.name = name;
   
   static def make(name) -> new Delimiter() { name: name };
   
@@ -131,22 +133,61 @@ protocol Scanner {
 (* --- G r a m m a r --- *)
 
 protocol Grammar {
-  static def make(terms) -> new Grammar() { terms: terms };
+
+  def parse(start_name, tokens) {
+    def state := ParserState.make(tokens, 0);
+    def start := this.get_nonterm(start_name);
+    return start.parse(state);
+  }
+  
+  def get_nonterm(name) -> this.nonterms[name];
+
+  static def make(nonterms) -> new Grammar() { nonterms: nonterms };
+  
+}
+
+protocol ParserState {
+
+  static def make(tokens, pos) -> new ParserState() {
+    tokens: tokens,
+    pos: pos
+  };
+  
+  def current() -> this.tokens[this.pos];
+  
+  def advance() -> this.pos := this.pos + 1;
+
 }
 
 protocol Term {
+
   def to_string() -> this.value;
+  
+  def parse(state) {
+    if (not state.current().is_term(this.value))
+      return false;
+    state.advance();
+    return this.value;
+  }
+  
 }
 
 protocol Value {
-  def to_string() -> "%";
-}
 
-protocol Delim {
-  def to_string() -> this.value;
+  def to_string() -> "%";
+  
+  def parse(state) {
+    if (not state.current().is_value())
+      return false;
+    def value := state.current().value;
+    state.advance();
+    return value;
+  }
+  
 }
 
 protocol Sequence {
+
   def to_string() {
     var result := "";
     var i := 0;
@@ -157,6 +198,27 @@ protocol Sequence {
     }
     return result;
   }
+  
+  def parse(state) {
+    var i := 0;
+    def values := new List();
+    while (i < |this.elms|) {
+      def value := this.elms[i].parse(state);
+      if (value = false) return false;
+      values.add(value);
+      i := i + 1;
+    }
+    return values;
+  }
+
+}
+
+protocol Repeat {
+
+}
+
+protocol Nonterm {
+
 }
 
 def term(value) -> new Term() { value: value };
@@ -167,20 +229,27 @@ def delim(value) -> new Delim() { value: value };
 
 def seq(elms) -> new Sequence() { elms: elms };
 
+def star(value) -> new Repeat() { value: value };
+
+def nonterm(name) -> new Nonterm() { name: name };
 
 (* --- M a i n --- *)
 
 
 def get_grammar() {
-  def program := seq([term("def"), value(), delim("("), delim(")"), delim("{"), delim("}")]);
-  return Grammar.make(program);
+  def nonterms := new Map();
+  nonterms["toplevel"] := seq([term("def"), value(), term("("), term(")"), term("{"), term("}")]);
+  nonterms["program"] := star(nonterm("toplevel"));
+  return Grammar.make(nonterms);
 }
 
 
 def main() {
+  def gram := get_grammar();
   def input := "def main() { } def main2() { }";
   def scan := Scanner.make(input);
-  while (scan.has_more()) print(scan.next_token());
-  def gram := get_grammar();
-  print(gram);
+  def tokens := new List();
+  while (scan.has_more())
+    tokens.add(scan.next_token());
+  print(gram.parse("toplevel", tokens));
 }
