@@ -501,9 +501,9 @@
   VISIT(104, new_forwarder,      "new_forwarder")                    \
   VISIT(105, set_target,         "set_target")                       \
   VISIT(109, close,              "close")                            \
-  VISIT(106, is_whitespace,      "is_whitespace")                    \
-  VISIT(107, is_alpha,           "is_alpha")                         \
-  VISIT(108, is_digit,           "is_digit")                         \
+  VISIT(106, is_whitespace,      "whitespace?")                      \
+  VISIT(107, is_alpha,           "alpha?")                           \
+  VISIT(108, is_digit,           "digit?")                           \
   VISIT(110, new_array,          "new_array")
 
 

@@ -230,7 +230,7 @@ def is_space(char):
 
 
 def is_ident_start(char):
-  return char.isalpha() or (char == '_')
+  return char.isalpha() or (char == '_') or (char == '?')
 
 
 def is_digit(char):

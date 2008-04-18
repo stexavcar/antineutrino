@@ -47,6 +47,8 @@ protocol MapImpl {
 
   def | | -> this.size;
 
+  def empty?() -> |this| = 0;
+
   def [key]:=(value) {
     def hash := key·get_hash();
     def entry := this·find_entry(key, hash);

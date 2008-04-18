@@ -221,9 +221,9 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
     }
     case ocInvoke: {
       uint16_t selector_index = code[pc + 1];
+      uint16_t argc = code[pc + 2];
       Selector *selector = cast<Selector>(constant_pool[selector_index]);
       Tuple *keymap = cast<Tuple>(constant_pool[code[pc + 3]]);
-      uint16_t argc = code[pc + 2];
       Value *recv = frame[argc];
       Layout *layout = get_layout(deref(recv));
       Data *lookup_result = lookup_method(layout, selector);

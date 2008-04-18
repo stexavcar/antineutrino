@@ -378,6 +378,8 @@ void BytecodeBackend::disassemble_next_instruction(uword *pc_ptr,
     case '?':
       buf.append("?");
       break;
+    case '.':
+      break;
     default:
       UNREACHABLE();
     }

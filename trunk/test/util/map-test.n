@@ -1,12 +1,16 @@
 def int_map_test() {
   def m := new Map();
   assert |m| = 0;
+  assert m.empty?();
   m[1] := "a";
   assert |m| = 1;
+  assert not m.empty?();
   m[2] := "b";
   assert |m| = 2;
+  assert not m.empty?();
   m[3] := "c";
   assert |m| = 3;
+  assert not m.empty?();
   assert m[1] = "a";
   assert m[2] = "b";
   assert m[3] = "c";
@@ -14,13 +18,17 @@ def int_map_test() {
 
 def string_map_test() {
   def m := new Map();
+  assert m.empty?();
   assert |m| = 0;
   m["a"] := 1;
   assert |m| = 1;
+  assert not m.empty?();
   m["b"] := 2;
   assert |m| = 2;
+  assert not m.empty?();
   m["c"] := 3;
   assert |m| = 3;
+  assert not m.empty?();
   assert m["a"] = 1;
   assert m["b"] = 2;
   assert m["c"] = 3;

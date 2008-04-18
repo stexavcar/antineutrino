@@ -265,7 +265,7 @@ public:
 
   DECLARE_FIELD(uword, height);
   DECLARE_FIELD(uword, fp);
-  DECLARE_FIELD(word*,    top_marker);
+  DECLARE_FIELD(word*, top_marker);
   DECLARE_FIELD(Status, status);
   inline word *bottom();
 

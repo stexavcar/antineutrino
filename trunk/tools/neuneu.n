@@ -1,18 +1,18 @@
-internal def is_whitespace();
-internal def is_alpha();
-internal def is_digit();
+internal def whitespace?();
+internal def alpha?();
+internal def digit?();
 
-def is_ident_start() -> is_alpha() or (this = "_");
-def is_ident_part() -> is_ident_start() or is_digit();
+def ident_start?() -> alpha?() or (this = "_");
+def ident_part?() -> ident_start?() or digit?();
 
 
 (* --- T o k e n s --- *)
 
 
 protocol Token {
-  def is_identifier() -> false;
-  def is_keyword(name) -> false;
-  def is_delimiter(name) -> false;
+  def identifier?() -> false;
+  def keyword?(name) -> false;
+  def delimiter?(name) -> false;
 }
 
 
@@ -20,7 +20,7 @@ protocol Identifier : Token {
   
   def to_string() -> "#<identifier '${this.value}'>";
 
-  def is_value() -> true;
+  def value?() -> true;
   
   static def make(value) -> new Identifier() { value: value };
   
@@ -31,7 +31,7 @@ protocol Keyword : Token {
   
   def to_string() -> "#<keyword ${this.name}>";
   
-  def is_term(name) -> (name = this.name);
+  def term?(name) -> (name = this.name);
   
   static def make(name) -> new Keyword() { name: name };
   
@@ -42,7 +42,7 @@ protocol Delimiter : Token {
   
   def to_string() -> "#<delimiter ${this.name}>";
   
-  def is_term(name) -> this.name = name;
+  def term?(name) -> this.name = name;
   
   static def make(name) -> new Delimiter() { name: name };
   
@@ -72,14 +72,14 @@ protocol Scanner {
   def substring(range) -> this.input.substring(range);
   
   def skip_whitespace() {
-    while (this.has_more() and this.current·is_whitespace())
+    while (this.has_more() and this.current·whitespace?())
       this.advance();
   }
   
   def next_token() {
     var result := null;
     if (not this.has_more()) return null;
-    if (this.current·is_ident_start()) {
+    if (this.current·ident_start?()) {
       result := this.scan_identifier();
     } else if (delimiters ∋ this.current) {
       result := this.scan_delimiter();
@@ -108,7 +108,7 @@ protocol Scanner {
   
   def scan_identifier() {
     def start := this.pos;
-    while (this.current·is_ident_part())
+    while (this.current·ident_part?())
       this.advance();
     def end := this.pos;
     def value := this.substring(start..end);
@@ -164,7 +164,7 @@ protocol Term {
   def to_string() -> this.value;
   
   def parse(state) {
-    if (not state.current().is_term(this.value))
+    if (not state.current().term?(this.value))
       return false;
     state.advance();
     return this.value;
@@ -177,7 +177,7 @@ protocol Value {
   def to_string() -> "%";
   
   def parse(state) {
-    if (not state.current().is_value())
+    if (not state.current().value?())
       return false;
     def value := state.current().value;
     state.advance();

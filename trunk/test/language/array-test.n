@@ -3,7 +3,7 @@ def simple_array_test() {
   assert |a| = 3;
   assert a[0] = null;
   assert a[1] = null;
-  assert a[2] = null;  
+  assert a[2] = null;
   a[0] := "a";
   assert a[0] = "a";
   assert a[1] = null;
