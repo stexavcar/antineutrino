@@ -264,10 +264,11 @@ public:
   typedef StackStatus Status;
 
   DECLARE_FIELD(uword, height);
-  DECLARE_FIELD(uword, fp);
+  DECLARE_FIELD(word*, fp);
   DECLARE_FIELD(word*, top_marker);
   DECLARE_FIELD(Status, status);
   inline word *bottom();
+  inline vector<word> buffer();
 
   IF_DEBUG(void validate_stack());
   void for_each_stack_field(FieldVisitor &visitor);

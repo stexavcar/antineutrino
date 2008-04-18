@@ -116,16 +116,18 @@ public:
   inline Marker push_marker();
   inline Marker pop_marker();
   
+  void park(Stack *stack);
+  
   /**
    * Unwinds a stack frame in a cooked stack.
    */
   inline void unwind();
   
   /**
-   * Unwinds a stack frame in an uncooked stack, where the given value
-   * is the address of the bottom of the stack.
+   * Unwinds a stack frame in an uncooked stack, where the given
+   * vector is the stack buffer.
    */
-  inline void unwind(word *bottom);
+  inline void unwind(vector<word> buffer);
   
   inline void push(Value *value);
   inline bool is_bottom();

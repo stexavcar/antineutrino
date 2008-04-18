@@ -45,6 +45,11 @@ void StackState::reset(Stack *old_stack, Stack *new_stack) {
   sp_ += delta;
 }
 
+void StackState::park(Stack *stack) {
+  IF_DEBUG(stack->status().is_parked = true);
+  stack->set_fp(fp());
+}
+
 /**
  * Returns the class object for the given value.
  */
@@ -90,13 +95,16 @@ static void unhandled_condition(Value *name, BuiltinArguments &args) {
 
 
 Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
-  StackState frame = prepare_call(task, lambda, 0);
-  frame.push_activation(0, *lambda);
-  Data *value = Nothing::make();
+  StackState initial_frame = prepare_call(task, lambda, 0);
+  initial_frame.push_activation(0, *lambda);
+  initial_frame.park(task->stack());
   while (true) {
-    value = interpret(task->stack(), frame);
+    ASSERT(task->stack()->status().is_parked);
+    StackState frame(task->stack()->fp());
+    IF_DEBUG(task->stack()->status().is_parked = false);
+    Data *value = interpret(task->stack(), frame);
+    ASSERT(task->stack()->status().is_parked);
     if (is<Signal>(value)) {
-      IF_DEBUG(task->stack()->status().is_parked = true);
       if (is<AllocationFailed>(value)) {
         Stack *old_stack = task->stack();
         runtime().heap().memory().collect_garbage(runtime());
@@ -104,13 +112,11 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
       } else {
         UNREACHABLE();
       }
-      IF_DEBUG(task->stack()->status().is_parked = false);
     } else {
-      break;
+      task->stack()->status().is_empty = true;
+      return cast<Value>(value);
     }
   }
-  task->stack()->status().is_empty = true;
-  return cast<Value>(value);
 }
 
 
@@ -530,7 +536,7 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
   }
 suspend:
   frame.push_activation(pc, lambda);
-  stack->set_fp(frame.fp() - stack->bottom());
+  frame.park(stack);
   return result;
 }
 
@@ -540,7 +546,7 @@ suspend:
 void Stack::validate_stack() {
   if (status().is_empty) return;
   ASSERT(status().is_cooked);
-  StackState frame(bottom() + fp());
+  StackState frame(fp());
   while (true) {
     GC_SAFE_CHECK_IS_C(cnValidation, Lambda, frame.lambda());
     if (frame.is_bottom()) break;
@@ -556,10 +562,11 @@ void Stack::recook_stack() {
   if (status().is_empty) return;
   ASSERT(!status().is_cooked);
   ASSERT(status().is_parked);
-  word *bot = bottom();
-  StackState frame(bot + fp());
+  vector<word> buf = buffer();
+  fp() = buf.from_offset(reinterpret_cast<uword>(fp()));
+  StackState frame(fp());
   while (!frame.is_bottom()) {
-    frame.prev_fp() = bot + reinterpret_cast<uword>(frame.prev_fp());
+    frame.prev_fp() = buf.from_offset(reinterpret_cast<uword>(frame.prev_fp()));
     frame.unwind();
   }
   IF_DEBUG(status().is_cooked = true);
@@ -569,16 +576,17 @@ void Stack::uncook_stack() {
   if (status().is_empty) return;
   ASSERT(status().is_cooked);
   ASSERT(status().is_parked);
-  StackState frame(bottom() + fp());
-  word *bot = bottom();
+  StackState frame(fp());
+  vector<word> buf = buffer();
   while (!frame.is_bottom()) {
     // Create a copy of the frame so that we can unwind the original
     // frame and then do the uncooking
     IF_DEBUG(word *prev_fp = frame.prev_fp());
-    frame.prev_fp() = reinterpret_cast<word*>(frame.prev_fp() - bot);
-    frame.unwind(bot);
+    frame.prev_fp() = reinterpret_cast<word*>(buf.offset_of(frame.prev_fp()));
+    frame.unwind(buf);
     ASSERT(prev_fp == frame.fp());
   }
+  fp() = reinterpret_cast<word*>(buf.offset_of(fp()));
   IF_DEBUG(status().is_cooked = false);
 }
 
@@ -586,8 +594,8 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
   if (status().is_empty) return;
   ASSERT(!status().is_cooked);
   ASSERT(status().is_parked);
-  word *bot = bottom();
-  StackState frame(bottom() + fp());
+  vector<word> buf = buffer();
+  StackState frame(buf.from_offset(reinterpret_cast<uword>(fp())));
   while (true) {
     visitor.visit_field(pointer_cast<Value*>(&frame.lambda()));
     if (frame.is_bottom()) break;
@@ -596,7 +604,7 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
       // Visit the i'th local variable
       visitor.visit_field(&frame[i]);
     }
-    frame.unwind(bot);
+    frame.unwind(buf);
   }
 }
 

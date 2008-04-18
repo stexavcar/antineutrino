@@ -33,6 +33,22 @@ T &vector<T>::operator[](uword index) {
   return data_[index];
 }
 
+
+template <typename T>
+uword vector<T>::offset_of(T *ptr) {
+  ASSERT(data_ <= ptr && ptr < (data_ + length_));
+  return ptr - data_;
 }
+
+
+template <typename T>
+T *vector<T>::from_offset(uword offset) {
+  ASSERT(offset < length_);
+  return data_ + offset;
+}
+
+
+} // neutrino
+
 
 #endif // _UTILS_ARRAY_INL

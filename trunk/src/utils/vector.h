@@ -18,6 +18,8 @@ public:
   IF_NOT_DEBUG(inline vector(T *data));
   inline T &operator[](uword index);
   inline T *start() { return data_; }
+  inline T *from_offset(uword offset);
+  inline uword offset_of(T *ptr);
 private:
   T *data_;
   IF_DEBUG(uword length_);

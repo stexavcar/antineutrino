@@ -376,8 +376,8 @@ vector<char> ref_traits<String>::c_str() {
 // --- S t a c k ---
 // -----------------
 
-DEFINE_ACCESSORS(uword,      Stack, height,     Height)
-DEFINE_ACCESSORS(uword,      Stack, fp,         Fp)
+DEFINE_ACCESSORS(uword,         Stack, height,     Height)
+DEFINE_ACCESSORS(word*,         Stack, fp,         Fp)
 DEFINE_ACCESSORS(word*,         Stack, top_marker, TopMarker)
 DEFINE_ACCESSORS(Stack::Status, Stack, status,     Status)
 
@@ -387,6 +387,11 @@ uword Stack::size_for(uword height) {
 
 word *Stack::bottom() {
   return &ValuePointer::access_direct<word>(this, Stack::kHeaderSize);
+}
+
+vector<word> Stack::buffer() {
+  word *start = &ValuePointer::access_direct<word>(this, Stack::kHeaderSize);
+  return NEW_VECTOR(word, start, height());
 }
 
 
