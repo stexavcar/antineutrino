@@ -565,7 +565,7 @@ DEFINE_REF_CLASS(Dictionary);
 // --- L a m b d a ---
 // -------------------
 
-#define eLambdaFields(VISIT, arg)                            \
+#define eLambdaFields(VISIT, arg)                                    \
   VISIT(Value,      code,          Code,         arg)                \
   VISIT(Value,      constant_pool, ConstantPool, arg)                \
   VISIT(Value,      tree,          Tree,         arg)                \

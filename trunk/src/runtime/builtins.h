@@ -8,17 +8,17 @@ namespace neutrino {
 
 class BuiltinArguments {
 public:
-  inline BuiltinArguments(Runtime &runtime, uword argc, Frame &stack);
+  inline BuiltinArguments(Runtime &runtime, uword argc, StackState &stack);
   inline Value *self();
   inline Value *operator[](uword index);
   inline Lambda *lambda();
   Runtime &runtime() { return runtime_; }
   uword count() { return count_; }
 private:
-  Frame &frame() { return frame_; }
+  StackState &frame() { return frame_; }
   Runtime &runtime_;
   uword count_;
-  Frame &frame_;
+  StackState &frame_;
 };
 
 typedef Data *(builtin)(BuiltinArguments&);

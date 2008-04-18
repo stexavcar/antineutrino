@@ -11,27 +11,6 @@
 
 namespace neutrino {
 
-MAKE_ENUM_INFO_HEADER(Opcode)
-#define MAKE_ENTRY(n, Name, argc, argf) MAKE_ENUM_INFO_ENTRY(oc##Name)
-eOpcodes(MAKE_ENTRY)
-#undef MAKE_ENTRY
-MAKE_ENUM_INFO_FOOTER()
-
-
-void OpcodeData::load(uint16_t value) {
-  switch (value) {
-#define MAKE_CASE(n, Name, argc, argf)                               \
-    case oc##Name:                                                   \
-      name_ = #Name;                                                 \
-      format_ = argf;                                                \
-      length_ = argc + 1;                                            \
-      is_resolved_ = true;                                           \
-      break;
-eOpcodes(MAKE_CASE)
-#undef MAKE_CASE
-  }
-}
-
   
 // -------------
 // --- L o g ---
@@ -40,71 +19,27 @@ eOpcodes(MAKE_CASE)
 class Log {
 public:
   static inline void instruction(uword pc, vector<uint16_t> code,
-      vector<Value*> pool, Frame &frame);
+      vector<Value*> pool, StackState &frame);
 };
-
-
-void BytecodeArchitecture::run(ref<Lambda> lambda, ref<Task> task) {
-  interpreter().call(lambda, task);
-}
-
-
-void BytecodeArchitecture::disassemble(Lambda *lambda, string_buffer &buf) {
-  uword pc = 0;
-  vector<uint16_t> code = cast<Code>(lambda->code())->buffer();
-  uword code_length = cast<Code>(lambda->code())->length();
-  vector<Value*> pool = cast<Tuple>(lambda->constant_pool())->buffer();
-  while (pc < code_length)
-    BytecodeBackend::disassemble_next_instruction(&pc, code, pool, buf);
-}
 
 
 // -----------------------------
 // --- I n t e r p r e t e r ---
 // -----------------------------
 
-Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
-  Frame frame = prepare_call(task, lambda, 0);
-  uword pc = 0;
-  Data *value;
-  while (true) {
-    value = interpret(task->stack(), frame, &pc);
-    if (is<Signal>(value)) {
-      frame.push_activation();
-      task->stack()->set_fp(frame.fp() - task->stack()->bottom());
-      frame.prev_pc() = pc;
-      frame.lambda() = *lambda;
-      IF_DEBUG(task->stack()->status().is_parked = true);
-      if (is<AllocationFailed>(value)) {
-        Stack *old_stack = task->stack();
-        runtime().heap().memory().collect_garbage(runtime());
-        frame.reset(old_stack, task->stack());
-      } else {
-        UNREACHABLE();
-      }
-      IF_DEBUG(task->stack()->status().is_parked = false);
-      frame.unwind();
-    } else {
-      break;
-    }
-  }
-  task->stack()->status().is_empty = true;
-  return cast<Value>(value);
-}
-
-Frame Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc) {
+StackState Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc) {
   lambda.ensure_compiled(runtime(), NULL);
   ASSERT(task->stack()->status().is_empty);
   task->stack()->status().is_empty = false;
-  Frame frame(task->stack()->bottom() + Frame::accessible_below_fp(argc));
+  StackState frame(task->stack()->bottom() + StackState::accessible_below_fp(argc));
   frame.self(argc) = runtime().roots().vhoid();
   frame.lambda() = *lambda;
   frame.prev_fp() = 0;
-  ASSERT(frame.sp() >= frame.fp() + Frame::kSize);
+  ASSERT(frame.sp() >= frame.fp() + StackState::kSize);
   return frame;
 }
 
-void Frame::reset(Stack *old_stack, Stack *new_stack) {
+void StackState::reset(Stack *old_stack, Stack *new_stack) {
   uword delta = new_stack->bottom() - old_stack->bottom();
   fp_ += delta;
   sp_ += delta;
@@ -153,34 +88,51 @@ static void unhandled_condition(Value *name, BuiltinArguments &args) {
   Conditions::get().error_occurred("%", buf.raw_string());
 }
 
-/**
- * A stack-allocated instance of this class ensures that execution
- * taking place on the specified stack is wrapped up correctly and
- * that the current execution status is stored in the task so
- * execution can continue afterwards.
- */
-class ExecutionWrapUp {
-public:
-  inline ExecutionWrapUp(uword *pc_from, uword *pc_to) {
-    pc_from_ = pc_from;
-    pc_to_ = pc_to;
-  }
-  inline ~ExecutionWrapUp() {
-    *pc_to_ = *pc_from_;
-  }
-private:
-  uword *pc_from_, *pc_to_;
-};
 
-Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
-  uword pc = *pc_ptr;
-  ExecutionWrapUp wrap_up(&pc, pc_ptr);
-  vector<uint16_t> code = cast<Code>(frame.lambda()->code())->buffer();
-  vector<Value*> constant_pool = cast<Tuple>(frame.lambda()->constant_pool())->buffer();
+Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
+  StackState frame = prepare_call(task, lambda, 0);
+  frame.push_activation(0, *lambda);
+  Data *value = Nothing::make();
   while (true) {
-    uint16_t oc = code[pc];
+    value = interpret(task->stack(), frame);
+    if (is<Signal>(value)) {
+      IF_DEBUG(task->stack()->status().is_parked = true);
+      if (is<AllocationFailed>(value)) {
+        Stack *old_stack = task->stack();
+        runtime().heap().memory().collect_garbage(runtime());
+        frame.reset(old_stack, task->stack());
+      } else {
+        UNREACHABLE();
+      }
+      IF_DEBUG(task->stack()->status().is_parked = false);
+    } else {
+      break;
+    }
+  }
+  task->stack()->status().is_empty = true;
+  return cast<Value>(value);
+}
+
+
+#define RETURN(val) do { result = val; goto suspend; } while(false)
+
+#define PREPARE_EXECUTION(value) do {                                \
+    lambda = (value);                                                \
+    code = cast<Code>(lambda->code())->buffer();                     \
+    constant_pool = cast<Tuple>(lambda->constant_pool())->buffer();  \
+  } while (false)
+
+Data *Interpreter::interpret(Stack *stack, StackState &frame) {
+  uword pc = frame.prev_pc();
+  frame.unwind();
+  Lambda *lambda;
+  vector<uint16_t> code;
+  vector<Value*> constant_pool;
+  PREPARE_EXECUTION(frame.lambda());
+  Data *result = Nothing::make();
+  while (true) {
     IF_DEBUG(Log::instruction(pc, code, constant_pool, frame));
-    switch (oc) {
+    switch (code[pc]) {
     case ocPush: {
       uint16_t index = code[pc + 1];
       Value *value = constant_pool[index];
@@ -282,12 +234,9 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
             *recv_str, *selector_str);
       }
       Method *method = cast<Method>(lookup_result);
-      frame.push_activation();
-      frame.prev_pc() = pc + OpcodeInfo<ocInvoke>::kSize;
-      frame.lambda() = method->lambda();
+      frame.push_activation(pc + OpcodeInfo<ocInvoke>::kSize, method->lambda());
       method->lambda()->ensure_compiled(runtime(), method);
-      code = cast<Code>(method->lambda()->code())->buffer();
-      constant_pool = cast<Tuple>(method->lambda()->constant_pool())->buffer();
+      PREPARE_EXECUTION(method->lambda());
       if (!keymap->is_empty())
         frame.push(keymap);
       pc = 0;
@@ -309,12 +258,9 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
             *recv_str, *selector_str);
       }
       Method *method = cast<Method>(lookup_result);
-      frame.push_activation();
-      frame.prev_pc() = pc + OpcodeInfo<ocInvokeSuper>::kSize;
-      frame.lambda() = method->lambda();
+      frame.push_activation(pc + OpcodeInfo<ocInvokeSuper>::kSize, method->lambda());
       method->lambda()->ensure_compiled(runtime(), method);
-      code = cast<Code>(method->lambda()->code())->buffer();
-      constant_pool = cast<Tuple>(method->lambda()->constant_pool())->buffer();
+      PREPARE_EXECUTION(method->lambda());
       if (!keymap->is_empty())
         frame.push(keymap);
       pc = 0;
@@ -330,13 +276,10 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
         for (uword i = 0; i < handlers->length(); i += 2) {
           String *handler = cast<String>(handlers->get(i));
           if (name->equals(handler)) {
-            Lambda *lambda = cast<Lambda>(handlers->get(i + 1));
-            lambda->ensure_compiled(runtime(), NULL);
-            frame.push_activation();
-            frame.prev_pc() = pc + OpcodeInfo<ocRaise>::kSize;
-            frame.lambda() = lambda;
-            code = cast<Code>(lambda->code())->buffer();
-            constant_pool = cast<Tuple>(lambda->constant_pool())->buffer();
+            Lambda *target = cast<Lambda>(handlers->get(i + 1));
+            target->ensure_compiled(runtime(), NULL);
+            frame.push_activation(pc + OpcodeInfo<ocRaise>::kSize, target);
+            PREPARE_EXECUTION(target);
             pc = 0;
             goto end;
           }
@@ -344,7 +287,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
         marker.unwind();
       }
       {
-        frame.push_activation();
+        frame.push_activation(0, lambda);
         BuiltinArguments args(runtime(), argc, frame);
         unhandled_condition(name, args);
         UNREACHABLE();
@@ -357,11 +300,8 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Value *value = frame[argc + 1];
       Lambda *fun = cast<Lambda>(value);
       fun->ensure_compiled(runtime(), NULL);
-      frame.push_activation();
-      frame.prev_pc() = pc + OpcodeInfo<ocCall>::kSize;
-      frame.lambda() = fun;
-      code = cast<Code>(fun->code())->buffer();
-      constant_pool = cast<Tuple>(fun->constant_pool())->buffer();
+      frame.push_activation(pc + OpcodeInfo<ocCall>::kSize, fun);
+      PREPARE_EXECUTION(fun);
       pc = 0;
       break;
     }
@@ -374,11 +314,11 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       uword field_count = layout_template->instance_field_count();
       Protocol *proto = cast<Protocol>(frame[field_count]);
       Data *layout_val = layout_template->clone(runtime().heap());
-      if (is<AllocationFailed>(layout_val)) return layout_val;
+      if (is<AllocationFailed>(layout_val)) RETURN(layout_val);
       Layout *layout = cast<Layout>(layout_val);
       layout->set_protocol(proto);
       Data *val = runtime().heap().new_instance(layout);
-      if (is<Signal>(val)) return val;
+      if (is<Signal>(val)) RETURN(val);
       Instance *instance = cast<Instance>(val);
       for (word i = field_count - 1; i >= 0; i--)
         instance->set_field(i, frame.pop());
@@ -428,7 +368,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Forwarder::Type type = static_cast<Forwarder::Type>(code[pc + 1]);
       Value *value = frame.pop();
       Data *forw = runtime().heap().new_forwarder(type, value);
-      if (is<AllocationFailed>(forw)) return forw;
+      if (is<AllocationFailed>(forw)) RETURN(forw);
       frame.push(cast<Value>(forw));
       pc += OpcodeInfo<ocForward>::kSize;
       break;
@@ -450,7 +390,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       Data *value = builtin(args);
       if (is<Signal>(value)) {
         if (is<AllocationFailed>(value)) {
-          return value;
+          RETURN(value);
         } else {
           Conditions::get().error_occurred("Problem executing builtin %i", index);
         }
@@ -463,11 +403,10 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     case ocYield: case ocReturn: {
       Value *value = frame.pop();
       if (frame.is_bottom())
-        return value;
+        RETURN(value);
       pc = frame.prev_pc();
       frame.unwind();
-      code = cast<Code>(frame.lambda()->code())->buffer();
-      constant_pool = cast<Tuple>(frame.lambda()->constant_pool())->buffer();
+      PREPARE_EXECUTION(frame.lambda());
       frame[0] = value;
       break;
     }
@@ -500,7 +439,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     case ocTuple: {
       uint16_t length = code[pc + 1];
       Data *val = runtime().heap().new_tuple(length);
-      if (is<Signal>(val)) return val;
+      if (is<Signal>(val)) RETURN(val);
       Tuple *result = cast<Tuple>(val);
       for (word i = length - 1; i >= 0; i--)
         result->set(i, frame.pop());
@@ -520,7 +459,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
       for (uword i = 0; i < terms; i++)
         length += cast<String>(frame[i])->length();
       Data *val = runtime().heap().new_string(length);
-      if (is<Signal>(val)) return val;
+      if (is<Signal>(val)) RETURN(val);
       String *result = cast<String>(val);
       uword cursor = 0;
       for (word i = terms - 1; i >= 0; i--) {
@@ -537,14 +476,14 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     case ocClosure: {
       uword index = code[pc + 1];
       Lambda *lambda = cast<Lambda>(constant_pool[index]);
-      uword outer_count = cast<Code>(frame.lambda()->code())->at(pc + 2);
+      uword outer_count = code[pc + 2];
       Data *outers_val = runtime().heap().new_tuple(outer_count);
-      if (is<Signal>(outers_val)) return outers_val;
+      if (is<Signal>(outers_val)) RETURN(outers_val);
       Tuple *outers = cast<Tuple>(outers_val);
       for (uword i = 0; i < outer_count; i++)
         outers->set(outer_count - i - 1, frame.pop());
       Data *clone_val = lambda->clone(runtime().heap());
-      if (is<Signal>(clone_val)) return clone_val;
+      if (is<Signal>(clone_val)) RETURN(clone_val);
       Lambda *clone = cast<Lambda>(clone_val);
       clone->set_outers(outers);
       frame.push(clone);
@@ -554,7 +493,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     case ocTask: {
       Lambda *lambda = cast<Lambda>(frame.pop());
       Data *task_val = runtime().heap().new_task();
-      if (is<Signal>(task_val)) return task_val;
+      if (is<Signal>(task_val)) RETURN(task_val);
       Task *task = cast<Task>(task_val);
       ref_scope scope(runtime().refs());
       prepare_call(runtime().refs().new_ref(task), runtime().refs().new_ref(lambda), 0);
@@ -564,7 +503,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     }
     case ocOuter: {
       uword index = code[pc + 1];
-      Value *value = frame.lambda()->outers()->get(index);
+      Value *value = lambda->outers()->get(index);
       frame.push(value);
       pc += OpcodeInfo<ocOuter>::kSize;
       break;
@@ -572,30 +511,36 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
     case ocQuote: {
       uword unquote_count = code[pc + 1];
       Data *unquotes_val = runtime().heap().new_tuple(unquote_count);
-      if (is<Signal>(unquotes_val)) return unquotes_val;
+      if (is<Signal>(unquotes_val)) RETURN(unquotes_val);
       Tuple *unquotes = cast<Tuple>(unquotes_val);
       for (uword i = 0; i < unquote_count; i++)
         unquotes->set(unquote_count - i - 1, frame.pop());
       SyntaxTree *tree = cast<SyntaxTree>(frame.pop());
       Data *result_val = runtime().heap().new_quote_template(tree, unquotes);
-      if (is<Signal>(result_val)) return result_val;
+      if (is<Signal>(result_val)) RETURN(result_val);
       QuoteTemplate *result = cast<QuoteTemplate>(result_val);
       frame.push(result);
       pc += OpcodeInfo<ocQuote>::kSize;
       break;
     }
     default:
-      UNHANDLED(Opcode, oc);
-      return Nothing::make();
+      UNHANDLED(Opcode, code[pc]);
+      RETURN(Nothing::make());
     }
   }
+suspend:
+  frame.push_activation(pc, lambda);
+  stack->set_fp(frame.fp() - stack->bottom());
+  return result;
 }
+
+#undef RETURN
 
 #ifdef DEBUG
 void Stack::validate_stack() {
   if (status().is_empty) return;
   ASSERT(status().is_cooked);
-  Frame frame(bottom() + fp());
+  StackState frame(bottom() + fp());
   while (true) {
     GC_SAFE_CHECK_IS_C(cnValidation, Lambda, frame.lambda());
     if (frame.is_bottom()) break;
@@ -612,7 +557,7 @@ void Stack::recook_stack() {
   ASSERT(!status().is_cooked);
   ASSERT(status().is_parked);
   word *bot = bottom();
-  Frame frame(bot + fp());
+  StackState frame(bot + fp());
   while (!frame.is_bottom()) {
     frame.prev_fp() = bot + reinterpret_cast<uword>(frame.prev_fp());
     frame.unwind();
@@ -624,7 +569,7 @@ void Stack::uncook_stack() {
   if (status().is_empty) return;
   ASSERT(status().is_cooked);
   ASSERT(status().is_parked);
-  Frame frame(bottom() + fp());
+  StackState frame(bottom() + fp());
   word *bot = bottom();
   while (!frame.is_bottom()) {
     // Create a copy of the frame so that we can unwind the original
@@ -642,7 +587,7 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
   ASSERT(!status().is_cooked);
   ASSERT(status().is_parked);
   word *bot = bottom();
-  Frame frame(bottom() + fp());
+  StackState frame(bottom() + fp());
   while (true) {
     visitor.visit_field(pointer_cast<Value*>(&frame.lambda()));
     if (frame.is_bottom()) break;
@@ -655,8 +600,31 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
   }
 }
 
+
+MAKE_ENUM_INFO_HEADER(Opcode)
+#define MAKE_ENTRY(n, Name, argc, argf) MAKE_ENUM_INFO_ENTRY(oc##Name)
+eOpcodes(MAKE_ENTRY)
+#undef MAKE_ENTRY
+MAKE_ENUM_INFO_FOOTER()
+
+
+void OpcodeData::load(uint16_t value) {
+  switch (value) {
+#define MAKE_CASE(n, Name, argc, argf)                               \
+    case oc##Name:                                                   \
+      name_ = #Name;                                                 \
+      format_ = argf;                                                \
+      length_ = argc + 1;                                            \
+      is_resolved_ = true;                                           \
+      break;
+eOpcodes(MAKE_CASE)
+#undef MAKE_CASE
+  }
+}
+
+
 void Log::instruction(uword pc, vector<uint16_t> code,
-    vector<Value*> pool, Frame &frame) {
+    vector<Value*> pool, StackState &frame) {
   if (Options::trace_interpreter) {
     string_buffer buf;
     BytecodeBackend::disassemble_next_instruction(&pc, code, pool, buf);

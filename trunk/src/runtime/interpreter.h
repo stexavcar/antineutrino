@@ -99,10 +99,10 @@ private:
  *             +---------------+
  *             |     . . .     |
  */
-class Frame {
+class StackState {
 public:
-  Frame(word *fp, word *sp) : fp_(fp), sp_(sp) { }
-  Frame(word *fp) : fp_(fp), sp_(fp + kSize) { }
+  StackState(word *fp, word *sp) : fp_(fp), sp_(sp) { }
+  StackState(word *fp) : fp_(fp), sp_(fp + kSize) { }
   uword locals() { return sp() - (fp() + kSize); }
   inline uword &prev_pc();
   inline word *&prev_fp();
@@ -112,7 +112,7 @@ public:
   inline Value *&self(uword argc);
   inline Value *pop(uword height = 1);
   inline Value *&operator[](uword offset);
-  inline void push_activation();
+  inline void push_activation(uword prev_pc, Lambda *lambda);
   inline Marker push_marker();
   inline Marker pop_marker();
   
@@ -171,8 +171,8 @@ public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
   Value *call(ref<Lambda> lambda, ref<Task> task);
 private:
-  Frame prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc);
-  Data *interpret(Stack *stack, Frame &frame, uword *pc_ptr);
+  StackState prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc);
+  Data *interpret(Stack *stack, StackState &frame);
   Layout *get_layout(Immediate *val);
   Data *lookup_method(Layout *layout, Selector *selector);
   Data *lookup_super_method(Layout *layout, Selector *selector,

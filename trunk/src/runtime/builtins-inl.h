@@ -3,10 +3,11 @@
 
 #include "runtime/builtins.h"
 #include "runtime/interpreter-inl.h"
+#include "values/values-inl.h"
 
 namespace neutrino {
 
-BuiltinArguments::BuiltinArguments(Runtime &runtime, uword count, Frame &frame)
+BuiltinArguments::BuiltinArguments(Runtime &runtime, uword count, StackState &frame)
     : runtime_(runtime)
     , count_(count)
     , frame_(frame) { }

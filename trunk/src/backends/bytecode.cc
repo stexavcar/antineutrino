@@ -387,4 +387,20 @@ void BytecodeBackend::disassemble_next_instruction(uword *pc_ptr,
 }
 
 
+void BytecodeArchitecture::run(ref<Lambda> lambda, ref<Task> task) {
+  
+  interpreter().call(lambda, task);
+}
+
+
+void BytecodeArchitecture::disassemble(Lambda *lambda, string_buffer &buf) {
+  uword pc = 0;
+  vector<uint16_t> code = cast<Code>(lambda->code())->buffer();
+  uword code_length = cast<Code>(lambda->code())->length();
+  vector<Value*> pool = cast<Tuple>(lambda->constant_pool())->buffer();
+  while (pc < code_length)
+    BytecodeBackend::disassemble_next_instruction(&pc, code, pool, buf);
+}
+
+
 } // neutrino
