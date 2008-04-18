@@ -71,6 +71,10 @@ public:
   ref<Tuple> flush_constant_pool();
   
   uint16_t constant_pool_index(ref<Value> value);
+  
+  static void disassemble_next_instruction(uword *pc_ptr, 
+      vector<uint16_t> data, vector<Value*> pool, string_buffer &buf);
+
 private:
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }

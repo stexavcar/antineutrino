@@ -580,8 +580,6 @@ public:
   Data *clone(Heap &heap);
   void ensure_compiled(Runtime &runtime, Method *holder);
 
-  string disassemble();
-
   static const uword kArgcOffset         = Object::kHeaderSize;
   static const uword kCodeOffset         = kArgcOffset + kPointerSize;
   static const uword kConstantPoolOffset = kCodeOffset + kPointerSize;

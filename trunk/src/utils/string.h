@@ -13,7 +13,7 @@ namespace neutrino {
 class string {
 public:
   inline string(const char chars[])
-      : chars_(chars), length_(IF_ELSE_DEBUG(kNoLength, ::strlen(chars))) { }
+      : chars_(chars), length_(IF(IS_DEBUG, kNoLength, ::strlen(chars))) { }
   inline string()
       : chars_(NULL), length_(0) { }
   inline string(const char *chars, uword length)
@@ -37,6 +37,7 @@ public:
   bool operator!=(string that) { return !(this->operator==(that)); }
   void dispose();
   void println(FILE *out = NULL);
+  void print(FILE *out = NULL);
   bool is_empty() { return chars_ == NULL; }
   static string dup(string arg);
   static bool equals(const char* a, const char* b);

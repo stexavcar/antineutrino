@@ -12,6 +12,7 @@ heap/roots.cc
 heap/space.cc
 io/image.cc
 io/out-stream.cc
+main/options.cc
 monitor/monitor.cc
 platform/<platform>/abort.cc
 platform/<platform>/dylib.cc

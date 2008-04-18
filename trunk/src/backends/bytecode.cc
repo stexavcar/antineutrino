@@ -1,6 +1,8 @@
 #include "backends/bytecode.h"
 #include "compiler/compile-utils-inl.h"
+#include "main/options.h"
 #include "runtime/interpreter-inl.h"
+#include "utils/string-inl.h"
 #include "values/values-inl.h"
 
 
@@ -345,8 +347,43 @@ ref<Method> BytecodeBackend::field_setter(uword index,
 void BytecodeBackend::adjust_stack_height(word delta) {
   ASSERT_GE(stack_height() + delta, 0);
   stack_height_ += delta;
-  IF_PARANOID(code().append(ocCheckHeight));
-  IF_PARANOID(code().append(stack_height()));
+  if (Options::check_stack_height) {
+    code().append(ocCheckHeight);
+    code().append(stack_height());
+  }
+}
+
+
+void BytecodeBackend::disassemble_next_instruction(uword *pc_ptr,
+    vector<uint16_t> data, vector<Value*> pool, string_buffer &buf) {
+  buf.printf("%{3} ", *pc_ptr);
+  OpcodeData opcode_data;
+  opcode_data.load(data[*pc_ptr]);
+  ASSERT(opcode_data.is_resolved());
+  buf.printf("%", opcode_data.name());
+  string format = opcode_data.format();
+  for (uword i = 0; i < format.length(); i++) {
+    buf.append(" ");
+    uint16_t arg = data[*pc_ptr + 1 + i];
+    switch (format[i]) {
+    case 'i':
+      buf.printf("%", arg);
+      break;
+    case '@':
+      buf.printf("@%", arg);
+      break;
+    case 'p':
+      pool[arg]->write_on(buf);
+      break;
+    case '?':
+      buf.append("?");
+      break;
+    default:
+      UNREACHABLE();
+    }
+  }
+  buf.append("\n");
+  *pc_ptr += opcode_data.length();
 }
 
 

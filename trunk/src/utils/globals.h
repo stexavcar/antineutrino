@@ -16,30 +16,30 @@
 #define SEMI_STATIC_JOIN(a, b) SEMI_STATIC_JOIN_HELPER(a, b)
 #define SEMI_STATIC_JOIN_HELPER(a, b) a##b
 
+// If the first argument is true then evaluates to the second 
+// argument, otherwise the third
+#define IF(COND, then_part, else_part) COND(then_part, else_part)
+
+// If the first argument is true then declares a const variable with
+// the specified value, otherwise declares the variable with no value.
+#define COND_CONST(COND, name, value)  IF(COND, name, const name = value)
+
 #ifdef DEBUG
 #define IF_DEBUG(arg)       arg
 #define IF_NOT_DEBUG(arg)   typedef void SEMI_STATIC_JOIN(__IfNotDebug__, __LINE__)
-#define IF_ELSE_DEBUG(t, e) t
+#define IS_DEBUG(t, e) t
 #else
 #define IF_DEBUG(arg)       typedef void SEMI_STATIC_JOIN(__IfDebug__, __LINE__)
 #define IF_NOT_DEBUG(arg)   arg
-#define IF_ELSE_DEBUG(t, e) e
+#define IS_DEBUG(t, e) e
 #endif
 
 #ifdef PARANOID
 #define IF_PARANOID(arg) arg
-#define IF_ELSE_PARANOID(t, e) t
+#define IS_PARANOID(t, e) t
 #else
 #define IF_PARANOID(arg) typedef void SEMI_STATIC_JOIN(__IfParanoid__, __LINE__)
-#define IF_ELSE_PARANOID(t, e) e
-#endif
-
-#define MONITOR
-
-#ifdef MONITOR
-#define IF_MONITOR(expr) expr
-#else
-#define IF_MONITOR(expr) typedef void SEMI_STATIC_JOIN(__IfMonitor__, __LINE__)
+#define IS_PARANOID(t, e) e
 #endif
 
 template <typename T>
@@ -48,7 +48,7 @@ static inline void USE(T t) { }
 static const uword kPointerSize = sizeof(void*);
 static const uword kWordSize = sizeof(word);
 
-static const bool kDebugMode = IF_ELSE_DEBUG(true, false);
+static const bool kDebugMode = IF(IS_DEBUG, true, false);
 
 /**
  * Returns the new extended capacity given that the current capacity

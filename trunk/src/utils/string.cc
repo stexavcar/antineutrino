@@ -38,8 +38,15 @@ void string::dispose() {
 }
 
 void string::println(FILE *out) {
-  if (out == NULL) ::printf("%s\n", chars());
-  else ::fprintf(out, "%s\n", chars());
+  if (out == NULL) out = stdout;
+  print(out);
+  ::fputc('\n', out);
+}
+
+void string::print(FILE *out) {
+  if (out == NULL) out = stdout;
+  for (uword i = 0; i < length(); i++)
+    ::fputc(chars_[i], out);
 }
 
 // --- S t r i n g   b u f f e r ---

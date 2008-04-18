@@ -17,6 +17,7 @@ class list {
 public:
   list();
   list(T *elms, uword length) : elms_(elms), length_(length) { }
+  list(vector<T> elms, uword length) : elms_(elms.start()), length_(length) { }
   uword length() { return length_; }
   T &operator[](uword index);
   list<T> sublist(uword start, uword length);

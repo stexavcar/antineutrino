@@ -13,12 +13,14 @@ namespace neutrino {
 class Architecture {
 public:
   virtual void run(ref<Lambda> lambda, ref<Task> task) = 0;
+  virtual void disassemble(Lambda *lambda, string_buffer &buf) = 0;
 };
 
 class BytecodeArchitecture : public Architecture {
 public:
   BytecodeArchitecture(Runtime &runtime) : interpreter_(runtime) { }
   virtual void run(ref<Lambda> lambda, ref<Task> task);
+  virtual void disassemble(Lambda *lambda, string_buffer &buf);
 private:
   Interpreter &interpreter() { return interpreter_; }
   Interpreter interpreter_;

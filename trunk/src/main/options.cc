@@ -3,13 +3,14 @@
 
 namespace neutrino {
 
-bool Options::print_stats_on_exit = false;
-REGISTER_FLAG(bool, Options, print_stats_on_exit);
+DEFINE_FLAG(bool, Options, print_stats_on_exit, false);
 
-list<string> Options::images;
-REGISTER_FLAG(list<string>, Options, images);
+COND_DEFINE_FLAG(IS_PARANOID, bool, Options, check_stack_height, false);
 
-list<string> Options::libs;
-REGISTER_FLAG(list<string>, Options, libs);
+COND_DEFINE_FLAG(IS_DEBUG, bool, Options, trace_interpreter, false);
+
+DEFINE_FLAG(list<string>, Options, images, list<string>());
+
+DEFINE_FLAG(list<string>, Options, libs, list<string>());
 
 } // neutrino

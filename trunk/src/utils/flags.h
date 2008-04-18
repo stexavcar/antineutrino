@@ -6,8 +6,12 @@
 
 namespace neutrino {
 
-#define REGISTER_FLAG(type, Class, name)                             \
+#define DEFINE_FLAG(type, Class, name, init)                         \
+  type Class::name = init;                                           \
   static RegisterFlag<type> register_##name(#name, &Class::name)
+
+#define COND_DEFINE_FLAG(COND, type, Class, name, init)              \
+  IF(COND, DEFINE_FLAG(type, Class, name, init), typedef void SEMI_STATIC_JOIN(__DefineFlag__, __LINE__))
 
 typedef void (ErrorHandler)(string message);
 

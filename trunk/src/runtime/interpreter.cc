@@ -1,4 +1,6 @@
+#include "backends/bytecode.h"
 #include "heap/ref-inl.h"
+#include "main/options.h"
 #include "runtime/builtins-inl.h"
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
@@ -37,14 +39,23 @@ eOpcodes(MAKE_CASE)
 
 class Log {
 public:
-  static inline void instruction(uint16_t opcode, Frame &frame);
-private:
-  static const bool kTraceInstructions = false;
+  static inline void instruction(uword pc, vector<uint16_t> code,
+      vector<Value*> pool, Frame &frame);
 };
 
 
 void BytecodeArchitecture::run(ref<Lambda> lambda, ref<Task> task) {
   interpreter().call(lambda, task);
+}
+
+
+void BytecodeArchitecture::disassemble(Lambda *lambda, string_buffer &buf) {
+  uword pc = 0;
+  vector<uint16_t> code = cast<Code>(lambda->code())->buffer();
+  uword code_length = cast<Code>(lambda->code())->length();
+  vector<Value*> pool = cast<Tuple>(lambda->constant_pool())->buffer();
+  while (pc < code_length)
+    BytecodeBackend::disassemble_next_instruction(&pc, code, pool, buf);
 }
 
 
@@ -168,7 +179,7 @@ Data *Interpreter::interpret(Stack *stack, Frame &frame, uword *pc_ptr) {
   vector<Value*> constant_pool = cast<Tuple>(frame.lambda()->constant_pool())->buffer();
   while (true) {
     uint16_t oc = code[pc];
-    Log::instruction(oc, frame);
+    IF_DEBUG(Log::instruction(pc, code, constant_pool, frame));
     switch (oc) {
     case ocPush: {
       uint16_t index = code[pc + 1];
@@ -644,15 +655,13 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
   }
 }
 
-void Log::instruction(uint16_t code, Frame &frame) {
-#ifdef DEBUG
-  if (kTraceInstructions) {
-    EnumInfo<Opcode> info;
-    string name = info.get_name_for(code);
-    uint16_t height = (frame.sp() - frame.fp()) - Frame::kSize;
-    printf("%s (%i)\n", name.chars(), height);
+void Log::instruction(uword pc, vector<uint16_t> code,
+    vector<Value*> pool, Frame &frame) {
+  if (Options::trace_interpreter) {
+    string_buffer buf;
+    BytecodeBackend::disassemble_next_instruction(&pc, code, pool, buf);
+    buf.raw_string().print();
   }
-#endif
 }
 
 } // namespace neutrino

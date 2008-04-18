@@ -314,54 +314,6 @@ void Data::write_short_on(string_buffer &buf, Data::WriteMode mode) {
 }
 
 
-// -------------------------------
-// --- D i s a s s e m b l e r ---
-// -------------------------------
-
-static void disassemble_buffer(uint16_t *data, uword size,
-    Tuple *literals, string_buffer &buf) {
-  uword pc = 0;
-  while (pc < size) {
-    buf.printf("%{ 3} ", pc);
-    OpcodeData opcode_data;
-    opcode_data.load(data[pc]);
-    ASSERT(opcode_data.is_resolved());
-    buf.printf("%", opcode_data.name());
-    string format = opcode_data.format();
-    for (uword i = 0; i < format.length(); i++) {
-      buf.append(" ");
-      uint16_t arg = data[pc + 1 + i];
-      switch (format[i]) {
-        case 'i':
-          buf.printf("%", arg);
-          break;
-        case '@':
-          buf.printf("@%", arg);
-          break;
-        case 'p':
-          literals->get(arg)->write_on(buf);
-          break;
-        case '?':
-          buf.append("?");
-          break;
-        default:
-          UNREACHABLE();
-      }
-    }
-    buf.append("\n");
-    pc += opcode_data.length();
-  }
-}
-
-string Lambda::disassemble() {
-  uword size = cast<Code>(code())->length();
-  uint16_t *data = &cast<Code>(code())->at(0);
-  string_buffer buf;
-  disassemble_buffer(data, size, cast<Tuple>(constant_pool()), buf);
-  return buf.to_string();
-}
-
-
 // ---------------
 // --- S i z e ---
 // ---------------

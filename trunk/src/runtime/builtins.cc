@@ -314,8 +314,9 @@ Data *Builtins::array_length(BuiltinArguments &args) {
 Data *Builtins::lambda_disassemble(BuiltinArguments &args) {
   ref<Lambda> self = args.runtime().refs().new_ref(cast<Lambda>(args.self()));
   self.ensure_compiled(args.runtime(), ref<Method>());
-  scoped_string str(self->disassemble());
-  str->println();
+  string_buffer buf;
+  args.runtime().architecture().disassemble(*self, buf);
+  buf.raw_string().println();
   return args.runtime().roots().vhoid();
 }
 

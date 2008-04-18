@@ -9,6 +9,8 @@ namespace neutrino {
 class Options {
 public:
   static bool print_stats_on_exit;
+  static bool COND_CONST(IS_PARANOID, check_stack_height, false);
+  static bool COND_CONST(IS_DEBUG, trace_interpreter, false);
   static list<string> images;
   static list<string> libs;
 };

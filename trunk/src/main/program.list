@@ -2,4 +2,3 @@
 # executable but not the library.
 
 main/main.cc
-main/options.cc
