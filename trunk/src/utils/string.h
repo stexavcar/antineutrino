@@ -13,15 +13,12 @@ namespace neutrino {
 class string {
 public:
   inline string(const char chars[])
-      : chars_(chars), length_(IF(IS_DEBUG, kNoLength, ::strlen(chars))) { }
+      : chars_(chars), length_(::strlen(chars)) { }
   inline string()
       : chars_(NULL), length_(0) { }
   inline string(const char *chars, uword length)
       : chars_(chars), length_(length) { }
-  inline uword length() {
-    IF_DEBUG(if (length_ == kNoLength) length_ = ::strlen(chars_));
-    return length_;
-  }
+  inline uword length() { return length_; }
   inline uword operator[](uword index);
   inline string substring(uword start);
   inline string substring(uword start, uword length);
@@ -42,7 +39,6 @@ public:
   static string dup(string arg);
   static bool equals(const char* a, const char* b);
   
-  static const uword kNoLength = ~0;
 private:
   const char *chars_;
   uword length_;

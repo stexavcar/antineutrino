@@ -38,14 +38,13 @@ class CodeGenerator : public Visitor {
 public:
   CodeGenerator(ref<LambdaExpression> lambda, ref<Method> method,
       CompileSession &session, CodeGenerator *enclosing)
-    : Visitor(session.runtime().refs())
+    : Visitor(session.runtime().refs(), enclosing)
     , lambda_(lambda)
     , method_(method)
     , session_(session)
     , scope_(NULL) {
     if (enclosing == NULL) return;
     scope_ = enclosing->scope_;
-    set_quote_scope(enclosing->quote_scope());    
   }
 
   SyntaxTree *resolve_unquote(UnquoteExpression *that);
@@ -795,6 +794,14 @@ ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
   return lambda;
 }
 
+
+class PostCompilationChecker : public Visitor {
+public:
+  PostCompilationChecker(RefStack &refs, Visitor *enclosing)
+      : Visitor(refs, enclosing) { }
+};
+
+
 } // neutrino
 
 
@@ -808,6 +815,11 @@ void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
     CodeGenerator *enclosing) {
   GarbageCollectionMonitor monitor(runtime().heap().memory());
   ref<LambdaExpression> tree = cast<LambdaExpression>(lambda.tree(runtime().refs()));
+  
+  // Analyze syntax tree
+  
+  
+  // Generate code
   BytecodeBackend backend(runtime());
   backend.initialize();
   Assembler<BytecodeCodeGeneratorConfig> assembler(tree, holder, *this, backend, enclosing);
@@ -822,6 +834,11 @@ void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
   ref<Tuple> constant_pool = backend.flush_constant_pool();
   lambda->set_code(*code);
   lambda->set_constant_pool(*constant_pool);
+  
+  // Ensure that the syntax tree has been cleaned up propertly
+  PostCompilationChecker checker(runtime().refs(), enclosing);
+  tree.body(runtime().refs()).accept(checker);
+  
   ASSERT(!monitor.has_collected_garbage());
 }
 

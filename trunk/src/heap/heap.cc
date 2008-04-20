@@ -300,6 +300,7 @@ Data *Heap::new_symbol(Value *name) {
   if (is<AllocationFailed>(val)) return val;
   Symbol *result = cast<Symbol>(val);
   result->set_name(name);
+  result->set_data(roots().nuhll());
   IF_PARANOID(result->validate());
   return result;
 }

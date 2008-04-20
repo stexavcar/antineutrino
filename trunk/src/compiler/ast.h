@@ -532,15 +532,17 @@ DEFINE_REF_CLASS(GlobalExpression);
 // --- S y m b o l ---
 // -------------------
 
-#define eSymbolFields(VISIT, arg)                            \
-  VISIT(Value, name, Name, arg)
+#define eSymbolFields(VISIT, arg)                                    \
+  VISIT(Value,     name, Name, arg)                                  \
+  VISIT(Immediate, data, Data, arg)
 
 class Symbol : public SyntaxTree {
 public:
   eSymbolFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kNameOffset = SyntaxTree::kHeaderSize;
-  static const uword kSize = kNameOffset + kPointerSize;
+  static const uword kDataOffset = kNameOffset + kPointerSize;
+  static const uword kSize       = kDataOffset + kPointerSize;
 };
 
 template <>
@@ -556,10 +558,17 @@ DEFINE_REF_CLASS(Symbol);
 // --- Q u o t e   E x p r e s s i o n ---
 // ---------------------------------------
 
-#define eQuoteExpressionFields(VISIT, arg)                  \
+#define eQuoteExpressionFields(VISIT, arg)                           \
   VISIT(SyntaxTree, value,    Value,    arg)                         \
   VISIT(Tuple,      unquotes, Unquotes, arg)
 
+
+/**
+ * A quote expression is a syntax tree representing an unbound,
+ * unexecuted code quote expression.  During evaluation the unquote
+ * expressions will be executed and bound together with the quoted
+ * code in a QuoteTemplate.
+ */
 class QuoteExpression : public SyntaxTree {
 public:
   eQuoteExpressionFields(DECLARE_OBJECT_FIELD, 0)
@@ -810,9 +819,12 @@ private:
   QuoteTemplateScope *previous_;
 };
 
+
 class Visitor {
 public:
-  Visitor(RefStack &refs) : quote_scope_(NULL), refs_(refs) { }
+  Visitor(RefStack &refs, Visitor *enclosing)
+      : quote_scope_(enclosing ? enclosing->quote_scope_ : NULL)
+      , refs_(refs) { }
   ~Visitor();
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
 #define MAKE_VISIT_METHOD(n, Name, name)                             \

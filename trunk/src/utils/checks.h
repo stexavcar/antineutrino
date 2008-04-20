@@ -21,62 +21,69 @@ public:
 class Checks {
 public:
 
-  static inline void check(string file_name, int line_number,
-      string source, bool value, Condition cause = cnUnknown) {
+  // We use c strings for the arguments that correspond to the
+  // "macro" strings, like file name and source code.  This is to
+  // avoid the overhead in debug mode of calculating the length of
+  // the strings whenever there is an assertion, since debug mode
+  // doesn't optimize strlen of literal strings.  This should be safe
+  // since there are no null characters in file names of source code.
+  
+  static inline void check(const char *file_name, int line_number,
+      const char *source, bool value, Condition cause = cnUnknown) {
     if (!value) {
       Conditions::get().check_failed(file_name, line_number,
           source, value, cause);
     }
   }
   
-  static inline void check_eq(string file_name, int line_number,
-      int expected, string expected_source, int value,
-      string value_source, Condition cause = cnUnknown) {
+  static inline void check_eq(const char *file_name, int line_number,
+      int expected, const char *expected_source, int value,
+      const char *value_source, Condition cause = cnUnknown) {
     if (expected != value) {
       Conditions::get().check_eq_failed(file_name, line_number,
           expected, expected_source, value, value_source, cause);
     }
   }
   
-  static inline void check_eq(string file_name, int line_number,
-      string expected, string expected_source, string value,
-      string value_source, Condition cause = cnUnknown) {
+  static inline void check_eq(const char *file_name, int line_number,
+      string expected, const char *expected_source, string value,
+      const char *value_source, Condition cause = cnUnknown) {
     if (expected != value) {
       Conditions::get().check_eq_failed(file_name, line_number,
           expected, expected_source, value, value_source, cause);
     }
   }
 
-  static inline void check_ge(string file_name, int line_number,
-      word value, string value_source, word limit,
-      string limit_source, Condition cause = cnUnknown) {
+  static inline void check_ge(const char *file_name, int line_number,
+      word value, const char *value_source, word limit,
+      const char *limit_source, Condition cause = cnUnknown) {
     if (value < limit) {
       Conditions::get().check_ge_failed(file_name, line_number,
           value, value_source, limit, limit_source, cause);
     }
   }
   
-  static inline void check_lt(string file_name, int line_number,
-      int value, string value_source, int limit,
-      string limit_source, Condition cause = cnUnknown) {
+  static inline void check_lt(const char *file_name, int line_number,
+      int value, const char *value_source, int limit,
+      const char *limit_source, Condition cause = cnUnknown) {
     if (value >= limit) {
       Conditions::get().check_lt_failed(file_name, line_number,
           value, value_source, limit, limit_source, cause);
     }
   }
     
-  static inline void check_eq(string file_name, int line_number,
-      Value *expected, string expected_source, Value *value,
-      string value_source, Condition cause = cnUnknown) {
+  static inline void check_eq(const char *file_name, int line_number,
+      Value *expected, const char *expected_source, Value *value,
+      const char *value_source, Condition cause = cnUnknown) {
     if (!expected->equals(value)) {
       Conditions::get().check_eq_failed(file_name, line_number,
           expected, expected_source, value, value_source, cause);
     }
   }
 
-  static inline void check_is(string file_name, int line_number,
-      string type_name, uword type_tag, Data *data,
-      string value_source, bool holds, Condition cause = cnUnknown) {
+  static inline void check_is(const char *file_name, int line_number,
+      const char *type_name, uword type_tag, Data *data,
+      const char *value_source, bool holds, Condition cause = cnUnknown) {
     if (!holds) {
       Conditions::get().check_is_failed(file_name, line_number,
           type_name, type_tag, data, value_source, cause);

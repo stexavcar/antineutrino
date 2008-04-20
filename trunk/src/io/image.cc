@@ -241,6 +241,13 @@ void Image::fixup_shallow_object(FObject *obj, ImageContext &info) {
       expr->set_index(img->index());
       break;
     }
+    case tSymbol: {
+      FSymbol *img = image_raw_cast<FSymbol>(obj);
+      Symbol *heap_obj = cast<Symbol>(img->forward_pointer());
+      TRANSFER_FIELD(Immediate, name, Name, Symbol);
+      heap_obj->set_data(info.runtime().roots().nuhll());
+      break;
+    }
     case tUnquoteExpression: {
       FUnquoteExpression *img = image_raw_cast<FUnquoteExpression>(obj);
       UnquoteExpression *expr = cast<UnquoteExpression>(img->forward_pointer());

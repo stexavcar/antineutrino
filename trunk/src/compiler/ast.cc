@@ -317,63 +317,83 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
     ref<SyntaxTree> value = visitor.refs().new_ref(cast<SyntaxTree>(term));
     return value.accept(visitor);
   }
-  case tBuiltinCall:
-    return visitor.visit_builtin_call(cast<BuiltinCall>(self));
 #define MAKE_VISIT(n, Name, name)                                    \
   case t##Name:                                                      \
     return visitor.visit_##name(cast<Name>(self));
-eSimpleSyntaxTreeTypes(MAKE_VISIT)
+eAcceptVisitorCases(MAKE_VISIT)
 #undef MAKE_VISIT
   default:
     UNHANDLED(InstanceType, type);
   }
 }
 
-static void traverse_tuple(Visitor &visitor, ref<Tuple> expressions) {
-  ref_scope scope(visitor.refs());
-  for (uword i = 0; i < expressions.length(); i++)
-    cast<SyntaxTree>(expressions.get(visitor.refs(), i)).accept(visitor);
+
+/**
+ * Dispatch the visitor for the given value.  If the value is a
+ * syntax tree node it is visited normally.  If it is a tuple, the
+ * tuple is assumed to contain syntax tree nodes which are visited
+ * in order.  Otherwise nothing happens.
+ */
+static void dispatch(Visitor &visitor, ref<Value> value, const char *field) {
+  if (is<SyntaxTree>(value)) {
+    cast<SyntaxTree>(value).accept(visitor);
+  } else if (is<Tuple>(value)) {
+    ref<Tuple> tuple = cast<Tuple>(value);
+    ref_scope scope(visitor.refs());
+    for (uword i = 0; i < tuple.length(); i++)
+      cast<SyntaxTree>(tuple.get(visitor.refs(), i)).accept(visitor);
+  } else {
+    // ignore
+  }
 }
 
+
+/**
+ * Dispatch the visitor for each element in the given tuple.
+ */
+static void dispatch_tuple(Visitor &visitor, ref<Tuple> tuple, const char *field) {
+  ref_scope scope(visitor.refs());
+  for (uword i = 0; i < tuple.length(); i++)
+    dispatch(visitor, tuple.get(visitor.refs(), i), field);
+}
+
+
 void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
-#define VISIT_FIELD(Type, field) cast<SyntaxTree>(cast<Type>(self).field(visitor.refs())).accept(visitor)
+#define VISIT_FIELD_WITH(field, Type, op) op(visitor, cast<Type>(self).field(visitor.refs()), #Type "." #field);
+#define VISIT_FIELD(ret, field, Field, Type) VISIT_FIELD_WITH(field, Type, dispatch)
   ref<SyntaxTree> self = open(this);
   InstanceType type = self->type();
   switch (type) {
-  case tReturnExpression:
-    VISIT_FIELD(ReturnExpression, value);
-    break;
-  case tInvokeExpression: {
+  case tArguments: {
     ref_scope scope(visitor.refs());
-    VISIT_FIELD(InvokeExpression, receiver);
-    if (is<SyntaxTree>(cast<InvokeExpression>(self)->arguments()))
-      VISIT_FIELD(InvokeExpression, arguments);
+    VISIT_FIELD(0, arguments, 0, Arguments);
     break;
   }
-  case tCallExpression: {
+  case tInstantiateExpression: {
     ref_scope scope(visitor.refs());
-    VISIT_FIELD(CallExpression, receiver);
-    VISIT_FIELD(CallExpression, function);
-    VISIT_FIELD(CallExpression, arguments);
+    VISIT_FIELD(0, receiver, 0, InstantiateExpression);
+    VISIT_FIELD(0, arguments, 0, InstantiateExpression);
+    VISIT_FIELD_WITH(terms, InstantiateExpression, dispatch_tuple);
     break;
   }
-  case tConditionalExpression: {
+  case tInterpolateExpression: {
     ref_scope scope(visitor.refs());
-    VISIT_FIELD(ConditionalExpression, condition);
-    VISIT_FIELD(ConditionalExpression, then_part);
-    VISIT_FIELD(ConditionalExpression, else_part);
+    VISIT_FIELD_WITH(terms, InterpolateExpression, dispatch_tuple);
     break;
   }
-  case tSequenceExpression: {
-    traverse_tuple(visitor, cast<SequenceExpression>(self).expressions(visitor.refs()));
+  case tQuoteExpression: {
+    ref_scope scope(visitor.refs());
+    VISIT_FIELD(0, unquotes, 0, QuoteExpression);
     break;
   }
-  case tTupleExpression: {
-    traverse_tuple(visitor, cast<TupleExpression>(self).values(visitor.refs()));
-    break;
+#define MAKE_VISIT(n, Name, name)                                    \
+  case t##Name: {                                                    \
+    ref_scope scope(visitor.refs());                                 \
+    e##Name##Fields(VISIT_FIELD, Name);                              \
+    break;                                                           \
   }
-  case tLiteralExpression: case tGlobalExpression: case tThisExpression:
-    break;
+eTraverseVisitorCases(MAKE_VISIT)
+#undef MAKE_VISIT    
   default:
     UNHANDLED(InstanceType, type);
   }

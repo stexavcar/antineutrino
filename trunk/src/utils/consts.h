@@ -81,6 +81,11 @@
   VISIT(39, BuiltinCall,           builtin_call)           \
   VISIT(40, UnquoteExpression,     unquote_expression)     \
   VISIT(41, QuoteTemplate,         quote_template)         \
+  VISIT(51, Symbol,                symbol)                 \
+  VISIT(62, Arguments,             arguments)              \
+  VISIT(61, InstantiateExpression, instantiate_expression) \
+  VISIT(56, InterpolateExpression, interpolate_expression) \
+  VISIT(53, QuoteExpression,       quote_expression)       \
   eSimpleSyntaxTreeTypes(VISIT)
 
 
@@ -94,18 +99,13 @@
   VISIT(48, TupleExpression,       tuple_expression)       \
   VISIT(49, GlobalExpression,      global_expression)      \
   VISIT(50, CallExpression,        call_expression)        \
-  VISIT(51, Symbol,                symbol)                 \
   VISIT(52, ConditionalExpression, conditional_expression) \
-  VISIT(53, QuoteExpression,       quote_expression)       \
   VISIT(54, ThisExpression,        this_expression)        \
   VISIT(55, LambdaExpression,      lambda_expression)      \
-  VISIT(56, InterpolateExpression, interpolate_expression) \
   VISIT(57, LocalDefinition,       local_definition)       \
   VISIT(58, RaiseExpression,       raise_expression)       \
   VISIT(59, OnClause,              on_clause)              \
   VISIT(60, DoOnExpression,        do_on_expression)       \
-  VISIT(61, InstantiateExpression, instantiate_expression) \
-  VISIT(62, Arguments,             arguments)              \
   VISIT(63, TaskExpression,        task_expression)        \
   VISIT(64, YieldExpression,       yield_expression)       \
   VISIT(65, Assignment,            assignment)             \
@@ -131,7 +131,12 @@
 #define eBoilerplateAllocator(VISIT)                       \
   eGeneratableTypes(VISIT)                                 \
   VISIT(0, BuiltinCall, builtin_call)                      \
-  VISIT(0, UnquoteExpression, unquote_expression)
+  VISIT(0, Arguments,   arguments)                         \
+  VISIT(0, UnquoteExpression, unquote_expression)          \
+  VISIT(0, InstantiateExpression, instantiate_expression)  \
+  VISIT(0, InterpolateExpression, interpolate_expression)  \
+  VISIT(0, QuoteExpression,       quote_expression)        \
+  VISIT(0, Symbol, symbol)
 
 
 /**
@@ -142,7 +147,28 @@
   eGeneratableTypes(VISIT)                                 \
   VISIT(0, BuiltinCall, builtin_call)                      \
   VISIT(0, UnquoteExpression, unquote_expression)          \
-  VISIT(0, Channel, channel)
+  VISIT(0, Channel, channel)                               \
+  VISIT(0, Arguments,   arguments)                         \
+  VISIT(0, InstantiateExpression, instantiate_expression)  \
+  VISIT(0, InterpolateExpression, interpolate_expression)  \
+  VISIT(0, QuoteExpression,       quote_expression)        \
+  VISIT(0, Symbol, symbol)
+
+
+#define eAcceptVisitorCases(VISIT)                         \
+  eSimpleSyntaxTreeTypes(VISIT)                            \
+  VISIT(0, Symbol, symbol)                                 \
+  VISIT(0, Arguments, arguments)                           \
+  VISIT(0, InstantiateExpression, instantiate_expression)  \
+  VISIT(0, InterpolateExpression, interpolate_expression)  \
+  VISIT(0, QuoteExpression,       quote_expression)        \
+  VISIT(0, BuiltinCall, builtin_call)
+
+
+#define eTraverseVisitorCases(VISIT)                       \
+  eSimpleSyntaxTreeTypes(VISIT)                            \
+  VISIT(0, Symbol, symbol)                                 \
+  VISIT(0, BuiltinCall, builtin_call)
 
 
 /**
@@ -151,6 +177,10 @@
  */
 #define eBoilerplateFixupShallow(VISIT)                    \
   eGeneratableTypes(VISIT)                                 \
+  VISIT(0, Arguments, 0)                                   \
+  VISIT(0, InstantiateExpression, 0)                       \
+  VISIT(0, InterpolateExpression, 0)                       \
+  VISIT(0, QuoteExpression,       0)                       \
   VISIT(0, Layout, 0)
 
 
@@ -166,7 +196,12 @@
   VISIT(0, Root, 0)                                        \
   VISIT(0, BuiltinCall, 0)                                 \
   VISIT(0, UnquoteExpression, 0)                           \
-  VISIT(0, Channel, 0)
+  VISIT(0, Channel, 0)                                     \
+  VISIT(0, Arguments, 0)                                   \
+  VISIT(0, InstantiateExpression, 0)                       \
+  VISIT(0, InterpolateExpression, 0)                       \
+  VISIT(0, QuoteExpression,       0)                       \
+  VISIT(0, Symbol, 0)
 
 
 /**
@@ -180,7 +215,12 @@
   VISIT(0, Context, 0)                                     \
   VISIT(0, BuiltinCall, 0)                                 \
   VISIT(0, UnquoteExpression, 0)                           \
-  VISIT(0, Channel, 0)
+  VISIT(0, Channel, 0)                                     \
+  VISIT(0, Arguments, 0)                                   \
+  VISIT(0, InstantiateExpression, 0)                       \
+  VISIT(0, InterpolateExpression, 0)                       \
+  VISIT(0, QuoteExpression,       0)                       \
+  VISIT(0, Symbol, 0)
 
 
 /**
@@ -190,7 +230,12 @@
   eGeneratableTypes(VISIT)                                 \
   VISIT(0, Layout, 0)                                      \
   VISIT(0, Lambda, 0)                                      \
-  VISIT(0, Channel, 0)
+  VISIT(0, Channel, 0)                                     \
+  VISIT(0, Arguments, 0)                                   \
+  VISIT(0, InstantiateExpression, 0)                       \
+  VISIT(0, InterpolateExpression, 0)                       \
+  VISIT(0, QuoteExpression,       0)                       \
+  VISIT(0, Symbol, 0)
 
 
 /**
@@ -203,7 +248,12 @@
   VISIT(0, Layout, 0)                                      \
   VISIT(0, Context, 0)                                     \
   VISIT(0, QuoteTemplate, 0)                               \
-  VISIT(0, ForwarderDescriptor, 0)
+  VISIT(0, ForwarderDescriptor, 0)                         \
+  VISIT(0, Arguments, 0)                                   \
+  VISIT(0, InstantiateExpression, 0)                       \
+  VISIT(0, InterpolateExpression, 0)                       \
+  VISIT(0, QuoteExpression,       0)                       \
+  VISIT(0, Symbol, 0)
 
 
 /**
@@ -215,7 +265,12 @@
   VISIT(0, BuiltinCall, 0)                                 \
   VISIT(0, Lambda, 0)                                      \
   VISIT(0, Layout, 0)                                      \
-  VISIT(0, Channel, 0)
+  VISIT(0, Channel, 0)                                     \
+  VISIT(0, Arguments, 0)                                   \
+  VISIT(0, InstantiateExpression, 0)                       \
+  VISIT(0, InterpolateExpression, 0)                       \
+  VISIT(0, QuoteExpression,       0)                       \
+  VISIT(0, Symbol, 0)
 
 
 // -------------------------------------
