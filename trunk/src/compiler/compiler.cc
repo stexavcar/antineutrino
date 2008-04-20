@@ -24,8 +24,9 @@ class Scope;
 class CompileSession {
 public:
   CompileSession(Runtime &runtime, ref<Context> context);
-  ref<Lambda> compile(ref<LambdaExpression> that, CodeGenerator *enclosing);
+  ref<Lambda> compile(ref<LambdaExpression> that, CodeGenerator &enclosing);
   void compile(ref<Lambda> tree, ref<Method> holder, CodeGenerator *enclosing);
+  void compile(ref<Lambda> tree, ref<Method> holder);
   Runtime &runtime() { return runtime_; }
   ref<Context> context() { return context_; }
 private:
@@ -542,7 +543,7 @@ void Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
 template <class C>
 void Assembler<C>::visit_lambda_expression(ref<LambdaExpression> that) {
   ClosureScope scope(*this);
-  ref<Lambda> lambda = session().compile(that, this);
+  ref<Lambda> lambda = session().compile(that, *this);
   scope.unlink();
   if (scope.outers().length() > 0) {
     for (uword i = 0; i < scope.outers().length(); i++) {
@@ -604,7 +605,7 @@ void Assembler<C>::visit_do_on_expression(ref<DoOnExpression> that) {
     data.set(2 * i, name);
     ref<LambdaExpression> handler = clause.lambda(refs());
     ClosureScope scope(*this);
-    ref<Lambda> lambda = session().compile(handler, this);
+    ref<Lambda> lambda = session().compile(handler, *this);
     scope.unlink();
     // TODO(5): We need a lifo block mechanism to implement outers in
     //   condition handlers
@@ -779,27 +780,65 @@ ref<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
 
 void Compiler::compile(Runtime &runtime, ref<Lambda> lambda, ref<Method> holder) {
   CompileSession session(runtime, lambda.context(runtime.refs()));
-  session.compile(lambda, holder, NULL);
+  session.compile(lambda, holder);
 }
 
 
 ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
-    CodeGenerator *enclosing) {
+    CodeGenerator &enclosing) {
   ref<Smi> zero = runtime().refs().new_ref(Smi::from_int(0));
   ref<Lambda> lambda = runtime().factory().new_lambda(
       that->parameters()->parameters()->length(), zero, zero, that,
       context()
   );
-  compile(lambda, enclosing->method(), enclosing);
+  compile(lambda, enclosing.method(), &enclosing);
   return lambda;
 }
 
 
+// --- P r e ---
+
+
+class PreAnalyzer : public Visitor {
+public:
+  PreAnalyzer(Runtime &runtime)
+      : Visitor(runtime.refs(), NULL)
+      , runtime_(runtime) { }
+  virtual void visit_symbol(ref<Symbol> that);
+private:
+  Runtime &runtime() { return runtime_; }
+  Runtime &runtime_;
+};
+
+
+void PreAnalyzer::visit_symbol(ref<Symbol> that) {
+  // that->set_data(runtime().roots().thrue());
+}
+
+
+// --- P o s t ---
+
+
+/**
+ * The post compilation checker traverses the whole syntax tree
+ * and checks that it has been returned to a consistent state after
+ * compilation.
+ */
 class PostCompilationChecker : public Visitor {
 public:
-  PostCompilationChecker(RefStack &refs, Visitor *enclosing)
-      : Visitor(refs, enclosing) { }
+  PostCompilationChecker(Runtime &runtime)
+      : Visitor(runtime.refs(), NULL)
+      , runtime_(runtime) { }
+  virtual void visit_symbol(ref<Symbol> that);
+private:
+  Runtime &runtime() { return runtime_; }
+  Runtime &runtime_;
 };
+
+
+void PostCompilationChecker::visit_symbol(ref<Symbol> that) {
+  ASSERT_IS(Null, that->data());
+}
 
 
 } // neutrino
@@ -811,15 +850,29 @@ public:
 namespace neutrino {
 
 
-void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
-    CodeGenerator *enclosing) {
+void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder) {
   GarbageCollectionMonitor monitor(runtime().heap().memory());
-  ref<LambdaExpression> tree = cast<LambdaExpression>(lambda.tree(runtime().refs()));
+  ref<SyntaxTree> body = cast<LambdaExpression>(lambda.tree(runtime().refs())).body(runtime().refs());
   
-  // Analyze syntax tree
-  
+  PreAnalyzer analyzer(runtime());
+  body.accept(analyzer);
   
   // Generate code
+  compile(lambda, holder, NULL);
+  
+#ifdef PARANOID
+  // Ensure that the syntax tree has been cleaned up propertly
+  PostCompilationChecker checker(runtime());
+  body.accept(checker);
+#endif
+  
+  ASSERT(!monitor.has_collected_garbage());
+}
+
+
+void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
+    CodeGenerator *enclosing) {
+  ref<LambdaExpression> tree = cast<LambdaExpression>(lambda.tree(runtime().refs()));
   BytecodeBackend backend(runtime());
   backend.initialize();
   Assembler<BytecodeCodeGeneratorConfig> assembler(tree, holder, *this, backend, enclosing);
@@ -834,12 +887,6 @@ void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
   ref<Tuple> constant_pool = backend.flush_constant_pool();
   lambda->set_code(*code);
   lambda->set_constant_pool(*constant_pool);
-  
-  // Ensure that the syntax tree has been cleaned up propertly
-  PostCompilationChecker checker(runtime().refs(), enclosing);
-  tree.body(runtime().refs()).accept(checker);
-  
-  ASSERT(!monitor.has_collected_garbage());
 }
 
 
