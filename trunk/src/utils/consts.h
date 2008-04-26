@@ -41,6 +41,7 @@
   VISIT(20, Context,               context)                \
   VISIT(21, ForwarderDescriptor,   forwarder_descriptor)   \
   VISIT(22, Channel,               channel)                \
+  VISIT(51, Symbol,                symbol)                 \
   eGeneratableObjectTypes(VISIT)                           \
   eSyntaxTreeTypes(VISIT)
 
@@ -81,11 +82,11 @@
   VISIT(39, BuiltinCall,           builtin_call)           \
   VISIT(40, UnquoteExpression,     unquote_expression)     \
   VISIT(41, QuoteTemplate,         quote_template)         \
-  VISIT(51, Symbol,                symbol)                 \
   VISIT(62, Arguments,             arguments)              \
   VISIT(61, InstantiateExpression, instantiate_expression) \
   VISIT(56, InterpolateExpression, interpolate_expression) \
   VISIT(53, QuoteExpression,       quote_expression)       \
+  VISIT(66, Parameters,            parameters)             \
   eSimpleSyntaxTreeTypes(VISIT)
 
 
@@ -97,7 +98,7 @@
   VISIT(46, MethodExpression,      method_expression)      \
   VISIT(47, SequenceExpression,    sequence_expression)    \
   VISIT(48, TupleExpression,       tuple_expression)       \
-  VISIT(49, GlobalExpression,      global_expression)      \
+  VISIT(49, GlobalVariable,        global_variable)        \
   VISIT(50, CallExpression,        call_expression)        \
   VISIT(52, ConditionalExpression, conditional_expression) \
   VISIT(54, ThisExpression,        this_expression)        \
@@ -109,9 +110,9 @@
   VISIT(63, TaskExpression,        task_expression)        \
   VISIT(64, YieldExpression,       yield_expression)       \
   VISIT(65, Assignment,            assignment)             \
-  VISIT(66, Parameters,            parameters)             \
   VISIT(67, WhileExpression,       while_expression)       \
-  VISIT(68, SuperExpression,       super_expression)
+  VISIT(68, SuperExpression,       super_expression)       \
+  VISIT(69, LocalVariable,         local_variable)
 
 
 #define eGeneratableTypes(VISIT)                           \
@@ -136,6 +137,7 @@
   VISIT(0, InstantiateExpression, instantiate_expression)  \
   VISIT(0, InterpolateExpression, interpolate_expression)  \
   VISIT(0, QuoteExpression,       quote_expression)        \
+  VISIT(0, Parameters,            parameters)              \
   VISIT(0, Symbol, symbol)
 
 
@@ -152,22 +154,22 @@
   VISIT(0, InstantiateExpression, instantiate_expression)  \
   VISIT(0, InterpolateExpression, interpolate_expression)  \
   VISIT(0, QuoteExpression,       quote_expression)        \
+  VISIT(0, Parameters,            parameters)              \
   VISIT(0, Symbol, symbol)
 
 
 #define eAcceptVisitorCases(VISIT)                         \
   eSimpleSyntaxTreeTypes(VISIT)                            \
-  VISIT(0, Symbol, symbol)                                 \
   VISIT(0, Arguments, arguments)                           \
   VISIT(0, InstantiateExpression, instantiate_expression)  \
   VISIT(0, InterpolateExpression, interpolate_expression)  \
   VISIT(0, QuoteExpression,       quote_expression)        \
+  VISIT(0, Parameters,            parameters)              \
   VISIT(0, BuiltinCall, builtin_call)
 
 
 #define eTraverseVisitorCases(VISIT)                       \
   eSimpleSyntaxTreeTypes(VISIT)                            \
-  VISIT(0, Symbol, symbol)                                 \
   VISIT(0, BuiltinCall, builtin_call)
 
 
@@ -181,6 +183,7 @@
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
   VISIT(0, QuoteExpression,       0)                       \
+  VISIT(0, Parameters,            0)                       \
   VISIT(0, Layout, 0)
 
 
@@ -201,6 +204,7 @@
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
   VISIT(0, QuoteExpression,       0)                       \
+  VISIT(0, Parameters,            0)                       \
   VISIT(0, Symbol, 0)
 
 
@@ -220,6 +224,7 @@
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
   VISIT(0, QuoteExpression,       0)                       \
+  VISIT(0, Parameters,            0)                       \
   VISIT(0, Symbol, 0)
 
 
@@ -235,6 +240,7 @@
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
   VISIT(0, QuoteExpression,       0)                       \
+  VISIT(0, Parameters,            0)                       \
   VISIT(0, Symbol, 0)
 
 
@@ -252,6 +258,7 @@
   VISIT(0, Arguments, 0)                                   \
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
+  VISIT(0, Parameters,            0)                       \
   VISIT(0, QuoteExpression,       0)                       \
   VISIT(0, Symbol, 0)
 
@@ -269,6 +276,7 @@
   VISIT(0, Arguments, 0)                                   \
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
+  VISIT(0, Parameters,            0)                       \
   VISIT(0, QuoteExpression,       0)                       \
   VISIT(0, Symbol, 0)
 
@@ -336,8 +344,10 @@
   VISIT(2, SequenceExpression,    Size)                              \
   VISIT(1, TupleExpression,       ValuesOffset)                      \
   VISIT(2, TupleExpression,       Size)                              \
-  VISIT(1, GlobalExpression,      NameOffset)                        \
-  VISIT(2, GlobalExpression,      Size)                              \
+  VISIT(1, GlobalVariable,        NameOffset)                        \
+  VISIT(2, GlobalVariable,        Size)                              \
+  VISIT(1, LocalVariable,         SymbolOffset)                      \
+  VISIT(2, LocalVariable,         Size)                              \
   VISIT(1, CallExpression,        ReceiverOffset)                    \
   VISIT(2, CallExpression,        FunctionOffset)                    \
   VISIT(3, CallExpression,        ArgumentsOffset)                   \
@@ -448,7 +458,7 @@
   VISIT(24, Layout,     method_expression_layout,      MethodExpression,      allocate_empty_layout(tMethodExpression))      \
   VISIT(25, Layout,     sequence_expression_layout,    SequenceExpression,    allocate_empty_layout(tSequenceExpression))    \
   VISIT(26, Layout,     tuple_expression_layout,       TupleExpression,       allocate_empty_layout(tTupleExpression))       \
-  VISIT(27, Layout,     global_expression_layout,      GlobalExpression,      allocate_empty_layout(tGlobalExpression))      \
+  VISIT(27, Layout,     global_variable_layout,        GlobalVariable,        allocate_empty_layout(tGlobalVariable))        \
   VISIT(28, Layout,     symbol_layout,                 Symbol,                allocate_empty_layout(tSymbol))                \
   VISIT(29, Layout,     call_expression_layout,        CallExpression,        allocate_empty_layout(tCallExpression))        \
   VISIT(30, Layout,     conditional_expression_layout, ConditionalExpression, allocate_empty_layout(tConditionalExpression)) \
@@ -478,7 +488,8 @@
   VISIT(55, Layout,     channel_layout,                Channel,               allocate_empty_layout(tChannel))               \
   VISIT(56, Layout,     while_expression_layout,       WhileExpression,       allocate_empty_layout(tWhileExpression))       \
   VISIT(57, Layout,     super_expression_layout,       SuperExpression,       allocate_empty_layout(tSuperExpression))       \
-  VISIT(58, Layout,     array_layout,                  Array,                 allocate_empty_layout(tArray))
+  VISIT(58, Layout,     array_layout,                  Array,                 allocate_empty_layout(tArray))                 \
+  VISIT(59, Layout,     local_variable_layout,         LocalVariable,         allocate_empty_layout(tLocalVariable))
 
 
 #define eRoots(VISIT)                                                \
@@ -559,7 +570,8 @@
   VISIT(106, is_whitespace,      "whitespace?")                      \
   VISIT(107, is_alpha,           "alpha?")                           \
   VISIT(108, is_digit,           "digit?")                           \
-  VISIT(110, new_array,          "new_array")
+  VISIT(110, new_array,          "new_array")                        \
+  VISIT(111, process_unquote,    "process_unquote")
 
 
 #define eBuiltinFunctions(VISIT)                                     \

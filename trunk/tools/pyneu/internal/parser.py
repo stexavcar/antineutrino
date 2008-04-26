@@ -16,7 +16,7 @@ class Parser(object):
   def __init__(self, scan):
     self.scan_ = scan
     self.resolver_ = VariableResolver()
-    self.quoter_ = QuoteLevel(None)
+    self.quoter_ = None
     scan.set_parser(self)
 
   def scanner(self):
@@ -244,7 +244,9 @@ class Parser(object):
 
   def parameter(self, params, keywords):
     if self.token().is_delimiter(u'‹'):
-      params.append(self.unquote_expression())
+      unq = self.unquote_expression(False)
+      assert isinstance(unq, ast.Unquote)
+      params.append(unq)
     else:
       name = self.expect_identifier()
       symbol = ast.Symbol(name)
@@ -341,16 +343,16 @@ class Parser(object):
       recv_sym = ast.Symbol("")
       raise_args = [ ]
       defs.append((recv_sym, value.recv()))
-      raise_args.append(recv_sym)
+      raise_args.append(ast.Local(recv_sym))
       name = value.name()
       args = value.args()
       argsyms = [ ]
       for arg in args.arguments():
         argsym = ast.Symbol("")
-        argsyms.append(argsym)
+        argsyms.append(ast.Local(argsym))
         defs.append((argsym, arg))
-        raise_args.append(argsym)
-      condition = ast.Invoke(recv_sym, name, args.clone_with_args(argsyms))
+        raise_args.append(ast.Local(argsym))
+      condition = ast.Invoke(ast.Local(recv_sym), name, args.clone_with_args(argsyms))
       error = ast.Raise("assertion_failure", ast.Arguments(raise_args, {}, False))
       result = ast.Conditional(condition, ast.Literal(ast.Void()), error)
       defs.reverse()
@@ -615,7 +617,7 @@ class Parser(object):
     elif self.token().is_delimiter(u'«'):
       return self.quote_expression()
     elif self.token().is_delimiter(u'‹'):
-      return self.unquote_expression()
+      return self.unquote_expression(True)
     elif self.token().is_operator():
       return self.circumfix_expression()
     elif self.token().is_delimiter('['):
@@ -634,11 +636,16 @@ class Parser(object):
     return ast.Quote(value, unquotes)
     return value
 
-  def unquote_expression(self):
+  def unquote_expression(self, in_expression):
     self.expect_delimiter(u'‹')
     current_quoter = self.quoter()
     self.quoter_ = current_quoter.parent()
     expr = self.expression(False)
+    # If we're in an expression we have to make sure that symbols
+    # are wrapped in local variables.  process_unquote takes care
+    # of that.
+    if in_expression:
+      expr = ast.Call(expr, ast.Global("process_unquote"), ast.Arguments([], {}, False))
     self.quoter_ = current_quoter
     self.expect_delimiter(u'›')
     index = current_quoter.register_unquoted(expr)

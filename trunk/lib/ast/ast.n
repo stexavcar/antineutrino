@@ -1,6 +1,8 @@
 internal def compile_expression();
 internal def lift(x);
 
+internal def process_unquote();
+
 protocol SyntaxTree { }
 
 protocol Expression {
@@ -26,7 +28,8 @@ internal protocol CallExpression : Expression { }
 internal protocol MethodExpression : Expression { }
 internal protocol SequenceExpression : Expression { }
 internal protocol TupleExpression : Expression { }
-internal protocol GlobalExpression : Expression { }
+internal protocol GlobalVariable : Expression { }
+internal protocol LocalVariable : Expression { }
 internal protocol ConditionalExpression : Expression { }
 internal protocol QuoteExpression : Expression { }
 internal protocol BuiltinCall : Expression { }

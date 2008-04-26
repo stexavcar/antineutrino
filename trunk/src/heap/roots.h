@@ -28,10 +28,10 @@ public:
    */
   bool initialize(Heap& heap);
 
-  static const uword kCount = 59;
+  static const uword kCount = 60;
 
 // Declare root field accessors
-#define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, allocator) \
+#define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, allocator)        \
   Type *&name() { return reinterpret_cast<Type**>(entries_)[n]; }
 eRoots(DECLARE_ROOT_ACCESSOR)
 #undef DECLARE_ROOT_ACCESSOR

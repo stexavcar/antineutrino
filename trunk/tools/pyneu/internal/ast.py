@@ -14,7 +14,7 @@ class Documentation(SyntaxTree):
     self.value_ = value
 
 
-class Symbol(SyntaxTree):
+class Symbol(object):
 
   def __init__(self, name):
     super(Symbol, self).__init__()
@@ -40,6 +40,7 @@ class Arguments(SyntaxTree):
 
   def __init__(self, args, keywords, is_accessor):
     super(Arguments, self).__init__()
+    for arg in args: assert isinstance(arg, SyntaxTree)
     self.args_ = args
     self.keywords_ = keywords
     self.is_accessor_ = is_accessor
@@ -769,7 +770,7 @@ class Global(Identifier):
     pass
 
   def quote(self):
-    return values.GlobalExpression(self.name())
+    return values.GlobalVariable(self.name())
 
 
 class Local(Identifier):
@@ -788,7 +789,7 @@ class Local(Identifier):
     pass
 
   def quote(self):
-    return self.symbol_.quote()
+    return values.LocalVariable(self.symbol_.quote())
 
 # --- V i s i t o r ---
 

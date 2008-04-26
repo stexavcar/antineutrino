@@ -301,9 +301,14 @@ public:
   DECLARE_IMAGE_FIELD(Immediate, name);
 };
 
-class FGlobalExpression : public FSyntaxTree {
+class FGlobalVariable : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(String, name);
+};
+
+class FLocalVariable : public FSyntaxTree {
+public:
+  DECLARE_IMAGE_FIELD(Symbol, symbol);
 };
 
 class FQuoteExpression : public FSyntaxTree {

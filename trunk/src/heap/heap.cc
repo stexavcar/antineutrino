@@ -305,6 +305,15 @@ Data *Heap::new_symbol(Value *name) {
   return result;
 }
 
+Data *Heap::new_local_variable(Symbol *symbol) {
+  Data *val = allocate_object(LocalVariable::kSize, roots().local_variable_layout());
+  if (is<AllocationFailed>(val)) return val;
+  LocalVariable *result = cast<LocalVariable>(val);
+  result->set_symbol(symbol);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
 Data *Heap::new_singleton(Layout *type) {
   return allocate_object(Singleton::kSize, type);
 }

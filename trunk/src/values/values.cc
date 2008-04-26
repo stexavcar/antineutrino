@@ -202,6 +202,9 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
   case tInstance:
     write_instance_short_on(cast<Instance>(obj), buf);
     break;
+  case tSymbol:
+    buf.printf("#<symbol %>", cast<Symbol>(obj)->name());
+    break;
 #define MAKE_CASE(n, Name, info) case t##Name:
 eSyntaxTreeTypes(MAKE_CASE)
 #undef MAKE_CASE

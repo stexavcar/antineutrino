@@ -386,7 +386,7 @@ class UnquoteExpression(SyntaxTree):
     return result
 
 
-class Symbol(SyntaxTree):
+class Symbol(Object):
 
   def __init__(self, name):
     super(Symbol, self).__init__()
@@ -546,15 +546,27 @@ class ThisExpression(SyntaxTree):
     return result
 
 
-class GlobalExpression(SyntaxTree):
+class GlobalVariable(SyntaxTree):
 
   def __init__(self, name):
-    super(GlobalExpression, self).__init__()
+    super(GlobalVariable, self).__init__()
     self.name_ = name
 
   def allocate(self, heap):
-    result = heap.allocate(fields.FGlobalExpression_Size, Smi(values.GlobalExpression.index))
-    result[fields.FGlobalExpression_NameOffset] = String(self.name_)
+    result = heap.allocate(fields.FGlobalVariable_Size, Smi(values.GlobalVariable.index))
+    result[fields.FGlobalVariable_NameOffset] = String(self.name_)
+    return result
+
+
+class LocalVariable(SyntaxTree):
+
+  def __init__(self, symbol):
+    super(LocalVariable, self).__init__()
+    self.symbol_ = symbol
+
+  def allocate(self, heap):
+    result = heap.allocate(fields.FLocalVariable_Size, Smi(values.LocalVariable.index))
+    result[fields.FLocalVariable_SymbolOffset] = self.symbol_
     return result
 
 

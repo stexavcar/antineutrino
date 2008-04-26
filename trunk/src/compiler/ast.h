@@ -504,28 +504,52 @@ public:
 DEFINE_REF_CLASS(TupleExpression);
 
 
-// -----------------------------------------
-// --- G l o b a l   E x p r e s s i o n ---
-// -----------------------------------------
+// -------------------------------------
+// --- G l o b a l   V a r i a b l e ---
+// -------------------------------------
 
-#define eGlobalExpressionFields(VISIT, arg)                 \
+#define eGlobalVariableFields(VISIT, arg)                            \
   VISIT(String, name, Name, arg)
 
-class GlobalExpression : public SyntaxTree {
+class GlobalVariable : public SyntaxTree {
 public:
-  eGlobalExpressionFields(DECLARE_OBJECT_FIELD, 0)
+  eGlobalVariableFields(DECLARE_OBJECT_FIELD, 0)
 
   static const uword kNameOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kNameOffset + kPointerSize;
 };
 
 template <>
-class ref_traits<GlobalExpression> : public ref_traits<SyntaxTree> {
+class ref_traits<GlobalVariable> : public ref_traits<SyntaxTree> {
 public:
-  eGlobalExpressionFields(DECLARE_REF_FIELD, 0)
+  eGlobalVariableFields(DECLARE_REF_FIELD, 0)
 };
 
-DEFINE_REF_CLASS(GlobalExpression);
+DEFINE_REF_CLASS(GlobalVariable);
+
+
+// -----------------------------------
+// --- L o c a l   V a r i a b l e ---
+// -----------------------------------
+
+#define eLocalVariableFields(VISIT, arg)                             \
+  VISIT(Symbol, symbol, Symbol, arg)
+
+class LocalVariable : public SyntaxTree {
+public:
+  eLocalVariableFields(DECLARE_OBJECT_FIELD, 0)
+
+  static const uword kSymbolOffset = SyntaxTree::kHeaderSize;
+  static const uword kSize         = kSymbolOffset + kPointerSize;
+};
+
+template <>
+class ref_traits<LocalVariable> : public ref_traits<SyntaxTree> {
+public:
+  eLocalVariableFields(DECLARE_REF_FIELD, 0)
+};
+
+DEFINE_REF_CLASS(LocalVariable);
 
 
 // -------------------
@@ -536,7 +560,7 @@ DEFINE_REF_CLASS(GlobalExpression);
   VISIT(Value,     name, Name, arg)                                  \
   VISIT(Immediate, data, Data, arg)
 
-class Symbol : public SyntaxTree {
+class Symbol : public Object {
 public:
   eSymbolFields(DECLARE_OBJECT_FIELD, 0)
 
@@ -546,7 +570,7 @@ public:
 };
 
 template <>
-class ref_traits<Symbol> : public ref_traits<SyntaxTree> {
+class ref_traits<Symbol> : public ref_traits<Object> {
 public:
   eSymbolFields(DECLARE_REF_FIELD, 0)
 };
@@ -813,10 +837,25 @@ public:
   inline QuoteTemplateScope(Visitor &visitor, ref<QuoteTemplate> value);
   inline ~QuoteTemplateScope();
   ref<QuoteTemplate> value() { return value_; }
+  QuoteTemplateScope *previous() { return previous_; }
 private:
   Visitor &visitor_;
   ref<QuoteTemplate> value_;
   QuoteTemplateScope *previous_;
+};
+
+
+/**
+ * The "reverse" of a quote template scope: pops the top quote
+ * template scope and restores it on deletion.
+ */
+class DropQuoteTemplateScope {
+public:
+  inline DropQuoteTemplateScope(Visitor &visitor);
+  inline ~DropQuoteTemplateScope();
+private:
+  Visitor &visitor_;
+  QuoteTemplateScope *top_;
 };
 
 
@@ -826,6 +865,7 @@ public:
       : quote_scope_(enclosing ? enclosing->quote_scope_ : NULL)
       , refs_(refs) { }
   ~Visitor();
+  virtual void visit_symbol(ref<Symbol> that);
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
 #define MAKE_VISIT_METHOD(n, Name, name)                             \
   virtual void visit_##name(ref<Name> that);

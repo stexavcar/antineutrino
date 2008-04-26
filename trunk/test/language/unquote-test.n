@@ -1,11 +1,11 @@
-def factorial_code(n) {
-  if (n = 0) return «1»;
-  else return «‹factorial_code(n - 1)› × ‹lift(n)›»;
-}
-
 def simple_unquote_test() {
   def x := «3»;
   assert «2 + ‹x›».evaluate() = 5;
+}
+
+def factorial_code(n) {
+  if (n = 0) return «1»;
+  else return «‹factorial_code(n - 1)› × ‹lift(n)›»;
 }
 
 def lift_test() {

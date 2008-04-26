@@ -143,11 +143,8 @@ MAKE_ENUM_INFO_FOOTER()
 
 
 struct Lookup {
-  Lookup(CodeGenerator &cg)
-      : category(cMissing)
-      , code_generator(cg) { }
+  Lookup() : category(cMissing) { }
   Category category;
-  CodeGenerator &code_generator;
   union {
     struct { uint16_t index; } argument_info;
     struct { uint16_t height; } local_info;
@@ -198,22 +195,45 @@ void Scope::unlink() {
 
 class FunctionScope : public Scope {
 public:
-  FunctionScope(CodeGenerator &code_generator, ref<Parameters> params)
-      : Scope(code_generator)
-      , params_(params) { }
+  FunctionScope(CodeGenerator &code_generator, ref<Parameters> params,
+      QuoteTemplateScope *quote_scope);
   virtual void lookup(ref<Symbol> symbol, Lookup &result);
 private:
   ref<Parameters> params() { return params_; }
+  QuoteTemplateScope *quote_scope() { return quote_scope_; }
   ref<Parameters> params_;
+  QuoteTemplateScope *quote_scope_;
 };
+
+
+FunctionScope::FunctionScope(CodeGenerator &code_generator,
+    ref<Parameters> params, QuoteTemplateScope *quote_scope)
+    : Scope(code_generator)
+    , params_(params)
+    , quote_scope_(quote_scope) {
+  if (kParanoid) {
+    // Check that if any parameters are unquotes then there is a
+    // quote scope to look them up in
+    Tuple *symbols = params->parameters();
+    for (uword i = 0; i < symbols->length(); i++) {
+      Value *entry = symbols->get(i);
+      if (!is<Symbol>(entry)) {
+        ASSERT_IS(UnquoteExpression, entry);
+        ASSERT(quote_scope != NULL);
+      }
+    }
+  }
+}
 
 
 void FunctionScope::lookup(ref<Symbol> symbol, Lookup &result) {
   Tuple *symbols = params()->parameters();
   for (uword i = 0; i < symbols->length(); i++) {
     Value *entry = symbols->get(i);
-    if (is<UnquoteExpression>(entry))
-      entry = result.code_generator.resolve_unquote(cast<UnquoteExpression>(entry));
+    if (is<UnquoteExpression>(entry)) {
+      uword index = cast<UnquoteExpression>(entry)->index();
+      entry = quote_scope()->value()->unquotes()->get(index);
+    }
     if (symbol->equals(cast<Symbol>(entry))) {
       uword posc = params()->position_count()->value();
       if (i < posc) {
@@ -400,14 +420,14 @@ void Assembler<C>::visit_tuple_expression(ref<TupleExpression> that) {
 
 
 template <class C>
-void Assembler<C>::visit_global_expression(ref<GlobalExpression> that) {
+void Assembler<C>::visit_global_variable(ref<GlobalVariable> that) {
   __ global(that.name(refs()));
 }
 
 
 template <class C>
 void Assembler<C>::load_symbol(ref<Symbol> that) {
-  Lookup lookup(*this);
+  Lookup lookup;
   scope().lookup(that, lookup);
   switch (lookup.category) {
     case cArgument:
@@ -430,7 +450,7 @@ void Assembler<C>::load_symbol(ref<Symbol> that) {
 
 template <class C>
 void Assembler<C>::store_symbol(ref<Symbol> that) {
-  Lookup lookup(*this);
+  Lookup lookup;
   scope().lookup(that, lookup);
   switch (lookup.category) {
     case cLocal:
@@ -443,8 +463,8 @@ void Assembler<C>::store_symbol(ref<Symbol> that) {
 
 
 template <class C>
-void Assembler<C>::visit_symbol(ref<Symbol> that) {
-  load_symbol(that);
+void Assembler<C>::visit_local_variable(ref<LocalVariable> that) {
+  load_symbol(that.symbol(refs()));
 }
 
 
@@ -804,16 +824,10 @@ public:
   PreAnalyzer(Runtime &runtime)
       : Visitor(runtime.refs(), NULL)
       , runtime_(runtime) { }
-  virtual void visit_symbol(ref<Symbol> that);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
 };
-
-
-void PreAnalyzer::visit_symbol(ref<Symbol> that) {
-  // that->set_data(runtime().roots().thrue());
-}
 
 
 // --- P o s t ---
@@ -829,15 +843,16 @@ public:
   PostCompilationChecker(Runtime &runtime)
       : Visitor(runtime.refs(), NULL)
       , runtime_(runtime) { }
-  virtual void visit_symbol(ref<Symbol> that);
+  virtual void visit_local_definition(ref<LocalDefinition> that);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
 };
 
 
-void PostCompilationChecker::visit_symbol(ref<Symbol> that) {
-  ASSERT_IS(Null, that->data());
+void PostCompilationChecker::visit_local_definition(ref<LocalDefinition> that) {
+  ASSERT_IS(Null, that->symbol()->data());
+  Visitor::visit_local_definition(that);
 }
 
 
@@ -881,7 +896,7 @@ void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
   // first local variable by the caller
   if (params->has_keywords())
     backend.adjust_stack_height(1);
-  FunctionScope scope(assembler, params);
+  FunctionScope scope(assembler, params, enclosing ? enclosing->quote_scope() : NULL);
   tree.body(runtime().refs()).accept(assembler);
   ref<Code> code = backend.flush_code();
   ref<Tuple> constant_pool = backend.flush_constant_pool();

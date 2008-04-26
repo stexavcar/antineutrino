@@ -316,7 +316,6 @@ Data *Builtins::lambda_disassemble(BuiltinArguments &args) {
   self.ensure_compiled(args.runtime(), ref<Method>());
   string_buffer buf;
   args.runtime().architecture().disassemble(*self, buf);
-  buf.raw_string().println();
   return args.runtime().roots().vhoid();
 }
 
@@ -358,6 +357,15 @@ Data *Builtins::compile_expression(BuiltinArguments &args) {
 Data *Builtins::lift(BuiltinArguments &args) {
   Value *value = args[0];
   return args.runtime().heap().new_literal_expression(value);
+}
+
+Data *Builtins::process_unquote(BuiltinArguments &args) {
+  Immediate *self = deref(args.self());
+  if (is<Symbol>(self)) {
+    return args.runtime().heap().new_local_variable(cast<Symbol>(self));
+  } else {
+    return self;
+  }
 }
 
 

@@ -55,6 +55,8 @@ public:
   
   Data *new_symbol(Value *name);
   
+  Data *new_local_variable(Symbol *symbol);
+  
   Data *new_dictionary();
   
   Data *new_dictionary(Tuple *store);

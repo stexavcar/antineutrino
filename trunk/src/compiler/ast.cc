@@ -131,15 +131,6 @@ static void unparse_method_expression(MethodExpression *obj, UnparseData &data) 
   data->append(";");
 }
 
-static void unparse_local_definition(LocalDefinition *obj, UnparseData &data) {
-  data->append("def ");
-  unparse_syntax_tree_on(obj->symbol(), data);
-  data->append(" := ");
-  unparse_syntax_tree_on(obj->value(), data);
-  data->append(" in ");
-  unparse_syntax_tree_on(obj->body(), data);
-}
-
 static void unparse_symbol(Symbol *obj, UnparseData &data) {
   Value *name = obj->name();
   if (is<Void>(name)) {
@@ -148,6 +139,15 @@ static void unparse_symbol(Symbol *obj, UnparseData &data) {
     data->append("$");
     name->write_on(data.out(), Data::UNQUOTED);
   }
+}
+
+static void unparse_local_definition(LocalDefinition *obj, UnparseData &data) {
+  data->append("def ");
+  unparse_symbol(obj->symbol(), data);
+  data->append(" := ");
+  unparse_syntax_tree_on(obj->value(), data);
+  data->append(" in ");
+  unparse_syntax_tree_on(obj->body(), data);
 }
 
 static void unparse_list_on(Tuple *objs, UnparseData &data) {
@@ -177,9 +177,7 @@ static void unparse_call_expression(CallExpression *obj, UnparseData &data) {
 }
 
 static void unparse_unquote_expression(UnquoteExpression *obj, UnparseData &data) {
-  QuoteTemplate *templ = data.current_quote_template();
-  SyntaxTree *tree = cast<SyntaxTree>(templ->unquotes()->get(obj->index()));
-  unparse_syntax_tree_on(tree, data);
+  data->printf("‹#%›", obj->index());
 }
 
 static void unparse_quote_template(QuoteTemplate *obj, UnparseData &data) {
@@ -193,9 +191,14 @@ static void unparse_builtin_call(BuiltinCall *obj, UnparseData &data) {
   data->printf("bc[%]", obj->index());
 }
 
-static void unparse_global_expression(GlobalExpression *expr, UnparseData &data) {
+static void unparse_global_variable(GlobalVariable *expr, UnparseData &data) {
   data->append("$");
   expr->name()->write_on(data.out(), Data::UNQUOTED);
+}
+
+static void unparse_local_variable(LocalVariable *expr, UnparseData &data) {
+  data->append("$_");
+  expr->symbol()->write_on(data.out(), Data::UNQUOTED);
 }
 
 static void unparse_sequence_expression(SequenceExpression *expr, UnparseData &data) {
@@ -220,7 +223,7 @@ static void unparse_conditional_expression(ConditionalExpression *expr, UnparseD
 }
 
 static void unparse_assignment(Assignment *expr, UnparseData &data) {
-  unparse_syntax_tree_on(expr->symbol(), data);
+  unparse_symbol(expr->symbol(), data);
   data->append(" := ");
   unparse_syntax_tree_on(expr->value(), data);
 }
@@ -251,17 +254,17 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
   case tUnquoteExpression:
     unparse_unquote_expression(cast<UnquoteExpression>(obj), data);
     break;
-  case tGlobalExpression:
-    unparse_global_expression(cast<GlobalExpression>(obj), data);
+  case tGlobalVariable:
+    unparse_global_variable(cast<GlobalVariable>(obj), data);
+    break;
+  case tLocalVariable:
+    unparse_local_variable(cast<LocalVariable>(obj), data);
     break;
   case tLocalDefinition:
     unparse_local_definition(cast<LocalDefinition>(obj), data);
     break;
   case tLambdaExpression:
     unparse_lambda_expression(cast<LambdaExpression>(obj), data);
-    break;
-  case tSymbol:
-    unparse_symbol(cast<Symbol>(obj), data);
     break;
   case tThisExpression:
     data->append("this");
@@ -302,6 +305,35 @@ void SyntaxTree::unparse_on(string_buffer &buf) {
 // --- V i s i t o r ---
 // ---------------------
 
+static void dispatch_single(Visitor &visitor, ref<Value> value, bool ignore_unexpected) {
+  if (is<SyntaxTree>(value)) {
+    cast<SyntaxTree>(value).accept(visitor);
+  } else if (is<Symbol>(value)) {
+    visitor.visit_symbol(cast<Symbol>(value));
+  } else {
+    ASSERT(ignore_unexpected);
+  }
+}
+
+
+/**
+ * Dispatch the visitor for the given value.  If the value is a
+ * syntax tree node it is visited normally.  If it is a tuple, the
+ * tuple is assumed to contain syntax tree nodes which are visited
+ * in order.  Otherwise nothing happens.
+ */
+static void dispatch(Visitor &visitor, ref<Value> value, const char *field) {
+  if (is<Tuple>(value)) {
+    ref<Tuple> tuple = cast<Tuple>(value);
+    ref_scope scope(visitor.refs());
+    for (uword i = 0; i < tuple.length(); i++)
+      dispatch_single(visitor, tuple.get(visitor.refs(), i), false);
+  } else {
+    dispatch_single(visitor, value, true);
+  }
+}
+
+
 void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
   ref<SyntaxTree> self = open(this);
   InstanceType type = self->type();
@@ -314,8 +346,9 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
     ref<QuoteTemplate> templ = visitor.current_quote();
     uword index = cast<UnquoteExpression>(self)->index();
     Value *term = templ->unquotes()->get(index);
-    ref<SyntaxTree> value = visitor.refs().new_ref(cast<SyntaxTree>(term));
-    return value.accept(visitor);
+    ref<Value> value = visitor.refs().new_ref(term);    
+    DropQuoteTemplateScope drop(visitor);
+    return dispatch_single(visitor, value, false);
   }
 #define MAKE_VISIT(n, Name, name)                                    \
   case t##Name:                                                      \
@@ -324,26 +357,6 @@ eAcceptVisitorCases(MAKE_VISIT)
 #undef MAKE_VISIT
   default:
     UNHANDLED(InstanceType, type);
-  }
-}
-
-
-/**
- * Dispatch the visitor for the given value.  If the value is a
- * syntax tree node it is visited normally.  If it is a tuple, the
- * tuple is assumed to contain syntax tree nodes which are visited
- * in order.  Otherwise nothing happens.
- */
-static void dispatch(Visitor &visitor, ref<Value> value, const char *field) {
-  if (is<SyntaxTree>(value)) {
-    cast<SyntaxTree>(value).accept(visitor);
-  } else if (is<Tuple>(value)) {
-    ref<Tuple> tuple = cast<Tuple>(value);
-    ref_scope scope(visitor.refs());
-    for (uword i = 0; i < tuple.length(); i++)
-      cast<SyntaxTree>(tuple.get(visitor.refs(), i)).accept(visitor);
-  } else {
-    // ignore
   }
 }
 
@@ -381,6 +394,11 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
     VISIT_FIELD_WITH(terms, InterpolateExpression, dispatch_tuple);
     break;
   }
+  case tParameters: {
+    ref_scope scope(visitor.refs());
+    VISIT_FIELD_WITH(parameters, Parameters, dispatch_tuple);
+    break;
+  }
   case tQuoteExpression: {
     ref_scope scope(visitor.refs());
     VISIT_FIELD(0, unquotes, 0, QuoteExpression);
@@ -404,6 +422,10 @@ Visitor::~Visitor() { }
 
 void Visitor::visit_syntax_tree(ref<SyntaxTree> that) {
   that.traverse(*this);
+}
+
+void Visitor::visit_symbol(ref<Symbol> that) {
+  // ignore
 }
 
 #define MAKE_VISIT_METHOD(n, Name, name)                             \
