@@ -863,7 +863,8 @@ class Visitor {
 public:
   Visitor(RefStack &refs, Visitor *enclosing)
       : quote_scope_(enclosing ? enclosing->quote_scope_ : NULL)
-      , refs_(refs) { }
+      , refs_(refs)
+      , scope_(enclosing ? enclosing->scope_ : NULL) { }
   ~Visitor();
   virtual void visit_symbol(ref<Symbol> that);
   virtual void visit_syntax_tree(ref<SyntaxTree> that);
@@ -875,9 +876,13 @@ eSyntaxTreeTypes(MAKE_VISIT_METHOD)
   void set_quote_scope(QuoteTemplateScope *scope) { quote_scope_ = scope; }
   QuoteTemplateScope *quote_scope() { return quote_scope_; }
   RefStack &refs() { return refs_; }
+  Scope &scope() { return *scope_; }
+
 private:
+  friend class Scope;
   QuoteTemplateScope *quote_scope_;
   RefStack &refs_;
+  Scope *scope_;
 };
 
 }

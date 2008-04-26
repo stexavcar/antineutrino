@@ -42,11 +42,7 @@ public:
     : Visitor(session.runtime().refs(), enclosing)
     , lambda_(lambda)
     , method_(method)
-    , session_(session)
-    , scope_(NULL) {
-    if (enclosing == NULL) return;
-    scope_ = enclosing->scope_;
-  }
+    , session_(session) { }
 
   SyntaxTree *resolve_unquote(UnquoteExpression *that);
   
@@ -54,8 +50,6 @@ public:
   Runtime &runtime() { return session().runtime(); }
 
 protected:
-  friend class Scope;
-  Scope &scope() { ASSERT(scope_ != NULL); return *scope_; }
   ref<LambdaExpression> lambda() { return lambda_; }
   CompileSession &session() { return session_; }
 
@@ -64,7 +58,6 @@ private:
   ref<LambdaExpression> lambda_;
   ref<Method> method_;
   CompileSession &session_;
-  Scope *scope_;
 };
 
 
@@ -156,7 +149,7 @@ struct Lookup {
 
 class Scope {
 public:
-  Scope(CodeGenerator &code_generator);
+  Scope(Visitor &visitor);
   Scope();
   ~Scope();
   virtual void lookup(ref<Symbol> symbol, Lookup &result) = 0;
@@ -164,20 +157,20 @@ public:
 protected:
   Scope *parent() { return parent_; }
 private:
-  CodeGenerator *code_generator() { return code_generator_; }
-  CodeGenerator *code_generator_;
+  Visitor *visitor() { return visitor_; }
+  Visitor *visitor_;
   Scope *parent_;
 };
 
 
-Scope::Scope(CodeGenerator &code_generator) 
-    : code_generator_(&code_generator)
-    , parent_(code_generator.scope_) {
-  code_generator.scope_ = this;
+Scope::Scope(Visitor &visitor) 
+    : visitor_(&visitor)
+    , parent_(visitor.scope_) {
+  visitor.scope_ = this;
 }
 
 
-Scope::Scope() : code_generator_(NULL), parent_(NULL) { }
+Scope::Scope() : visitor_(NULL), parent_(NULL) { }
 
 
 Scope::~Scope() {
@@ -186,16 +179,16 @@ Scope::~Scope() {
 
 
 void Scope::unlink() {
-  if (code_generator() != NULL) {
-    code_generator()->scope_ = parent();
-    code_generator_ = NULL;
+  if (visitor() != NULL) {
+    visitor()->scope_ = parent();
+    visitor_ = NULL;
   }
 }
 
 
 class FunctionScope : public Scope {
 public:
-  FunctionScope(CodeGenerator &code_generator, ref<Parameters> params,
+  FunctionScope(Visitor &visitor, ref<Parameters> params,
       QuoteTemplateScope *quote_scope);
   virtual void lookup(ref<Symbol> symbol, Lookup &result);
 private:
@@ -206,9 +199,9 @@ private:
 };
 
 
-FunctionScope::FunctionScope(CodeGenerator &code_generator,
+FunctionScope::FunctionScope(Visitor &visitor,
     ref<Parameters> params, QuoteTemplateScope *quote_scope)
-    : Scope(code_generator)
+    : Scope(visitor)
     , params_(params)
     , quote_scope_(quote_scope) {
   if (kParanoid) {
@@ -253,8 +246,8 @@ void FunctionScope::lookup(ref<Symbol> symbol, Lookup &result) {
 
 class LocalScope : public Scope {
 public:
-  LocalScope(CodeGenerator &code_generator, ref<Symbol> symbol, uword height)
-      : Scope(code_generator)
+  LocalScope(Visitor &visitor, ref<Symbol> symbol, uword height)
+      : Scope(visitor)
       , symbol_(symbol)
       , height_(height) { }
   virtual void lookup(ref<Symbol> name, Lookup &result);
@@ -824,10 +817,38 @@ public:
   PreAnalyzer(Runtime &runtime)
       : Visitor(runtime.refs(), NULL)
       , runtime_(runtime) { }
+  virtual void visit_assignment(ref<Assignment> that);
+  virtual void visit_local_definition(ref<LocalDefinition> that);
+  virtual void visit_lambda_expression(ref<LambdaExpression> that);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
 };
+
+
+void PreAnalyzer::visit_assignment(ref<Assignment> that) {
+  ref<Symbol> sym = that.symbol(refs());
+  Lookup lookup;
+  scope().lookup(sym, lookup);
+  switch (lookup.category) {
+  case cLocal:
+    break;
+  default:
+    UNHANDLED(Category, lookup.category);
+  }
+}
+
+
+void PreAnalyzer::visit_local_definition(ref<LocalDefinition> that) {
+  LocalScope scope(*this, that.symbol(refs()), 0);
+  Visitor::visit_local_definition(that);
+}
+
+
+void PreAnalyzer::visit_lambda_expression(ref<LambdaExpression> that) {
+  FunctionScope scope(*this, that.parameters(refs()), quote_scope());
+  Visitor::visit_lambda_expression(that);
+}
 
 
 // --- P o s t ---

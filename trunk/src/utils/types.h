@@ -95,6 +95,7 @@ class ReturnExpression;
 class Root;
 class Roots;
 class Runtime;
+class Scope;
 class Selector;
 class SemiSpace;
 class Signature;
