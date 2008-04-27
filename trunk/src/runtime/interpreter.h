@@ -34,7 +34,9 @@ namespace neutrino {
   VISIT(32, Attach,      0, "")    VISIT(33, Keyword,       1, "?")    \
   VISIT(34, StoreField,  2, "i.")  VISIT(35, InvokeSuper,   4, "????") \
   VISIT(36, Forward,     1, "?")   VISIT(37, BindForwarder, 0, "")     \
-  VISIT(38, Swap,        0, "")    VISIT(39, LazyCompile,   0, "")
+  VISIT(38, Swap,        0, "")    VISIT(39, LazyCompile,   0, "")     \
+  VISIT(40, StoreCell,   0, "")    VISIT(41, LoadCell,      0, "")     \
+  VISIT(42, NewCell,     0, "")
 
 enum Opcode {
   __first_opcode = -1

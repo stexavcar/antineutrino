@@ -49,6 +49,14 @@ public:
   ref<Method> method() { return method_; }
   Runtime &runtime() { return session().runtime(); }
 
+  /**
+   * Attributes used to determine which code should be generated for
+   * local variables.
+   */
+  enum LocalType {
+    ltMaterialize = 1
+  };
+  
 protected:
   ref<LambdaExpression> lambda() { return lambda_; }
   CompileSession &session() { return session_; }
@@ -75,6 +83,7 @@ public:
   typedef typename Config::Label Label;
   typedef typename Config::Backend Backend;
 
+  void load_raw_symbol(ref<Symbol> sym);
   void load_symbol(ref<Symbol> sym);
   void store_symbol(ref<Symbol> sym);
   
@@ -271,9 +280,9 @@ void LocalScope::lookup(ref<Symbol> name, Lookup &result) {
 
 class ClosureScope : public Scope {
 public:
-  ClosureScope(CodeGenerator &code_generator)
-      : Scope(code_generator)
-      , outers_(code_generator.runtime()) {
+  ClosureScope(Visitor &visitor, Runtime &runtime)
+      : Scope(visitor)
+      , outers_(runtime) {
     outers().initialize();
   }
   virtual void lookup(ref<Symbol> symbol, Lookup &result);
@@ -418,8 +427,13 @@ void Assembler<C>::visit_global_variable(ref<GlobalVariable> that) {
 }
 
 
+/**
+ * Loads a "raw" symbol, which means that if this symbol has been
+ * materialized as a referenced the raw reference is loaded but not
+ * dereferenced.
+ */
 template <class C>
-void Assembler<C>::load_symbol(ref<Symbol> that) {
+void Assembler<C>::load_raw_symbol(ref<Symbol> that) {
   Lookup lookup;
   scope().lookup(that, lookup);
   switch (lookup.category) {
@@ -442,15 +456,28 @@ void Assembler<C>::load_symbol(ref<Symbol> that) {
 
 
 template <class C>
+void Assembler<C>::load_symbol(ref<Symbol> that) {
+  load_raw_symbol(that);
+  if (that->data() == Smi::from_int(ltMaterialize))
+    __ load_cell();
+}
+
+
+template <class C>
 void Assembler<C>::store_symbol(ref<Symbol> that) {
-  Lookup lookup;
-  scope().lookup(that, lookup);
-  switch (lookup.category) {
-    case cLocal:
-      __ store_local(lookup.local_info.height);
-      break;
-    default:
-      UNHANDLED(Category, lookup.category);
+  if (that->data() == Smi::from_int(ltMaterialize)) {
+    load_raw_symbol(that);
+    __ store_cell();
+  } else {
+    Lookup lookup;
+    scope().lookup(that, lookup);
+    switch (lookup.category) {
+      case cLocal:
+        __ store_local(lookup.local_info.height);
+        break;
+      default:
+        UNHANDLED(Category, lookup.category);
+    }
   }
 }
 
@@ -546,22 +573,30 @@ void Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
     ASSERT(type == Smi::from_int(LocalDefinition::ldDef) || type == Smi::from_int(LocalDefinition::ldVar));
     uword height = backend().stack_height();
     codegen(that.value(refs()));
+    if (that->symbol()->data() == Smi::from_int(ltMaterialize)) {
+      ASSERT_EQ(type, Smi::from_int(LocalDefinition::ldVar));
+      __ new_cell();
+    }
     LocalScope scope(*this, that.symbol(refs()), height);
     codegen(that.body(refs()));
     __ slap(1);
   }
+  // Clear any temporary data from the symbol
+  that->symbol()->set_data(runtime().roots().nuhll());
 }
 
 
 template <class C>
 void Assembler<C>::visit_lambda_expression(ref<LambdaExpression> that) {
-  ClosureScope scope(*this);
+  ClosureScope scope(*this, runtime());
   ref<Lambda> lambda = session().compile(that, *this);
   scope.unlink();
   if (scope.outers().length() > 0) {
     for (uword i = 0; i < scope.outers().length(); i++) {
       ref<Symbol> sym = cast<Symbol>(scope.outers()[i]);
-      load_symbol(sym);
+      // Load raw symbols so that materialized variables are
+      // transferred properly by reference rather than by value
+      load_raw_symbol(sym);
     }
     __ closure(lambda, scope.outers().length());
   } else {
@@ -617,7 +652,7 @@ void Assembler<C>::visit_do_on_expression(ref<DoOnExpression> that) {
     ref<String> name = clause.name(refs());
     data.set(2 * i, name);
     ref<LambdaExpression> handler = clause.lambda(refs());
-    ClosureScope scope(*this);
+    ClosureScope scope(*this, runtime());
     ref<Lambda> lambda = session().compile(handler, *this);
     scope.unlink();
     // TODO(5): We need a lifo block mechanism to implement outers in
@@ -809,15 +844,22 @@ ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
 }
 
 
-// --- P r e ---
+// --- P r e   C o m p i l a t i o n   A n a l y s i s ---
 
 
-class PreAnalyzer : public Visitor {
+/**
+ * Analyzer that is invoked on the complete syntax tree before
+ * code generation.  Is currently used to determine which local
+ * variables are used by closures, so these variables can be
+ * materialized.
+ */
+class Analyzer : public Visitor {
 public:
-  PreAnalyzer(Runtime &runtime)
+  Analyzer(Runtime &runtime)
       : Visitor(runtime.refs(), NULL)
       , runtime_(runtime) { }
   virtual void visit_assignment(ref<Assignment> that);
+  virtual void visit_local_variable(ref<LocalVariable> that);
   virtual void visit_local_definition(ref<LocalDefinition> that);
   virtual void visit_lambda_expression(ref<LambdaExpression> that);
 private:
@@ -826,27 +868,30 @@ private:
 };
 
 
-void PreAnalyzer::visit_assignment(ref<Assignment> that) {
+void Analyzer::visit_assignment(ref<Assignment> that) {
   ref<Symbol> sym = that.symbol(refs());
   Lookup lookup;
   scope().lookup(sym, lookup);
-  switch (lookup.category) {
-  case cLocal:
-    break;
-  default:
-    UNHANDLED(Category, lookup.category);
-  }
+  if (lookup.category == cOuter)
+    sym->set_data(Smi::from_int(CodeGenerator::ltMaterialize));
+  Visitor::visit_assignment(that);
 }
 
 
-void PreAnalyzer::visit_local_definition(ref<LocalDefinition> that) {
+void Analyzer::visit_local_variable(ref<LocalVariable> that) {
+  // TODO: If this local variable is mutable, and is being accessed 
+  // by a closure we have to materialize it.
+}
+
+
+void Analyzer::visit_local_definition(ref<LocalDefinition> that) {
   LocalScope scope(*this, that.symbol(refs()), 0);
   Visitor::visit_local_definition(that);
 }
 
 
-void PreAnalyzer::visit_lambda_expression(ref<LambdaExpression> that) {
-  FunctionScope scope(*this, that.parameters(refs()), quote_scope());
+void Analyzer::visit_lambda_expression(ref<LambdaExpression> that) {
+  ClosureScope scope(*this, runtime());
   Visitor::visit_lambda_expression(that);
 }
 
@@ -890,7 +935,7 @@ void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder) {
   GarbageCollectionMonitor monitor(runtime().heap().memory());
   ref<SyntaxTree> body = cast<LambdaExpression>(lambda.tree(runtime().refs())).body(runtime().refs());
   
-  PreAnalyzer analyzer(runtime());
+  Analyzer analyzer(runtime());
   body.accept(analyzer);
   
   // Generate code

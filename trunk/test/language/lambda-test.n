@@ -10,7 +10,17 @@ def test_closure() {
   assert ((fn (x) -> fn (y) -> x + y)(2)(3)) = 5;
 }
 
+def test_set_outer() {
+  var v := 5;
+  assert v = 5;
+  def add_to_v := fn (z) -> (v := v + z);
+  assert v = 5;
+  add_to_v(3);
+  assert v = 8;
+}
+
 def main() {
   test_lambda();
   test_closure();
+  test_set_outer();
 }

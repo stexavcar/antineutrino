@@ -172,6 +172,33 @@ public:
 DEFINE_REF_CLASS(Object);
 
 
+// ---------------
+// --- C e l l ---
+// ---------------
+
+
+#define eCellFields(VISIT, arg)                                      \
+  VISIT(Value, value, Value, arg)
+
+
+class Cell : public Object {
+public:
+  eCellFields(DECLARE_OBJECT_FIELD, 0)
+  
+  static const uword kValueOffset = Object::kHeaderSize;
+  static const uword kSize        = kValueOffset + kPointerSize;
+};
+
+
+template <> class ref_traits<Cell> : public ref_traits<Object> {
+public:
+  eCellFields(DECLARE_REF_FIELD, 0)
+};
+
+
+DEFINE_REF_CLASS(Cell);
+
+
 // -------------------------
 // --- F o r w a r d e r ---
 // -------------------------

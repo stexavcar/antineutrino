@@ -64,6 +64,8 @@ public:
   Data *new_lambda(uword argc, Value *code, Value *literals, Value *tree,
       Context *context);
   
+  Data *new_cell(Value *value);
+  
   Data *new_parameters(Smi *position_count, Tuple *params);
   
   Data *new_quote_template(SyntaxTree *body, Tuple *unquotes);

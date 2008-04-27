@@ -21,7 +21,8 @@
   VISIT(3,  Protocol,              protocol)               \
   VISIT(4,  Task,                  task)                   \
   VISIT(5,  Signature,             signature)              \
-  VISIT(6,  Selector,              selector)
+  VISIT(6,  Selector,              selector)               \
+  VISIT(70, Cell,                  cell)
 
 
 #define eObjectTypes(VISIT)                                \
@@ -419,7 +420,9 @@
   VISIT(1, YieldExpression,       ValueOffset)                       \
   VISIT(2, YieldExpression,       Size)                              \
   VISIT(1, Channel,               NameOffset)                        \
-  VISIT(2, Channel,               Size)
+  VISIT(2, Channel,               Size)                              \
+  VISIT(1, Cell,                  ValueOffset)                       \
+  VISIT(2, Cell,                  Size)
 
 
 // -----------------
@@ -489,7 +492,8 @@
   VISIT(56, Layout,     while_expression_layout,       WhileExpression,       allocate_empty_layout(tWhileExpression))       \
   VISIT(57, Layout,     super_expression_layout,       SuperExpression,       allocate_empty_layout(tSuperExpression))       \
   VISIT(58, Layout,     array_layout,                  Array,                 allocate_empty_layout(tArray))                 \
-  VISIT(59, Layout,     local_variable_layout,         LocalVariable,         allocate_empty_layout(tLocalVariable))
+  VISIT(59, Layout,     local_variable_layout,         LocalVariable,         allocate_empty_layout(tLocalVariable))         \
+  VISIT(60, Layout,     cell_layout,                   Cell,                  allocate_empty_layout(tCell))
 
 
 #define eRoots(VISIT)                                                \

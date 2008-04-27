@@ -282,6 +282,25 @@ void BytecodeBackend::bind_forwarder() {
 }
 
 
+void BytecodeBackend::load_cell() {
+  STATIC_CHECK(OpcodeInfo<ocLoadCell>::kArgc == 0);
+  code().append(ocLoadCell);
+}
+
+
+void BytecodeBackend::store_cell() {
+  STATIC_CHECK(OpcodeInfo<ocStoreCell>::kArgc == 0);
+  code().append(ocStoreCell);
+  adjust_stack_height(-1);
+}
+
+
+void BytecodeBackend::new_cell() {
+  STATIC_CHECK(OpcodeInfo<ocNewCell>::kArgc == 0);
+  code().append(ocNewCell);
+}
+
+
 ref<Code> BytecodeBackend::flush_code() {
   ref<Code> result = factory().new_code(code().length());
   for (uword i = 0; i < result.length(); i++)

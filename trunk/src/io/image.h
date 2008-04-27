@@ -184,6 +184,11 @@ public:
   DECLARE_IMAGE_FIELD(Stack, stack);
 };
 
+class FCell : public FObject {
+public:
+  DECLARE_IMAGE_FIELD(Immediate, value);
+};
+
 class FRoot : public FObject {
 public:
   inline uword index();

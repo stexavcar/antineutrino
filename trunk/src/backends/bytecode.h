@@ -57,6 +57,9 @@ public:
   void unmark();
   void new_forwarder(uint16_t type);
   void bind_forwarder();
+  void store_cell();
+  void load_cell();
+  void new_cell();
   
   ref<Method> field_getter(uword index,  ref<Selector> selector,
       ref<Signature> signature, ref<Context> context);

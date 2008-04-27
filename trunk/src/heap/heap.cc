@@ -55,6 +55,15 @@ Data *Heap::new_lambda(uword argc, Value *code, Value *constant_pool,
   return result;
 }
 
+Data *Heap::new_cell(Value *value) {
+  Data *val = allocate_object(Cell::kSize, roots().cell_layout());
+  if (is<AllocationFailed>(val)) return val;
+  Cell *result = cast<Cell>(val);
+  result->set_value(value);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
 Data *Heap::new_parameters(Smi *position_count, Tuple *params) {
   Data *val = allocate_object(Parameters::kSize, roots().parameters_layout());
   if (is<AllocationFailed>(val)) return val;

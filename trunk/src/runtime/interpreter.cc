@@ -529,6 +529,26 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
       pc += OpcodeInfo<ocQuote>::kSize;
       break;
     }
+    case ocNewCell: {
+      Value *value = frame.pop();
+      Data *val = runtime().heap().new_cell(value);
+      if (is<AllocationFailed>(val)) RETURN(val);
+      frame.push(cast<Cell>(val));
+      pc += OpcodeInfo<ocNewCell>::kSize;
+      break;
+    }
+    case ocLoadCell: {
+      Cell *cell = cast<Cell>(frame.pop());
+      frame.push(cell->value());
+      pc += OpcodeInfo<ocLoadCell>::kSize;
+      break;
+    }
+    case ocStoreCell: {
+      Cell *cell = cast<Cell>(frame.pop());
+      cell->set_value(frame[0]);
+      pc += OpcodeInfo<ocStoreCell>::kSize;
+      break;
+    }
     default:
       UNHANDLED(Opcode, code[pc]);
       RETURN(Nothing::make());
