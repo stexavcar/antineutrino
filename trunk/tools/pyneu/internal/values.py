@@ -304,15 +304,19 @@ class SyntaxTree(Object):
 
 class LambdaExpression(SyntaxTree):
 
-  def __init__(self, params, body):
+  def __init__(self, params, body, is_local):
     super(LambdaExpression, self).__init__()
     self.params_ = params
     self.body_ = body
+    self.is_local_ = is_local
 
   def allocate(self, heap):
     result = heap.allocate(fields.FLambdaExpression_Size, Smi(values.LambdaExpression.index))
     result[fields.FLambdaExpression_ParametersOffset] = self.params_
     result[fields.FLambdaExpression_BodyOffset] = self.body_
+    if self.is_local_: is_local_val = TRUE
+    else: is_local_val = FALSE
+    result[fields.FLambdaExpression_IsLocalOffset] = is_local_val
     return result
 
 

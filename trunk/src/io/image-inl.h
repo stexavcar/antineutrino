@@ -339,6 +339,7 @@ DEFINE_GETTER    (LambdaExpression, MethodExpression,      lambda,          Lamb
 DEFINE_GETTER    (Immediate,        MethodExpression,      is_static,       IsStatic)
 DEFINE_GETTER    (Parameters,       LambdaExpression,      parameters,      Parameters)
 DEFINE_GETTER    (SyntaxTree,       LambdaExpression,      body,            Body)
+DEFINE_GETTER    (Immediate,        LambdaExpression,      is_local,        IsLocal)
 DEFINE_GETTER    (Tuple,            SequenceExpression,    expressions,     Expressions)
 DEFINE_GETTER    (Tuple,            TupleExpression,       values,          Values)
 DEFINE_GETTER    (Immediate,        Symbol,                name,            Name)

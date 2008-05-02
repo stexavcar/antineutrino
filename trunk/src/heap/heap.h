@@ -70,7 +70,8 @@ public:
   
   Data *new_quote_template(SyntaxTree *body, Tuple *unquotes);
   
-  Data *new_lambda_expression(Parameters *params, SyntaxTree *body);
+  Data *new_lambda_expression(Parameters *params, SyntaxTree *body,
+      bool is_local);
   
   Data *new_return_expression(SyntaxTree *value);
   

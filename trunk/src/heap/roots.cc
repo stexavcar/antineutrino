@@ -5,7 +5,7 @@
 namespace neutrino {
 
 MAKE_ENUM_INFO_HEADER(RootName)
-#define MAKE_ENTRY(n, Type, name, Name, allocator) MAKE_ENUM_INFO_ENTRY(Name##_ROOT)
+#define MAKE_ENTRY(n, Type, name, Name, allocator) MAKE_ENUM_INFO_ENTRY(r##Name)
 eRoots(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()

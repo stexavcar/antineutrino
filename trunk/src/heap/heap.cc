@@ -84,12 +84,14 @@ Data *Heap::new_quote_template(SyntaxTree *value, Tuple *unquotes) {
   return result;
 }
 
-Data *Heap::new_lambda_expression(Parameters *params, SyntaxTree *body) {
+Data *Heap::new_lambda_expression(Parameters *params, SyntaxTree *body,
+    bool is_local) {
   Data *val = allocate_object(LambdaExpression::kSize, roots().lambda_expression_layout());
   if (is<AllocationFailed>(val)) return val;
   LambdaExpression *result = cast<LambdaExpression>(val);
   result->set_parameters(params);
   result->set_body(body);
+  result->set_is_local(is_local ? static_cast<Bool*>(roots().thrue()) : static_cast<Bool*>(roots().fahlse()));
   IF_PARANOID(result->validate());
   return result;
 }

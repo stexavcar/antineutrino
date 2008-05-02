@@ -236,7 +236,7 @@ class Lambda(Expression):
   def quote(self):
     params = self.params().quote()
     body = self.body().quote()
-    return values.LambdaExpression(params, body)
+    return values.LambdaExpression(params, body, self.is_local)
 
   def evaluate(self):
     body = self.quote()

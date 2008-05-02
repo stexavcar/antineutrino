@@ -10,16 +10,11 @@ protocol Matrix {
     // Create a copy of the objects given as arguments to make this
     // matrix mutable.
     def backbone := new Array(size: |objs|);
-    var i := 0;
-    while (i < |objs|) {
+    for (i in 0 .. |objs|) {
       def row := new Array(size: |objs[i]|);
       backbone[i] := row;
-      var j := 0;
-      while (j < |row|) {
+      for (j in 0 .. |row|)
         row[j] := objs[i][j];
-        j := j + 1;
-      }
-      i := i + 1;
     }
     return new Matrix() { objs: backbone };
   }

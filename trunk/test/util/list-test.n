@@ -10,16 +10,11 @@ def simple_list_test() {
 
 def extend_test() {
   def l := new List();
-  var i := 0;
-  while (i < 100) {
+  for (i in 0 .. 100) {
     assert |l| = i;
-    var j := 0;
-    while (j < i) {
+    for (j in 0 .. i)
       assert l[j] = j;
-      j := j + 1;
-    }
     l.add(i);
-    i := i + 1;
   }
 }
 

@@ -1,6 +1,7 @@
 #ifndef _RUNTIME
 #define _RUNTIME
 
+#include "compiler/ast.h"
 #include "heap/factory.h"
 #include "heap/heap.h"
 #include "heap/ref.h"

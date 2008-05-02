@@ -55,8 +55,8 @@ ref<QuoteTemplate> Factory::new_quote_template(ref<SyntaxTree> body, ref<Tuple> 
 }
 
 ref<LambdaExpression> Factory::new_lambda_expression(ref<Parameters> params,
-    ref<SyntaxTree> body) {
-  ALLOCATE_CHECKED(LambdaExpression, new_lambda_expression(*params, *body));
+    ref<SyntaxTree> body, bool is_local) {
+  ALLOCATE_CHECKED(LambdaExpression, new_lambda_expression(*params, *body, is_local));
 }
 
 ref<ReturnExpression> Factory::new_return_expression(ref<SyntaxTree> value) {

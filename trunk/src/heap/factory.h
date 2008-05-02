@@ -19,7 +19,7 @@ public:
       ref<Value> literals, ref<Value> tree, ref<Context> context);
   ref<Task> new_task();
   ref<LambdaExpression> new_lambda_expression(ref<Parameters> params,
-      ref<SyntaxTree> body);
+      ref<SyntaxTree> body, bool is_local);
   ref<ReturnExpression> new_return_expression(ref<SyntaxTree> value);
   ref<QuoteTemplate> new_quote_template(ref<SyntaxTree> body, ref<Tuple> unquotes);
   ref<LiteralExpression> new_literal_expression(ref<Value> value);

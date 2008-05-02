@@ -54,6 +54,7 @@ public:
    * local variables.
    */
   enum LocalType {
+    ltNone = 0,
     ltMaterialize = 1
   };
   
@@ -119,6 +120,39 @@ SyntaxTree *CodeGenerator::resolve_unquote(UnquoteExpression *expr) {
   Value *term = templ->unquotes()->get(index);
   return cast<SyntaxTree>(term);
 }
+
+
+class SymbolInfo : public Smi {
+public:
+  inline CodeGenerator::LocalType type();
+  inline SymbolInfo *clone_with_type(CodeGenerator::LocalType value);
+  inline LocalDefinition::Type def_type();
+  inline SymbolInfo *clone_with_def_type(LocalDefinition::Type value);
+  static inline SymbolInfo *empty() { return SymbolInfo::from(Smi::from_int(0)); }
+  static inline SymbolInfo *from(Data *value);
+};
+
+
+SymbolInfo *SymbolInfo::from(Data *value) {
+  if (is<Null>(value)) return empty();
+  return static_cast<SymbolInfo*>(cast<Smi>(value));
+}
+
+
+#define BIT_FIELD_ACCESSORS(type, Class, name, start, size)          \
+  type Class::name() {                                               \
+    word mask = ((1 << size) - 1);                                   \
+    return static_cast<type>((value() >> start) & mask);             \
+  }                                                                  \
+                                                                     \
+  Class *Class::clone_with_##name(type val) {                        \
+    word mask = ~(((1 << size) - 1) << start);                       \
+    return Class::from(Smi::from_int((value() & mask) | (val << start))); \
+  }
+
+
+BIT_FIELD_ACCESSORS(CodeGenerator::LocalType, SymbolInfo, type, 0, 1)
+BIT_FIELD_ACCESSORS(LocalDefinition::Type, SymbolInfo, def_type, 1, 3)
 
 
 // -----------------
@@ -197,39 +231,42 @@ void Scope::unlink() {
 
 class FunctionScope : public Scope {
 public:
-  FunctionScope(Visitor &visitor, ref<Parameters> params,
+  FunctionScope(Runtime &runtime, Visitor &visitor,
+      ref<Parameters> params, bool is_local,
       QuoteTemplateScope *quote_scope);
   virtual void lookup(ref<Symbol> symbol, Lookup &result);
 private:
+  Runtime &runtime() { return runtime_; }
   ref<Parameters> params() { return params_; }
+  bool is_local() { return is_local_; }
   QuoteTemplateScope *quote_scope() { return quote_scope_; }
+  Runtime &runtime_;
   ref<Parameters> params_;
+  bool is_local_;
   QuoteTemplateScope *quote_scope_;
 };
 
 
-FunctionScope::FunctionScope(Visitor &visitor,
-    ref<Parameters> params, QuoteTemplateScope *quote_scope)
+FunctionScope::FunctionScope(Runtime &runtime, Visitor &visitor,
+    ref<Parameters> params, bool is_local,
+    QuoteTemplateScope *quote_scope)
     : Scope(visitor)
+    , runtime_(runtime)
     , params_(params)
-    , quote_scope_(quote_scope) {
-  if (kParanoid) {
-    // Check that if any parameters are unquotes then there is a
-    // quote scope to look them up in
-    Tuple *symbols = params->parameters();
-    for (uword i = 0; i < symbols->length(); i++) {
-      Value *entry = symbols->get(i);
-      if (!is<Symbol>(entry)) {
-        ASSERT_IS(UnquoteExpression, entry);
-        ASSERT(quote_scope != NULL);
-      }
-    }
-  }
-}
+    , is_local_(is_local)
+    , quote_scope_(quote_scope) { }
 
 
 void FunctionScope::lookup(ref<Symbol> symbol, Lookup &result) {
   Tuple *symbols = params()->parameters();
+  // If we're looking up the 'this' symbol the result is the first
+  // argument
+  if (!is_local() && symbol == runtime().this_symbol()) {
+    result.category = cArgument;
+    result.argument_info.index = symbols->length();
+    return;
+  }
+  // If it's not 'this' then maybe it's a parameter
   for (uword i = 0; i < symbols->length(); i++) {
     Value *entry = symbols->get(i);
     if (is<UnquoteExpression>(entry)) {
@@ -249,6 +286,7 @@ void FunctionScope::lookup(ref<Symbol> symbol, Lookup &result) {
       }
     }
   }
+  // Don't know the symbol -- ask outside
   if (parent() != NULL) return parent()->lookup(symbol, result);
 }
 
@@ -458,14 +496,14 @@ void Assembler<C>::load_raw_symbol(ref<Symbol> that) {
 template <class C>
 void Assembler<C>::load_symbol(ref<Symbol> that) {
   load_raw_symbol(that);
-  if (that->data() == Smi::from_int(ltMaterialize))
+  if (SymbolInfo::from(that->data())->type() == ltMaterialize)
     __ load_cell();
 }
 
 
 template <class C>
 void Assembler<C>::store_symbol(ref<Symbol> that) {
-  if (that->data() == Smi::from_int(ltMaterialize)) {
+  if (SymbolInfo::from(that->data())->type() == ltMaterialize) {
     load_raw_symbol(that);
     __ store_cell();
   } else {
@@ -485,6 +523,12 @@ void Assembler<C>::store_symbol(ref<Symbol> that) {
 template <class C>
 void Assembler<C>::visit_local_variable(ref<LocalVariable> that) {
   load_symbol(that.symbol(refs()));
+}
+
+
+template <class C>
+void Assembler<C>::visit_this_expression(ref<ThisExpression> that) {
+  load_symbol(runtime().this_symbol());
 }
 
 
@@ -573,7 +617,7 @@ void Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
     ASSERT(type == Smi::from_int(LocalDefinition::ldDef) || type == Smi::from_int(LocalDefinition::ldVar));
     uword height = backend().stack_height();
     codegen(that.value(refs()));
-    if (that->symbol()->data() == Smi::from_int(ltMaterialize)) {
+    if (SymbolInfo::from(that->symbol()->data())->type() == ltMaterialize) {
       ASSERT_EQ(type, Smi::from_int(LocalDefinition::ldVar));
       __ new_cell();
     }
@@ -609,17 +653,6 @@ template <class C>
 void Assembler<C>::visit_task_expression(ref<TaskExpression> that) {
   codegen(that.lambda(refs()));
   __ task();
-}
-
-
-template <class C>
-void Assembler<C>::visit_this_expression(ref<ThisExpression> that) {
-  uword argc;
-  if (is<Parameters>(lambda()->parameters()))
-    argc = cast<Parameters>(lambda()->parameters())->length();
-  else
-    argc = 0;
-  __ argument(argc);
 }
 
 
@@ -817,7 +850,8 @@ ref<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
     );
     ref<LambdaExpression> expr = runtime.factory().new_lambda_expression(
       params,
-      ret
+      ret,
+      false
     );
     ref<Lambda> ref_result = compile(runtime, expr, context);
     result = *ref_result;
@@ -858,6 +892,7 @@ public:
   Analyzer(Runtime &runtime)
       : Visitor(runtime.refs(), NULL)
       , runtime_(runtime) { }
+  void materialize_if_outer(ref<Symbol> sym);
   virtual void visit_assignment(ref<Assignment> that);
   virtual void visit_local_variable(ref<LocalVariable> that);
   virtual void visit_local_definition(ref<LocalDefinition> that);
@@ -868,24 +903,37 @@ private:
 };
 
 
-void Analyzer::visit_assignment(ref<Assignment> that) {
-  ref<Symbol> sym = that.symbol(refs());
+void Analyzer::materialize_if_outer(ref<Symbol> sym) {
+  SymbolInfo *info = SymbolInfo::from(sym->data());
+  if (info->type() == CodeGenerator::ltMaterialize) return;
   Lookup lookup;
   scope().lookup(sym, lookup);
-  if (lookup.category == cOuter)
-    sym->set_data(Smi::from_int(CodeGenerator::ltMaterialize));
+  if (lookup.category == cOuter) {
+    sym->set_data(info->clone_with_type(CodeGenerator::ltMaterialize));
+  }  
+}
+
+
+void Analyzer::visit_assignment(ref<Assignment> that) {
+  materialize_if_outer(that.symbol(refs()));
   Visitor::visit_assignment(that);
 }
 
 
 void Analyzer::visit_local_variable(ref<LocalVariable> that) {
-  // TODO: If this local variable is mutable, and is being accessed 
-  // by a closure we have to materialize it.
+  ref<Symbol> sym = that.symbol(refs());
+  SymbolInfo *info = SymbolInfo::from(sym->data());
+  if (info->def_type() == LocalDefinition::ldVar)
+    materialize_if_outer(sym);
 }
 
 
 void Analyzer::visit_local_definition(ref<LocalDefinition> that) {
-  LocalScope scope(*this, that.symbol(refs()), 0);
+  ref<Symbol> sym = that.symbol(refs());
+  LocalScope scope(*this, sym, 0);
+  ASSERT_IS(Null, sym->data());
+  if (that->type() == Smi::from_int(LocalDefinition::ldVar))
+    sym->set_data(SymbolInfo::empty()->clone_with_def_type(LocalDefinition::ldVar));
   Visitor::visit_local_definition(that);
 }
 
@@ -962,7 +1010,9 @@ void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
   // first local variable by the caller
   if (params->has_keywords())
     backend.adjust_stack_height(1);
-  FunctionScope scope(assembler, params, enclosing ? enclosing->quote_scope() : NULL);
+  FunctionScope scope(runtime(), assembler, params,
+      tree->is_local() == runtime().roots().thrue(),
+      enclosing ? enclosing->quote_scope() : NULL);
   tree.body(runtime().refs()).accept(assembler);
   ref<Code> code = backend.flush_code();
   ref<Tuple> constant_pool = backend.flush_constant_pool();

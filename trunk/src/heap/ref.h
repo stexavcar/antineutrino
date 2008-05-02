@@ -97,6 +97,8 @@ public:
   inline C* operator*();
   inline C* operator->();
   inline C** cell() { return cell_; }
+  template <class D>
+  bool operator==(abstract_ref<D> that) { return this->operator*() == *that; }
   inline bool is_empty() { return cell_ == 0; }
   static inline ref<C> empty();
 protected:

@@ -228,6 +228,7 @@ class FLambdaExpression : public FSyntaxTree {
 public:
   DECLARE_IMAGE_FIELD(Parameters, parameters);
   DECLARE_IMAGE_FIELD(SyntaxTree, body);
+  DECLARE_IMAGE_FIELD(Immediate, is_local);
 };
 
 class FTaskExpression : public FSyntaxTree {

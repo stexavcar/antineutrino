@@ -1,11 +1,8 @@
 def ensure_capacity() {
   if (this.size < |this.elms|) return null;
   def new_elms := new Array(size: |this.elms| × 2);
-  var i := 0;
-  while (i < |this.elms|) {
+  for (i in 0 .. |this.elms|)
     new_elms[i] := this.elms[i];
-    i := i + 1;
-  }
   this.elms := new_elms;
 }
 
@@ -28,13 +25,11 @@ protocol ArrayList : List {
   
   def to_string() {
     var result := "[";
-    var i := 0;
     var first := true;
-    while (i < |this|) {
+    for (i in 0 .. |this|) {
       if (first) first := false;
       else result := result + ", ";
       result := result + this[i].to_string();
-      i := i + 1;
     }
     return result + "]";
   }

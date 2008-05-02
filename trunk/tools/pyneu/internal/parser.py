@@ -270,6 +270,8 @@ class Parser(object):
       return self.recursive_definition(is_toplevel)
     elif self.token().is_keyword(IF):
       return self.conditional_expression(is_toplevel)
+    elif self.token().is_keyword(FOR):
+      return self.for_expression(is_toplevel);
     elif self.token().is_keyword(WHILE):
       return self.while_expression(is_toplevel)
     elif self.token().is_keyword(RETURN):
@@ -382,6 +384,17 @@ class Parser(object):
     else:
       else_part = ast.Literal(ast.Void())
     return ast.Conditional(cond, then_part, else_part)
+  
+  def for_expression(self, is_toplevel):
+    self.expect_keyword(FOR)
+    params = self.parameters('(', IN)
+    coll = self.expression(False)
+    self.expect_delimiter(')')
+    self.resolver().push_scope(params.params())
+    body = self.expression(is_toplevel)
+    self.resolver().pop_scope()
+    lam = ast.Lambda([], None, params, ast.Return(body), True)
+    return ast.Invoke(coll, "for", ast.Arguments([lam], {}, False))
   
   def while_expression(self, is_toplevel):
     self.expect_keyword(WHILE)

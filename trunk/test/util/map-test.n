@@ -35,16 +35,12 @@ def string_map_test() {
 }
 
 def big_map_test() {
-  var i := 0;
   def m := new Map();
-  while (i < 128) {
+  for (i in 0 .. 128) {
     m[i.to_string()] := i;
-    i := i + 1;
   }
-  i := 0;
-  while (i < 128) {
+  for (i in 0 .. 128) {
     assert m[i.to_string()] = i;
-    i := i + 1;
   }
 }
 

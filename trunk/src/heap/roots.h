@@ -10,7 +10,7 @@ namespace neutrino {
 
 enum RootName {
   __first_root_tag
-#define DECLARE_ROOT_ENUM(n, Type, name, Name, allocator) , Name##_ROOT
+#define DECLARE_ROOT_ENUM(n, Type, name, Name, allocator) , r##Name
 eRoots(DECLARE_ROOT_ENUM)
 #undef DECLARE_ROOT_ENUM
 };
@@ -28,7 +28,9 @@ public:
    */
   bool initialize(Heap& heap);
 
-  static const uword kCount = 61;
+  static const uword kExternalCount = 59;
+  static const uword kInternalCount = 2;
+  static const uword kCount = kExternalCount + kInternalCount;
 
 // Declare root field accessors
 #define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, allocator)        \

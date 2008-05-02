@@ -31,15 +31,13 @@ def add_entry(entry) {
 def expand(new_capacity) {
   def from_table := this.table;
   this.table := new Array(size: new_capacity);
-  var i := 0;
-  while (i < |from_table|) {
+  for (i in 0 .. |from_table|) {
     var current := from_table[i];
     while (not current = null) {
       def next := current.next;
       this·add_entry(current);
       current := next;
     }
-    i := i + 1;
   }
 }
 

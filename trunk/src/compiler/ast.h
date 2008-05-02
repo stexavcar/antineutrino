@@ -633,9 +633,10 @@ DEFINE_REF_CLASS(UnquoteExpression);
 // --- L a m b d a   E x p r e s s i o n ---
 // -----------------------------------------
 
-#define eLambdaExpressionFields(VISIT, arg)                 \
+#define eLambdaExpressionFields(VISIT, arg)                          \
   VISIT(Parameters, parameters, Parameters, arg)                     \
-  VISIT(SyntaxTree, body,       Body,       arg)
+  VISIT(SyntaxTree, body,       Body,       arg)                     \
+  VISIT(Bool,       is_local,   IsLocal,    arg)
 
 class LambdaExpression : public SyntaxTree {
 public:
@@ -643,7 +644,8 @@ public:
 
   static const uword kParametersOffset = SyntaxTree::kHeaderSize;
   static const uword kBodyOffset       = kParametersOffset + kPointerSize;
-  static const uword kSize             = kBodyOffset + kPointerSize;
+  static const uword kIsLocalOffset    = kBodyOffset + kPointerSize;
+  static const uword kSize             = kIsLocalOffset + kPointerSize;
 };
 
 template <>
@@ -780,6 +782,7 @@ public:
   eLocalDefinitionFields(DECLARE_OBJECT_FIELD, 0)
   
   enum Type {
+    ldNone = 0,
     ldDef = 1,
     ldVar = 2,
     ldRec = 3,

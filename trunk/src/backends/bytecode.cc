@@ -129,6 +129,7 @@ void BytecodeBackend::closure(ref<Lambda> lambda, uint16_t outers) {
   code().append(ocClosure);
   code().append(index);
   code().append(outers);
+  adjust_stack_height(1 - outers);
 }
 
 

@@ -82,8 +82,8 @@ void Image::initialize(ImageContext &context) {
     context.status().invalid_version(data_[kVersionOffset]);
     return;
   }
-  if (data_[kRootCountOffset] != static_cast<word>(Roots::kCount)) {
-    context.status().invalid_root_count(Roots::kCount, data_[kRootCountOffset]);
+  if (data_[kRootCountOffset] != static_cast<word>(Roots::kExternalCount)) {
+    context.status().invalid_root_count(Roots::kExternalCount, data_[kRootCountOffset]);
     return;
   }
   uword heap_size = data_[kHeapSizeOffset];

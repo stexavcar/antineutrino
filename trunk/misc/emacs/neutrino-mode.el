@@ -75,7 +75,7 @@
   (regexp-opt
    '("def" "new" "and" "or" "not" "if" "else" "return" "fn"
      "in" "while" "do" "operator" "on" "raise" "protocol" "native"
-     "task" "yield" "var" "while" "assert" "super"
+     "task" "yield" "var" "while" "assert" "super" "for"
      "rec")
    'words))
 

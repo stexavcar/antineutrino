@@ -12,12 +12,9 @@ internal protocol String {
   internal def [index];
 
   def substring(interval) {
-    def result := "";
-    var i := interval.from;
-    while (i < interval.to) {
+    var result := "";
+    for (i in interval)
       result := result + this[i];
-      i := i + 1;
-    }
     return result;
   }
   

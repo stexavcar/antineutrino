@@ -39,7 +39,7 @@ KEYWORDS = to_map([
   'def', 'this', 'is', 'if', 'else', 'while', 'do', 'return', 'null',
   'true', 'false', 'new', 'in', 'fn', 'and', 'or', 'not', 'on',
   'raise', 'protocol', 'task', 'yield', 'var', 'while', 'assert',
-  'super', 'rec'
+  'super', 'rec', 'for'
 ])
 
 
@@ -145,6 +145,9 @@ class Keyword(Token):
 
   def __init__(self, value, pos):
     super(Keyword, self).__init__(pos, value)
+  
+  def is_delimiter(self, value):
+    return self.is_keyword(value)
   
   def is_keyword(self, value = None):
     if not value:
