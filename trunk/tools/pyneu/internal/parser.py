@@ -512,19 +512,35 @@ class Parser(object):
     self.expect_operator(match)
     return ast.Invoke(expr, value + match, ast.Arguments([], {}, False))
 
+  def at_infix(self):
+    return self.token().is_operator() or self.token().is_keyword(IN)
+  
+  def expect_infix(self):
+    if self.token().is_keyword(IN):
+      return self.expect_keyword(IN)
+    else:
+      return self.expect_operator()
+
+  def is_right_associative(self, op):
+    return op == IN
+
   def operator_expression(self, match):
     exprs = [ self.call_expression() ]
     ops = [ ]
-    while self.token().is_operator() and (not match or not self.token().is_operator(match)):
-      ops.append(self.expect_operator())
+    while self.at_infix() and (not match or not self.token().is_operator(match)):
+      ops.append(self.expect_infix())
       exprs.append(self.call_expression())
     # TODO: operator precedence
     while ops:
       rest = exprs.pop()
       next = exprs.pop()
       op = ops.pop()
-      args = ast.Arguments([rest], {}, False)
-      exprs.append(ast.Invoke(next, op, args))
+      if self.is_right_associative(op):
+        args = ast.Arguments([next], {}, False)
+        exprs.append(ast.Invoke(rest, op, args))
+      else:
+        args = ast.Arguments([rest], {}, False)
+        exprs.append(ast.Invoke(next, op, args))
     return exprs[0]
 
   def at_call_start(self):

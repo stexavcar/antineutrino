@@ -10,42 +10,37 @@ def ident_part?() -> ident_start?() or digit?();
 
 
 protocol Token {
-  def identifier?() -> false;
-  def keyword?(name) -> false;
-  def delimiter?(name) -> false;
+  def end?() -> false;
+  def term?(name) -> false;
+  def value?() -> false;
 }
 
 
 protocol Identifier : Token {
-  
   def to_string() -> "#<identifier '${this.value}'>";
-
   def value?() -> true;
-  
   static def make(value) -> new Identifier() { value: value };
-  
 }
 
 
 protocol Keyword : Token {
-  
   def to_string() -> "#<keyword ${this.name}>";
-  
   def term?(name) -> (name = this.name);
-  
   static def make(name) -> new Keyword() { name: name };
-  
 }
 
 
 protocol Delimiter : Token {
-  
   def to_string() -> "#<delimiter ${this.name}>";
-  
   def term?(name) -> this.name = name;
-  
   static def make(name) -> new Delimiter() { name: name };
-  
+}
+
+
+protocol End : Token {
+  def to_string() -> "#<end>";
+  def end?() -> true;
+  static def make() -> new End();
 }
 
 
@@ -78,10 +73,10 @@ protocol Scanner {
   
   def next_token() {
     var result := null;
-    if (not this.has_more()) return null;
+    if (not this.has_more()) return End.make();
     if (this.current·ident_start?()) {
       result := this.scan_identifier();
-    } else if (delimiters ∋ this.current) {
+    } else if (this.current in delimiters) {
       result := this.scan_delimiter();
     } else {
       def char := this.current;
@@ -96,7 +91,7 @@ protocol Scanner {
     while (this.has_more()) {
       def prev_value := value;
       value := value + this.current;
-      if (not delimiters ∋ value)
+      if (not value in delimiters)
         return Delimiter.make(prev_value);
       else
         this.advance();
@@ -112,7 +107,7 @@ protocol Scanner {
       this.advance();
     def end := this.pos;
     def value := this.substring(start..end);
-    if (keywords ∋ value) return Keyword.make(value);
+    if (value in keywords) return Keyword.make(value);
     else return Identifier.make(value);
   }
   
@@ -135,7 +130,7 @@ protocol Scanner {
 protocol Grammar {
 
   def parse(start_name, tokens) {
-    def state := ParserState.make(tokens, 0);
+    def state := ParserState.make(tokens, 0, this);
     def start := this.get_nonterm(start_name);
     return start.parse(state);
   }
@@ -146,19 +141,23 @@ protocol Grammar {
   
 }
 
+
 protocol ParserState {
 
-  static def make(tokens, pos) -> new ParserState() {
+  def current() -> this.tokens[this.position];
+  
+  def advance() -> this.position := this.position + 1;
+
+  static def make(tokens, pos, gram) -> new ParserState() {
     tokens: tokens,
-    pos: pos
+    position: pos,
+    grammar: gram
   };
-  
-  def current() -> this.tokens[this.pos];
-  
-  def advance() -> this.pos := this.pos + 1;
 
 }
 
+
+def term(value) -> new Term() { value: value };
 protocol Term {
 
   def to_string() -> this.value;
@@ -167,11 +166,13 @@ protocol Term {
     if (not state.current().term?(this.value))
       return false;
     state.advance();
-    return this.value;
+    return null;
   }
   
 }
 
+
+def value() -> new Value();
 protocol Value {
 
   def to_string() -> "%";
@@ -186,15 +187,15 @@ protocol Value {
   
 }
 
+
+def seq(elms) -> new Sequence() { elms: elms };
 protocol Sequence {
 
   def to_string() {
     var result := "";
-    var i := 0;
-    while (i < |this.elms|) {
+    for (i in 0 .. |this.elms|) {
       if (not i = 0) result := result + " ";
       result := result + this.elms[i].to_string();
-      i := i + 1;
     }
     return result;
   }
@@ -202,36 +203,51 @@ protocol Sequence {
   def parse(state) {
     var i := 0;
     def values := new List();
+    def start := state.position;
     while (i < |this.elms|) {
       def value := this.elms[i].parse(state);
-      if (value = false) return false;
-      values.add(value);
+      if (value = false) {
+        state.position = start;
+        return false;
+      } else if (not value = null) {
+        values.add(value);
+      }
       i := i + 1;
     }
-    return values;
+    if (values.empty?()) return null;
+    else if (|values| = 1) return values[0];
+    else return values;
   }
 
 }
 
-protocol Repeat {
-
-}
-
-protocol Nonterm {
-
-}
-
-def term(value) -> new Term() { value: value };
-
-def value() -> new Value();
-
-def delim(value) -> new Delim() { value: value };
-
-def seq(elms) -> new Sequence() { elms: elms };
 
 def star(value) -> new Repeat() { value: value };
+protocol Repeat {
+  
+  def parse(state) {
+    def values := new List();
+    while (true) {
+      def start := state.position;
+      def value := this.value.parse(state);
+      if (value = false) {
+        state.position = start;
+        return values;
+      }
+      values.add(value);
+    }
+  }
+
+}
+
 
 def nonterm(name) -> new Nonterm() { name: name };
+protocol Nonterm {
+  
+  def parse(state) -> state.grammar.get_nonterm(this.name).parse(state);
+
+}
+
 
 (* --- M a i n --- *)
 
@@ -251,5 +267,6 @@ def main() {
   def tokens := new List();
   while (scan.has_more())
     tokens.add(scan.next_token());
-  print(gram.parse("toplevel", tokens));
+  tokens.add(End.make());
+  print(gram.parse("program", tokens));
 }

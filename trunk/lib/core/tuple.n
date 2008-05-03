@@ -4,7 +4,7 @@ internal protocol Tuple {
   internal def =(that);
   internal def [index];
 
-  def ∋(that) {
+  def in(that) {
     var i := 0;
     while (i < |this|) {
       if (this[i] = that)
