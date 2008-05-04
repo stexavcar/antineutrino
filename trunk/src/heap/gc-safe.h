@@ -7,6 +7,15 @@
 
 namespace neutrino {
 
+class GcSafe {
+public:
+  GcSafe(Runtime &runtime);
+  void set(ref<Dictionary> dict, ref<Value> key, ref<Value> value);
+private:
+  Runtime &runtime() { return runtime_; }
+  Runtime &runtime_;
+};
+
 class Factory {
 public:
   Factory(Runtime &heap);
@@ -37,7 +46,6 @@ public:
   ref<Instance> new_instance(ref<Layout> layout);
   ref<Selector> new_selector(ref<Immediate> name, Smi *argc, ref<Bool> is_accessor);
 private:
-  template <typename T, class M> inline ref<T> allocate(M fun);
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
 };

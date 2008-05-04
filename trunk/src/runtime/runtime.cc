@@ -9,6 +9,7 @@ namespace neutrino {
 Runtime::Runtime(DynamicLibraryCollection *dylibs)
   : heap_(roots_)
   , factory_(*this)
+  , gc_safe_(*this)
   , architecture_(NULL)
   , dylibs_(dylibs) {
 }

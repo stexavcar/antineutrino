@@ -13,4 +13,6 @@ DEFINE_FLAG(list<string>, Options, images, list<string>());
 
 DEFINE_FLAG(list<string>, Options, libs, list<string>());
 
+DEFINE_FLAG(list<string>, Options, args, list<string>());
+
 } // neutrino

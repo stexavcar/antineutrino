@@ -1,5 +1,6 @@
 #include <stdio.h>
 
+#include "heap/ref-inl.h"
 #include "io/image.h"
 #include "main/options.h"
 #include "monitor/monitor.h"
@@ -18,6 +19,7 @@ public:
   static void main(list<char*> &args);
   static void on_option_error(string message);
   static Image *read_image(string name);
+  static void build_arguments(Runtime &runtime);
   static DynamicLibraryCollection *load_dynamic_libraries();
 };
 
@@ -57,6 +59,7 @@ void Main::main(list<char*> &args) {
     bool loaded = runtime.load_image(**image);
     USE(loaded); ASSERT(loaded);
   }
+  build_arguments(runtime);
   runtime.start();
   if (Options::print_stats_on_exit) {
     string_buffer stats;
@@ -64,6 +67,19 @@ void Main::main(list<char*> &args) {
     stats.to_string().println();
   }
 }
+
+void Main::build_arguments(Runtime &runtime) {
+  list<string> args = Options::args;
+  ref_scope scope(runtime.refs());
+  ref<Tuple> result = runtime.factory().new_tuple(args.length());
+  for (uword i = 0; i < args.length(); i++) {
+    ref<String> arg = runtime.factory().new_string(args[i]);
+    result->set(i, *arg);
+  }
+  ref<String> arguments = runtime.factory().new_string("arguments");
+  runtime.gc_safe().set(runtime.toplevel(), arguments, result);
+}
+
 
 /**
  * Reads the contents of the specified file into a string.

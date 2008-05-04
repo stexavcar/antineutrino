@@ -4,7 +4,7 @@ backends/bytecode.cc
 compiler/ast.cc
 compiler/compiler.cc
 compiler/compile-utils.cc
-heap/factory.cc
+heap/gc-safe.cc
 heap/heap.cc
 heap/memory.cc
 heap/ref.cc

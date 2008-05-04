@@ -2,7 +2,7 @@
 #define _RUNTIME
 
 #include "compiler/ast.h"
-#include "heap/factory.h"
+#include "heap/gc-safe.h"
 #include "heap/heap.h"
 #include "heap/ref.h"
 #include "heap/roots.h"
@@ -34,9 +34,7 @@ class Runtime : public nocopy {
 public:
   Runtime(DynamicLibraryCollection *dylibs = 0);
   bool initialize(Architecture *arch);
-  Factory &factory() { return factory_; }
-  Heap &heap() { return heap_; }
-  Roots &roots() { return roots_; }
+
   bool load_image(Image &image);
   void report_load_error(ImageLoadStatus &info);
   bool install_loaded_roots(ref<Tuple> roots);
@@ -56,11 +54,17 @@ public:
   DynamicLibraryCollection *dylibs() { return dylibs_; }
   RefStack &refs() { return refs_; }
   Architecture &architecture() { return *architecture_; }
+  Factory &factory() { return factory_; }
+  GcSafe &gc_safe() { return gc_safe_; }
+  Heap &heap() { return heap_; }
+  Roots &roots() { return roots_; }
+
   
 private:
   Roots roots_;
   Heap heap_;
   Factory factory_;
+  GcSafe gc_safe_;
   Architecture *architecture_;
   DynamicLibraryCollection *dylibs_;
   RefStack refs_;

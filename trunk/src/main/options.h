@@ -13,6 +13,7 @@ public:
   static bool COND_CONST(IS_DEBUG, trace_interpreter, false);
   static list<string> images;
   static list<string> libs;
+  static list<string> args;
 };
 
 } // neutrino

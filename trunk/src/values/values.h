@@ -556,7 +556,7 @@ public:
   uword size();
 
   Data *get(Value *key);
-  bool set(Heap &heap, Value *key, Value *value);
+  Data *set(Heap &heap, Value *key, Value *value);
 
   class Iterator {
   public:

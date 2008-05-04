@@ -1,5 +1,5 @@
 #include "compiler/compile-utils-inl.h"
-#include "heap/factory.h"
+#include "heap/gc-safe.h"
 #include "heap/ref-inl.h"
 #include "runtime/runtime-inl.h"
 #include "values/values-inl.h"

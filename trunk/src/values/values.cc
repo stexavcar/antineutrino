@@ -604,7 +604,7 @@ Data *Dictionary::get(Value *key) {
   else return Nothing::make();  
 }
 
-bool Dictionary::set(Heap &heap, Value *key, Value *value) {
+Data *Dictionary::set(Heap &heap, Value *key, Value *value) {
   DictionaryLookup lookup;
   if (lookup_key(this->table(), key, lookup)) {
     *lookup.value = value;
@@ -613,7 +613,7 @@ bool Dictionary::set(Heap &heap, Value *key, Value *value) {
     Tuple *table = this->table();
     uword length = table->length();
     Data *new_table_val = heap.new_tuple(length + 2);
-    if (is<AllocationFailed>(new_table_val)) return false;
+    if (is<AllocationFailed>(new_table_val)) return new_table_val;
     Tuple *new_table = cast<Tuple>(new_table_val);
     for (uword i = 0; i < length; i++)
       new_table->set(i, table->get(i));
@@ -621,7 +621,7 @@ bool Dictionary::set(Heap &heap, Value *key, Value *value) {
     new_table->set(length + 1, value);
     this->set_table(new_table);
   }
-  return true;
+  return this;
 }
 
 uword Dictionary::size() {
