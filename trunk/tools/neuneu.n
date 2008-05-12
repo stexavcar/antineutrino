@@ -76,7 +76,7 @@ protocol Scanner {
     if (not this.has_more()) return End.make();
     if (this.current·ident_start?()) {
       result := this.scan_identifier();
-    } else if (this.current in delimiters) {
+    } else if (delimiters ∋ this.current) {
       result := this.scan_delimiter();
     } else {
       def char := this.current;
@@ -91,7 +91,7 @@ protocol Scanner {
     while (this.has_more()) {
       def prev_value := value;
       value := value + this.current;
-      if (not value in delimiters)
+      if (not delimiters ∋ value)
         return Delimiter.make(prev_value);
       else
         this.advance();
@@ -107,7 +107,7 @@ protocol Scanner {
       this.advance();
     def end := this.pos;
     def value := this.substring(start..end);
-    if (value in keywords) return Keyword.make(value);
+    if (keywords ∋ value) return Keyword.make(value);
     else return Identifier.make(value);
   }
   

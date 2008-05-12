@@ -513,13 +513,10 @@ class Parser(object):
     return ast.Invoke(expr, value + match, ast.Arguments([], {}, False))
 
   def at_infix(self):
-    return self.token().is_operator() or self.token().is_keyword(IN)
+    return self.token().is_operator()
   
   def expect_infix(self):
-    if self.token().is_keyword(IN):
-      return self.expect_keyword(IN)
-    else:
-      return self.expect_operator()
+    return self.expect_operator()
 
   def is_right_associative(self, op):
     return op == IN
