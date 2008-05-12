@@ -18,11 +18,25 @@ internal protocol LambdaExpression : Expression {
   internal def body();
 }
 
+internal protocol InvokeExpression : Expression {
+  static internal def new(receive, selector, arguments);
+}
+
+internal protocol Selector {
+  static internal def new(name, argc, keywords, is_accessor);
+}
+
+internal protocol LiteralExpression : Expression {
+  static internal def new(value);
+}
+
+internal protocol Arguments : SyntaxTree {
+  static internal def new(arguments, keyword_indices);
+}
+
 internal protocol Symbol : Expression { }
 internal protocol ThisExpression : Expression { }
 internal protocol LocalDefinition : Expression { }
-internal protocol LiteralExpression : Expression { }
-internal protocol InvokeExpression : Expression { }
 internal protocol ReturnExpression : Expression { }
 internal protocol CallExpression : Expression { }
 internal protocol MethodExpression : Expression { }

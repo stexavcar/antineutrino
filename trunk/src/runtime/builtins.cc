@@ -404,4 +404,35 @@ Data *Builtins::close(BuiltinArguments &args) {
   return args.runtime().roots().vhoid();
 }
 
+
+// ---------------------------------------
+// --- A s t   C o n s t r u c t i o n ---
+// ---------------------------------------
+
+#define FETCH_ARG(Type, __name__, Name, arg)                         \
+    SIGNAL_CHECK(Type, __name__, to<Type>(args[__offset__++]));
+
+#define SET_FIELD(Type, __name__, Name, arg)                         \
+  __result__->set_##__name__(__name__);
+
+#define MAKE_AST_CONSTRUCTOR(Type, __type__)                         \
+Data *Builtins::__type__##_new(BuiltinArguments &args) {             \
+  int __offset__ = 0;                                                \
+  e##Type##Fields(FETCH_ARG, 0)                                      \
+  Data *__value__ = args.runtime().heap().allocate_##__type__();     \
+  if (is<AllocationFailed>(__value__)) return __value__;             \
+  Type *__result__ = cast<Type>(__value__);                          \
+  e##Type##Fields(SET_FIELD, 0)                                      \
+  return __result__;                                                 \
+}
+
+MAKE_AST_CONSTRUCTOR(InvokeExpression, invoke_expression)
+MAKE_AST_CONSTRUCTOR(Selector, selector)
+MAKE_AST_CONSTRUCTOR(LiteralExpression, literal_expression)
+MAKE_AST_CONSTRUCTOR(Arguments, arguments)
+
+#undef FETCH_ARG
+#undef SET_FIELD
+
+
 } // namespace neutrino

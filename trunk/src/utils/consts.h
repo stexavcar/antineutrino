@@ -562,7 +562,12 @@
   VISIT(45, channel,             send,        "send")                \
   VISIT(49, array,               get,         "[]")                  \
   VISIT(51, array,               length,      "||")                  \
-  VISIT(52, array,               set,         "[]:=")
+  VISIT(52, array,               set,         "[]:=")                \
+  \
+  VISIT(60, invoke_expression,   new,         "new")                 \
+  VISIT(61, selector,            new,         "new")                 \
+  VISIT(62, literal_expression,  new,         "new")                 \
+  VISIT(63, arguments,           new,         "new")
 
 
 // ---------------------------------------

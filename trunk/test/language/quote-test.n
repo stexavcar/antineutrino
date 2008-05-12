@@ -21,9 +21,18 @@ def expression_evaluation_test() {
   assert «3 + 4».evaluate() = 7;
 }
 
+def explicit_constructors() {
+  def sel := new Selector("+", 1, [], false);
+  def lit := new LiteralExpression(1);
+  def args := new Arguments([lit], []);
+  def expr := new InvokeExpression(lit, sel, args);
+  assert expr.evaluate() = 2;
+}
+
 def get_this() -> this;
 
 def main() {
-  test_expressions();
-  expression_evaluation_test();
+  // test_expressions();
+  // expression_evaluation_test();
+  explicit_constructors();
 }
