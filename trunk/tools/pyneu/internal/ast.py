@@ -69,6 +69,10 @@ class Arguments(SyntaxTree):
   def traverse(self, visitor):
     for arg in self.args_:
       arg.accept(visitor)
+  
+  def construct(self):
+    args = make_tuple([ s.construct() for s in self.args_ ])
+    return make_construct("Arguments", [args, values.LiteralExpression(values.EMPTY_TUPLE)])
 
   def quote(self):
     args = [ s.quote() for s in self.args_ ]
@@ -267,9 +271,7 @@ class Quote(Expression):
     self.unquotes_ = unquotes
 
   def quote(self):
-    value = self.value_.quote()
-    unquotes = [ u.quote() for u in self.unquotes_ ]
-    return values.QuoteExpression(value, unquotes)
+    return self.value_.construct()
 
 
 class Unquote(Expression):
@@ -372,6 +374,16 @@ class Call(Expression):
     return values.CallExpression(recv, fun, args)
 
 
+def make_construct(name, arg_list):
+  sel = values.Selector("new", len(arg_list), [], False)
+  args = values.Arguments(arg_list, {})
+  return values.InvokeExpression(values.GlobalVariable(name), sel, args)
+
+
+def make_tuple(args):
+  return values.TupleExpression(args)
+
+
 class Invoke(Expression):
 
   def __init__(self, recv, name, args):
@@ -398,6 +410,13 @@ class Invoke(Expression):
   def traverse(self, visitor):
     self.recv_.accept(visitor)
     self.args_.accept(visitor)
+  
+  def construct(self):
+    recv = self.recv_.construct()
+    args = self.args_.construct()
+    is_accessor = self.args_.is_accessor()
+    sel = values.LiteralExpression(values.Selector(self.name_, len(self.args_), self.args_.keywords(), is_accessor))
+    return make_construct("InvokeExpression", [recv, sel, args])
 
   def quote(self):
     recv = self.recv_.quote()
@@ -722,6 +741,9 @@ class Literal(Expression):
   
   def evaluate(self):
     return to_literal(self.value_)
+
+  def construct(self):
+    return make_construct("LiteralExpression", [ self.quote() ])
 
   def quote(self):
     return values.LiteralExpression(to_literal(self.value_))

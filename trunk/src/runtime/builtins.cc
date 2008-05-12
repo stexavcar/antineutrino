@@ -316,6 +316,7 @@ Data *Builtins::lambda_disassemble(BuiltinArguments &args) {
   self.ensure_compiled(args.runtime(), ref<Method>());
   string_buffer buf;
   args.runtime().architecture().disassemble(*self, buf);
+  buf.raw_string().println();
   return args.runtime().roots().vhoid();
 }
 
@@ -324,9 +325,11 @@ Data *Builtins::lambda_disassemble(BuiltinArguments &args) {
 // --- L a m b d a   E x p r e s s i o n ---
 // -----------------------------------------
 
+
 Data *Builtins::lambda_expression_params(BuiltinArguments &args) {
   return cast<LambdaExpression>(args.self())->parameters()->parameters();
 }
+
 
 Data *Builtins::lambda_expression_body(BuiltinArguments &args) {
   return cast<LambdaExpression>(args.self())->body();

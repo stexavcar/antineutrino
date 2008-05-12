@@ -311,7 +311,8 @@ static void dispatch_single(Visitor &visitor, ref<Value> value, bool ignore_unex
   } else if (is<Symbol>(value)) {
     visitor.visit_symbol(cast<Symbol>(value));
   } else {
-    ASSERT(ignore_unexpected);
+    if (!ignore_unexpected)
+      UNHANDLED(InstanceType, value->type());
   }
 }
 
