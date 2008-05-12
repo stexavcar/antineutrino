@@ -106,6 +106,10 @@ class Parameters(SyntaxTree):
   def __len__(self):
     return len(self.params_)
   
+  def construct(self):
+    params = make_tuple([ make_literal(s.quote()) for s in self.params_ ])
+    return make_construct("Parameters", [ make_literal(self.posc_), params ])
+  
   def quote(self):
     params = [ p.quote() for p in self.params_ ]
     return values.Parameters(self.posc_, params)
@@ -173,6 +177,14 @@ class Method(Declaration):
   def is_static(self):
     return parser.STATIC in self.modifiers_
 
+  def construct(self):
+    params = self.lambda_.params()
+    argc = len(params)
+    is_accessor = params.is_accessor()
+    selector = values.LiteralExpression(values.Selector(self.name_, argc, [], is_accessor))
+    lam = self.lambda_.construct()
+    return make_construct("MethodExpression", [ selector, lam, make_literal(values.FALSE) ])
+
   def quote(self):
     params = self.lambda_.params()
     argc = len(params)
@@ -237,6 +249,11 @@ class Lambda(Expression):
   def body(self):
     return self.body_
 
+  def construct(self):
+    params = self.params().construct()
+    body = self.body().construct()
+    return make_construct("LambdaExpression", [params, body, make_literal(self.is_local)])
+
   def quote(self):
     params = self.params().quote()
     body = self.body().quote()
@@ -291,6 +308,10 @@ class Sequence(Expression):
     assert len(exprs) > 1
     self.exprs_ = exprs
 
+  def construct(self):
+    elms = make_tuple([ e.construct() for e in self.exprs_ ])
+    return make_construct("SequenceExpression", [ elms ])
+
   def quote(self):
     return values.SequenceExpression([ e.quote() for e in self.exprs_ ])
 
@@ -344,6 +365,12 @@ class Protocol(Expression):
     result = values.Protocol(self.name_, members, static_members)
     self.image_ = result
     return result
+  
+  def construct(self):
+    members = make_tuple([ member.construct() for member in self.members_ ])
+    if self.super_name_: sup = values.GlobalVariable(self.super_name_)
+    else: sup = make_literal(values.VOID)
+    return make_construct("ProtocolExpression", [ make_literal(self.name_), members, sup ])
 
   def quote(self):
     members = [ member.quote() for member in self.members_ ]
@@ -372,6 +399,12 @@ class Call(Expression):
     fun = self.fun_.quote()
     args = self.args_.quote()
     return values.CallExpression(recv, fun, args)
+  
+  def construct(self):
+    recv = self.recv_.construct()
+    fun = self.fun_.construct()
+    args = self.args_.construct()
+    return make_construct("CallExpression", [ recv, fun, args ])
 
 
 def make_construct(name, arg_list):
@@ -382,6 +415,10 @@ def make_construct(name, arg_list):
 
 def make_tuple(args):
   return values.TupleExpression(args)
+
+
+def make_literal(obj):
+  return values.LiteralExpression(to_literal(obj))
 
 
 class Invoke(Expression):
@@ -462,6 +499,10 @@ class Tuple(Expression):
   def accept(self, visitor):
     pass
   
+  def construct(self):
+    vals = [ e.construct() for e in self.exprs_ ]
+    return make_construct("TupleExpression", [ make_tuple(vals) ])
+  
   def evaluate(self):
     vals = [ e.evaluate() for e in self.exprs_ ]
     return values.Tuple(entries = vals)
@@ -482,6 +523,10 @@ class Return(Expression):
 
   def traverse(self, visitor):
     self.value_.accept(visitor)
+
+  def construct(self):
+    value = self.value_.construct()
+    return make_construct("ReturnExpression", [ value ])
 
   def quote(self):
     return values.ReturnExpression(self.value_.quote())
@@ -640,6 +685,12 @@ class Conditional(Expression):
     self.then_part_.accept(visitor)
     self.else_part_.accept(visitor)
 
+  def construct(self):
+    cond = self.cond_.construct()
+    then_part = self.then_part_.construct()
+    else_part = self.else_part_.construct()
+    return make_construct("ConditionalExpression", [ cond, then_part, else_part ])
+
   def quote(self):
     cond = self.cond_.quote()
     then_part = self.then_part_.quote()
@@ -721,9 +772,15 @@ class Assignment(Expression):
 
 
 def to_literal(value):
-  if type(value) in [unicode, str]: return values.String(value)
-  elif type(value) in [int, long]: return values.Smi(value)
-  if isinstance(value, SyntaxTree): return value.quote()
+  if type(value) in [unicode, str]:
+    return values.String(value)
+  elif type(value) in [int, long]:
+    return values.Smi(value)
+  elif type(value) is bool:
+    if value: return values.TRUE
+    else: return values.FALSE
+  elif isinstance(value, SyntaxTree):
+    return value.quote()
   else: return value
 
 
@@ -791,6 +848,9 @@ class Global(Identifier):
   def traverse(self, visitor):
     pass
 
+  def construct(self):
+    return make_construct("GlobalVariable", [ make_literal(self.name()) ])
+
   def quote(self):
     return values.GlobalVariable(self.name())
 
@@ -809,6 +869,9 @@ class Local(Identifier):
 
   def traverse(self, visitor):
     pass
+  
+  def construct(self):
+    return make_construct("LocalVariable", [ make_literal(self.symbol_.quote()) ])
 
   def quote(self):
     return values.LocalVariable(self.symbol_.quote())

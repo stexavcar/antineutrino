@@ -433,6 +433,17 @@ MAKE_AST_CONSTRUCTOR(InvokeExpression, invoke_expression)
 MAKE_AST_CONSTRUCTOR(Selector, selector)
 MAKE_AST_CONSTRUCTOR(LiteralExpression, literal_expression)
 MAKE_AST_CONSTRUCTOR(Arguments, arguments)
+MAKE_AST_CONSTRUCTOR(ProtocolExpression, protocol_expression)
+MAKE_AST_CONSTRUCTOR(Parameters, parameters)
+MAKE_AST_CONSTRUCTOR(ReturnExpression, return_expression)
+MAKE_AST_CONSTRUCTOR(LambdaExpression, lambda_expression)
+MAKE_AST_CONSTRUCTOR(MethodExpression, method_expression)
+MAKE_AST_CONSTRUCTOR(SequenceExpression, sequence_expression)
+MAKE_AST_CONSTRUCTOR(TupleExpression, tuple_expression)
+MAKE_AST_CONSTRUCTOR(GlobalVariable, global_variable)
+MAKE_AST_CONSTRUCTOR(CallExpression, call_expression)
+MAKE_AST_CONSTRUCTOR(LocalVariable, local_variable)
+MAKE_AST_CONSTRUCTOR(ConditionalExpression, conditional_expression)
 
 #undef FETCH_ARG
 #undef SET_FIELD

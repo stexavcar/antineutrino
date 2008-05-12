@@ -1,4 +1,3 @@
-(*
 def test_expressions() {
   «1 + 1 + 1»;
   assert Bool.to_string() = "#<protocol Bool>";
@@ -15,9 +14,11 @@ def test_expressions() {
   assert null = new («protocol Foo { def x() -> null; }».evaluate())().x();
   assert 9 = new («protocol Foo { def x(a, b, c) -> a; }».evaluate())().x(9, 8, 7);
   assert 5 = new («protocol Foo { def x(x) -> if (x) 9 else 5; }».evaluate())().x(false);
+(*
   assert "«this»" = new («protocol Foo { def x() -> «this»; }».evaluate())().x().to_string();
-}
 *)
+}
+
 def expression_evaluation_test() {
   assert «3 + 4».evaluate() = 7;
 }
@@ -33,7 +34,7 @@ def explicit_constructors() {
 def get_this() -> this;
 
 def main() {
-  // test_expressions();
+  test_expressions();
   expression_evaluation_test();
   explicit_constructors();
 }

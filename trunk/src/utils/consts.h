@@ -567,7 +567,18 @@
   VISIT(60, invoke_expression,   new,         "new")                 \
   VISIT(61, selector,            new,         "new")                 \
   VISIT(62, literal_expression,  new,         "new")                 \
-  VISIT(63, arguments,           new,         "new")
+  VISIT(63, arguments,           new,         "new")                 \
+  VISIT(64, protocol_expression, new,         "new")                 \
+  VISIT(65, parameters,          new,         "new")                 \
+  VISIT(66, return_expression,   new,         "new")                 \
+  VISIT(67, lambda_expression,   new,         "new")                 \
+  VISIT(68, method_expression,   new,         "new")                 \
+  VISIT(69, sequence_expression, new,         "new")                 \
+  VISIT(70, tuple_expression,    new,         "new")                 \
+  VISIT(71, global_variable,     new,         "new")                 \
+  VISIT(72, call_expression,     new,         "new")                 \
+  VISIT(73, local_variable,      new,         "new")                 \
+  VISIT(74, conditional_expression, new,      "new")
 
 
 // ---------------------------------------

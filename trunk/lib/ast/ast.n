@@ -10,10 +10,12 @@ protocol Expression {
 }
 
 internal protocol ProtocolExpression : Expression {
+  static internal def new(name, members, parent);
   internal def evaluate();
 }
 
 internal protocol LambdaExpression : Expression {
+  static internal def new(params, body, is_local);
   internal def parameters();
   internal def body();
 }
@@ -34,17 +36,45 @@ internal protocol Arguments : SyntaxTree {
   static internal def new(arguments, keyword_indices);
 }
 
+internal protocol Parameters : SyntaxTree {
+  static internal def new(posc, parameters);
+}
+
+internal protocol ReturnExpression : Expression {
+  static internal def new(value);
+}
+
+internal protocol MethodExpression : Expression {
+  static internal def new(name, lambda, is_static);
+}
+
+internal protocol SequenceExpression : Expression {
+  static internal def new(exprs);
+}
+
+internal protocol TupleExpression : Expression {
+  static internal def new(exprs);
+}
+
+internal protocol GlobalVariable : Expression {
+  static internal def new(name);
+}
+
+internal protocol CallExpression : Expression {
+  static internal def new(recv, fun, args);
+}
+
+internal protocol LocalVariable : Expression {
+  static internal def new(symbol);
+}
+
+internal protocol ConditionalExpression : Expression {
+  static internal def new(cond, then_part, else_part);
+}
+
 internal protocol Symbol : Expression { }
 internal protocol ThisExpression : Expression { }
 internal protocol LocalDefinition : Expression { }
-internal protocol ReturnExpression : Expression { }
-internal protocol CallExpression : Expression { }
-internal protocol MethodExpression : Expression { }
-internal protocol SequenceExpression : Expression { }
-internal protocol TupleExpression : Expression { }
-internal protocol GlobalVariable : Expression { }
-internal protocol LocalVariable : Expression { }
-internal protocol ConditionalExpression : Expression { }
 internal protocol QuoteExpression : Expression { }
 internal protocol BuiltinCall : Expression { }
 internal protocol InterpolateExpression : Expression { }

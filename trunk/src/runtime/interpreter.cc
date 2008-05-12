@@ -94,6 +94,14 @@ static void unhandled_condition(Value *name, BuiltinArguments &args) {
 }
 
 
+static void unresolved_global(Value *name) {
+  string_buffer buf;
+  buf.append("Unresolved global: ");
+  name->write_on(buf, Data::UNQUOTED);
+  Conditions::get().error_occurred("%", buf.raw_string());
+}
+
+
 Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
   StackState initial_frame = prepare_call(task, lambda, 0);
   initial_frame.push_activation(0, *lambda);
@@ -165,7 +173,8 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
       Value *name = constant_pool[index];
       Data *value = runtime().toplevel()->get(name);
       if (is<Nothing>(value)) {
-        frame.push(runtime().roots().vhoid());
+        unresolved_global(name);
+        UNREACHABLE();
       } else {
         frame.push(cast<Value>(value));
       }

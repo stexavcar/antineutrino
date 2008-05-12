@@ -407,7 +407,9 @@ class Arguments(SyntaxTree):
   def __init__(self, args, keywords):
     super(Arguments, self).__init__()
     for arg in args:
-      assert isinstance(arg, SyntaxTree)
+      if not isinstance(arg, SyntaxTree):
+        print arg
+        assert False
     self.args_ = args
     self.keywords_ = keywords
 
