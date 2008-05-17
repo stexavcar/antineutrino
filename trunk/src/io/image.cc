@@ -248,12 +248,6 @@ void Image::fixup_shallow_object(FObject *obj, ImageContext &info) {
       heap_obj->set_data(info.runtime().roots().nuhll());
       break;
     }
-    case tUnquoteExpression: {
-      FUnquoteExpression *img = image_raw_cast<FUnquoteExpression>(obj);
-      UnquoteExpression *expr = cast<UnquoteExpression>(img->forward_pointer());
-      expr->set_index(img->index());
-      break;
-    }
     case tContext: {
       break;
     }

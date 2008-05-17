@@ -523,21 +523,6 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
       pc += OpcodeInfo<ocOuter>::kSize;
       break;
     }
-    case ocQuote: {
-      uword unquote_count = code[pc + 1];
-      Data *unquotes_val = runtime().heap().new_tuple(unquote_count);
-      if (is<Signal>(unquotes_val)) RETURN(unquotes_val);
-      Tuple *unquotes = cast<Tuple>(unquotes_val);
-      for (uword i = 0; i < unquote_count; i++)
-        unquotes->set(unquote_count - i - 1, frame.pop());
-      SyntaxTree *tree = cast<SyntaxTree>(frame.pop());
-      Data *result_val = runtime().heap().new_quote_template(tree, unquotes);
-      if (is<Signal>(result_val)) RETURN(result_val);
-      QuoteTemplate *result = cast<QuoteTemplate>(result_val);
-      frame.push(result);
-      pc += OpcodeInfo<ocQuote>::kSize;
-      break;
-    }
     case ocNewCell: {
       Value *value = frame.pop();
       Data *val = runtime().heap().new_cell(value);

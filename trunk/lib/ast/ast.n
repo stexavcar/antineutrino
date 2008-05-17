@@ -78,8 +78,6 @@ internal protocol ThisExpression : Expression {
 
 internal protocol Symbol : Expression { }
 internal protocol LocalDefinition : Expression { }
-internal protocol QuoteExpression : Expression { }
 internal protocol BuiltinCall : Expression { }
 internal protocol InterpolateExpression : Expression { }
 internal protocol LocalDefinition : Expression { }
-internal protocol QuoteTemplate : Expression { }

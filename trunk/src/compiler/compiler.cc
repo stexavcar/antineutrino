@@ -44,8 +44,6 @@ public:
     , method_(method)
     , session_(session) { }
 
-  SyntaxTree *resolve_unquote(UnquoteExpression *that);
-  
   ref<Method> method() { return method_; }
   Runtime &runtime() { return session().runtime(); }
 
@@ -112,15 +110,6 @@ eSyntaxTreeTypes(MAKE_VISIT_METHOD)
 private:
   Backend &backend_;
 };
-
-
-SyntaxTree *CodeGenerator::resolve_unquote(UnquoteExpression *expr) {
-  UNREACHABLE();
-  ref<QuoteTemplate> templ = current_quote();
-  uword index = expr->index();
-  Value *term = templ->unquotes()->get(index);
-  return cast<SyntaxTree>(term);
-}
 
 
 class SymbolInfo : public Smi {
@@ -233,29 +222,24 @@ void Scope::unlink() {
 class FunctionScope : public Scope {
 public:
   FunctionScope(Runtime &runtime, Visitor &visitor,
-      ref<Parameters> params, bool is_local,
-      QuoteTemplateScope *quote_scope);
+      ref<Parameters> params, bool is_local);
   virtual void lookup(ref<Symbol> symbol, Lookup &result);
 private:
   Runtime &runtime() { return runtime_; }
   ref<Parameters> params() { return params_; }
   bool is_local() { return is_local_; }
-  QuoteTemplateScope *quote_scope() { return quote_scope_; }
   Runtime &runtime_;
   ref<Parameters> params_;
   bool is_local_;
-  QuoteTemplateScope *quote_scope_;
 };
 
 
 FunctionScope::FunctionScope(Runtime &runtime, Visitor &visitor,
-    ref<Parameters> params, bool is_local,
-    QuoteTemplateScope *quote_scope)
+    ref<Parameters> params, bool is_local)
     : Scope(visitor)
     , runtime_(runtime)
     , params_(params)
-    , is_local_(is_local)
-    , quote_scope_(quote_scope) { }
+    , is_local_(is_local) { }
 
 
 void FunctionScope::lookup(ref<Symbol> symbol, Lookup &result) {
@@ -270,10 +254,6 @@ void FunctionScope::lookup(ref<Symbol> symbol, Lookup &result) {
   // If it's not 'this' then maybe it's a parameter
   for (uword i = 0; i < symbols->length(); i++) {
     Value *entry = symbols->get(i);
-    if (is<UnquoteExpression>(entry)) {
-      uword index = cast<UnquoteExpression>(entry)->index();
-      entry = quote_scope()->value()->unquotes()->get(index);
-    }
     if (symbol->equals(cast<Symbol>(entry))) {
       uword posc = params()->position_count()->value();
       if (i < posc) {
@@ -368,19 +348,6 @@ void Assembler<C>::visit_yield_expression(ref<YieldExpression> that) {
 template <class C>
 void Assembler<C>::visit_literal_expression(ref<LiteralExpression> that) {
   __ push(that.value(refs()));
-}
-
-template <class C>
-void Assembler<C>::visit_quote_expression(ref<QuoteExpression> that) {
-  __ push(that.value(refs()));
-  if (that->unquotes()->length() > 0) {
-    ref_scope scope(refs());
-    ref<Tuple> unquotes = that.unquotes(refs());
-    for (uword i = 0; i < unquotes->length(); i++) {
-      codegen(cast<SyntaxTree>(unquotes.get(refs(), i)));
-    }
-    __ quote(unquotes->length());
-  }
 }
 
 template <class C>
@@ -770,22 +737,6 @@ void Assembler<C>::visit_on_clause(ref<OnClause> that) {
 
 
 template <class C>
-void Assembler<C>::visit_unquote_expression(ref<UnquoteExpression> that) {
-  // This is handled specially by the visitor and should never be
-  // visited explicitly
-  UNREACHABLE();
-}
-
-
-template <class C>
-void Assembler<C>::visit_quote_template(ref<QuoteTemplate> that) {
-  // This is handled specially by the visitor and should never be
-  // visited explicitly
-  UNREACHABLE();
-}
-
-
-template <class C>
 void Assembler<C>::visit_arguments(ref<Arguments> that) {
   UNREACHABLE();
 }
@@ -1013,8 +964,7 @@ void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
   if (params->has_keywords())
     backend.adjust_stack_height(1);
   FunctionScope scope(runtime(), assembler, params,
-      tree->is_local() == runtime().roots().thrue(),
-      enclosing ? enclosing->quote_scope() : NULL);
+      tree->is_local() == runtime().roots().thrue());
   tree.body(runtime().refs()).accept(assembler);
   ref<Code> code = backend.flush_code();
   ref<Tuple> constant_pool = backend.flush_constant_pool();

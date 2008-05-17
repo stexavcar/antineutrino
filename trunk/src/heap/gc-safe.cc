@@ -101,11 +101,6 @@ ref<Parameters> Factory::new_parameters(ref<Smi> position_count,
 }
 
 
-ref<QuoteTemplate> Factory::new_quote_template(ref<SyntaxTree> body, ref<Tuple> unquotes) {
-  ALLOCATE_CHECKED(QuoteTemplate, new_quote_template(*body, *unquotes));
-}
-
-
 ref<LambdaExpression> Factory::new_lambda_expression(ref<Parameters> params,
     ref<SyntaxTree> body, bool is_local) {
   ALLOCATE_CHECKED(LambdaExpression, new_lambda_expression(*params, *body, is_local));

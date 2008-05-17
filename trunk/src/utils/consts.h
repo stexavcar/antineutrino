@@ -82,39 +82,36 @@
 
 #define eSyntaxTreeTypes(VISIT)                            \
   VISIT(42, BuiltinCall,           builtin_call)           \
-  VISIT(43, UnquoteExpression,     unquote_expression)     \
-  VISIT(44, QuoteTemplate,         quote_template)         \
-  VISIT(45, Arguments,             arguments)              \
-  VISIT(46, InstantiateExpression, instantiate_expression) \
-  VISIT(47, InterpolateExpression, interpolate_expression) \
-  VISIT(48, QuoteExpression,       quote_expression)       \
-  VISIT(49, Parameters,            parameters)             \
+  VISIT(43, Arguments,             arguments)              \
+  VISIT(44, InstantiateExpression, instantiate_expression) \
+  VISIT(45, InterpolateExpression, interpolate_expression) \
+  VISIT(46, Parameters,            parameters)             \
   eSimpleSyntaxTreeTypes(VISIT)
 
 
 #define eSimpleSyntaxTreeTypes(VISIT)                      \
-  VISIT(50, LiteralExpression,     literal_expression)     \
-  VISIT(51, InvokeExpression,      invoke_expression)      \
-  VISIT(52, ProtocolExpression,    protocol_expression)    \
-  VISIT(53, ReturnExpression,      return_expression)      \
-  VISIT(54, MethodExpression,      method_expression)      \
-  VISIT(55, SequenceExpression,    sequence_expression)    \
-  VISIT(56, TupleExpression,       tuple_expression)       \
-  VISIT(57, GlobalVariable,        global_variable)        \
-  VISIT(58, CallExpression,        call_expression)        \
-  VISIT(59, ConditionalExpression, conditional_expression) \
-  VISIT(60, ThisExpression,        this_expression)        \
-  VISIT(61, LambdaExpression,      lambda_expression)      \
-  VISIT(62, LocalDefinition,       local_definition)       \
-  VISIT(63, RaiseExpression,       raise_expression)       \
-  VISIT(64, OnClause,              on_clause)              \
-  VISIT(65, DoOnExpression,        do_on_expression)       \
-  VISIT(66, TaskExpression,        task_expression)        \
-  VISIT(67, YieldExpression,       yield_expression)       \
-  VISIT(68, Assignment,            assignment)             \
-  VISIT(69, WhileExpression,       while_expression)       \
-  VISIT(70, SuperExpression,       super_expression)       \
-  VISIT(71, LocalVariable,         local_variable)
+  VISIT(47, LiteralExpression,     literal_expression)     \
+  VISIT(48, InvokeExpression,      invoke_expression)      \
+  VISIT(49, ProtocolExpression,    protocol_expression)    \
+  VISIT(50, ReturnExpression,      return_expression)      \
+  VISIT(51, MethodExpression,      method_expression)      \
+  VISIT(52, SequenceExpression,    sequence_expression)    \
+  VISIT(53, TupleExpression,       tuple_expression)       \
+  VISIT(54, GlobalVariable,        global_variable)        \
+  VISIT(55, CallExpression,        call_expression)        \
+  VISIT(56, ConditionalExpression, conditional_expression) \
+  VISIT(57, ThisExpression,        this_expression)        \
+  VISIT(58, LambdaExpression,      lambda_expression)      \
+  VISIT(59, LocalDefinition,       local_definition)       \
+  VISIT(60, RaiseExpression,       raise_expression)       \
+  VISIT(61, OnClause,              on_clause)              \
+  VISIT(62, DoOnExpression,        do_on_expression)       \
+  VISIT(63, TaskExpression,        task_expression)        \
+  VISIT(64, YieldExpression,       yield_expression)       \
+  VISIT(65, Assignment,            assignment)             \
+  VISIT(66, WhileExpression,       while_expression)       \
+  VISIT(67, SuperExpression,       super_expression)       \
+  VISIT(68, LocalVariable,         local_variable)
 
 
 #define eGeneratableTypes(VISIT)                           \
@@ -135,10 +132,8 @@
   eGeneratableTypes(VISIT)                                 \
   VISIT(0, BuiltinCall, builtin_call)                      \
   VISIT(0, Arguments,   arguments)                         \
-  VISIT(0, UnquoteExpression, unquote_expression)          \
   VISIT(0, InstantiateExpression, instantiate_expression)  \
   VISIT(0, InterpolateExpression, interpolate_expression)  \
-  VISIT(0, QuoteExpression,       quote_expression)        \
   VISIT(0, Parameters,            parameters)              \
   VISIT(0, Symbol, symbol)
 
@@ -150,12 +145,10 @@
 #define eBoilerplateShallowCopy(VISIT)                     \
   eGeneratableTypes(VISIT)                                 \
   VISIT(0, BuiltinCall, builtin_call)                      \
-  VISIT(0, UnquoteExpression, unquote_expression)          \
   VISIT(0, Channel, channel)                               \
   VISIT(0, Arguments,   arguments)                         \
   VISIT(0, InstantiateExpression, instantiate_expression)  \
   VISIT(0, InterpolateExpression, interpolate_expression)  \
-  VISIT(0, QuoteExpression,       quote_expression)        \
   VISIT(0, Parameters,            parameters)              \
   VISIT(0, Symbol, symbol)
 
@@ -165,7 +158,6 @@
   VISIT(0, Arguments, arguments)                           \
   VISIT(0, InstantiateExpression, instantiate_expression)  \
   VISIT(0, InterpolateExpression, interpolate_expression)  \
-  VISIT(0, QuoteExpression,       quote_expression)        \
   VISIT(0, Parameters,            parameters)              \
   VISIT(0, BuiltinCall, builtin_call)
 
@@ -184,7 +176,6 @@
   VISIT(0, Arguments, 0)                                   \
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
-  VISIT(0, QuoteExpression,       0)                       \
   VISIT(0, Parameters,            0)                       \
   VISIT(0, Layout, 0)
 
@@ -200,12 +191,10 @@
   VISIT(0, Context, 0)                                     \
   VISIT(0, Root, 0)                                        \
   VISIT(0, BuiltinCall, 0)                                 \
-  VISIT(0, UnquoteExpression, 0)                           \
   VISIT(0, Channel, 0)                                     \
   VISIT(0, Arguments, 0)                                   \
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
-  VISIT(0, QuoteExpression,       0)                       \
   VISIT(0, Parameters,            0)                       \
   VISIT(0, Symbol, 0)
 
@@ -220,12 +209,10 @@
   VISIT(0, Layout, 0)                                      \
   VISIT(0, Context, 0)                                     \
   VISIT(0, BuiltinCall, 0)                                 \
-  VISIT(0, UnquoteExpression, 0)                           \
   VISIT(0, Channel, 0)                                     \
   VISIT(0, Arguments, 0)                                   \
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
-  VISIT(0, QuoteExpression,       0)                       \
   VISIT(0, Parameters,            0)                       \
   VISIT(0, Symbol, 0)
 
@@ -241,7 +228,6 @@
   VISIT(0, Arguments, 0)                                   \
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
-  VISIT(0, QuoteExpression,       0)                       \
   VISIT(0, Parameters,            0)                       \
   VISIT(0, Symbol, 0)
 
@@ -255,13 +241,11 @@
   VISIT(0, Channel, 0)                                     \
   VISIT(0, Layout, 0)                                      \
   VISIT(0, Context, 0)                                     \
-  VISIT(0, QuoteTemplate, 0)                               \
   VISIT(0, ForwarderDescriptor, 0)                         \
   VISIT(0, Arguments, 0)                                   \
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
   VISIT(0, Parameters,            0)                       \
-  VISIT(0, QuoteExpression,       0)                       \
   VISIT(0, Symbol, 0)
 
 
@@ -279,7 +263,6 @@
   VISIT(0, InstantiateExpression, 0)                       \
   VISIT(0, InterpolateExpression, 0)                       \
   VISIT(0, Parameters,            0)                       \
-  VISIT(0, QuoteExpression,       0)                       \
   VISIT(0, Symbol, 0)
 
 
@@ -366,9 +349,6 @@
   VISIT(1, ThisExpression,        Size)                              \
   VISIT(1, SuperExpression,       ValueOffset)                       \
   VISIT(2, SuperExpression,       Size)                              \
-  VISIT(1, QuoteExpression,       ValueOffset)                       \
-  VISIT(2, QuoteExpression,       UnquotesOffset)                    \
-  VISIT(3, QuoteExpression,       Size)                              \
   VISIT(1, LambdaExpression,      ParametersOffset)                  \
   VISIT(2, LambdaExpression,      BodyOffset)                        \
   VISIT(3, LambdaExpression,      IsLocalOffset)                     \
@@ -386,11 +366,6 @@
   VISIT(1, Assignment,            SymbolOffset)                      \
   VISIT(2, Assignment,            ValueOffset)                       \
   VISIT(3, Assignment,            Size)                              \
-  VISIT(1, UnquoteExpression,     IndexOffset)                       \
-  VISIT(2, UnquoteExpression,     Size)                              \
-  VISIT(1, QuoteTemplate,         ValueOffset)                       \
-  VISIT(2, QuoteTemplate,         UnquotesOffset)                    \
-  VISIT(3, QuoteTemplate,         Size)                              \
   VISIT(1, Task,                  StackOffset)                       \
   VISIT(2, Task,                  Size)                              \
   VISIT(1, RaiseExpression,       NameOffset)                        \
@@ -471,38 +446,35 @@
   VISIT(28, Layout,     call_expression_layout,        CallExpression,        allocate_empty_layout(tCallExpression))        \
   VISIT(29, Layout,     conditional_expression_layout, ConditionalExpression, allocate_empty_layout(tConditionalExpression)) \
   VISIT(30, Layout,     this_expression_layout,        ThisExpression,        allocate_empty_layout(tThisExpression))        \
-  VISIT(31, Layout,     quote_expression_layout,       QuoteExpression,       allocate_empty_layout(tQuoteExpression))       \
-  VISIT(32, Layout,     lambda_expression_layout,      LambdaExpression,      allocate_empty_layout(tLambdaExpression))      \
-  VISIT(33, Layout,     builtin_call_layout,           BuiltinCall,           allocate_empty_layout(tBuiltinCall))           \
-  VISIT(34, Layout,     interpolate_expression_layout, InterpolateExpression, allocate_empty_layout(tInterpolateExpression)) \
-  VISIT(35, Layout,     local_definition_layout,       LocalDefinition,       allocate_empty_layout(tLocalDefinition))       \
-  VISIT(36, Layout,     unquote_expression_layout,     UnquoteExpression,     allocate_empty_layout(tUnquoteExpression))     \
-  VISIT(37, Layout,     quote_template_layout,         QuoteTemplate,         allocate_empty_layout(tQuoteTemplate))         \
-  VISIT(38, Layout,     stack_layout,                  Stack,                 allocate_empty_layout(tStack))                 \
-  VISIT(39, Layout,     task_layout,                   Task,                  allocate_empty_layout(tTask))                  \
-  VISIT(40, Layout,     raise_expression_layout,       RaiseExpression,       allocate_empty_layout(tRaiseExpression))       \
-  VISIT(41, Layout,     on_clause_layout,              OnClause,              allocate_empty_layout(tOnClause))              \
-  VISIT(42, Layout,     do_on_expression_layout,       DoOnExpression,        allocate_empty_layout(tDoOnExpression))        \
-  VISIT(43, Layout,     instantiate_expression_layout, InstantiateExpression, allocate_empty_layout(tInstantiateExpression)) \
-  VISIT(44, Layout,     context_layout,                Context,               allocate_empty_layout(tContext))               \
-  VISIT(45, Layout,     signature_layout,              Signature,             allocate_empty_layout(tSignature))             \
-  VISIT(46, Layout,     forwarder_descriptor_layout,   ForwarderDescriptor,   allocate_empty_layout(tForwarderDescriptor))   \
-  VISIT(47, Layout,     arguments_layout,              Arguments,             allocate_empty_layout(tArguments))             \
-  VISIT(48, Layout,     selector_layout,               Selector,              allocate_empty_layout(tSelector))              \
-  VISIT(49, Layout,     task_expression_layout,        TaskExpression,        allocate_empty_layout(tTaskExpression))        \
-  VISIT(50, Layout,     yield_expression_layout,       YieldExpression,       allocate_empty_layout(tYieldExpression))       \
-  VISIT(51, Layout,     assignment_layout,             Assignment,            allocate_empty_layout(tAssignment))            \
-  VISIT(52, Layout,     parameters_layout,             Parameters,            allocate_empty_layout(tParameters))            \
-  VISIT(53, Layout,     channel_layout,                Channel,               allocate_empty_layout(tChannel))               \
-  VISIT(54, Layout,     while_expression_layout,       WhileExpression,       allocate_empty_layout(tWhileExpression))       \
-  VISIT(55, Layout,     super_expression_layout,       SuperExpression,       allocate_empty_layout(tSuperExpression))       \
-  VISIT(56, Layout,     array_layout,                  Array,                 allocate_empty_layout(tArray))                 \
-  VISIT(57, Layout,     local_variable_layout,         LocalVariable,         allocate_empty_layout(tLocalVariable))         \
-  VISIT(58, Layout,     cell_layout,                   Cell,                  allocate_empty_layout(tCell))
+  VISIT(31, Layout,     lambda_expression_layout,      LambdaExpression,      allocate_empty_layout(tLambdaExpression))      \
+  VISIT(32, Layout,     builtin_call_layout,           BuiltinCall,           allocate_empty_layout(tBuiltinCall))           \
+  VISIT(33, Layout,     interpolate_expression_layout, InterpolateExpression, allocate_empty_layout(tInterpolateExpression)) \
+  VISIT(34, Layout,     local_definition_layout,       LocalDefinition,       allocate_empty_layout(tLocalDefinition))       \
+  VISIT(35, Layout,     stack_layout,                  Stack,                 allocate_empty_layout(tStack))                 \
+  VISIT(36, Layout,     task_layout,                   Task,                  allocate_empty_layout(tTask))                  \
+  VISIT(37, Layout,     raise_expression_layout,       RaiseExpression,       allocate_empty_layout(tRaiseExpression))       \
+  VISIT(38, Layout,     on_clause_layout,              OnClause,              allocate_empty_layout(tOnClause))              \
+  VISIT(39, Layout,     do_on_expression_layout,       DoOnExpression,        allocate_empty_layout(tDoOnExpression))        \
+  VISIT(40, Layout,     instantiate_expression_layout, InstantiateExpression, allocate_empty_layout(tInstantiateExpression)) \
+  VISIT(41, Layout,     context_layout,                Context,               allocate_empty_layout(tContext))               \
+  VISIT(42, Layout,     signature_layout,              Signature,             allocate_empty_layout(tSignature))             \
+  VISIT(43, Layout,     forwarder_descriptor_layout,   ForwarderDescriptor,   allocate_empty_layout(tForwarderDescriptor))   \
+  VISIT(44, Layout,     arguments_layout,              Arguments,             allocate_empty_layout(tArguments))             \
+  VISIT(45, Layout,     selector_layout,               Selector,              allocate_empty_layout(tSelector))              \
+  VISIT(46, Layout,     task_expression_layout,        TaskExpression,        allocate_empty_layout(tTaskExpression))        \
+  VISIT(47, Layout,     yield_expression_layout,       YieldExpression,       allocate_empty_layout(tYieldExpression))       \
+  VISIT(48, Layout,     assignment_layout,             Assignment,            allocate_empty_layout(tAssignment))            \
+  VISIT(49, Layout,     parameters_layout,             Parameters,            allocate_empty_layout(tParameters))            \
+  VISIT(50, Layout,     channel_layout,                Channel,               allocate_empty_layout(tChannel))               \
+  VISIT(51, Layout,     while_expression_layout,       WhileExpression,       allocate_empty_layout(tWhileExpression))       \
+  VISIT(52, Layout,     super_expression_layout,       SuperExpression,       allocate_empty_layout(tSuperExpression))       \
+  VISIT(53, Layout,     array_layout,                  Array,                 allocate_empty_layout(tArray))                 \
+  VISIT(54, Layout,     local_variable_layout,         LocalVariable,         allocate_empty_layout(tLocalVariable))         \
+  VISIT(55, Layout,     cell_layout,                   Cell,                  allocate_empty_layout(tCell))
 
 #define eSimpleInternalRootObjects(VISIT)                                                                                    \
-  VISIT(59, Tuple,      empty_tuple,                   EmptyTuple,            new_tuple(0))                                  \
-  VISIT(60, Symbol,     this_symbol,                   ThisSymbol,            new_symbol(vhoid()))
+  VISIT(56, Tuple,      empty_tuple,                   EmptyTuple,            new_tuple(0))                                  \
+  VISIT(57, Symbol,     this_symbol,                   ThisSymbol,            new_symbol(vhoid()))
 
 #define eInternalRoots(VISIT)                                        \
   eSimpleInternalRootObjects(VISIT)

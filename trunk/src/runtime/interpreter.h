@@ -25,7 +25,7 @@ namespace neutrino {
   VISIT(14, Builtin,     2, "i")   VISIT(15, Tuple,         1, "i")    \
   VISIT(16, Concat,      1, "i")   VISIT(17, LoadLocal,     1, "i")    \
   VISIT(18, CheckHeight, 1, "i")   VISIT(19, Outer,         1, "i")    \
-  VISIT(20, Closure,     2, "??")  VISIT(21, Quote,         1, "i")    \
+  VISIT(20, Closure,     2, "??")                                      \
   VISIT(22, Unquote,     1, "?")   VISIT(23, Raise,         2, "??")   \
   VISIT(24, Mark,        1, "?")   VISIT(25, Unmark,        0, "")     \
   VISIT(26, New,         1, "p")   VISIT(27, LoadField,     2, "i.")   \

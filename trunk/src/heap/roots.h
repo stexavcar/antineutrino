@@ -28,7 +28,7 @@ public:
    */
   bool initialize(Heap& heap);
 
-  static const uword kExternalCount = 59;
+  static const uword kExternalCount = 58;
   static const uword kInternalCount = 2;
   static const uword kCount = kExternalCount + kInternalCount;
 

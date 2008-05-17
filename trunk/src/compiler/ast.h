@@ -51,32 +51,6 @@ public:
 
 DEFINE_REF_CLASS(LiteralExpression);
 
-// -----------------
-// --- Q u o t e ---
-// -----------------
-
-#define eQuoteTemplateFields(VISIT, arg)                    \
-  VISIT(SyntaxTree, value,    Value,    arg)                         \
-  VISIT(Tuple,      unquotes, Unquotes, arg)
-
-class QuoteTemplate : public SyntaxTree {
-public:
-  eQuoteTemplateFields(DECLARE_OBJECT_FIELD, 0)
-
-  static const uword kValueOffset = SyntaxTree::kHeaderSize;
-  static const uword kUnquotesOffset = kValueOffset + kPointerSize;
-  static const uword kSize = kUnquotesOffset + kPointerSize;
-};
-
-template <>
-class ref_traits<QuoteTemplate> : public ref_traits<SyntaxTree> {
-public:
-  eQuoteTemplateFields(DECLARE_REF_FIELD, 0)
-};
-
-DEFINE_REF_CLASS(QuoteTemplate);
-
-
 // -----------------------------------------
 // --- I n v o k e   E x p r e s s i o n ---
 // -----------------------------------------
@@ -578,57 +552,6 @@ public:
 DEFINE_REF_CLASS(Symbol);
 
 
-// ---------------------------------------
-// --- Q u o t e   E x p r e s s i o n ---
-// ---------------------------------------
-
-#define eQuoteExpressionFields(VISIT, arg)                           \
-  VISIT(SyntaxTree, value,    Value,    arg)                         \
-  VISIT(Tuple,      unquotes, Unquotes, arg)
-
-
-/**
- * A quote expression is a syntax tree representing an unbound,
- * unexecuted code quote expression.  During evaluation the unquote
- * expressions will be executed and bound together with the quoted
- * code in a QuoteTemplate.
- */
-class QuoteExpression : public SyntaxTree {
-public:
-  eQuoteExpressionFields(DECLARE_OBJECT_FIELD, 0)
-
-  static const uword kValueOffset = SyntaxTree::kHeaderSize;
-  static const uword kUnquotesOffset = kValueOffset + kPointerSize;
-  static const uword kSize = kUnquotesOffset + kPointerSize;
-};
-
-template <>
-class ref_traits<QuoteExpression> : public ref_traits<SyntaxTree> {
-public:
-  eQuoteExpressionFields(DECLARE_REF_FIELD, 0)
-};
-
-DEFINE_REF_CLASS(QuoteExpression);
-
-
-// -------------------------------------------
-// --- U n q u o t e   E x p r e s s i o n ---
-// -------------------------------------------
-
-class UnquoteExpression : public SyntaxTree {
-public:
-  DECLARE_FIELD(uword, index);
-
-  static const uword kIndexOffset = SyntaxTree::kHeaderSize;
-  static const uword kSize        = kIndexOffset + kPointerSize;
-};
-
-template <>
-class ref_traits<UnquoteExpression> : public ref_traits<SyntaxTree> {
-};
-
-DEFINE_REF_CLASS(UnquoteExpression);
-
 // -----------------------------------------
 // --- L a m b d a   E x p r e s s i o n ---
 // -----------------------------------------
@@ -835,38 +758,10 @@ DEFINE_REF_CLASS(Assignment);
 // --- V i s i t o r ---
 // ---------------------
 
-class QuoteTemplateScope {
-public:
-  inline QuoteTemplateScope(Visitor &visitor, ref<QuoteTemplate> value);
-  inline ~QuoteTemplateScope();
-  ref<QuoteTemplate> value() { return value_; }
-  QuoteTemplateScope *previous() { return previous_; }
-private:
-  Visitor &visitor_;
-  ref<QuoteTemplate> value_;
-  QuoteTemplateScope *previous_;
-};
-
-
-/**
- * The "reverse" of a quote template scope: pops the top quote
- * template scope and restores it on deletion.
- */
-class DropQuoteTemplateScope {
-public:
-  inline DropQuoteTemplateScope(Visitor &visitor);
-  inline ~DropQuoteTemplateScope();
-private:
-  Visitor &visitor_;
-  QuoteTemplateScope *top_;
-};
-
-
 class Visitor {
 public:
   Visitor(RefStack &refs, Visitor *enclosing)
-      : quote_scope_(enclosing ? enclosing->quote_scope_ : NULL)
-      , refs_(refs)
+      : refs_(refs)
       , scope_(enclosing ? enclosing->scope_ : NULL) { }
   ~Visitor();
   virtual void visit_symbol(ref<Symbol> that);
@@ -875,15 +770,11 @@ public:
   virtual void visit_##name(ref<Name> that);
 eSyntaxTreeTypes(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
-  inline ref<QuoteTemplate> current_quote();
-  void set_quote_scope(QuoteTemplateScope *scope) { quote_scope_ = scope; }
-  QuoteTemplateScope *quote_scope() { return quote_scope_; }
   RefStack &refs() { return refs_; }
   Scope &scope() { return *scope_; }
 
 private:
   friend class Scope;
-  QuoteTemplateScope *quote_scope_;
   RefStack &refs_;
   Scope *scope_;
 };

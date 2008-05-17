@@ -398,9 +398,8 @@ static void validate_object(Object *obj) {
         GC_SAFE_CHECK_IS_C(cnValidation, Tuple, cast<Lambda>(obj)->constant_pool());
       }
       break;
-    case tBuiltinCall: case tUnquoteExpression: case tCode:
+    case tBuiltinCall: case tCode: case tBuffer:
     case tString: case tVoid: case tTrue: case tFalse: case tNull:
-    case tBuffer:
       break;
 #define MAKE_CASE(n, Name, name)                                     \
     case t##Name:                                                    \

@@ -52,7 +52,6 @@ public:
   void bind(BytecodeLabel &label);
   void builtin(uint16_t argc, uint16_t index);
   void concat(uint16_t terms);
-  void quote(uint16_t unquotes);
   void mark(ref<Value> data);
   void unmark();
   void new_forwarder(uint16_t type);

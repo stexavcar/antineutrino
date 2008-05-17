@@ -198,15 +198,6 @@ void BytecodeBackend::concat(uint16_t terms) {
 }
 
 
-void BytecodeBackend::quote(uint16_t unquotes) {
-  STATIC_CHECK(OpcodeInfo<ocQuote>::kArgc == 1);
-  ASSERT(unquotes > 0);
-  code().append(ocQuote);
-  code().append(unquotes);
-  adjust_stack_height(-unquotes);
-}
-
-
 void BytecodeBackend::builtin(uint16_t argc, uint16_t index) {
   STATIC_CHECK(OpcodeInfo<ocBuiltin>::kArgc == 2);
   code().append(ocBuiltin);

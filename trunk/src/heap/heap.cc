@@ -74,16 +74,6 @@ Data *Heap::new_parameters(Smi *position_count, Tuple *params) {
   return result;
 }
 
-Data *Heap::new_quote_template(SyntaxTree *value, Tuple *unquotes) {
-  Data *val = allocate_object(QuoteTemplate::kSize, roots().quote_template_layout());
-  if (is<AllocationFailed>(val)) return val;
-  QuoteTemplate *result = cast<QuoteTemplate>(val);
-  result->set_value(value);
-  result->set_unquotes(unquotes);
-  IF_PARANOID(result->validate());
-  return result;
-}
-
 Data *Heap::new_lambda_expression(Parameters *params, SyntaxTree *body,
     bool is_local) {
   Data *val = allocate_object(LambdaExpression::kSize, roots().lambda_expression_layout());

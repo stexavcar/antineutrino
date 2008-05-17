@@ -176,17 +176,6 @@ static void unparse_call_expression(CallExpression *obj, UnparseData &data) {
   unparse_list_on(obj->arguments()->arguments(), data);
 }
 
-static void unparse_unquote_expression(UnquoteExpression *obj, UnparseData &data) {
-  data->printf("‹#%›", obj->index());
-}
-
-static void unparse_quote_template(QuoteTemplate *obj, UnparseData &data) {
-  QuoteScope scope(obj, data.quote_scope());
-  data.set_quote_scope(&scope);
-  unparse_syntax_tree_on(obj->value(), data);
-  data.set_quote_scope(scope.parent());
-}
-
 static void unparse_builtin_call(BuiltinCall *obj, UnparseData &data) {
   data->printf("bc[%]", obj->index());
 }
@@ -251,9 +240,6 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
   case tReturnExpression:
     unparse_return_expression(cast<ReturnExpression>(obj), data);
     break;
-  case tUnquoteExpression:
-    unparse_unquote_expression(cast<UnquoteExpression>(obj), data);
-    break;
   case tGlobalVariable:
     unparse_global_variable(cast<GlobalVariable>(obj), data);
     break;
@@ -271,9 +257,6 @@ static void unparse_syntax_tree_on(SyntaxTree *obj, UnparseData &data) {
     break;
   case tCallExpression:
     unparse_call_expression(cast<CallExpression>(obj), data);
-    break;
-  case tQuoteTemplate:
-    unparse_quote_template(cast<QuoteTemplate>(obj), data);
     break;
   case tBuiltinCall:
     unparse_builtin_call(cast<BuiltinCall>(obj), data);
@@ -339,18 +322,6 @@ void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
   ref<SyntaxTree> self = open(this);
   InstanceType type = self->type();
   switch (type) {
-  case tQuoteTemplate: {
-    QuoteTemplateScope scope(visitor, cast<QuoteTemplate>(self));
-    return cast<QuoteTemplate>(self).value(visitor.refs()).accept(visitor);
-  }
-  case tUnquoteExpression: {
-    ref<QuoteTemplate> templ = visitor.current_quote();
-    uword index = cast<UnquoteExpression>(self)->index();
-    Value *term = templ->unquotes()->get(index);
-    ref<Value> value = visitor.refs().new_ref(term);    
-    DropQuoteTemplateScope drop(visitor);
-    return dispatch_single(visitor, value, false);
-  }
 #define MAKE_VISIT(n, Name, name)                                    \
   case t##Name:                                                      \
     return visitor.visit_##name(cast<Name>(self));
@@ -398,11 +369,6 @@ void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
   case tParameters: {
     ref_scope scope(visitor.refs());
     VISIT_FIELD_WITH(parameters, Parameters, dispatch_tuple);
-    break;
-  }
-  case tQuoteExpression: {
-    ref_scope scope(visitor.refs());
-    VISIT_FIELD(0, unquotes, 0, QuoteExpression);
     break;
   }
 #define MAKE_VISIT(n, Name, name)                                    \
