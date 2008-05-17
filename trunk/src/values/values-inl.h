@@ -495,6 +495,7 @@ bool HashMap::Iterator::next(HashMap::Iterator::Entry *entry) {
 // -------------------
 
 DEFINE_ACCESSORS(uword, Lambda, argc, Argc)
+DEFINE_ACCESSORS(uword, Lambda, max_stack_height, MaxStackHeight)
 
 
 // ---------------------
@@ -637,6 +638,10 @@ InstanceType TypeMismatch::found() {
 
 Nothing *Nothing::make() {
   return cast<Nothing>(ValuePointer::tag_as_signal(sNothing, 0));
+}
+
+StackOverflow *StackOverflow::make() {
+  return cast<StackOverflow>(ValuePointer::tag_as_signal(sStackOverflow, 0));
 }
 
 ForwardPointer *ForwardPointer::make(Object *obj) {

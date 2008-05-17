@@ -11,8 +11,7 @@ namespace neutrino {
 
 BytecodeBackend::BytecodeBackend(Runtime &runtime)
   : AbstractBackend(runtime)
-  , pool_(runtime)
-  , stack_height_(0) { }
+  , pool_(runtime) { }
 
 
 void BytecodeBackend::invoke(ref<Selector> selector, uint16_t argc,
@@ -170,7 +169,7 @@ void BytecodeBackend::swap() {
 
 void BytecodeBackend::rethurn() {
   STATIC_CHECK(OpcodeInfo<ocReturn>::kArgc == 0);
-  ASSERT(stack_height() > 0);
+  ASSERT(stack().height() > 0);
   code().append(ocReturn);
 }
 
@@ -331,7 +330,7 @@ ref<Method> BytecodeBackend::field_getter(uword index,
   ld_code->at(1) = index;
   ld_code->at(2) = 0;
   ld_code->at(3) = ocReturn;
-  ref<Lambda> lambda = factory().new_lambda(0, ld_code,
+  ref<Lambda> lambda = factory().new_lambda(0, 1, ld_code,
       runtime().empty_tuple(), runtime().nuhll(), context);
   return factory().new_method(selector, signature, lambda);
 }
@@ -349,18 +348,17 @@ ref<Method> BytecodeBackend::field_setter(uword index,
   st_code->at(3) = index;
   st_code->at(4) = 1;
   st_code->at(5) = ocReturn;
-  ref<Lambda> lambda = factory().new_lambda(1, st_code,
+  ref<Lambda> lambda = factory().new_lambda(1, 1, st_code,
     runtime().empty_tuple(), runtime().nuhll(), context);
   return factory().new_method(selector, signature, lambda);
 }
 
 
 void BytecodeBackend::adjust_stack_height(word delta) {
-  ASSERT_GE(stack_height() + delta, 0);
-  stack_height_ += delta;
+  stack().set_height(stack().height() + delta);
   if (Options::check_stack_height) {
     code().append(ocCheckHeight);
-    code().append(stack_height());
+    code().append(stack().height());
   }
 }
 

@@ -61,8 +61,8 @@ public:
   
   Data *new_hash_map(Tuple *store);
   
-  Data *new_lambda(uword argc, Value *code, Value *literals, Value *tree,
-      Context *context);
+  Data *new_lambda(uword argc, uword max_stack_height, Value *code,
+      Value *literals, Value *tree, Context *context);
   
   Data *new_cell(Value *value);
   

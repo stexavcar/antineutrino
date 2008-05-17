@@ -87,9 +87,9 @@ public:
   void store_symbol(ref<Symbol> sym);
   
   void codegen(ref<SyntaxTree> that) {
-    IF_DEBUG(uword height_before = backend().stack_height());
+    IF_DEBUG(uword height_before = backend().stack().height());
     that.accept(*this);
-    ASSERT_EQ(height_before + 1, backend().stack_height());
+    ASSERT_EQ(height_before + 1, backend().stack().height());
   }
 
   special_builtin get_special(uword index);
@@ -106,10 +106,18 @@ eSyntaxTreeTypes(MAKE_VISIT_METHOD)
 
   Factory &factory() { return runtime().factory(); }
   Backend &backend() { return backend_; }
+  VirtualStack &stack() { return backend().stack(); }
 
 private:
   Backend &backend_;
 };
+
+
+void VirtualStack::set_height(uword value) {
+  height_ = value;
+  if (value > max_height_)
+    max_height_ = value;
+}
 
 
 class SymbolInfo : public Smi {
@@ -514,12 +522,12 @@ void Assembler<C>::visit_conditional_expression(ref<ConditionalExpression> that)
   codegen(that.condition(refs()));
   __ if_true(then);
   backend().adjust_stack_height(-1);
-  IF_DEBUG(uword height_before = backend().stack_height());
+  IF_DEBUG(uword height_before = backend().stack().height());
   codegen(that.else_part(refs()));
   __ ghoto(end);
   __ bind(then);
   backend().adjust_stack_height(-1);
-  ASSERT_EQ(height_before, backend().stack_height());
+  ASSERT_EQ(height_before, backend().stack().height());
   codegen(that.then_part(refs()));
   __ bind(end);
 }
@@ -563,7 +571,7 @@ template <class C>
 void Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
   Smi *type = that->type();
   if (type == Smi::from_int(LocalDefinition::ldRec)) {
-    uword height = backend().stack_height();
+    uword height = backend().stack().height();
     __ push(runtime().vhoid());
     __ new_forwarder(Forwarder::fwOpen);
     LocalScope scope(*this, that.symbol(refs()), height);
@@ -572,7 +580,7 @@ void Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
     codegen(that.body(refs()));
     __ slap(1);
   } else if (type == Smi::from_int(LocalDefinition::ldLoc)) {
-    uword height = backend().stack_height();
+    uword height = backend().stack().height();
     codegen(that.value(refs()));
     __ new_forwarder(Forwarder::fwOpen);
     LocalScope scope(*this, that.symbol(refs()), height);
@@ -584,7 +592,7 @@ void Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
     __ slap(1);
   } else {
     ASSERT(type == Smi::from_int(LocalDefinition::ldDef) || type == Smi::from_int(LocalDefinition::ldVar));
-    uword height = backend().stack_height();
+    uword height = backend().stack().height();
     codegen(that.value(refs()));
     if (SymbolInfo::from(that->symbol()->data())->type() == ltMaterialize) {
       ASSERT_EQ(type, Smi::from_int(LocalDefinition::ldVar));
@@ -785,7 +793,7 @@ ref<Lambda> Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
     ref<Context> context) {
   ref<Smi> zero = runtime.refs().new_ref(Smi::from_int(0));  
   ref<Lambda> lambda = runtime.factory().new_lambda(
-    expr->parameters()->parameters()->length(), zero, zero, expr, context
+    expr->parameters()->parameters()->length(), 0, zero, zero, expr, context
   );
   return lambda;
 }
@@ -823,7 +831,7 @@ ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
     CodeGenerator &enclosing) {
   ref<Smi> zero = runtime().refs().new_ref(Smi::from_int(0));
   ref<Lambda> lambda = runtime().factory().new_lambda(
-      that->parameters()->parameters()->length(), zero, zero, that,
+      that->parameters()->parameters()->length(), 0, zero, zero, that,
       context()
   );
   compile(lambda, enclosing.method(), &enclosing);
@@ -970,6 +978,7 @@ void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
   ref<Tuple> constant_pool = backend.flush_constant_pool();
   lambda->set_code(*code);
   lambda->set_constant_pool(*constant_pool);
+  lambda->set_max_stack_height(backend.stack().max_height());
 }
 
 

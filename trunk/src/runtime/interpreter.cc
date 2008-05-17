@@ -118,7 +118,7 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
         runtime().heap().memory().collect_garbage(runtime());
         frame.reset(old_stack, task->stack());
       } else {
-        UNREACHABLE();
+        Conditions::get().error_occurred("Unexpected signal: %", value);
       }
     } else {
       task->stack()->status().is_empty = true;
@@ -130,13 +130,23 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
 
 #define RETURN(val) do { result = val; goto suspend; } while(false)
 
+
 #define PREPARE_EXECUTION(value) do {                                \
     lambda = (value);                                                \
     code = cast<Code>(lambda->code())->buffer();                     \
     constant_pool = cast<Tuple>(lambda->constant_pool())->buffer();  \
   } while (false)
 
+
+#define CHECK_STACK_HEIGHT(value) do {                               \
+    Lambda *__lambda__ = (value);                                    \
+    if (frame.fp() + __lambda__->max_stack_height() >= stack_limit)  \
+      return StackOverflow::make();                                  \
+  } while (false)
+
+
 Data *Interpreter::interpret(Stack *stack, StackState &frame) {
+  word *stack_limit = stack->bottom() + stack->height() - StackState::kSize;
   uword pc = frame.prev_pc();
   frame.unwind();
   Lambda *lambda;
@@ -249,9 +259,11 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
             *recv_str, *selector_str);
       }
       Method *method = cast<Method>(lookup_result);
-      frame.push_activation(pc + OpcodeInfo<ocInvoke>::kSize, method->lambda());
-      method->lambda()->ensure_compiled(runtime(), method);
-      PREPARE_EXECUTION(method->lambda());
+      Lambda *target = method->lambda();
+      target->ensure_compiled(runtime(), method);
+      CHECK_STACK_HEIGHT(target);
+      frame.push_activation(pc + OpcodeInfo<ocInvoke>::kSize, target);
+      PREPARE_EXECUTION(target);
       if (!keymap->is_empty())
         frame.push(keymap);
       pc = 0;
@@ -273,9 +285,11 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
             *recv_str, *selector_str);
       }
       Method *method = cast<Method>(lookup_result);
-      frame.push_activation(pc + OpcodeInfo<ocInvokeSuper>::kSize, method->lambda());
-      method->lambda()->ensure_compiled(runtime(), method);
-      PREPARE_EXECUTION(method->lambda());
+      Lambda *target = method->lambda();
+      target->ensure_compiled(runtime(), method);
+      CHECK_STACK_HEIGHT(target);
+      frame.push_activation(pc + OpcodeInfo<ocInvokeSuper>::kSize, target);
+      PREPARE_EXECUTION(target);
       if (!keymap->is_empty())
         frame.push(keymap);
       pc = 0;
@@ -293,6 +307,7 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
           if (name->equals(handler)) {
             Lambda *target = cast<Lambda>(handlers->get(i + 1));
             target->ensure_compiled(runtime(), NULL);
+            CHECK_STACK_HEIGHT(target);
             frame.push_activation(pc + OpcodeInfo<ocRaise>::kSize, target);
             PREPARE_EXECUTION(target);
             pc = 0;
@@ -313,10 +328,11 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
     case ocCall: {
       uint16_t argc = code[pc + 1];
       Value *value = frame[argc + 1];
-      Lambda *fun = cast<Lambda>(value);
-      fun->ensure_compiled(runtime(), NULL);
-      frame.push_activation(pc + OpcodeInfo<ocCall>::kSize, fun);
-      PREPARE_EXECUTION(fun);
+      Lambda *target = cast<Lambda>(value);
+      target->ensure_compiled(runtime(), NULL);
+      CHECK_STACK_HEIGHT(target);
+      frame.push_activation(pc + OpcodeInfo<ocCall>::kSize, target);
+      PREPARE_EXECUTION(target);
       pc = 0;
       break;
     }
@@ -554,7 +570,11 @@ suspend:
   return result;
 }
 
+
 #undef RETURN
+#undef PREPARE_EXECUTION
+#undef CHECK_STACK_HEIGHT
+
 
 #ifdef DEBUG
 void Stack::validate_stack() {

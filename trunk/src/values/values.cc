@@ -472,7 +472,8 @@ void Instance::for_each_instance_field(FieldVisitor &visitor) {
 // -------------------
 
 Data *Lambda::clone(Heap &heap) {
-  return heap.new_lambda(argc(), code(), constant_pool(), tree(), context());
+  return heap.new_lambda(argc(), max_stack_height(), code(),
+      constant_pool(), tree(), context());
 }
 
 

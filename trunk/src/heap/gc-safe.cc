@@ -84,9 +84,10 @@ ref<Symbol> Factory::new_symbol(ref<Value> name) {
 }
 
 
-ref<Lambda> Factory::new_lambda(uword argc, ref<Value> code,
-    ref<Value> literals, ref<Value> tree, ref<Context> context) {
-  ALLOCATE_CHECKED(Lambda, new_lambda(argc, *code, *literals, *tree, *context));
+ref<Lambda> Factory::new_lambda(uword argc, uword max_stack_height,
+    ref<Value> code, ref<Value> literals, ref<Value> tree,
+    ref<Context> context) {
+  ALLOCATE_CHECKED(Lambda, new_lambda(argc, max_stack_height, *code, *literals, *tree, *context));
 }
 
 

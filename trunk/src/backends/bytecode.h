@@ -65,24 +65,22 @@ public:
   ref<Method> field_setter(uword index,  ref<Selector> selector,
       ref<Signature> signature, ref<Context> context);
   
-  void adjust_stack_height(word delta);
-  uword stack_height() { return stack_height_; }
-
   void initialize() { pool().initialize(); }
   ref<Code> flush_code();
   ref<Tuple> flush_constant_pool();
-  
+
   uint16_t constant_pool_index(ref<Value> value);
   
   static void disassemble_next_instruction(uword *pc_ptr, 
       vector<uint16_t> data, vector<Value*> pool, string_buffer &buf);
+  
+  void adjust_stack_height(word delta);
 
 private:
   heap_list &pool() { return pool_; }
   list_buffer<uint16_t> &code() { return code_; }
   list_buffer<uint16_t> code_;
   heap_list pool_;
-  uword stack_height_;
 };
 
 

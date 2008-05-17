@@ -24,7 +24,7 @@ public:
   ref<String> new_string(uword length);
   ref<Tuple> new_tuple(uword size);
   ref<Parameters> new_parameters(ref<Smi> position_count, ref<Tuple> params);
-  ref<Lambda> new_lambda(uword argc, ref<Value> code,
+  ref<Lambda> new_lambda(uword argc, uword max_stack_height, ref<Value> code,
       ref<Value> literals, ref<Value> tree, ref<Context> context);
   ref<Task> new_task();
   ref<LambdaExpression> new_lambda_expression(ref<Parameters> params,

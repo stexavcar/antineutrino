@@ -14,14 +14,14 @@ static NValue open_file(IValueFactory &factory, NValue name_val) {
   const char *name = cast<NString>(name_val).c_str();
   FILE *file = stdc_fopen(name, "r");
   if (file == NULL) return factory.get_null();
-  NBuffer<FILE*> buffer = factory.new_buffer<FILE*>(1);
-  buffer[0] = file;
+  NProxy<FILE*> buffer = factory.new_proxy<FILE*>();
+  buffer.set(file);
   return buffer;
 }
 
 
 static NValue read_file(IValueFactory &factory, NValue file_obj) {
-  FILE *file = cast< NBuffer<FILE*> >(file_obj)[0];
+  FILE *file = cast< NProxy<FILE*> >(file_obj).get();
   fseek(file, 0, SEEK_END);
   unsigned size = ftell(file);
   rewind(file);
@@ -40,9 +40,9 @@ static NValue read_file(IValueFactory &factory, NValue file_obj) {
 
 
 static NValue close_file(IValueFactory &factory, NValue file_obj) {
-  NBuffer<FILE*> buf = cast< NBuffer<FILE*> >(file_obj);
-  FILE *file = buf[0];
-  buf[0] = NULL;
+  NProxy<FILE*> buf = cast< NProxy<FILE*> >(file_obj);
+  FILE *file = buf.get();
+  buf.set(NULL);
   fclose(file);
   return factory.get_null();
 }

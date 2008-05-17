@@ -603,18 +603,20 @@ DEFINE_REF_CLASS(HashMap);
 class Lambda : public Object {
 public:
   DECLARE_FIELD(uword, argc);
+  DECLARE_FIELD(uword, max_stack_height);
   eLambdaFields(DECLARE_OBJECT_FIELD, 0)
 
   Data *clone(Heap &heap);
   void ensure_compiled(Runtime &runtime, Method *holder);
 
-  static const uword kArgcOffset         = Object::kHeaderSize;
-  static const uword kCodeOffset         = kArgcOffset + kPointerSize;
-  static const uword kConstantPoolOffset = kCodeOffset + kPointerSize;
-  static const uword kTreeOffset         = kConstantPoolOffset + kPointerSize;
-  static const uword kOutersOffset       = kTreeOffset + kPointerSize;
-  static const uword kContextOffset      = kOutersOffset + kPointerSize;
-  static const uword kSize               = kContextOffset + kPointerSize;
+  static const uword kArgcOffset           = Object::kHeaderSize;
+  static const uword kMaxStackHeightOffset = kArgcOffset + kPointerSize;
+  static const uword kCodeOffset           = kMaxStackHeightOffset + kPointerSize;
+  static const uword kConstantPoolOffset   = kCodeOffset + kPointerSize;
+  static const uword kTreeOffset           = kConstantPoolOffset + kPointerSize;
+  static const uword kOutersOffset         = kTreeOffset + kPointerSize;
+  static const uword kContextOffset        = kOutersOffset + kPointerSize;
+  static const uword kSize                 = kContextOffset + kPointerSize;
 };
 
 template <> class ref_traits<Lambda> : public ref_traits<Object> {
@@ -756,6 +758,11 @@ public:
 class Nothing : public Signal {
 public:
   static inline Nothing *make();
+};
+
+class StackOverflow : public Signal {
+public:
+  static inline StackOverflow *make();
 };
 
 /**

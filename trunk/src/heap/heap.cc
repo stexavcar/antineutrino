@@ -40,12 +40,13 @@ Data *Heap::allocate_layout(InstanceType instance_type) {
   return result;
 }
 
-Data *Heap::new_lambda(uword argc, Value *code, Value *constant_pool,
-    Value *tree, Context *context) {
+Data *Heap::new_lambda(uword argc, uword max_stack_height,
+    Value *code, Value *constant_pool, Value *tree, Context *context) {
   Data *val = allocate_object(Lambda::kSize, roots().lambda_layout());
   if (is<AllocationFailed>(val)) return val;
   Lambda *result = cast<Lambda>(val);
   result->set_argc(argc);
+  result->set_max_stack_height(max_stack_height);
   result->set_code(code);
   result->set_constant_pool(constant_pool);
   result->set_tree(tree);

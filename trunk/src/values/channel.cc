@@ -94,7 +94,7 @@ public:
   virtual NInteger new_integer(word value);
   virtual NString new_string(const char *data, unsigned length);
   virtual NNull get_null();
-  virtual NValue new_raw_buffer(unsigned total_size);
+  virtual NValue new_raw_proxy(unsigned size);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
@@ -153,8 +153,8 @@ NNull ValueFactoryImpl::get_null() {
 }
 
 
-NValue ValueFactoryImpl::new_raw_buffer(unsigned total_size) {
-  Data *result = cast<Value>(runtime().heap().new_buffer(total_size));
+NValue ValueFactoryImpl::new_raw_proxy(unsigned size) {
+  Data *result = cast<Value>(runtime().heap().new_buffer(size));
   NValue val = ApiUtils::new_value(LiveValueDTableImpl::instance(), result);
   return val;
 }
@@ -169,7 +169,7 @@ LiveValueDTableImpl LiveValueDTableImpl::instance_;
 class LiveNValue : public NValue {
 public:
   ValueType type();
-  void *buffer_get(int index);
+  void *proxy_deref(unsigned size);
   Data *to_data();
 };
 
@@ -181,14 +181,14 @@ public:
 class LiveNString : public NString {
 public:
   int length();
-  char get(int index);
+  char get(unsigned index);
   const char *c_str();
 };
 
 class LiveNTuple : public NTuple {
 public:
   int length();
-  NValue get(int index);
+  NValue get(unsigned index);
 };
 
 LiveValueDTableImpl::LiveValueDTableImpl() {
@@ -200,8 +200,8 @@ LiveValueDTableImpl::LiveValueDTableImpl() {
   tuple_length_ = static_cast<int (NTuple::*)()>(&FrozenNTuple::length);
 */
   string_c_str_ = static_cast<const char *(NString::*)()>(&LiveNString::c_str);
-  tuple_get_ = static_cast<NValue (NTuple::*)(int)>(&LiveNTuple::get);
-  buffer_get_ = static_cast<void *(NValue::*)(int)>(&LiveNValue::buffer_get);
+  tuple_get_ = static_cast<NValue (NTuple::*)(unsigned)>(&LiveNTuple::get);
+  proxy_deref_ = static_cast<void *(NValue::*)(unsigned)>(&LiveNValue::proxy_deref);
   value_to_data_ = static_cast<Data *(NValue::*)()>(&LiveNValue::to_data);
 }
 
@@ -215,16 +215,20 @@ ValueType LiveNValue::type() {
     case tTuple:
       return vtTuple;
     case tBuffer:
-      return vtBuffer;
+      return vtProxy;
     default:
       UNHANDLED(InstanceType, type);
       return vtUnknown;
   }
 }
 
-void *LiveNValue::buffer_get(int index) {
+void *LiveNValue::proxy_deref(unsigned size) {
   Buffer *obj = ApiUtils::open<Buffer>(this);
-  return obj->buffer<byte>().start() + index;
+  if (obj->size<byte>() == size) {
+    return obj->buffer<byte>().start();
+  } else {
+    return 0;
+  }
 }
 
 Data *LiveNValue::to_data() {
@@ -239,7 +243,7 @@ const char *LiveNString::c_str() {
   return ApiUtils::open<String>(this)->c_str().start();
 }
 
-NValue LiveNTuple::get(int index) {
+NValue LiveNTuple::get(unsigned index) {
   Value *result = ApiUtils::open<Tuple>(this)->get(index);
   return ApiUtils::new_value_from(this, result);
 }
@@ -264,24 +268,24 @@ public:
 class FrozenNString : public NString {
 public:
   int length();
-  char get(int index);
+  char get(unsigned index);
   const char *c_str();
 };
 
 class FrozenNTuple : public NTuple {
 public:
   int length();
-  NValue get(int index);
+  NValue get(unsigned index);
 };
 
 FrozenValueDTableImpl::FrozenValueDTableImpl() {
   value_type_ = static_cast<ValueType (NValue::*)()>(&FrozenNValue::type);
   integer_value_ = static_cast<int (NInteger::*)()>(&FrozenNInteger::value);
   string_length_ = static_cast<int (NString::*)()>(&FrozenNString::length);
-  string_get_ = static_cast<char (NString::*)(int)>(&FrozenNString::get);
+  string_get_ = static_cast<char (NString::*)(unsigned)>(&FrozenNString::get);
   string_c_str_ = static_cast<const char *(NString::*)()>(&FrozenNString::c_str);
   tuple_length_ = static_cast<int (NTuple::*)()>(&FrozenNTuple::length);
-  tuple_get_ = static_cast<NValue (NTuple::*)(int)>(&FrozenNTuple::get);
+  tuple_get_ = static_cast<NValue (NTuple::*)(unsigned)>(&FrozenNTuple::get);
 }
 
 ValueType FrozenNValue::type() {
@@ -306,7 +310,7 @@ int FrozenNString::length() {
   return ApiUtils::open<FString>(this)->length();
 }
 
-char FrozenNString::get(int index) {
+char FrozenNString::get(unsigned index) {
   return ApiUtils::open<FString>(this)->get(index);
 }
 
@@ -324,7 +328,7 @@ int FrozenNTuple::length() {
   return ApiUtils::open<FTuple>(this)->length();
 }
 
-NValue FrozenNTuple::get(int index) {
+NValue FrozenNTuple::get(unsigned index) {
   FImmediate *result = ApiUtils::open<FTuple>(this)->at(index);
   return ApiUtils::new_value_from(this, result);
 }

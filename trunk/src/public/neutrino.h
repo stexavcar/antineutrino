@@ -8,7 +8,7 @@ namespace neutrino {
 class IMessage;
 class IMessageContext;
 class IValueFactory;
-template <typename T> class NBuffer;
+template <typename T> class NProxy;
 class NInteger;
 class NString;
 class NTuple;
@@ -16,7 +16,7 @@ class NValue;
 
 
 enum ValueType {
-  vtInteger, vtString, vtTuple, vtBuffer, vtUnknown
+  vtInteger, vtString, vtTuple, vtProxy, vtUnknown
 };
 
 
@@ -30,11 +30,11 @@ struct ValueDTable {
   ValueType (NValue::*value_type_)();
   int (NInteger::*integer_value_)();
   int (NString::*string_length_)();
-  char (NString::*string_get_)(int index);
+  char (NString::*string_get_)(unsigned index);
   const char *(NString::*string_c_str_)();
   int (NTuple::*tuple_length_)();
-  NValue (NTuple::*tuple_get_)(int index);
-  void *(NValue::*buffer_get_)(int raw_index);
+  NValue (NTuple::*tuple_get_)(unsigned index);
+  void *(NValue::*proxy_deref_)(unsigned size);
 };
 
 
@@ -86,7 +86,7 @@ public:
   static const ValueType kTag = vtString;
   inline int length() { return (this->*(methods().string_length_))(); }
   inline const char *c_str() { return (this->*(methods().string_c_str_))(); }
-  inline char operator[](int index) { return ((this->*(methods().string_get_)))(index); }
+  inline char operator[](unsigned index) { return ((this->*(methods().string_get_)))(index); }
 };
 
 
@@ -94,15 +94,16 @@ class NTuple : public NValue {
 public:
   static const ValueType kTag = vtTuple;
   inline int length() { return ((this->*(methods().tuple_length_)))(); }
-  inline NValue operator[](int index) { return ((this->*(methods().tuple_get_)))(index); }
+  inline NValue operator[](unsigned index) { return ((this->*(methods().tuple_get_)))(index); }
 };
 
 
 template <typename T>
-class NBuffer : public NValue {
+class NProxy : public NValue {
 public:
-  static const ValueType kTag = vtBuffer;
-  inline T &operator[](int index) { return *static_cast<T*>(((this->*(methods().buffer_get_)))(sizeof(T) * index)); }
+  static const ValueType kTag = vtProxy;
+  inline const T &get() { return *static_cast<T*>(((this->*(methods().proxy_deref_)))(sizeof(T))); }
+  inline void set(const T &value) { *static_cast<T*>(((this->*(methods().proxy_deref_)))(sizeof(T))) = value; }
 };
 
 
@@ -141,9 +142,9 @@ public:
   virtual NInteger new_integer(int value) = 0;
   virtual NNull get_null() = 0;
   virtual NString new_string(const char *data, unsigned length) = 0;
-  template <typename T> NBuffer<T> new_buffer(unsigned elms);
+  template <typename T> NProxy<T> new_proxy();
 private:
-  virtual NValue new_raw_buffer(unsigned total_size) = 0;
+  virtual NValue new_raw_proxy(unsigned size) = 0;
 };
 
 
@@ -157,8 +158,8 @@ NValue::NValue(ValueDTable *methods, void *origin)
   , origin_(origin) { }
 
 
-template <typename T> NBuffer<T> IValueFactory::new_buffer(unsigned elms) {
-  return cast< NBuffer<T> >(new_raw_buffer(sizeof(T) * elms));
+template <typename T> NProxy<T> IValueFactory::new_proxy() {
+  return cast< NProxy<T> >(new_raw_proxy(sizeof(T)));
 }
 
 
