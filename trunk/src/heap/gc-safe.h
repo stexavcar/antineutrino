@@ -10,7 +10,7 @@ namespace neutrino {
 class GcSafe {
 public:
   GcSafe(Runtime &runtime);
-  void set(ref<Dictionary> dict, ref<Value> key, ref<Value> value);
+  void set(ref<HashMap> dict, ref<Value> key, ref<Value> value);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
@@ -36,7 +36,7 @@ public:
   ref<Method> new_method(ref<Selector> selector, ref<Signature> signature,
       ref<Lambda> lambda);
   ref<Symbol> new_symbol(ref<Value> value);
-  ref<Dictionary> new_dictionary();
+  ref<HashMap> new_hash_map();
   ref<Code> new_code(uword size);
   ref<Layout> new_layout(InstanceType instance_type, 
       uword instance_field_count, ref<Immediate> protocol,

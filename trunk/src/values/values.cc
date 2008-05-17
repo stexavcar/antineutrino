@@ -3,6 +3,7 @@
 #include "heap/ref-inl.h"
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
+#include "utils/hash-inl.h"
 #include "utils/string-inl.h"
 #include "values/values-inl.h"
 
@@ -178,8 +179,8 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
   case tFalse:
     buf.append("false");
     break;
-  case tDictionary:
-    buf.append("#<dictionary>");
+  case tHashMap:
+    buf.append("#<hash_map>");
     break;
   case tCode:
     buf.append("#<code>");
@@ -267,10 +268,10 @@ static void write_lambda_on(Lambda *obj, string_buffer &buf) {
     buf.append("#<lambda>");
 }
 
-static void write_dictionary_on(Dictionary *obj, string_buffer &buf) {
+static void write_hash_map_on(HashMap *obj, string_buffer &buf) {
   buf.append('{');
-  Dictionary::Iterator iter(obj);
-  Dictionary::Iterator::Entry entry;
+  HashMap::Iterator iter(obj);
+  HashMap::Iterator::Entry entry;
   bool first = true;
   while (iter.next(&entry)) {
     if (first) first = false;
@@ -295,8 +296,8 @@ static void write_object_on(Object *obj, Data::WriteMode mode, string_buffer &bu
   case tLambda:
     write_lambda_on(cast<Lambda>(obj), buf);
     break;
-  case tDictionary:
-    write_dictionary_on(cast<Dictionary>(obj), buf);
+  case tHashMap:
+    write_hash_map_on(cast<HashMap>(obj), buf);
     break;
   case tMethod:
     write_method_on(cast<Method>(obj), buf);
@@ -587,49 +588,48 @@ vector<char> String::c_str() {
 // --- D i c t i o n a r y ---
 // ---------------------------
 
-struct DictionaryLookup {
-  Value **value;
+
+class HashMapConfig {
+public:
+  typedef Tuple *table_t;
+  typedef Value *key_t;
+  typedef Value *value_t;
+  typedef HashMap *map_t;
+  typedef Data *raw_table_t;
+  typedef Heap &data_t;
+  static uword table_length(Tuple *t) { return t->length(); }
+  static Value *&table_get(Tuple *t, uword i) { return t->get(i); }
+  static void table_set(Tuple *t, uword i, Value *v) { t->set(i, v); }
+  static Data *allocate_table(uword s, Heap &h) { return h.new_tuple(s); }
+  static void free_table(Tuple *table) { }
+  static bool keys_equal(Value *a, Value *b) { return a->equals(b); }
+  static Tuple *cast_to_table(Data *d) { return cast<Tuple>(d); }
+  static bool is_abort_value(Data *d) { return is<AllocationFailed>(d); }
+  static void set_table(HashMap *d, Tuple *t) { d->set_table(t); }
 };
 
-static bool lookup_key(Tuple *table, Value *key,
-    DictionaryLookup &result) {
-  ASSERT(key->is_key());
-  for (uword i = 0; i < table->length(); i += 2) {
-    if (key->equals(table->get(i))) {
-      result.value = &table->get(i + 1);
-      return true;
-    }
-  }
-  return false;
-}
 
-Data *Dictionary::get(Value *key) {
-  DictionaryLookup lookup;
-  if (lookup_key(this->table(), key, lookup)) return *lookup.value;
+Data *HashMap::get(Value *key) {
+  HashMapLookup<Value*> lookup;
+  if (HashUtils<HashMapConfig>::lookup_entry(this->table(), key, lookup)) return *lookup.value;
   else return Nothing::make();  
 }
 
-Data *Dictionary::set(Heap &heap, Value *key, Value *value) {
-  DictionaryLookup lookup;
-  if (lookup_key(this->table(), key, lookup)) {
+
+Data *HashMap::set(Heap &heap, Value *key, Value *value) {
+  HashMapLookup<Value*> lookup;
+  Data *raw_table = Smi::from_int(0);
+  if (HashUtils<HashMapConfig>::ensure_entry(this, this->table(), key, lookup,
+      &raw_table, heap)) {
     *lookup.value = value;
+    return this;
   } else {
-    // Extend table with the new pair
-    Tuple *table = this->table();
-    uword length = table->length();
-    Data *new_table_val = heap.new_tuple(length + 2);
-    if (is<AllocationFailed>(new_table_val)) return new_table_val;
-    Tuple *new_table = cast<Tuple>(new_table_val);
-    for (uword i = 0; i < length; i++)
-      new_table->set(i, table->get(i));
-    new_table->set(length, key);
-    new_table->set(length + 1, value);
-    this->set_table(new_table);
+    return raw_table;
   }
-  return this;
 }
 
-uword Dictionary::size() {
+
+uword HashMap::size() {
   return table()->length() / 2;
 }
 

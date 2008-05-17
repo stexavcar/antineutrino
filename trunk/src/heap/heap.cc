@@ -319,16 +319,16 @@ Data *Heap::new_singleton(Layout *type) {
   return allocate_object(Singleton::kSize, type);
 }
 
-Data *Heap::new_dictionary() {
+Data *Heap::new_hash_map() {
   Data *table_val = new_tuple(0);
   if (is<AllocationFailed>(table_val)) return table_val;
-  return new_dictionary(cast<Tuple>(table_val));
+  return new_hash_map(cast<Tuple>(table_val));
 }
 
-Data *Heap::new_dictionary(Tuple *table) {
-  Data *val = allocate_object(Dictionary::kSize, roots().dictionary_layout());
+Data *Heap::new_hash_map(Tuple *table) {
+  Data *val = allocate_object(HashMap::kSize, roots().hash_map_layout());
   if (is<AllocationFailed>(val)) return val;
-  Dictionary *result = cast<Dictionary>(val);
+  HashMap *result = cast<HashMap>(val);
   result->set_table(table);
   IF_PARANOID(result->validate());
   return result;

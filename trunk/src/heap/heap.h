@@ -57,9 +57,9 @@ public:
   
   Data *new_local_variable(Symbol *symbol);
   
-  Data *new_dictionary();
+  Data *new_hash_map();
   
-  Data *new_dictionary(Tuple *store);
+  Data *new_hash_map(Tuple *store);
   
   Data *new_lambda(uword argc, Value *code, Value *literals, Value *tree,
       Context *context);

@@ -4,10 +4,10 @@
 
 using namespace neutrino;
 
-void Test::dictionary_simple() {
+void Test::hash_map_simple() {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
-  Dictionary *dict = cast<Dictionary>(heap.new_dictionary());
+  HashMap *dict = cast<HashMap>(heap.new_hash_map());
   // { }
   CHECK_IS(Nothing, dict->get(cast<Value>(heap.new_string("flab"))));
   CHECK_IS(Nothing, dict->get(cast<Value>(heap.new_string("foo"))));
@@ -39,15 +39,15 @@ void Test::dictionary_simple() {
   CHECK(cast<Value>(heap.new_string("flab"))->equals(cast<Value>(dict->get(cast<Value>(heap.new_string("by"))))));
 }
 
-void Test::dictionary_iterator() {
+void Test::hash_map_iterator() {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
-  Dictionary *dict = cast<Dictionary>(heap.new_dictionary());
+  HashMap *dict = cast<HashMap>(heap.new_hash_map());
   const int kCount = 100;
   for (int i = 0; i < kCount; i++)
     dict->set(heap, Smi::from_int(i), Smi::from_int(i + 7));
-  Dictionary::Iterator iter(dict);
-  Dictionary::Iterator::Entry entry;
+  HashMap::Iterator iter(dict);
+  HashMap::Iterator::Entry entry;
   bool visited[kCount];
   for (int i = 0; i < kCount; i++)
     visited[i] = false;

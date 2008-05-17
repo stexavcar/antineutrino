@@ -8,7 +8,7 @@ import values
 
 def compile(files, out):
   asts = load_files(files)
-  toplevel = values.Dictionary()
+  toplevel = values.HashMap()
   roots = values.Tuple(length = image.Heap.kRootCount)
   load_into(asts, toplevel, roots)
   heap = image.Heap(roots)

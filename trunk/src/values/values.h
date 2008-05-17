@@ -542,16 +542,16 @@ public:
 DEFINE_REF_CLASS(Array);
 
 
-// ---------------------------
-// --- D i c t i o n a r y ---
-// ---------------------------
+// -----------------------
+// --- H a s h   M a p ---
+// -----------------------
 
-#define eDictionaryFields(VISIT, arg)                        \
+#define eHashMapFields(VISIT, arg)                        \
   VISIT(Tuple, table, Table, arg)
 
-class Dictionary : public Object {
+class HashMap : public Object {
 public:
-  eDictionaryFields(DECLARE_OBJECT_FIELD, 0)
+  eHashMapFields(DECLARE_OBJECT_FIELD, 0)
 
   uword size();
 
@@ -565,7 +565,7 @@ public:
       Entry() : key(NULL), value(NULL) { }
       Value *key, *value;
     };
-    inline Iterator(Dictionary *dict);
+    inline Iterator(HashMap *dict);
     inline bool next(Entry *entry);
   private:
     Tuple *table() { return table_; }
@@ -578,15 +578,15 @@ public:
   static const int kSize        = kTableOffset + kPointerSize;
 };
 
-template <> class ref_traits<Dictionary> : public ref_traits<Object> {
+template <> class ref_traits<HashMap> : public ref_traits<Object> {
 public:
-  eDictionaryFields(DECLARE_REF_FIELD, 0)
+  eHashMapFields(DECLARE_REF_FIELD, 0)
   inline ref<Value> get(RefStack &refs, ref<Value> key);
   inline void set(Heap &heap, ref<Value> key, ref<Value> value);
   inline uword size();
 };
 
-DEFINE_REF_CLASS(Dictionary);
+DEFINE_REF_CLASS(HashMap);
 
 
 // -------------------

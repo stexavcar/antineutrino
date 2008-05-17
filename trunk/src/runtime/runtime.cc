@@ -121,8 +121,8 @@ bool Runtime::install_loaded_roots(ref<Tuple> roots) {
 bool Runtime::install_object(ref<Object> root, ref<Object> changes) {
   InstanceType type = root.type();
   switch (type) {
-    case tDictionary:
-      return install_dictionary(cast<Dictionary>(root), cast<Dictionary>(changes));
+    case tHashMap:
+      return install_hash_map(cast<HashMap>(root), cast<HashMap>(changes));
     case tLayout:
       return install_layout(cast<Layout>(root), cast<Protocol>(changes));
     default:
@@ -131,14 +131,14 @@ bool Runtime::install_object(ref<Object> root, ref<Object> changes) {
   }
 }
 
-bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) {
+bool Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
   // First copy all elements into the tables so that we can iterate
   // through the elements independent of whether a gc occurs or not
   uword length = changes.size();
   ref<Tuple> keys = factory().new_tuple(length);
   ref<Tuple> values = factory().new_tuple(length);
-  Dictionary::Iterator iter(*changes);
-  Dictionary::Iterator::Entry entry;
+  HashMap::Iterator iter(*changes);
+  HashMap::Iterator::Entry entry;
   for (uword i = 0; i < length; i++) {
     bool next_result = iter.next(&entry);
     use(next_result); ASSERT(next_result);

@@ -1,9 +1,9 @@
 buffer-test.cc
 builtin-string-test.cc
 channel-test.cc
-dictionary-test.cc
 equality-test.cc
 forwarder-test.cc
+hash-map-test.cc
 heap-test.cc
 memory-test.cc
 platform-test.cc

@@ -17,6 +17,7 @@ void walk_dont_run() {
   cast<NTuple>(value);
 }
 
+
 void Test::tuple() {
   LocalRuntime runtime;
   
@@ -31,6 +32,7 @@ void Test::tuple() {
   stream.flush();
   use(raw_tup);
 }
+
 
 void Test::simple_objects() {
   LocalRuntime runtime;

@@ -1,5 +1,5 @@
-#ifndef _GLOBALS
-#define _GLOBALS
+#ifndef _UTILS_GLOBALS
+#define _UTILS_GLOBALS
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -70,4 +70,4 @@ static inline T max(T a, T b) {
   return (a < b) ? b : a;
 }
 
-#endif // _GLOBALS
+#endif // _UTILS_GLOBALS

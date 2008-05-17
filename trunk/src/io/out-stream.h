@@ -33,6 +33,10 @@ private:
 };
 
 
+/**
+ * A frozen heap is a chunk of memory that contains serialized
+ * objects.
+ */
 class FrozenHeap {
 public:
   FrozenHeap(Serializer &stream);

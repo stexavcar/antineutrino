@@ -48,7 +48,7 @@ GcSafe::GcSafe(Runtime &runtime)
     : runtime_(runtime) { }
 
 
-void GcSafe::set(ref<Dictionary> dict, ref<Value> key, ref<Value> value) {
+void GcSafe::set(ref<HashMap> dict, ref<Value> key, ref<Value> value) {
   DO_CHECKED(dict->set(runtime().heap(), *key, *value));
 }
 
@@ -117,8 +117,8 @@ ref<LiteralExpression> Factory::new_literal_expression(ref<Value> value) {
 }
 
 
-ref<Dictionary> Factory::new_dictionary() {
-  ALLOCATE_CHECKED(Dictionary, new_dictionary());
+ref<HashMap> Factory::new_hash_map() {
+  ALLOCATE_CHECKED(HashMap, new_hash_map());
 }
 
 

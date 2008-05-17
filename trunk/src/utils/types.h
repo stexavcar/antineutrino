@@ -63,7 +63,7 @@ class Code;
 class CodeGenerator;
 class Context;
 class Data;
-class Dictionary;
+class HashMap;
 class DoClause;
 class DoOnExpression;
 class ExtendedValueDTable;

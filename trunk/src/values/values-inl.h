@@ -459,26 +459,26 @@ void ref_traits<AbstractTuple>::set(uword index, ref<Value> value) {
 // --- D i c t i o n a r y ---
 // ---------------------------
 
-ref<Value> ref_traits<Dictionary>::get(RefStack &refs, ref<Value> value) {
+ref<Value> ref_traits<HashMap>::get(RefStack &refs, ref<Value> value) {
   Data *result = open(this)->get(*value);
   if (is<Nothing>(result)) return ref<Value>();
   else return refs.new_ref(cast<Value>(result));
 }
 
-void ref_traits<Dictionary>::set(Heap &heap, ref<Value> key, ref<Value> value) {
+void ref_traits<HashMap>::set(Heap &heap, ref<Value> key, ref<Value> value) {
   open(this)->set(heap, *key, *value);
 }
 
-uword ref_traits<Dictionary>::size() {
+uword ref_traits<HashMap>::size() {
   return open(this)->size();
 }
 
-Dictionary::Iterator::Iterator(Dictionary *dict)
+HashMap::Iterator::Iterator(HashMap *dict)
     : table_(dict->table())
     , index_(0) {
 }
 
-bool Dictionary::Iterator::next(Dictionary::Iterator::Entry *entry) {
+bool HashMap::Iterator::next(HashMap::Iterator::Entry *entry) {
   if (index() < table()->length()) {
     entry->key = table()->get(index());
     entry->value = table()->get(index() + 1);

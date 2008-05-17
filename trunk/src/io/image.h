@@ -170,7 +170,7 @@ public:
   DECLARE_IMAGE_FIELD(Lambda, lambda);
 };
 
-class FDictionary : public FObject {
+class FHashMap : public FObject {
 public:
   DECLARE_IMAGE_FIELD(Tuple, table);
 };

@@ -1,6 +1,7 @@
 #ifndef _PUBLIC_CHANNEL
 #define _PUBLIC_CHANNEL
 
+
 namespace neutrino {
 
 

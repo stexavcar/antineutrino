@@ -16,7 +16,7 @@
 
 
 #define eGeneratableObjectTypes(VISIT)                     \
-  VISIT(1,  Dictionary,            dictionary)             \
+  VISIT(1,  HashMap,            hash_map)             \
   VISIT(2,  Method,                method)                 \
   VISIT(3,  Protocol,              protocol)               \
   VISIT(4,  Task,                  task)                   \
@@ -28,7 +28,7 @@
 #define eObjectTypes(VISIT)                                \
   VISIT(8,  Layout,                layout)                 \
   VISIT(9,  String,                string)                 \
-  VISIT(10,  Tuple,                 tuple)                  \
+  VISIT(10, Tuple,                 tuple)                  \
   VISIT(11, Array,                 array)                  \
   VISIT(12, Void,                  void)                   \
   VISIT(13, Null,                  null)                   \
@@ -273,8 +273,8 @@
 #define eImageObjectConsts(VISIT)                                    \
   VISIT(0, Object,                LayoutOffset)                      \
   VISIT(1, Object,                HeaderSize)                        \
-  VISIT(1, Dictionary,            TableOffset)                       \
-  VISIT(2, Dictionary,            Size)                              \
+  VISIT(1, HashMap,            TableOffset)                       \
+  VISIT(2, HashMap,            Size)                              \
   VISIT(1, String,                LengthOffset)                      \
   VISIT(2, String,                HeaderSize)                        \
   VISIT(1, Code,                  LengthOffset)                      \
@@ -415,7 +415,7 @@
   VISIT(1,  Null,       nuhll,                         NullValue,             new_singleton(null_layout()))                  \
   VISIT(2,  True,       thrue,                         TrueValue,             new_singleton(true_layout()))                  \
   VISIT(3,  False,      fahlse,                        FalseValue,            new_singleton(false_layout()))                 \
-  VISIT(4,  Dictionary, toplevel,                      Toplevel,              new_dictionary())
+  VISIT(4,  HashMap, toplevel,                      Toplevel,              new_hash_map())
 
 #define eComplicatedRootLayouts(VISIT)                                                                                       \
   VISIT(5,  Layout,     layout_layout,                 Layout,                0)
@@ -429,7 +429,7 @@
   VISIT(11, Layout,     true_layout,                   True,                  allocate_empty_layout(tTrue))                  \
   VISIT(12, Layout,     false_layout,                  False,                 allocate_empty_layout(tFalse))                 \
   VISIT(13, Layout,     literal_expression_layout,     LiteralExpression,     allocate_empty_layout(tLiteralExpression))     \
-  VISIT(14, Layout,     dictionary_layout,             Dictionary,            allocate_empty_layout(tDictionary))            \
+  VISIT(14, Layout,     hash_map_layout,             HashMap,            allocate_empty_layout(tHashMap))            \
   VISIT(15, Layout,     lambda_layout,                 Lambda,                allocate_empty_layout(tLambda))                \
   VISIT(16, Layout,     buffer_layout,                 Buffer,                allocate_empty_layout(tBuffer))                \
   VISIT(17, Layout,     code_layout,                   Code,                  allocate_empty_layout(tCode))                  \

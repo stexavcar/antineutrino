@@ -242,10 +242,10 @@ class Layout(Object):
     return result
 
 
-class Dictionary(Object):
+class HashMap(Object):
 
   def __init__(self):
-    super(Dictionary, self).__init__()
+    super(HashMap, self).__init__()
     self.map_ = { }
 
   def map(self):
@@ -265,8 +265,8 @@ class Dictionary(Object):
       table[index] = String(key)
       table[index + 1] = value
       index += 2
-    result = heap.allocate(fields.FDictionary_Size, Smi(values.Dictionary.index))
-    result[fields.FDictionary_TableOffset] = table
+    result = heap.allocate(fields.FHashMap_Size, Smi(values.HashMap.index))
+    result[fields.FHashMap_TableOffset] = table
     return result
 
   def __str__(self):

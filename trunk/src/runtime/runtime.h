@@ -39,7 +39,7 @@ public:
   void report_load_error(ImageLoadStatus &info);
   bool install_loaded_roots(ref<Tuple> roots);
   bool install_object(ref<Object> root, ref<Object> changes);
-  bool install_dictionary(ref<Dictionary> root, ref<Dictionary> changes);
+  bool install_hash_map(ref<HashMap> root, ref<HashMap> changes);
   bool install_layout(ref<Layout> root, ref<Protocol> changes);
   void start();
 
