@@ -76,7 +76,7 @@ void Serializer::marshal_object_deep(FObject *obj) {
       uword length = that->length();
       for (uword i = 0; i < length; i++) {
         Value *elm = that->get_raw(i);
-        USE(elm);
+        use(elm);
       }
       break;
     }

@@ -115,6 +115,7 @@ private:
 
 
 SyntaxTree *CodeGenerator::resolve_unquote(UnquoteExpression *expr) {
+  UNREACHABLE();
   ref<QuoteTemplate> templ = current_quote();
   uword index = expr->index();
   Value *term = templ->unquotes()->get(index);
@@ -488,6 +489,7 @@ void Assembler<C>::load_raw_symbol(ref<Symbol> that) {
       __ keyword(lookup.keyword_info.index);
       break;
     default:
+      that.to_string().println();
       UNHANDLED(Category, lookup.category);
   }
 }

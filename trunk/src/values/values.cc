@@ -23,16 +23,16 @@ eSignalTypes(MAKE_SIGNAL_TYPE_CASE)
   }
 }
 
-const char *Layout::tag_name(uword tag) {
-  switch (tag) {
+#endif // DEBUG
+
+string Layout::name_for(InstanceType type) {
+  switch (type) {
 #define MAKE_TYPE_CASE(n, Name, info) case t##Name: return #Name;
 eDeclaredTypes(MAKE_TYPE_CASE)
 #undef MAKE_TYPE_CASE
     default: return "<illegal>";
   }
 }
-
-#endif // DEBUG
 
 MAKE_ENUM_INFO_HEADER(InstanceType)
 #define MAKE_ENTRY(n, Name, info) MAKE_ENUM_INFO_ENTRY(t##Name)
@@ -226,6 +226,12 @@ static void write_signal_short_on(Signal *obj, string_buffer &buf) {
   case Signal::sInternalError:
     buf.append("@<internal error>");
     break;
+  case Signal::sTypeMismatch: {
+    string expected = Layout::name_for(cast<TypeMismatch>(obj)->expected());
+    string found = Layout::name_for(cast<TypeMismatch>(obj)->found());
+    buf.printf("@<type mismatch: found % expected %>", found, expected);
+    break;
+  }
   default:
     UNHANDLED(Signal::Type, obj->type());
   }

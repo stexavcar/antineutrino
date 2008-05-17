@@ -23,6 +23,12 @@ protocol Identifier : Token {
 }
 
 
+protocol Number : Token {
+  def value?() -> true;
+  static def make(value) -> new Number() { value: value };
+}
+
+
 protocol Keyword : Token {
   def to_string() -> "#<keyword ${this.name}>";
   def term?(name) -> (name = this.name);
@@ -78,12 +84,22 @@ protocol Scanner {
       result := this.scan_identifier();
     } else if (delimiters ∋ this.current) {
       result := this.scan_delimiter();
+    } else if (this.current·digit?()) {
+      result := this.scan_number();
     } else {
       def char := this.current;
       raise unexpected_character(char);
     }
     this.skip_whitespace();
     return result;
+  }
+  
+  def scan_number() {
+    def start := this.pos;
+    while (this.current·digit?())
+      this.advance();
+    def end := this.pos;
+    return Number.make(this.substring(start .. end));
   }
   
   def scan_delimiter() {
@@ -106,7 +122,7 @@ protocol Scanner {
     while (this.current·ident_part?())
       this.advance();
     def end := this.pos;
-    def value := this.substring(start..end);
+    def value := this.substring(start .. end);
     if (keywords ∋ value) return Keyword.make(value);
     else return Identifier.make(value);
   }

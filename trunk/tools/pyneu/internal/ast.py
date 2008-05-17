@@ -27,6 +27,9 @@ class Symbol(object):
   def __repr__(self):
     return "$%s" % self.name_
 
+  def construct(self):
+    return Literal(self.quote())
+
   def quote(self):
     # We need to preserve the identity of this symbol when quoting,
     # so the result has to be cached so we can return if this symbol
@@ -40,7 +43,10 @@ class Arguments(SyntaxTree):
 
   def __init__(self, args, keywords, is_accessor):
     super(Arguments, self).__init__()
-    for arg in args: assert isinstance(arg, SyntaxTree)
+    for arg in args:
+      if not isinstance(arg, SyntaxTree):
+        print arg
+        assert False
     self.args_ = args
     self.keywords_ = keywords
     self.is_accessor_ = is_accessor
@@ -72,7 +78,7 @@ class Arguments(SyntaxTree):
   
   def construct(self):
     args = make_tuple([ s.construct() for s in self.args_ ])
-    return make_construct("Arguments", [args, values.LiteralExpression(values.EMPTY_TUPLE)])
+    return make_construct("Arguments", [args, Literal(values.EMPTY_TUPLE)])
 
   def quote(self):
     args = [ s.quote() for s in self.args_ ]
@@ -107,7 +113,7 @@ class Parameters(SyntaxTree):
     return len(self.params_)
   
   def construct(self):
-    params = make_tuple([ make_literal(s.quote()) for s in self.params_ ])
+    params = make_tuple([ p.construct() for p in self.params_ ])
     return make_construct("Parameters", [ make_literal(self.posc_), params ])
   
   def quote(self):
@@ -181,9 +187,9 @@ class Method(Declaration):
     params = self.lambda_.params()
     argc = len(params)
     is_accessor = params.is_accessor()
-    selector = values.LiteralExpression(values.Selector(self.name_, argc, [], is_accessor))
+    selector = Literal(values.Selector(self.name_, argc, [], is_accessor))
     lam = self.lambda_.construct()
-    return make_construct("MethodExpression", [ selector, lam, make_literal(values.FALSE) ])
+    return make_construct("MethodExpression", [ selector, lam, make_literal(self.is_static()) ])
 
   def quote(self):
     params = self.lambda_.params()
@@ -220,7 +226,7 @@ class Expression(SyntaxTree):
   
   def is_invoke(self):
     return False
-
+  
 
 class Lambda(Expression):
 
@@ -287,18 +293,22 @@ class Quote(Expression):
     self.value_ = value
     self.unquotes_ = unquotes
 
+  def construct(self):
+    return self.value_.construct().construct()
+
   def quote(self):
-    return self.value_.construct()
+    return self.value_.construct().quote()
 
 
 class Unquote(Expression):
 
-  def __init__(self, index):
+  def __init__(self, expr, index):
     super(Unquote, self).__init__()
+    self.expr_ = expr
     self.index_ = index
 
-  def quote(self):
-    return values.UnquoteExpression(self.index_)
+  def construct(self):
+    return self.expr_
 
 
 class Sequence(Expression):
@@ -368,7 +378,7 @@ class Protocol(Expression):
   
   def construct(self):
     members = make_tuple([ member.construct() for member in self.members_ ])
-    if self.super_name_: sup = values.GlobalVariable(self.super_name_)
+    if self.super_name_: sup = Global(self.super_name_)
     else: sup = make_literal(values.VOID)
     return make_construct("ProtocolExpression", [ make_literal(self.name_), members, sup ])
 
@@ -408,17 +418,16 @@ class Call(Expression):
 
 
 def make_construct(name, arg_list):
-  sel = values.Selector("new", len(arg_list), [], False)
-  args = values.Arguments(arg_list, {})
-  return values.InvokeExpression(values.GlobalVariable(name), sel, args)
+  args = Arguments(arg_list, {}, False)
+  return Invoke(Global(name), "new", args)
 
 
 def make_tuple(args):
-  return values.TupleExpression(args)
+  return Tuple(args)
 
 
 def make_literal(obj):
-  return values.LiteralExpression(to_literal(obj))
+  return Literal(obj)
 
 
 class Invoke(Expression):
@@ -452,7 +461,7 @@ class Invoke(Expression):
     recv = self.recv_.construct()
     args = self.args_.construct()
     is_accessor = self.args_.is_accessor()
-    sel = values.LiteralExpression(values.Selector(self.name_, len(self.args_), self.args_.keywords(), is_accessor))
+    sel = Literal(values.Selector(self.name_, len(self.args_), self.args_.keywords(), is_accessor))
     return make_construct("InvokeExpression", [recv, sel, args])
 
   def quote(self):
@@ -495,6 +504,8 @@ class Tuple(Expression):
   def __init__(self, exprs):
     super(Tuple, self).__init__()
     self.exprs_ = exprs
+    if (len(exprs) > 0) and isinstance(exprs[0], values.Symbol):
+      assert False
   
   def accept(self, visitor):
     pass
@@ -600,6 +611,9 @@ class This(Expression):
 
   def traverse(self, visitor):
     pass
+  
+  def construct(self):
+    return make_construct("ThisExpression", [])
 
   def quote(self):
     return values.ThisExpression()
@@ -781,7 +795,8 @@ def to_literal(value):
     else: return values.FALSE
   elif isinstance(value, SyntaxTree):
     return value.quote()
-  else: return value
+  else:
+    return value
 
 
 class Literal(Expression):
@@ -789,6 +804,9 @@ class Literal(Expression):
   def __init__(self, value):
     super(Literal, self).__init__()
     self.value_ = value
+  
+  def __repr__(self):
+    return "literal %s" % self.value_
 
   def accept(self, visitor):
     visitor.visit_literal(self)
@@ -800,7 +818,7 @@ class Literal(Expression):
     return to_literal(self.value_)
 
   def construct(self):
-    return make_construct("LiteralExpression", [ self.quote() ])
+    return make_construct("LiteralExpression", [ Literal(self.value_) ])
 
   def quote(self):
     return values.LiteralExpression(to_literal(self.value_))
@@ -871,7 +889,7 @@ class Local(Identifier):
     pass
   
   def construct(self):
-    return make_construct("LocalVariable", [ make_literal(self.symbol_.quote()) ])
+    return make_construct("LocalVariable", [ self.symbol_.construct() ])
 
   def quote(self):
     return values.LocalVariable(self.symbol_.quote())

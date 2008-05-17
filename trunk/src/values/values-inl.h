@@ -213,7 +213,7 @@ template <class C> Data *convert_object(Value *obj) {
   if (is<Forwarder>(obj)) {
     return to<C>(cast<Forwarder>(obj)->descriptor()->target());
   } else {
-    return Nothing::make();
+    return TypeMismatch::make(ValueInfo<C>::kTag, obj->type());
   }
 }
 
@@ -617,6 +617,22 @@ AllocationFailed *AllocationFailed::make(int size) {
 InternalError *InternalError::make(int code) {
   Signal *result = ValuePointer::tag_as_signal(sInternalError, code);
   return cast<InternalError>(result);
+}
+
+TypeMismatch *TypeMismatch::make(InstanceType expected, InstanceType found) {
+  STATIC_CHECK(ValuePointer::kSignalPayloadSize >= 16);
+  ASSERT_LT(expected, (1 << 8));
+  ASSERT_LT(found, (1 << 8));
+  Signal *result = ValuePointer::tag_as_signal(sTypeMismatch, expected << 8 | found);
+  return cast<TypeMismatch>(result);
+}
+
+InstanceType TypeMismatch::expected() {
+  return static_cast<InstanceType>(payload() >> 8);
+}
+
+InstanceType TypeMismatch::found() {
+  return static_cast<InstanceType>(payload() & 0xFF);
 }
 
 Nothing *Nothing::make() {

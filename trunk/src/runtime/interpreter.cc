@@ -407,7 +407,7 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
         if (is<AllocationFailed>(value)) {
           RETURN(value);
         } else {
-          Conditions::get().error_occurred("Problem executing builtin %i", index);
+          Conditions::get().error_occurred("Problem executing builtin %: %", index, value);
         }
       } else {
         frame.push(cast<Value>(value));

@@ -141,7 +141,7 @@ bool Runtime::install_dictionary(ref<Dictionary> root, ref<Dictionary> changes) 
   Dictionary::Iterator::Entry entry;
   for (uword i = 0; i < length; i++) {
     bool next_result = iter.next(&entry);
-    USE(next_result); ASSERT(next_result);
+    use(next_result); ASSERT(next_result);
     keys->set(i, entry.key);
     values->set(i, entry.value);
   }

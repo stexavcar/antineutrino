@@ -31,3 +31,10 @@ void Test::forward_pointers() {
   Object *target = ptr->target();
   CHECK(code == target);
 }
+
+void Test::type_mismatch() {
+  Signal *val = TypeMismatch::make(tString, tTuple);
+  CHECK_IS(TypeMismatch, val);
+  CHECK_EQ(tString, cast<TypeMismatch>(val)->expected());
+  CHECK_EQ(tTuple, cast<TypeMismatch>(val)->found());
+}

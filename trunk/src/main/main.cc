@@ -57,7 +57,7 @@ void Main::main(list<char*> &args) {
     string file = files[i];
     own_ptr<Image> image(read_image(file));
     bool loaded = runtime.load_image(**image);
-    USE(loaded); ASSERT(loaded);
+    use(loaded); ASSERT(loaded);
   }
   build_arguments(runtime);
   runtime.start();

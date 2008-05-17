@@ -29,7 +29,7 @@ void Test::tuple() {
   Serializer stream;
   RawFValue *raw_tup = stream.marshal(tup);
   stream.flush();
-  USE(raw_tup);
+  use(raw_tup);
 }
 
 void Test::simple_objects() {

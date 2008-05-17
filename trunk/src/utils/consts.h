@@ -22,54 +22,55 @@
   VISIT(4,  Task,                  task)                   \
   VISIT(5,  Signature,             signature)              \
   VISIT(6,  Selector,              selector)               \
-  VISIT(70, Cell,                  cell)
+  VISIT(7,  Cell,                  cell)
 
 
 #define eObjectTypes(VISIT)                                \
-  VISIT(7,  Layout,                layout)                 \
-  VISIT(8,  String,                string)                 \
-  VISIT(9,  Tuple,                 tuple)                  \
-  VISIT(10, Array,                 array)                  \
-  VISIT(11, Void,                  void)                   \
-  VISIT(12, Null,                  null)                   \
-  VISIT(13, True,                  true)                   \
-  VISIT(14, False,                 false)                  \
-  VISIT(15, Lambda,                lambda)                 \
-  VISIT(16, Buffer,                buffer)                 \
-  VISIT(17, Code,                  code)                   \
-  VISIT(18, Instance,              instance)               \
-  VISIT(19, Stack,                 stack)                  \
-  VISIT(20, Context,               context)                \
-  VISIT(21, ForwarderDescriptor,   forwarder_descriptor)   \
-  VISIT(22, Channel,               channel)                \
-  VISIT(51, Symbol,                symbol)                 \
+  VISIT(8,  Layout,                layout)                 \
+  VISIT(9,  String,                string)                 \
+  VISIT(10,  Tuple,                 tuple)                  \
+  VISIT(11, Array,                 array)                  \
+  VISIT(12, Void,                  void)                   \
+  VISIT(13, Null,                  null)                   \
+  VISIT(14, True,                  true)                   \
+  VISIT(15, False,                 false)                  \
+  VISIT(16, Lambda,                lambda)                 \
+  VISIT(17, Buffer,                buffer)                 \
+  VISIT(18, Code,                  code)                   \
+  VISIT(19, Instance,              instance)               \
+  VISIT(20, Stack,                 stack)                  \
+  VISIT(21, Context,               context)                \
+  VISIT(22, ForwarderDescriptor,   forwarder_descriptor)   \
+  VISIT(23, Channel,               channel)                \
+  VISIT(24, Symbol,                symbol)                 \
   eGeneratableObjectTypes(VISIT)                           \
   eSyntaxTreeTypes(VISIT)
 
 
 #define eVirtualTypes(VISIT)                               \
-  VISIT(23, Object,                object)                 \
-  VISIT(24, Value,                 0)                      \
-  VISIT(25, AbstractBuffer,        0)                      \
-  VISIT(26, AbstractTuple,         0)                      \
-  VISIT(27, Singleton,             0)                      \
-  VISIT(28, SyntaxTree,            0)                      \
-  VISIT(29, Immediate,             0)                      \
-  VISIT(30, Bool,                  0)                      \
-  VISIT(31, Root,                  0)
+  VISIT(25, Object,                object)                 \
+  VISIT(26, Value,                 0)                      \
+  VISIT(27, AbstractBuffer,        0)                      \
+  VISIT(28, AbstractTuple,         0)                      \
+  VISIT(29, Singleton,             0)                      \
+  VISIT(30, SyntaxTree,            0)                      \
+  VISIT(31, Immediate,             0)                      \
+  VISIT(32, Bool,                  0)                      \
+  VISIT(33, Root,                  0)
 
 
 #define eSignalTypes(VISIT)                                \
-  VISIT(32, AllocationFailed,      0)                      \
-  VISIT(33, InternalError,         0)                      \
-  VISIT(34, Nothing,               0)
+  VISIT(34, AllocationFailed,      0)                      \
+  VISIT(35, InternalError,         0)                      \
+  VISIT(36, Nothing,               0)                      \
+  VISIT(37, TypeMismatch,          0)
 
 
 #define eValueTypes(VISIT)                                 \
-  VISIT(35, Smi,                   smi)                    \
-  VISIT(36, Signal,                0)                      \
-  VISIT(37, ForwardPointer,        0)                      \
-  VISIT(38, Forwarder,             0)                      \
+  VISIT(38, Smi,                   smi)                    \
+  VISIT(39, Signal,                0)                      \
+  VISIT(40, ForwardPointer,        0)                      \
+  VISIT(41, Forwarder,             0)                      \
   eSignalTypes(VISIT)                                      \
   eObjectTypes(VISIT)
 
@@ -80,40 +81,40 @@
 
 
 #define eSyntaxTreeTypes(VISIT)                            \
-  VISIT(39, BuiltinCall,           builtin_call)           \
-  VISIT(40, UnquoteExpression,     unquote_expression)     \
-  VISIT(41, QuoteTemplate,         quote_template)         \
-  VISIT(62, Arguments,             arguments)              \
-  VISIT(61, InstantiateExpression, instantiate_expression) \
-  VISIT(56, InterpolateExpression, interpolate_expression) \
-  VISIT(53, QuoteExpression,       quote_expression)       \
-  VISIT(66, Parameters,            parameters)             \
+  VISIT(42, BuiltinCall,           builtin_call)           \
+  VISIT(43, UnquoteExpression,     unquote_expression)     \
+  VISIT(44, QuoteTemplate,         quote_template)         \
+  VISIT(45, Arguments,             arguments)              \
+  VISIT(46, InstantiateExpression, instantiate_expression) \
+  VISIT(47, InterpolateExpression, interpolate_expression) \
+  VISIT(48, QuoteExpression,       quote_expression)       \
+  VISIT(49, Parameters,            parameters)             \
   eSimpleSyntaxTreeTypes(VISIT)
 
 
 #define eSimpleSyntaxTreeTypes(VISIT)                      \
-  VISIT(42, LiteralExpression,     literal_expression)     \
-  VISIT(43, InvokeExpression,      invoke_expression)      \
-  VISIT(44, ProtocolExpression,    protocol_expression)    \
-  VISIT(45, ReturnExpression,      return_expression)      \
-  VISIT(46, MethodExpression,      method_expression)      \
-  VISIT(47, SequenceExpression,    sequence_expression)    \
-  VISIT(48, TupleExpression,       tuple_expression)       \
-  VISIT(49, GlobalVariable,        global_variable)        \
-  VISIT(50, CallExpression,        call_expression)        \
-  VISIT(52, ConditionalExpression, conditional_expression) \
-  VISIT(54, ThisExpression,        this_expression)        \
-  VISIT(55, LambdaExpression,      lambda_expression)      \
-  VISIT(57, LocalDefinition,       local_definition)       \
-  VISIT(58, RaiseExpression,       raise_expression)       \
-  VISIT(59, OnClause,              on_clause)              \
-  VISIT(60, DoOnExpression,        do_on_expression)       \
-  VISIT(63, TaskExpression,        task_expression)        \
-  VISIT(64, YieldExpression,       yield_expression)       \
-  VISIT(65, Assignment,            assignment)             \
-  VISIT(67, WhileExpression,       while_expression)       \
-  VISIT(68, SuperExpression,       super_expression)       \
-  VISIT(69, LocalVariable,         local_variable)
+  VISIT(50, LiteralExpression,     literal_expression)     \
+  VISIT(51, InvokeExpression,      invoke_expression)      \
+  VISIT(52, ProtocolExpression,    protocol_expression)    \
+  VISIT(53, ReturnExpression,      return_expression)      \
+  VISIT(54, MethodExpression,      method_expression)      \
+  VISIT(55, SequenceExpression,    sequence_expression)    \
+  VISIT(56, TupleExpression,       tuple_expression)       \
+  VISIT(57, GlobalVariable,        global_variable)        \
+  VISIT(58, CallExpression,        call_expression)        \
+  VISIT(59, ConditionalExpression, conditional_expression) \
+  VISIT(60, ThisExpression,        this_expression)        \
+  VISIT(61, LambdaExpression,      lambda_expression)      \
+  VISIT(62, LocalDefinition,       local_definition)       \
+  VISIT(63, RaiseExpression,       raise_expression)       \
+  VISIT(64, OnClause,              on_clause)              \
+  VISIT(65, DoOnExpression,        do_on_expression)       \
+  VISIT(66, TaskExpression,        task_expression)        \
+  VISIT(67, YieldExpression,       yield_expression)       \
+  VISIT(68, Assignment,            assignment)             \
+  VISIT(69, WhileExpression,       while_expression)       \
+  VISIT(70, SuperExpression,       super_expression)       \
+  VISIT(71, LocalVariable,         local_variable)
 
 
 #define eGeneratableTypes(VISIT)                           \
@@ -537,48 +538,49 @@
  * implementation must be added in builtins.cc.
  */
 #define eBuiltinMethods(VISIT)                                       \
-  VISIT(0,  string,              length,      "||")                  \
-  VISIT(1,  string,              eq,          "=")                   \
-  VISIT(2,  string,              plus,        "+")                   \
-  VISIT(3,  string,              get,         "[]")                  \
-  VISIT(4,  string,              hash,        "hash")                \
-  VISIT(10, smi,                 plus,        "+")                   \
-  VISIT(11, smi,                 minus,       "-")                   \
-  VISIT(12, smi,                 times,       "×")                   \
-  VISIT(13, smi,                 divide,      "÷")                   \
-  VISIT(14, smi,                 abs,         "||")                  \
-  VISIT(15, smi,                 less,        "<")                   \
-  VISIT(16, smi,                 modulo,      "%")                   \
-  VISIT(20, object,              eq,          "=")                   \
-  VISIT(21, object,              to_string,   "to_string")           \
-  VISIT(30, protocol_expression, evaluate,    "evaluate")            \
-  VISIT(40, protocol,            new,         "new")                 \
-  VISIT(41, tuple,               eq,          "=")                   \
-  VISIT(46, tuple,               get,         "[]")                  \
-  VISIT(47, tuple,               length,      "||")                  \
-  VISIT(42, lambda,              disassemble, "disassemble")         \
-  VISIT(43, lambda_expression,   params,      "parameters")          \
-  VISIT(44, lambda_expression,   body,        "body")                \
-  VISIT(45, channel,             send,        "send")                \
-  VISIT(49, array,               get,         "[]")                  \
-  VISIT(51, array,               length,      "||")                  \
-  VISIT(52, array,               set,         "[]:=")                \
+  VISIT(0,  string,                 length,      "||")               \
+  VISIT(1,  string,                 eq,          "=")                \
+  VISIT(2,  string,                 plus,        "+")                \
+  VISIT(3,  string,                 get,         "[]")               \
+  VISIT(4,  string,                 hash,        "hash")             \
+  VISIT(10, smi,                    plus,        "+")                \
+  VISIT(11, smi,                    minus,       "-")                \
+  VISIT(12, smi,                    times,       "×")                \
+  VISIT(13, smi,                    divide,      "÷")                \
+  VISIT(14, smi,                    abs,         "||")               \
+  VISIT(15, smi,                    less,        "<")                \
+  VISIT(16, smi,                    modulo,      "%")                \
+  VISIT(20, object,                 eq,          "=")                \
+  VISIT(21, object,                 to_string,   "to_string")        \
+  VISIT(30, protocol_expression,    evaluate,    "evaluate")         \
+  VISIT(40, protocol,               new,         "new")              \
+  VISIT(41, tuple,                  eq,          "=")                \
+  VISIT(46, tuple,                  get,         "[]")               \
+  VISIT(47, tuple,                  length,      "||")               \
+  VISIT(42, lambda,                 disassemble, "disassemble")      \
+  VISIT(43, lambda_expression,      params,      "parameters")       \
+  VISIT(44, lambda_expression,      body,        "body")             \
+  VISIT(45, channel,                send,        "send")             \
+  VISIT(49, array,                  get,         "[]")               \
+  VISIT(51, array,                  length,      "||")               \
+  VISIT(52, array,                  set,         "[]:=")             \
   \
-  VISIT(60, invoke_expression,   new,         "new")                 \
-  VISIT(61, selector,            new,         "new")                 \
-  VISIT(62, literal_expression,  new,         "new")                 \
-  VISIT(63, arguments,           new,         "new")                 \
-  VISIT(64, protocol_expression, new,         "new")                 \
-  VISIT(65, parameters,          new,         "new")                 \
-  VISIT(66, return_expression,   new,         "new")                 \
-  VISIT(67, lambda_expression,   new,         "new")                 \
-  VISIT(68, method_expression,   new,         "new")                 \
-  VISIT(69, sequence_expression, new,         "new")                 \
-  VISIT(70, tuple_expression,    new,         "new")                 \
-  VISIT(71, global_variable,     new,         "new")                 \
-  VISIT(72, call_expression,     new,         "new")                 \
-  VISIT(73, local_variable,      new,         "new")                 \
-  VISIT(74, conditional_expression, new,      "new")
+  VISIT(60, invoke_expression,      new,         "new")              \
+  VISIT(61, selector,               new,         "new")              \
+  VISIT(62, literal_expression,     new,         "new")              \
+  VISIT(63, arguments,              new,         "new")              \
+  VISIT(64, protocol_expression,    new,         "new")              \
+  VISIT(65, parameters,             new,         "new")              \
+  VISIT(66, return_expression,      new,         "new")              \
+  VISIT(67, lambda_expression,      new,         "new")              \
+  VISIT(68, method_expression,      new,         "new")              \
+  VISIT(69, sequence_expression,    new,         "new")              \
+  VISIT(70, tuple_expression,       new,         "new")              \
+  VISIT(71, global_variable,        new,         "new")              \
+  VISIT(72, call_expression,        new,         "new")              \
+  VISIT(73, local_variable,         new,         "new")              \
+  VISIT(74, conditional_expression, new,         "new")              \
+  VISIT(75, this_expression,        new,         "new")
 
 
 // ---------------------------------------

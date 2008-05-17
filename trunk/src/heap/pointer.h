@@ -107,15 +107,14 @@ public:
   
   static const uword kUninitialized = 0xFeedDead;
 
-private:
-  
 #define MASK(value) ((1 << value) - 1)
 
   static const uword kSmiTagSize          = 2;
   static const uword kObjectTagSize       = 2;
   static const uword kForwarderTagSize    = 2;
-  static const uword kSignalTypeSize      = 2;
-  static const uword kSignalPayloadSize   = 28;
+
+  static const uword kSignalTypeSize      = 4;
+  static const uword kSignalPayloadSize   = (kBitsPerByte * kWordSize) - kObjectTagSize - kSignalTypeSize;
   
   static const uword kObjectAlignmentSize = kObjectTagSize;
   static const uword kObjectAlignmentMask = MASK(kObjectAlignmentSize);

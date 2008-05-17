@@ -47,10 +47,11 @@ static const bool kParanoid = false;
 #endif
 
 template <typename T>
-static inline void USE(T t) { }
+static inline void use(T t) { }
 
 static const uword kPointerSize = sizeof(void*);
 static const uword kWordSize = sizeof(word);
+static const uword kBitsPerByte = 8;
 
 static const bool kDebugMode = IF(IS_DEBUG, true, false);
 

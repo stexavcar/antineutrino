@@ -170,7 +170,7 @@ void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
     }
     case tContext: {
       FContext *img = image_raw_cast<FContext>(obj);
-      USE(img);
+      use(img);
       Context *context = cast<Context>(heap.new_context());
       obj->point_forward(context);
       break;
@@ -265,7 +265,7 @@ void Image::fixup_shallow_object(FObject *obj, ImageContext &info) {
       F##Name *img = image_cast<F##Name>(obj, info, #Name);          \
       if (info.has_error()) return;                                  \
       Name *heap_obj = cast<Name>(img->forward_pointer());           \
-      USE(heap_obj);                                                 \
+      use(heap_obj);                                                 \
       e##Name##Fields(TRANSFER_FIELD, Name)                          \
       break;                                                         \
     }

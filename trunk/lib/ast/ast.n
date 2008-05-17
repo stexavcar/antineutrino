@@ -72,8 +72,11 @@ internal protocol ConditionalExpression : Expression {
   static internal def new(cond, then_part, else_part);
 }
 
+internal protocol ThisExpression : Expression {
+  static internal def new();
+}
+
 internal protocol Symbol : Expression { }
-internal protocol ThisExpression : Expression { }
 internal protocol LocalDefinition : Expression { }
 internal protocol QuoteExpression : Expression { }
 internal protocol BuiltinCall : Expression { }

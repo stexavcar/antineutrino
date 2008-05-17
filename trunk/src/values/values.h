@@ -698,7 +698,7 @@ public:
   Data *clone(Heap &heap);
 
   IF_DEBUG(static uword tag_of(Data *value));
-  IF_DEBUG(static const char *tag_name(uword tag));
+  static string name_for(InstanceType type);
 
   static const char *layout_name(uword tag);
   static const uword kInstanceTypeOffset       = Object::kHeaderSize;
@@ -744,6 +744,13 @@ public:
 class InternalError : public Signal {
 public:
   static inline InternalError *make(int code);
+};
+
+class TypeMismatch : public Signal {
+public:
+  inline InstanceType expected();
+  inline InstanceType found();
+  static inline TypeMismatch *make(InstanceType expected, InstanceType found);
 };
 
 class Nothing : public Signal {

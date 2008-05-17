@@ -421,6 +421,7 @@ Data *Builtins::close(BuiltinArguments &args) {
 #define MAKE_AST_CONSTRUCTOR(Type, __type__)                         \
 Data *Builtins::__type__##_new(BuiltinArguments &args) {             \
   int __offset__ = 0;                                                \
+  use(__offset__);                                                   \
   e##Type##Fields(FETCH_ARG, 0)                                      \
   Data *__value__ = args.runtime().heap().allocate_##__type__();     \
   if (is<AllocationFailed>(__value__)) return __value__;             \
@@ -444,9 +445,11 @@ MAKE_AST_CONSTRUCTOR(GlobalVariable, global_variable)
 MAKE_AST_CONSTRUCTOR(CallExpression, call_expression)
 MAKE_AST_CONSTRUCTOR(LocalVariable, local_variable)
 MAKE_AST_CONSTRUCTOR(ConditionalExpression, conditional_expression)
+MAKE_AST_CONSTRUCTOR(ThisExpression, this_expression)
 
 #undef FETCH_ARG
 #undef SET_FIELD
+#undef MAKE_AST_CONSTRUCTOR
 
 
 } // namespace neutrino

@@ -675,7 +675,7 @@ class Parser(object):
     self.quoter_ = current_quoter
     self.expect_delimiter(u'›')
     index = current_quoter.register_unquoted(expr)
-    return ast.Unquote(index)
+    return ast.Unquote(expr, index)
 
   def tuple(self):
     self.expect_delimiter('[')
