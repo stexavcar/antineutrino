@@ -2,6 +2,7 @@
 
 #include "heap/memory-inl.h"
 #include "monitor/monitor-inl.h"
+#include "main/options.h"
 #include "values/values-inl.h"
 
 namespace neutrino {
@@ -80,6 +81,7 @@ void FieldMigrator::visit_field(Value **field) {
 
 void Memory::collect_garbage(Runtime &runtime) {
   ASSERT_C(cnDisallowed, allow_garbage_collection());
+  if (Options::trace_gc) Log::get().info("Collecting garbage", elms());
   SemiSpace &from_space = young_space();
   SemiSpace *to_space = new SemiSpace(kSize);
   FieldMigrator migrator(from_space, *to_space);

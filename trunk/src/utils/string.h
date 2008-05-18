@@ -62,6 +62,7 @@ private:
  */
 class fmt_elm {
 public:
+  fmt_elm() : tag_(eEmpty) { }
   fmt_elm(double value) : tag_(eDouble) { value_.u_double = value; }
   fmt_elm(uint16_t value) : tag_(eInt) { value_.u_int = value; }
   fmt_elm(int16_t value) : tag_(eInt) { value_.u_int = value; }
@@ -69,26 +70,116 @@ public:
   fmt_elm(int32_t value) : tag_(eInt) { value_.u_int = value; }
   fmt_elm(uint64_t value) : tag_(eInt) { value_.u_int = static_cast<word>(value); }
   fmt_elm(int64_t value) : tag_(eInt) { value_.u_int = static_cast<word>(value); }
-  fmt_elm(const char *value) : tag_(eString) { value_.u_string = value; }
-  fmt_elm(string value) : tag_(eString) { value_.u_string = value.chars(); }
+  fmt_elm(const char *value) : tag_(eCStr) { value_.u_c_str = value; }
+  fmt_elm(const string &value) : tag_(eString) { value_.u_string = &value; }
   fmt_elm(Data *value) : tag_(eObject) { value_.u_object = value; }
   /**
    * Prints this element on the specified buffer.  If the params
    * string is non-null it will be used to configure how this
    * element is printed.
    */
-  void print_on(string_buffer &buf, string params);
-  void print_int_on(string_buffer &buf, string params);
+  void print_on(string_buffer &buf, string params) const;
+  void print_int_on(string_buffer &buf, string params) const;
 private:
-  enum Tag { eInt, eString, eDouble, eObject };
+  enum Tag { eInt, eCStr, eString, eDouble, eObject, eEmpty };
   Tag tag_;
   union {
     word u_int;
-    const char *u_string;
+    const char *u_c_str;
+    const string *u_string;
     double u_double;
     Data *u_object;
   } value_;
 };
+
+
+class fmt_elms {
+public:
+  fmt_elms(uword size) : size_(size) { }
+  uword size() const { return size_; }
+  virtual const fmt_elm &operator[](uword index) const = 0;
+private:
+  uword size_;  
+};
+
+
+template <int n>
+class fmt_elms_impl : public fmt_elms {
+public:
+  fmt_elms_impl(uword size) : fmt_elms(size) { }
+  virtual const fmt_elm &operator[](uword index) const { return *(elms_[index]); }
+  const fmt_elm *elms_[n];
+};
+
+
+static inline fmt_elms_impl<1> elms() {
+  return fmt_elms_impl<1>(0);
+}
+
+
+static inline fmt_elms_impl<1> elms(const fmt_elm &elm) {
+  fmt_elms_impl<1> result(1);
+  result.elms_[0] = &elm;
+  return result;
+}
+
+
+static inline fmt_elms_impl<2> elms(const fmt_elm &elm1,
+    const fmt_elm &elm2) {
+  fmt_elms_impl<2> result(2);
+  result.elms_[0] = &elm1;
+  result.elms_[1] = &elm2;
+  return result;
+}
+
+
+static inline fmt_elms_impl<3> elms(const fmt_elm &elm1,
+    const fmt_elm &elm2, const fmt_elm &elm3) {
+  fmt_elms_impl<3> result(3);
+  result.elms_[0] = &elm1;
+  result.elms_[1] = &elm2;
+  result.elms_[2] = &elm3;
+  return result;
+}
+
+
+static inline fmt_elms_impl<4> elms(const fmt_elm &elm1,
+    const fmt_elm &elm2, const fmt_elm &elm3, const fmt_elm &elm4) {
+  fmt_elms_impl<4> result(4);
+  result.elms_[0] = &elm1;
+  result.elms_[1] = &elm2;
+  result.elms_[2] = &elm3;
+  result.elms_[3] = &elm4;
+  return result;
+}
+
+
+static inline fmt_elms_impl<5> elms(const fmt_elm &elm1,
+    const fmt_elm &elm2, const fmt_elm &elm3, const fmt_elm &elm4,
+    const fmt_elm &elm5) {
+  fmt_elms_impl<5> result(5);
+  result.elms_[0] = &elm1;
+  result.elms_[1] = &elm2;
+  result.elms_[2] = &elm3;
+  result.elms_[3] = &elm4;
+  result.elms_[4] = &elm5;
+  return result;
+}
+
+
+static inline fmt_elms_impl<6> elms(const fmt_elm &elm1,
+    const fmt_elm &elm2, const fmt_elm &elm3, const fmt_elm &elm4,
+    const fmt_elm &elm5, const fmt_elm &elm6) {
+  fmt_elms_impl<6> result(6);
+  result.elms_[0] = &elm1;
+  result.elms_[1] = &elm2;
+  result.elms_[2] = &elm3;
+  result.elms_[3] = &elm4;
+  result.elms_[4] = &elm5;
+  result.elms_[5] = &elm6;
+  return result;
+}
+
 
 /**
  * An extensible buffer for building up strings.
@@ -117,25 +208,8 @@ public:
    * Writes the specified string to this buffer, formatted using the
    * specified elements.
    */
-  void printf(string format, list<fmt_elm> args);
+  void printf(string format, const fmt_elms &args);
   
-  /**
-   * Convenience methods for calling printf.  These allow printf to be
-   * called directly with integers, strings, and what have you,
-   * because they are implicitly wrapped by the element constructors.
-   */
-  void printf(string format, fmt_elm arg1);
-  void printf(string format, fmt_elm arg1, fmt_elm arg2);
-  void printf(string format, fmt_elm arg1, fmt_elm arg2, fmt_elm arg3);
-  void printf(string format, fmt_elm arg1, fmt_elm arg2, fmt_elm arg3,
-      fmt_elm arg4);
-  void printf(string format, fmt_elm arg1, fmt_elm arg2, fmt_elm arg3,
-      fmt_elm arg4, fmt_elm arg5);
-  void printf(string format, fmt_elm arg1, fmt_elm arg2, fmt_elm arg3,
-      fmt_elm arg4, fmt_elm arg5, fmt_elm arg6);
-  void printf(string format, fmt_elm arg1, fmt_elm arg2, fmt_elm arg3,
-      fmt_elm arg4, fmt_elm arg5, fmt_elm arg6, fmt_elm arg7);
-
 private:
   void ensure_capacity(int required);
   char *data_;

@@ -8,6 +8,13 @@ namespace neutrino {
 
 static Conditions kDefaultConditions;
 Conditions *Conditions::current_ = NULL;
+Log Log::instance_;
+
+void Log::info(string format, const fmt_elms &args) {
+  string_buffer buf;
+  buf.printf(format, args);
+  buf.raw_string().println();
+}
 
 Conditions &Conditions::get() {
   if (current_ == NULL) return kDefaultConditions;
@@ -40,16 +47,16 @@ void Conditions::check_is_failed(string file_name, int line_number,
   uword value_tag = Layout::tag_of(data);
   string value_type_name = Layout::layout_name(value_tag);
   string_buffer buf;
-  buf.printf(kErrorMessage, file_name, line_number, type_name,
-      value_source, expected_name, value_type_name);
+  buf.printf(kErrorMessage, elms(file_name, line_number, type_name,
+      value_source, expected_name, value_type_name));
 #else // DEBUG
   static string kErrorMessage =
     "#\n"
     "# %:%: CHECK_IS(%, %) failed\n"
     "#\n";
   string_buffer buf;
-  buf.printf(kErrorMessage, file_name, line_number, type_name,
-      value_source);
+  buf.printf(kErrorMessage, elms(file_name, line_number, type_name,
+      value_source));
 #endif // DEBUG  
   abort(buf.raw_string());
 }
@@ -62,7 +69,7 @@ void Conditions::check_failed(string file_name, int line_number,
     "# %:%: CHECK(%) failed\n"
     "#\n";
   string_buffer buf;
-  buf.printf(kErrorMessage, file_name, line_number, source);
+  buf.printf(kErrorMessage, elms(file_name, line_number, source));
   abort(buf.raw_string());
 }
 
@@ -77,8 +84,8 @@ void Conditions::check_eq_failed(string file_name, int line_number,
     "#   found: %\n"
     "#\n";
   string_buffer buf;
-  buf.printf(kErrorMessage, file_name, line_number, expected_source,
-      value_source, expected, value);
+  buf.printf(kErrorMessage, elms(file_name, line_number, expected_source,
+      value_source, expected, value));
   abort(buf.raw_string());
 }
 
@@ -93,8 +100,8 @@ void Conditions::check_eq_failed(string file_name, int line_number,
     "#   found: %\n"
     "#\n";
   string_buffer buf;
-  buf.printf(kErrorMessage, file_name, line_number, expected_source,
-      value_source, expected, value);
+  buf.printf(kErrorMessage, elms(file_name, line_number, expected_source,
+      value_source, expected, value));
   abort(buf.raw_string());
 }
 
@@ -109,8 +116,8 @@ void Conditions::check_ge_failed(string file_name, int line_number,
     "#   limit: %\n"
     "#\n";
   string_buffer buf;
-  buf.printf(kErrorMessage, file_name, line_number, value_source,
-      limit_source, value, limit);
+  buf.printf(kErrorMessage, elms(file_name, line_number, value_source,
+      limit_source, value, limit));
   abort(buf.raw_string());
 }
 
@@ -125,8 +132,8 @@ void Conditions::check_lt_failed(string file_name, int line_number,
     "#   limit: %\n"
     "#\n";
   string_buffer buf;
-  buf.printf(kErrorMessage, file_name, line_number, value_source,
-      limit_source, value, limit);
+  buf.printf(kErrorMessage, elms(file_name, line_number, value_source,
+      limit_source, value, limit));
   abort(buf.raw_string());
 }
 
@@ -141,9 +148,9 @@ void Conditions::check_eq_failed(string file_name, int line_number,
     "#   found: %{x}\n"
     "#\n";
   string_buffer buf;
-  buf.printf(kErrorMessage, file_name, line_number, expected_source,
+  buf.printf(kErrorMessage, elms(file_name, line_number, expected_source,
       value_source, reinterpret_cast<word>(expected),
-      reinterpret_cast<word>(value));
+      reinterpret_cast<word>(value)));
   abort(buf.raw_string());
 }
 
@@ -155,7 +162,7 @@ void Conditions::unreachable(string file_name, int line_number,
     "# %:%: Unreachable code\n"
     "#\n";
   string_buffer buf;
-  buf.printf(kErrorMessage, file_name, line_number);
+  buf.printf(kErrorMessage, elms(file_name, line_number));
   abort(buf.raw_string());
 }
 
@@ -169,38 +176,14 @@ void Conditions::unhandled(string file_name, int line_number,
     "# %:%: Unhandled % value %\n"
     "#\n";
   string_buffer buf;
-  buf.printf(kErrorMessage, file_name, line_number, enum_name, name);
+  buf.printf(kErrorMessage, elms(file_name, line_number, enum_name, name));
   abort(buf.raw_string());
 }
 
-void Conditions::error_occurred(string format, list<fmt_elm> elms) {
+void Conditions::error_occurred(string format, const fmt_elms &args) {
   string_buffer buf;
-  buf.printf(format, elms);
+  buf.printf(format, args);
   abort(buf.raw_string());
-}
-
-void Conditions::error_occurred(string format) {
-  error_occurred(format, list<fmt_elm>());
-}
-
-void Conditions::error_occurred(string format, fmt_elm elm1) {
-  const uword argc = 1;
-  fmt_elm argv[argc] = { elm1 };
-  error_occurred(format, list<fmt_elm>(argv, argc));
-}
-
-void Conditions::error_occurred(string format, fmt_elm elm1,
-    fmt_elm elm2) {
-  const uword argc = 2;
-  fmt_elm argv[argc] = { elm1, elm2 };
-  error_occurred(format, list<fmt_elm>(argv, argc));
-}
-
-void Conditions::error_occurred(string format, fmt_elm elm1,
-    fmt_elm elm2, fmt_elm elm3) {
-  const uword argc = 3;
-  fmt_elm argv[argc] = { elm1, elm2, elm3 };
-  error_occurred(format, list<fmt_elm>(argv, argc));
 }
 
 void Conditions::abort(string message) {

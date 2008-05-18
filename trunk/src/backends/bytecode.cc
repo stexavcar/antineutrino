@@ -365,21 +365,21 @@ void BytecodeBackend::adjust_stack_height(word delta) {
 
 void BytecodeBackend::disassemble_next_instruction(uword *pc_ptr,
     array<uint16_t> data, array<Value*> pool, string_buffer &buf) {
-  buf.printf("%{3} ", *pc_ptr);
+  buf.printf("%{3} ", elms(*pc_ptr));
   OpcodeData opcode_data;
   opcode_data.load(data[*pc_ptr]);
   ASSERT(opcode_data.is_resolved());
-  buf.printf("%", opcode_data.name());
+  buf.printf("%", elms(opcode_data.name()));
   string format = opcode_data.format();
   for (uword i = 0; i < format.length(); i++) {
     buf.append(" ");
     uint16_t arg = data[*pc_ptr + 1 + i];
     switch (format[i]) {
     case 'i':
-      buf.printf("%", arg);
+      buf.printf("%", elms(arg));
       break;
     case '@':
-      buf.printf("@%", arg);
+      buf.printf("@%", elms(arg));
       break;
     case 'p':
       pool[arg]->write_on(buf);

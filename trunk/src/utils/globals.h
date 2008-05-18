@@ -20,10 +20,6 @@
 // argument, otherwise the third
 #define IF(COND, then_part, else_part) COND(then_part, else_part)
 
-// If the first argument is true then declares a const variable with
-// the specified value, otherwise declares the variable with no value.
-#define COND_CONST(COND, name, value)  IF(COND, name, const name = value)
-
 #ifdef DEBUG
 static const bool kDebug = true;
 #define IF_DEBUG(arg)       arg

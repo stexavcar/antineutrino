@@ -73,7 +73,7 @@ string Data::to_short_string() {
 }
 
 static void write_smi_short_on(Smi *obj, string_buffer &buf) {
-  buf.printf("%", obj->value());
+  buf.printf("%", elms(obj->value()));
 }
 
 static void write_string_short_on(String *obj, Data::WriteMode mode, string_buffer &buf) {
@@ -204,7 +204,7 @@ static void write_object_short_on(Object *obj, Data::WriteMode mode, string_buff
     write_instance_short_on(cast<Instance>(obj), buf);
     break;
   case tSymbol:
-    buf.printf("#<symbol %>", cast<Symbol>(obj)->name());
+    buf.printf("#<symbol %>", elms(cast<Symbol>(obj)->name()));
     break;
 #define MAKE_CASE(n, Name, info) case t##Name:
 eSyntaxTreeTypes(MAKE_CASE)
@@ -230,7 +230,7 @@ static void write_signal_short_on(Signal *obj, string_buffer &buf) {
   case Signal::sTypeMismatch: {
     string expected = Layout::name_for(cast<TypeMismatch>(obj)->expected());
     string found = Layout::name_for(cast<TypeMismatch>(obj)->found());
-    buf.printf("@<type mismatch: found % expected %>", found, expected);
+    buf.printf("@<type mismatch: found % expected %>", elms(found, expected));
     break;
   }
   default:

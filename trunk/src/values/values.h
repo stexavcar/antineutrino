@@ -5,6 +5,7 @@
 #include "utils/array.h"
 #include "utils/consts.h"
 #include "utils/globals.h"
+#include "utils/smart-ptrs.h"
 #include "utils/string.h"
 
 namespace neutrino {
@@ -294,7 +295,8 @@ public:
   DECLARE_FIELD(word*, fp);
   DECLARE_FIELD(word*, top_marker);
   DECLARE_FIELD(Status, status);
-  inline word *bottom();
+  inline word* bottom();
+  inline bounded_ptr<word> bound(word *ptr);
   inline array<word> buffer();
 
   IF_DEBUG(void validate_stack());

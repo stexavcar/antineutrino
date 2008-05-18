@@ -44,7 +44,7 @@ IExternalChannel *Channel::ensure_proxy(Runtime &runtime) {
   DynamicLibraryCollection *dylibs = runtime.dylibs();
   if (dylibs == NULL) return NULL;
   string_buffer buf;
-  buf.printf(kConfiguratorNamePattern, name());
+  buf.printf(kConfiguratorNamePattern, elms(name()));
   string name = buf.to_string();
   void *ptr = dylibs->lookup(name);
   if (ptr == NULL) return NULL;

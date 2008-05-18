@@ -13,6 +13,10 @@ namespace neutrino {
 #define COND_DEFINE_FLAG(COND, type, Class, name, init)              \
   IF(COND, DEFINE_FLAG(type, Class, name, init), typedef void SEMI_STATIC_JOIN(__DefineFlag__, __LINE__))
 
+// If the first argument is true then declares a const variable with
+// the specified value, otherwise declares the variable with no value.
+#define COND_FLAG(COND, name, value)  IF(COND, name, const name = value)
+
 typedef void (ErrorHandler)(string message);
 
 class FlagParser {

@@ -18,6 +18,19 @@ eConditions(DECLARE_ENUM)
 #undef DECLARE_ENUM
 };
 
+
+class Log {
+public:
+  
+  void info(string format, const fmt_elms &args);
+  
+  static Log &get() { return instance_; }
+  
+private:
+  static Log instance_;
+};
+
+
 /**
  * The conditions are functions that can be called when something
  * unexpected or problematic occurs.  When this happens the condition
@@ -61,15 +74,8 @@ public:
       string enum_name, word value, AbstractEnumInfo &info,
       Condition cause);
   
-  void error_occurred(string format, list<fmt_elm> elms);
-  void error_occurred(string format);
-  void error_occurred(string format, fmt_elm elm1);
-  void error_occurred(string format, fmt_elm elm1, fmt_elm elm2);
-  void error_occurred(string format, fmt_elm elm1, fmt_elm elm2,
-      fmt_elm elm3);
-  
+  void error_occurred(string format, const fmt_elms &args);  
   virtual void notify(Condition cause);
-  
   void abort(string message);
   
   static Conditions &get();

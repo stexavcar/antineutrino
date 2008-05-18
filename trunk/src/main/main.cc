@@ -35,7 +35,7 @@ DynamicLibraryCollection *Main::load_dynamic_libraries() {
   list<string> &libs = Options::libs;
   for (uword i = 0; i < libs.length(); i++) {
     if (!result->load(libs[i])) {
-      Conditions::get().error_occurred("Error loading library %", libs[i]);
+      Conditions::get().error_occurred("Error loading library %", elms(libs[i]));
       return NULL;
     }
   }
@@ -87,7 +87,7 @@ void Main::build_arguments(Runtime &runtime) {
 Image *Main::read_image(string name) {
   FILE *file = stdc_fopen(name.chars(), "rb");
   if (file == NULL) {
-    Conditions::get().error_occurred("Unable to open %.\n", name);
+    Conditions::get().error_occurred("Unable to open %.\n", elms(name));
   }
   fseek(file, 0, SEEK_END);
   uword size = ftell(file);

@@ -2,6 +2,7 @@
 #define _RUNTIME_INTERPRETER
 
 #include "utils/consts.h"
+#include "utils/smart-ptrs-inl.h"
 #include "utils/types.h"
 
 namespace neutrino {
@@ -103,8 +104,9 @@ private:
  */
 class StackState {
 public:
-  StackState(word *fp, word *sp) : fp_(fp), sp_(sp) { }
-  StackState(word *fp) : fp_(fp), sp_(fp + kSize) { }
+  StackState(bounded_ptr<word> fp, bounded_ptr<word>sp)
+      : fp_(fp), sp_(sp) { }
+  StackState(bounded_ptr<word> fp) : fp_(fp), sp_(fp + kSize) { }
   uword locals() { return sp() - (fp() + kSize); }
   inline uword &prev_pc();
   inline word *&prev_fp();
@@ -123,18 +125,18 @@ public:
   /**
    * Unwinds a stack frame in a cooked stack.
    */
-  inline void unwind();
+  inline void unwind(Stack *stack);
   
   /**
    * Unwinds a stack frame in an uncooked stack, where the given
    * array is the stack buffer.
    */
-  inline void unwind(array<word> buffer);
+  inline void unwind(array<word> buffer, uword height);
   
   inline void push(Value *value);
   inline bool is_bottom();
-  word *fp() { return fp_; }
-  word *sp() { return sp_; }
+  bounded_ptr<word> fp() { return fp_; }
+  bounded_ptr<word> sp() { return sp_; }
   void reset(Stack *old_stack, Stack *new_stack);
   
   /**
@@ -149,8 +151,10 @@ public:
   static const uword kSize         = kLambdaOffset + 1;
 
 private:
-  word *fp_;
-  word *sp_;
+  friend class Stack;
+  
+  bounded_ptr<word> fp_;
+  bounded_ptr<word> sp_;
 };
 
 class OpcodeData {

@@ -4,6 +4,7 @@
 #include "heap/pointer-inl.h"
 #include "runtime/interpreter.h"
 #include "utils/checks.h"
+#include "utils/smart-ptrs-inl.h"
 
 namespace neutrino {
 
@@ -45,15 +46,15 @@ void Marker::unwind() {
 // -----------------
 
 uword &StackState::prev_pc() {
-  return reinterpret_cast<uword*>(fp_)[kPrevPcOffset];
+  return reinterpret_cast<uword&>(fp_[kPrevPcOffset]);
 }
 
 word *&StackState::prev_fp() {
-  return reinterpret_cast<word**>(fp_)[kPrevFpOffset];
+  return reinterpret_cast<word*&>(fp_[kPrevFpOffset]);
 }
 
 Lambda *&StackState::lambda() {
-  return reinterpret_cast<Lambda**>(fp_)[kLambdaOffset];
+  return reinterpret_cast<Lambda*&>(fp_[kLambdaOffset]);
 }
 
 bool StackState::is_bottom() {
@@ -61,21 +62,21 @@ bool StackState::is_bottom() {
 }
 
 Value *StackState::pop(uword height) {
-  Value *result = *reinterpret_cast<Value**>(sp_ - 1);
-  sp_ -= height;
+  Value *result = reinterpret_cast<Value*>(*(sp_ - 1));
+  sp_ = sp_ - height;
   return result;
 }
 
 Value *&StackState::operator[](uword index) {
-  return *reinterpret_cast<Value**>(sp_ - 1 - index);
+  return reinterpret_cast<Value*&>(*(sp_ - 1 - index));
 }
 
 Value *&StackState::argument(uword index) {
-  return *reinterpret_cast<Value**>(fp_ - index - 1);
+  return reinterpret_cast<Value*&>(*(fp_ - index - 1));
 }
 
 Value *&StackState::local(uword index) {
-  return *reinterpret_cast<Value**>(fp_ + StackState::kSize + index);
+  return reinterpret_cast<Value*&>(*(fp_ + StackState::kSize + index));
 }
 
 Value *&StackState::self(uword argc) {
@@ -83,37 +84,40 @@ Value *&StackState::self(uword argc) {
 }
 
 void StackState::push(Value *value) {
-  *(sp_++) = reinterpret_cast<word>(value);
+  *sp_ = reinterpret_cast<word>(value);
+  sp_ = sp_ + 1;
 }
 
 Marker StackState::push_marker() {
-  word *mp = sp_;
-  sp_ += Marker::kSize;
-  return Marker(mp);
+  bounded_ptr<word> mp = sp_;
+  sp_ = sp_ + Marker::kSize;
+  return Marker(mp.value());
 }
 
 Marker StackState::pop_marker() {
-  return Marker(sp_ -= Marker::kSize);
+  sp_ = sp_ - Marker::kSize;
+  return Marker(sp_.value());
 }
 
 void StackState::push_activation(uword prev_pc, Lambda *lambda) {
-  word *prev_fp = fp_;
+  bounded_ptr<word> prev_fp = fp_;
   fp_ = sp_;
   sp_ = fp_ + StackState::kSize;
   ASSERT(sp_ >= fp_ + kSize);
-  this->prev_fp() = prev_fp;
+  this->prev_fp() = prev_fp.value();
   this->prev_pc() = prev_pc;
   this->lambda() = lambda;
 }
 
-void StackState::unwind() {
+void StackState::unwind(Stack *stack) {
   sp_ = fp();
-  fp_ = prev_fp();
+  fp_ = stack->bound(prev_fp());
 }
 
-void StackState::unwind(array<word> buffer) {
+void StackState::unwind(array<word> buffer, uword height) {
   sp_ = fp();
-  fp_ = buffer.from_offset(reinterpret_cast<uword>(prev_fp()));
+  word *raw_ptr = buffer.from_offset(reinterpret_cast<uword>(prev_fp()));
+  fp_ = NEW_BOUNDED_PTR(raw_ptr, buffer.start(), buffer.start() + height);
 }
 
 

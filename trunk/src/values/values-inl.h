@@ -7,6 +7,7 @@
 #include "runtime/context.h"
 #include "utils/array-inl.h"
 #include "utils/checks.h"
+#include "utils/smart-ptrs-inl.h"
 #include "utils/types-inl.h"
 #include "values/values.h"
 
@@ -388,6 +389,12 @@ uword Stack::size_for(uword height) {
 word *Stack::bottom() {
   return &ValuePointer::access_direct<word>(this, Stack::kHeaderSize);
 }
+
+
+bounded_ptr<word> Stack::bound(word *ptr) {
+  return NEW_BOUNDED_PTR(ptr, bottom(), bottom() + height());
+}
+
 
 array<word> Stack::buffer() {
   word *start = &ValuePointer::access_direct<word>(this, Stack::kHeaderSize);

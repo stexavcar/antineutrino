@@ -60,18 +60,23 @@ private:
 
 
 /**
- * A checked pointer is a pointer coupled with a set of bounds.  Any
+ * A bounded pointer is a pointer coupled with a set of bounds.  Any
  * operations performed on the pointer are asserted to stay within
  * these bounds.  In non-paranoid mode a checked pointer is just an
  * ordinary pointer.
  */
 template <typename T>
-class checked_ptr {
+class bounded_ptr {
 public:
-  IF_PARANOID(inline checked_ptr(T *value, T *lower, T *upper));
-  IF_NOT_PARANOID(inline checked_ptr(T *value));
+  IF_PARANOID(inline bounded_ptr(T *value, T *lower, T *upper));
+  IF_NOT_PARANOID(inline bounded_ptr(T *value));
   inline T &operator[](uword index);
-  inline checked_ptr<T> operator+(word delta);
+  inline T &operator*();
+  inline bounded_ptr<T> operator+(word delta);
+  inline bounded_ptr<T> operator-(word delta);
+  inline bool operator>=(bounded_ptr<T> that) { return value_ >= that.value_; }
+  inline word operator-(bounded_ptr<T> that);
+  inline T *value() { return value_; }
 private:
   T *value_;
   IF_PARANOID(T *lower_);
@@ -85,11 +90,11 @@ private:
  * This function is used to get argument type inference.
  */
 template <typename T>
-static inline checked_ptr<T> new_checked_ptr(T *value, T *lower, T *upper) {
-  return checked_ptr<T>(value, lower, upper);
+static inline bounded_ptr<T> new_bounded_ptr(T *value, T *lower, T *upper) {
+  return bounded_ptr<T>(value, lower, upper);
 }
 
-#define NEW_CHECKED_PTR(value, lower, upper) neutrino::new_checked_ptr(value, lower, upper)
+#define NEW_BOUNDED_PTR(value, lower, upper) neutrino::new_bounded_ptr(value, lower, upper)
 
 #else
 
@@ -97,11 +102,11 @@ static inline checked_ptr<T> new_checked_ptr(T *value, T *lower, T *upper) {
  * This function is used to get argument type inference.
  */
 template <typename T>
-static inline checked_ptr<T> new_checked_ptr(T *value) {
-  return checked_ptr<T>(value);
+static inline bounded_ptr<T> new_bounded_ptr(T *value) {
+  return bounded_ptr<T>(value);
 }
 
-#define NEW_CHECKED_PTR(value, upper, lower) neutrino::new_checked_ptr(value)
+#define NEW_BOUNDED_PTR(value, upper, lower) neutrino::new_bounded_ptr(value)
 
 #endif
 

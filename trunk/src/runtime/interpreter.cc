@@ -16,7 +16,7 @@ namespace neutrino {
 // --- L o g ---
 // -------------
 
-class Log {
+class ExecutionLog {
 public:
   static inline void instruction(uword pc, array<uint16_t> code,
       array<Value*> pool, StackState &frame);
@@ -31,7 +31,7 @@ StackState Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda, uword a
   lambda.ensure_compiled(runtime(), NULL);
   ASSERT(task->stack()->status().is_empty);
   task->stack()->status().is_empty = false;
-  StackState frame(task->stack()->bottom() + StackState::accessible_below_fp(argc));
+  StackState frame(task->stack()->bound(task->stack()->bottom()) + StackState::accessible_below_fp(argc));
   frame.self(argc) = runtime().roots().vhoid();
   frame.lambda() = *lambda;
   frame.prev_fp() = 0;
@@ -41,13 +41,13 @@ StackState Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda, uword a
 
 void StackState::reset(Stack *old_stack, Stack *new_stack) {
   uword delta = new_stack->bottom() - old_stack->bottom();
-  fp_ += delta;
-  sp_ += delta;
+  fp_ = new_stack->bound(fp_.value() + delta);
+  sp_ = new_stack->bound(sp_.value() + delta);
 }
 
 void StackState::park(Stack *stack) {
   IF_DEBUG(stack->status().is_parked = true);
-  stack->set_fp(fp());
+  stack->set_fp(fp().value());
 }
 
 /**
@@ -90,7 +90,7 @@ static void unhandled_condition(Value *name, BuiltinArguments &args) {
     args[i]->write_on(buf);
   }
   buf.append(")");
-  Conditions::get().error_occurred("%", buf.raw_string());
+  Conditions::get().error_occurred("%", elms(buf.raw_string()));
 }
 
 
@@ -98,7 +98,7 @@ static void unresolved_global(Value *name) {
   string_buffer buf;
   buf.append("Unresolved global: ");
   name->write_on(buf, Data::UNQUOTED);
-  Conditions::get().error_occurred("%", buf.raw_string());
+  Conditions::get().error_occurred("%", elms(buf.raw_string()));
 }
 
 
@@ -108,7 +108,7 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
   initial_frame.park(task->stack());
   while (true) {
     ASSERT(task->stack()->status().is_parked);
-    StackState frame(task->stack()->fp());
+    StackState frame(task->stack()->bound(task->stack()->fp()));
     IF_DEBUG(task->stack()->status().is_parked = false);
     Data *value = interpret(task->stack(), frame);
     ASSERT(task->stack()->status().is_parked);
@@ -118,7 +118,7 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
         runtime().heap().memory().collect_garbage(runtime());
         frame.reset(old_stack, task->stack());
       } else {
-        Conditions::get().error_occurred("Unexpected signal: %", value);
+        Conditions::get().error_occurred("Unexpected signal: %", elms(value));
       }
     } else {
       task->stack()->status().is_empty = true;
@@ -138,24 +138,26 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
   } while (false)
 
 
-#define CHECK_STACK_HEIGHT(value) do {                               \
+#define CHECK_STACK_HEIGHT(value)
+
+/*do {                               \
     Lambda *__lambda__ = (value);                                    \
     if (frame.fp() + __lambda__->max_stack_height() >= stack_limit)  \
       return StackOverflow::make();                                  \
-  } while (false)
+  } while (false)*/
 
 
 Data *Interpreter::interpret(Stack *stack, StackState &frame) {
-  word *stack_limit = stack->bottom() + stack->height() - StackState::kSize;
+  bounded_ptr<word> stack_limit = stack->bound(stack->bottom()) + (stack->height() - StackState::kSize);
   uword pc = frame.prev_pc();
-  frame.unwind();
+  frame.unwind(stack);
   Lambda *lambda;
   array<uint16_t> code;
   array<Value*> constant_pool;
   PREPARE_EXECUTION(frame.lambda());
   Data *result = Nothing::make();
   while (true) {
-    IF_DEBUG(Log::instruction(pc, code, constant_pool, frame));
+    IF_DEBUG(ExecutionLog::instruction(pc, code, constant_pool, frame));
     switch (code[pc]) {
     case ocPush: {
       uint16_t index = code[pc + 1];
@@ -256,7 +258,7 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
         scoped_string selector_str(selector->to_string());
         scoped_string recv_str(recv->to_short_string());
         Conditions::get().error_occurred("Lookup failure: %::%",
-            *recv_str, *selector_str);
+            elms(*recv_str, *selector_str));
       }
       Method *method = cast<Method>(lookup_result);
       Lambda *target = method->lambda();
@@ -282,7 +284,7 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
         scoped_string selector_str(selector->to_string());
         scoped_string recv_str(recv->to_short_string());
         Conditions::get().error_occurred("Lookup failure: %::%",
-            *recv_str, *selector_str);
+            elms(*recv_str, *selector_str));
       }
       Method *method = cast<Method>(lookup_result);
       Lambda *target = method->lambda();
@@ -423,7 +425,7 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
         if (is<AllocationFailed>(value)) {
           RETURN(value);
         } else {
-          Conditions::get().error_occurred("Problem executing builtin %: %", index, value);
+          Conditions::get().error_occurred("Problem executing builtin %: %", elms(index, value));
         }
       } else {
         frame.push(cast<Value>(value));
@@ -436,7 +438,7 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
       if (frame.is_bottom())
         RETURN(value);
       pc = frame.prev_pc();
-      frame.unwind();
+      frame.unwind(stack);
       PREPARE_EXECUTION(frame.lambda());
       frame[0] = value;
       break;
@@ -580,14 +582,14 @@ suspend:
 void Stack::validate_stack() {
   if (status().is_empty) return;
   ASSERT(status().is_cooked);
-  StackState frame(fp());
+  StackState frame(bound(fp()));
   while (true) {
     GC_SAFE_CHECK_IS_C(cnValidation, Lambda, frame.lambda());
     if (frame.is_bottom()) break;
     uword local_count = frame.locals();
     for (uword i = 0; i < local_count; i++)
       GC_SAFE_CHECK_IS_C(cnValidation, Value, frame[i]);
-    frame.unwind();
+    frame.unwind(this);
   }
 }
 #endif
@@ -598,10 +600,10 @@ void Stack::recook_stack() {
   ASSERT(status().is_parked);
   array<word> buf = buffer();
   fp() = buf.from_offset(reinterpret_cast<uword>(fp()));
-  StackState frame(fp());
+  StackState frame(bound(fp()));
   while (!frame.is_bottom()) {
     frame.prev_fp() = buf.from_offset(reinterpret_cast<uword>(frame.prev_fp()));
-    frame.unwind();
+    frame.unwind(this);
   }
   IF_DEBUG(status().is_cooked = true);
 }
@@ -610,15 +612,13 @@ void Stack::uncook_stack() {
   if (status().is_empty) return;
   ASSERT(status().is_cooked);
   ASSERT(status().is_parked);
-  StackState frame(fp());
+  StackState frame(bound(fp()));
   array<word> buf = buffer();
   while (!frame.is_bottom()) {
-    // Create a copy of the frame so that we can unwind the original
-    // frame and then do the uncooking
     IF_DEBUG(word *prev_fp = frame.prev_fp());
     frame.prev_fp() = reinterpret_cast<word*>(buf.offset_of(frame.prev_fp()));
-    frame.unwind(buf);
-    ASSERT(prev_fp == frame.fp());
+    frame.unwind(buf, height());
+    ASSERT(prev_fp == frame.fp().value());
   }
   fp() = reinterpret_cast<word*>(buf.offset_of(fp()));
   IF_DEBUG(status().is_cooked = false);
@@ -629,7 +629,7 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
   ASSERT(!status().is_cooked);
   ASSERT(status().is_parked);
   array<word> buf = buffer();
-  StackState frame(buf.from_offset(reinterpret_cast<uword>(fp())));
+  StackState frame(bound(buf.from_offset(reinterpret_cast<uword>(fp()))));
   while (true) {
     visitor.visit_field(pointer_cast<Value*>(&frame.lambda()));
     if (frame.is_bottom()) break;
@@ -638,7 +638,7 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
       // Visit the i'th local variable
       visitor.visit_field(&frame[i]);
     }
-    frame.unwind(buf);
+    frame.unwind(buf, height());
   }
 }
 
@@ -665,7 +665,7 @@ eOpcodes(MAKE_CASE)
 }
 
 
-void Log::instruction(uword pc, array<uint16_t> code,
+void ExecutionLog::instruction(uword pc, array<uint16_t> code,
     array<Value*> pool, StackState &frame) {
   if (Options::trace_interpreter) {
     string_buffer buf;

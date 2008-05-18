@@ -45,13 +45,13 @@ list<string> FlagParser::parse_flags(list<char*> &args, ErrorHandler on_error) {
       }
       if (option == NULL) {
         string_buffer message;
-        message.printf("Unknown option %", str);
+        message.printf("Unknown option %", elms(str));
         on_error(message.raw_string());
         UNREACHABLE();
       } else if (is_list) {
         if (option->argc() >= 0) {
           string_buffer message;
-          message.printf("% is not a list option", str);
+          message.printf("% is not a list option", elms(str));
           on_error(message.raw_string());
         } else {
           uword start = cursor;
@@ -59,7 +59,7 @@ list<string> FlagParser::parse_flags(list<char*> &args, ErrorHandler on_error) {
             cursor++;
           if (cursor == args.length()) {
             string_buffer message;
-            message.printf("Malformed list option %", str);
+            message.printf("Malformed list option %", elms(str));
             on_error(message.raw_string());
           } else {
             list<char*> option_args = args.sublist(start, cursor - start);
@@ -71,12 +71,12 @@ list<string> FlagParser::parse_flags(list<char*> &args, ErrorHandler on_error) {
         word argc = option->argc();
         if (argc < 0) {
           string_buffer message;
-          message.printf("% is a list option", str);
+          message.printf("% is a list option", elms(str));
           on_error(message.raw_string());
         }
         if (args.length() < argc + cursor) {
           string_buffer message;
-          message.printf("Not enough arguments to %", str);
+          message.printf("Not enough arguments to %", elms(str));
           on_error(message.raw_string());
         }
         list<char*> option_args = args.sublist(cursor, argc);

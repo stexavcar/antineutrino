@@ -134,7 +134,7 @@ static void unparse_method_expression(MethodExpression *obj, UnparseData &data) 
 static void unparse_symbol(Symbol *obj, UnparseData &data) {
   Value *name = obj->name();
   if (is<Void>(name)) {
-    data->printf("&#%", reinterpret_cast<uword>(obj));
+    data->printf("&#%", elms(reinterpret_cast<uword>(obj)));
   } else {
     data->append("$");
     name->write_on(data.out(), Data::UNQUOTED);
@@ -177,7 +177,7 @@ static void unparse_call_expression(CallExpression *obj, UnparseData &data) {
 }
 
 static void unparse_builtin_call(BuiltinCall *obj, UnparseData &data) {
-  data->printf("bc[%]", obj->index());
+  data->printf("bc[%]", elms(obj->index()));
 }
 
 static void unparse_global_variable(GlobalVariable *expr, UnparseData &data) {

@@ -36,22 +36,40 @@ array<T> own_array<T>::release() {
 
 
 template <typename T>
-inline T &checked_ptr<T>::operator[](uword index) {
+inline T &bounded_ptr<T>::operator*() {
+  return this->operator[](0);
+}
+
+
+template <typename T>
+inline T &bounded_ptr<T>::operator[](uword index) {
   IF_PARANOID(CHECK_C(cnOutOfBounds, value_ + index < upper_));
   return value_[index];
 }
 
 
 template <typename T>
-checked_ptr<T> checked_ptr<T>::operator+(word d) {
-  return NEW_CHECKED_PTR(value_ + d, lower_, upper_);
+bounded_ptr<T> bounded_ptr<T>::operator+(word d) {
+  return NEW_BOUNDED_PTR(value_ + d, lower_, upper_);
+}
+
+
+template <typename T>
+bounded_ptr<T> bounded_ptr<T>::operator-(word d) {
+  return NEW_BOUNDED_PTR(value_ - d, lower_, upper_);
+}
+
+
+template <typename T>
+word bounded_ptr<T>::operator-(bounded_ptr<T> that) {
+  return value_ - that.value_;
 }
 
 
 #ifdef PARANOID
 
 template <typename T>
-checked_ptr<T>::checked_ptr(T *value, T *lower, T *upper)
+bounded_ptr<T>::bounded_ptr(T *value, T *lower, T *upper)
     : value_(value)
     , lower_(lower)
     , upper_(upper) {
@@ -61,7 +79,7 @@ checked_ptr<T>::checked_ptr(T *value, T *lower, T *upper)
 #else
 
 template <typename T>
-checked_ptr<T>::checked_ptr(T *value)
+bounded_ptr<T>::bounded_ptr(T *value)
     : value_(value) { }
 
 #endif // PARANOID

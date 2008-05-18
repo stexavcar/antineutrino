@@ -62,26 +62,26 @@ void Test::string_buffer_basic() {
 
 void Test::printf() {
   string_buffer buf;
-  buf.printf("[$0 $1 $2]", "foo", "bar", "baz");
+  buf.printf("[$0 $1 $2]", elms("foo", "bar", "baz"));
   CHECK_EQ("[foo bar baz]", buf.to_string());
   buf.clear();
-  buf.printf("[% % %]", "foo", "bar", "baz");
+  buf.printf("[% % %]", elms("foo", "bar", "baz"));
   CHECK(buf.to_string() == "[foo bar baz]");
   buf.clear();
-  buf.printf("[$2 $1 $0]", "foo", "bar", "baz");
+  buf.printf("[$2 $1 $0]", elms("foo", "bar", "baz"));
   CHECK(buf.to_string() == "[baz bar foo]");
   buf.clear();
-  buf.printf("$2-$1-$0", 6, 7, 8);
+  buf.printf("$2-$1-$0", elms(6, 7, 8));
   CHECK(buf.to_string() == "8-7-6");
   buf.clear();
-  buf.printf("[%{04}]", 26);
+  buf.printf("[%{04}]", elms(26));
   CHECK(buf.to_string() == "[0026]");
 }
 
 
 static string format(string form, fmt_elm arg) {
   string_buffer buf;
-  buf.printf(form, arg);
+  buf.printf(form, elms(arg));
   return buf.to_string();
 }
 
@@ -114,4 +114,9 @@ void Test::int_formats() {
   CHECK_EQ("-10", format("%{02}", -10));
   CHECK_EQ("-10", format("%{03}", -10));
   CHECK_EQ("-010", format("%{04}", -10));
+}
+
+
+void Test::string_null_print() {
+  CHECK_EQ(7, format("[%]", string("ab\0cd", 5)).length());
 }

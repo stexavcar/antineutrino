@@ -23,9 +23,9 @@ bool Runtime::initialize(Architecture *arch) {
 void Runtime::start() {
   Data *value = roots().toplevel()->get(cast<String>(heap().new_string("main")));
   if (is<Nothing>(value)) {
-    Conditions::get().error_occurred("Error: no function 'main' was defined.");
+    Conditions::get().error_occurred("Error: no function 'main' was defined.", elms());
   } else if (!is<Lambda>(value)) {
-    Conditions::get().error_occurred("Value 'main' is not a function.");
+    Conditions::get().error_occurred("Value 'main' is not a function.", elms());
   }
   ref_scope scope(refs());
   ref<Lambda> lambda = refs().new_ref(cast<Lambda>(value));
@@ -43,13 +43,13 @@ void Runtime::report_load_error(ImageLoadStatus &info) {
       string expected_str = Layout::layout_name(info.error_info.type_mismatch.expected);
       string found_str = Layout::layout_name(info.error_info.type_mismatch.found);
       const char *location = info.error_info.type_mismatch.location;
-      Conditions::get().error_occurred(kErrorMessage, location,
-          expected_str, found_str);
+      Conditions::get().error_occurred(kErrorMessage, elms(location,
+          expected_str, found_str));
       return;
     }
     case ImageLoadStatus::lsInvalidImage: {
       static string kErrorMessage = "Invalid image";
-      Conditions::get().error_occurred(kErrorMessage);
+      Conditions::get().error_occurred(kErrorMessage, elms());
       return;
     }
     case ImageLoadStatus::lsRootCount: {
@@ -58,8 +58,8 @@ void Runtime::report_load_error(ImageLoadStatus &info) {
         "  Expected: %\n"
         "  Found: %";
       Conditions::get().error_occurred(kErrorMessage,
-          info.error_info.root_count.expected,
-          info.error_info.root_count.found);
+          elms(info.error_info.root_count.expected,
+              info.error_info.root_count.found));
       return;
     }
     case ImageLoadStatus::lsInvalidMagic: {
@@ -68,8 +68,7 @@ void Runtime::report_load_error(ImageLoadStatus &info) {
         "  Expected magic number: 0x%{08X}\n"
         "  Found: 0x%{08X}";
       Conditions::get().error_occurred(kErrorMessage,
-          Image::kMagicNumber,
-          info.error_info.magic.found);
+          elms(Image::kMagicNumber, info.error_info.magic.found));
       return;
     }
     case ImageLoadStatus::lsInvalidVersion: {
@@ -78,8 +77,7 @@ void Runtime::report_load_error(ImageLoadStatus &info) {
         "  Expected version: %\n"
         "  Found: %";
       Conditions::get().error_occurred(kErrorMessage,
-          Image::kCurrentVersion,
-          info.error_info.version.found);
+          elms(Image::kCurrentVersion, info.error_info.version.found));
       return;
     }
     default:
@@ -158,7 +156,7 @@ bool Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
 bool Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
   if (!root->is_empty()) {
     scoped_string str(changes.name(refs()).to_string());
-    Conditions::get().error_occurred("Root class % is not empty.", *str);
+    Conditions::get().error_occurred("Root class % is not empty.", elms(*str));
     return false;
   }
   root->set_protocol(*changes);

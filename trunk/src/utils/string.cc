@@ -96,40 +96,7 @@ string string_buffer::raw_string() {
   return string(data_, cursor_);
 }
 
-void string_buffer::printf(string format, fmt_elm arg1) {
-  const int argc = 1;
-  fmt_elm argv[argc] = { arg1 };
-  printf(format, list<fmt_elm>(argv, argc));
-}
-
-void string_buffer::printf(string format, fmt_elm arg1, fmt_elm arg2) {
-  const int argc = 2;
-  fmt_elm argv[argc] = { arg1, arg2 };
-  printf(format, list<fmt_elm>(argv, argc));
-}
-
-void string_buffer::printf(string format, fmt_elm arg1,
-    fmt_elm arg2, fmt_elm arg3) {
-  const int argc = 3;
-  fmt_elm argv[argc] = { arg1, arg2, arg3 };
-  printf(format, list<fmt_elm>(argv, argc));
-}
-
-void string_buffer::printf(string format, fmt_elm arg1,
-    fmt_elm arg2, fmt_elm arg3, fmt_elm arg4) {
-  const int argc = 4;
-  fmt_elm argv[argc] = { arg1, arg2, arg3, arg4 };
-  printf(format, list<fmt_elm>(argv, argc));
-}
-
-void string_buffer::printf(string format, fmt_elm arg1, fmt_elm arg2,
-    fmt_elm arg3, fmt_elm arg4, fmt_elm arg5, fmt_elm arg6) {
-  const int argc = 6;
-  fmt_elm argv[argc] = { arg1, arg2, arg3, arg4, arg5, arg6 };
-  printf(format, list<fmt_elm>(argv, argc));  
-}
-
-void string_buffer::printf(string format, list<fmt_elm> args) {
+void string_buffer::printf(string format, const fmt_elms &args) {
   const int kMaxParamsLength = 16;
   // Make the params buffer large enough to allow changes before and
   // after the param string
@@ -156,7 +123,7 @@ void string_buffer::printf(string format, list<fmt_elm> args) {
       continue;
     }
     i++;
-    fmt_elm *fmt_elm;
+    const fmt_elm *fmt_elm = NULL;
     if (is_positional) {
       ASSERT(i < format.length());
       // Read the fmt_elm from the specified position in the args
@@ -208,7 +175,7 @@ static uword char_to_digit(uword chr) {
   return chr - '0';
 }
 
-void fmt_elm::print_on(string_buffer &buf, string params) {
+void fmt_elm::print_on(string_buffer &buf, string params) const {
   switch (tag_) {
   case eInt:
     print_int_on(buf, params);
@@ -217,9 +184,14 @@ void fmt_elm::print_on(string_buffer &buf, string params) {
     UNREACHABLE();
     break;
   }
-  case eString: {
-    const char *value = value_.u_string;
+  case eCStr: {
+    const char *value = value_.u_c_str;
     buf.append(value);
+    break;
+  }
+  case eString: {
+    const string &str = *(value_.u_string);
+    buf.append(str);
     break;
   }
   case eObject: {
@@ -234,7 +206,7 @@ void fmt_elm::print_on(string_buffer &buf, string params) {
 }
 
 
-void fmt_elm::print_int_on(string_buffer &buf, string params) {
+void fmt_elm::print_int_on(string_buffer &buf, string params) const {
   // Configuration parameters
   bool flush_right = true;
   uword min_length = 0;
