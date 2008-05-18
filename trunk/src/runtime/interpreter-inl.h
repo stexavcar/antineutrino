@@ -111,7 +111,7 @@ void StackState::unwind() {
   fp_ = prev_fp();
 }
 
-void StackState::unwind(vector<word> buffer) {
+void StackState::unwind(array<word> buffer) {
   sp_ = fp();
   fp_ = buffer.from_offset(reinterpret_cast<uword>(prev_fp()));
 }

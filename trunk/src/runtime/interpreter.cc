@@ -5,8 +5,8 @@
 #include "runtime/interpreter-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/checks.h"
-#include "utils/scoped-ptrs-inl.h"
-#include "utils/vector-inl.h"
+#include "utils/smart-ptrs-inl.h"
+#include "utils/array-inl.h"
 #include "values/method-inl.h"
 
 namespace neutrino {
@@ -18,8 +18,8 @@ namespace neutrino {
 
 class Log {
 public:
-  static inline void instruction(uword pc, vector<uint16_t> code,
-      vector<Value*> pool, StackState &frame);
+  static inline void instruction(uword pc, array<uint16_t> code,
+      array<Value*> pool, StackState &frame);
 };
 
 
@@ -150,8 +150,8 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
   uword pc = frame.prev_pc();
   frame.unwind();
   Lambda *lambda;
-  vector<uint16_t> code;
-  vector<Value*> constant_pool;
+  array<uint16_t> code;
+  array<Value*> constant_pool;
   PREPARE_EXECUTION(frame.lambda());
   Data *result = Nothing::make();
   while (true) {
@@ -596,7 +596,7 @@ void Stack::recook_stack() {
   if (status().is_empty) return;
   ASSERT(!status().is_cooked);
   ASSERT(status().is_parked);
-  vector<word> buf = buffer();
+  array<word> buf = buffer();
   fp() = buf.from_offset(reinterpret_cast<uword>(fp()));
   StackState frame(fp());
   while (!frame.is_bottom()) {
@@ -611,7 +611,7 @@ void Stack::uncook_stack() {
   ASSERT(status().is_cooked);
   ASSERT(status().is_parked);
   StackState frame(fp());
-  vector<word> buf = buffer();
+  array<word> buf = buffer();
   while (!frame.is_bottom()) {
     // Create a copy of the frame so that we can unwind the original
     // frame and then do the uncooking
@@ -628,7 +628,7 @@ void Stack::for_each_stack_field(FieldVisitor &visitor) {
   if (status().is_empty) return;
   ASSERT(!status().is_cooked);
   ASSERT(status().is_parked);
-  vector<word> buf = buffer();
+  array<word> buf = buffer();
   StackState frame(buf.from_offset(reinterpret_cast<uword>(fp())));
   while (true) {
     visitor.visit_field(pointer_cast<Value*>(&frame.lambda()));
@@ -665,8 +665,8 @@ eOpcodes(MAKE_CASE)
 }
 
 
-void Log::instruction(uword pc, vector<uint16_t> code,
-    vector<Value*> pool, StackState &frame) {
+void Log::instruction(uword pc, array<uint16_t> code,
+    array<Value*> pool, StackState &frame) {
   if (Options::trace_interpreter) {
     string_buffer buf;
     BytecodeBackend::disassemble_next_instruction(&pc, code, pool, buf);

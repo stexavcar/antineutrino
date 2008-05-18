@@ -6,7 +6,7 @@
 #include "runtime/builtins.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
-#include "utils/scoped-ptrs-inl.h"
+#include "utils/smart-ptrs-inl.h"
 
 namespace neutrino {
 
@@ -706,7 +706,7 @@ void Assembler<C>::visit_instantiate_expression(ref<InstantiateExpression> that)
     methods.set(2 * i, getter);
     
     // Construct setter method for this field
-    own_vector<char> raw_name(ld_keyword.c_str());
+    own_array<char> raw_name(ld_keyword.c_str());
     string_buffer st_name;
     st_name.append(raw_name.start());
     st_name.append(":=");

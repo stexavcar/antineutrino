@@ -2,7 +2,7 @@
 #define _UTILS_VECTOR_INL
 
 #include "utils/checks.h"
-#include "utils/vector.h"
+#include "utils/array.h"
 
 namespace neutrino {
 
@@ -10,39 +10,39 @@ namespace neutrino {
 #ifdef DEBUG
 
 template <typename T>
-vector<T>::vector(T *data, uword length) : data_(data), length_(length) { }
+array<T>::array(T *data, uword length) : data_(data), length_(length) { }
 
 template <typename T>
-vector<T>::vector() : data_(NULL), length_(0) { }
+array<T>::array() : data_(NULL), length_(0) { }
 
 
 #else
 
 template <typename T>
-vector<T>::vector(T *data) : data_(data) { }
+array<T>::array(T *data) : data_(data) { }
 
 template <typename T>
-vector<T>::vector() : data_(NULL) { }
+array<T>::array() : data_(NULL) { }
 
 #endif
 
 
 template <typename T>
-T &vector<T>::operator[](uword index) {
+T &array<T>::operator[](uword index) {
   ASSERT_LT_C(cnOutOfBounds, index, length_);
   return data_[index];
 }
 
 
 template <typename T>
-uword vector<T>::offset_of(T *ptr) {
+uword array<T>::offset_of(T *ptr) {
   ASSERT(data_ <= ptr && ptr < (data_ + length_));
   return ptr - data_;
 }
 
 
 template <typename T>
-T *vector<T>::from_offset(uword offset) {
+T *array<T>::from_offset(uword offset) {
   ASSERT(offset < length_);
   return data_ + offset;
 }

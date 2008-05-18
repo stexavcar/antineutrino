@@ -364,7 +364,7 @@ void BytecodeBackend::adjust_stack_height(word delta) {
 
 
 void BytecodeBackend::disassemble_next_instruction(uword *pc_ptr,
-    vector<uint16_t> data, vector<Value*> pool, string_buffer &buf) {
+    array<uint16_t> data, array<Value*> pool, string_buffer &buf) {
   buf.printf("%{3} ", *pc_ptr);
   OpcodeData opcode_data;
   opcode_data.load(data[*pc_ptr]);
@@ -406,9 +406,9 @@ void BytecodeArchitecture::run(ref<Lambda> lambda, ref<Task> task) {
 
 void BytecodeArchitecture::disassemble(Lambda *lambda, string_buffer &buf) {
   uword pc = 0;
-  vector<uint16_t> code = cast<Code>(lambda->code())->buffer();
+  array<uint16_t> code = cast<Code>(lambda->code())->buffer();
   uword code_length = cast<Code>(lambda->code())->length();
-  vector<Value*> pool = cast<Tuple>(lambda->constant_pool())->buffer();
+  array<Value*> pool = cast<Tuple>(lambda->constant_pool())->buffer();
   while (pc < code_length)
     BytecodeBackend::disassemble_next_instruction(&pc, code, pool, buf);
 }

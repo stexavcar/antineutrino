@@ -1,13 +1,13 @@
 #include "cctest/tests-inl.h"
-#include "utils/vector-inl.h"
+#include "utils/array-inl.h"
 
 using namespace neutrino;
 
-void Test::vector() {
+void Test::array() {
   int int_array[4] = { 1, 2, 3, 4 };
-  // The vector is made one shorter than the array so that we can
+  // The array is made one shorter than the array so that we can
   // safely read one element past the "last" element.
-  neutrino::vector<int> ints = NEW_VECTOR(int, int_array, 3);
+  neutrino::array<int> ints = NEW_VECTOR(int, int_array, 3);
   CHECK_EQ(1, ints[0]);
   CHECK_EQ(2, ints[1]);
   CHECK_EQ(3, ints[2]);

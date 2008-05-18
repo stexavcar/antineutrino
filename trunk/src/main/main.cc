@@ -9,8 +9,8 @@
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
 #include "utils/flags.h"
-#include "utils/scoped-ptrs-inl.h"
-#include "utils/vector.h"
+#include "utils/smart-ptrs-inl.h"
+#include "utils/array.h"
 
 namespace neutrino {
 
@@ -92,7 +92,7 @@ Image *Main::read_image(string name) {
   fseek(file, 0, SEEK_END);
   uword size = ftell(file);
   rewind(file);
-  own_vector<word> buffer(ALLOCATE_VECTOR(word, size));
+  own_array<word> buffer(ALLOCATE_ARRAY(word, size));
   for (uword i = 0; i < size / kWordSize;) {
     const uword kSize = 256;
     uint8_t bytes[kSize];

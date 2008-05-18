@@ -575,9 +575,9 @@ bool String::starts_with_vowel() {
   }
 }
 
-vector<char> String::c_str() {
+array<char> String::c_str() {
   uword length = this->length();
-  vector<char> result = ALLOCATE_VECTOR(char, length + 1);
+  array<char> result = ALLOCATE_ARRAY(char, length + 1);
   for (uword i = 0; i < length; i++)
     result[i] = get(i);
   result[length] = '\0';

@@ -2,7 +2,7 @@
 #define _VALUES
 
 #include "heap/ref.h"
-#include "utils/vector.h"
+#include "utils/array.h"
 #include "utils/consts.h"
 #include "utils/globals.h"
 #include "utils/string.h"
@@ -295,7 +295,7 @@ public:
   DECLARE_FIELD(word*, top_marker);
   DECLARE_FIELD(Status, status);
   inline word *bottom();
-  inline vector<word> buffer();
+  inline array<word> buffer();
 
   IF_DEBUG(void validate_stack());
   void for_each_stack_field(FieldVisitor &visitor);
@@ -402,7 +402,7 @@ public:
    */
   template <typename T> inline T &at(uword index);
 
-  template <typename T> inline vector<T> buffer();
+  template <typename T> inline array<T> buffer();
 
   static inline uword size_for(uword byte_count);
 
@@ -432,7 +432,7 @@ public:
 
   bool string_equals(String *that);
   bool starts_with_vowel();
-  vector<char> c_str();
+  array<char> c_str();
 
   static inline uword size_for(uword chars);
 
@@ -443,7 +443,7 @@ public:
 template <>
 class ref_traits<String> : public ref_traits<AbstractBuffer> {
 public:
-  inline vector<char> c_str();
+  inline array<char> c_str();
 };
 
 DEFINE_REF_CLASS(String);
@@ -468,7 +468,7 @@ class Buffer : public AbstractBuffer {
 class Code : public AbstractBuffer {
 public:
   inline uint16_t &at(uword index);
-  inline vector<uint16_t> buffer();
+  inline array<uint16_t> buffer();
   inline uword length();
 };
 
@@ -489,7 +489,7 @@ DEFINE_REF_CLASS(Code);
 class AbstractTuple : public Object {
 public:
   DECLARE_FIELD(uword, length);
-  inline vector<Value*> buffer();
+  inline array<Value*> buffer();
   inline Value *&get(uword index);
   inline void set(uword index, Value *value);
   

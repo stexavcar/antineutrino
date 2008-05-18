@@ -25,7 +25,7 @@ public:
   void marshal_object_deep(FObject *obj);
   void flush();
   bool has_been_flushed() { return has_been_flushed_; }
-  vector<word> data() { return buffer().data(); }
+  array<word> data() { return buffer().data(); }
 private:
   heap_buffer &buffer() { return buffer_; }
   heap_buffer buffer_;
@@ -42,8 +42,8 @@ public:
   FrozenHeap(Serializer &stream);
   FImmediate *cook(RawFValue *obj);
 private:
-  vector<word> &data() { return data_; }
-  vector<word> data_;
+  array<word> &data() { return data_; }
+  array<word> data_;
 };
 
 

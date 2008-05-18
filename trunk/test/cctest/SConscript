@@ -24,7 +24,7 @@ public:\
 int main(int argc, const char* argv[]) {
   bool has_run_tests = false;
   for (int i = 1; i < argc; i++) {
-    const char* current = argv[i];
+    string current = argv[i];\
     %(cases)s
   }
   if (!has_run_tests)
@@ -34,10 +34,10 @@ int main(int argc, const char* argv[]) {
 """
 
 test_case_template = """
-  if (neutrino::string::equals(current, "%(name)s")) {
-    has_run_tests = true;
-    Test::%(name)s();
-  }\
+    if (current == "%(name)s") {
+      has_run_tests = true;
+      Test::%(name)s();
+    }\
 """
 
 test_decl_template = """

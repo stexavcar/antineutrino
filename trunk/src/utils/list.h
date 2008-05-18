@@ -3,7 +3,7 @@
 
 #include "utils/misc.h"
 #include "utils/types.h"
-#include "utils/vector.h"
+#include "utils/array.h"
 
 namespace neutrino {
 
@@ -17,7 +17,7 @@ class list {
 public:
   list();
   list(T *elms, uword length) : elms_(elms), length_(length) { }
-  list(vector<T> elms, uword length) : elms_(elms.start()), length_(length) { }
+  list(array<T> elms, uword length) : elms_(elms.start()), length_(length) { }
   uword length() { return length_; }
   T &operator[](uword index);
   list<T> sublist(uword start, uword length);
@@ -42,7 +42,7 @@ public:
   T remove_last();
   T pop();
   T peek();
-  vector<T> data();
+  array<T> data();
   T &operator[](uword index);
   T *start() { return data_; }
 

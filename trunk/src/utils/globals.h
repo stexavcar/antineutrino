@@ -38,12 +38,14 @@ static const bool kDebug = false;
 
 #ifdef PARANOID
 static const bool kParanoid = true;
-#define IF_PARANOID(arg) arg
-#define IS_PARANOID(t, e) t
+#define IF_PARANOID(arg)     arg
+#define IF_NOT_PARANOID(arg) typedef void SEMI_STATIC_JOIN(__IfNotParanoid__, __LINE__)
+#define IS_PARANOID(t, e)    t
 #else
 static const bool kParanoid = false;
-#define IF_PARANOID(arg) typedef void SEMI_STATIC_JOIN(__IfParanoid__, __LINE__)
-#define IS_PARANOID(t, e) e
+#define IF_PARANOID(arg)     typedef void SEMI_STATIC_JOIN(__IfParanoid__, __LINE__)
+#define IF_NOT_PARANOID(arg) arg
+#define IS_PARANOID(t, e)    e
 #endif
 
 template <typename T>

@@ -72,7 +72,7 @@ public:
   uint16_t constant_pool_index(ref<Value> value);
   
   static void disassemble_next_instruction(uword *pc_ptr, 
-      vector<uint16_t> data, vector<Value*> pool, string_buffer &buf);
+      array<uint16_t> data, array<Value*> pool, string_buffer &buf);
   
   void adjust_stack_height(word delta);
 

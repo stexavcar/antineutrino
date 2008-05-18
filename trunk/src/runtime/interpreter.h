@@ -127,9 +127,9 @@ public:
   
   /**
    * Unwinds a stack frame in an uncooked stack, where the given
-   * vector is the stack buffer.
+   * array is the stack buffer.
    */
-  inline void unwind(vector<word> buffer);
+  inline void unwind(array<word> buffer);
   
   inline void push(Value *value);
   inline bool is_bottom();

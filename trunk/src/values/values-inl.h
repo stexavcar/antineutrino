@@ -5,7 +5,7 @@
 #include "heap/pointer-inl.h"
 #include "heap/ref-inl.h"
 #include "runtime/context.h"
-#include "utils/vector-inl.h"
+#include "utils/array-inl.h"
 #include "utils/checks.h"
 #include "utils/types-inl.h"
 #include "values/values.h"
@@ -367,7 +367,7 @@ uword String::size_for(uword chars) {
   return ValuePointer::align(raw_size);
 }
 
-vector<char> ref_traits<String>::c_str() {
+array<char> ref_traits<String>::c_str() {
   return open(this)->c_str();
 }
 
@@ -389,9 +389,9 @@ word *Stack::bottom() {
   return &ValuePointer::access_direct<word>(this, Stack::kHeaderSize);
 }
 
-vector<word> Stack::buffer() {
+array<word> Stack::buffer() {
   word *start = &ValuePointer::access_direct<word>(this, Stack::kHeaderSize);
-  return NEW_VECTOR(word, start, height());
+  return NEW_ARRAY(word, start, height());
 }
 
 
@@ -425,8 +425,8 @@ Value *&AbstractTuple::get(uword index) {
   return ValuePointer::access_field<Value*>(this, AbstractTuple::kHeaderSize + kPointerSize * index);
 }
 
-vector<Value*> AbstractTuple::buffer() {
-  return NEW_VECTOR(Value*, &ValuePointer::access_direct<Value*>(this, AbstractTuple::kHeaderSize), length());
+array<Value*> AbstractTuple::buffer() {
+  return NEW_ARRAY(Value*, &ValuePointer::access_direct<Value*>(this, AbstractTuple::kHeaderSize), length());
 }
 
 void AbstractTuple::set(uword index, Value *value) {
@@ -555,8 +555,8 @@ T &AbstractBuffer::at(uword index) {
 }
 
 template <typename T>
-vector<T> AbstractBuffer::buffer() {
-  return NEW_VECTOR(T, &ValuePointer::access_direct<T>(this, kHeaderSize), size<T>());
+array<T> AbstractBuffer::buffer() {
+  return NEW_ARRAY(T, &ValuePointer::access_direct<T>(this, kHeaderSize), size<T>());
 }
 
 uword AbstractBuffer::size_for(uword byte_count) {
@@ -573,7 +573,7 @@ uint16_t &Code::at(uword index) {
   return AbstractBuffer::at<uint16_t>(index);
 }
 
-vector<uint16_t> Code::buffer() {
+array<uint16_t> Code::buffer() {
   return AbstractBuffer::buffer<uint16_t>();
 }
 

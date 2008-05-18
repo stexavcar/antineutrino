@@ -3,7 +3,7 @@
 
 #include "utils/checks.h"
 #include "utils/list.h"
-#include "utils/vector-inl.h"
+#include "utils/array-inl.h"
 
 
 namespace neutrino {
@@ -32,8 +32,8 @@ list<T> list<T>::sublist(uword start, uword length) {
 }
 
 template <typename T>
-vector<T> list_buffer<T>::data() {
-  return NEW_VECTOR(T, data_, length_);
+array<T> list_buffer<T>::data() {
+  return NEW_ARRAY(T, data_, length_);
 }
 
 template <typename T>
