@@ -25,7 +25,7 @@ own_array<T>::~own_array() {
 template <typename T>
 array<T> own_array<T>::release() {
   array<T> result = value_;
-  value_ = NEW_ARRAY(T, NULL, 0);
+  value_ = NEW_ARRAY(static_cast<T*>(NULL), 0);
   return result;
 }
 

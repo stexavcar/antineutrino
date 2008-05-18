@@ -25,12 +25,27 @@ private:
   IF_DEBUG(uword length_);
 };
 
-#define ALLOCATE_ARRAY(Type, length) NEW_ARRAY(Type, new Type[length], length)
+#define ALLOCATE_ARRAY(Type, length) NEW_ARRAY(new Type[length], length)
 
 #ifdef DEBUG
-#define NEW_ARRAY(Type, data, length) neutrino::array<Type>(data, length)
+
+// Introduced to get type inference to add up
+template <typename T>
+static inline array<T> new_array(T *data, uword length) {
+  return array<T>(data, length);
+}
+
+#define NEW_ARRAY(data, length) neutrino::new_array(data, length)
+
 #else
-#define NEW_ARRAY(Type, data, length) neutrino::array<Type>(data)
+
+template <typename T>
+static inline array<T> new_array(T *data) {
+  return array<T>(data);
+}
+
+#define NEW_ARRAY(data, length) neutrino::new_array(data)
+
 #endif
 
 }

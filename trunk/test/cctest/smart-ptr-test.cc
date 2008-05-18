@@ -18,13 +18,10 @@ void Test::simple_checked_ptr_test() {
   CHECK_EQ(9, ints[0]);
   CHECK_EQ(8, ints[1]);
   CHECK_EQ(7, ints[2]);
-#ifdef PARANOID
   // Paranoid mode does bounds checking
-  CHECK_ABORTS(cnOutOfBounds, ints[3]);
-#else
+  IF_PARANOID(CHECK_ABORTS(cnOutOfBounds, ints[3]));
   // Non-paranoid mode doesn't
-  CHECK_EQ(6, ints[3]);
-#endif // PARANOID
+  IF_NOT_PARANOID(CHECK_EQ(6, ints[3]));
 }
 
 
@@ -32,9 +29,6 @@ void Test::checked_ptr_simple_arith_test() {
   checked_ptr<int> ints = ints_start();
   checked_ptr<int> second = ints + 2;
   CHECK_EQ(7, second[0]);
-#ifdef PARANOID
-  CHECK_ABORTS(cnOutOfBounds, second[1]);
-#else
-  CHECK_EQ(6, second[1]);
-#endif
+  IF_PARANOID(CHECK_ABORTS(cnOutOfBounds, second[1]));
+  IF_NOT_PARANOID(CHECK_EQ(6, second[1]));
 }

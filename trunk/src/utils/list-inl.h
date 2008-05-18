@@ -33,7 +33,7 @@ list<T> list<T>::sublist(uword start, uword length) {
 
 template <typename T>
 array<T> list_buffer<T>::data() {
-  return NEW_ARRAY(T, data_, length_);
+  return NEW_ARRAY(data_, length_);
 }
 
 template <typename T>

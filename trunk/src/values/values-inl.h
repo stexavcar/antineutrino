@@ -391,7 +391,7 @@ word *Stack::bottom() {
 
 array<word> Stack::buffer() {
   word *start = &ValuePointer::access_direct<word>(this, Stack::kHeaderSize);
-  return NEW_ARRAY(word, start, height());
+  return NEW_ARRAY(start, height());
 }
 
 
@@ -426,7 +426,7 @@ Value *&AbstractTuple::get(uword index) {
 }
 
 array<Value*> AbstractTuple::buffer() {
-  return NEW_ARRAY(Value*, &ValuePointer::access_direct<Value*>(this, AbstractTuple::kHeaderSize), length());
+  return NEW_ARRAY(&ValuePointer::access_direct<Value*>(this, AbstractTuple::kHeaderSize), length());
 }
 
 void AbstractTuple::set(uword index, Value *value) {
@@ -556,7 +556,7 @@ T &AbstractBuffer::at(uword index) {
 
 template <typename T>
 array<T> AbstractBuffer::buffer() {
-  return NEW_ARRAY(T, &ValuePointer::access_direct<T>(this, kHeaderSize), size<T>());
+  return NEW_ARRAY(&ValuePointer::access_direct<T>(this, kHeaderSize), size<T>());
 }
 
 uword AbstractBuffer::size_for(uword byte_count) {
