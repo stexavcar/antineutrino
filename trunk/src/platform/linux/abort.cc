@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #include "platform/posix/abort.cc"
-#include "utils/scoped-ptrs-inl.h"
+#include "utils/smart-ptrs-inl.h"
 
 namespace neutrino {
 
