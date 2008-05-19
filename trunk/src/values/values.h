@@ -314,7 +314,7 @@ public:
   void recook_stack();
 
   static inline uword size_for(uword height);
-  static const uword kInitialHeight = 256;
+  static const uword kInitialHeight = 144;
 
   static const uword kHeightOffset    = Object::kHeaderSize;
   static const uword kFpOffset        = kHeightOffset + kPointerSize;
@@ -764,7 +764,8 @@ public:
 
 class StackOverflow : public Signal {
 public:
-  static inline StackOverflow *make();
+  inline uword height();
+  static inline StackOverflow *make(uword height);
 };
 
 /**

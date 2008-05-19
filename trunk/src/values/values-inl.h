@@ -647,8 +647,12 @@ Nothing *Nothing::make() {
   return cast<Nothing>(ValuePointer::tag_as_signal(sNothing, 0));
 }
 
-StackOverflow *StackOverflow::make() {
-  return cast<StackOverflow>(ValuePointer::tag_as_signal(sStackOverflow, 0));
+uword StackOverflow::height() {
+  return payload();
+}
+
+StackOverflow *StackOverflow::make(uword height) {
+  return cast<StackOverflow>(ValuePointer::tag_as_signal(sStackOverflow, height));
 }
 
 ForwardPointer *ForwardPointer::make(Object *obj) {

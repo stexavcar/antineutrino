@@ -227,6 +227,11 @@ static void write_signal_short_on(Signal *obj, string_buffer &buf) {
   case Signal::sInternalError:
     buf.append("@<internal error>");
     break;
+  case Signal::sStackOverflow: {
+    uword height = cast<StackOverflow>(obj)->height();
+    buf.printf("@<stack overflow: %>", elms(height));
+    break;
+  }
   case Signal::sTypeMismatch: {
     string expected = Layout::name_for(cast<TypeMismatch>(obj)->expected());
     string found = Layout::name_for(cast<TypeMismatch>(obj)->found());

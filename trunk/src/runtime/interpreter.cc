@@ -102,6 +102,29 @@ static void unresolved_global(Value *name) {
 }
 
 
+static Data *grow_stack(ref<Task> task, Heap &heap) {
+  Stack *old_stack = task->stack();
+  uword new_size = grow_value(old_stack->height());
+  Data *value = heap.new_stack(new_size);
+  if (is<Signal>(value)) return value;
+  Stack *new_stack = cast<Stack>(value);
+  old_stack->uncook_stack();
+  // Copy the full contents of the old stack into the new
+  ::memcpy(ValuePointer::address_of(new_stack),
+      ValuePointer::address_of(old_stack),
+      old_stack->size_in_memory());
+  // Be sure to restore the correct height after it was overwritten
+  // with the old one by memcpy
+  new_stack->set_height(new_size);
+  // Recook both stacks.  The old stack should be garbage but just in
+  // case we recook it anyway.
+  old_stack->recook_stack();
+  new_stack->recook_stack();
+  task->set_stack(new_stack);
+  return new_stack;
+}
+
+
 Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
   StackState initial_frame = prepare_call(task, lambda, 0);
   initial_frame.push_activation(0, *lambda);
@@ -115,6 +138,13 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
     if (is<Signal>(value)) {
       if (Options::trace_signals)
         Log::get().info("Signal: %", elms(value));
+      if (is<StackOverflow>(value)) {
+        value = grow_stack(task, runtime().heap());
+        // If grow_stack returns a signal then we have to fall through
+        // to get a gc.  Otherwise we can just continue.
+        if (!is<Signal>(value))
+          continue;
+      }
       if (is<AllocationFailed>(value)) {
         Stack *old_stack = task->stack();
         runtime().heap().memory().collect_garbage(runtime());
@@ -140,17 +170,14 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
   } while (false)
 
 
-#define CHECK_STACK_HEIGHT(value)
-
-/*do {                               \
-    Lambda *__lambda__ = (value);                                    \
-    if (frame.fp() + __lambda__->max_stack_height() >= stack_limit)  \
-      return StackOverflow::make();                                  \
-  } while (false)*/
+#define CHECK_STACK_HEIGHT(__lambda__) do {                          \
+    if (frame.fp().value() + (__lambda__)->max_stack_height() >= stack_limit) \
+      RETURN(StackOverflow::make(stack->height()));                  \
+  } while (false)
 
 
 Data *Interpreter::interpret(Stack *stack, StackState &frame) {
-  bounded_ptr<word> stack_limit = stack->bound(stack->bottom()) + (stack->height() - StackState::kSize);
+  word *stack_limit = stack->bottom() + (stack->height() - 4 * StackState::kSize);
   uword pc = frame.prev_pc();
   frame.unwind(stack);
   Lambda *lambda;
