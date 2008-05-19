@@ -29,6 +29,20 @@ private:
   uword length_;
 };
 
+
+/**
+ * A list object that contains its own elements.  This can for
+ * instance be used to stack allocate lists along with their elements.
+ */
+template <typename T, int n>
+class list_value : public list<T> {
+public:
+  list_value() : list<T>(buffer_, n) { }
+private:
+  T buffer_[n];
+};
+
+
 /**
  * A locally scoped heap-allocated extensible list.
  */

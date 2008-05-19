@@ -1,4 +1,4 @@
-#include <stdarg.h>
+#include <ctime>
 
 #include "platform/abort.h"
 #include "utils/checks.h"
@@ -10,26 +10,45 @@ static Conditions kDefaultConditions;
 Conditions *Conditions::current_ = NULL;
 Log Log::instance_;
 
+
+// Note that because of the call to localtime this function is not
+// thread safe.  Who came up with the idea of sharing the result
+// value between all invocations of localtime?!?
+static string format_current_time(list<char> &buf) {
+  time_t raw_now = ::time(NULL);
+  struct tm *now = ::localtime(&raw_now);
+  size_t count = ::strftime(buf.start(), buf.length(), "%X", now);
+  buf[count] = '\0'; // just to be on the safe side
+  return string(buf.start(), count);
+}
+
+
 void Log::info(string format, const fmt_elms &args) {
   string_buffer buf;
+  list_value<char, 16> time_buf;
+  buf.printf("[%] ", elms(format_current_time(time_buf)));
   buf.printf(format, args);
   buf.raw_string().println();
 }
+
 
 Conditions &Conditions::get() {
   if (current_ == NULL) return kDefaultConditions;
   else return *current_;
 }
 
+
 void Conditions::notify(Condition cause) {
   // ignore
 }
+
 
 MAKE_ENUM_INFO_HEADER(Condition)
 #define MAKE_ENTRY(Name) MAKE_ENUM_INFO_ENTRY(cn##Name)
 eConditions(MAKE_ENTRY)
 #undef MAKE_ENTRY
 MAKE_ENUM_INFO_FOOTER()
+
 
 void Conditions::check_is_failed(string file_name, int line_number,
     string type_name, uword type_tag, Data *data,
@@ -61,6 +80,7 @@ void Conditions::check_is_failed(string file_name, int line_number,
   abort(buf.raw_string());
 }
 
+
 void Conditions::check_failed(string file_name, int line_number,
     string source, bool value, Condition cause) {
   notify(cause);
@@ -72,6 +92,7 @@ void Conditions::check_failed(string file_name, int line_number,
   buf.printf(kErrorMessage, elms(file_name, line_number, source));
   abort(buf.raw_string());
 }
+
 
 void Conditions::check_eq_failed(string file_name, int line_number,
     int expected, string expected_source, int value, string value_source,
@@ -89,6 +110,7 @@ void Conditions::check_eq_failed(string file_name, int line_number,
   abort(buf.raw_string());
 }
 
+
 void Conditions::check_eq_failed(string file_name, int line_number,
     string expected, string expected_source, string value,
     string value_source, Condition cause) {
@@ -104,6 +126,7 @@ void Conditions::check_eq_failed(string file_name, int line_number,
       value_source, expected, value));
   abort(buf.raw_string());
 }
+
 
 void Conditions::check_ge_failed(string file_name, int line_number,
     word value, string value_source, word limit, string limit_source,
@@ -121,6 +144,7 @@ void Conditions::check_ge_failed(string file_name, int line_number,
   abort(buf.raw_string());
 }
 
+
 void Conditions::check_lt_failed(string file_name, int line_number,
     int value, string value_source, int limit, string limit_source,
     Condition cause) {
@@ -136,6 +160,7 @@ void Conditions::check_lt_failed(string file_name, int line_number,
       limit_source, value, limit));
   abort(buf.raw_string());
 }
+
 
 void Conditions::check_eq_failed(string file_name, int line_number,
     Value *expected, string expected_source, Value *value,
@@ -154,6 +179,7 @@ void Conditions::check_eq_failed(string file_name, int line_number,
   abort(buf.raw_string());
 }
 
+
 void Conditions::unreachable(string file_name, int line_number,
     Condition cause) {
   notify(cause);
@@ -165,6 +191,7 @@ void Conditions::unreachable(string file_name, int line_number,
   buf.printf(kErrorMessage, elms(file_name, line_number));
   abort(buf.raw_string());
 }
+
 
 void Conditions::unhandled(string file_name, int line_number,
     string enum_name, word value, AbstractEnumInfo &info,
@@ -180,14 +207,17 @@ void Conditions::unhandled(string file_name, int line_number,
   abort(buf.raw_string());
 }
 
+
 void Conditions::error_occurred(string format, const fmt_elms &args) {
   string_buffer buf;
   buf.printf(format, args);
   abort(buf.raw_string());
 }
 
+
 void Conditions::abort(string message) {
   Abort::abort(message);
 }
+
 
 } // namespace neutrino

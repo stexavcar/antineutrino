@@ -97,11 +97,9 @@ string string_buffer::raw_string() {
 }
 
 void string_buffer::printf(string format, const fmt_elms &args) {
-  const int kMaxParamsLength = 16;
   // Make the params buffer large enough to allow changes before and
   // after the param string
-  char params_buffer[kMaxParamsLength];
-  list<char> params(params_buffer, kMaxParamsLength);
+  list_value<char, 16> params;
   uword i = 0;
   uword cursor = 0;
   while (i < format.length()) {

@@ -6,10 +6,12 @@
 
 namespace neutrino {
 
+
 #define eConditions(VISIT)                                           \
   VISIT(Unknown)         VISIT(OutOfBounds)   VISIT(NoRefScope)      \
   VISIT(CastError)       VISIT(Validation)    VISIT(Disallowed)      \
   VISIT(ForwarderState)
+
 
 enum Condition {
   cnNoProblem = 0
@@ -23,7 +25,6 @@ class Log {
 public:
   
   void info(string format, const fmt_elms &args);
-  
   static Log &get() { return instance_; }
   
 private:
