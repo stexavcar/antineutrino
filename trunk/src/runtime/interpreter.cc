@@ -113,6 +113,8 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
     Data *value = interpret(task->stack(), frame);
     ASSERT(task->stack()->status().is_parked);
     if (is<Signal>(value)) {
+      if (Options::trace_signals)
+        Log::get().info("Signal: %", elms(value));
       if (is<AllocationFailed>(value)) {
         Stack *old_stack = task->stack();
         runtime().heap().memory().collect_garbage(runtime());

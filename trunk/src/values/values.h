@@ -314,7 +314,7 @@ public:
   void recook_stack();
 
   static inline uword size_for(uword height);
-  static const uword kInitialHeight = 2048;
+  static const uword kInitialHeight = 256;
 
   static const uword kHeightOffset    = Object::kHeaderSize;
   static const uword kFpOffset        = kHeightOffset + kPointerSize;

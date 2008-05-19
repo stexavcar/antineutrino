@@ -5,7 +5,7 @@ namespace neutrino {
 
 DEFINE_FLAG(bool, Options, print_stats_on_exit, false);
 
-DEFINE_FLAG(bool, Options, trace_gc, false);
+DEFINE_FLAG(bool, Options, trace_signals, false);
 
 COND_DEFINE_FLAG(IS_PARANOID, bool, Options, check_stack_height, false);
 

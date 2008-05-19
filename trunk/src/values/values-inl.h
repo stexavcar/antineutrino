@@ -383,7 +383,7 @@ DEFINE_ACCESSORS(word*,         Stack, top_marker, TopMarker)
 DEFINE_ACCESSORS(Stack::Status, Stack, status,     Status)
 
 uword Stack::size_for(uword height) {
-  return kHeaderSize + height;
+  return kHeaderSize + height * kWordSize;
 }
 
 word *Stack::bottom() {
