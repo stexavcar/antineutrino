@@ -33,7 +33,7 @@ static inline persistent<C> new_persistent(C *obj) {
 }
 
 template <class C>
-C* abstract_ref<C>::operator->() {
+C* abstract_ref<C>::operator->(){
   ASSERT(cell() != 0);
   return *cell();
 }

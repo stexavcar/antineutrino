@@ -21,14 +21,17 @@ bool Runtime::initialize(Architecture *arch) {
 }
 
 void Runtime::start() {
-  Data *value = roots().toplevel()->get(cast<String>(heap().new_string("main")));
-  if (is<Nothing>(value)) {
-    Conditions::get().error_occurred("Error: no function 'main' was defined.", elms());
-  } else if (!is<Lambda>(value)) {
-    Conditions::get().error_occurred("Value 'main' is not a function.", elms());
-  }
   ref_scope scope(refs());
-  ref<Lambda> lambda = refs().new_ref(cast<Lambda>(value));
+  ref<String> main_name = factory().new_string("entry_point");
+  Data *entry_point = roots().toplevel()->get(*main_name);
+  if (is<Nothing>(entry_point)) {
+    Conditions::get().error_occurred("Error: no entry point '%' was defined.",
+        elms(main_name));
+  } else if (!is<Lambda>(entry_point)) {
+    Conditions::get().error_occurred("Entry point '%' is not a function.",
+        elms(main_name));
+  }
+  ref<Lambda> lambda = refs().new_ref(cast<Lambda>(entry_point));
   ref<Task> task = factory().new_task();
   architecture().run(lambda, task);
 }

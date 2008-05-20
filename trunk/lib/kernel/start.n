@@ -1,0 +1,3 @@
+def entry_point() {
+  return main();
+}

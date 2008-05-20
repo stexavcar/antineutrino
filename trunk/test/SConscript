@@ -1,3 +1,4 @@
+import os
 from os.path import join, walk, abspath, exists
 from buildutils import apply_items, read_lines_from, read_files_from
 from pyneu.internal.scanner import KEYWORDS, MODIFIERS
@@ -22,6 +23,13 @@ natives = relative(config['bin'], str(config[prefix + 'natives']))
 pyneu_path = join(config['root'], 'tools', 'pyneu')
 pyneu_files = [ join(pyneu_path, f) for f in read_files_from({ }, pyneu_path, join(pyneu_path, 'pyneu.list')) ]
 
+lib_path = join(config['root'], 'lib')
+lib_files = [ ]
+for (root, dirs, files) in os.walk(lib_path):
+  for file in files:
+    if file.endswith('.n'):
+      lib_files.append(join(root, file))
+
 def add_pyneu_test(arg, dir, fnames):
   tests = []
   for fname in fnames:
@@ -30,7 +38,7 @@ def add_pyneu_test(arg, dir, fnames):
       short_name = fname[:-2]
       compiled_name = short_name + '.nc'
       compile = env.CompilePyNeutrinoTest(compiled_name, full_path)
-      env.Depends(compile, pyneu_files)
+      env.Depends(compile, pyneu_files + lib_files)
       test_file = relative(config['bin'], join(build, compiled_name))
       test_case = PyNeutrinoTestCase(executable, test_file, [ natives ], target)
       config['tests'].append(test_case)

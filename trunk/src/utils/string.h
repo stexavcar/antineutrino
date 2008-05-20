@@ -63,16 +63,18 @@ private:
 class fmt_elm {
 public:
   fmt_elm() : tag_(eEmpty) { }
-  fmt_elm(double value) : tag_(eDouble) { value_.u_double = value; }
-  fmt_elm(uint16_t value) : tag_(eInt) { value_.u_int = value; }
-  fmt_elm(int16_t value) : tag_(eInt) { value_.u_int = value; }
-  fmt_elm(uint32_t value) : tag_(eInt) { value_.u_int = value; }
-  fmt_elm(int32_t value) : tag_(eInt) { value_.u_int = value; }
-  fmt_elm(uint64_t value) : tag_(eInt) { value_.u_int = static_cast<word>(value); }
-  fmt_elm(int64_t value) : tag_(eInt) { value_.u_int = static_cast<word>(value); }
-  fmt_elm(const char *value) : tag_(eCStr) { value_.u_c_str = value; }
-  fmt_elm(const string &value) : tag_(eString) { value_.u_string = &value; }
-  fmt_elm(Data *value) : tag_(eObject) { value_.u_object = value; }
+  fmt_elm(double v) : tag_(eDouble) { value_.u_double = v; }
+  fmt_elm(uint16_t v) : tag_(eInt) { value_.u_int = v; }
+  fmt_elm(int16_t v) : tag_(eInt) { value_.u_int = v; }
+  fmt_elm(uint32_t v) : tag_(eInt) { value_.u_int = v; }
+  fmt_elm(int32_t v) : tag_(eInt) { value_.u_int = v; }
+  fmt_elm(uint64_t v) : tag_(eInt) { value_.u_int = static_cast<word>(v); }
+  fmt_elm(int64_t v) : tag_(eInt) { value_.u_int = static_cast<word>(v); }
+  fmt_elm(const char *v) : tag_(eCStr) { value_.u_c_str = v; }
+  fmt_elm(const string &v) : tag_(eString) { value_.u_string = &v; }
+  fmt_elm(Data *v) : tag_(eObject) { value_.u_object = v; }
+  template <typename T>
+  fmt_elm(const ref<T> &v) : tag_(eRef) { value_.u_ref = reinterpret_cast<const ref<Value>*>(&v); }
   /**
    * Prints this element on the specified buffer.  If the params
    * string is non-null it will be used to configure how this
@@ -81,12 +83,13 @@ public:
   void print_on(string_buffer &buf, string params) const;
   void print_int_on(string_buffer &buf, string params) const;
 private:
-  enum Tag { eInt, eCStr, eString, eDouble, eObject, eEmpty };
+  enum Tag { eInt, eCStr, eString, eDouble, eObject, eRef, eEmpty };
   Tag tag_;
   union {
     word u_int;
     const char *u_c_str;
     const string *u_string;
+    const ref<Value> *u_ref;
     double u_double;
     Data *u_object;
   } value_;

@@ -1,6 +1,7 @@
 #include "utils/list-inl.h"
 #include "utils/string-inl.h"
 #include "platform/stdc-inl.h"
+#include "heap/ref-inl.h"
 
 #include <string.h>
 
@@ -195,6 +196,11 @@ void fmt_elm::print_on(string_buffer &buf, string params) const {
   case eObject: {
     Data *data = value_.u_object;
     data->write_on(buf, Data::UNQUOTED);
+    break;
+  }
+  case eRef: {
+    ref<Value> val = *value_.u_ref;
+    val->write_on(buf, Data::UNQUOTED);
     break;
   }
   default:
