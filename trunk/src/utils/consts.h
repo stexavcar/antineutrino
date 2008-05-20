@@ -368,7 +368,8 @@
   VISIT(2, Assignment,            ValueOffset)                       \
   VISIT(3, Assignment,            Size)                              \
   VISIT(1, Task,                  StackOffset)                       \
-  VISIT(2, Task,                  Size)                              \
+  VISIT(2, Task,                  CallerOffset)                      \
+  VISIT(3, Task,                  Size)                              \
   VISIT(1, RaiseExpression,       NameOffset)                        \
   VISIT(2, RaiseExpression,       ArgumentsOffset)                   \
   VISIT(3, RaiseExpression,       Size)                              \

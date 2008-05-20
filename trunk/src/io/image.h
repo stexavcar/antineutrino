@@ -182,6 +182,7 @@ public:
 class FTask : public FObject {
 public:
   DECLARE_IMAGE_FIELD(Stack, stack);
+  DECLARE_IMAGE_FIELD(Immediate, caller);
 };
 
 class FCell : public FObject {

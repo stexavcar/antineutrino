@@ -233,6 +233,7 @@ Data *Heap::new_task() {
   if (is<AllocationFailed>(task_val)) return task_val;
   Task *result = cast<Task>(task_val);
   result->set_stack(cast<Stack>(stack_val));
+  result->set_caller(roots().nuhll());
   IF_PARANOID(result->validate());
   return result;
 }

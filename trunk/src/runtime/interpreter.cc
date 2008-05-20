@@ -102,7 +102,7 @@ static void unresolved_global(Value *name) {
 }
 
 
-static Data *grow_stack(ref<Task> task, Heap &heap) {
+static Data *grow_stack(Task *task, Heap &heap) {
   Stack *old_stack = task->stack();
   uword new_size = grow_value(old_stack->height());
   Data *value = heap.new_stack(new_size);
@@ -125,35 +125,67 @@ static Data *grow_stack(ref<Task> task, Heap &heap) {
 }
 
 
-Value *Interpreter::call(ref<Lambda> lambda, ref<Task> task) {
-  StackState initial_frame = prepare_call(task, lambda, 0);
+class InterpreterState {
+public:
+  InterpreterState(Task *task) : task_(task) { }
+  Task *task() { return task_; }
+  Stack *stack() { return task()->stack(); }
+private:
+  friend class CaptureInterpreterState;
+  Task *task_;
+};
+
+
+/**
+ * A utility class used to secure the members of an InterpreterState
+ * during gc.
+ */
+class CaptureInterpreterState {
+public:
+  CaptureInterpreterState(RefStack &refs, InterpreterState &state) {
+    task_ = refs.new_ref(state.task_);
+  }
+  void restore(InterpreterState &state) {
+    state.task_ = *task_;
+  }
+private:
+  ref<Task> task_;
+};
+
+
+Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
+  StackState initial_frame = prepare_call(initial_task, lambda, 0);
   initial_frame.push_activation(0, *lambda);
-  initial_frame.park(task->stack());
+  initial_frame.park(initial_task->stack());
+  InterpreterState state(*initial_task);
   while (true) {
-    ASSERT(task->stack()->status().is_parked);
-    StackState frame(task->stack()->bound(task->stack()->fp()));
-    IF_DEBUG(task->stack()->status().is_parked = false);
-    Data *value = interpret(task->stack(), frame);
-    ASSERT(task->stack()->status().is_parked);
+    ASSERT(state.stack()->status().is_parked);
+    StackState frame(state.stack()->bound(state.stack()->fp()));
+    IF_DEBUG(state.stack()->status().is_parked = false);
+    Data *value = interpret(state.stack(), frame);
+    ASSERT(state.stack()->status().is_parked);
     if (is<Signal>(value)) {
       if (Options::trace_signals)
         Log::get().info("Signal: %", elms(value));
       if (is<StackOverflow>(value)) {
-        value = grow_stack(task, runtime().heap());
+        value = grow_stack(state.task(), runtime().heap());
         // If grow_stack returns a signal then we have to fall through
         // to get a gc.  Otherwise we can just continue.
         if (!is<Signal>(value))
           continue;
       }
       if (is<AllocationFailed>(value)) {
-        Stack *old_stack = task->stack();
+        ref_scope scope(runtime().refs());
+        Stack *old_stack = state.stack();
+        CaptureInterpreterState capture(runtime().refs(), state);
         runtime().heap().memory().collect_garbage(runtime());
-        frame.reset(old_stack, task->stack());
+        capture.restore(state);
+        frame.reset(old_stack, state.stack());
       } else {
         Conditions::get().error_occurred("Unexpected signal: %", elms(value));
       }
     } else {
-      task->stack()->status().is_empty = true;
+      state.stack()->status().is_empty = true;
       return cast<Value>(value);
     }
   }
@@ -367,9 +399,6 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
       pc = 0;
       break;
     }
-    case ocAttach: {
-      UNREACHABLE();
-    }
     case ocNew: {
       uint16_t layout_template_index = code[pc + 1];
       Layout *layout_template = cast<Layout>(constant_pool[layout_template_index]);
@@ -461,6 +490,9 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
         pc += OpcodeInfo<ocBuiltin>::kSize;
       }
       break;
+    }
+    case ocAttach: {
+      UNREACHABLE();
     }
     case ocYield: case ocReturn: {
       Value *value = frame.pop();

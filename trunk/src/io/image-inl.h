@@ -355,6 +355,7 @@ DEFINE_GETTER    (Smi,              LocalDefinition,       type,            Type
 DEFINE_GETTER    (Symbol,           Assignment,            symbol,          Symbol)
 DEFINE_GETTER    (SyntaxTree,       Assignment,            value,           Value)
 DEFINE_GETTER    (Stack,            Task,                  stack,           Stack)
+DEFINE_GETTER    (Immediate,        Task,                  caller,          Caller)
 DEFINE_GETTER    (Immediate,        Cell,                  value,           Value)
 DEFINE_GETTER    (Immediate,        ForwarderDescriptor,   target,          Target)
 DEFINE_GETTER    (Tuple,            Arguments,             arguments,       Arguments)

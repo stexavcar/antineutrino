@@ -333,15 +333,17 @@ DEFINE_REF_CLASS(Stack);
 // --- T a s k ---
 // ---------------
 
-#define eTaskFields(VISIT, arg)                              \
-  VISIT(Stack, stack, Stack, arg)
+#define eTaskFields(VISIT, arg)                                      \
+  VISIT(Stack,     stack,  Stack,  arg)                              \
+  VISIT(Immediate, caller, Caller, arg)
 
 class Task : public Object {
 public:
   eTaskFields(DECLARE_OBJECT_FIELD, 0)
 
-  static const uword kStackOffset = Object::kHeaderSize;
-  static const uword kSize = kStackOffset + kPointerSize;
+  static const uword kStackOffset  = Object::kHeaderSize;
+  static const uword kCallerOffset = kStackOffset + kPointerSize;
+  static const uword kSize         = kCallerOffset + kPointerSize;
 };
 
 template <> class ref_traits<Task> : public ref_traits<Object> {
