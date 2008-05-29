@@ -16,6 +16,7 @@ main/options.cc
 monitor/monitor.cc
 platform/<platform>/abort.cc
 platform/<platform>/dylib.cc
+public/plankton.c
 runtime/builtins.cc
 runtime/interpreter.cc
 runtime/runtime.cc
