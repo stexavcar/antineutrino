@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include "public/neutrino.h"
+#include "plankton/neutrino.h"
 #include "platform/stdc-inl.h"
 
 namespace neutrino {

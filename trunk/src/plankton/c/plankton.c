@@ -1,4 +1,5 @@
-#include "public/plankton.h"
+#include "plankton/c/channel.h"
+#include "plankton/c/plankton.h"
 
 #include <stdlib.h>
 #include <string.h>

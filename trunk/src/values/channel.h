@@ -3,7 +3,7 @@
 
 #include "utils/globals.h"
 #include "utils/types.h"
-#include "public/neutrino.h"
+#include "plankton/neutrino.h"
 
 namespace neutrino {
 
