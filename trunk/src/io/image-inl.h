@@ -284,7 +284,7 @@ Value *FTuple::get_raw(uword index) {
 
 DEFINE_RAW_GETTER(uword, Code, length, Length)
 
-uword FCode::at(uword index) {
+uword FCode::get(uword index) {
   ASSERT(index < length());
   return reinterpret_cast<word>(access_field(this, FCode_HeaderSize + index));
 }

@@ -147,7 +147,7 @@ void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
       uword length = img->length();
       Code *code = cast<Code>(heap.new_code(length));
       for (uword i = 0; i < length; i++)
-        code->at(i) = img->at(i);
+        code->set(i, img->get(i));
       obj->point_forward(code);
       break;
     }

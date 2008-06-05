@@ -26,9 +26,10 @@ ref<C> RefStack::new_ref(C *obj) {
 }
 
 template <class C>
-static inline persistent<C> new_persistent(C *obj) {
-  C **cell = new C*;
-  *cell = obj;
+inline persistent<C> RefStack::new_persistent(C *obj) {
+  uword index = persistent_list().length();
+  persistent_cell *cell = new persistent_cell(obj, *this, index);
+  persistent_list().push(cell);
   return persistent<C>(cell);
 }
 

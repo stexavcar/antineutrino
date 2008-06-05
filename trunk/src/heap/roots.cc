@@ -16,10 +16,10 @@ Roots::Roots() {
     iter.next() = Smi::from_int(0);
 }
 
-bool Roots::initialize(Heap& heap) {
+Signal *Roots::initialize(Heap& heap) {
   // Complicated roots
   Data *layout_layout_val = heap.allocate_layout(tLayout);
-  if (is<AllocationFailed>(layout_layout_val)) return false;
+  if (is<AllocationFailed>(layout_layout_val)) return cast<Signal>(layout_layout_val);
   Layout *layout_layout_obj = reinterpret_cast<Layout*>(layout_layout_val);
   layout_layout_obj->set_layout(layout_layout_obj);
   layout_layout() = cast<Layout>(layout_layout_obj);
@@ -28,7 +28,7 @@ bool Roots::initialize(Heap& heap) {
   // makes them simple.
 #define ALLOCATE_ROOT(n, Type, name, Name, allocator)                \
   Data *name##_val = heap.allocator;                                 \
-  if (is<AllocationFailed>(name##_val)) return false;                \
+  if (is<AllocationFailed>(name##_val)) return cast<Signal>(name##_val); \
   name() = cast<Type>(name##_val);
 eSimpleRoots(ALLOCATE_ROOT)
 #undef ALLOCATE_ROOT
@@ -37,7 +37,7 @@ eSimpleRoots(ALLOCATE_ROOT)
   name()->set_methods(empty_tuple());
 eRootLayouts(FIXUP_LAYOUT)
 #undef FIXUP_LAYOUT
-  return true;
+  return Success::make();
 
 #ifdef PARANOID
 #define VALIDATE(n, Type, name, Name, allocator) name()->validate();

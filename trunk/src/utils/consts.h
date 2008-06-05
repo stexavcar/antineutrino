@@ -64,7 +64,8 @@
   VISIT(41, InternalError,         0)                      \
   VISIT(42, Nothing,               0)                      \
   VISIT(43, TypeMismatch,          0)                      \
-  VISIT(44, StackOverflow,         0)
+  VISIT(44, StackOverflow,         0)                      \
+  VISIT(45, Success,               0)
 
 
 #define eValueTypes(VISIT)                                 \
@@ -476,7 +477,8 @@
 
 #define eSimpleInternalRootObjects(VISIT)                                                                                    \
   VISIT(56, Tuple,      empty_tuple,                   EmptyTuple,            new_tuple(0))                                  \
-  VISIT(57, Symbol,     this_symbol,                   ThisSymbol,            new_symbol(vhoid()))
+  VISIT(57, Symbol,     this_symbol,                   ThisSymbol,            new_symbol(vhoid()))                           \
+  VISIT(58, Context,    dummy_context,                 DummyContext,          new_context())
 
 #define eInternalRoots(VISIT)                                        \
   eSimpleInternalRootObjects(VISIT)

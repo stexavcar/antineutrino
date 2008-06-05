@@ -226,7 +226,7 @@ Data *Heap::new_stack(uword height) {
   return result;
 }
 
-Data *Heap::new_task() {
+Data *Heap::new_task(Architecture &arch) {
   Data *stack_val = new_stack(Stack::kInitialHeight);
   if (is<AllocationFailed>(stack_val)) return stack_val;
   Data *task_val = allocate_object(Task::kSize, roots().task_layout());
@@ -235,6 +235,8 @@ Data *Heap::new_task() {
   result->set_stack(cast<Stack>(stack_val));
   result->set_caller(roots().nuhll());
   IF_PARANOID(result->validate());
+  Signal *init_sig = arch.initialize_task(result);
+  if (!is<Success>(init_sig)) return init_sig;
   return result;
 }
 

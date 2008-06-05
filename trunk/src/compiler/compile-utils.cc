@@ -8,7 +8,7 @@ namespace neutrino {
 
 void heap_list::initialize() {
   ref<Tuple> tuple = runtime().factory().new_tuple(16);
-  data_ = new_persistent(*tuple);
+  data_ = runtime().refs().new_persistent(*tuple);
 }
 
 heap_list::~heap_list() {
@@ -23,7 +23,7 @@ void heap_list::extend_capacity() {
   for (uword i = 0; i < capacity; i++)
     new_data.set(i, data().get(runtime().refs(), i));
   data().dispose();
-  set_data(new_persistent(*new_data));
+  set_data(runtime().refs().new_persistent(*new_data));
 }
 
 void heap_list::append(ref<Value> value) {

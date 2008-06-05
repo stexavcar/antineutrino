@@ -576,8 +576,12 @@ uword AbstractBuffer::size_for(uword byte_count) {
 // --- C o d e ---
 // ---------------
 
-uint16_t &Code::at(uword index) {
+uint16_t Code::get(uword index) {
   return AbstractBuffer::at<uint16_t>(index);
+}
+
+void Code::set(uword index, uint16_t value) {
+  AbstractBuffer::at<uint16_t>(index) = value;
 }
 
 array<uint16_t> Code::buffer() {
@@ -588,8 +592,12 @@ uword Code::length() {
   return AbstractBuffer::size<uint16_t>();
 }
 
-uint16_t &ref_traits<Code>::at(uword index) {
-  return open(this)->at(index);
+uint16_t ref_traits<Code>::get(uword index) {
+  return open(this)->get(index);
+}
+
+void ref_traits<Code>::set(uword index, uint16_t value) {
+  open(this)->set(index, value);
 }
 
 uword ref_traits<Code>::length() {
@@ -645,6 +653,10 @@ InstanceType TypeMismatch::found() {
 
 Nothing *Nothing::make() {
   return cast<Nothing>(ValuePointer::tag_as_signal(sNothing, 0));
+}
+
+Success *Success::make() {
+  return cast<Success>(ValuePointer::tag_as_signal(sSuccess, 0));
 }
 
 uword StackOverflow::height() {

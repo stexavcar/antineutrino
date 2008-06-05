@@ -471,7 +471,8 @@ class Buffer : public AbstractBuffer {
 
 class Code : public AbstractBuffer {
 public:
-  inline uint16_t &at(uword index);
+  inline uint16_t get(uword index);
+  inline void set(uword index, uint16_t value);
   inline array<uint16_t> buffer();
   inline uword length();
 };
@@ -479,7 +480,8 @@ public:
 template <>
 class ref_traits<Code> : public ref_traits<AbstractBuffer> {
 public:
-  inline uint16_t &at(uword index);
+  inline uint16_t get(uword index);
+  inline void set(uword index, uint16_t value);
   inline uword length();
 };
 
@@ -762,6 +764,11 @@ public:
 class Nothing : public Signal {
 public:
   static inline Nothing *make();
+};
+
+class Success : public Signal {
+public:
+  static inline Success *make();
 };
 
 class StackOverflow : public Signal {

@@ -13,18 +13,26 @@ namespace neutrino {
 
 class Architecture {
 public:
+  virtual Signal *setup(Runtime &runtime) = 0;
+  virtual void dispose() = 0;
   virtual void run(ref<Lambda> lambda, ref<Task> task) = 0;
   virtual void disassemble(Lambda *lambda, string_buffer &buf) = 0;
+  virtual Signal *initialize_task(Task *task) = 0;
 };
 
 class BytecodeArchitecture : public Architecture {
 public:
   BytecodeArchitecture(Runtime &runtime) : interpreter_(runtime) { }
+  virtual Signal *setup(Runtime &runtime);
+  virtual void dispose();
   virtual void run(ref<Lambda> lambda, ref<Task> task);
   virtual void disassemble(Lambda *lambda, string_buffer &buf);
+  virtual Signal *initialize_task(Task *task);
 private:
   Interpreter &interpreter() { return interpreter_; }
+  persistent<Lambda> bottom() { return bottom_; }
   Interpreter interpreter_;
+  persistent<Lambda> bottom_;
 };
 
 /**
@@ -33,7 +41,8 @@ private:
 class Runtime : public nocopy {
 public:
   Runtime(DynamicLibraryCollection *dylibs = 0);
-  bool initialize(Architecture *arch);
+  ~Runtime();
+  Signal *initialize(Architecture *arch);
 
   bool load_image(Image &image);
   void report_load_error(ImageLoadStatus &info);
@@ -41,7 +50,7 @@ public:
   bool install_object(ref<Object> root, ref<Object> changes);
   bool install_hash_map(ref<HashMap> root, ref<HashMap> changes);
   bool install_layout(ref<Layout> root, ref<Protocol> changes);
-  void start();
+  Signal *start();
 
   // Declare root field ref accessors
   #define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, allocator)      \

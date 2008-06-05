@@ -276,7 +276,7 @@ protocol Repeat {
     def first := state.position;
     def first_value := this.value.parse(state);
     if (first_value = false) {
-      state.position = start;
+      state.position = first;
       return value;
     }
     values.add(first_value);
@@ -302,7 +302,7 @@ protocol Repeat {
 def nonterm(name) -> new Nonterm() { name: name };
 protocol Nonterm {
   
-  def parse(state) -> state.grammar.get_nonterm(this.name).parse(state);
+  def parse(state) -> return state.grammar.get_nonterm(this.name).parse(state);
 
 }
 

@@ -295,7 +295,7 @@ void BytecodeBackend::new_cell() {
 ref<Code> BytecodeBackend::flush_code() {
   ref<Code> result = factory().new_code(code().length());
   for (uword i = 0; i < result.length(); i++)
-    result.at(i) = code()[i];
+    result.set(i, code()[i]);
   return result;
 }
 
@@ -326,10 +326,10 @@ ref<Method> BytecodeBackend::field_getter(uword index,
     ref<Context> context) {
   ref<Code> ld_code = factory().new_code(4);
   STATIC_CHECK(OpcodeInfo<ocLoadField>::kArgc == 2);
-  ld_code->at(0) = ocLoadField;
-  ld_code->at(1) = index;
-  ld_code->at(2) = 0;
-  ld_code->at(3) = ocReturn;
+  ld_code->set(0, ocLoadField);
+  ld_code->set(1, index);
+  ld_code->set(2, 0);
+  ld_code->set(3, ocReturn);
   ref<Lambda> lambda = factory().new_lambda(0, 1, ld_code,
       runtime().empty_tuple(), runtime().nuhll(), context);
   return factory().new_method(selector, signature, lambda);
@@ -342,12 +342,12 @@ ref<Method> BytecodeBackend::field_setter(uword index,
   ref<Code> st_code = factory().new_code(6);
   STATIC_CHECK(OpcodeInfo<ocStoreField>::kArgc == 2);
   STATIC_CHECK(OpcodeInfo<ocArgument>::kArgc == 1);
-  st_code->at(0) = ocArgument;
-  st_code->at(1) = 0;
-  st_code->at(2) = ocStoreField;
-  st_code->at(3) = index;
-  st_code->at(4) = 1;
-  st_code->at(5) = ocReturn;
+  st_code->set(0, ocArgument);
+  st_code->set(1, 0);
+  st_code->set(2, ocStoreField);
+  st_code->set(3, index);
+  st_code->set(4, 1);
+  st_code->set(5, ocReturn);
   ref<Lambda> lambda = factory().new_lambda(1, 1, st_code,
     runtime().empty_tuple(), runtime().nuhll(), context);
   return factory().new_method(selector, signature, lambda);
@@ -398,8 +398,10 @@ void BytecodeBackend::disassemble_next_instruction(uword *pc_ptr,
 }
 
 
+// --- A r c h i t e c t u r e ---
+
+
 void BytecodeArchitecture::run(ref<Lambda> lambda, ref<Task> task) {
-  
   interpreter().call(lambda, task);
 }
 
@@ -411,6 +413,31 @@ void BytecodeArchitecture::disassemble(Lambda *lambda, string_buffer &buf) {
   array<Value*> pool = cast<Tuple>(lambda->constant_pool())->buffer();
   while (pc < code_length)
     BytecodeBackend::disassemble_next_instruction(&pc, code, pool, buf);
+}
+
+
+Signal *BytecodeArchitecture::initialize_task(Task *task) {
+  return Success::make();
+}
+
+
+Signal *BytecodeArchitecture::setup(Runtime &runtime) {
+  Data *code_val = runtime.heap().new_code(1);
+  if (is<Signal>(code_val)) return cast<Signal>(code_val);
+  Code *code = cast<Code>(code_val);
+  code->set(0, ocStackBottom);
+  Roots &roots = runtime.roots();
+  Data *lambda_val = runtime.heap().new_lambda(0, 0, code, 
+      roots.empty_tuple(), 0, roots.dummy_context());
+  if (is<Signal>(lambda_val)) return cast<Signal>(lambda_val);
+  Lambda *lambda = cast<Lambda>(lambda_val);
+  bottom_ = runtime.refs().new_persistent(lambda);
+  return Success::make();
+}
+
+
+void BytecodeArchitecture::dispose() {
+  bottom().dispose();
 }
 
 

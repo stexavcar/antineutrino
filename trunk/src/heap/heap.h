@@ -39,7 +39,7 @@ public:
   
   Data *new_context();
   
-  Data *new_task();
+  Data *new_task(Architecture &arch);
   
   Data *new_stack(uword height);
   

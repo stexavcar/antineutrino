@@ -586,7 +586,7 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
     }
     case ocTask: {
       Lambda *lambda = cast<Lambda>(frame.pop());
-      Data *task_val = runtime().heap().new_task();
+      Data *task_val = runtime().heap().new_task(runtime().architecture());
       if (is<Signal>(task_val)) RETURN(task_val);
       Task *task = cast<Task>(task_val);
       ref_scope scope(runtime().refs());

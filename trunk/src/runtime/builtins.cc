@@ -62,8 +62,8 @@ Data *Builtins::string_hash(BuiltinArguments &args) {
 Data *Builtins::string_eq(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   SIGNAL_CHECK(String, self, to<String>(args.self()));
-  Data *other = to<String>(args[0]);
-  if (is<Nothing>(other)) return args.runtime().roots().fahlse();
+  SIGNAL_CHECK(Immediate, other, to<Immediate>(args[0]));
+  if (!is<String>(other)) return args.runtime().roots().fahlse();
   String *that = cast<String>(other);
   uword length = self->length();
   if (length != that->length())

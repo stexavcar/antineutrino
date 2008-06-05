@@ -26,7 +26,7 @@ public:
   ref<Parameters> new_parameters(ref<Smi> position_count, ref<Tuple> params);
   ref<Lambda> new_lambda(uword argc, uword max_stack_height, ref<Value> code,
       ref<Value> literals, ref<Value> tree, ref<Context> context);
-  ref<Task> new_task();
+  ref<Task> new_task(Architecture &arch);
   ref<LambdaExpression> new_lambda_expression(ref<Parameters> params,
       ref<SyntaxTree> body, bool is_local);
   ref<ReturnExpression> new_return_expression(ref<SyntaxTree> value);

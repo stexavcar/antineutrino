@@ -91,8 +91,8 @@ ref<Lambda> Factory::new_lambda(uword argc, uword max_stack_height,
 }
 
 
-ref<Task> Factory::new_task() {
-  ALLOCATE_CHECKED(Task, new_task());
+ref<Task> Factory::new_task(Architecture &arch) {
+  ALLOCATE_CHECKED(Task, new_task(arch));
 }
 
 

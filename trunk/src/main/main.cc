@@ -17,6 +17,7 @@ namespace neutrino {
 class Main {
 public:
   static void main(list<char*> &args);
+  static Signal *run_system(list<char*> &args);
   static void on_option_error(string message);
   static Image *read_image(string name);
   static void build_arguments(Runtime &runtime);
@@ -44,14 +45,23 @@ DynamicLibraryCollection *Main::load_dynamic_libraries() {
 
 
 void Main::main(list<char*> &args) {
-  if (!Abort::setup_signal_handler()) return;
+  Signal *run_sig = run_system(args);
+  if (is<Success>(run_sig)) return;
+  // Issue an error of some sort...
+  UNREACHABLE();
+}
+
+
+Signal *Main::run_system(list<char*> &args) {
+  if (!Abort::setup_signal_handler()) return Nothing::make();
   FlagParser::parse_flags(args, on_option_error);
   own_ptr<DynamicLibraryCollection> dylibs(load_dynamic_libraries());
-  if (*dylibs == NULL) return;
+  if (*dylibs == NULL) return Nothing::make();
   list<string> files = Options::images;
   Runtime runtime(*dylibs);
   BytecodeArchitecture arch(runtime);
-  runtime.initialize(&arch);
+  Signal *init_sig = runtime.initialize(&arch);
+  if (!is<Success>(init_sig)) return init_sig;
   for (uword i = 0; i < files.length(); i++) {
     ref_scope ref_scope(runtime.refs());
     string file = files[i];
@@ -60,12 +70,13 @@ void Main::main(list<char*> &args) {
     use(loaded); ASSERT(loaded);
   }
   build_arguments(runtime);
-  runtime.start();
+  Signal *start_sig = runtime.start();
   if (Options::print_stats_on_exit) {
     string_buffer stats;
     Monitor::write_on(stats);
     stats.to_string().println();
   }
+  return start_sig;
 }
 
 void Main::build_arguments(Runtime &runtime) {

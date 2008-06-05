@@ -37,7 +37,7 @@ namespace neutrino {
   VISIT(36, Forward,     1, "?")   VISIT(37, BindForwarder, 0, "")     \
   VISIT(38, Swap,        0, "")    VISIT(39, LazyCompile,   0, "")     \
   VISIT(40, StoreCell,   0, "")    VISIT(41, LoadCell,      0, "")     \
-  VISIT(42, NewCell,     0, "")
+  VISIT(42, NewCell,     0, "")    VISIT(43, StackBottom,   0, "")
 
 enum Opcode {
   __first_opcode = -1
@@ -106,7 +106,8 @@ class StackState {
 public:
   StackState(bounded_ptr<word> fp, bounded_ptr<word>sp)
       : fp_(fp), sp_(sp) { }
-  StackState(bounded_ptr<word> fp) : fp_(fp), sp_(fp + kSize) { }
+  StackState(bounded_ptr<word> fp)
+      : fp_(fp), sp_(fp + kSize) { }
   uword locals() { return sp() - (fp() + kSize); }
   inline uword &prev_pc();
   inline word *&prev_fp();

@@ -14,13 +14,20 @@ Runtime::Runtime(DynamicLibraryCollection *dylibs)
   , dylibs_(dylibs) {
 }
 
-bool Runtime::initialize(Architecture *arch) {
-  if (!roots().initialize(heap())) return false;
-  architecture_ = arch;
-  return true;
+Runtime::~Runtime() {
+  if (architecture_ != NULL)
+    architecture().dispose();
 }
 
-void Runtime::start() {
+Signal *Runtime::initialize(Architecture *arch) {
+  Signal *root_init_sig = roots().initialize(heap());
+  if (!is<Success>(root_init_sig)) return root_init_sig;
+  architecture_ = arch;
+  if (arch == NULL) return Success::make();
+  else return architecture().setup(*this);
+}
+
+Signal *Runtime::start() {
   ref_scope scope(refs());
   ref<String> main_name = factory().new_string("entry_point");
   Data *entry_point = roots().toplevel()->get(*main_name);
@@ -32,8 +39,9 @@ void Runtime::start() {
         elms(main_name));
   }
   ref<Lambda> lambda = refs().new_ref(cast<Lambda>(entry_point));
-  ref<Task> task = factory().new_task();
+  ref<Task> task = factory().new_task(architecture());
   architecture().run(lambda, task);
+  return Success::make();
 }
 
 void Runtime::report_load_error(ImageLoadStatus &info) {

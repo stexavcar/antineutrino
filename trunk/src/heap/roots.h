@@ -26,10 +26,10 @@ public:
   /**
    * Set up the root objects.
    */
-  bool initialize(Heap& heap);
+  Signal *initialize(Heap& heap);
 
   static const uword kExternalCount = 58;
-  static const uword kInternalCount = 2;
+  static const uword kInternalCount = 3;
   static const uword kCount = kExternalCount + kInternalCount;
 
 // Declare root field accessors

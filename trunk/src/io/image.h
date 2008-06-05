@@ -116,7 +116,7 @@ public:
 class FCode : public FObject {
 public:
   inline uword length();
-  inline uword at(uword offset);
+  inline uword get(uword offset);
   uword code_size_in_image();
 };
 

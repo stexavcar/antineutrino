@@ -56,6 +56,7 @@ public:
 namespace neutrino {
 
 class AbstractWatch;
+class Architecture;
 class Arguments;
 template <class Config> class Assembler;
 class Layout;
@@ -87,6 +88,7 @@ class Null;
 class Object;
 class Parameters;
 template <class T> class persistent;
+class persistent_cell;
 class QuoteTemplate;
 class RawFValue;
 template <class T> class ref;
