@@ -139,7 +139,6 @@ public:
   inline bool is_bottom();
   bounded_ptr<word> fp() { return fp_; }
   bounded_ptr<word> sp() { return sp_; }
-  void reset(Stack *old_stack, Stack *new_stack);
   
   /**
    * Returns the number of stack entries below the current fp that may

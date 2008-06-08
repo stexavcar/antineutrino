@@ -29,6 +29,7 @@ public:
 
 Signal *Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda,
     uword argc) {
+  ASSERT_EQ(0, argc);
   lambda.ensure_compiled(runtime(), NULL);
   Stack *stack = task->stack();
   ASSERT(stack->status().is_empty);
@@ -36,16 +37,11 @@ Signal *Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda,
   stack->status().is_empty = false;
   uword prev_pc = stack->pc();
   IF_DEBUG(stack->status().state = Stack::Status::ssRunning);
-  StackState frame(stack->bound(stack->fp()));
+  StackState frame(stack->bound(stack->fp()), stack->bound(stack->sp()));
+  frame.push(runtime().roots().vhoid()); // push the void receiver
   frame.push_activation(prev_pc, *lambda);
   frame.park(stack, 0);
   return Success::make();
-}
-
-void StackState::reset(Stack *old_stack, Stack *new_stack) {
-  uword delta = new_stack->bottom() - old_stack->bottom();
-  fp_ = new_stack->bound(fp_.value() + delta);
-  sp_ = new_stack->bound(sp_.value() + delta);
 }
 
 void StackState::park(Stack *stack, uword pc) {
@@ -198,7 +194,7 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
 
 
 #define PREPARE_EXECUTION(value) do {                                \
-    lambda = (value);                                                \
+    lambda = cast<Lambda>(value);                                    \
     code = cast<Code>(lambda->code())->buffer();                     \
     constant_pool = cast<Tuple>(lambda->constant_pool())->buffer();  \
   } while (false)
