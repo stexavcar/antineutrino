@@ -79,6 +79,7 @@ class ImageLoadStatus;
 class FImmediate;
 class Immediate;
 class Instance;
+class InterpreterState;
 class Lambda;
 class LambdaExpression;
 class LiteralExpression;

@@ -763,6 +763,7 @@ void Assembler<C>::visit_parameters(ref<Parameters> that) {
 
 template <class C>
 void Assembler<C>::attach_task() {
+  load_symbol(runtime().this_symbol());
   __ attach();
 }
 

@@ -104,11 +104,11 @@ static void unresolved_global(Value *name) {
 }
 
 
-static Data *grow_stack(Task *task, Heap &heap) {
+static Signal *grow_stack(Task *task, Heap &heap) {
   Stack *old_stack = task->stack();
   uword new_size = grow_value(old_stack->height());
   Data *value = heap.new_stack(new_size);
-  if (is<Signal>(value)) return value;
+  if (is<Signal>(value)) return cast<Signal>(value);
   Stack *new_stack = cast<Stack>(value);
   old_stack->uncook_stack();
   // Copy the full contents of the old stack into the new
@@ -123,7 +123,7 @@ static Data *grow_stack(Task *task, Heap &heap) {
   old_stack->recook_stack();
   new_stack->recook_stack();
   task->set_stack(new_stack);
-  return new_stack;
+  return Success::make();
 }
 
 
@@ -132,6 +132,7 @@ public:
   InterpreterState(Task *task) : task_(task) { }
   Task *task() { return task_; }
   Stack *stack() { return task()->stack(); }
+  void attach(Task *task) { task_ = task; }
 private:
   friend class CaptureInterpreterState;
   Task *task_;
@@ -162,16 +163,16 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
       state.stack()->bound(state.stack()->sp()));
   while (true) {
     ASSERT_EQ(Stack::Status::ssParked, state.stack()->status().state);
-    Data *value = interpret(state.stack());
+    Data *value = interpret(state);
     ASSERT_EQ(Stack::Status::ssParked, state.stack()->status().state);
     if (is<Signal>(value)) {
       if (Options::trace_signals)
         Log::get().info("Signal: %", elms(value));
       if (is<StackOverflow>(value)) {
         value = grow_stack(state.task(), runtime().heap());
-        // If grow_stack returns a signal then we have to fall through
+        // If grow_stack is not successful then we have to fall through
         // to get a gc.  Otherwise we can just continue.
-        if (!is<Signal>(value))
+        if (is<Success>(value))
           continue;
       }
       if (is<AllocationFailed>(value)) {
@@ -192,6 +193,9 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
 
 #define RETURN(val) do { result = val; goto suspend; } while(false)
 
+#define UPDATE_STACK_LIMIT() do {                                    \
+    stack_limit = stack->bottom() + (stack->height() - 4 * StackState::kSize); \
+  } while (false)
 
 #define PREPARE_EXECUTION(value) do {                                \
     lambda = cast<Lambda>(value);                                    \
@@ -206,8 +210,10 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
   } while (false)
 
 
-Data *Interpreter::interpret(Stack *stack) {
-  word *stack_limit = stack->bottom() + (stack->height() - 4 * StackState::kSize);
+Data *Interpreter::interpret(InterpreterState &state) {
+  Stack *stack = state.stack();
+  word *stack_limit;
+  UPDATE_STACK_LIMIT();
   StackState frame(stack->bound(stack->fp()), stack->bound(stack->sp()));
   uword pc = frame.unpark(stack);
   Lambda *lambda;
@@ -360,7 +366,7 @@ Data *Interpreter::interpret(Stack *stack) {
       uint16_t name_index = code[pc + 1];
       Value *name = constant_pool[name_index];
       uint16_t argc = code[pc + 2];
-      Marker marker(stack->top_marker());
+      Marker marker(state.stack()->top_marker());
       while (!marker.is_bottom()) {
         Tuple *handlers = cast<Tuple>(marker.data());
         for (uword i = 0; i < handlers->length(); i += 2) {
@@ -437,9 +443,9 @@ Data *Interpreter::interpret(Stack *stack) {
       Value *data = constant_pool[data_index];
       Marker mark = frame.push_marker();
       mark.set_data(data);
-      word *current_marker = stack->top_marker();
+      word *current_marker = state.stack()->top_marker();
       mark.set_prev_mp(current_marker);
-      stack->set_top_marker(mark.mp());
+      state.stack()->set_top_marker(mark.mp());
       pc += OpcodeInfo<ocMark>::kSize;
       break;
     }
@@ -448,7 +454,7 @@ Data *Interpreter::interpret(Stack *stack) {
       Marker mark = frame.pop_marker();
       word *marker_value = mark.prev_mp();
       ASSERT(ValuePointer::has_smi_tag(marker_value));
-      stack->set_top_marker(marker_value);
+      state.stack()->set_top_marker(marker_value);
       frame.push(value);
       pc += OpcodeInfo<ocUnmark>::kSize;
       break;
@@ -490,18 +496,43 @@ Data *Interpreter::interpret(Stack *stack) {
       break;
     }
     case ocAttach: {
-      UNREACHABLE();
+      Task *task = cast<Task>(frame.pop());
+      ASSERT_EQ(Stack::Status::ssParked, task->stack()->status().state);
+      ASSERT_IS(Null, task->caller());
+      task->set_caller(state.task());
+      frame.park(state.stack(), pc + OpcodeInfo<ocAttach>::kSize);
+      state.attach(task);
+      pc = frame.unpark(task->stack());
+      UPDATE_STACK_LIMIT();
+      PREPARE_EXECUTION(frame.lambda());
+      break;
+    }
+    case ocYield: {
+      Value *value = frame[0];
+      // Grab the caller of the current task
+      Task *caller = cast<Task>(state.task()->caller());
+      ASSERT_EQ(Stack::Status::ssParked, caller->stack()->status().state);
+      // Park the current task
+      state.task()->set_caller(runtime().roots().nuhll());
+      frame.park(state.stack(), pc + OpcodeInfo<ocYield>::kSize);
+      // Attach the caller
+      state.attach(caller);
+      pc = frame.unpark(caller->stack());
+      UPDATE_STACK_LIMIT();
+      // Push the yielded value on the caller's stack
+      frame.push(value);
+      // Go!
+      PREPARE_EXECUTION(frame.lambda());
+      break;
     }
     case ocStackBottom: {
       Value *value = frame.pop();
       RETURN(value);
     }
-    case ocYield: case ocReturn: {
+    case ocReturn: {
       Value *value = frame.pop();
-      if (frame.is_bottom())
-        RETURN(value);
       pc = frame.prev_pc();
-      frame.unwind(stack);
+      frame.unwind(state.stack());
       PREPARE_EXECUTION(frame.lambda());
       frame[0] = value;
       break;
@@ -630,7 +661,7 @@ Data *Interpreter::interpret(Stack *stack) {
     }
   }
 suspend:
-  frame.park(stack, pc);
+  frame.park(state.stack(), pc);
   return result;
 }
 

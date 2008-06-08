@@ -177,7 +177,7 @@ void BytecodeBackend::rethurn() {
 void BytecodeBackend::attach() {
   STATIC_CHECK(OpcodeInfo<ocAttach>::kArgc == 0);
   code().append(ocAttach);
-  adjust_stack_height(1);
+  adjust_stack_height(0);
 }
 
 

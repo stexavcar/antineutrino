@@ -181,7 +181,7 @@ public:
   Value *call(ref<Lambda> lambda, ref<Task> task);
 private:
   Signal *prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc);
-  Data *interpret(Stack *stack);
+  Data *interpret(InterpreterState &state);
   Layout *get_layout(Immediate *val);
   Data *lookup_method(Layout *layout, Selector *selector);
   Data *lookup_super_method(Layout *layout, Selector *selector,
