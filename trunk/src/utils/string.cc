@@ -25,7 +25,7 @@ bool string::equals(const char* a, const char* b) {
   return b[i] == '\0';
 }
 
-bool string::operator==(string that) {
+bool string::operator==(string that) const {
   if (length() != that.length()) return false;
   for (uword i = 0; i < length(); i++) {
     if (operator[](i) != that[i])

@@ -94,88 +94,19 @@ void Conditions::check_failed(string file_name, int line_number,
 }
 
 
-void Conditions::check_eq_failed(string file_name, int line_number,
-    int expected, string expected_source, int value, string value_source,
-    Condition cause) {
+void Conditions::check_predicate_failed(string file_name, int line_number,
+    const fmt_elm &expected, string expected_source, const fmt_elm &value,
+    string value_source, string name, Condition cause) {
   notify(cause);
   static string kErrorMessage =
     "#\n"
-    "# %:%: CHECK_EQ(%, %) failed\n"
+    "# %:%: % % %) failed\n"
     "#   expected: %\n"
     "#   found: %\n"
     "#\n";
   string_buffer buf;
   buf.printf(kErrorMessage, elms(file_name, line_number, expected_source,
-      value_source, expected, value));
-  abort(buf.raw_string());
-}
-
-
-void Conditions::check_eq_failed(string file_name, int line_number,
-    string expected, string expected_source, string value,
-    string value_source, Condition cause) {
-  notify(cause);
-  static string kErrorMessage =
-    "#\n"
-    "# %:%: CHECK_EQ(%, %) failed\n"
-    "#   expected: %\n"
-    "#   found: %\n"
-    "#\n";
-  string_buffer buf;
-  buf.printf(kErrorMessage, elms(file_name, line_number, expected_source,
-      value_source, expected, value));
-  abort(buf.raw_string());
-}
-
-
-void Conditions::check_ge_failed(string file_name, int line_number,
-    word value, string value_source, word limit, string limit_source,
-    Condition cause) {
-  notify(cause);
-  static string kErrorMessage =
-    "#\n"
-    "# %:%: CHECK_GE(%, %) failed\n"
-    "#   value: %\n"
-    "#   limit: %\n"
-    "#\n";
-  string_buffer buf;
-  buf.printf(kErrorMessage, elms(file_name, line_number, value_source,
-      limit_source, value, limit));
-  abort(buf.raw_string());
-}
-
-
-void Conditions::check_lt_failed(string file_name, int line_number,
-    int value, string value_source, int limit, string limit_source,
-    Condition cause) {
-  notify(cause);
-  static string kErrorMessage =
-    "#\n"
-    "# %:%: CHECK_LT(%, %) failed\n"
-    "#   value: %\n"
-    "#   limit: %\n"
-    "#\n";
-  string_buffer buf;
-  buf.printf(kErrorMessage, elms(file_name, line_number, value_source,
-      limit_source, value, limit));
-  abort(buf.raw_string());
-}
-
-
-void Conditions::check_eq_failed(string file_name, int line_number,
-    Value *expected, string expected_source, Value *value,
-    string value_source, Condition cause) {
-  notify(cause);
-  static string kErrorMessage =
-    "#\n"
-    "# %:%: CHECK_EQ(%, %) failed\n"
-    "#   expected: %{x}\n"
-    "#   found: %{x}\n"
-    "#\n";
-  string_buffer buf;
-  buf.printf(kErrorMessage, elms(file_name, line_number, expected_source,
-      value_source, reinterpret_cast<word>(expected),
-      reinterpret_cast<word>(value)));
+      name, value_source, expected, value));
   abort(buf.raw_string());
 }
 

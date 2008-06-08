@@ -18,8 +18,8 @@ public:
       : chars_(NULL), length_(0) { }
   inline string(const char *chars, uword length)
       : chars_(chars), length_(length) { }
-  inline uword length() { return length_; }
-  inline uword operator[](uword index);
+  inline uword length() const { return length_; }
+  inline uword operator[](uword index) const;
   inline string substring(uword start);
   inline string substring(uword start, uword length);
   
@@ -30,8 +30,8 @@ public:
    */
   inline const char *chars() { return chars_; }
   
-  bool operator==(string that);
-  bool operator!=(string that) { return !(this->operator==(that)); }
+  bool operator==(string that) const;
+  bool operator!=(string that) const { return !(this->operator==(that)); }
   void dispose();
   void println(FILE *out = NULL);
   void print(FILE *out = NULL);
@@ -180,6 +180,21 @@ static inline fmt_elms_impl<6> elms(const fmt_elm &elm1,
   result.elms_[3] = &elm4;
   result.elms_[4] = &elm5;
   result.elms_[5] = &elm6;
+  return result;
+}
+
+
+static inline fmt_elms_impl<7> elms(const fmt_elm &elm1,
+    const fmt_elm &elm2, const fmt_elm &elm3, const fmt_elm &elm4,
+    const fmt_elm &elm5, const fmt_elm &elm6, const fmt_elm &elm7) {
+  fmt_elms_impl<7> result(7);
+  result.elms_[0] = &elm1;
+  result.elms_[1] = &elm2;
+  result.elms_[2] = &elm3;
+  result.elms_[3] = &elm4;
+  result.elms_[4] = &elm5;
+  result.elms_[5] = &elm6;
+  result.elms_[6] = &elm7;
   return result;
 }
 

@@ -12,5 +12,5 @@ void Test::basic_data_types() {
 }
 
 void Test::data_structures() {
-  CHECK_LT(sizeof(Stack::Status), sizeof(word));
+  CHECK_LEQ(sizeof(Stack::Status), sizeof(word));
 }

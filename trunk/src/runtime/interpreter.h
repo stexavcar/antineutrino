@@ -121,7 +121,8 @@ public:
   inline Marker push_marker();
   inline Marker pop_marker();
   
-  void park(Stack *stack);
+  void park(Stack *stack, uword pc);
+  inline uword unpark(Stack *stack);
   
   /**
    * Unwinds a stack frame in a cooked stack.
@@ -180,8 +181,8 @@ public:
   Interpreter(Runtime &runtime) : runtime_(runtime) { }
   Value *call(ref<Lambda> lambda, ref<Task> task);
 private:
-  StackState prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc);
-  Data *interpret(Stack *stack, StackState &frame);
+  Signal *prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc);
+  Data *interpret(Stack *stack);
   Layout *get_layout(Immediate *val);
   Data *lookup_method(Layout *layout, Selector *selector);
   Data *lookup_super_method(Layout *layout, Selector *selector,

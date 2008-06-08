@@ -220,6 +220,8 @@ Data *Heap::new_stack(uword height) {
   Stack *result = cast<Stack>(val);
   result->set_height(height);
   result->set_fp(0);
+  result->set_sp(0);
+  result->set_pc(0);
   result->set_top_marker(0);
   result->set_status(Stack::Status());
   IF_PARANOID(result->validate());

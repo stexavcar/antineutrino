@@ -33,6 +33,17 @@ eDeclaredTypes(SPECIALIZE_VALUE_INFO)
 #undef SPECIALIZE_VALUE_INFO
 
 
+// This is a trick to make values compare using the equals() method
+// rather than pointer equality.
+template <>
+class CheckComparer<Value*> {
+public:
+  static inline bool compare(Value *a, Value *b) {
+    return a->equals(b);
+  }
+};
+
+
 // ---------------------------
 // --- P r e d i c a t e s ---
 // ---------------------------
@@ -379,6 +390,8 @@ array<char> ref_traits<String>::c_str() {
 
 DEFINE_ACCESSORS(uword,         Stack, height,     Height)
 DEFINE_ACCESSORS(word*,         Stack, fp,         Fp)
+DEFINE_ACCESSORS(word*,         Stack, sp,         Sp)
+DEFINE_ACCESSORS(uword,         Stack, pc,         Pc)
 DEFINE_ACCESSORS(word*,         Stack, top_marker, TopMarker)
 DEFINE_ACCESSORS(Stack::Status, Stack, status,     Status)
 
@@ -637,8 +650,8 @@ InternalError *InternalError::make(int code) {
 
 TypeMismatch *TypeMismatch::make(InstanceType expected, InstanceType found) {
   STATIC_CHECK(ValuePointer::kSignalPayloadSize >= 16);
-  ASSERT_LT(expected, (1 << 8));
-  ASSERT_LT(found, (1 << 8));
+  ASSERT_LT(static_cast<word>(expected), (1 << 8));
+  ASSERT_LT(static_cast<word>(found), (1 << 8));
   Signal *result = ValuePointer::tag_as_signal(sTypeMismatch, expected << 8 | found);
   return cast<TypeMismatch>(result);
 }

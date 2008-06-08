@@ -18,8 +18,38 @@ public:
   virtual string get_name_for(word) = 0;
 };
 
+template <typename T>
+class CheckComparer {
+public:
+  static inline bool compare(T a, T b) { return a == b; }
+};
+
 class Checks {
 public:
+  
+  struct Equals {
+    template <typename T>
+    static inline bool compare(const T &a, const T &b) { return CheckComparer<T>::compare(a, b); }
+    static inline string name() { return "=="; }
+  };
+
+  struct LessThan {
+    template <typename T>
+    static inline bool compare(const T &a, const T &b) { return a < b; }
+    static inline string name() { return "<"; }
+  };
+
+  struct LessOrEquals {
+    template <typename T>
+    static inline bool compare(const T &a, const T &b) { return a <= b; }
+    static inline string name() { return "<="; }
+  };
+
+  struct GreaterOrEquals {
+    template <typename T>
+    static inline bool compare(const T &a, const T &b) { return a >= b; }
+    static inline string name() { return ">="; }
+  };
 
   // We use c strings for the arguments that correspond to the
   // "macro" strings, like file name and source code.  This is to
@@ -36,51 +66,18 @@ public:
     }
   }
   
-  static inline void check_eq(const char *file_name, int line_number,
-      int expected, const char *expected_source, int value,
-      const char *value_source, Condition cause = cnUnknown) {
-    if (expected != value) {
-      Conditions::get().check_eq_failed(file_name, line_number,
-          expected, expected_source, value, value_source, cause);
+  template <class Comparer, typename T>
+  static inline void check_predicate(const char *file_name,
+      int line_number, const T &expected, const char *expected_source,
+      const T &value, const char *value_source,
+      Condition cause = cnUnknown) {
+    if (!Comparer::compare(expected, value)) {
+      Conditions::get().check_predicate_failed(file_name, line_number,
+          expected, expected_source, value, value_source,
+          Comparer::name(), cause);
     }
   }
   
-  static inline void check_eq(const char *file_name, int line_number,
-      string expected, const char *expected_source, string value,
-      const char *value_source, Condition cause = cnUnknown) {
-    if (expected != value) {
-      Conditions::get().check_eq_failed(file_name, line_number,
-          expected, expected_source, value, value_source, cause);
-    }
-  }
-
-  static inline void check_ge(const char *file_name, int line_number,
-      word value, const char *value_source, word limit,
-      const char *limit_source, Condition cause = cnUnknown) {
-    if (value < limit) {
-      Conditions::get().check_ge_failed(file_name, line_number,
-          value, value_source, limit, limit_source, cause);
-    }
-  }
-  
-  static inline void check_lt(const char *file_name, int line_number,
-      int value, const char *value_source, int limit,
-      const char *limit_source, Condition cause = cnUnknown) {
-    if (value >= limit) {
-      Conditions::get().check_lt_failed(file_name, line_number,
-          value, value_source, limit, limit_source, cause);
-    }
-  }
-    
-  static inline void check_eq(const char *file_name, int line_number,
-      Value *expected, const char *expected_source, Value *value,
-      const char *value_source, Condition cause = cnUnknown) {
-    if (!expected->equals(value)) {
-      Conditions::get().check_eq_failed(file_name, line_number,
-          expected, expected_source, value, value_source, cause);
-    }
-  }
-
   static inline void check_is(const char *file_name, int line_number,
       const char *type_name, uword type_tag, Data *data,
       const char *value_source, bool holds, Condition cause = cnUnknown) {
@@ -89,10 +86,49 @@ public:
           type_name, type_tag, data, value_source, cause);
     }
   }
-  
+
+};
+
+
+// This helper class exists to make the template and inference magic
+// add up.
+template <class Predicate>
+class PredicateCheckHelper {
+public:
+  // The generic assertion method that checks its arguments according
+  // to the Predicate.
+  template <typename E, typename A>
+  static inline void check(const char *file_name, int line_number,
+      const E &expected, const char *expected_source, const A &actual,
+      const char *actual_source, Condition cause = cnUnknown) {
+    check_helper<A>(file_name, line_number, expected, expected_source,
+        actual, actual_source, cause);
+  }
+private:
+  // Utility function whose function is to turn the two type arguments
+  // E and A to 'check' into just one, T.  'check' uses this to coerce
+  // the expected value to the type of the actual value.
+  template <typename T>
+  static inline void check_helper(const char *file_name, int line_number,
+      const T &expected, const char *expected_source, const T &actual,
+      const char *actual_source, Condition cause) {
+    if (!Predicate::compare(expected, actual)) {
+      Conditions::get().check_predicate_failed(file_name, line_number,
+          expected, expected_source, actual, actual_source,
+          Predicate::name(), cause);
+    }
+  }
 };
 
 // --- C h e c k   M a c r o s ---
+
+#define CHECK_PREDICATE(Predicate, expected, value)                  \
+  neutrino::PredicateCheckHelper<neutrino::Checks::Predicate>::check(__FILE__,\
+      __LINE__, expected, #expected, value, #value)
+
+#define CHECK_PREDICATE_C(COND, Predicate, expected, value)          \
+  neutrino::PredicateCheckHelper<neutrino::Checks::Predicate>::check(__FILE__,         \
+      __LINE__, expected, #expected, value, #value, COND)
 
 #define CHECK(value) neutrino::Checks::check(__FILE__, __LINE__,     \
     #value, value)
@@ -100,20 +136,15 @@ public:
 #define CHECK_C(COND, value) neutrino::Checks::check(__FILE__,       \
     __LINE__, #value, value, COND)
 
-#define CHECK_EQ(expected, value) neutrino::Checks::check_eq(        \
-    __FILE__, __LINE__, expected, #expected, value, #value)
+#define CHECK_EQ(expected, value) CHECK_PREDICATE(Equals, expected, value)
+#define CHECK_EQ_C(COND, expected, value) CHECK_PREDICATE_C(COND, Equals, expected, value)
 
-#define CHECK_EQ_C(COND, expected, value) neutrino::Checks::check_eq(\
-    __FILE__, __LINE__, expected, #expected, value, #value, COND)
+#define CHECK_GEQ(value, limit) CHECK_PREDICATE(GreaterOrEquals, value, limit)
 
-#define CHECK_GE(value, limit) neutrino::Checks::check_ge(           \
-    __FILE__, __LINE__, value, #value, limit, #limit)
+#define CHECK_LT(value, limit) CHECK_PREDICATE(LessThan, value, limit)
+#define CHECK_LT_C(COND, expected, value) CHECK_PREDICATE_C(COND, LessThan, expected, value)
 
-#define CHECK_LT(value, limit) neutrino::Checks::check_lt(           \
-    __FILE__, __LINE__, value, #value, limit, #limit)
-
-#define CHECK_LT_C(COND, value, limit) neutrino::Checks::check_lt(   \
-    __FILE__, __LINE__, value, #value, limit, #limit, COND)
+#define CHECK_LEQ(value, limit) CHECK_PREDICATE(LessOrEquals, value, limit)
 
 #define CHECK_IS(Type, value)                                        \
     neutrino::Checks::check_is(__FILE__, __LINE__, #Type,            \

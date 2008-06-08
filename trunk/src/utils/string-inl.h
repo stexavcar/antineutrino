@@ -5,7 +5,7 @@
 
 namespace neutrino {
 
-uword string::operator[](uword index) {
+uword string::operator[](uword index) const {
   ASSERT(index < length());
   return chars_[index];
 }

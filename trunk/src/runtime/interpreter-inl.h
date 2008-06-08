@@ -45,6 +45,14 @@ void Marker::unwind() {
 // --- F r a m e ---
 // -----------------
 
+uword StackState::unpark(Stack *stack) {
+  ASSERT_EQ(Stack::Status::ssParked, stack->status().state);
+  IF_DEBUG(stack->status().state = Stack::Status::ssRunning);
+  fp_ = stack->bound(stack->fp());
+  sp_ = stack->bound(stack->sp());
+  return stack->pc();
+}
+
 uword &StackState::prev_pc() {
   return reinterpret_cast<uword&>(fp_[kPrevPcOffset]);
 }

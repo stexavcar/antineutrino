@@ -27,15 +27,19 @@ public:
 // --- I n t e r p r e t e r ---
 // -----------------------------
 
-StackState Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc) {
+Signal *Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda,
+    uword argc) {
   lambda.ensure_compiled(runtime(), NULL);
   Stack *stack = task->stack();
   ASSERT(stack->status().is_empty);
+  ASSERT_EQ(Stack::Status::ssParked, stack->status().state);
   stack->status().is_empty = false;
+  uword prev_pc = stack->pc();
+  IF_DEBUG(stack->status().state = Stack::Status::ssRunning);
   StackState frame(stack->bound(stack->fp()));
-  frame.push_activation(0, *lambda);
-  frame.push_activation(0, *lambda);
-  return frame;
+  frame.push_activation(prev_pc, *lambda);
+  frame.park(stack, 0);
+  return Success::make();
 }
 
 void StackState::reset(Stack *old_stack, Stack *new_stack) {
@@ -44,9 +48,12 @@ void StackState::reset(Stack *old_stack, Stack *new_stack) {
   sp_ = new_stack->bound(sp_.value() + delta);
 }
 
-void StackState::park(Stack *stack) {
-  IF_DEBUG(stack->status().is_parked = true);
+void StackState::park(Stack *stack, uword pc) {
+  ASSERT_EQ(Stack::Status::ssRunning, stack->status().state);
+  IF_DEBUG(stack->status().state = Stack::Status::ssParked);
   stack->set_fp(fp().value());
+  stack->set_sp(sp().value());
+  stack->set_pc(pc);
 }
 
 /**
@@ -153,15 +160,14 @@ private:
 
 
 Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
-  StackState initial_frame = prepare_call(initial_task, lambda, 0);
-  initial_frame.park(initial_task->stack());
+  prepare_call(initial_task, lambda, 0);
   InterpreterState state(*initial_task);
+  StackState initial_frame(state.stack()->bound(state.stack()->fp()),
+      state.stack()->bound(state.stack()->sp()));
   while (true) {
-    ASSERT(state.stack()->status().is_parked);
-    StackState frame(state.stack()->bound(state.stack()->fp()));
-    IF_DEBUG(state.stack()->status().is_parked = false);
-    Data *value = interpret(state.stack(), frame);
-    ASSERT(state.stack()->status().is_parked);
+    ASSERT_EQ(Stack::Status::ssParked, state.stack()->status().state);
+    Data *value = interpret(state.stack());
+    ASSERT_EQ(Stack::Status::ssParked, state.stack()->status().state);
     if (is<Signal>(value)) {
       if (Options::trace_signals)
         Log::get().info("Signal: %", elms(value));
@@ -174,11 +180,9 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
       }
       if (is<AllocationFailed>(value)) {
         ref_scope scope(runtime().refs());
-        Stack *old_stack = state.stack();
         CaptureInterpreterState capture(runtime().refs(), state);
         runtime().heap().memory().collect_garbage(runtime());
         capture.restore(state);
-        frame.reset(old_stack, state.stack());
       } else {
         Conditions::get().error_occurred("Unexpected signal: %", elms(value));
       }
@@ -206,10 +210,10 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
   } while (false)
 
 
-Data *Interpreter::interpret(Stack *stack, StackState &frame) {
+Data *Interpreter::interpret(Stack *stack) {
   word *stack_limit = stack->bottom() + (stack->height() - 4 * StackState::kSize);
-  uword pc = frame.prev_pc();
-  frame.unwind(stack);
+  StackState frame(stack->bound(stack->fp()), stack->bound(stack->sp()));
+  uword pc = frame.unpark(stack);
   Lambda *lambda;
   array<uint16_t> code;
   array<Value*> constant_pool;
@@ -630,8 +634,7 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
     }
   }
 suspend:
-  frame.push_activation(pc, lambda);
-  frame.park(stack);
+  frame.park(stack, pc);
   return result;
 }
 
@@ -660,9 +663,10 @@ void Stack::validate_stack() {
 void Stack::recook_stack() {
   if (status().is_empty) return;
   ASSERT(!status().is_cooked);
-  ASSERT(status().is_parked);
+  ASSERT_EQ(Stack::Status::ssParked, status().state);
   array<word> buf = buffer();
-  fp() = buf.from_offset(reinterpret_cast<uword>(fp()));
+  set_fp(buf.from_offset(reinterpret_cast<uword>(fp())));
+  set_sp(buf.from_offset(reinterpret_cast<uword>(sp())));
   StackState frame(bound(fp()));
   while (!frame.is_bottom()) {
     frame.prev_fp() = buf.from_offset(reinterpret_cast<uword>(frame.prev_fp()));
@@ -674,8 +678,8 @@ void Stack::recook_stack() {
 void Stack::uncook_stack() {
   if (status().is_empty) return;
   ASSERT(status().is_cooked);
-  ASSERT(status().is_parked);
-  StackState frame(bound(fp()));
+  ASSERT_EQ(Stack::Status::ssParked, status().state);
+  StackState frame(bound(fp()), bound(sp()));
   array<word> buf = buffer();
   while (!frame.is_bottom()) {
     IF_DEBUG(word *prev_fp = frame.prev_fp());
@@ -683,16 +687,18 @@ void Stack::uncook_stack() {
     frame.unwind(buf, height());
     ASSERT(prev_fp == frame.fp().value());
   }
-  fp() = reinterpret_cast<word*>(buf.offset_of(fp()));
+  set_fp(reinterpret_cast<word*>(buf.offset_of(fp())));
+  set_sp(reinterpret_cast<word*>(buf.offset_of(sp())));
   IF_DEBUG(status().is_cooked = false);
 }
 
 void Stack::for_each_stack_field(FieldVisitor &visitor) {
   if (status().is_empty) return;
   ASSERT(!status().is_cooked);
-  ASSERT(status().is_parked);
+  ASSERT_EQ(Stack::Status::ssParked, status().state);
   array<word> buf = buffer();
-  StackState frame(bound(buf.from_offset(reinterpret_cast<uword>(fp()))));
+  StackState frame(bound(buf.from_offset(reinterpret_cast<uword>(fp()))),
+      bound(buf.from_offset(reinterpret_cast<uword>(sp()))));
   while (true) {
     visitor.visit_field(pointer_cast<Value*>(&frame.lambda()));
     if (frame.is_bottom()) break;

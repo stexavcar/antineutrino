@@ -94,6 +94,7 @@ public:
 
 DEFINE_REF_CLASS(Value);
 
+
 // -------------------------
 // --- I m m e d i a t e ---
 // -------------------------
@@ -265,6 +266,9 @@ DEFINE_REF_CLASS(ForwarderDescriptor);
 // -----------------
 
 struct StackStatus {
+  enum State {
+    ssUninitialized, ssParked, ssRunning
+  };
   /**
    * This constructor specifies the state of the stack flags when
    * a stack is first created
@@ -273,13 +277,13 @@ struct StackStatus {
       : is_empty(true)
 #ifdef DEBUG
       , is_cooked(true)
-      , is_parked(false)
+      , state(ssUninitialized)
 #endif
       { }
 
   bool is_empty : 1;
   IF_DEBUG(bool is_cooked : 1);
-  IF_DEBUG(bool is_parked : 1);
+  IF_DEBUG(State state : 3);
 };
 
 class Stack : public Object {
@@ -292,7 +296,17 @@ public:
   typedef StackStatus Status;
 
   DECLARE_FIELD(uword, height);
+
   DECLARE_FIELD(word*, fp);
+  DECLARE_FIELD(word*, sp);
+  DECLARE_FIELD(uword, pc);
+  // An alternative model to having all the execution state stored
+  // in fields is to just have the fp and then push an activation,
+  // since all new activation store the sp and pc.  The reason for
+  // not doing that is that when suspending the stack on stack
+  // overflow we need room to store these, and reserving room for
+  // one activation would waste more space than these extra fields.
+  
   DECLARE_FIELD(word*, top_marker);
   DECLARE_FIELD(Status, status);
   inline word* bottom();
@@ -318,7 +332,9 @@ public:
 
   static const uword kHeightOffset    = Object::kHeaderSize;
   static const uword kFpOffset        = kHeightOffset + kPointerSize;
-  static const uword kTopMarkerOffset = kFpOffset + kPointerSize;
+  static const uword kSpOffset        = kFpOffset + kPointerSize;
+  static const uword kPcOffset        = kSpOffset + kPointerSize;
+  static const uword kTopMarkerOffset = kPcOffset + kPointerSize;
   static const uword kStatusOffset    = kTopMarkerOffset + kPointerSize;
   static const uword kHeaderSize      = kStatusOffset + kPointerSize;
 };

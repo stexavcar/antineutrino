@@ -667,7 +667,7 @@ void Assembler<C>::visit_do_on_expression(ref<DoOnExpression> that) {
     scope.unlink();
     // TODO(5): We need a lifo block mechanism to implement outers in
     //   condition handlers
-    ASSERT_EQ(0, scope.outers().length());
+    ASSERT_EQ(0u, scope.outers().length());
     data.set(2 * i + 1, lambda);
   }
   __ mark(data);

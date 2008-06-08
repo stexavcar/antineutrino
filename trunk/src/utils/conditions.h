@@ -44,25 +44,10 @@ public:
   void check_failed(string file_name, int line_number, string source,
       bool value, Condition cause);
 
-  void check_eq_failed(string file_name, int line_number,
-      int expected, string expected_source, int value,
-      string value_source, Condition cause);
-
-  void check_eq_failed(string file_name, int line_number,
-      Value *expected, string expected_source,
-      Value *value, string value_source, Condition cause);
-
-  void check_eq_failed(string file_name, int line_number,
-      string expected, string expected_source, string value,
-      string value_source, Condition cause);
-  
-  void check_ge_failed(string file_name, int line_number,
-      word value, string value_source, word limit,
-      string limit_source, Condition cause);
-
-  void check_lt_failed(string file_name, int line_number,
-      int value, string value_source, int limit,
-      string limit_source, Condition cause);
+  void check_predicate_failed(string file_name, int line_number,
+      const fmt_elm &expected, string expected_source, 
+      const fmt_elm &value, string value_source,
+      string name, Condition cause);
 
   void check_is_failed(string file_name, int line_number,
       string type_name, uword type_tag, Data *value,

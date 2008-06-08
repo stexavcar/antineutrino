@@ -418,6 +418,7 @@ void BytecodeArchitecture::disassemble(Lambda *lambda, string_buffer &buf) {
 
 Signal *BytecodeArchitecture::initialize_task(Task *task) {
   Stack *stack = task->stack();
+  ASSERT_EQ(Stack::Status::ssUninitialized, stack->status().state);
   // Set up the bottom-most dummy activation
   word *bottom_fp = stack->bottom() + StackState::accessible_below_fp(0);
   StackState state(stack->bound(bottom_fp));
@@ -427,6 +428,9 @@ Signal *BytecodeArchitecture::initialize_task(Task *task) {
   state.prev_pc() = ~0;
   // Set up the stack object itself
   stack->set_fp(bottom_fp);
+  stack->set_sp(bottom_fp + StackState::kSize);
+  stack->set_pc(0);
+  IF_DEBUG(stack->status().state = Stack::Status::ssParked);
   return Success::make();
 }
 
