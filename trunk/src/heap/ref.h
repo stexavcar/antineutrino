@@ -52,6 +52,7 @@ public:
   
 private:
   friend class ref_iterator;
+  friend class persistent_iterator;
   friend class ref_scope;
   template <class C> friend class persistent;
 
@@ -74,14 +75,26 @@ private:
 
 class ref_iterator {
 public:
-  inline ref_iterator(RefStack &manager);
+  inline ref_iterator(RefStack &refs);
   inline bool has_next();
   inline Value *&next();
 private:
-  RefStack &manager() { return manager_; }
-  RefStack &manager_;
+  RefStack &refs() { return refs_; }
+  RefStack &refs_;
   uword current_block_;
   Value **current_, **limit_;
+};
+
+
+class persistent_iterator {
+public:
+  inline persistent_iterator(RefStack &refs);
+  inline bool has_next();
+  inline Value *&next();
+private:
+  RefStack &refs() { return refs_; }
+  RefStack &refs_;
+  uword index_;
 };
 
 

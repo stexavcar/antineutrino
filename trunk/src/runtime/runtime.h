@@ -13,16 +13,22 @@ namespace neutrino {
 
 class Architecture {
 public:
+  Architecture(Runtime &runtime) : runtime_(runtime) { }
   virtual Signal *setup(Runtime &runtime) = 0;
   virtual void dispose() = 0;
   virtual void run(ref<Lambda> lambda, ref<Task> task) = 0;
   virtual void disassemble(Lambda *lambda, string_buffer &buf) = 0;
   virtual Signal *initialize_task(Task *task) = 0;
+protected:
+  Runtime &runtime() { return runtime_; }
+  Runtime &runtime_;
 };
 
 class BytecodeArchitecture : public Architecture {
 public:
-  BytecodeArchitecture(Runtime &runtime) : interpreter_(runtime) { }
+  BytecodeArchitecture(Runtime &runtime)
+      : Architecture(runtime)
+      , interpreter_(runtime) { }
   virtual Signal *setup(Runtime &runtime);
   virtual void dispose();
   virtual void run(ref<Lambda> lambda, ref<Task> task);

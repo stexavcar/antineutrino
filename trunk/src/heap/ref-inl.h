@@ -65,31 +65,43 @@ ref_scope::~ref_scope() {
   manager().current_ = previous_;
 }
 
-ref_iterator::ref_iterator(RefStack &manager) 
-    : manager_(manager) {
+ref_iterator::ref_iterator(RefStack &refs) 
+    : refs_(refs) {
   current_block_ = 0;
-  if (manager.block_stack().length() > 0) {
-    ref_block *bottom = manager.block_stack()[0];
+  if (refs.block_stack().length() > 0) {
+    ref_block *bottom = refs.block_stack()[0];
     current_ = bottom->first_cell();
     limit_ = bottom->limit();
   } else {
-    current_ = manager.current().next_cell;
+    current_ = refs.current().next_cell;
     limit_ = current_;
   }
 }
 
 bool ref_iterator::has_next() {
-  return current_ != manager().current().next_cell;
+  return current_ != refs().current().next_cell;
 }
 
 Value *&ref_iterator::next() {
   if (current_ == limit_) {
-    ref_block *next = manager().block_stack()[++current_block_];
+    ref_block *next = refs().block_stack()[++current_block_];
     current_ = next->first_cell();
     limit_ = next->limit();
     ASSERT(current_ < limit_);
   }
   return *(current_++);
+}
+
+persistent_iterator::persistent_iterator(RefStack &refs)
+    : refs_(refs), index_(0) { }
+
+bool persistent_iterator::has_next() {
+  return index_ < refs().persistent_list().length();
+}
+
+Value *&persistent_iterator::next() {
+  persistent_cell *cell = refs().persistent_list()[index_++];
+  return *cell->cell();
 }
 
 } // neutrino

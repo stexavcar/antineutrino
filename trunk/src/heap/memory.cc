@@ -84,14 +84,24 @@ void Memory::collect_garbage(Runtime &runtime) {
   SemiSpace &from_space = young_space();
   SemiSpace *to_space = new SemiSpace(kSize);
   FieldMigrator migrator(from_space, *to_space);
-  // Migrate all roots (shallow)
-  RootIterator root_iter(heap().roots());
-  while (root_iter.has_next())
-    migrator.migrate_field(&root_iter.next());
-  // Migrate local refs (shallow)
-  ref_iterator ref_iter(runtime.refs());
-  while (ref_iter.has_next())
-    migrator.migrate_field(&ref_iter.next());
+  {
+    // Migrate all roots (shallow)
+    RootIterator iter(heap().roots());
+    while (iter.has_next())
+      migrator.migrate_field(&iter.next());
+  }
+  {
+    // Migrate local refs (shallow)
+    ref_iterator iter(runtime.refs());
+    while (iter.has_next())
+      migrator.migrate_field(&iter.next());
+  }
+  {
+    // Migrate persistent refs (shallow)
+    persistent_iterator iter(runtime.refs());
+    while (iter.has_next())
+      migrator.migrate_field(&iter.next());
+  }
   // Do deep migration of shallowly migrated objects
   SemiSpaceIterator to_space_iter(*to_space);
   while (to_space_iter.has_next()) {

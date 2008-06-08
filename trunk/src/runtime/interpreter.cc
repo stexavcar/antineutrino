@@ -29,13 +29,12 @@ public:
 
 StackState Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc) {
   lambda.ensure_compiled(runtime(), NULL);
-  ASSERT(task->stack()->status().is_empty);
-  task->stack()->status().is_empty = false;
-  StackState frame(task->stack()->bound(task->stack()->bottom()) + StackState::accessible_below_fp(argc));
-  frame.self(argc) = runtime().roots().vhoid();
-  frame.lambda() = *lambda;
-  frame.prev_fp() = 0;
-  ASSERT(frame.sp() >= frame.fp() + StackState::kSize);
+  Stack *stack = task->stack();
+  ASSERT(stack->status().is_empty);
+  stack->status().is_empty = false;
+  StackState frame(stack->bound(stack->fp()));
+  frame.push_activation(0, *lambda);
+  frame.push_activation(0, *lambda);
   return frame;
 }
 
@@ -155,7 +154,6 @@ private:
 
 Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
   StackState initial_frame = prepare_call(initial_task, lambda, 0);
-  initial_frame.push_activation(0, *lambda);
   initial_frame.park(initial_task->stack());
   InterpreterState state(*initial_task);
   while (true) {
@@ -493,6 +491,10 @@ Data *Interpreter::interpret(Stack *stack, StackState &frame) {
     }
     case ocAttach: {
       UNREACHABLE();
+    }
+    case ocStackBottom: {
+      Value *value = frame.pop();
+      RETURN(value);
     }
     case ocYield: case ocReturn: {
       Value *value = frame.pop();

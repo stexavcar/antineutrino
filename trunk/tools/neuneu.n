@@ -330,9 +330,13 @@ protocol Definition {
 }
 
 
+def get_void() { }
+
+
 def make_function(nodes) {
   def name := nodes[0];
   def params := nodes[1];
+  def body := new ReturnExpression(new LiteralExpression(get_void()));
   return Definition.make(name, params);
 }
 
