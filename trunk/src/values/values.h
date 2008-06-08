@@ -283,7 +283,7 @@ struct StackStatus {
 
   bool is_empty : 1;
   IF_DEBUG(bool is_cooked : 1);
-  IF_DEBUG(State state : 3);
+  IF_DEBUG(uint8_t state : 3);
 };
 
 class Stack : public Object {
