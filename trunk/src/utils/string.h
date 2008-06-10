@@ -60,21 +60,21 @@ private:
  * Formatter element.  Utility class used to wrap an printf argument
  * together with a type tag.
  */
-class fmt_elm {
+class variant : public nocopy {
 public:
-  fmt_elm() : tag_(eEmpty) { }
-  fmt_elm(double v) : tag_(eDouble) { value_.u_double = v; }
-  fmt_elm(uint16_t v) : tag_(eInt) { value_.u_int = v; }
-  fmt_elm(int16_t v) : tag_(eInt) { value_.u_int = v; }
-  fmt_elm(uint32_t v) : tag_(eInt) { value_.u_int = v; }
-  fmt_elm(int32_t v) : tag_(eInt) { value_.u_int = v; }
-  fmt_elm(uint64_t v) : tag_(eInt) { value_.u_int = static_cast<word>(v); }
-  fmt_elm(int64_t v) : tag_(eInt) { value_.u_int = static_cast<word>(v); }
-  fmt_elm(const char *v) : tag_(eCStr) { value_.u_c_str = v; }
-  fmt_elm(const string &v) : tag_(eString) { value_.u_string = &v; }
-  fmt_elm(Data *v) : tag_(eObject) { value_.u_object = v; }
+  variant() : tag_(eEmpty) { }
+  variant(double v) : tag_(eDouble) { value_.u_double = v; }
+  variant(uint16_t v) : tag_(eInt) { value_.u_int = v; }
+  variant(int16_t v) : tag_(eInt) { value_.u_int = v; }
+  variant(uint32_t v) : tag_(eInt) { value_.u_int = v; }
+  variant(int32_t v) : tag_(eInt) { value_.u_int = v; }
+  variant(uint64_t v) : tag_(eInt) { value_.u_int = static_cast<word>(v); }
+  variant(int64_t v) : tag_(eInt) { value_.u_int = static_cast<word>(v); }
+  variant(const char *v) : tag_(eCStr) { value_.u_c_str = v; }
+  variant(const string &v) : tag_(eString) { value_.u_string = &v; }
+  variant(Data *v) : tag_(eObject) { value_.u_object = v; }
   template <typename T>
-  fmt_elm(const ref<T> &v) : tag_(eRef) { value_.u_ref = reinterpret_cast<const ref<Value>*>(&v); }
+  variant(const ref<T> &v) : tag_(eRef) { value_.u_ref = reinterpret_cast<const ref<Value>*>(&v); }
   /**
    * Prints this element on the specified buffer.  If the params
    * string is non-null it will be used to configure how this
@@ -96,49 +96,49 @@ private:
 };
 
 
-class fmt_elms {
+class var_args {
 public:
-  fmt_elms(uword size) : size_(size) { }
+  var_args(uword size) : size_(size) { }
   uword size() const { return size_; }
-  virtual const fmt_elm &operator[](uword index) const = 0;
+  virtual const variant &operator[](uword index) const = 0;
 private:
   uword size_;  
 };
 
 
 template <int n>
-class fmt_elms_impl : public fmt_elms {
+class var_args_impl : public var_args {
 public:
-  fmt_elms_impl(uword size) : fmt_elms(size) { }
-  virtual const fmt_elm &operator[](uword index) const { return *(elms_[index]); }
-  const fmt_elm *elms_[n];
+  var_args_impl(uword size) : var_args(size) { }
+  virtual const variant &operator[](uword index) const { return *(elms_[index]); }
+  const variant *elms_[n];
 };
 
 
-static inline fmt_elms_impl<1> elms() {
-  return fmt_elms_impl<1>(0);
+static inline var_args_impl<1> elms() {
+  return var_args_impl<1>(0);
 }
 
 
-static inline fmt_elms_impl<1> elms(const fmt_elm &elm) {
-  fmt_elms_impl<1> result(1);
+static inline var_args_impl<1> elms(const variant &elm) {
+  var_args_impl<1> result(1);
   result.elms_[0] = &elm;
   return result;
 }
 
 
-static inline fmt_elms_impl<2> elms(const fmt_elm &elm1,
-    const fmt_elm &elm2) {
-  fmt_elms_impl<2> result(2);
+static inline var_args_impl<2> elms(const variant &elm1,
+    const variant &elm2) {
+  var_args_impl<2> result(2);
   result.elms_[0] = &elm1;
   result.elms_[1] = &elm2;
   return result;
 }
 
 
-static inline fmt_elms_impl<3> elms(const fmt_elm &elm1,
-    const fmt_elm &elm2, const fmt_elm &elm3) {
-  fmt_elms_impl<3> result(3);
+static inline var_args_impl<3> elms(const variant &elm1,
+    const variant &elm2, const variant &elm3) {
+  var_args_impl<3> result(3);
   result.elms_[0] = &elm1;
   result.elms_[1] = &elm2;
   result.elms_[2] = &elm3;
@@ -146,9 +146,9 @@ static inline fmt_elms_impl<3> elms(const fmt_elm &elm1,
 }
 
 
-static inline fmt_elms_impl<4> elms(const fmt_elm &elm1,
-    const fmt_elm &elm2, const fmt_elm &elm3, const fmt_elm &elm4) {
-  fmt_elms_impl<4> result(4);
+static inline var_args_impl<4> elms(const variant &elm1,
+    const variant &elm2, const variant &elm3, const variant &elm4) {
+  var_args_impl<4> result(4);
   result.elms_[0] = &elm1;
   result.elms_[1] = &elm2;
   result.elms_[2] = &elm3;
@@ -157,10 +157,10 @@ static inline fmt_elms_impl<4> elms(const fmt_elm &elm1,
 }
 
 
-static inline fmt_elms_impl<5> elms(const fmt_elm &elm1,
-    const fmt_elm &elm2, const fmt_elm &elm3, const fmt_elm &elm4,
-    const fmt_elm &elm5) {
-  fmt_elms_impl<5> result(5);
+static inline var_args_impl<5> elms(const variant &elm1,
+    const variant &elm2, const variant &elm3, const variant &elm4,
+    const variant &elm5) {
+  var_args_impl<5> result(5);
   result.elms_[0] = &elm1;
   result.elms_[1] = &elm2;
   result.elms_[2] = &elm3;
@@ -170,10 +170,10 @@ static inline fmt_elms_impl<5> elms(const fmt_elm &elm1,
 }
 
 
-static inline fmt_elms_impl<6> elms(const fmt_elm &elm1,
-    const fmt_elm &elm2, const fmt_elm &elm3, const fmt_elm &elm4,
-    const fmt_elm &elm5, const fmt_elm &elm6) {
-  fmt_elms_impl<6> result(6);
+static inline var_args_impl<6> elms(const variant &elm1,
+    const variant &elm2, const variant &elm3, const variant &elm4,
+    const variant &elm5, const variant &elm6) {
+  var_args_impl<6> result(6);
   result.elms_[0] = &elm1;
   result.elms_[1] = &elm2;
   result.elms_[2] = &elm3;
@@ -184,10 +184,10 @@ static inline fmt_elms_impl<6> elms(const fmt_elm &elm1,
 }
 
 
-static inline fmt_elms_impl<7> elms(const fmt_elm &elm1,
-    const fmt_elm &elm2, const fmt_elm &elm3, const fmt_elm &elm4,
-    const fmt_elm &elm5, const fmt_elm &elm6, const fmt_elm &elm7) {
-  fmt_elms_impl<7> result(7);
+static inline var_args_impl<7> elms(const variant &elm1,
+    const variant &elm2, const variant &elm3, const variant &elm4,
+    const variant &elm5, const variant &elm6, const variant &elm7) {
+  var_args_impl<7> result(7);
   result.elms_[0] = &elm1;
   result.elms_[1] = &elm2;
   result.elms_[2] = &elm3;
@@ -226,7 +226,7 @@ public:
    * Writes the specified string to this buffer, formatted using the
    * specified elements.
    */
-  void printf(string format, const fmt_elms &args);
+  void printf(string format, const var_args &args);
   
 private:
   void ensure_capacity(int required);

@@ -97,7 +97,7 @@ string string_buffer::raw_string() {
   return string(data_, cursor_);
 }
 
-void string_buffer::printf(string format, const fmt_elms &args) {
+void string_buffer::printf(string format, const var_args &args) {
   // Make the params buffer large enough to allow changes before and
   // after the param string
   list_value<char, 16> params;
@@ -122,7 +122,7 @@ void string_buffer::printf(string format, const fmt_elms &args) {
       continue;
     }
     i++;
-    const fmt_elm *fmt_elm = NULL;
+    const variant *fmt_elm = NULL;
     if (is_positional) {
       ASSERT(i < format.length());
       // Read the fmt_elm from the specified position in the args
@@ -174,7 +174,7 @@ static uword char_to_digit(uword chr) {
   return chr - '0';
 }
 
-void fmt_elm::print_on(string_buffer &buf, string params) const {
+void variant::print_on(string_buffer &buf, string params) const {
   switch (tag_) {
   case eInt:
     print_int_on(buf, params);
@@ -210,7 +210,7 @@ void fmt_elm::print_on(string_buffer &buf, string params) const {
 }
 
 
-void fmt_elm::print_int_on(string_buffer &buf, string params) const {
+void variant::print_int_on(string_buffer &buf, string params) const {
   // Configuration parameters
   bool flush_right = true;
   uword min_length = 0;

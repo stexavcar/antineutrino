@@ -23,7 +23,7 @@ static string format_current_time(list<char> &buf) {
 }
 
 
-void Log::info(string format, const fmt_elms &args) {
+void Log::info(string format, const var_args &args) {
   string_buffer buf;
   list_value<char, 16> time_buf;
   buf.printf("[%] ", elms(format_current_time(time_buf)));
@@ -95,7 +95,7 @@ void Conditions::check_failed(string file_name, int line_number,
 
 
 void Conditions::check_predicate_failed(string file_name, int line_number,
-    const fmt_elm &expected, string expected_source, const fmt_elm &value,
+    const variant &expected, string expected_source, const variant &value,
     string value_source, string name, Condition cause) {
   notify(cause);
   static string kErrorMessage =
@@ -139,7 +139,7 @@ void Conditions::unhandled(string file_name, int line_number,
 }
 
 
-void Conditions::error_occurred(string format, const fmt_elms &args) {
+void Conditions::error_occurred(string format, const var_args &args) {
   string_buffer buf;
   buf.printf(format, args);
   abort(buf.raw_string());

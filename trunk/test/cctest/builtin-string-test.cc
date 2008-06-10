@@ -79,7 +79,7 @@ void Test::printf() {
 }
 
 
-static string format(string form, fmt_elm arg) {
+static string format(string form, const variant &arg) {
   string_buffer buf;
   buf.printf(form, elms(arg));
   return buf.to_string();

@@ -24,7 +24,7 @@ eConditions(DECLARE_ENUM)
 class Log {
 public:
   
-  void info(string format, const fmt_elms &args);
+  void info(string format, const var_args &args);
   static Log &get() { return instance_; }
   
 private:
@@ -45,8 +45,8 @@ public:
       bool value, Condition cause);
 
   void check_predicate_failed(string file_name, int line_number,
-      const fmt_elm &expected, string expected_source, 
-      const fmt_elm &value, string value_source,
+      const variant &expected, string expected_source, 
+      const variant &value, string value_source,
       string name, Condition cause);
 
   void check_is_failed(string file_name, int line_number,
@@ -60,7 +60,7 @@ public:
       string enum_name, word value, AbstractEnumInfo &info,
       Condition cause);
   
-  void error_occurred(string format, const fmt_elms &args);  
+  void error_occurred(string format, const var_args &args);  
   virtual void notify(Condition cause);
   void abort(string message);
   
