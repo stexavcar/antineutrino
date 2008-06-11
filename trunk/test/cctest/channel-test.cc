@@ -6,15 +6,16 @@
 #include "utils/checks.h"
 #include "utils/string-inl.h"
 
+namespace p = plankton;
 using namespace neutrino;
 
 // This test is not for running, only compiling
 void walk_dont_run() {
-  NValue value = *static_cast<NValue*>(NULL);
-  is<NString>(value);
-  is<NTuple>(value);
-  cast<NString>(value);
-  cast<NTuple>(value);
+  p::Value value = *static_cast<p::Value*>(NULL);
+  p::is<p::String>(value);
+  p::is<p::Tuple>(value);
+  p::cast<p::String>(value);
+  p::cast<p::Tuple>(value);
 }
 
 
@@ -52,33 +53,33 @@ void Test::simple_objects() {
   FImmediate *f_emp = heap.cook(raw_emp);
   ExtendedValueDTable &dict = FrozenValueDTableImpl::instance();
   
-  NValue smi_val = ApiUtils::new_value(dict, f_smi);
-  CHECK_EQ(vtInteger, smi_val.type());
-  CHECK(is<NInteger>(smi_val));
-  CHECK(!is<NString>(smi_val));
-  CHECK(!is<NTuple>(smi_val));
-  NInteger smi = cast<NInteger>(smi_val);
+  p::Value smi_val = ApiUtils::new_value(dict, f_smi);
+  CHECK_EQ(p::Value::vtInteger, smi_val.type());
+  CHECK(p::is<p::Integer>(smi_val));
+  CHECK(!p::is<p::String>(smi_val));
+  CHECK(!p::is<p::Tuple>(smi_val));
+  p::Integer smi = p::cast<p::Integer>(smi_val);
   CHECK_EQ(10, smi.value());
   
-  NValue str_val = ApiUtils::new_value(dict, f_str);
-  CHECK_EQ(vtString, str_val.type());
-  CHECK(!is<NInteger>(str_val));
-  CHECK(is<NString>(str_val));
-  CHECK(!is<NTuple>(str_val));
-  NString str = cast<NString>(str_val);
+  p::Value str_val = ApiUtils::new_value(dict, f_str);
+  CHECK_EQ(p::Value::vtString, str_val.type());
+  CHECK(!p::is<p::Integer>(str_val));
+  CHECK(p::is<p::String>(str_val));
+  CHECK(!p::is<p::Tuple>(str_val));
+  p::String str = p::cast<p::String>(str_val);
   CHECK_EQ(knirk.length(), str.length());
   const char *c_str = str.c_str();
-  for (int i = 0; i < str.length(); i++) {
+  for (unsigned i = 0; i < str.length(); i++) {
     CHECK_EQ(knirk[i], str[i]);
     CHECK_EQ(knirk[i], c_str[i]);
   }
   CHECK_EQ(0, c_str[str.length()]);
   
-  NValue emp_val = ApiUtils::new_value(dict, f_emp);
-  CHECK_EQ(vtTuple, emp_val.type());
-  CHECK(!is<NInteger>(emp_val));
-  CHECK(!is<NString>(emp_val));
-  CHECK(is<NTuple>(emp_val));
-  NTuple emp = cast<NTuple>(emp_val);
+  p::Value emp_val = ApiUtils::new_value(dict, f_emp);
+  CHECK_EQ(p::Value::vtTuple, emp_val.type());
+  CHECK(!p::is<p::Integer>(emp_val));
+  CHECK(!p::is<p::String>(emp_val));
+  CHECK(p::is<p::Tuple>(emp_val));
+  p::Tuple emp = p::cast<p::Tuple>(emp_val);
   CHECK_EQ(0, emp.length());
 }

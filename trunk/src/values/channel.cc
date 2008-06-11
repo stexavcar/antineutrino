@@ -62,13 +62,13 @@ IExternalChannel *Channel::ensure_proxy(Runtime &runtime) {
 // --- U t i l s ---
 // -----------------
 
-template <class C> C *ApiUtils::open(NValue *obj) {
+template <class C> C *ApiUtils::open(plankton::Value *obj) {
   return static_cast<C*>(obj->origin());
 }
 
 
 template <class C> C ApiUtils::wrap(Value *obj) {
-  NValue val = new_value(LiveValueDTableImpl::instance(), obj);
+  plankton::Value val = new_value(LiveValueDTableImpl::instance(), obj);
   return *reinterpret_cast<C*>(&val);
 }
 
@@ -78,23 +78,23 @@ void *ApiUtils::close(FImmediate *obj) {
 }
 
 
-NValue ApiUtils::new_value(ExtendedValueDTable &methods, void *origin) {
-  return NValue(&methods, origin);
+plankton::Value ApiUtils::new_value(ExtendedValueDTable &dtable, void *origin) {
+  return plankton::Value(dtable, origin);
 }
 
 
-NValue ApiUtils::new_value_from(NValue *source, void *origin) {
-  return NValue(source->methods_, origin);
+plankton::Value ApiUtils::new_value_from(plankton::Value *source, void *origin) {
+  return plankton::Value(source->dtable(), origin);
 }
 
 
-class ValueFactoryImpl : public IValueFactory {
+class BuilderImpl : public plankton::IBuilder {
 public:
-  ValueFactoryImpl(Runtime &runtime) : runtime_(runtime) { }
-  virtual NInteger new_integer(word value);
-  virtual NString new_string(const char *data, unsigned length);
-  virtual NNull get_null();
-  virtual NValue new_raw_proxy(unsigned size);
+  BuilderImpl(Runtime &runtime) : runtime_(runtime) { }
+  virtual plankton::Integer new_integer(word value);
+  virtual plankton::String new_string(const char *data, unsigned length);
+  virtual plankton::Null get_null();
+  virtual plankton::Value new_raw_proxy(unsigned size);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
@@ -103,59 +103,59 @@ private:
 
 class MessageContextImpl : public IMessageContext {
 public:
-  MessageContextImpl(IValueFactory &factory) : factory_(factory) { }
-  virtual IValueFactory &factory() { return factory_; }
+  MessageContextImpl(plankton::IBuilder &factory) : factory_(factory) { }
+  virtual plankton::IBuilder &factory() { return factory_; }
 private:
-  IValueFactory &factory_;
+  plankton::IBuilder &factory_;
 };
 
 
 class MessageImpl : public IMessage {
 public:
-  MessageImpl(NValue contents, IMessageContext &context)
+  MessageImpl(plankton::Value contents, IMessageContext &context)
     : contents_(contents)
     , context_(context) { }
-  virtual NValue contents() { return contents_; }
+  virtual plankton::Value contents() { return contents_; }
   virtual IMessageContext &context() { return context_; }
 private:
-  NValue contents_;
+  plankton::Value contents_;
   IMessageContext &context_;
 };
 
 
 Data *ApiUtils::send_message(Runtime &runtime, IExternalChannel &channel,
     Immediate *contents) {
-  NValue value = new_value(LiveValueDTableImpl::instance(), contents);
-  ValueFactoryImpl factory(runtime);
+  plankton::Value value = new_value(LiveValueDTableImpl::instance(), contents);
+  BuilderImpl factory(runtime);
   MessageContextImpl context(factory);
   MessageImpl message(value, context);
-  NValue result = channel.receive(message);
-  ExtendedValueDTable &methods = static_cast<ExtendedValueDTable&>(result.methods());
+  plankton::Value result = channel.receive(message);
+  ExtendedValueDTable &methods = static_cast<ExtendedValueDTable&>(result.dtable());
   return (result.*(methods.value_to_data_))();
 }
 
 
-NInteger ValueFactoryImpl::new_integer(word value) {
+plankton::Integer BuilderImpl::new_integer(word value) {
   Smi *obj = Smi::from_int(value);
-  return ApiUtils::wrap<NInteger>(obj);
+  return ApiUtils::wrap<plankton::Integer>(obj);
 }
 
 
-NString ValueFactoryImpl::new_string(const char *data, unsigned length) {
+plankton::String BuilderImpl::new_string(const char *data, unsigned length) {
   Data *str = runtime().heap().new_string(string(data, length));
-  return ApiUtils::wrap<NString>(cast<String>(str));
+  return ApiUtils::wrap<plankton::String>(cast<String>(str));
 }
 
 
-NNull ValueFactoryImpl::get_null() {
+plankton::Null BuilderImpl::get_null() {
   Null *nuhll = runtime().roots().nuhll();
-  return ApiUtils::wrap<NNull>(nuhll);
+  return ApiUtils::wrap<plankton::Null>(nuhll);
 }
 
 
-NValue ValueFactoryImpl::new_raw_proxy(unsigned size) {
+plankton::Value BuilderImpl::new_raw_proxy(unsigned size) {
   Data *result = cast<Value>(runtime().heap().new_buffer(size));
-  NValue val = ApiUtils::new_value(LiveValueDTableImpl::instance(), result);
+  plankton::Value val = ApiUtils::new_value(LiveValueDTableImpl::instance(), result);
   return val;
 }
 
@@ -166,46 +166,46 @@ NValue ValueFactoryImpl::new_raw_proxy(unsigned size) {
 
 LiveValueDTableImpl LiveValueDTableImpl::instance_;
 
-class LiveNValue : public NValue {
+class LiveNValue : public plankton::Value {
 public:
-  ValueType type();
+  plankton::Value::Tag type();
   void *proxy_deref(unsigned size);
   Data *to_data();
 };
 
-class LiveNInteger : public NInteger {
+class LiveNInteger : public plankton::Integer {
 public:
   int value();
 };
 
-class LiveNString : public NString {
+class LiveNString : public plankton::String {
 public:
   int length();
   char get(unsigned index);
   const char *c_str();
 };
 
-class LiveNTuple : public NTuple {
+class LiveNTuple : public plankton::Tuple {
 public:
   int length();
-  NValue get(unsigned index);
+  plankton::Value get(unsigned index);
 };
 
 LiveValueDTableImpl::LiveValueDTableImpl() {
-  value_type_ = static_cast<ValueType (NValue::*)()>(&LiveNValue::type);
-  integer_value_ = static_cast<int (NInteger::*)()>(&LiveNInteger::value);
+  value_type_ = static_cast<plankton::Value::Tag (plankton::Value::*)()>(&LiveNValue::type);
+  integer_value_ = static_cast<int (plankton::Integer::*)()>(&LiveNInteger::value);
 /*
   string_length_ = static_cast<int (NString::*)()>(&FrozenNString::length);
   string_get_ = static_cast<char (NString::*)(int)>(&FrozenNString::get);
   tuple_length_ = static_cast<int (NTuple::*)()>(&FrozenNTuple::length);
 */
-  string_c_str_ = static_cast<const char *(NString::*)()>(&LiveNString::c_str);
-  tuple_get_ = static_cast<NValue (NTuple::*)(unsigned)>(&LiveNTuple::get);
-  proxy_deref_ = static_cast<void *(NValue::*)(unsigned)>(&LiveNValue::proxy_deref);
-  value_to_data_ = static_cast<Data *(NValue::*)()>(&LiveNValue::to_data);
+  string_c_str_ = static_cast<const char *(plankton::String::*)()>(&LiveNString::c_str);
+  tuple_get_ = static_cast<plankton::Value (plankton::Tuple::*)(unsigned)>(&LiveNTuple::get);
+  proxy_deref_ = static_cast<void *(plankton::Value::*)(unsigned)>(&LiveNValue::proxy_deref);
+  value_to_data_ = static_cast<Data *(plankton::Value::*)()>(&LiveNValue::to_data);
 }
 
-ValueType LiveNValue::type() {
+plankton::Value::Tag LiveNValue::type() {
   InstanceType type = ApiUtils::open<Immediate>(this)->type();
   switch (type) {
     case tString:
@@ -240,11 +240,11 @@ int LiveNInteger::value() {
 }
 
 const char *LiveNString::c_str() {
-  return ApiUtils::open<String>(this)->c_str().start();
+  return ApiUtils::open<neutrino::String>(this)->c_str().start();
 }
 
-NValue LiveNTuple::get(unsigned index) {
-  Value *result = ApiUtils::open<Tuple>(this)->get(index);
+plankton::Value LiveNTuple::get(unsigned index) {
+  neutrino::Value *result = ApiUtils::open<neutrino::Tuple>(this)->get(index);
   return ApiUtils::new_value_from(this, result);
 }
 
@@ -255,40 +255,40 @@ NValue LiveNTuple::get(unsigned index) {
 
 FrozenValueDTableImpl FrozenValueDTableImpl::instance_;
 
-class FrozenNValue : public NValue {
+class FrozenNValue : public plankton::Value {
 public:
-  ValueType type();
+  plankton::Value::Tag type();
 };
 
-class FrozenNInteger : public NInteger {
+class FrozenNInteger : public plankton::Integer {
 public:
   int value();
 };
 
-class FrozenNString : public NString {
+class FrozenNString : public plankton::String {
 public:
-  int length();
-  char get(unsigned index);
+  unsigned length();
+  unsigned get(unsigned index);
   const char *c_str();
 };
 
-class FrozenNTuple : public NTuple {
+class FrozenNTuple : public plankton::Tuple {
 public:
   int length();
-  NValue get(unsigned index);
+  plankton::Value get(unsigned index);
 };
 
 FrozenValueDTableImpl::FrozenValueDTableImpl() {
-  value_type_ = static_cast<ValueType (NValue::*)()>(&FrozenNValue::type);
-  integer_value_ = static_cast<int (NInteger::*)()>(&FrozenNInteger::value);
-  string_length_ = static_cast<int (NString::*)()>(&FrozenNString::length);
-  string_get_ = static_cast<char (NString::*)(unsigned)>(&FrozenNString::get);
-  string_c_str_ = static_cast<const char *(NString::*)()>(&FrozenNString::c_str);
-  tuple_length_ = static_cast<int (NTuple::*)()>(&FrozenNTuple::length);
-  tuple_get_ = static_cast<NValue (NTuple::*)(unsigned)>(&FrozenNTuple::get);
+  value_type_ = static_cast<plankton::Value::Tag (plankton::Value::*)()>(&FrozenNValue::type);
+  integer_value_ = static_cast<int (plankton::Integer::*)()>(&FrozenNInteger::value);
+  string_length_ = static_cast<unsigned (plankton::String::*)()>(&FrozenNString::length);
+  string_get_ = static_cast<unsigned (plankton::String::*)(unsigned)>(&FrozenNString::get);
+  string_c_str_ = static_cast<const char *(plankton::String::*)()>(&FrozenNString::c_str);
+  tuple_length_ = static_cast<int (plankton::Tuple::*)()>(&FrozenNTuple::length);
+  tuple_get_ = static_cast<plankton::Value (plankton::Tuple::*)(unsigned)>(&FrozenNTuple::get);
 }
 
-ValueType FrozenNValue::type() {
+plankton::Value::Tag FrozenNValue::type() {
   InstanceType type = ApiUtils::open<FImmediate>(this)->type();
   switch (type) {
     case tString:
@@ -306,11 +306,11 @@ int FrozenNInteger::value() {
   return ApiUtils::open<FSmi>(this)->value();
 }
 
-int FrozenNString::length() {
+unsigned FrozenNString::length() {
   return ApiUtils::open<FString>(this)->length();
 }
 
-char FrozenNString::get(unsigned index) {
+unsigned FrozenNString::get(unsigned index) {
   return ApiUtils::open<FString>(this)->get(index);
 }
 
@@ -328,7 +328,7 @@ int FrozenNTuple::length() {
   return ApiUtils::open<FTuple>(this)->length();
 }
 
-NValue FrozenNTuple::get(unsigned index) {
+plankton::Value FrozenNTuple::get(unsigned index) {
   FImmediate *result = ApiUtils::open<FTuple>(this)->at(index);
   return ApiUtils::new_value_from(this, result);
 }

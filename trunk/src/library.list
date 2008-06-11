@@ -18,6 +18,7 @@ platform/<platform>/abort.cc
 platform/<platform>/dylib.cc
 plankton/c/channel.c
 plankton/c/plankton.c
+plankton/cpp/plankton.cc
 runtime/builtins.cc
 runtime/interpreter.cc
 runtime/runtime.cc

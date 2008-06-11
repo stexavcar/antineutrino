@@ -45,11 +45,11 @@ DEFINE_REF_CLASS(Channel);
 
 class ApiUtils {
 public:
-  template <class C> static C *open(NValue *obj);
+  template <class C> static C *open(plankton::Value *obj);
   template <class C> static C wrap(Value *obj);
   static void *close(FImmediate *value);
-  static NValue new_value(ExtendedValueDTable &methods, void *origin);  
-  static NValue new_value_from(NValue *source, void *origin);
+  static plankton::Value new_value(ExtendedValueDTable &methods, void *origin);  
+  static plankton::Value new_value_from(plankton::Value *source, void *origin);
   static Data *send_message(Runtime &runtime, IExternalChannel &channel,
       Immediate *message);
 };
@@ -59,8 +59,8 @@ public:
  * This d-table adds a few methods that we need internally.  Any
  * d-table used with values must be a subclass of this.
  */
-struct ExtendedValueDTable : public ValueDTable {
-  Data *(NValue::*value_to_data_)();
+struct ExtendedValueDTable : public plankton::Value::DTable {
+  Data *(plankton::Value::*value_to_data_)();
 };
 
 
