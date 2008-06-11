@@ -25,7 +25,7 @@ public:
     unsigned (String::*string_length_)();
     unsigned (String::*string_get_)(unsigned index);
     const char *(String::*string_c_str_)();
-    int (Tuple::*tuple_length_)();
+    unsigned (Tuple::*tuple_length_)();
     Value (Tuple::*tuple_get_)(unsigned index);
     void *(Value::*proxy_deref_)(unsigned size);
   };

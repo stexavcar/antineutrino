@@ -168,44 +168,42 @@ LiveValueDTableImpl LiveValueDTableImpl::instance_;
 
 class LiveNValue : public plankton::Value {
 public:
-  plankton::Value::Tag type();
-  void *proxy_deref(unsigned size);
-  Data *to_data();
+  plankton::Value::Tag type_impl();
+  void *proxy_deref_impl(unsigned size);
+  Data *to_data_impl();
 };
 
 class LiveNInteger : public plankton::Integer {
 public:
-  int value();
+  int value_impl();
 };
 
 class LiveNString : public plankton::String {
 public:
-  int length();
-  char get(unsigned index);
-  const char *c_str();
+  unsigned length_impl();
+  unsigned get_impl(unsigned index);
+  const char *c_str_impl();
 };
 
 class LiveNTuple : public plankton::Tuple {
 public:
-  int length();
-  plankton::Value get(unsigned index);
+  unsigned length_impl();
+  plankton::Value get_impl(unsigned index);
 };
 
 LiveValueDTableImpl::LiveValueDTableImpl() {
-  value_type_ = static_cast<plankton::Value::Tag (plankton::Value::*)()>(&LiveNValue::type);
-  integer_value_ = static_cast<int (plankton::Integer::*)()>(&LiveNInteger::value);
-/*
-  string_length_ = static_cast<int (NString::*)()>(&FrozenNString::length);
-  string_get_ = static_cast<char (NString::*)(int)>(&FrozenNString::get);
-  tuple_length_ = static_cast<int (NTuple::*)()>(&FrozenNTuple::length);
-*/
-  string_c_str_ = static_cast<const char *(plankton::String::*)()>(&LiveNString::c_str);
-  tuple_get_ = static_cast<plankton::Value (plankton::Tuple::*)(unsigned)>(&LiveNTuple::get);
-  proxy_deref_ = static_cast<void *(plankton::Value::*)(unsigned)>(&LiveNValue::proxy_deref);
-  value_to_data_ = static_cast<Data *(plankton::Value::*)()>(&LiveNValue::to_data);
+  value_type_ = static_cast<plankton::Value::Tag (plankton::Value::*)()>(&LiveNValue::type_impl);
+  integer_value_ = static_cast<int (plankton::Integer::*)()>(&LiveNInteger::value_impl);
+  string_length_ = static_cast<unsigned (plankton::String::*)()>(&LiveNString::length_impl);
+  string_get_ = static_cast<unsigned (plankton::String::*)(unsigned)>(&LiveNString::get_impl);
+  tuple_length_ = static_cast<unsigned (plankton::Tuple::*)()>(&LiveNTuple::length_impl);
+  string_c_str_ = static_cast<const char *(plankton::String::*)()>(&LiveNString::c_str_impl);
+  tuple_get_ = static_cast<plankton::Value (plankton::Tuple::*)(unsigned)>(&LiveNTuple::get_impl);
+  proxy_deref_ = static_cast<void *(plankton::Value::*)(unsigned)>(&LiveNValue::proxy_deref_impl);
+  value_to_data_ = static_cast<Data *(plankton::Value::*)()>(&LiveNValue::to_data_impl);
 }
 
-plankton::Value::Tag LiveNValue::type() {
+plankton::Value::Tag LiveNValue::type_impl() {
   InstanceType type = ApiUtils::open<Immediate>(this)->type();
   switch (type) {
     case tString:
@@ -222,7 +220,7 @@ plankton::Value::Tag LiveNValue::type() {
   }
 }
 
-void *LiveNValue::proxy_deref(unsigned size) {
+void *LiveNValue::proxy_deref_impl(unsigned size) {
   Buffer *obj = ApiUtils::open<Buffer>(this);
   if (obj->size<byte>() == size) {
     return obj->buffer<byte>().start();
@@ -231,21 +229,33 @@ void *LiveNValue::proxy_deref(unsigned size) {
   }
 }
 
-Data *LiveNValue::to_data() {
+Data *LiveNValue::to_data_impl() {
   return ApiUtils::open<Immediate>(this);
 }
 
-int LiveNInteger::value() {
+int LiveNInteger::value_impl() {
   return ApiUtils::open<Smi>(this)->value();
 }
 
-const char *LiveNString::c_str() {
+unsigned LiveNString::length_impl() {
+  return ApiUtils::open<neutrino::String>(this)->length();
+}
+
+unsigned LiveNString::get_impl(unsigned index) {
+  return ApiUtils::open<neutrino::String>(this)->get(index);
+}
+
+const char *LiveNString::c_str_impl() {
   return ApiUtils::open<neutrino::String>(this)->c_str().start();
 }
 
-plankton::Value LiveNTuple::get(unsigned index) {
+plankton::Value LiveNTuple::get_impl(unsigned index) {
   neutrino::Value *result = ApiUtils::open<neutrino::Tuple>(this)->get(index);
   return ApiUtils::new_value_from(this, result);
+}
+
+unsigned LiveNTuple::length_impl() {
+  return ApiUtils::open<neutrino::Tuple>(this)->length();
 }
 
 
@@ -257,38 +267,38 @@ FrozenValueDTableImpl FrozenValueDTableImpl::instance_;
 
 class FrozenNValue : public plankton::Value {
 public:
-  plankton::Value::Tag type();
+  plankton::Value::Tag type_impl();
 };
 
 class FrozenNInteger : public plankton::Integer {
 public:
-  int value();
+  int value_impl();
 };
 
 class FrozenNString : public plankton::String {
 public:
-  unsigned length();
-  unsigned get(unsigned index);
-  const char *c_str();
+  unsigned length_impl();
+  unsigned get_impl(unsigned index);
+  const char *c_str_impl();
 };
 
 class FrozenNTuple : public plankton::Tuple {
 public:
-  int length();
-  plankton::Value get(unsigned index);
+  unsigned length_impl();
+  plankton::Value get_impl(unsigned index);
 };
 
 FrozenValueDTableImpl::FrozenValueDTableImpl() {
-  value_type_ = static_cast<plankton::Value::Tag (plankton::Value::*)()>(&FrozenNValue::type);
-  integer_value_ = static_cast<int (plankton::Integer::*)()>(&FrozenNInteger::value);
-  string_length_ = static_cast<unsigned (plankton::String::*)()>(&FrozenNString::length);
-  string_get_ = static_cast<unsigned (plankton::String::*)(unsigned)>(&FrozenNString::get);
-  string_c_str_ = static_cast<const char *(plankton::String::*)()>(&FrozenNString::c_str);
-  tuple_length_ = static_cast<int (plankton::Tuple::*)()>(&FrozenNTuple::length);
-  tuple_get_ = static_cast<plankton::Value (plankton::Tuple::*)(unsigned)>(&FrozenNTuple::get);
+  value_type_ = static_cast<plankton::Value::Tag (plankton::Value::*)()>(&FrozenNValue::type_impl);
+  integer_value_ = static_cast<int (plankton::Integer::*)()>(&FrozenNInteger::value_impl);
+  string_length_ = static_cast<unsigned (plankton::String::*)()>(&FrozenNString::length_impl);
+  string_get_ = static_cast<unsigned (plankton::String::*)(unsigned)>(&FrozenNString::get_impl);
+  string_c_str_ = static_cast<const char *(plankton::String::*)()>(&FrozenNString::c_str_impl);
+  tuple_length_ = static_cast<unsigned (plankton::Tuple::*)()>(&FrozenNTuple::length_impl);
+  tuple_get_ = static_cast<plankton::Value (plankton::Tuple::*)(unsigned)>(&FrozenNTuple::get_impl);
 }
 
-plankton::Value::Tag FrozenNValue::type() {
+plankton::Value::Tag FrozenNValue::type_impl() {
   InstanceType type = ApiUtils::open<FImmediate>(this)->type();
   switch (type) {
     case tString:
@@ -302,19 +312,19 @@ plankton::Value::Tag FrozenNValue::type() {
   }
 }
 
-int FrozenNInteger::value() {
+int FrozenNInteger::value_impl() {
   return ApiUtils::open<FSmi>(this)->value();
 }
 
-unsigned FrozenNString::length() {
+unsigned FrozenNString::length_impl() {
   return ApiUtils::open<FString>(this)->length();
 }
 
-unsigned FrozenNString::get(unsigned index) {
+unsigned FrozenNString::get_impl(unsigned index) {
   return ApiUtils::open<FString>(this)->get(index);
 }
 
-const char *FrozenNString::c_str() {
+const char *FrozenNString::c_str_impl() {
   FString *str = ApiUtils::open<FString>(this);
   uword length = str->length();
   char *result = new char[length + 1];
@@ -324,11 +334,11 @@ const char *FrozenNString::c_str() {
   return result;
 }
 
-int FrozenNTuple::length() {
+unsigned FrozenNTuple::length_impl() {
   return ApiUtils::open<FTuple>(this)->length();
 }
 
-plankton::Value FrozenNTuple::get(unsigned index) {
+plankton::Value FrozenNTuple::get_impl(unsigned index) {
   FImmediate *result = ApiUtils::open<FTuple>(this)->at(index);
   return ApiUtils::new_value_from(this, result);
 }
