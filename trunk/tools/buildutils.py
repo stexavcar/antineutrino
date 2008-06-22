@@ -22,7 +22,7 @@ def generate_possibilities(params, config):
   for param in params:
     if not param in config:
       raise "The current configuration does not define parameter '" + param + "'"
-    value = config[param]
+    (value, append) = config[param]
     if not type(value) is list: value = [ value ]
     options.append(value)
     count *= len(value)
@@ -130,15 +130,17 @@ class Configuration:
       self.load_section_into(self.sections[super], properties, triggers)
     for props in section.get_property_groups(triggers):
       for (key, (value, is_extension)) in props.items():
+        append = is_extension
         if (key in properties) and is_extension:
-          old_value = properties[key]
+          (old_value, old_append) = properties[key]
+          append = old_append
           if type(old_value) is str:
             value = old_value + ' ' + value
           elif type(old_value) is list:
             value = old_value + value
           else:
             assert False
-        properties[key] = value
+        properties[key] = (value, append)
 
 class Section:
   def __init__(self, name, trigger, supers, properties):
@@ -247,5 +249,6 @@ def read_config_file(name, parent=None, triggers=[]):
 # Apply a set of items read from a configuration file to an
 # environment
 def apply_items(env, properties):
-  for (key, value) in properties.items():
-    env.Replace(**{key.upper(): value})
+  for (key, (value, append)) in properties.items():
+    if append: env.Append(**{key.upper(): value})
+    else: env.Replace(**{key.upper(): value})

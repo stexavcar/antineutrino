@@ -15,8 +15,8 @@ public:
 };
 
 Value ForkProcessChannel::receive(neutrino::IMessage &message) {
-  //pid_t pid = fork();
-  //if (pid != 0) return message.context().factory().get_null();
+  pid_t pid = fork();
+  if (pid != 0) return message.context().factory().get_null();
   Tuple argv_obj = cast<Tuple>(message.contents());
   int argc = argv_obj.length();
   const char **argv = new const char*[argc];

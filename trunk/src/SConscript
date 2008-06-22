@@ -17,7 +17,7 @@ program_files = read_files_from(get_wildcard_mapping(), config['src'], join(conf
 # Creates a new environment and pre-configure it based on the set
 # of configuration items
 def create_environment():
-  result = Environment(CPPPATH=".")
+  result = Environment(CPPPATH=["."])
   apply_items(result, properties)
   return result
 
