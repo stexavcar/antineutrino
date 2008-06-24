@@ -4,6 +4,7 @@ from os.path import join, abspath
 from buildutils import read_files_from, apply_items, escape_string
 Import('config target properties prefix')
 
+
 def get_wildcard_mapping():
   result = { }
   for (key, value) in config.items(): result[key.lower()] = value

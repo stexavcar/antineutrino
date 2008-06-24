@@ -126,7 +126,7 @@ def load_source_targets():
       SConscript(
         join('natives', 'SConscript'),
         build_dir = build,
-        exports = 'config target native_properties common prefix build',
+        exports = 'config target native_properties common prefix build properties',
         duplicate = False
       )
       SConscript(

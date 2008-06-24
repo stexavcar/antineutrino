@@ -5,6 +5,7 @@
 <storageModule moduleId="org.eclipse.cdt.core.settings">
 <cconfiguration id="cdt.managedbuild.config.gnu.macosx.exe.debug.672268600">
 <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.macosx.exe.debug.672268600" moduleId="org.eclipse.cdt.core.settings" name="Paranoid">
+
 <macros>
 <stringMacro name="cairo_path" type="VALUE_TEXT" value="/usr/include/cairo"/>
 </macros>
@@ -742,6 +743,7 @@
 </cconfiguration>
 <cconfiguration id="cdt.managedbuild.config.gnu.macosx.exe.debug.672268600.1518288293">
 <storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.config.gnu.macosx.exe.debug.672268600.1518288293" moduleId="org.eclipse.cdt.core.settings" name="Product">
+
 <macros>
 <stringMacro name="cairo_path" type="VALUE_TEXT" value="/usr/include/cairo"/>
 </macros>

@@ -4,4 +4,4 @@
 core/file.cc
 test/test.cc
 whiteout/process.cc
-whiteout/cairo.cc
+whiteout/cairo_<platform>.cc
