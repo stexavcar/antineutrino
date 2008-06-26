@@ -52,7 +52,11 @@ def report_error(ce):
 
 
 def ignore_file(name):
-  return os.path.basename(name).startswith('.')
+  basename = os.path.basename(name)
+  return basename.startswith('.') or (basename == 'CVS')
+
+
+MODULE_DEF = 'module.def'
 
 
 def find_source_files(location):
@@ -66,6 +70,8 @@ def find_source_files(location):
       # it
       for ignored in [f for f in dirnames if ignore_file(f)]:
         dirnames.remove(ignored)
+      if MODULE_DEF in filenames:
+        pass
       for f in filenames:
         if f.endswith('.n') and not ignore_file(f):
           result.append(os.path.join(dirpath, f))

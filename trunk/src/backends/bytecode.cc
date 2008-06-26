@@ -254,7 +254,7 @@ void BytecodeBackend::mark(ref<Value> data) {
 
 void BytecodeBackend::unmark() {
   STATIC_CHECK(OpcodeInfo<ocUnmark>::kArgc == 0);
-  code().append(ocUnmark);  
+  code().append(ocUnmark);
   adjust_stack_height(-static_cast<word>(Marker::kSize));
 }
 
@@ -321,7 +321,7 @@ uint16_t BytecodeBackend::constant_pool_index(ref<Value> value) {
 }
 
 
-ref<Method> BytecodeBackend::field_getter(uword index, 
+ref<Method> BytecodeBackend::field_getter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref<Code> ld_code = factory().new_code(4);
@@ -336,7 +336,7 @@ ref<Method> BytecodeBackend::field_getter(uword index,
 }
 
 
-ref<Method> BytecodeBackend::field_setter(uword index, 
+ref<Method> BytecodeBackend::field_setter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref<Code> st_code = factory().new_code(6);
@@ -436,15 +436,11 @@ Signal *BytecodeArchitecture::initialize_task(Task *task) {
 
 
 Signal *BytecodeArchitecture::setup(Runtime &runtime) {
-  Data *code_val = runtime.heap().new_code(1);
-  if (is<Signal>(code_val)) return cast<Signal>(code_val);
-  Code *code = cast<Code>(code_val);
+  @check Code *code = runtime.heap().new_code(1);
   code->set(0, ocStackBottom);
   Roots &roots = runtime.roots();
-  Data *lambda_val = runtime.heap().new_lambda(0, 0, code, 
+  @check Lambda *lambda = runtime.heap().new_lambda(0, 0, code,
       roots.empty_tuple(), 0, roots.dummy_context());
-  if (is<Signal>(lambda_val)) return cast<Signal>(lambda_val);
-  Lambda *lambda = cast<Lambda>(lambda_val);
   bottom_ = runtime.refs().new_persistent(lambda);
   return Success::make();
 }

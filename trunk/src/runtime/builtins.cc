@@ -154,21 +154,21 @@ Data *Builtins::smi_times(BuiltinArguments &args) {
 
 Data *Builtins::smi_divide(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
-  SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
+  @check Smi* self = to<Smi>(args.self());
+  @check Smi* that = to<Smi>(args[0]);
   return Smi::from_int(self->value() / that->value());
 }
 
 Data *Builtins::smi_modulo(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
-  SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
+  @check Smi* self = to<Smi>(args.self());
+  @check Smi* that = to<Smi>(args[0]);
   return Smi::from_int(self->value() % that->value());
 }
 
 Data *Builtins::smi_less(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
+  @check Smi* self = to<Smi>(args.self());
   SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
   return (self->value() < that->value())
     ? static_cast<Bool*>(args.runtime().roots().thrue())
@@ -177,7 +177,7 @@ Data *Builtins::smi_less(BuiltinArguments &args) {
 
 Data *Builtins::smi_abs(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
+  @check Smi* self = to<Smi>(args.self());
   word value = self->value();
   if (value >= 0) return self;
   else return Smi::from_int(-value);
