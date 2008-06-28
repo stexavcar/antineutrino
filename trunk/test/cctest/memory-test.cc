@@ -9,8 +9,8 @@ using namespace neutrino;
 
 void Test::simple_migration() {
   LocalRuntime runtime;
-  stack_ref_block<> safe(runtime.refs());
-  ref<Tuple> tuple = safe(cast<Tuple>(runtime.factory().new_tuple(10)));
+  ref_block<> protect(runtime.refs());
+  ref<Tuple> tuple = protect(cast<Tuple>(runtime.factory().new_tuple(10)));
   CHECK_IS(Tuple, *tuple);
   Tuple *old_tuple = *tuple;
   Memory &memory = runtime.heap().memory();
@@ -49,10 +49,10 @@ void Test::garbage_removed() {
 
 void Test::migrate_cycle() {
   LocalRuntime runtime;
-  stack_ref_block<> safe(runtime.refs());
+  ref_block<> protect(runtime.refs());
   Memory &memory = runtime.heap().memory();
   SemiSpace &old_space = memory.young_space();
-  ref<Tuple> value = safe(cast<Tuple>(runtime.factory().new_tuple(3)));
+  ref<Tuple> value = protect(cast<Tuple>(runtime.factory().new_tuple(3)));
   CHECK_IS(Tuple, *value);
   value->set(0, *value);
   value->set(1, *value);

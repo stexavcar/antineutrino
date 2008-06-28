@@ -80,13 +80,13 @@ Signal *Main::run_system(list<char*> &args) {
 
 Signal *Main::build_arguments(Runtime &runtime) {
   list<string> args = Options::args;
-  stack_ref_block<> safe(runtime.refs());
-  @protect ref<Tuple> result = runtime.factory().new_tuple(args.length());
+  ref_block<> protect(runtime.refs());
+  @check ref<Tuple> result = runtime.factory().new_tuple(args.length());
   for (uword i = 0; i < args.length(); i++) {
-    @protect ref<String> arg = runtime.factory().new_string(args[i]);
+    @check ref<String> arg = runtime.factory().new_string(args[i]);
     result->set(i, *arg);
   }
-  @protect ref<String> arguments = runtime.factory().new_string("arguments");
+  @check ref<String> arguments = runtime.factory().new_string("arguments");
   runtime.gc_safe().set(runtime.toplevel(), arguments, result);
   return Success::make();
 }

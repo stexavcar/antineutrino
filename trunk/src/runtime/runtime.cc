@@ -27,8 +27,8 @@ Signal *Runtime::initialize(Architecture *arch) {
 }
 
 Signal *Runtime::start() {
-  stack_ref_block<> safe(refs());
-  @protect ref<String> main_name = factory().new_string("entry_point");
+  ref_block<> protect(refs());
+  @check ref<String> main_name = factory().new_string("entry_point");
   Data *entry_point = roots().toplevel()->get(*main_name);
   if (is<Nothing>(entry_point)) {
     Conditions::get().error_occurred("Error: no entry point '%' was defined.",
@@ -39,8 +39,8 @@ Signal *Runtime::start() {
         elms(main_name));
     return InternalError::make(InternalError::ieFatalError);
   }
-  ref<Lambda> lambda = safe(cast<Lambda>(entry_point));
-  @protect ref<Task> task = factory().new_task(architecture());
+  ref<Lambda> lambda = protect(cast<Lambda>(entry_point));
+  @check ref<Task> task = factory().new_task(architecture());
   architecture().run(lambda, task);
   return Success::make();
 }
@@ -110,16 +110,16 @@ Signal *Runtime::load_image(Image &image) {
     report_load_error(info.status());
     return InternalError::make(InternalError::ieFatalError);
   } else {
-    stack_ref_block<> safe(refs());
+    ref_block<> protect(refs());
     Tuple *roots = cast<Tuple>(roots_val);
-    return install_loaded_roots(safe(roots));
+    return install_loaded_roots(protect(roots));
   }
 }
 
 Signal *Runtime::install_loaded_roots(ref<Tuple> roots) {
-  for (uword i = 0; i < roots.length(); i++) {
-    stack_ref_block<> safe(refs());
-    ref<Value> raw_changes = safe(roots.get(i));
+  for (uword i = 0; i < roots->length(); i++) {
+    ref_block<> protect(refs());
+    ref<Value> raw_changes = protect(roots->get(i));
     if (is<Smi>(raw_changes)) continue;
     ref<Object> changes = cast<Object>(raw_changes);
     ref<Object> root = get_root(i);
@@ -142,12 +142,12 @@ Signal *Runtime::install_object(ref<Object> root, ref<Object> changes) {
 }
 
 Signal *Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
-  stack_ref_block<> safe(refs());
+  ref_block<> protect(refs());
   // First copy all elements into the tables so that we can iterate
   // through the elements independent of whether a gc occurs or not
   uword length = changes.size();
-  @protect ref<Tuple> keys = factory().new_tuple(length);
-  @protect ref<Tuple> values = factory().new_tuple(length);
+  @check ref<Tuple> keys = factory().new_tuple(length);
+  @check ref<Tuple> values = factory().new_tuple(length);
   HashMap::Iterator iter(*changes);
   HashMap::Iterator::Entry entry;
   for (uword i = 0; i < length; i++) {
@@ -160,8 +160,8 @@ Signal *Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
   ASSERT(!iter.next(&entry));
   // Then add the elements to the root object
   for (uword i = 0; i < length; i++) {
-    stack_ref_block<> safe(refs());
-    root.set(heap(), safe(keys.get(i)), safe(values.get(i)));
+    ref_block<> protect(refs());
+    root.set(heap(), protect(keys->get(i)), protect(values->get(i)));
   }
   return Success::make();
 }

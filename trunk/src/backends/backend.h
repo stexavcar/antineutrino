@@ -14,7 +14,7 @@ public:
 protected:
   Runtime &runtime() { return runtime_; }
   Factory &factory() { return runtime().factory(); }
-  RefStack &refs() { return runtime().refs(); }
+  RefManager &refs() { return runtime().refs(); }
 
 private:
   Runtime &runtime_;

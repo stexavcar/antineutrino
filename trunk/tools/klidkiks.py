@@ -59,10 +59,12 @@ class Matcher(object):
   
   def replace(self, input, counter):
     match = re.match(self.pattern, input)
-    dict = match.groupdict()
-    dict['i'] = str(counter)
-    if match: return self.value % dict
-    else: return None
+    if match:
+      dict = match.groupdict()
+      dict['i'] = str(counter)
+      return self.value % dict
+    else:
+      return None
 
 
 class Counter(object):

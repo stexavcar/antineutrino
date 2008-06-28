@@ -10,37 +10,37 @@ namespace neutrino {
 
 Data *ref_traits<ProtocolExpression>::compile(Runtime &runtime,
     ref<Context> context) {
-  stack_ref_block<> safe(runtime.refs());
+  ref_block<> protect(runtime.refs());
   ref<ProtocolExpression> self = open(this);
   Factory &factory = runtime.factory();
-  ref<Tuple> method_asts = safe(methods());
-  @protect ref<Tuple> methods = factory.new_tuple(method_asts.length());
-  for (uword i = 0; i < method_asts.length(); i++) {
-    stack_ref_block<> safe(runtime.refs());
-    ref<MethodExpression> method_ast = safe(cast<MethodExpression>(method_asts.get(i)));
-    @protect ref<Method> method = method_ast.compile(runtime, context);
-    methods.set(i, method);
+  ref<Tuple> method_asts = protect(methods());
+  @check ref<Tuple> methods = factory.new_tuple(method_asts->length());
+  for (uword i = 0; i < method_asts->length(); i++) {
+    ref_block<> protect(runtime.refs());
+    ref<MethodExpression> method_ast = protect(cast<MethodExpression>(method_asts->get(i)));
+    @check ref<Method> method = method_ast.compile(runtime, context);
+    methods->set(i, *method);
   }
-  return factory.new_protocol(methods, safe(super()), safe(name()));
+  return factory.new_protocol(methods, protect(super()), protect(name()));
 }
 
 Data *ref_traits<MethodExpression>::compile(Runtime &runtime,
     ref<Context> context) {
-  stack_ref_block<> safe(runtime.refs());
+  ref_block<> protect(runtime.refs());
   ref<MethodExpression> self = open(this);
-  @protect ref<Lambda> code = Compiler::compile(runtime, safe(self.lambda()), context);
+  @check ref<Lambda> code = Compiler::compile(runtime, protect(self.lambda()), context);
   Factory &factory = runtime.factory();
-  @protect ref<Tuple> tuple = factory.new_tuple(0);
-  @protect ref<Signature> signature = factory.new_signature(tuple);
-  @protect ref<Method> result = factory.new_method(safe(selector()), signature, code);
+  @check ref<Tuple> tuple = factory.new_tuple(0);
+  @check ref<Signature> signature = factory.new_signature(tuple);
+  @check ref<Method> result = factory.new_method(protect(selector()), signature, code);
   return *result;
 }
 
 void Lambda::ensure_compiled(Runtime &runtime, Method *holder) {
   if (is<Code>(code())) return;
-  stack_ref_block<> safe(runtime.refs());
-  ref<Method> holder_ref = safe(holder);
-  ref<Lambda> self_ref = safe(this);
+  ref_block<> protect(runtime.refs());
+  ref<Method> holder_ref = protect(holder);
+  ref<Lambda> self_ref = protect(this);
   self_ref.ensure_compiled(runtime, holder_ref);
 }
 
@@ -312,9 +312,9 @@ static void dispatch_single(Visitor &visitor, ref<Value> value, bool ignore_unex
 static void dispatch(Visitor &visitor, ref<Value> value, const char *field) {
   if (is<Tuple>(value)) {
     ref<Tuple> tuple = cast<Tuple>(value);
-    for (uword i = 0; i < tuple.length(); i++) {
-      stack_ref_block<1> safe(visitor.refs());
-      dispatch_single(visitor, safe(tuple.get(i)), false);
+    for (uword i = 0; i < tuple->length(); i++) {
+      ref_block<1> protect(visitor.refs());
+      dispatch_single(visitor, protect(tuple->get(i)), false);
     }
   } else {
     dispatch_single(visitor, value, true);
@@ -342,44 +342,44 @@ eAcceptVisitorCases(MAKE_VISIT)
  * Dispatch the visitor for each element in the given tuple.
  */
 static void dispatch_tuple(Visitor &visitor, ref<Tuple> tuple, const char *field) {
-  for (uword i = 0; i < tuple.length(); i++) {
-    stack_ref_block<> safe(visitor.refs());
-    dispatch(visitor, safe(tuple.get(i)), field);
+  for (uword i = 0; i < tuple->length(); i++) {
+    ref_block<> protect(visitor.refs());
+    dispatch(visitor, protect(tuple->get(i)), field);
   }
 }
 
 
 Signal *ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
-#define VISIT_FIELD_WITH(field, Type, op) op(visitor, safe(cast<Type>(self).field()), #Type "." #field);
+#define VISIT_FIELD_WITH(field, Type, op) op(visitor, protect(cast<Type>(self).field()), #Type "." #field);
 #define VISIT_FIELD(ret, field, Field, Type) VISIT_FIELD_WITH(field, Type, dispatch)
   ref<SyntaxTree> self = open(this);
   InstanceType type = self->type();
   switch (type) {
   case tArguments: {
-    stack_ref_block<> safe(visitor.refs());
+    ref_block<> protect(visitor.refs());
     VISIT_FIELD(0, arguments, 0, Arguments);
     break;
   }
   case tInstantiateExpression: {
-    stack_ref_block<> safe(visitor.refs());
+    ref_block<> protect(visitor.refs());
     VISIT_FIELD(0, receiver, 0, InstantiateExpression);
     VISIT_FIELD(0, arguments, 0, InstantiateExpression);
     VISIT_FIELD_WITH(terms, InstantiateExpression, dispatch_tuple);
     break;
   }
   case tInterpolateExpression: {
-    stack_ref_block<> safe(visitor.refs());
+    ref_block<> protect(visitor.refs());
     VISIT_FIELD_WITH(terms, InterpolateExpression, dispatch_tuple);
     break;
   }
   case tParameters: {
-    stack_ref_block<> safe(visitor.refs());
+    ref_block<> protect(visitor.refs());
     VISIT_FIELD_WITH(parameters, Parameters, dispatch_tuple);
     break;
   }
 #define MAKE_VISIT(n, Name, name)                                    \
   case t##Name: {                                                    \
-    stack_ref_block<> safe(visitor.refs());                          \
+    ref_block<> protect(visitor.refs());                          \
     e##Name##Fields(VISIT_FIELD, Name);                              \
     break;                                                           \
   }

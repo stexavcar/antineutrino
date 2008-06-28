@@ -67,7 +67,7 @@ public:
   inline ref<Object> get_root(uword index);
 
   DynamicLibraryCollection *dylibs() { return dylibs_; }
-  RefStack &refs() { return refs_; }
+  RefManager &refs() { return refs_; }
   Architecture &architecture() { return *architecture_; }
   Factory &factory() { return factory_; }
   GcSafe &gc_safe() { return gc_safe_; }
@@ -82,7 +82,7 @@ private:
   GcSafe gc_safe_;
   Architecture *architecture_;
   DynamicLibraryCollection *dylibs_;
-  RefStack refs_;
+  RefManager refs_;
 };
 
 } // neutrino

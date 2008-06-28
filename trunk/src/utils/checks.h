@@ -55,7 +55,7 @@ public:
   // "macro" strings, like file name and source code.  This is to
   // avoid the overhead in debug mode of calculating the length of
   // the strings whenever there is an assertion, since debug mode
-  // doesn't optimize strlen of literal strings.  This should be safe
+  // doesn't optimize strlen of literal strings.  This should be protect
   // since there are no null characters in file names of source code.
   
   static inline void check(const char *file_name, int line_number,

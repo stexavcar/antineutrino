@@ -93,7 +93,7 @@ class persistent_cell;
 class QuoteTemplate;
 class RawFValue;
 template <class T> class ref;
-class RefStack;
+class RefManager;
 class ReturnExpression;
 class Root;
 class Roots;

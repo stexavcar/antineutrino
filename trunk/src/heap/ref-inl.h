@@ -14,7 +14,7 @@ template <class C> static inline ref<C> open(ref_traits<C> *that) {
 
 
 template <class C>
-inline persistent<C> RefStack::new_persistent(C *obj) {
+inline persistent<C> RefManager::new_persistent(C *obj) {
   uword index = persistent_list().length();
   persistent_cell *cell = new persistent_cell(obj, *this, index);
   persistent_list().push(cell);
@@ -24,7 +24,7 @@ inline persistent<C> RefStack::new_persistent(C *obj) {
 
 template <uword n>
 template<typename T>
-inline ref<T> stack_ref_block<n>::operator()(T *val) {
+inline ref<T> ref_block<n>::operator()(T *val) {
   uword index = count_++;
   ASSERT_LT_C(cnRefOverflow, index, n);
   entries_[index] = val;
@@ -32,8 +32,8 @@ inline ref<T> stack_ref_block<n>::operator()(T *val) {
 }
 
 
-array<Value*> base_stack_ref_block::entries() {
-  stack_ref_block<>* self = static_cast<stack_ref_block<>*>(this);
+array<Value*> abstract_ref_block::entries() {
+  ref_block<>* self = static_cast<ref_block<>*>(this);
   return NEW_ARRAY(self->entries_, self->size_);
 }
 
@@ -57,7 +57,7 @@ ref<C> abstract_ref<C>::empty() {
 }
 
 
-base_stack_ref_block::base_stack_ref_block(RefStack &refs)
+abstract_ref_block::abstract_ref_block(RefManager &refs)
     : count_(0)
     , refs_(refs)
     , prev_(refs.top()) {
@@ -65,12 +65,12 @@ base_stack_ref_block::base_stack_ref_block(RefStack &refs)
 }
 
 
-base_stack_ref_block::~base_stack_ref_block() {
+abstract_ref_block::~abstract_ref_block() {
   refs_.set_top(prev_);
 }
 
 
-ref_iterator::ref_iterator(RefStack &refs)
+ref_iterator::ref_iterator(RefManager &refs)
     : current_(refs.top())
     , next_index_(0) {
   advance();
@@ -106,7 +106,7 @@ void ref_iterator::advance() {
 }
 
 
-persistent_iterator::persistent_iterator(RefStack &refs)
+persistent_iterator::persistent_iterator(RefManager &refs)
     : refs_(refs), index_(0) { }
 
 

@@ -7,8 +7,8 @@
 namespace neutrino {
 
 Signal *heap_list::initialize() {
-  stack_ref_block<> safe(runtime().refs());
-  @protect ref<Tuple> tuple = runtime().factory().new_tuple(16);
+  ref_block<> protect(runtime().refs());
+  @check ref<Tuple> tuple = runtime().factory().new_tuple(16);
   data_ = runtime().refs().new_persistent(*tuple);
   return Success::make();
 }
@@ -18,10 +18,10 @@ heap_list::~heap_list() {
 }
 
 Signal *heap_list::extend_capacity() {
-  stack_ref_block<> safe(runtime().refs());
-  uword capacity = data().length();
+  ref_block<> protect(runtime().refs());
+  uword capacity = data()->length();
   uword new_capacity = grow_value(capacity);
-  @protect ref<Tuple> new_data = runtime().factory().new_tuple(new_capacity);
+  @check ref<Tuple> new_data = runtime().factory().new_tuple(new_capacity);
   for (uword i = 0; i < capacity; i++)
     new_data->set(i, data()->get(i));
   data().dispose();
@@ -30,9 +30,9 @@ Signal *heap_list::extend_capacity() {
 }
 
 Signal *heap_list::append(ref<Value> value) {
-  if (length() >= data().length())
+  if (length() >= data()->length())
     @try extend_capacity();
-  data().set(length(), value);
+  data()->set(length(), *value);
   length_++;
   return Success::make();
 }

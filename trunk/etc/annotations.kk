@@ -3,10 +3,10 @@ def @check ${Type:\w+} \* ${name:[\w_]+} = ${operation:[^;]+}
   if (is<Signal>(__${name}_val__)) return cast<Signal>(__${name}_val__);
   ${Type}* ${name} = cast<${Type}>(__${name}_val__);
 
-def @protect ref < ${Type:\w+} > ${name:\w+} = ${operation:[^;]+}
+def @check ref < ${Type:\w+} > ${name:\w+} = ${operation:[^;]+}
   Data *__${name}_val__ = ${operation};
   if (is<Signal>(__${name}_val__)) return cast<Signal>(__${name}_val__);
-  ref<${Type}> ${name} = safe(cast<${Type}>(__${name}_val__));
+  ref<${Type}> ${name} = protect(cast<${Type}>(__${name}_val__));
 
 def @alloc ${Type:\w+} \* ${name:\w+} = ${operation:[^;]+}
   Data *__${name}_val__ = ${operation};

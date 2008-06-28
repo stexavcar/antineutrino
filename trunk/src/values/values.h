@@ -220,12 +220,12 @@ public:
 
     /**
      * An open forwarder is one whose value may change.  It is not
-     * safe to replace an open forwarder with its value.
+     * protect to replace an open forwarder with its value.
      */
     fwOpen,
 
     /**
-     * A closed forwarder is one whose value is fixed.  It is safe
+     * A closed forwarder is one whose value is fixed.  It is protect
      * to replace it with its value, and indeed the garbage collector
      * should eventually replace all instances of the forwarder with
      * their values.
@@ -522,13 +522,6 @@ public:
 
   static const int kLengthOffset = Object::kHeaderSize;
   static const int kHeaderSize   = kLengthOffset + kPointerSize;
-};
-
-template <> class ref_traits<AbstractTuple> : public ref_traits<Object> {
-public:
-  inline uword length();
-  inline Value *get(uword index);
-  inline void set(uword index, ref<Value> value);
 };
 
 DEFINE_REF_CLASS(AbstractTuple);

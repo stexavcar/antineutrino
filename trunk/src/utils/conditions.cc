@@ -12,13 +12,13 @@ Log Log::instance_;
 
 
 // Note that because of the call to localtime this function is not
-// thread safe.  Who came up with the idea of sharing the result
+// thread protect.  Who came up with the idea of sharing the result
 // value between all invocations of localtime?!?
 static string format_current_time(list<char> &buf) {
   time_t raw_now = ::time(NULL);
   struct tm *now = ::localtime(&raw_now);
   size_t count = ::strftime(buf.start(), buf.length(), "%X", now);
-  buf[count] = '\0'; // just to be on the safe side
+  buf[count] = '\0'; // just to be on the protect side
   return string(buf.start(), count);
 }
 

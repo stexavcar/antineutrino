@@ -462,18 +462,6 @@ bool AbstractTuple::is_empty() {
   return length() == 0;
 }
 
-uword ref_traits<AbstractTuple>::length() {
-  return open(this)->length();
-}
-
-Value *ref_traits<AbstractTuple>::get(uword index) {
-  return open(this)->get(index);
-}
-
-void ref_traits<AbstractTuple>::set(uword index, ref<Value> value) {
-  open(this)->set(index, *value);
-}
-
 
 // ---------------------------
 // --- D i c t i o n a r y ---

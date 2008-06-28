@@ -760,7 +760,7 @@ DEFINE_REF_CLASS(Assignment);
 
 class Visitor {
 public:
-  Visitor(RefStack &refs, Visitor *enclosing)
+  Visitor(RefManager &refs, Visitor *enclosing)
       : refs_(refs)
       , scope_(enclosing ? enclosing->scope_ : NULL) { }
   ~Visitor();
@@ -770,12 +770,12 @@ public:
   virtual Signal *visit_##name(ref<Name> that);
 eSyntaxTreeTypes(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
-  RefStack &refs() { return refs_; }
+  RefManager &refs() { return refs_; }
   Scope &scope() { return *scope_; }
 
 private:
   friend class Scope;
-  RefStack &refs_;
+  RefManager &refs_;
   Scope *scope_;
 };
 

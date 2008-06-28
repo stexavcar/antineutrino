@@ -5,11 +5,11 @@
 namespace neutrino {
 
 
-RefStack::RefStack()
+RefManager::RefManager()
     : top_(NULL) { }
 
 
-void RefStack::dispose(persistent_cell &cell) {
+void RefManager::dispose(persistent_cell &cell) {
   uword last_index = persistent_list().length() - 1;
   if (cell.index() < last_index) {
     // If this is not the last persistent cell then we override its

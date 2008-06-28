@@ -10,33 +10,33 @@ namespace neutrino {
 
 // --- R e f   S c o p e ---
 
-class base_stack_ref_block {
+class abstract_ref_block {
 public:
-  inline base_stack_ref_block(RefStack &refs);
-  inline ~base_stack_ref_block();
+  inline abstract_ref_block(RefManager &refs);
+  inline ~abstract_ref_block();
   uword count() { return count_; }
-  base_stack_ref_block *prev() { return prev_; }
+  abstract_ref_block *prev() { return prev_; }
   inline array<Value*> entries();
 protected:
   uword count_;
 private:
-  RefStack &refs_;
-  base_stack_ref_block *prev_;
+  RefManager &refs_;
+  abstract_ref_block *prev_;
 };
 
 
 template <uword size = 16>
-class stack_ref_block : public base_stack_ref_block {
+class ref_block : public abstract_ref_block {
 public:
-  inline stack_ref_block(RefStack &refs)
-    : base_stack_ref_block(refs)
+  inline ref_block(RefManager &refs)
+    : abstract_ref_block(refs)
 #ifdef DEBUG
     , size_(size)
 #endif // DEBUG
     { }
   template <typename T> inline ref<T> operator()(T *val);
 private:
-  friend class base_stack_ref_block;
+  friend class abstract_ref_block;
   IF_DEBUG(uword size_);
   Value *entries_[size];
 };
@@ -45,14 +45,14 @@ private:
 /**
  * A stack of references.
  */
-class RefStack {
+class RefManager {
 public:
-  RefStack();
+  RefManager();
 
   template <class C> inline persistent<C> new_persistent(C *obj);
 
-  base_stack_ref_block *top() { return top_; }
-  void set_top(base_stack_ref_block *value) { top_ = value; }
+  abstract_ref_block *top() { return top_; }
+  void set_top(abstract_ref_block *value) { top_ = value; }
 
 private:
   friend class ref_iterator;
@@ -61,7 +61,7 @@ private:
 
   void dispose(persistent_cell &cell);
 
-  base_stack_ref_block *top_;
+  abstract_ref_block *top_;
 
   list_buffer<persistent_cell*> &persistent_list() { return persistent_list_; }
   list_buffer<persistent_cell*> persistent_list_;
@@ -70,24 +70,24 @@ private:
 
 class ref_iterator {
 public:
-  inline ref_iterator(RefStack &refs);
+  inline ref_iterator(RefManager &refs);
   inline bool has_next();
   inline Value *&next();
 private:
   inline void advance();
-  base_stack_ref_block *current_;
+  abstract_ref_block *current_;
   uword next_index_;
 };
 
 
 class persistent_iterator {
 public:
-  inline persistent_iterator(RefStack &refs);
+  inline persistent_iterator(RefManager &refs);
   inline bool has_next();
   inline Value *&next();
 private:
-  RefStack &refs() { return refs_; }
-  RefStack &refs_;
+  RefManager &refs() { return refs_; }
+  RefManager &refs_;
   uword index_;
 };
 
@@ -152,7 +152,7 @@ public:
 
 class persistent_cell {
 public:
-  persistent_cell(Value *value, RefStack &refs, uword index)
+  persistent_cell(Value *value, RefManager &refs, uword index)
     : cell_(value)
     , refs_(refs)
     , index_(index) { }
@@ -163,7 +163,7 @@ public:
 private:
   template <class C> friend class persistent;
   Value *cell_;
-  RefStack &refs_;
+  RefManager &refs_;
   uword index_;
 };
 

@@ -145,15 +145,15 @@ private:
  */
 class CaptureInterpreterState {
 public:
-  CaptureInterpreterState(RefStack &refs, InterpreterState &state)
-    : safe(refs) {
-    task_ = safe(state.task_);
+  CaptureInterpreterState(RefManager &refs, InterpreterState &state)
+    : protect(refs) {
+    task_ = protect(state.task_);
   }
   void restore(InterpreterState &state) {
     state.task_ = *task_;
   }
 private:
-  stack_ref_block<> safe;
+  ref_block<> protect;
   ref<Task> task_;
 };
 
@@ -619,12 +619,12 @@ Data *Interpreter::interpret(InterpreterState &state) {
       break;
     }
     case ocTask: {
-      stack_ref_block<> safe(runtime().refs());
+      ref_block<> protect(runtime().refs());
       Lambda *lambda = cast<Lambda>(frame.pop());
       Data *task_val = runtime().heap().new_task(runtime().architecture());
       if (is<Signal>(task_val)) RETURN(task_val);
       Task *task = cast<Task>(task_val);
-      prepare_call(safe(task), safe(lambda), 0);
+      prepare_call(protect(task), protect(lambda), 0);
       frame.push(task);
       pc += OpcodeInfo<ocTask>::kSize;
       break;

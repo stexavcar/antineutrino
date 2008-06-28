@@ -12,7 +12,7 @@ namespace neutrino {
 
 
 /**
- * Performs the specified operation in a gc-safe manner without
+ * Performs the specified operation in a gc-protect manner without
  * returning a value.
  */
 #define DO_CHECKED(operation) do {                                   \
@@ -28,7 +28,7 @@ namespace neutrino {
 
 
 /**
- * Performs the specified operation in a gc-safe manner, wraps the
+ * Performs the specified operation in a gc-protect manner, wraps the
  * result in a handle and returns it.
  */
 #define RETURN_CHECKED(Type, operation) do {                         \
@@ -54,7 +54,7 @@ void GcSafe::set(ref<HashMap> dict, ref<Value> key, ref<Value> value) {
 
 
 /**
- * Shorthand for performing a gc-safe allocation.
+ * Shorthand for performing a gc-protect allocation.
  */
 #define ALLOCATE_CHECKED(Type, allocator)                            \
   RETURN_CHECKED(Type, runtime().heap().allocator)

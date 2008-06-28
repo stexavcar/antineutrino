@@ -293,8 +293,8 @@ void BytecodeBackend::new_cell() {
 
 
 Data *BytecodeBackend::flush_code() {
-  stack_ref_block<> safe(refs());
-  @protect ref<Code> result = factory().new_code(code().length());
+  ref_block<> protect(refs());
+  @check ref<Code> result = factory().new_code(code().length());
   for (uword i = 0; i < result.length(); i++)
     result.set(i, code()[i]);
   return *result;
@@ -302,9 +302,9 @@ Data *BytecodeBackend::flush_code() {
 
 
 Data *BytecodeBackend::flush_constant_pool() {
-  stack_ref_block<> safe(refs());
-  @protect ref<Tuple> result = factory().new_tuple(pool().length());
-  for (uword i = 0; i < result.length(); i++)
+  ref_block<> protect(refs());
+  @check ref<Tuple> result = factory().new_tuple(pool().length());
+  for (uword i = 0; i < result->length(); i++)
     result->set(i, pool().get(i));
   return *result;
 }
@@ -313,8 +313,8 @@ Data *BytecodeBackend::flush_constant_pool() {
 uint16_t BytecodeBackend::constant_pool_index(ref<Value> value) {
   heap_list &pool = this->pool();
   for (uint16_t i = 0; i < pool.length(); i++) {
-    stack_ref_block<> safe(refs());
-    ref<Value> entry = safe(pool[i]);
+    ref_block<> protect(refs());
+    ref<Value> entry = protect(pool[i]);
     if (entry->is_identical(*value)) return i;
   }
   uint16_t result = pool.length();
@@ -326,14 +326,14 @@ uint16_t BytecodeBackend::constant_pool_index(ref<Value> value) {
 Data *BytecodeBackend::field_getter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
-  stack_ref_block<> safe(refs());
-  @protect ref<Code> ld_code = factory().new_code(4);
+  ref_block<> protect(refs());
+  @check ref<Code> ld_code = factory().new_code(4);
   STATIC_CHECK(OpcodeInfo<ocLoadField>::kArgc == 2);
   ld_code->set(0, ocLoadField);
   ld_code->set(1, index);
   ld_code->set(2, 0);
   ld_code->set(3, ocReturn);
-  @protect ref<Lambda> lambda = factory().new_lambda(0, 1, ld_code,
+  @check ref<Lambda> lambda = factory().new_lambda(0, 1, ld_code,
       runtime().empty_tuple(), runtime().nuhll(), context);
   return factory().new_method(selector, signature, lambda);
 }
@@ -342,8 +342,8 @@ Data *BytecodeBackend::field_getter(uword index,
 Data *BytecodeBackend::field_setter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
-  stack_ref_block<> safe(refs());
-  @protect ref<Code> st_code = factory().new_code(6);
+  ref_block<> protect(refs());
+  @check ref<Code> st_code = factory().new_code(6);
   STATIC_CHECK(OpcodeInfo<ocStoreField>::kArgc == 2);
   STATIC_CHECK(OpcodeInfo<ocArgument>::kArgc == 1);
   st_code->set(0, ocArgument);
@@ -352,7 +352,7 @@ Data *BytecodeBackend::field_setter(uword index,
   st_code->set(3, index);
   st_code->set(4, 1);
   st_code->set(5, ocReturn);
-  @protect ref<Lambda> lambda = factory().new_lambda(1, 1, st_code,
+  @check ref<Lambda> lambda = factory().new_lambda(1, 1, st_code,
     runtime().empty_tuple(), runtime().nuhll(), context);
   return factory().new_method(selector, signature, lambda);
 }

@@ -7,38 +7,38 @@
 using namespace neutrino;
 
 void Test::handles() {
-  RefStack refs;
-  stack_ref_block<> safe(refs);
+  RefManager refs;
+  ref_block<> protect(refs);
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   Tuple *tuple = cast<Tuple>(heap.new_tuple(10));
-  ref<Tuple> tuple_ref = safe(tuple);
+  ref<Tuple> tuple_ref = protect(tuple);
   CHECK_EQ(10, tuple_ref->length());
-  ref<Value> zero = safe(tuple_ref.get(0));
+  ref<Value> zero = protect(tuple_ref->get(0));
   CHECK(is<Null>(zero));
   tuple_ref->set(1, *tuple_ref);
-  ref<Value> one = safe(tuple_ref.get(1));
+  ref<Value> one = protect(tuple_ref->get(1));
   ref<Tuple> one_tuple = cast<Tuple>(one);
   ref<Value> one_tuple_value = one_tuple;
 }
 
 void Test::too_many_refs() {
 #ifdef DEBUG
-  RefStack refs;
-  stack_ref_block<2> safe(refs);
-  safe(Smi::from_int(0));
-  safe(Smi::from_int(1));
-  CHECK_ABORTS(cnRefOverflow, safe(Smi::from_int(2)));
+  RefManager refs;
+  ref_block<2> protect(refs);
+  protect(Smi::from_int(0));
+  protect(Smi::from_int(1));
+  CHECK_ABORTS(cnRefOverflow, protect(Smi::from_int(2)));
 #endif
 }
 
-static void test_deep(RefStack &refs, uword n) {
+static void test_deep(RefManager &refs, uword n) {
   static const int kCount = 300;
   if (n == 0) return;
-  stack_ref_block<kCount> safe(refs);
+  ref_block<kCount> protect(refs);
   ref<Smi> rs[kCount];
   for (int i = 0; i < kCount; i++)
-    rs[i] = safe(Smi::from_int(n + (i << 16)));
+    rs[i] = protect(Smi::from_int(n + (i << 16)));
   test_deep(refs, n - 1);
   for (int i = 0; i < kCount; i++) {
     CHECK_EQ(rs[i]->value(), n + (i << 16));
@@ -46,11 +46,11 @@ static void test_deep(RefStack &refs, uword n) {
 }
 
 void Test::deep() {
-  RefStack refs;
+  RefManager refs;
   test_deep(refs, 500);
 }
 
-static void count_refs(RefStack &refs, uword expected) {
+static void count_refs(RefManager &refs, uword expected) {
   ref_iterator iter(refs);
   uword count = 0;
   while (iter.has_next()) {
@@ -65,11 +65,11 @@ static void count_refs(RefStack &refs, uword expected) {
 
 void Test::ref_iteration() {
   static const uword kRefCount = 1024;
-  RefStack refs;
-  stack_ref_block<kRefCount> safe(refs);
+  RefManager refs;
+  ref_block<kRefCount> protect(refs);
   for (uword i = 0; i < kRefCount; i++) {
     count_refs(refs, i);
-    ref<Smi> next = safe(Smi::from_int(i));
+    ref<Smi> next = protect(Smi::from_int(i));
   }
   count_refs(refs, kRefCount);
 }
