@@ -20,8 +20,8 @@ Value *heap_list::get(uword index) {
 }
 
 
-ref<Value> heap_list::operator[](uword index) {
-  return runtime().refs().new_ref(get(index));
+Value *heap_list::operator[](uword index) {
+  return get(index);
 }
 
 

@@ -10,56 +10,34 @@ namespace neutrino {
 
 // --- R e f   S c o p e ---
 
-
-class ref_block {
-public:
-  Value **first_cell() { return &entries_[0]; }
-  Value **limit() { return &entries_[kSize]; }
-private:
-  static const int kSize = 256;
-  Value *entries_[kSize];
-};
-
-
-class ref_scope_info {
-public:
-  inline ref_scope_info();
-  word block_count;
-  Value **next_cell;
-  Value **limit;
-};
-
-
-/**
- * A scope for allocating new refs.
- */
-class ref_scope {
-public:
-  inline ref_scope(RefStack &manager);
-  inline ~ref_scope();
-private:
-  RefStack &manager() { return manager_; }
-  ref_scope_info previous_;
-  RefStack &manager_;
-};
-
-
 class base_stack_ref_block {
 public:
   inline base_stack_ref_block(RefStack &refs);
   inline ~base_stack_ref_block();
+  uword count() { return count_; }
+  base_stack_ref_block *prev() { return prev_; }
+  inline array<Value*> entries();
+protected:
+  uword count_;
 private:
   RefStack &refs_;
-  int count_;
   base_stack_ref_block *prev_;
 };
 
 
-template <uword size>
+template <uword size = 16>
 class stack_ref_block : public base_stack_ref_block {
 public:
-  inline stack_ref_block(RefStack &refs) : base_stack_ref_block(refs) { }
+  inline stack_ref_block(RefStack &refs)
+    : base_stack_ref_block(refs)
+#ifdef DEBUG
+    , size_(size)
+#endif // DEBUG
+    { }
+  template <typename T> inline ref<T> operator()(T *val);
 private:
+  friend class base_stack_ref_block;
+  IF_DEBUG(uword size_);
   Value *entries_[size];
 };
 
@@ -71,7 +49,6 @@ class RefStack {
 public:
   RefStack();
 
-  template <class C> inline ref<C> new_ref(C *value);
   template <class C> inline persistent<C> new_persistent(C *obj);
 
   base_stack_ref_block *top() { return top_; }
@@ -80,25 +57,14 @@ public:
 private:
   friend class ref_iterator;
   friend class persistent_iterator;
-  friend class ref_scope;
   template <class C> friend class persistent;
 
-  template <class C> inline C **new_cell(C *value);
   void dispose(persistent_cell &cell);
-  void shrink();
-  Value **grow();
 
   base_stack_ref_block *top_;
 
-  ref_scope_info &current() { return current_; }
-  ref_scope_info current_;
-
-  list_buffer<ref_block*> &block_stack() { return block_stack_; }
-  list_buffer<ref_block*> block_stack_;
   list_buffer<persistent_cell*> &persistent_list() { return persistent_list_; }
   list_buffer<persistent_cell*> persistent_list_;
-  ref_block *spare_block() { return spare_block_; }
-  ref_block *spare_block_;
 };
 
 
@@ -108,10 +74,9 @@ public:
   inline bool has_next();
   inline Value *&next();
 private:
-  RefStack &refs() { return refs_; }
-  RefStack &refs_;
-  uword current_block_;
-  Value **current_, **limit_;
+  inline void advance();
+  base_stack_ref_block *current_;
+  uword next_index_;
 };
 
 

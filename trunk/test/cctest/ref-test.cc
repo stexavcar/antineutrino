@@ -8,35 +8,37 @@ using namespace neutrino;
 
 void Test::handles() {
   RefStack refs;
-  ref_scope scope(refs);
+  stack_ref_block<> safe(refs);
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   Tuple *tuple = cast<Tuple>(heap.new_tuple(10));
-  ref<Tuple> tuple_ref = refs.new_ref(tuple);
+  ref<Tuple> tuple_ref = safe(tuple);
   CHECK_EQ(10, tuple_ref->length());
-  ref<Value> zero = tuple_ref.get(refs, 0);
+  ref<Value> zero = safe(tuple_ref.get(0));
   CHECK(is<Null>(zero));
   tuple_ref->set(1, *tuple_ref);
-  ref<Value> one = tuple_ref.get(refs, 1);
+  ref<Value> one = safe(tuple_ref.get(1));
   ref<Tuple> one_tuple = cast<Tuple>(one);
   ref<Value> one_tuple_value = one_tuple;
 }
 
-void Test::unscoped() {
+void Test::too_many_refs() {
 #ifdef DEBUG
   RefStack refs;
-  Value *value = Smi::from_int(0);
-  CHECK_ABORTS(cnNoRefScope, refs.new_ref(value));
-#endif // DEBUG
+  stack_ref_block<2> safe(refs);
+  safe(Smi::from_int(0));
+  safe(Smi::from_int(1));
+  CHECK_ABORTS(cnRefOverflow, safe(Smi::from_int(2)));
+#endif
 }
 
 static void test_deep(RefStack &refs, uword n) {
-  if (n == 0) return;
-  ref_scope scope(refs);
   static const int kCount = 300;
+  if (n == 0) return;
+  stack_ref_block<kCount> safe(refs);
   ref<Smi> rs[kCount];
   for (int i = 0; i < kCount; i++)
-    rs[i] = refs.new_ref(Smi::from_int(n + (i << 16)));
+    rs[i] = safe(Smi::from_int(n + (i << 16)));
   test_deep(refs, n - 1);
   for (int i = 0; i < kCount; i++) {
     CHECK_EQ(rs[i]->value(), n + (i << 16));
@@ -62,12 +64,12 @@ static void count_refs(RefStack &refs, uword expected) {
 }
 
 void Test::ref_iteration() {
+  static const uword kRefCount = 1024;
   RefStack refs;
-  ref_scope scope(refs);
-  const uword kRefCount = 1024;
+  stack_ref_block<kRefCount> safe(refs);
   for (uword i = 0; i < kRefCount; i++) {
     count_refs(refs, i);
-    ref<Smi> next = refs.new_ref(Smi::from_int(i));
+    ref<Smi> next = safe(Smi::from_int(i));
   }
   count_refs(refs, kRefCount);
 }

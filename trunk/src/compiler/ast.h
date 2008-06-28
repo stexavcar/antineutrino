@@ -21,8 +21,8 @@ public:
 template <>
 class ref_traits<SyntaxTree> : public ref_traits<Object> {
 public:
-  void accept(Visitor &visitor);
-  void traverse(Visitor &visitor);
+  Signal *accept(Visitor &visitor);
+  Signal *traverse(Visitor &visitor);
 };
 
 DEFINE_REF_CLASS(SyntaxTree);
@@ -116,7 +116,7 @@ DEFINE_REF_CLASS(Arguments);
 class Parameters : public SyntaxTree {
 public:
   eParametersFields(DECLARE_OBJECT_FIELD, 0)
-  
+
   inline bool has_keywords();
   inline uword length();
 
@@ -347,7 +347,7 @@ template <>
 class ref_traits<ProtocolExpression> : public ref_traits<SyntaxTree> {
 public:
   eProtocolExpressionFields(DECLARE_REF_FIELD, 0)
-  ref<Protocol> compile(Runtime &runtime, ref<Context> context);
+  Data *compile(Runtime &runtime, ref<Context> context);
 };
 
 DEFINE_REF_CLASS(ProtocolExpression);
@@ -424,7 +424,7 @@ template <>
 class ref_traits<MethodExpression> : public ref_traits<SyntaxTree> {
 public:
   eMethodExpressionFields(DECLARE_REF_FIELD, 0)
-  ref<Method> compile(Runtime &runtime, ref<Context> context);
+  Data *compile(Runtime &runtime, ref<Context> context);
 };
 
 DEFINE_REF_CLASS(MethodExpression);
@@ -590,7 +590,7 @@ DEFINE_REF_CLASS(LambdaExpression);
 class TaskExpression : public SyntaxTree {
 public:
   eTaskExpressionFields(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kLambdaOffset = SyntaxTree::kHeaderSize;
   static const uword kSize = kLambdaOffset + kPointerSize;
 };
@@ -626,7 +626,7 @@ public:
 class SuperExpression : public SyntaxTree {
 public:
   eSuperExpressionFields(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kValueOffset = SyntaxTree::kHeaderSize;
   static const uword kSize        = kValueOffset + kPointerSize;
 };
@@ -703,7 +703,7 @@ DEFINE_REF_CLASS(BuiltinCall);
 class LocalDefinition : public SyntaxTree {
 public:
   eLocalDefinitionFields(DECLARE_OBJECT_FIELD, 0)
-  
+
   enum Type {
     ldNone = 0,
     ldDef = 1,
@@ -764,10 +764,10 @@ public:
       : refs_(refs)
       , scope_(enclosing ? enclosing->scope_ : NULL) { }
   ~Visitor();
-  virtual void visit_symbol(ref<Symbol> that);
-  virtual void visit_syntax_tree(ref<SyntaxTree> that);
+  virtual Signal *visit_symbol(ref<Symbol> that);
+  virtual Signal *visit_syntax_tree(ref<SyntaxTree> that);
 #define MAKE_VISIT_METHOD(n, Name, name)                             \
-  virtual void visit_##name(ref<Name> that);
+  virtual Signal *visit_##name(ref<Name> that);
 eSyntaxTreeTypes(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
   RefStack &refs() { return refs_; }

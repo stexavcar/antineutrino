@@ -59,21 +59,21 @@ public:
   void store_cell();
   void load_cell();
   void new_cell();
-  
-  ref<Method> field_getter(uword index,  ref<Selector> selector,
+
+  Data *field_getter(uword index,  ref<Selector> selector,
       ref<Signature> signature, ref<Context> context);
-  ref<Method> field_setter(uword index,  ref<Selector> selector,
+  Data *field_setter(uword index,  ref<Selector> selector,
       ref<Signature> signature, ref<Context> context);
-  
+
   void initialize() { pool().initialize(); }
-  ref<Code> flush_code();
-  ref<Tuple> flush_constant_pool();
+  Data *flush_code();
+  Data *flush_constant_pool();
 
   uint16_t constant_pool_index(ref<Value> value);
-  
-  static void disassemble_next_instruction(uword *pc_ptr, 
+
+  static void disassemble_next_instruction(uword *pc_ptr,
       array<uint16_t> data, array<Value*> pool, string_buffer &buf);
-  
+
   void adjust_stack_height(word delta);
 
 private:

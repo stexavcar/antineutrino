@@ -203,12 +203,11 @@ Data *Builtins::object_to_string(BuiltinArguments &args) {
 
 Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
+  stack_ref_block<> safe(args.runtime().refs());
   @check ProtocolExpression *raw_expr = to<ProtocolExpression>(args.self());
-  ref_scope scope(args.runtime().refs());
-  ref<ProtocolExpression> expr = args.runtime().refs().new_ref(raw_expr);
-  ref<Context> context = args.runtime().refs().new_ref(args.lambda()->context());
-  ref<Protocol> result = expr.compile(args.runtime(), context);
-  return *result;
+  ref<ProtocolExpression> expr = safe(raw_expr);
+  ref<Context> context = safe(args.lambda()->context());
+  return expr.compile(args.runtime(), context);
 }
 
 
@@ -218,7 +217,6 @@ Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
 
 Data *Builtins::protocol_new(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  ref_scope scope(args.runtime().refs());
   Runtime &runtime = args.runtime();
   @check Protocol *protocol = to<Protocol>(args.self());
   if (protocol == runtime.roots().symbol_layout()->protocol()) {
@@ -303,7 +301,8 @@ Data *Builtins::array_length(BuiltinArguments &args) {
 // -------------------
 
 Data *Builtins::lambda_disassemble(BuiltinArguments &args) {
-  ref<Lambda> self = args.runtime().refs().new_ref(cast<Lambda>(args.self()));
+  stack_ref_block<> safe(args.runtime().refs());
+  ref<Lambda> self = safe(cast<Lambda>(args.self()));
   self.ensure_compiled(args.runtime(), ref<Method>());
   string_buffer buf;
   args.runtime().architecture().disassemble(*self, buf);
@@ -341,10 +340,11 @@ Data *Builtins::raw_print(BuiltinArguments &args) {
 }
 
 Data *Builtins::compile_expression(BuiltinArguments &args) {
+  stack_ref_block<> safe(args.runtime().refs());
   @check SyntaxTree *raw_self = to<SyntaxTree>(args.self());
-  ref<SyntaxTree> self = args.runtime().refs().new_ref(raw_self);
-  ref<Context> context = args.runtime().refs().new_ref(args.lambda()->context());
-  ref<Lambda> code = Compiler::compile(args.runtime(), self, context);
+  ref<SyntaxTree> self = safe(raw_self);
+  ref<Context> context = safe(args.lambda()->context());
+  @protect ref<Lambda> code = Compiler::compile(args.runtime(), self, context);
   return *code;
 }
 

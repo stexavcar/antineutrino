@@ -8,13 +8,13 @@ namespace neutrino {
 class heap_list {
 public:
   inline heap_list(Runtime &runtime);
-  void initialize();
+  Signal *initialize();
   ~heap_list();
   uword length() { return length_; }
-  inline ref<Value> operator[](uword index);
+  inline Value *operator[](uword index);
   inline Value *get(uword index);
-  void append(ref<Value> value);
-  void extend_capacity();
+  Signal *append(ref<Value> value);
+  Signal *extend_capacity();
 private:
   Runtime &runtime() { return runtime_; }
   persistent<Tuple> data() { return data_; }

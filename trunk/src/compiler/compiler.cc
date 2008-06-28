@@ -24,9 +24,9 @@ class Scope;
 class CompileSession {
 public:
   CompileSession(Runtime &runtime, ref<Context> context);
-  ref<Lambda> compile(ref<LambdaExpression> that, CodeGenerator &enclosing);
-  void compile(ref<Lambda> tree, ref<Method> holder, CodeGenerator *enclosing);
-  void compile(ref<Lambda> tree, ref<Method> holder);
+  Data *compile(ref<LambdaExpression> that, CodeGenerator &enclosing);
+  Signal *compile(ref<Lambda> tree, ref<Method> holder, CodeGenerator *enclosing);
+  Signal *compile(ref<Lambda> tree, ref<Method> holder);
   Runtime &runtime() { return runtime_; }
   ref<Context> context() { return context_; }
 private:
@@ -55,7 +55,7 @@ public:
     ltNone = 0,
     ltMaterialize = 1
   };
-  
+
 protected:
   ref<LambdaExpression> lambda() { return lambda_; }
   CompileSession &session() { return session_; }
@@ -78,14 +78,14 @@ public:
       , backend_(backend) {
   }
 
-  typedef void (Assembler<Config>::*special_builtin)();
+  typedef Signal *(Assembler<Config>::*special_builtin)();
   typedef typename Config::Label Label;
   typedef typename Config::Backend Backend;
 
   void load_raw_symbol(ref<Symbol> sym);
   void load_symbol(ref<Symbol> sym);
   void store_symbol(ref<Symbol> sym);
-  
+
   void codegen(ref<SyntaxTree> that) {
     IF_DEBUG(uword height_before = backend().stack().height());
     that.accept(*this);
@@ -93,14 +93,14 @@ public:
   }
 
   special_builtin get_special(uword index);
-  
-#define MAKE_CASE(n, name, str) void name();
+
+#define MAKE_CASE(n, name, str) Signal *name();
 eSpecialBuiltinFunctions(MAKE_CASE)
 #undef MAKE_CASE
 
-  virtual void visit_syntax_tree(ref<SyntaxTree> that);
+  virtual Signal *visit_syntax_tree(ref<SyntaxTree> that);
 #define MAKE_VISIT_METHOD(n, Name, name)                             \
-  virtual void visit_##name(ref<Name> that);
+  virtual Signal *visit_##name(ref<Name> that);
 eSyntaxTreeTypes(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD
 
@@ -184,7 +184,7 @@ struct Lookup {
     struct { uint16_t height; } local_info;
     struct { uint16_t index; } outer_info;
     struct { uint16_t index; } keyword_info;
-  };  
+  };
 };
 
 
@@ -204,7 +204,7 @@ private:
 };
 
 
-Scope::Scope(Visitor &visitor) 
+Scope::Scope(Visitor &visitor)
     : visitor_(&visitor)
     , parent_(visitor.scope_) {
   visitor.scope_ = this;
@@ -337,42 +337,49 @@ void ClosureScope::lookup(ref<Symbol> symbol, Lookup &result) {
 // -------------------------------------
 
 template <class C>
-void Assembler<C>::visit_syntax_tree(ref<SyntaxTree> that) {
+Signal *Assembler<C>::visit_syntax_tree(ref<SyntaxTree> that) {
   UNHANDLED(InstanceType, that.type());
+  return InternalError::make(InternalError::ieFatalError);
 }
 
 template <class C>
-void Assembler<C>::visit_return_expression(ref<ReturnExpression> that) {
-  codegen(that.value(refs()));
+Signal *Assembler<C>::visit_return_expression(ref<ReturnExpression> that) {
+  stack_ref_block<> safe(refs());
+  codegen(safe(that.value()));
   __ rethurn();
+  return Success::make();
 }
 
 template <class C>
-void Assembler<C>::visit_yield_expression(ref<YieldExpression> that) {
-  codegen(that.value(refs()));
+Signal *Assembler<C>::visit_yield_expression(ref<YieldExpression> that) {
+  stack_ref_block<> safe(refs());
+  codegen(safe(that.value()));
   __ yield();
+  return Success::make();
 }
 
 template <class C>
-void Assembler<C>::visit_literal_expression(ref<LiteralExpression> that) {
-  __ push(that.value(refs()));
+Signal *Assembler<C>::visit_literal_expression(ref<LiteralExpression> that) {
+  stack_ref_block<> safe(refs());
+  __ push(safe(that.value()));
+  return Success::make();
 }
 
 template <class C>
-void Assembler<C>::visit_invoke_expression(ref<InvokeExpression> that) {
-  ref_scope scope(refs());
-  ref<SyntaxTree> recv = that.receiver(refs());
+Signal *Assembler<C>::visit_invoke_expression(ref<InvokeExpression> that) {
+  stack_ref_block<> safe(refs());
+  ref<SyntaxTree> recv = safe(that.receiver());
   bool is_super = is<SuperExpression>(recv);
   if (is_super) {
-    codegen(cast<SuperExpression>(recv).value(refs()));
+    codegen(safe(cast<SuperExpression>(recv).value()));
   } else {
     codegen(recv);
   }
-  ref<Arguments> args_obj = cast<Arguments>(that.arguments(refs()));
-  ref<Tuple> args = args_obj.arguments(refs());
+  ref<Arguments> args_obj = safe(cast<Arguments>(that.arguments()));
+  ref<Tuple> args = safe(args_obj.arguments());
   for (uword i = 0; i < args.length(); i++)
-    codegen(cast<SyntaxTree>(args.get(refs(), i)));
-  ref<Tuple> raw_keymap = args_obj.keyword_indices(refs());
+    codegen(safe(cast<SyntaxTree>(args.get(i))));
+  ref<Tuple> raw_keymap = safe(args_obj.keyword_indices());
   ref<Tuple> keymap;
   // The construction of the concrete keymap will eventually be moved
   // to runtime once we introduce optional keywords with default
@@ -381,7 +388,8 @@ void Assembler<C>::visit_invoke_expression(ref<InvokeExpression> that) {
   if (raw_keymap.is_empty()) {
     keymap = raw_keymap;
   } else {
-    keymap = runtime().factory().new_tuple(raw_keymap.length());
+    @protect ref<Tuple> result_keymap = runtime().factory().new_tuple(raw_keymap.length());
+    keymap = result_keymap;
     uword argc = args.length();
     uword posc = args.length() - raw_keymap.length();
     for (uword i = 0; i < keymap.length(); i++) {
@@ -390,54 +398,61 @@ void Assembler<C>::visit_invoke_expression(ref<InvokeExpression> that) {
     }
   }
   if (is_super) {
-    ref<Signature> current = method().signature(refs());
-    __ invoke_super(that.selector(refs()), args.length(), keymap, current);
+    ref<Signature> current = safe(method().signature());
+    __ invoke_super(safe(that.selector()), args.length(), keymap, current);
   } else {
-    __ invoke(that.selector(refs()), args.length(), keymap);
+    __ invoke(safe(that.selector()), args.length(), keymap);
   }
   __ slap(args.length());
+  return Success::make();
 }
 
 template <class C>
-void Assembler<C>::visit_call_expression(ref<CallExpression> that) {
-  ref_scope scope(refs());
-  codegen(that.receiver(refs()));
-  codegen(that.function(refs()));
+Signal *Assembler<C>::visit_call_expression(ref<CallExpression> that) {
+  stack_ref_block<> safe(refs());
+  codegen(safe(that.receiver()));
+  codegen(safe(that.function()));
   __ swap();
-  ref<Tuple> args = that.arguments(refs()).arguments(refs());
+  ref<Tuple> args = safe(that.arguments()->arguments());
   for (uword i = 0; i < args.length(); i++)
-    codegen(cast<SyntaxTree>(args.get(refs(), i)));
+    codegen(safe(cast<SyntaxTree>(args.get(i))));
   __ call(args.length());
   __ slap(args.length() + 1);
+  return Success::make();
 }
 
 template <class C>
-void Assembler<C>::visit_sequence_expression(ref<SequenceExpression> that) {
-  ref_scope scope(refs());
-  ref<Tuple> expressions = that.expressions(refs());
+Signal *Assembler<C>::visit_sequence_expression(ref<SequenceExpression> that) {
+  stack_ref_block<> safe(refs());
+  ref<Tuple> expressions = safe(that.expressions());
   ASSERT(expressions.length() > 1);
   bool is_first = true;
   for (uword i = 0; i < expressions.length(); i++) {
+    stack_ref_block<> safe(refs());
     if (is_first) is_first = false;
     else __ pop();
-    codegen(cast<SyntaxTree>(expressions.get(refs(), i)));
+    codegen(safe(cast<SyntaxTree>(expressions.get(i))));
   }
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_tuple_expression(ref<TupleExpression> that) {
-  ref_scope scope(refs());
-  ref<Tuple> values = that.values(refs());
+Signal *Assembler<C>::visit_tuple_expression(ref<TupleExpression> that) {
+  stack_ref_block<> safe(refs());
+  ref<Tuple> values = safe(that.values());
   for (uword i = 0; i < values.length(); i++)
-    codegen(cast<SyntaxTree>(values.get(refs(), i)));
+    codegen(safe(cast<SyntaxTree>(values.get(i))));
   __ tuple(values.length());
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_global_variable(ref<GlobalVariable> that) {
-  __ global(that.name(refs()));
+Signal *Assembler<C>::visit_global_variable(ref<GlobalVariable> that) {
+  stack_ref_block<> safe(refs());
+  __ global(safe(that.name()));
+  return Success::make();
 }
 
 
@@ -498,93 +513,104 @@ void Assembler<C>::store_symbol(ref<Symbol> that) {
 
 
 template <class C>
-void Assembler<C>::visit_local_variable(ref<LocalVariable> that) {
-  load_symbol(that.symbol(refs()));
+Signal *Assembler<C>::visit_local_variable(ref<LocalVariable> that) {
+  stack_ref_block<> safe(refs());
+  load_symbol(safe(that.symbol()));
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_this_expression(ref<ThisExpression> that) {
+Signal *Assembler<C>::visit_this_expression(ref<ThisExpression> that) {
   load_symbol(runtime().this_symbol());
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_assignment(ref<Assignment> that) {
-  codegen(that.value(refs()));
-  store_symbol(that.symbol(refs()));
+Signal *Assembler<C>::visit_assignment(ref<Assignment> that) {
+  stack_ref_block<> safe(refs());
+  codegen(safe(that.value()));
+  store_symbol(safe(that.symbol()));
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_conditional_expression(ref<ConditionalExpression> that) {
+Signal *Assembler<C>::visit_conditional_expression(ref<ConditionalExpression> that) {
+  stack_ref_block<> safe(refs());
   Label then, end;
-  codegen(that.condition(refs()));
+  codegen(safe(that.condition()));
   __ if_true(then);
   backend().adjust_stack_height(-1);
   IF_DEBUG(uword height_before = backend().stack().height());
-  codegen(that.else_part(refs()));
+  codegen(safe(that.else_part()));
   __ ghoto(end);
   __ bind(then);
   backend().adjust_stack_height(-1);
   ASSERT_EQ(height_before, backend().stack().height());
-  codegen(that.then_part(refs()));
+  codegen(safe(that.then_part()));
   __ bind(end);
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_while_expression(ref<WhileExpression> that) {
+Signal *Assembler<C>::visit_while_expression(ref<WhileExpression> that) {
+  stack_ref_block<> safe(refs());
   Label start, end;
   __ bind(start);
-  codegen(that.condition(refs()));
+  codegen(safe(that.condition()));
   __ if_false(end);
   backend().adjust_stack_height(-1);
-  codegen(that.body(refs()));
+  codegen(safe(that.body()));
   __ pop();
   __ ghoto(start);
   __ bind(end);
   __ push(runtime().vhoid());
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_interpolate_expression(ref<InterpolateExpression> that) {
-  ref_scope scope(refs());
-  ref<Tuple> terms = that.terms(refs());
+Signal *Assembler<C>::visit_interpolate_expression(ref<InterpolateExpression> that) {
+  stack_ref_block<> safe(refs());
+  ref<Tuple> terms = safe(that.terms());
   for (uword i = 0; i < terms.length(); i++) {
-    ref<Value> entry = terms.get(refs(), i);
+    ref<Value> entry = safe(terms.get(i));
     if (is<String>(entry)) {
       __ push(entry);
     } else {
       codegen(cast<SyntaxTree>(entry));
-      ref<String> name = factory().new_string("to_string");
-      ref<Selector> selector = factory().new_selector(name, Smi::from_int(0), runtime().fahlse());
+      @protect ref<String> name = factory().new_string("to_string");
+      @protect ref<Selector> selector = factory().new_selector(name, Smi::from_int(0), runtime().fahlse());
       __ invoke(selector, 0, runtime().empty_tuple());
     }
   }
   __ concat(terms.length());
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
+Signal *Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
+  stack_ref_block<> safe(refs());
   Smi *type = that->type();
   if (type == Smi::from_int(LocalDefinition::ldRec)) {
     uword height = backend().stack().height();
     __ push(runtime().vhoid());
     __ new_forwarder(Forwarder::fwOpen);
-    LocalScope scope(*this, that.symbol(refs()), height);
-    codegen(that.value(refs()));
+    LocalScope scope(*this, safe(that.symbol()), height);
+    codegen(safe(that.value()));
     __ bind_forwarder();
-    codegen(that.body(refs()));
+    codegen(safe(that.body()));
     __ slap(1);
   } else if (type == Smi::from_int(LocalDefinition::ldLoc)) {
     uword height = backend().stack().height();
-    codegen(that.value(refs()));
+    codegen(safe(that.value()));
     __ new_forwarder(Forwarder::fwOpen);
-    LocalScope scope(*this, that.symbol(refs()), height);
-    codegen(that.body(refs()));
+    LocalScope scope(*this, safe(that.symbol()), height);
+    codegen(safe(that.body()));
     __ load_local(height);
     __ push(runtime().nuhll());
     __ bind_forwarder();
@@ -593,28 +619,31 @@ void Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
   } else {
     ASSERT(type == Smi::from_int(LocalDefinition::ldDef) || type == Smi::from_int(LocalDefinition::ldVar));
     uword height = backend().stack().height();
-    codegen(that.value(refs()));
+    codegen(safe(that.value()));
     if (SymbolInfo::from(that->symbol()->data())->type() == ltMaterialize) {
       ASSERT_EQ(type, Smi::from_int(LocalDefinition::ldVar));
       __ new_cell();
     }
-    LocalScope scope(*this, that.symbol(refs()), height);
-    codegen(that.body(refs()));
+    LocalScope scope(*this, safe(that.symbol()), height);
+    codegen(safe(that.body()));
     __ slap(1);
   }
   // Clear any temporary data from the symbol
   that->symbol()->set_data(runtime().roots().nuhll());
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_lambda_expression(ref<LambdaExpression> that) {
+Signal *Assembler<C>::visit_lambda_expression(ref<LambdaExpression> that) {
+  stack_ref_block<> safe(refs());
   ClosureScope scope(*this, runtime());
-  ref<Lambda> lambda = session().compile(that, *this);
+  @protect ref<Lambda> lambda = session().compile(that, *this);
   scope.unlink();
   if (scope.outers().length() > 0) {
     for (uword i = 0; i < scope.outers().length(); i++) {
-      ref<Symbol> sym = cast<Symbol>(scope.outers()[i]);
+      stack_ref_block<> safe(refs());
+      ref<Symbol> sym = safe(cast<Symbol>(scope.outers()[i]));
       // Load raw symbols so that materialized variables are
       // transferred properly by reference rather than by value
       load_raw_symbol(sym);
@@ -623,47 +652,52 @@ void Assembler<C>::visit_lambda_expression(ref<LambdaExpression> that) {
   } else {
     __ push(lambda);
   }
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_task_expression(ref<TaskExpression> that) {
-  codegen(that.lambda(refs()));
+Signal *Assembler<C>::visit_task_expression(ref<TaskExpression> that) {
+  stack_ref_block<> safe(refs());
+  codegen(safe(that.lambda()));
   __ task();
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_super_expression(ref<SuperExpression> that) {
+Signal *Assembler<C>::visit_super_expression(ref<SuperExpression> that) {
   UNREACHABLE();
+  return InternalError::make(InternalError::ieFatalError);
 }
 
 
 template <class C>
-void Assembler<C>::visit_builtin_call(ref<BuiltinCall> that) {
+Signal *Assembler<C>::visit_builtin_call(ref<BuiltinCall> that) {
   uword index = that->index();
   special_builtin special = get_special(index);
   if (special == NULL) {
     // This is a plain runtime builtin
     __ builtin(that->argc(), that->index());
+    return Success::make();
   } else {
-    (this->*special)();
+    return (this->*special)();
   }
 }
 
 
 template <class C>
-void Assembler<C>::visit_do_on_expression(ref<DoOnExpression> that) {
-  ref_scope scope(refs());
-  ref<Tuple> clauses = that.clauses(refs());
-  ref<Tuple> data = factory().new_tuple(2 * clauses.length());
+Signal *Assembler<C>::visit_do_on_expression(ref<DoOnExpression> that) {
+  stack_ref_block<> safe(refs());
+  ref<Tuple> clauses = safe(that.clauses());
+  @protect ref<Tuple> data = factory().new_tuple(2 * clauses.length());
   for (uword i = 0; i < clauses.length(); i++) {
-    ref<OnClause> clause = cast<OnClause>(clauses.get(refs(), i));
-    ref<String> name = clause.name(refs());
+    ref<OnClause> clause = safe(cast<OnClause>(clauses.get(i)));
+    ref<String> name = safe(clause.name());
     data.set(2 * i, name);
-    ref<LambdaExpression> handler = clause.lambda(refs());
+    ref<LambdaExpression> handler = safe(clause.lambda());
     ClosureScope scope(*this, runtime());
-    ref<Lambda> lambda = session().compile(handler, *this);
+    @protect ref<Lambda> lambda = session().compile(handler, *this);
     scope.unlink();
     // TODO(5): We need a lifo block mechanism to implement outers in
     //   condition handlers
@@ -671,88 +705,96 @@ void Assembler<C>::visit_do_on_expression(ref<DoOnExpression> that) {
     data.set(2 * i + 1, lambda);
   }
   __ mark(data);
-  codegen(that.value(refs()));
+  codegen(safe(that.value()));
   __ unmark();
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_raise_expression(ref<RaiseExpression> that) {
-  ref_scope scope(refs());
-  ref<Tuple> args = that.arguments(refs()).arguments(refs());
+Signal *Assembler<C>::visit_raise_expression(ref<RaiseExpression> that) {
+  stack_ref_block<> safe(refs());
+  ref<Tuple> args = safe(that.arguments()->arguments());
   __ push(runtime().vhoid()); // receiver
   for (uword i = 0; i < args.length(); i++)
-    codegen(cast<SyntaxTree>(args.get(refs(), i)));
-  __ raise(that.name(refs()), args.length());
+    codegen(safe(cast<SyntaxTree>(args.get(i))));
+  __ raise(safe(that.name()), args.length());
   __ slap(args.length());
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_instantiate_expression(ref<InstantiateExpression> that) {
-  ref_scope scope(refs());
-  ref<Tuple> terms = that.terms(refs());
+Signal *Assembler<C>::visit_instantiate_expression(ref<InstantiateExpression> that) {
+  stack_ref_block<> safe(refs());
+  ref<Tuple> terms = safe(that.terms());
   uword term_count = terms.length() / 2;
-  ref<Tuple> methods = factory().new_tuple(2 * term_count);
-  ref<Signature> signature = factory().new_signature(factory().new_tuple(0));
-  codegen(that.receiver(refs()));
+  @protect ref<Tuple> methods = factory().new_tuple(2 * term_count);
+  @protect ref<Tuple> tuple = factory().new_tuple(0);
+  @protect ref<Signature> signature = factory().new_signature(tuple);
+  codegen(safe(that.receiver()));
   for (uword i = 0; i < term_count; i++) {
-    ref<String> ld_keyword = cast<String>(terms.get(refs(), 2 * i));
+    stack_ref_block<> safe(refs());
+    ref<String> ld_keyword = safe(cast<String>(terms.get(2 * i)));
 
     // Construct getter method for this field
-    ref<Selector> get_selector = factory().new_selector(ld_keyword,
+    @protect ref<Selector> get_selector = factory().new_selector(ld_keyword,
         Smi::from_int(0), runtime().thrue());
-    ref<Method> getter = backend().field_getter(i, get_selector, signature, session().context());
+    @protect ref<Method> getter = backend().field_getter(i, get_selector, signature, session().context());
     methods.set(2 * i, getter);
-    
+
     // Construct setter method for this field
     own_array<char> raw_name(ld_keyword.c_str());
     string_buffer st_name;
     st_name.append(raw_name.start());
     st_name.append(":=");
-    ref<String> st_keyword = runtime().factory().new_string(st_name.raw_string());
-    ref<Selector> set_selector = factory().new_selector(st_keyword, Smi::from_int(1), runtime().thrue());
-    ref<Method> setter = backend().field_setter(i, set_selector, signature, session().context());
+    @protect ref<String> st_keyword = runtime().factory().new_string(st_name.raw_string());
+    @protect ref<Selector> set_selector = factory().new_selector(st_keyword, Smi::from_int(1), runtime().thrue());
+    @protect ref<Method> setter = backend().field_setter(i, set_selector, signature, session().context());
     methods.set(2 * i + 1, setter);
-    
+
     // Load (initial) value for the field
-    ref<SyntaxTree> value = cast<SyntaxTree>(terms.get(refs(), 2 * i + 1));
+    ref<SyntaxTree> value = safe(cast<SyntaxTree>(terms.get(2 * i + 1)));
     codegen(value);
   }
-  ref<Layout> layout = factory().new_layout(tInstance, term_count,
+  @protect ref<Layout> layout = factory().new_layout(tInstance, term_count,
       runtime().vhoid(), methods);
   __ instantiate(layout);
+  return Success::make();
 }
 
 
 template <class C>
-void Assembler<C>::visit_protocol_expression(ref<ProtocolExpression> that) {
-  visit_syntax_tree(that);
+Signal *Assembler<C>::visit_protocol_expression(ref<ProtocolExpression> that) {
+  return visit_syntax_tree(that);
 }
 
 
 template <class C>
-void Assembler<C>::visit_method_expression(ref<MethodExpression> that) {
-  visit_syntax_tree(that);
+Signal *Assembler<C>::visit_method_expression(ref<MethodExpression> that) {
+  return visit_syntax_tree(that);
 }
 
 
 template <class C>
-void Assembler<C>::visit_on_clause(ref<OnClause> that) {
+Signal *Assembler<C>::visit_on_clause(ref<OnClause> that) {
   // This type of node is handled by the enclosing do-on expression.
   UNREACHABLE();
+  return InternalError::make(InternalError::ieFatalError);
 }
 
 
 template <class C>
-void Assembler<C>::visit_arguments(ref<Arguments> that) {
+Signal *Assembler<C>::visit_arguments(ref<Arguments> that) {
   UNREACHABLE();
+  return InternalError::make(InternalError::ieFatalError);
 }
 
 
 template <class C>
-void Assembler<C>::visit_parameters(ref<Parameters> that) {
+Signal *Assembler<C>::visit_parameters(ref<Parameters> that) {
   UNREACHABLE();
+  return InternalError::make(InternalError::ieFatalError);
 }
 
 
@@ -762,9 +804,10 @@ void Assembler<C>::visit_parameters(ref<Parameters> that) {
 
 
 template <class C>
-void Assembler<C>::attach_task() {
+Signal *Assembler<C>::attach_task() {
   load_symbol(runtime().this_symbol());
   __ attach();
+  return Success::make();
 }
 
 
@@ -790,53 +833,50 @@ CompileSession::CompileSession(Runtime &runtime, ref<Context> context)
     : runtime_(runtime), context_(context) { }
 
 
-ref<Lambda> Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
+Data *Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
     ref<Context> context) {
-  ref<Smi> zero = runtime.refs().new_ref(Smi::from_int(0));  
-  ref<Lambda> lambda = runtime.factory().new_lambda(
+  stack_ref_block<> safe(runtime.refs());
+  ref<Smi> zero = safe(Smi::from_int(0));
+  return runtime.factory().new_lambda(
     expr->parameters()->parameters()->length(), 0, zero, zero, expr, context
   );
-  return lambda;
 }
 
 
-ref<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
+Data *Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
     ref<Context> context) {
-  Lambda *result;
-  {
-    ref_scope scope(runtime.refs());
-    ref<ReturnExpression> ret = runtime.factory().new_return_expression(tree);
-    ref<Parameters> params = runtime.factory().new_parameters(
-      runtime.refs().new_ref(Smi::from_int(0)),
+  stack_ref_block<> safe(runtime.refs());
+  @protect ref<ReturnExpression> ret = runtime.factory().new_return_expression(tree);
+  @protect ref<Parameters> params = runtime.factory().new_parameters(
+      safe(Smi::from_int(0)),
       runtime.empty_tuple()
-    );
-    ref<LambdaExpression> expr = runtime.factory().new_lambda_expression(
+  );
+  @protect ref<LambdaExpression> expr = runtime.factory().new_lambda_expression(
       params,
       ret,
       false
-    );
-    ref<Lambda> ref_result = compile(runtime, expr, context);
-    result = *ref_result;
-  }
-  return runtime.refs().new_ref(result);
+  );
+  return compile(runtime, expr, context);
 }
 
 
-void Compiler::compile(Runtime &runtime, ref<Lambda> lambda, ref<Method> holder) {
-  CompileSession session(runtime, lambda.context(runtime.refs()));
-  session.compile(lambda, holder);
+Signal *Compiler::compile(Runtime &runtime, ref<Lambda> lambda, ref<Method> holder) {
+  stack_ref_block<> safe(runtime.refs());
+  CompileSession session(runtime, safe(lambda.context()));
+  return session.compile(lambda, holder);
 }
 
 
-ref<Lambda> CompileSession::compile(ref<LambdaExpression> that,
+Data *CompileSession::compile(ref<LambdaExpression> that,
     CodeGenerator &enclosing) {
-  ref<Smi> zero = runtime().refs().new_ref(Smi::from_int(0));
-  ref<Lambda> lambda = runtime().factory().new_lambda(
+  stack_ref_block<> safe(runtime().refs());
+  ref<Smi> zero = safe(Smi::from_int(0));
+  @protect ref<Lambda> lambda = runtime().factory().new_lambda(
       that->parameters()->parameters()->length(), 0, zero, zero, that,
       context()
   );
-  compile(lambda, enclosing.method(), &enclosing);
-  return lambda;
+  @try compile(lambda, enclosing.method(), &enclosing);
+  return *lambda;
 }
 
 
@@ -855,10 +895,10 @@ public:
       : Visitor(runtime.refs(), NULL)
       , runtime_(runtime) { }
   void materialize_if_outer(ref<Symbol> sym);
-  virtual void visit_assignment(ref<Assignment> that);
-  virtual void visit_local_variable(ref<LocalVariable> that);
-  virtual void visit_local_definition(ref<LocalDefinition> that);
-  virtual void visit_lambda_expression(ref<LambdaExpression> that);
+  virtual Signal *visit_assignment(ref<Assignment> that);
+  virtual Signal *visit_local_variable(ref<LocalVariable> that);
+  virtual Signal *visit_local_definition(ref<LocalDefinition> that);
+  virtual Signal *visit_lambda_expression(ref<LambdaExpression> that);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
@@ -872,37 +912,41 @@ void Analyzer::materialize_if_outer(ref<Symbol> sym) {
   scope().lookup(sym, lookup);
   if (lookup.category == cOuter) {
     sym->set_data(info->clone_with_type(CodeGenerator::ltMaterialize));
-  }  
+  }
 }
 
 
-void Analyzer::visit_assignment(ref<Assignment> that) {
-  materialize_if_outer(that.symbol(refs()));
-  Visitor::visit_assignment(that);
+Signal *Analyzer::visit_assignment(ref<Assignment> that) {
+  stack_ref_block<> safe(refs());
+  materialize_if_outer(safe(that.symbol()));
+  return Visitor::visit_assignment(that);
 }
 
 
-void Analyzer::visit_local_variable(ref<LocalVariable> that) {
-  ref<Symbol> sym = that.symbol(refs());
+Signal *Analyzer::visit_local_variable(ref<LocalVariable> that) {
+  stack_ref_block<> safe(refs());
+  ref<Symbol> sym = safe(that.symbol());
   SymbolInfo *info = SymbolInfo::from(sym->data());
   if (info->def_type() == LocalDefinition::ldVar)
     materialize_if_outer(sym);
+  return Success::make();
 }
 
 
-void Analyzer::visit_local_definition(ref<LocalDefinition> that) {
-  ref<Symbol> sym = that.symbol(refs());
+Signal *Analyzer::visit_local_definition(ref<LocalDefinition> that) {
+  stack_ref_block<> safe(refs());
+  ref<Symbol> sym = safe(that.symbol());
   LocalScope scope(*this, sym, 0);
   ASSERT_IS(Null, sym->data());
   if (that->type() == Smi::from_int(LocalDefinition::ldVar))
     sym->set_data(SymbolInfo::empty()->clone_with_def_type(LocalDefinition::ldVar));
-  Visitor::visit_local_definition(that);
+  return Visitor::visit_local_definition(that);
 }
 
 
-void Analyzer::visit_lambda_expression(ref<LambdaExpression> that) {
+Signal *Analyzer::visit_lambda_expression(ref<LambdaExpression> that) {
   ClosureScope scope(*this, runtime());
-  Visitor::visit_lambda_expression(that);
+  return Visitor::visit_lambda_expression(that);
 }
 
 
@@ -919,16 +963,16 @@ public:
   PostCompilationChecker(Runtime &runtime)
       : Visitor(runtime.refs(), NULL)
       , runtime_(runtime) { }
-  virtual void visit_local_definition(ref<LocalDefinition> that);
+  virtual Signal *visit_local_definition(ref<LocalDefinition> that);
 private:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
 };
 
 
-void PostCompilationChecker::visit_local_definition(ref<LocalDefinition> that) {
+Signal *PostCompilationChecker::visit_local_definition(ref<LocalDefinition> that) {
   ASSERT_IS(Null, that->symbol()->data());
-  Visitor::visit_local_definition(that);
+  return Visitor::visit_local_definition(that);
 }
 
 
@@ -941,45 +985,50 @@ void PostCompilationChecker::visit_local_definition(ref<LocalDefinition> that) {
 namespace neutrino {
 
 
-void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder) {
+Signal *CompileSession::compile(ref<Lambda> lambda, ref<Method> holder) {
   GarbageCollectionMonitor monitor(runtime().heap().memory());
-  ref<SyntaxTree> body = cast<LambdaExpression>(lambda.tree(runtime().refs())).body(runtime().refs());
-  
+  stack_ref_block<> safe(runtime().refs());
+  ref<SyntaxTree> body = safe(cast<LambdaExpression>(lambda.tree())->body());
+
   Analyzer analyzer(runtime());
-  body.accept(analyzer);
-  
+  @try body.accept(analyzer);
+
   // Generate code
-  compile(lambda, holder, NULL);
-  
+  @try compile(lambda, holder, NULL);
+
 #ifdef PARANOID
   // Ensure that the syntax tree has been cleaned up propertly
   PostCompilationChecker checker(runtime());
-  body.accept(checker);
+  @try body.accept(checker);
 #endif
-  
+
   ASSERT(!monitor.has_collected_garbage());
+
+  return Success::make();
 }
 
 
-void CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
+Signal *CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
     CodeGenerator *enclosing) {
-  ref<LambdaExpression> tree = cast<LambdaExpression>(lambda.tree(runtime().refs()));
+  stack_ref_block<> safe(runtime().refs());
+  ref<LambdaExpression> tree = safe(cast<LambdaExpression>(lambda.tree()));
   BytecodeBackend backend(runtime());
   backend.initialize();
   Assembler<BytecodeCodeGeneratorConfig> assembler(tree, holder, *this, backend, enclosing);
-  ref<Parameters> params = tree.parameters(runtime().refs());
+  ref<Parameters> params = safe(tree.parameters());
   // If this is a keyword call the keyword map will be pushed as the
   // first local variable by the caller
   if (params->has_keywords())
     backend.adjust_stack_height(1);
   FunctionScope scope(runtime(), assembler, params,
       tree->is_local() == runtime().roots().thrue());
-  tree.body(runtime().refs()).accept(assembler);
-  ref<Code> code = backend.flush_code();
-  ref<Tuple> constant_pool = backend.flush_constant_pool();
+  safe(tree.body()).accept(assembler);
+  @protect ref<Code> code = backend.flush_code();
+  @protect ref<Tuple> constant_pool = backend.flush_constant_pool();
   lambda->set_code(*code);
   lambda->set_constant_pool(*constant_pool);
   lambda->set_max_stack_height(backend.stack().max_height());
+  return Success::make();
 }
 
 

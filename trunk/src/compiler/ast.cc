@@ -8,36 +8,39 @@ namespace neutrino {
 // --- C o m p i l i n g ---
 // -------------------------
 
-ref<Protocol> ref_traits<ProtocolExpression>::compile(Runtime &runtime,
+Data *ref_traits<ProtocolExpression>::compile(Runtime &runtime,
     ref<Context> context) {
+  stack_ref_block<> safe(runtime.refs());
   ref<ProtocolExpression> self = open(this);
   Factory &factory = runtime.factory();
-  ref<Tuple> method_asts = methods(runtime.refs());
-  ref<Tuple> methods = factory.new_tuple(method_asts.length());
+  ref<Tuple> method_asts = safe(methods());
+  @protect ref<Tuple> methods = factory.new_tuple(method_asts.length());
   for (uword i = 0; i < method_asts.length(); i++) {
-    ref_scope scope(runtime.refs());
-    ref<MethodExpression> method_ast = cast<MethodExpression>(method_asts.get(runtime.refs(), i));
-    ref<Method> method = method_ast.compile(runtime, context);
+    stack_ref_block<> safe(runtime.refs());
+    ref<MethodExpression> method_ast = safe(cast<MethodExpression>(method_asts.get(i)));
+    @protect ref<Method> method = method_ast.compile(runtime, context);
     methods.set(i, method);
   }
-  return factory.new_protocol(methods, super(runtime.refs()), name(runtime.refs()));
+  return factory.new_protocol(methods, safe(super()), safe(name()));
 }
 
-ref<Method> ref_traits<MethodExpression>::compile(Runtime &runtime, 
+Data *ref_traits<MethodExpression>::compile(Runtime &runtime,
     ref<Context> context) {
+  stack_ref_block<> safe(runtime.refs());
   ref<MethodExpression> self = open(this);
-  ref<Lambda> code = Compiler::compile(runtime, self.lambda(runtime.refs()), context);
+  @protect ref<Lambda> code = Compiler::compile(runtime, safe(self.lambda()), context);
   Factory &factory = runtime.factory();
-  ref<Signature> signature = factory.new_signature(factory.new_tuple(0));
-  ref<Method> result = factory.new_method(selector(runtime.refs()), signature, code);
-  return result;
+  @protect ref<Tuple> tuple = factory.new_tuple(0);
+  @protect ref<Signature> signature = factory.new_signature(tuple);
+  @protect ref<Method> result = factory.new_method(safe(selector()), signature, code);
+  return *result;
 }
 
 void Lambda::ensure_compiled(Runtime &runtime, Method *holder) {
   if (is<Code>(code())) return;
-  ref_scope scope(runtime.refs());
-  ref<Method> holder_ref = runtime.refs().new_ref(holder);
-  ref<Lambda> self_ref = runtime.refs().new_ref(this);
+  stack_ref_block<> safe(runtime.refs());
+  ref<Method> holder_ref = safe(holder);
+  ref<Lambda> self_ref = safe(this);
   self_ref.ensure_compiled(runtime, holder_ref);
 }
 
@@ -309,16 +312,17 @@ static void dispatch_single(Visitor &visitor, ref<Value> value, bool ignore_unex
 static void dispatch(Visitor &visitor, ref<Value> value, const char *field) {
   if (is<Tuple>(value)) {
     ref<Tuple> tuple = cast<Tuple>(value);
-    ref_scope scope(visitor.refs());
-    for (uword i = 0; i < tuple.length(); i++)
-      dispatch_single(visitor, tuple.get(visitor.refs(), i), false);
+    for (uword i = 0; i < tuple.length(); i++) {
+      stack_ref_block<1> safe(visitor.refs());
+      dispatch_single(visitor, safe(tuple.get(i)), false);
+    }
   } else {
     dispatch_single(visitor, value, true);
   }
 }
 
 
-void ref_traits<SyntaxTree>::accept(Visitor &visitor) {
+Signal *ref_traits<SyntaxTree>::accept(Visitor &visitor) {
   ref<SyntaxTree> self = open(this);
   InstanceType type = self->type();
   switch (type) {
@@ -329,6 +333,7 @@ eAcceptVisitorCases(MAKE_VISIT)
 #undef MAKE_VISIT
   default:
     UNHANDLED(InstanceType, type);
+    return InternalError::make(InternalError::ieFatalError);
   }
 }
 
@@ -337,67 +342,69 @@ eAcceptVisitorCases(MAKE_VISIT)
  * Dispatch the visitor for each element in the given tuple.
  */
 static void dispatch_tuple(Visitor &visitor, ref<Tuple> tuple, const char *field) {
-  ref_scope scope(visitor.refs());
-  for (uword i = 0; i < tuple.length(); i++)
-    dispatch(visitor, tuple.get(visitor.refs(), i), field);
+  for (uword i = 0; i < tuple.length(); i++) {
+    stack_ref_block<> safe(visitor.refs());
+    dispatch(visitor, safe(tuple.get(i)), field);
+  }
 }
 
 
-void ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
-#define VISIT_FIELD_WITH(field, Type, op) op(visitor, cast<Type>(self).field(visitor.refs()), #Type "." #field);
+Signal *ref_traits<SyntaxTree>::traverse(Visitor &visitor) {
+#define VISIT_FIELD_WITH(field, Type, op) op(visitor, safe(cast<Type>(self).field()), #Type "." #field);
 #define VISIT_FIELD(ret, field, Field, Type) VISIT_FIELD_WITH(field, Type, dispatch)
   ref<SyntaxTree> self = open(this);
   InstanceType type = self->type();
   switch (type) {
   case tArguments: {
-    ref_scope scope(visitor.refs());
+    stack_ref_block<> safe(visitor.refs());
     VISIT_FIELD(0, arguments, 0, Arguments);
     break;
   }
   case tInstantiateExpression: {
-    ref_scope scope(visitor.refs());
+    stack_ref_block<> safe(visitor.refs());
     VISIT_FIELD(0, receiver, 0, InstantiateExpression);
     VISIT_FIELD(0, arguments, 0, InstantiateExpression);
     VISIT_FIELD_WITH(terms, InstantiateExpression, dispatch_tuple);
     break;
   }
   case tInterpolateExpression: {
-    ref_scope scope(visitor.refs());
+    stack_ref_block<> safe(visitor.refs());
     VISIT_FIELD_WITH(terms, InterpolateExpression, dispatch_tuple);
     break;
   }
   case tParameters: {
-    ref_scope scope(visitor.refs());
+    stack_ref_block<> safe(visitor.refs());
     VISIT_FIELD_WITH(parameters, Parameters, dispatch_tuple);
     break;
   }
 #define MAKE_VISIT(n, Name, name)                                    \
   case t##Name: {                                                    \
-    ref_scope scope(visitor.refs());                                 \
+    stack_ref_block<> safe(visitor.refs());                          \
     e##Name##Fields(VISIT_FIELD, Name);                              \
     break;                                                           \
   }
 eTraverseVisitorCases(MAKE_VISIT)
-#undef MAKE_VISIT    
+#undef MAKE_VISIT
   default:
     UNHANDLED(InstanceType, type);
   }
 #undef VISIT_FIELD
+  return Success::make();
 }
 
 Visitor::~Visitor() { }
 
-void Visitor::visit_syntax_tree(ref<SyntaxTree> that) {
-  that.traverse(*this);
+Signal *Visitor::visit_syntax_tree(ref<SyntaxTree> that) {
+  return that.traverse(*this);
 }
 
-void Visitor::visit_symbol(ref<Symbol> that) {
-  // ignore
+Signal *Visitor::visit_symbol(ref<Symbol> that) {
+  return Success::make();
 }
 
 #define MAKE_VISIT_METHOD(n, Name, name)                             \
-  void Visitor::visit_##name(ref<Name> that) {                       \
-    visit_syntax_tree(that);                                         \
+  Signal *Visitor::visit_##name(ref<Name> that) {                    \
+    return visit_syntax_tree(that);                                  \
   }
 eSyntaxTreeTypes(MAKE_VISIT_METHOD)
 #undef MAKE_VISIT_METHOD

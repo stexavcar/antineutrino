@@ -11,7 +11,7 @@
 
 namespace neutrino {
 
-  
+
 // -------------
 // --- L o g ---
 // -------------
@@ -145,13 +145,15 @@ private:
  */
 class CaptureInterpreterState {
 public:
-  CaptureInterpreterState(RefStack &refs, InterpreterState &state) {
-    task_ = refs.new_ref(state.task_);
+  CaptureInterpreterState(RefStack &refs, InterpreterState &state)
+    : safe(refs) {
+    task_ = safe(state.task_);
   }
   void restore(InterpreterState &state) {
     state.task_ = *task_;
   }
 private:
+  stack_ref_block<> safe;
   ref<Task> task_;
 };
 
@@ -176,7 +178,6 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
           continue;
       }
       if (is<AllocationFailed>(value)) {
-        ref_scope scope(runtime().refs());
         CaptureInterpreterState capture(runtime().refs(), state);
         runtime().heap().memory().collect_garbage(runtime());
         capture.restore(state);
@@ -618,12 +619,12 @@ Data *Interpreter::interpret(InterpreterState &state) {
       break;
     }
     case ocTask: {
+      stack_ref_block<> safe(runtime().refs());
       Lambda *lambda = cast<Lambda>(frame.pop());
       Data *task_val = runtime().heap().new_task(runtime().architecture());
       if (is<Signal>(task_val)) RETURN(task_val);
       Task *task = cast<Task>(task_val);
-      ref_scope scope(runtime().refs());
-      prepare_call(runtime().refs().new_ref(task), runtime().refs().new_ref(lambda), 0);
+      prepare_call(safe(task), safe(lambda), 0);
       frame.push(task);
       pc += OpcodeInfo<ocTask>::kSize;
       break;

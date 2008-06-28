@@ -142,7 +142,7 @@ public:
 };
 
 #define DECLARE_OBJECT_FIELD(Type, name, Name, arg) DECLARE_FIELD(Type*, name);
-#define DECLARE_REF_FIELD(Type, name, Name, arg) inline ref<Type> name(RefStack &refs);
+#define DECLARE_REF_FIELD(Type, name, Name, arg) inline Type *name();
 
 class Object : public Immediate {
 public:
@@ -168,7 +168,7 @@ public:
 
 template <> class ref_traits<Object> : public ref_traits<Immediate> {
 public:
-  inline ref<Layout> layout(RefStack &refs);
+  inline Layout *layout();
 };
 
 DEFINE_REF_CLASS(Object);
@@ -527,7 +527,7 @@ public:
 template <> class ref_traits<AbstractTuple> : public ref_traits<Object> {
 public:
   inline uword length();
-  inline ref<Value> get(RefStack &refs, uword index);
+  inline Value *get(uword index);
   inline void set(uword index, ref<Value> value);
 };
 
@@ -603,7 +603,7 @@ public:
 template <> class ref_traits<HashMap> : public ref_traits<Object> {
 public:
   eHashMapFields(DECLARE_REF_FIELD, 0)
-  inline ref<Value> get(RefStack &refs, ref<Value> key);
+  inline Data *get(ref<Value> key);
   inline void set(Heap &heap, ref<Value> key, ref<Value> value);
   inline uword size();
 };
@@ -766,7 +766,7 @@ public:
 };
 
 #define eInternalErrorTypes(VISIT)                                   \
-  VISIT(FatalError)
+  VISIT(FatalError) VISIT(OutOfMemory)
 
 class InternalError : public Signal {
 public:

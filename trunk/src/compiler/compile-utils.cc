@@ -6,31 +6,35 @@
 
 namespace neutrino {
 
-void heap_list::initialize() {
-  ref<Tuple> tuple = runtime().factory().new_tuple(16);
+Signal *heap_list::initialize() {
+  stack_ref_block<> safe(runtime().refs());
+  @protect ref<Tuple> tuple = runtime().factory().new_tuple(16);
   data_ = runtime().refs().new_persistent(*tuple);
+  return Success::make();
 }
 
 heap_list::~heap_list() {
   data().dispose();
 }
 
-void heap_list::extend_capacity() {
-  ref_scope scope(runtime().refs());
+Signal *heap_list::extend_capacity() {
+  stack_ref_block<> safe(runtime().refs());
   uword capacity = data().length();
   uword new_capacity = grow_value(capacity);
-  ref<Tuple> new_data = runtime().factory().new_tuple(new_capacity);
+  @protect ref<Tuple> new_data = runtime().factory().new_tuple(new_capacity);
   for (uword i = 0; i < capacity; i++)
-    new_data.set(i, data().get(runtime().refs(), i));
+    new_data->set(i, data()->get(i));
   data().dispose();
   set_data(runtime().refs().new_persistent(*new_data));
+  return Success::make();
 }
 
-void heap_list::append(ref<Value> value) {
+Signal *heap_list::append(ref<Value> value) {
   if (length() >= data().length())
-    extend_capacity();
+    @try extend_capacity();
   data().set(length(), value);
   length_++;
+  return Success::make();
 }
 
-}
+} // neutrino

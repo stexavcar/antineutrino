@@ -20,7 +20,7 @@ public:
   static Signal *run_system(list<char*> &args);
   static void on_option_error(string message);
   static Image *read_image(string name);
-  static void build_arguments(Runtime &runtime);
+  static Signal *build_arguments(Runtime &runtime);
   static DynamicLibraryCollection *load_dynamic_libraries();
 };
 
@@ -48,6 +48,7 @@ void Main::main(list<char*> &args) {
   Signal *run_sig = run_system(args);
   if (is<Success>(run_sig)) return;
   // Issue an error of some sort...
+  run_sig->to_string().println();
   UNREACHABLE();
 }
 
@@ -62,13 +63,12 @@ Signal *Main::run_system(list<char*> &args) {
   BytecodeArchitecture arch(runtime);
   @try runtime.initialize(&arch);
   for (uword i = 0; i < files.length(); i++) {
-    ref_scope ref_scope(runtime.refs());
     string file = files[i];
     own_ptr<Image> image(read_image(file));
     bool loaded = runtime.load_image(**image);
     use(loaded); ASSERT(loaded);
   }
-  build_arguments(runtime);
+  @try build_arguments(runtime);
   Signal *start_sig = runtime.start();
   if (Options::print_stats_on_exit) {
     string_buffer stats;
@@ -78,16 +78,17 @@ Signal *Main::run_system(list<char*> &args) {
   return start_sig;
 }
 
-void Main::build_arguments(Runtime &runtime) {
+Signal *Main::build_arguments(Runtime &runtime) {
   list<string> args = Options::args;
-  ref_scope scope(runtime.refs());
-  ref<Tuple> result = runtime.factory().new_tuple(args.length());
+  stack_ref_block<> safe(runtime.refs());
+  @protect ref<Tuple> result = runtime.factory().new_tuple(args.length());
   for (uword i = 0; i < args.length(); i++) {
-    ref<String> arg = runtime.factory().new_string(args[i]);
+    @protect ref<String> arg = runtime.factory().new_string(args[i]);
     result->set(i, *arg);
   }
-  ref<String> arguments = runtime.factory().new_string("arguments");
+  @protect ref<String> arguments = runtime.factory().new_string("arguments");
   runtime.gc_safe().set(runtime.toplevel(), arguments, result);
+  return Success::make();
 }
 
 

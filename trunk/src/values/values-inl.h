@@ -289,8 +289,8 @@ T &Class::name() {                                                   \
 }
 
 #define DEFINE_REF_GETTER(T, Class, name)                            \
-ref<T> ref_traits<Class>::name(RefStack &refs) {                     \
-  return refs.new_ref(open(this)->name());                           \
+T *ref_traits<Class>::name() {                                       \
+  return open(this)->name();                                         \
 }
 
 #define DEFINE_SETTER(T, Class, name, Name)                          \
@@ -466,8 +466,8 @@ uword ref_traits<AbstractTuple>::length() {
   return open(this)->length();
 }
 
-ref<Value> ref_traits<AbstractTuple>::get(RefStack &refs, uword index) {
-  return refs.new_ref(open(this)->get(index));
+Value *ref_traits<AbstractTuple>::get(uword index) {
+  return open(this)->get(index);
 }
 
 void ref_traits<AbstractTuple>::set(uword index, ref<Value> value) {
@@ -479,10 +479,8 @@ void ref_traits<AbstractTuple>::set(uword index, ref<Value> value) {
 // --- D i c t i o n a r y ---
 // ---------------------------
 
-ref<Value> ref_traits<HashMap>::get(RefStack &refs, ref<Value> value) {
-  Data *result = open(this)->get(*value);
-  if (is<Nothing>(result)) return ref<Value>();
-  else return refs.new_ref(cast<Value>(result));
+Data *ref_traits<HashMap>::get(ref<Value> value) {
+  return open(this)->get(*value);
 }
 
 void ref_traits<HashMap>::set(Heap &heap, ref<Value> key, ref<Value> value) {
