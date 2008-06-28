@@ -49,6 +49,17 @@ ref<C> abstract_ref<C>::empty() {
   return ref<C>(static_cast<C**>(0));
 }
 
+base_stack_ref_block::base_stack_ref_block(RefStack &refs)
+    : refs_(refs)
+    , count_(0)
+    , prev_(refs.top()) {
+  refs.set_top(this);
+}
+
+base_stack_ref_block::~base_stack_ref_block() {
+  refs_.set_top(prev_);
+}
+
 ref_scope_info::ref_scope_info()
     : block_count(-1)
     , next_cell(NULL)
@@ -65,7 +76,7 @@ ref_scope::~ref_scope() {
   manager().current_ = previous_;
 }
 
-ref_iterator::ref_iterator(RefStack &refs) 
+ref_iterator::ref_iterator(RefStack &refs)
     : refs_(refs) {
   current_block_ = 0;
   if (refs.block_stack().length() > 0) {

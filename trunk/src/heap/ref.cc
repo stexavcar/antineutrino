@@ -5,8 +5,9 @@
 namespace neutrino {
 
 
-RefStack::RefStack() 
-    : spare_block_(NULL) { }
+RefStack::RefStack()
+    : top_(NULL)
+    , spare_block_(NULL) { }
 
 
 Value **RefStack::grow() {

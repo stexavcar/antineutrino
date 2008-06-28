@@ -20,8 +20,7 @@ Runtime::~Runtime() {
 }
 
 Signal *Runtime::initialize(Architecture *arch) {
-  Signal *root_init_sig = roots().initialize(heap());
-  if (!is<Success>(root_init_sig)) return root_init_sig;
+  @try roots().initialize(heap());
   architecture_ = arch;
   if (arch == NULL) return Success::make();
   else return architecture().setup(*this);
@@ -34,9 +33,11 @@ Signal *Runtime::start() {
   if (is<Nothing>(entry_point)) {
     Conditions::get().error_occurred("Error: no entry point '%' was defined.",
         elms(main_name));
+    return InternalError::make(InternalError::ieFatalError);
   } else if (!is<Lambda>(entry_point)) {
     Conditions::get().error_occurred("Entry point '%' is not a function.",
         elms(main_name));
+    return InternalError::make(InternalError::ieFatalError);
   }
   ref<Lambda> lambda = refs().new_ref(cast<Lambda>(entry_point));
   ref<Task> task = factory().new_task(architecture());
@@ -64,7 +65,7 @@ void Runtime::report_load_error(ImageLoadStatus &info) {
       return;
     }
     case ImageLoadStatus::lsRootCount: {
-      static string kErrorMessage = 
+      static string kErrorMessage =
         "Invalid root count\n"
         "  Expected: %\n"
         "  Found: %";
@@ -97,17 +98,17 @@ void Runtime::report_load_error(ImageLoadStatus &info) {
   }
 }
 
-bool Runtime::load_image(Image &image) {
+Signal *Runtime::load_image(Image &image) {
   ImageContext info(*this);
   image.initialize(info);
   if (info.has_error()) {
     report_load_error(info.status());
-    return false;    
+    return InternalError::make(InternalError::ieFatalError);
   }
   Data *roots_val = image.load(info);
   if (info.has_error()) {
     report_load_error(info.status());
-    return false;
+    return InternalError::make(InternalError::ieFatalError);
   } else {
     Tuple *roots = cast<Tuple>(roots_val);
     ref_scope ref_scope(refs());
@@ -115,19 +116,19 @@ bool Runtime::load_image(Image &image) {
   }
 }
 
-bool Runtime::install_loaded_roots(ref<Tuple> roots) {
+Signal *Runtime::install_loaded_roots(ref<Tuple> roots) {
   for (uword i = 0; i < roots.length(); i++) {
     ref_scope scope(refs());
     ref<Value> raw_changes = roots.get(refs(), i);
     if (is<Smi>(raw_changes)) continue;
     ref<Object> changes = cast<Object>(raw_changes);
     ref<Object> root = get_root(i);
-    if (!install_object(root, changes)) return false;
+    @try install_object(root, changes);
   }
-  return true;
+  return Success::make();
 }
 
-bool Runtime::install_object(ref<Object> root, ref<Object> changes) {
+Signal *Runtime::install_object(ref<Object> root, ref<Object> changes) {
   InstanceType type = root.type();
   switch (type) {
     case tHashMap:
@@ -136,11 +137,11 @@ bool Runtime::install_object(ref<Object> root, ref<Object> changes) {
       return install_layout(cast<Layout>(root), cast<Protocol>(changes));
     default:
       UNHANDLED(InstanceType, type);
-      return false;
+      return InternalError::make(InternalError::ieFatalError);
   }
 }
 
-bool Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
+Signal *Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
   // First copy all elements into the tables so that we can iterate
   // through the elements independent of whether a gc occurs or not
   uword length = changes.size();
@@ -161,18 +162,18 @@ bool Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
     ref_scope scope(refs());
     root.set(heap(), keys.get(refs(), i), values.get(refs(), i));
   }
-  return true;
+  return Success::make();
 }
 
-bool Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
+Signal *Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
   if (!root->is_empty()) {
     scoped_string str(changes.name(refs()).to_string());
     Conditions::get().error_occurred("Root class % is not empty.", elms(*str));
-    return false;
+    return InternalError::make(InternalError::ieFatalError);
   }
   root->set_protocol(*changes);
   ASSERT(!root->is_empty());
-  return true;
+  return Success::make();
 }
 
 }

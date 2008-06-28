@@ -50,12 +50,12 @@ public:
   ~Runtime();
   Signal *initialize(Architecture *arch);
 
-  bool load_image(Image &image);
+  Signal *load_image(Image &image);
   void report_load_error(ImageLoadStatus &info);
-  bool install_loaded_roots(ref<Tuple> roots);
-  bool install_object(ref<Object> root, ref<Object> changes);
-  bool install_hash_map(ref<HashMap> root, ref<HashMap> changes);
-  bool install_layout(ref<Layout> root, ref<Protocol> changes);
+  Signal *install_loaded_roots(ref<Tuple> roots);
+  Signal *install_object(ref<Object> root, ref<Object> changes);
+  Signal *install_hash_map(ref<HashMap> root, ref<HashMap> changes);
+  Signal *install_layout(ref<Layout> root, ref<Protocol> changes);
   Signal *start();
 
   // Declare root field ref accessors
@@ -63,9 +63,9 @@ public:
     ref<Type> name() { return ref<Type>(&roots().name()); }
   eRoots(DECLARE_ROOT_ACCESSOR)
   #undef DECLARE_ROOT_ACCESSOR
-  
+
   inline ref<Object> get_root(uword index);
-  
+
   DynamicLibraryCollection *dylibs() { return dylibs_; }
   RefStack &refs() { return refs_; }
   Architecture &architecture() { return *architecture_; }
@@ -74,7 +74,7 @@ public:
   Heap &heap() { return heap_; }
   Roots &roots() { return roots_; }
 
-  
+
 private:
   Roots roots_;
   Heap heap_;

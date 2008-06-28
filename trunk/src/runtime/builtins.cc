@@ -31,26 +31,19 @@ ePlainBuiltinFunctions(MAKE_CASE)
   }
 }
 
-
-#define SIGNAL_CHECK(Type, name, operation)                          \
-  Data *name##_val = operation;                                      \
-  if (is<Signal>(name##_val)) return name##_val;                     \
-  Type *name = cast<Type>(name##_val);
-
-
 // -------------------
 // --- S t r i n g ---
 // -------------------
 
 Data *Builtins::string_length(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  @check String *self = to<String>(args.self());
   return Smi::from_int(self->length());
 }
 
 Data *Builtins::string_hash(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  @check String *self = to<String>(args.self());
   // TODO: This hash is exceedingly stupid.  Replace with something
   //   that gives a better distribution.
   uword value = 0;
@@ -61,8 +54,8 @@ Data *Builtins::string_hash(BuiltinArguments &args) {
 
 Data *Builtins::string_eq(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(String, self, to<String>(args.self()));
-  SIGNAL_CHECK(Immediate, other, to<Immediate>(args[0]));
+  @check String *self = to<String>(args.self());
+  @check Immediate *other = to<Immediate>(args[0]);
   if (!is<String>(other)) return args.runtime().roots().fahlse();
   String *that = cast<String>(other);
   uword length = self->length();
@@ -77,10 +70,10 @@ Data *Builtins::string_eq(BuiltinArguments &args) {
 
 Data *Builtins::string_plus(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(String, self, to<String>(args.self()));
-  SIGNAL_CHECK(String, that, to<String>(args[0]));
+  @check String *self = to<String>(args.self());
+  @check String *that = to<String>(args[0]);
   uword length = self->length() + that->length();
-  SIGNAL_CHECK(String, result, args.runtime().heap().new_string(length));
+  @check String *result = args.runtime().heap().new_string(length);
   for (uword i = 0; i < self->length(); i++)
     result->set(i, self->get(i));
   for (uword i = 0; i < that->length(); i++)
@@ -90,15 +83,15 @@ Data *Builtins::string_plus(BuiltinArguments &args) {
 
 Data *Builtins::string_get(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(String, self, to<String>(args.self()));
-  SIGNAL_CHECK(Smi, index, to<Smi>(args[0]));
+  @check String *self = to<String>(args.self());
+  @check Smi *index = to<Smi>(args[0]);
   char c = self->get(index->value());
   return args.runtime().heap().new_string(string(&c, 1));
 }
 
 Data *Builtins::is_whitespace(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  @check String *self = to<String>(args.self());
   for (uword i = 0; i < self->length(); i++) {
     if (!isspace(self->get(i)))
       return args.runtime().roots().fahlse();
@@ -108,7 +101,7 @@ Data *Builtins::is_whitespace(BuiltinArguments &args) {
 
 Data *Builtins::is_alpha(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  @check String *self = to<String>(args.self());
   for (uword i = 0; i < self->length(); i++) {
     if (!isalpha(self->get(i)))
       return args.runtime().roots().fahlse();
@@ -118,7 +111,7 @@ Data *Builtins::is_alpha(BuiltinArguments &args) {
 
 Data *Builtins::is_digit(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  SIGNAL_CHECK(String, self, to<String>(args.self()));
+  @check String *self = to<String>(args.self());
   for (uword i = 0; i < self->length(); i++) {
     if (!isdigit(self->get(i)))
       return args.runtime().roots().fahlse();
@@ -133,43 +126,43 @@ Data *Builtins::is_digit(BuiltinArguments &args) {
 
 Data *Builtins::smi_plus(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
-  SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
+  @check Smi *self = to<Smi>(args.self());
+  @check Smi *that = to<Smi>(args[0]);
   return Smi::from_int(self->value() + that->value());
 }
 
 Data *Builtins::smi_minus(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
-  SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
+  @check Smi *self = to<Smi>(args.self());
+  @check Smi *that = to<Smi>(args[0]);
   return Smi::from_int(self->value() - that->value());
 }
 
 Data *Builtins::smi_times(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(Smi, self, to<Smi>(args.self()));
-  SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
+  @check Smi *self = to<Smi>(args.self());
+  @check Smi *that = to<Smi>(args[0]);
   return Smi::from_int(self->value() * that->value());
 }
 
 Data *Builtins::smi_divide(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  @check Smi* self = to<Smi>(args.self());
-  @check Smi* that = to<Smi>(args[0]);
+  @check Smi *self = to<Smi>(args.self());
+  @check Smi *that = to<Smi>(args[0]);
   return Smi::from_int(self->value() / that->value());
 }
 
 Data *Builtins::smi_modulo(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  @check Smi* self = to<Smi>(args.self());
-  @check Smi* that = to<Smi>(args[0]);
+  @check Smi *self = to<Smi>(args.self());
+  @check Smi *that = to<Smi>(args[0]);
   return Smi::from_int(self->value() % that->value());
 }
 
 Data *Builtins::smi_less(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  @check Smi* self = to<Smi>(args.self());
-  SIGNAL_CHECK(Smi, that, to<Smi>(args[0]));
+  @check Smi *self = to<Smi>(args.self());
+  @check Smi *that = to<Smi>(args[0]);
   return (self->value() < that->value())
     ? static_cast<Bool*>(args.runtime().roots().thrue())
     : static_cast<Bool*>(args.runtime().roots().fahlse());
@@ -177,7 +170,7 @@ Data *Builtins::smi_less(BuiltinArguments &args) {
 
 Data *Builtins::smi_abs(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  @check Smi* self = to<Smi>(args.self());
+  @check Smi *self = to<Smi>(args.self());
   word value = self->value();
   if (value >= 0) return self;
   else return Smi::from_int(-value);
@@ -210,7 +203,7 @@ Data *Builtins::object_to_string(BuiltinArguments &args) {
 
 Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  SIGNAL_CHECK(ProtocolExpression, raw_expr, to<ProtocolExpression>(args.self()));
+  @check ProtocolExpression *raw_expr = to<ProtocolExpression>(args.self());
   ref_scope scope(args.runtime().refs());
   ref<ProtocolExpression> expr = args.runtime().refs().new_ref(raw_expr);
   ref<Context> context = args.runtime().refs().new_ref(args.lambda()->context());
@@ -227,13 +220,11 @@ Data *Builtins::protocol_new(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   ref_scope scope(args.runtime().refs());
   Runtime &runtime = args.runtime();
-  SIGNAL_CHECK(Protocol, protocol, to<Protocol>(args.self()));
+  @check Protocol *protocol = to<Protocol>(args.self());
   if (protocol == runtime.roots().symbol_layout()->protocol()) {
     return runtime.heap().new_symbol(runtime.roots().vhoid());
   } else {
-    Data *layout_val = runtime.heap().new_layout(tInstance, 0, protocol, runtime.roots().empty_tuple());
-    if (is<AllocationFailed>(layout_val)) return layout_val;
-    Layout *layout = cast<Layout>(layout_val);
+    @alloc Layout *layout = runtime.heap().new_layout(tInstance, 0, protocol, runtime.roots().empty_tuple());
     return runtime.heap().new_instance(layout);
   }
 }
@@ -245,7 +236,7 @@ Data *Builtins::protocol_new(BuiltinArguments &args) {
 
 Data *Builtins::tuple_eq(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(Tuple, self, to<Tuple>(args.self()));
+  @check Tuple *self = to<Tuple>(args.self());
   Data *other = to<Tuple>(args[0]);
   if (self == other) return args.runtime().roots().thrue();
   if (is<Nothing>(other))
@@ -262,14 +253,14 @@ Data *Builtins::tuple_eq(BuiltinArguments &args) {
 
 Data *Builtins::tuple_get(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(Tuple, self, to<Tuple>(args.self()));
-  SIGNAL_CHECK(Smi, index, to<Smi>(args[0]));
+  @check Tuple *self = to<Tuple>(args.self());
+  @check Smi *index = to<Smi>(args[0]);
   return self->get(index->value());
 }
 
 Data *Builtins::tuple_length(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  SIGNAL_CHECK(Tuple, self, to<Tuple>(args.self()));
+  @check Tuple *self = to<Tuple>(args.self());
   return Smi::from_int(self->length());
 }
 
@@ -280,8 +271,8 @@ Data *Builtins::tuple_length(BuiltinArguments &args) {
 
 Data *Builtins::array_set(BuiltinArguments &args) {
   ASSERT_EQ(2, args.count());
-  SIGNAL_CHECK(Array, self, to<Array>(args.self()));
-  SIGNAL_CHECK(Smi, index, to<Smi>(args[0]));
+  @check Array *self = to<Array>(args.self());
+  @check Smi *index = to<Smi>(args[0]);
   Value *value = args[1];
   self->set(index->value(), value);
   return value;
@@ -289,20 +280,20 @@ Data *Builtins::array_set(BuiltinArguments &args) {
 
 Data *Builtins::array_get(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(Array, self, to<Array>(args.self()));
-  SIGNAL_CHECK(Smi, index, to<Smi>(args[0]));
+  @check Array *self = to<Array>(args.self());
+  @check Smi *index = to<Smi>(args[0]);
   return self->get(index->value());
 }
 
 Data *Builtins::new_array(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(Smi, size, to<Smi>(args[0]));
+  @check Smi *size = to<Smi>(args[0]);
   return args.runtime().heap().new_array(size->value());
 }
 
 Data *Builtins::array_length(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  SIGNAL_CHECK(Array, self, to<Array>(args.self()));
+  @check Array *self = to<Array>(args.self());
   return Smi::from_int(self->length());
 }
 
@@ -342,7 +333,7 @@ Data *Builtins::lambda_expression_body(BuiltinArguments &args) {
 
 Data *Builtins::raw_print(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(String, str_obj, to<String>(args[0]));
+  @check String *str_obj = to<String>(args[0]);
   for (uword i = 0; i < str_obj->length(); i++)
     putc(str_obj->get(i), stdout);
   putc('\n', stdout);
@@ -350,7 +341,7 @@ Data *Builtins::raw_print(BuiltinArguments &args) {
 }
 
 Data *Builtins::compile_expression(BuiltinArguments &args) {
-  SIGNAL_CHECK(SyntaxTree, raw_self, to<SyntaxTree>(args.self()));
+  @check SyntaxTree *raw_self = to<SyntaxTree>(args.self());
   ref<SyntaxTree> self = args.runtime().refs().new_ref(raw_self);
   ref<Context> context = args.runtime().refs().new_ref(args.lambda()->context());
   ref<Lambda> code = Compiler::compile(args.runtime(), self, context);
@@ -378,8 +369,8 @@ Data *Builtins::process_unquote(BuiltinArguments &args) {
 
 Data *Builtins::channel_send(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
-  SIGNAL_CHECK(Channel, self, to<Channel>(args.self()));
-  SIGNAL_CHECK(Immediate, message, to<Immediate>(args[0]));
+  @check Channel *self = to<Channel>(args.self());
+  @check Immediate *message = to<Immediate>(args[0]);
   return self->send(args.runtime(), message);
 }
 
@@ -413,7 +404,9 @@ Data *Builtins::close(BuiltinArguments &args) {
 // ---------------------------------------
 
 #define FETCH_ARG(Type, __name__, Name, arg)                         \
-    SIGNAL_CHECK(Type, __name__, to<Type>(args[__offset__++]));
+    Data *__name__##_val = to<Type>(args[__offset__++]);             \
+    if (is<Signal>(__name__##_val)) return __name__##_val;           \
+    Type *__name__ = cast<Type>(__name__##_val);
 
 #define SET_FIELD(Type, __name__, Name, arg)                         \
   __result__->set_##__name__(__name__);

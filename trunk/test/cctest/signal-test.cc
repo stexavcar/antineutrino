@@ -13,11 +13,11 @@ void Test::signals() {
   CHECK(is<AllocationFailed>(signal));
   CHECK(!is<InternalError>(signal));
   CHECK_EQ(100, cast<AllocationFailed>(signal)->payload());
-  Signal *ie = InternalError::make(25);
+  Signal *ie = InternalError::make(InternalError::ieFatalError);
   CHECK(is<Signal>(ie));
   CHECK(is<InternalError>(ie));
   CHECK(!is<AllocationFailed>(ie));
-  CHECK_EQ(25, cast<InternalError>(ie)->payload());
+  CHECK_EQ(InternalError::ieFatalError, cast<InternalError>(ie)->payload());
   Signal *no = Nothing::make();
   CHECK_IS(Nothing, no);
 }

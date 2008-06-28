@@ -60,8 +60,7 @@ Signal *Main::run_system(list<char*> &args) {
   list<string> files = Options::images;
   Runtime runtime(*dylibs);
   BytecodeArchitecture arch(runtime);
-  Signal *init_sig = runtime.initialize(&arch);
-  if (!is<Success>(init_sig)) return init_sig;
+  @try runtime.initialize(&arch);
   for (uword i = 0; i < files.length(); i++) {
     ref_scope ref_scope(runtime.refs());
     string file = files[i];

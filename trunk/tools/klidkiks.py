@@ -57,10 +57,23 @@ class Matcher(object):
     self.pattern = pattern
     self.value = value
   
-  def replace(self, str):
-    match = re.match(self.pattern, str)
-    if match: return self.value % match.groupdict()
+  def replace(self, input, counter):
+    match = re.match(self.pattern, input)
+    dict = match.groupdict()
+    dict['i'] = str(counter)
+    if match: return self.value % dict
     else: return None
+
+
+class Counter(object):
+
+  def __init__(self):
+    self.index = 0
+  
+  def next(self):
+    value = self.index
+    self.index += 1
+    return value
 
 
 class KlidKiksProcessor(object):
@@ -69,15 +82,18 @@ class KlidKiksProcessor(object):
     self.matchers = matchers
 
   def process(self, name, str):
-    str = re.sub(ANNOTATED_STATEMENT, lambda x: self.process_match(x), str)
+    counter = Counter()
+    str = re.sub(ANNOTATED_STATEMENT, lambda x: self.process_match(x, counter), str)
     return ('#line %i "%s" \n' % (1, name)) + str
   
-  def process_match(self, match):
+  def process_match(self, match, counter):
     preamble = match.group(1)
     tag = match.group(2)
     stmt = match.group(3)
     list = self.matchers[tag]
+    index = counter.next()
     for matcher in list:
-      replacement = matcher.replace(stmt)
-      if replacement: return preamble + replacement + ';'
+      replacement = matcher.replace(stmt, index)
+      if replacement:
+        return preamble + replacement + ';'
     return preamble + stmt + ';'

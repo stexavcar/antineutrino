@@ -76,7 +76,7 @@ public:
    * objecs.
    */
   bool is_key();
-  
+
   /**
    * Returns true if this object can be compared with other objects,
    * and equality of this object does not involve testing other
@@ -186,7 +186,7 @@ DEFINE_REF_CLASS(Object);
 class Cell : public Object {
 public:
   eCellFields(DECLARE_OBJECT_FIELD, 0)
-  
+
   static const uword kValueOffset = Object::kHeaderSize;
   static const uword kSize        = kValueOffset + kPointerSize;
 };
@@ -223,7 +223,7 @@ public:
      * safe to replace an open forwarder with its value.
      */
     fwOpen,
-    
+
     /**
      * A closed forwarder is one whose value is fixed.  It is safe
      * to replace it with its value, and indeed the garbage collector
@@ -306,7 +306,7 @@ public:
   // not doing that is that when suspending the stack on stack
   // overflow we need room to store these, and reserving room for
   // one activation would waste more space than these extra fields.
-  
+
   DECLARE_FIELD(word*, top_marker);
   DECLARE_FIELD(Status, status);
   inline word* bottom();
@@ -514,7 +514,7 @@ public:
   inline array<Value*> buffer();
   inline Value *&get(uword index);
   inline void set(uword index, Value *value);
-  
+
   inline bool is_empty();
   bool tuple_equals(Tuple *that);
 
@@ -765,9 +765,18 @@ public:
   static inline AllocationFailed *make(int size);
 };
 
+#define eInternalErrorTypes(VISIT)                                   \
+  VISIT(FatalError)
+
 class InternalError : public Signal {
 public:
-  static inline InternalError *make(int code);
+  enum Type {
+    __first_internal_error = -1
+#define DECLARE_INTERNAL_ERROR_TYPE(Name) , ie##Name
+eInternalErrorTypes(DECLARE_INTERNAL_ERROR_TYPE)
+#undef DECLARE_INTERNAL_ERROR_TYPE
+  };
+  static inline InternalError *make(Type type);
 };
 
 class TypeMismatch : public Signal {

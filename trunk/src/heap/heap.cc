@@ -42,9 +42,7 @@ Data *Heap::allocate_layout(InstanceType instance_type) {
 
 Data *Heap::new_lambda(uword argc, uword max_stack_height,
     Value *code, Value *constant_pool, Value *tree, Context *context) {
-  Data *val = allocate_object(Lambda::kSize, roots().lambda_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Lambda *result = cast<Lambda>(val);
+  @alloc Lambda *result = allocate_object(Lambda::kSize, roots().lambda_layout());
   result->set_argc(argc);
   result->set_max_stack_height(max_stack_height);
   result->set_code(code);
@@ -57,18 +55,14 @@ Data *Heap::new_lambda(uword argc, uword max_stack_height,
 }
 
 Data *Heap::new_cell(Value *value) {
-  Data *val = allocate_object(Cell::kSize, roots().cell_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Cell *result = cast<Cell>(val);
+  @alloc Cell *result = allocate_object(Cell::kSize, roots().cell_layout());
   result->set_value(value);
   IF_PARANOID(result->validate());
   return result;
 }
 
 Data *Heap::new_parameters(Smi *position_count, Tuple *params) {
-  Data *val = allocate_object(Parameters::kSize, roots().parameters_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Parameters *result = cast<Parameters>(val);
+  @alloc Parameters *result = allocate_object(Parameters::kSize, roots().parameters_layout());
   result->set_position_count(position_count);
   result->set_parameters(params);
   IF_PARANOID(result->validate());
@@ -77,9 +71,7 @@ Data *Heap::new_parameters(Smi *position_count, Tuple *params) {
 
 Data *Heap::new_lambda_expression(Parameters *params, SyntaxTree *body,
     bool is_local) {
-  Data *val = allocate_object(LambdaExpression::kSize, roots().lambda_expression_layout());
-  if (is<AllocationFailed>(val)) return val;
-  LambdaExpression *result = cast<LambdaExpression>(val);
+  @alloc LambdaExpression *result = allocate_object(LambdaExpression::kSize, roots().lambda_expression_layout());
   result->set_parameters(params);
   result->set_body(body);
   result->set_is_local(is_local ? static_cast<Bool*>(roots().thrue()) : static_cast<Bool*>(roots().fahlse()));
@@ -88,35 +80,27 @@ Data *Heap::new_lambda_expression(Parameters *params, SyntaxTree *body,
 }
 
 Data *Heap::new_literal_expression(Value *value) {
-  Data *val = allocate_object(LiteralExpression::kSize, roots().literal_expression_layout());
-  if (is<AllocationFailed>(val)) return val;
-  LiteralExpression *result = cast<LiteralExpression>(val);
+  @alloc LiteralExpression *result = allocate_object(LiteralExpression::kSize, roots().literal_expression_layout());
   result->set_value(value);
   IF_PARANOID(result->validate());
   return result;
 }
 
 Data *Heap::new_return_expression(SyntaxTree *value) {
-  Data *val = allocate_object(ReturnExpression::kSize, roots().return_expression_layout());
-  if (is<AllocationFailed>(val)) return val;
-  ReturnExpression *result = cast<ReturnExpression>(val);
+  @alloc ReturnExpression *result = allocate_object(ReturnExpression::kSize, roots().return_expression_layout());
   result->set_value(value);
   IF_PARANOID(result->validate());
   return result;
 }
 
 Data *Heap::allocate_lambda(uword argc) {
-  Data *val = allocate_object(Lambda::kSize, roots().lambda_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Lambda *result = cast<Lambda>(val);
+  @alloc Lambda *result = allocate_object(Lambda::kSize, roots().lambda_layout());
   result->set_argc(argc);
   return result;
 }
 
 Data *Heap::allocate_channel() {
-  Data *val = allocate_object(Channel::kSize, roots().channel_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Channel *result = cast<Channel>(val);
+  @alloc Channel *result = allocate_object(Channel::kSize, roots().channel_layout());
   result->set_is_connected(roots().fahlse());
   result->set_proxy(NULL);
   return result;
@@ -143,16 +127,7 @@ Data *Heap::allocate_empty_layout(InstanceType instance_type) {
 }
 
 
-Data *Heap::new_context() {
-  Data *val = allocate_object(Context::kSize, roots().context_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Context *result = cast<Context>(val);
-  IF_PARANOID(result->validate());
-  return result;
-}
-
-
-Data *Heap::new_layout(InstanceType instance_type, 
+Data *Heap::new_layout(InstanceType instance_type,
     uword instance_field_count, Immediate *protocol, Tuple *methods) {
   Data *val = allocate_layout(instance_type);
   if (is<AllocationFailed>(val)) return val;
@@ -162,13 +137,19 @@ Data *Heap::new_layout(InstanceType instance_type,
   result->set_protocol(protocol);
   result->set_methods(methods);
   IF_PARANOID(result->validate());
-  return result;  
+  return result;
 }
 
+
+Data *Heap::new_context() {
+  @alloc Context *result = allocate_object(Context::kSize, roots().context_layout());
+  IF_PARANOID(result->validate());
+  return result;
+}
+
+
 Data *Heap::new_protocol(Tuple *methods, Value *super, Immediate *name) {
-  Data *val = allocate_object(Protocol::kSize, roots().protocol_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Protocol *result = cast<Protocol>(val);
+  @alloc Protocol *result = allocate_object(Protocol::kSize, roots().protocol_layout());
   result->set_methods(methods);
   result->set_super(super);
   result->set_name(name);
@@ -181,9 +162,7 @@ Data *Heap::allocate_empty_protocol() {
 }
 
 Data *Heap::new_method(Selector *selector, Signature *signature, Lambda *lambda) {
-  Data *val = allocate_object(Method::kSize, roots().method_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Method *result = cast<Method>(val);
+  @alloc Method *result = allocate_object(Method::kSize, roots().method_layout());
   result->set_selector(selector);
   result->set_signature(signature);
   result->set_lambda(lambda);
@@ -192,9 +171,7 @@ Data *Heap::new_method(Selector *selector, Signature *signature, Lambda *lambda)
 }
 
 Data *Heap::new_signature(Tuple *parameters) {
-  Data *val = allocate_object(Signature::kSize, roots().signature_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Signature *result = cast<Signature>(val);
+  @alloc Signature *result = allocate_object(Signature::kSize, roots().signature_layout());
   result->set_parameters(parameters);
   IF_PARANOID(result->validate());
   return result;
@@ -202,9 +179,7 @@ Data *Heap::new_signature(Tuple *parameters) {
 
 Data *Heap::new_string(string value) {
   uword size = String::size_for(value.length());
-  Data *val = allocate_object(size, roots().string_layout());
-  if (is<AllocationFailed>(val)) return val;
-  String *result = cast<String>(val);
+  @alloc String *result = allocate_object(size, roots().string_layout());
   result->set_length(value.length());
   for (uword i = 0; i < value.length(); i++)
     result->set(i, value[i]);
@@ -215,9 +190,7 @@ Data *Heap::new_string(string value) {
 
 Data *Heap::new_stack(uword height) {
   uword size = Stack::size_for(height);
-  Data *val = allocate_object(size, roots().stack_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Stack *result = cast<Stack>(val);
+  @alloc Stack *result = allocate_object(size, roots().stack_layout());
   result->set_height(height);
   result->set_fp(0);
   result->set_sp(0);
@@ -229,24 +202,18 @@ Data *Heap::new_stack(uword height) {
 }
 
 Data *Heap::new_task(Architecture &arch) {
-  Data *stack_val = new_stack(Stack::kInitialHeight);
-  if (is<AllocationFailed>(stack_val)) return stack_val;
-  Data *task_val = allocate_object(Task::kSize, roots().task_layout());
-  if (is<AllocationFailed>(task_val)) return task_val;
-  Task *result = cast<Task>(task_val);
-  result->set_stack(cast<Stack>(stack_val));
+  @alloc Stack *stack = new_stack(Stack::kInitialHeight);
+  @alloc Task *result = allocate_object(Task::kSize, roots().task_layout());
+  result->set_stack(stack);
   result->set_caller(roots().nuhll());
   IF_PARANOID(result->validate());
-  Signal *init_sig = arch.initialize_task(result);
-  if (!is<Success>(init_sig)) return init_sig;
+  @try arch.initialize_task(result);
   return result;
 }
 
 Data *Heap::new_string(uword length) {
   uword size = String::size_for(length);
-  Data *val = allocate_object(size, roots().string_layout());
-  if (is<AllocationFailed>(val)) return val;
-  String *result = cast<String>(val);
+  @alloc String *result = allocate_object(size, roots().string_layout());
   result->set_length(length);
   ASSERT_EQ(size, result->size_in_memory());
   IF_PARANOID(result->validate());
@@ -254,9 +221,7 @@ Data *Heap::new_string(uword length) {
 }
 
 Data *Heap::new_code(uword size) {
-  Data *val = new_abstract_buffer(sizeof(uint16_t) * size, roots().code_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Code *result = cast<Code>(val);
+  @alloc Code *result = new_abstract_buffer(sizeof(uint16_t) * size, roots().code_layout());
   IF_PARANOID(result->validate());
   return result;
 }
@@ -267,9 +232,7 @@ Data *Heap::new_buffer(uword total_size) {
 
 Data *Heap::new_abstract_buffer(uword byte_count, Layout *type) {
   uword size = AbstractBuffer::size_for(byte_count);
-  Data *val = allocate_object(size, type);
-  if (is<AllocationFailed>(val)) return val;
-  AbstractBuffer *result = cast<AbstractBuffer>(val);
+  @alloc AbstractBuffer *result = allocate_object(size, type);
   result->set_size<uint8_t>(byte_count);
   ASSERT_EQ(size, result->size_in_memory());
   IF_PARANOID(result->validate());
@@ -278,9 +241,7 @@ Data *Heap::new_abstract_buffer(uword byte_count, Layout *type) {
 
 Data *Heap::new_tuple(uword length) {
   uword size = Tuple::size_for(length);
-  Data *val = allocate_object(size, roots().tuple_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Tuple *result = cast<Tuple>(val);
+  @alloc Tuple *result = allocate_object(size, roots().tuple_layout());
   result->set_length(length);
   for (uword i = 0; i < length; i++)
     result->set(i, roots().nuhll());
@@ -291,9 +252,7 @@ Data *Heap::new_tuple(uword length) {
 
 Data *Heap::new_array(uword length) {
   uword size = Array::size_for(length);
-  Data *val = allocate_object(size, roots().array_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Array *result = cast<Array>(val);
+  @alloc Array *result = allocate_object(size, roots().array_layout());
   result->set_length(length);
   for (uword i = 0; i < length; i++)
     result->set(i, roots().nuhll());
@@ -303,9 +262,7 @@ Data *Heap::new_array(uword length) {
 }
 
 Data *Heap::new_symbol(Value *name) {
-  Data *val = allocate_object(Symbol::kSize, roots().symbol_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Symbol *result = cast<Symbol>(val);
+  @alloc Symbol *result = allocate_object(Symbol::kSize, roots().symbol_layout());
   result->set_name(name);
   result->set_data(roots().nuhll());
   IF_PARANOID(result->validate());
@@ -313,9 +270,7 @@ Data *Heap::new_symbol(Value *name) {
 }
 
 Data *Heap::new_local_variable(Symbol *symbol) {
-  Data *val = allocate_object(LocalVariable::kSize, roots().local_variable_layout());
-  if (is<AllocationFailed>(val)) return val;
-  LocalVariable *result = cast<LocalVariable>(val);
+  @alloc LocalVariable *result = allocate_object(LocalVariable::kSize, roots().local_variable_layout());
   result->set_symbol(symbol);
   IF_PARANOID(result->validate());
   return result;
@@ -326,15 +281,12 @@ Data *Heap::new_singleton(Layout *type) {
 }
 
 Data *Heap::new_hash_map() {
-  Data *table_val = new_tuple(0);
-  if (is<AllocationFailed>(table_val)) return table_val;
-  return new_hash_map(cast<Tuple>(table_val));
+  @alloc Tuple *table = new_tuple(0);
+  return new_hash_map(table);
 }
 
 Data *Heap::new_hash_map(Tuple *table) {
-  Data *val = allocate_object(HashMap::kSize, roots().hash_map_layout());
-  if (is<AllocationFailed>(val)) return val;
-  HashMap *result = cast<HashMap>(val);
+  @alloc HashMap *result = allocate_object(HashMap::kSize, roots().hash_map_layout());
   result->set_table(table);
   IF_PARANOID(result->validate());
   return result;
@@ -344,9 +296,7 @@ Data *Heap::new_instance(Layout *layout) {
   ASSERT_EQ(tInstance, layout->instance_type());
   uword field_count = layout->instance_field_count();
   uword size = Instance::size_for(field_count);
-  Data *val = allocate_object(size, layout);
-  if (is<AllocationFailed>(val)) return val;
-  Instance *result = cast<Instance>(val);
+  @alloc Instance *result = allocate_object(size, layout);
   for (uword i = 0; i < field_count; i++)
     result->set_field(i, roots().vhoid());
   IF_PARANOID(result->validate());
@@ -354,9 +304,7 @@ Data *Heap::new_instance(Layout *layout) {
 }
 
 Data *Heap::new_selector(Immediate *name, Smi *argc, Bool *is_accessor) {
-  Data *val = allocate_object(Selector::kSize, roots().selector_layout());
-  if (is<AllocationFailed>(val)) return val;
-  Selector *result = cast<Selector>(val);
+  @alloc Selector *result = allocate_object(Selector::kSize, roots().selector_layout());
   result->set_name(name);
   result->set_argc(argc);
   result->set_keywords(roots().empty_tuple());
@@ -369,16 +317,12 @@ Data *Heap::new_forwarder(Forwarder::Type type, Value *target) {
   // Right now the only kind of forwarder that makes any sense are
   // open ones.
   ASSERT_EQ(Forwarder::fwOpen, type);
-  Data *val = new_forwarder_descriptor(type, target);
-  if (is<AllocationFailed>(val)) return val;
-  ForwarderDescriptor *desc = cast<ForwarderDescriptor>(val);
+  @alloc ForwarderDescriptor *desc = new_forwarder_descriptor(type, target);
   return Forwarder::to(desc);
 }
 
 Data *Heap::new_forwarder_descriptor(Forwarder::Type type, Value *target) {
-  Data *val = allocate_object(ForwarderDescriptor::kSize, roots().forwarder_descriptor_layout());
-  if (is<AllocationFailed>(val)) return val;
-  ForwarderDescriptor *result = cast<ForwarderDescriptor>(val);
+  @alloc ForwarderDescriptor *result = allocate_object(ForwarderDescriptor::kSize, roots().forwarder_descriptor_layout());
   result->set_raw_type(type);
   result->set_target(target);
   IF_PARANOID(result->validate());

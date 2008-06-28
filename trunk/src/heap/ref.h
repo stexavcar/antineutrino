@@ -7,7 +7,9 @@
 
 namespace neutrino {
 
+
 // --- R e f   S c o p e ---
+
 
 class ref_block {
 public:
@@ -18,6 +20,7 @@ private:
   Value *entries_[kSize];
 };
 
+
 class ref_scope_info {
 public:
   inline ref_scope_info();
@@ -25,6 +28,7 @@ public:
   Value **next_cell;
   Value **limit;
 };
+
 
 /**
  * A scope for allocating new refs.
@@ -40,16 +44,39 @@ private:
 };
 
 
+class base_stack_ref_block {
+public:
+  inline base_stack_ref_block(RefStack &refs);
+  inline ~base_stack_ref_block();
+private:
+  RefStack &refs_;
+  int count_;
+  base_stack_ref_block *prev_;
+};
+
+
+template <uword size>
+class stack_ref_block : public base_stack_ref_block {
+public:
+  inline stack_ref_block(RefStack &refs) : base_stack_ref_block(refs) { }
+private:
+  Value *entries_[size];
+};
+
+
 /**
  * A stack of references.
  */
 class RefStack {
 public:
   RefStack();
-  
+
   template <class C> inline ref<C> new_ref(C *value);
   template <class C> inline persistent<C> new_persistent(C *obj);
-  
+
+  base_stack_ref_block *top() { return top_; }
+  void set_top(base_stack_ref_block *value) { top_ = value; }
+
 private:
   friend class ref_iterator;
   friend class persistent_iterator;
@@ -61,15 +88,17 @@ private:
   void shrink();
   Value **grow();
 
+  base_stack_ref_block *top_;
+
   ref_scope_info &current() { return current_; }
   ref_scope_info current_;
-  
+
   list_buffer<ref_block*> &block_stack() { return block_stack_; }
   list_buffer<ref_block*> block_stack_;
   list_buffer<persistent_cell*> &persistent_list() { return persistent_list_; }
   list_buffer<persistent_cell*> persistent_list_;
   ref_block *spare_block() { return spare_block_; }
-  ref_block *spare_block_;  
+  ref_block *spare_block_;
 };
 
 

@@ -643,7 +643,7 @@ AllocationFailed *AllocationFailed::make(int size) {
   return cast<AllocationFailed>(result);
 }
 
-InternalError *InternalError::make(int code) {
+InternalError *InternalError::make(InternalError::Type code) {
   Signal *result = ValuePointer::tag_as_signal(sInternalError, code);
   return cast<InternalError>(result);
 }
