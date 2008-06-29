@@ -7,11 +7,11 @@ namespace neutrino {
 
 class Compiler {
 public:
-  static Option<Lambda> compile(Runtime &runtime, ref<LambdaExpression> tree,
+  static maybe<Lambda> compile(Runtime &runtime, ref<LambdaExpression> tree,
       ref<Context> context);
-  static Option<Lambda> compile(Runtime &runtime, ref<SyntaxTree> tree,
+  static maybe<Lambda> compile(Runtime &runtime, ref<SyntaxTree> tree,
       ref<Context> context);
-  static Option<Lambda> compile(Runtime &runtime, ref<Lambda> lambda,
+  static maybe<Lambda> compile(Runtime &runtime, ref<Lambda> lambda,
       ref<Method> holder);
 };
 

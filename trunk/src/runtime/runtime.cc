@@ -33,11 +33,11 @@ Signal *Runtime::start() {
   if (is<Nothing>(entry_point)) {
     Conditions::get().error_occurred("Error: no entry point '%' was defined.",
         elms(main_name));
-    return InternalError::make(InternalError::ieFatalError);
+    return FatalError::make(FatalError::feUnexpected);
   } else if (!is<Lambda>(entry_point)) {
     Conditions::get().error_occurred("Entry point '%' is not a function.",
         elms(main_name));
-    return InternalError::make(InternalError::ieFatalError);
+    return FatalError::make(FatalError::feUnexpected);
   }
   ref<Lambda> lambda = protect(cast<Lambda>(entry_point));
   @check ref<Task> task = factory().new_task(architecture());
@@ -103,12 +103,12 @@ Signal *Runtime::load_image(Image &image) {
   image.initialize(info);
   if (info.has_error()) {
     report_load_error(info.status());
-    return InternalError::make(InternalError::ieFatalError);
+    return FatalError::make(FatalError::feUnexpected);
   }
   Data *roots_val = image.load(info);
   if (info.has_error()) {
     report_load_error(info.status());
-    return InternalError::make(InternalError::ieFatalError);
+    return FatalError::make(FatalError::feUnexpected);
   } else {
     ref_block<> protect(refs());
     Tuple *roots = cast<Tuple>(roots_val);
@@ -137,7 +137,7 @@ Signal *Runtime::install_object(ref<Object> root, ref<Object> changes) {
       return install_layout(cast<Layout>(root), cast<Protocol>(changes));
     default:
       UNHANDLED(InstanceType, type);
-      return InternalError::make(InternalError::ieFatalError);
+      return FatalError::make(FatalError::feUnexpected);
   }
 }
 
@@ -170,7 +170,7 @@ Signal *Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
   if (!root->is_empty()) {
     scoped_string str(changes.name()->to_string());
     Conditions::get().error_occurred("Root class % is not empty.", elms(*str));
-    return InternalError::make(InternalError::ieFatalError);
+    return FatalError::make(FatalError::feUnexpected);
   }
   root->set_protocol(*changes);
   ASSERT(!root->is_empty());

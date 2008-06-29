@@ -18,7 +18,7 @@ Roots::Roots() {
 
 Signal *Roots::initialize(Heap& heap) {
   // Complicated roots
-  Allocation<Layout> layout_layout_val = heap.allocate_layout(tLayout);
+  allocation<Layout> layout_layout_val = heap.allocate_layout(tLayout);
   if (layout_layout_val.has_failed()) return layout_layout_val.signal();
   Layout *layout_layout_obj = reinterpret_cast<Layout*>(layout_layout_val.data());
   layout_layout_obj->set_layout(layout_layout_obj);
@@ -27,7 +27,7 @@ Signal *Roots::initialize(Heap& heap) {
   // All the simple roots get allocated the same way, which is what
   // makes them simple.
 #define ALLOCATE_ROOT(n, Type, name, Name, allocator)                \
-  Allocation<Type> name##_val = heap.allocator;                \
+  allocation<Type> name##_val = heap.allocator;                \
   if (name##_val.has_failed()) return name##_val.signal();           \
   name() = name##_val.value();
 eSimpleRoots(ALLOCATE_ROOT)

@@ -235,7 +235,7 @@ Data *Builtins::protocol_new(BuiltinArguments &args) {
 Data *Builtins::tuple_eq(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   @check Tuple *self = to<Tuple>(args.self());
-  Option<Tuple> other_opt = to<Tuple>(args[0]);
+  maybe<Tuple> other_opt = to<Tuple>(args[0]);
   if (other_opt.has_failed()) return args.runtime().roots().fahlse();
   Tuple *other = other_opt.value();
   if (self == other) return args.runtime().roots().thrue();
@@ -416,7 +416,7 @@ Data *Builtins::__type__##_new(BuiltinArguments &args) {             \
   int __offset__ = 0;                                                \
   use(__offset__);                                                   \
   e##Type##Fields(FETCH_ARG, 0)                                      \
-  Allocation<Type> __value__ = args.runtime().heap().allocate_##__type__(); \
+  allocation<Type> __value__ = args.runtime().heap().allocate_##__type__(); \
   if (__value__.has_failed()) return __value__.signal();             \
   Type *__result__ = __value__.value();                              \
   e##Type##Fields(SET_FIELD, 0)                                      \

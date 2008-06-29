@@ -225,7 +225,7 @@ eSignalTypes(DEFINE_SIGNAL_QUERY)
  * This is the slow case in the 'to' function.  It gets called if the
  * object is not immediately an instance of C.
  */
-template <class C> Option<C> convert_object(Value *obj) {
+template <class C> maybe<C> convert_object(Value *obj) {
   ASSERT(!is<C>(obj));
   if (is<Forwarder>(obj)) {
     return to<C>(cast<Forwarder>(obj)->descriptor()->target());
@@ -236,9 +236,9 @@ template <class C> Option<C> convert_object(Value *obj) {
 
 #define DEFINE_CONVERTER(n, Name, info)                              \
   template <>                                                        \
-  inline Option<Name> to<Name>(Value *val) {                         \
+  inline maybe<Name> to<Name>(Value *val) {                         \
     return is<Name>(val)                                             \
-        ? Option<Name>(cast<Name>(val))                              \
+        ? maybe<Name>(cast<Name>(val))                              \
         : convert_object<Name>(val);                                 \
   }
 eNormalTypes(DEFINE_CONVERTER)
@@ -624,25 +624,25 @@ DEFINE_ACCESSORS(uword, Layout, instance_field_count, InstanceFieldCount)
 // -------------------
 
 template <class T, class F>
-bool Option<T, F>::has_failed() {
+bool maybe<T, F>::has_failed() {
   return is<F>(data_);
 }
 
 template <class T, class F>
-T *Option<T, F>::value() {
+T *maybe<T, F>::value() {
   return cast<T>(data_);
 }
 
 template <class T, class F>
-F *Option<T, F>::signal() {
+F *maybe<T, F>::signal() {
   return cast<F>(data_);
 }
 
 template <class T, class F>
-Option<T, F>::Option(T *value) : data_(value) { }
+maybe<T, F>::maybe(T *value) : data_(value) { }
 
 template <class T, class F>
-Option<T, F>::Option(F *failure) : data_(failure) { }
+maybe<T, F>::maybe(F *failure) : data_(failure) { }
 
 
 // ---------------------
@@ -662,9 +662,9 @@ AllocationFailed *AllocationFailed::make(int size) {
   return cast<AllocationFailed>(result);
 }
 
-InternalError *InternalError::make(InternalError::Type code) {
-  Signal *result = ValuePointer::tag_as_signal(sInternalError, code);
-  return cast<InternalError>(result);
+FatalError *FatalError::make(FatalError::Type code) {
+  Signal *result = ValuePointer::tag_as_signal(sFatalError, code);
+  return cast<FatalError>(result);
 }
 
 TypeMismatch *TypeMismatch::make(InstanceType expected, InstanceType found) {

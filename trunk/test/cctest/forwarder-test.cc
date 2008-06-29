@@ -14,10 +14,10 @@ void Test::simple_forwarder() {
   CHECK_IS(Forwarder, forwarder);
   CHECK_IS(Value, forwarder);
   CHECK(forwarder->descriptor()->target() == empty);
-  Option<Tuple> target_val = to<Tuple>(forwarder);
+  maybe<Tuple> target_val = to<Tuple>(forwarder);
   CHECK_IS(Tuple, target_val.value());
   CHECK(target_val.value() == empty);
-  Option<String> string_val = to<String>(forwarder);
+  maybe<String> string_val = to<String>(forwarder);
   CHECK_IS(TypeMismatch, string_val.signal());
 }
 

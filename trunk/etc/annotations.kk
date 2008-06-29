@@ -2,7 +2,7 @@ def @check ${Type:\w+} \* ${name:[\w_]+} = ${operation:[^;]+}
   KLIDKIKS_CHECK_OBJ(${Type}, ${name}, ${operation})
 
 def @check ref < ${Type:\w+} > ${name:\w+} = ${operation:[^;]+}
-  Option<${Type}> __${name}_opt__ = ${operation};
+  maybe<${Type}> __${name}_opt__ = ${operation};
   if (__${name}_opt__.has_failed()) return __${name}_opt__.signal();
   ref<${Type}> ${name} = protect(__${name}_opt__.value());
 

@@ -65,7 +65,7 @@
 
 #define eSignalTypes(VISIT)                                \
   VISIT(40, AllocationFailed,      0)                      \
-  VISIT(41, InternalError,         0)                      \
+  VISIT(41, FatalError,            0)                      \
   VISIT(42, Nothing,               0)                      \
   VISIT(43, TypeMismatch,          0)                      \
   VISIT(44, StackOverflow,         0)                      \

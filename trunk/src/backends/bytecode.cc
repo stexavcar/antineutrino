@@ -292,7 +292,7 @@ void BytecodeBackend::new_cell() {
 }
 
 
-Option<Code> BytecodeBackend::flush_code() {
+maybe<Code> BytecodeBackend::flush_code() {
   ref_block<> protect(refs());
   @check ref<Code> result = factory().new_code(code().length());
   for (uword i = 0; i < result.length(); i++)
@@ -301,7 +301,7 @@ Option<Code> BytecodeBackend::flush_code() {
 }
 
 
-Option<Tuple> BytecodeBackend::flush_constant_pool() {
+maybe<Tuple> BytecodeBackend::flush_constant_pool() {
   ref_block<> protect(refs());
   @check ref<Tuple> result = factory().new_tuple(pool().length());
   for (uword i = 0; i < result->length(); i++)
@@ -323,7 +323,7 @@ uint16_t BytecodeBackend::constant_pool_index(ref<Value> value) {
 }
 
 
-Option<Method> BytecodeBackend::field_getter(uword index,
+maybe<Method> BytecodeBackend::field_getter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref_block<> protect(refs());
@@ -339,7 +339,7 @@ Option<Method> BytecodeBackend::field_getter(uword index,
 }
 
 
-Option<Method> BytecodeBackend::field_setter(uword index,
+maybe<Method> BytecodeBackend::field_setter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref_block<> protect(refs());

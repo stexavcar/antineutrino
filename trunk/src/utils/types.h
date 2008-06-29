@@ -73,6 +73,7 @@ class DoOnExpression;
 class ExtendedValueDTable;
 class Factory;
 class False;
+class FatalError;
 class ForwarderDescriptor;
 class GarbageCollectionMonitor;
 class Heap;
@@ -131,47 +132,60 @@ class AbstractEnumInfo;
 
 
 template <class Type, class Failure = Signal>
-class Option {
+class maybe {
 public:
-  inline Option(Type *value);
-  inline Option(Failure *failure);
+  inline maybe(Type *value);
+  inline maybe(Failure *failure);
+  template <class T, class F>
+  inline maybe(const maybe<T, F> &other) : data_(other.data()) {
+    TYPE_CHECK(Type*, T*);
+    TYPE_CHECK(Failure*, F*);
+  }
   inline bool has_failed();
   inline Type *value();
   inline Failure *signal();
-  inline Data *data() { return data_; }
+  inline Data *data() const { return data_; }
 private:
   Data *data_;
 };
 
 
 template <class T>
-class Allocation : public Option<T, AllocationFailed> {
+class allocation : public maybe<T, AllocationFailed> {
 public:
-  Allocation(T *value) : Option<T, AllocationFailed>(value) { }
-  Allocation(AllocationFailed *value) : Option<T, AllocationFailed>(value) { }
+  allocation(T *value) : maybe<T, AllocationFailed>(value) { }
+  allocation(AllocationFailed *value) : maybe<T, AllocationFailed>(value) { }
+};
+
+
+template <class T>
+class probably : public maybe<T, FatalError> {
+public:
+  probably(T *value) : maybe<T, FatalError>(value) { }
+  probably(FatalError *value) : maybe<T, FatalError>(value) { }
 };
 
 
 #define KLIDKIKS_CHECK_OBJ(__Type__, __name__, __operation__)        \
-  Option<__Type__> __##__name__##_opt__ = __operation__;             \
+  maybe<__Type__> __##__name__##_opt__ = __operation__;              \
   if (__##__name__##_opt__.has_failed()) return __##__name__##_opt__.signal(); \
   __Type__* __name__ = cast<__Type__>(__##__name__##_opt__.value());
 
 
 #define KLIDKIKS_ALLOC(__Type__, __name__, __operation__)            \
-  Allocation<__Type__> __##__name__##_alloc__ = __operation__;       \
+  allocation<__Type__> __##__name__##_alloc__ = __operation__;       \
   if (__##__name__##_alloc__.has_failed()) return __##__name__##_alloc__.signal(); \
   __Type__ *__name__ = __##__name__##_alloc__.value();
 
 
 #define KLIDKIKS_OBJALLOC(__Type__, __name__, __operation__)         \
-  Allocation<Object> __##__name__##_alloc__ = __operation__;         \
+  allocation<Object> __##__name__##_alloc__ = __operation__;         \
   if (__##__name__##_alloc__.has_failed()) return __##__name__##_alloc__.signal(); \
   __Type__ *__name__ = cast<__Type__>(__##__name__##_alloc__.value());
 
 
 #define KLIDKIKS_BUFALLOC(__Type__, __name__, __operation__)         \
-  Allocation<AbstractBuffer> __##__name__##_alloc__ = __operation__; \
+  allocation<AbstractBuffer> __##__name__##_alloc__ = __operation__; \
   if (__##__name__##_alloc__.has_failed()) return __##__name__##_alloc__.signal(); \
   __Type__ *__name__ = cast<__Type__>(__##__name__##_alloc__.value());
 

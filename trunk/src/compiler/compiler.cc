@@ -24,7 +24,7 @@ class Scope;
 class CompileSession {
 public:
   CompileSession(Runtime &runtime, ref<Context> context);
-  Option<Lambda> compile(ref<LambdaExpression> that, CodeGenerator &enclosing);
+  maybe<Lambda> compile(ref<LambdaExpression> that, CodeGenerator &enclosing);
   Signal *compile(ref<Lambda> tree, ref<Method> holder, CodeGenerator *enclosing);
   Signal *compile(ref<Lambda> tree, ref<Method> holder);
   Runtime &runtime() { return runtime_; }
@@ -339,7 +339,7 @@ void ClosureScope::lookup(ref<Symbol> symbol, Lookup &result) {
 template <class C>
 Signal *Assembler<C>::visit_syntax_tree(ref<SyntaxTree> that) {
   UNHANDLED(InstanceType, that.type());
-  return InternalError::make(InternalError::ieFatalError);
+  return FatalError::make(FatalError::feUnexpected);
 }
 
 template <class C>
@@ -668,7 +668,7 @@ Signal *Assembler<C>::visit_task_expression(ref<TaskExpression> that) {
 template <class C>
 Signal *Assembler<C>::visit_super_expression(ref<SuperExpression> that) {
   UNREACHABLE();
-  return InternalError::make(InternalError::ieFatalError);
+  return FatalError::make(FatalError::feUnexpected);
 }
 
 
@@ -780,21 +780,21 @@ template <class C>
 Signal *Assembler<C>::visit_on_clause(ref<OnClause> that) {
   // This type of node is handled by the enclosing do-on expression.
   UNREACHABLE();
-  return InternalError::make(InternalError::ieFatalError);
+  return FatalError::make(FatalError::feUnexpected);
 }
 
 
 template <class C>
 Signal *Assembler<C>::visit_arguments(ref<Arguments> that) {
   UNREACHABLE();
-  return InternalError::make(InternalError::ieFatalError);
+  return FatalError::make(FatalError::feUnexpected);
 }
 
 
 template <class C>
 Signal *Assembler<C>::visit_parameters(ref<Parameters> that) {
   UNREACHABLE();
-  return InternalError::make(InternalError::ieFatalError);
+  return FatalError::make(FatalError::feUnexpected);
 }
 
 
@@ -833,7 +833,7 @@ CompileSession::CompileSession(Runtime &runtime, ref<Context> context)
     : runtime_(runtime), context_(context) { }
 
 
-Option<Lambda> Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
+maybe<Lambda> Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
   ref<Smi> zero = protect(Smi::from_int(0));
@@ -843,7 +843,7 @@ Option<Lambda> Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
 }
 
 
-Option<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
+maybe<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
   @check ref<ReturnExpression> ret = runtime.factory().new_return_expression(tree);
@@ -860,14 +860,14 @@ Option<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
 }
 
 
-Option<Lambda> Compiler::compile(Runtime &runtime, ref<Lambda> lambda, ref<Method> holder) {
+maybe<Lambda> Compiler::compile(Runtime &runtime, ref<Lambda> lambda, ref<Method> holder) {
   ref_block<> protect(runtime.refs());
   CompileSession session(runtime, protect(lambda.context()));
   return session.compile(lambda, holder);
 }
 
 
-Option<Lambda> CompileSession::compile(ref<LambdaExpression> that,
+maybe<Lambda> CompileSession::compile(ref<LambdaExpression> that,
     CodeGenerator &enclosing) {
   ref_block<> protect(runtime().refs());
   ref<Smi> zero = protect(Smi::from_int(0));

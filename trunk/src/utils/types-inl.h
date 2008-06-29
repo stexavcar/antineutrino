@@ -24,7 +24,7 @@ template <class C> inline bool gc_safe_is(Data *val);
 #endif
 
 template <class C>
-inline Option<C> to(Value *obj);
+inline maybe<C> to(Value *obj);
 
 }
 

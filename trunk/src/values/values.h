@@ -621,7 +621,7 @@ public:
   DECLARE_FIELD(uword, max_stack_height);
   eLambdaFields(DECLARE_OBJECT_FIELD, 0)
 
-  Allocation<Lambda> clone(Heap &heap);
+  allocation<Lambda> clone(Heap &heap);
   void ensure_compiled(Runtime &runtime, Method *holder);
 
   static const uword kArgcOffset           = Object::kHeaderSize;
@@ -712,7 +712,7 @@ public:
   eLayoutFields(DECLARE_OBJECT_FIELD, 0)
 
   bool is_empty();
-  Allocation<Layout> clone(Heap &heap);
+  allocation<Layout> clone(Heap &heap);
 
   IF_DEBUG(static uword tag_of(Data *value));
   static string name_for(InstanceType type);
@@ -758,18 +758,18 @@ public:
   static inline AllocationFailed *make(int size);
 };
 
-#define eInternalErrorTypes(VISIT)                                   \
-  VISIT(FatalError) VISIT(OutOfMemory)
+#define eFatalErrorTypes(VISIT)                                      \
+  VISIT(Unexpected) VISIT(OutOfMemory)
 
-class InternalError : public Signal {
+class FatalError : public Signal {
 public:
   enum Type {
-    __first_internal_error = -1
-#define DECLARE_INTERNAL_ERROR_TYPE(Name) , ie##Name
-eInternalErrorTypes(DECLARE_INTERNAL_ERROR_TYPE)
+    __first_fatal_error = -1
+#define DECLARE_INTERNAL_ERROR_TYPE(Name) , fe##Name
+eFatalErrorTypes(DECLARE_INTERNAL_ERROR_TYPE)
 #undef DECLARE_INTERNAL_ERROR_TYPE
   };
-  static inline InternalError *make(Type type);
+  static inline FatalError *make(Type type);
 };
 
 class TypeMismatch : public Signal {

@@ -426,7 +426,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
     case ocLoadField: {
       uint16_t index = code[pc + 1];
       uint16_t argc = code[pc + 2];
-      Option<Instance> self = to<Instance>(frame.self(argc));
+      maybe<Instance> self = to<Instance>(frame.self(argc));
       Value *value = self.value()->get_field(index);
       frame.push(value);
       pc += OpcodeInfo<ocLoadField>::kSize;
@@ -436,7 +436,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
       uint16_t index = code[pc + 1];
       uint16_t argc = code[pc + 2];
       Value *value = frame[0];
-      Option<Instance> self = to<Instance>(frame.self(argc));
+      maybe<Instance> self = to<Instance>(frame.self(argc));
       self.value()->set_field(index, value);
       pc += OpcodeInfo<ocStoreField>::kSize;
       break;

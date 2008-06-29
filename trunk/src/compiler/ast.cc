@@ -8,7 +8,7 @@ namespace neutrino {
 // --- C o m p i l i n g ---
 // -------------------------
 
-Option<Protocol> ref_traits<ProtocolExpression>::compile(Runtime &runtime,
+maybe<Protocol> ref_traits<ProtocolExpression>::compile(Runtime &runtime,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
   ref<ProtocolExpression> self = open(this);
@@ -24,7 +24,7 @@ Option<Protocol> ref_traits<ProtocolExpression>::compile(Runtime &runtime,
   return factory.new_protocol(methods, protect(super()), protect(name()));
 }
 
-Option<Method> ref_traits<MethodExpression>::compile(Runtime &runtime,
+maybe<Method> ref_traits<MethodExpression>::compile(Runtime &runtime,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
   ref<MethodExpression> self = open(this);
@@ -333,7 +333,7 @@ eAcceptVisitorCases(MAKE_VISIT)
 #undef MAKE_VISIT
   default:
     UNHANDLED(InstanceType, type);
-    return InternalError::make(InternalError::ieFatalError);
+    return FatalError::make(FatalError::feUnexpected);
   }
 }
 
