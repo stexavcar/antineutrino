@@ -142,8 +142,8 @@ plankton::Integer BuilderImpl::new_integer(word value) {
 
 
 plankton::String BuilderImpl::new_string(const char *data, unsigned length) {
-  Data *str = runtime().heap().new_string(string(data, length));
-  return ApiUtils::wrap<plankton::String>(cast<String>(str));
+  String *str = runtime().heap().new_string(string(data, length)).value();
+  return ApiUtils::wrap<plankton::String>(str);
 }
 
 
@@ -154,7 +154,7 @@ plankton::Null BuilderImpl::get_null() {
 
 
 plankton::Value BuilderImpl::new_raw_proxy(unsigned size) {
-  Data *result = cast<Value>(runtime().heap().new_buffer(size));
+  Value *result = runtime().heap().new_buffer(size).value();
   plankton::Value val = ApiUtils::new_value(LiveValueDTableImpl::instance(), result);
   return val;
 }

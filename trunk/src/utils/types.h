@@ -36,6 +36,7 @@ static inline T function_cast(void *obj) {
   return reinterpret_cast<T>(reinterpret_cast<uword>(obj));
 }
 
+
 template <typename T>
 class TypeConsts {
 };
@@ -56,10 +57,12 @@ public:
 namespace neutrino {
 
 class AbstractWatch;
+class AllocationFailed;
 class Architecture;
 class Arguments;
 template <class Config> class Assembler;
 class Layout;
+class LocalVariable;
 class Code;
 class CodeGenerator;
 class Context;
@@ -111,6 +114,7 @@ class True;
 class Value;
 class Visitor;
 class Void;
+class Signal;
 class String;
 class Symbol;
 class SyntaxTree;
@@ -120,6 +124,58 @@ class FTuple;
 
 class AbstractEnumInfo;
 
-}
+
+// -------------------
+// --- O p t i o n ---
+// -------------------
+
+
+template <class Type, class Failure = Signal>
+class Option {
+public:
+  inline Option(Type *value);
+  inline Option(Failure *failure);
+  inline bool has_failed();
+  inline Type *value();
+  inline Failure *signal();
+  inline Data *data() { return data_; }
+private:
+  Data *data_;
+};
+
+
+template <class T>
+class Allocation : public Option<T, AllocationFailed> {
+public:
+  Allocation(T *value) : Option<T, AllocationFailed>(value) { }
+  Allocation(AllocationFailed *value) : Option<T, AllocationFailed>(value) { }
+};
+
+
+#define KLIDKIKS_CHECK_OBJ(__Type__, __name__, __operation__)        \
+  Option<__Type__> __##__name__##_opt__ = __operation__;             \
+  if (__##__name__##_opt__.has_failed()) return __##__name__##_opt__.signal(); \
+  __Type__* __name__ = cast<__Type__>(__##__name__##_opt__.value());
+
+
+#define KLIDKIKS_ALLOC(__Type__, __name__, __operation__)            \
+  Allocation<__Type__> __##__name__##_alloc__ = __operation__;       \
+  if (__##__name__##_alloc__.has_failed()) return __##__name__##_alloc__.signal(); \
+  __Type__ *__name__ = __##__name__##_alloc__.value();
+
+
+#define KLIDKIKS_OBJALLOC(__Type__, __name__, __operation__)         \
+  Allocation<Object> __##__name__##_alloc__ = __operation__;         \
+  if (__##__name__##_alloc__.has_failed()) return __##__name__##_alloc__.signal(); \
+  __Type__ *__name__ = cast<__Type__>(__##__name__##_alloc__.value());
+
+
+#define KLIDKIKS_BUFALLOC(__Type__, __name__, __operation__)         \
+  Allocation<AbstractBuffer> __##__name__##_alloc__ = __operation__; \
+  if (__##__name__##_alloc__.has_failed()) return __##__name__##_alloc__.signal(); \
+  __Type__ *__name__ = cast<__Type__>(__##__name__##_alloc__.value());
+
+
+} // neutrino
 
 #endif // _TYPES

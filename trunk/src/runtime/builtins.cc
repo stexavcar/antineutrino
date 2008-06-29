@@ -73,7 +73,7 @@ Data *Builtins::string_plus(BuiltinArguments &args) {
   @check String *self = to<String>(args.self());
   @check String *that = to<String>(args[0]);
   uword length = self->length() + that->length();
-  @check String *result = args.runtime().heap().new_string(length);
+  @alloc String *result = args.runtime().heap().new_string(length);
   for (uword i = 0; i < self->length(); i++)
     result->set(i, self->get(i));
   for (uword i = 0; i < that->length(); i++)
@@ -86,7 +86,7 @@ Data *Builtins::string_get(BuiltinArguments &args) {
   @check String *self = to<String>(args.self());
   @check Smi *index = to<Smi>(args[0]);
   char c = self->get(index->value());
-  return args.runtime().heap().new_string(string(&c, 1));
+  return args.runtime().heap().new_string(string(&c, 1)).data();
 }
 
 Data *Builtins::is_whitespace(BuiltinArguments &args) {
@@ -193,7 +193,7 @@ Data *Builtins::object_eq(BuiltinArguments &args) {
 Data *Builtins::object_to_string(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
   scoped_string str(args.self()->to_string());
-  return args.runtime().heap().new_string(*str);
+  return args.runtime().heap().new_string(*str).data();
 }
 
 
@@ -207,7 +207,7 @@ Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
   @check ProtocolExpression *raw_expr = to<ProtocolExpression>(args.self());
   ref<ProtocolExpression> expr = protect(raw_expr);
   ref<Context> context = protect(args.lambda()->context());
-  return expr.compile(args.runtime(), context);
+  return expr.compile(args.runtime(), context).data();
 }
 
 
@@ -220,10 +220,10 @@ Data *Builtins::protocol_new(BuiltinArguments &args) {
   Runtime &runtime = args.runtime();
   @check Protocol *protocol = to<Protocol>(args.self());
   if (protocol == runtime.roots().symbol_layout()->protocol()) {
-    return runtime.heap().new_symbol(runtime.roots().vhoid());
+    return runtime.heap().new_symbol(runtime.roots().vhoid()).data();
   } else {
     @alloc Layout *layout = runtime.heap().new_layout(tInstance, 0, protocol, runtime.roots().empty_tuple());
-    return runtime.heap().new_instance(layout);
+    return runtime.heap().new_instance(layout).data();
   }
 }
 
@@ -235,7 +235,9 @@ Data *Builtins::protocol_new(BuiltinArguments &args) {
 Data *Builtins::tuple_eq(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   @check Tuple *self = to<Tuple>(args.self());
-  Data *other = to<Tuple>(args[0]);
+  Option<Tuple> other_opt = to<Tuple>(args[0]);
+  if (other_opt.has_failed()) return args.runtime().roots().fahlse();
+  Tuple *other = other_opt.value();
   if (self == other) return args.runtime().roots().thrue();
   if (is<Nothing>(other))
     return args.runtime().roots().fahlse();
@@ -286,7 +288,7 @@ Data *Builtins::array_get(BuiltinArguments &args) {
 Data *Builtins::new_array(BuiltinArguments &args) {
   ASSERT_EQ(1, args.count());
   @check Smi *size = to<Smi>(args[0]);
-  return args.runtime().heap().new_array(size->value());
+  return args.runtime().heap().new_array(size->value()).data();
 }
 
 Data *Builtins::array_length(BuiltinArguments &args) {
@@ -350,13 +352,13 @@ Data *Builtins::compile_expression(BuiltinArguments &args) {
 
 Data *Builtins::lift(BuiltinArguments &args) {
   Value *value = args[0];
-  return args.runtime().heap().new_literal_expression(value);
+  return args.runtime().heap().new_literal_expression(value).data();
 }
 
 Data *Builtins::process_unquote(BuiltinArguments &args) {
   Immediate *self = deref(args.self());
   if (is<Symbol>(self)) {
-    return args.runtime().heap().new_local_variable(cast<Symbol>(self));
+    return args.runtime().heap().new_local_variable(cast<Symbol>(self)).data();
   } else {
     return self;
   }
@@ -381,7 +383,7 @@ Data *Builtins::channel_send(BuiltinArguments &args) {
 
 Data *Builtins::new_forwarder(BuiltinArguments &args) {
   ASSERT_EQ(0, args.count());
-  return args.runtime().heap().new_forwarder(Forwarder::fwOpen, args.self());
+  return args.runtime().heap().new_forwarder(Forwarder::fwOpen, args.self()).data();
 }
 
 Data *Builtins::set_target(BuiltinArguments &args) {
@@ -404,9 +406,7 @@ Data *Builtins::close(BuiltinArguments &args) {
 // ---------------------------------------
 
 #define FETCH_ARG(Type, __name__, Name, arg)                         \
-    Data *__name__##_val = to<Type>(args[__offset__++]);             \
-    if (is<Signal>(__name__##_val)) return __name__##_val;           \
-    Type *__name__ = cast<Type>(__name__##_val);
+    @check Type *__name__ = to<Type>(args[__offset__++]);
 
 #define SET_FIELD(Type, __name__, Name, arg)                         \
   __result__->set_##__name__(__name__);
@@ -416,9 +416,9 @@ Data *Builtins::__type__##_new(BuiltinArguments &args) {             \
   int __offset__ = 0;                                                \
   use(__offset__);                                                   \
   e##Type##Fields(FETCH_ARG, 0)                                      \
-  Data *__value__ = args.runtime().heap().allocate_##__type__();     \
-  if (is<AllocationFailed>(__value__)) return __value__;             \
-  Type *__result__ = cast<Type>(__value__);                          \
+  Allocation<Type> __value__ = args.runtime().heap().allocate_##__type__(); \
+  if (__value__.has_failed()) return __value__.signal();             \
+  Type *__result__ = __value__.value();                              \
   e##Type##Fields(SET_FIELD, 0)                                      \
   return __result__;                                                 \
 }

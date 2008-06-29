@@ -292,7 +292,7 @@ void BytecodeBackend::new_cell() {
 }
 
 
-Data *BytecodeBackend::flush_code() {
+Option<Code> BytecodeBackend::flush_code() {
   ref_block<> protect(refs());
   @check ref<Code> result = factory().new_code(code().length());
   for (uword i = 0; i < result.length(); i++)
@@ -301,7 +301,7 @@ Data *BytecodeBackend::flush_code() {
 }
 
 
-Data *BytecodeBackend::flush_constant_pool() {
+Option<Tuple> BytecodeBackend::flush_constant_pool() {
   ref_block<> protect(refs());
   @check ref<Tuple> result = factory().new_tuple(pool().length());
   for (uword i = 0; i < result->length(); i++)
@@ -323,7 +323,7 @@ uint16_t BytecodeBackend::constant_pool_index(ref<Value> value) {
 }
 
 
-Data *BytecodeBackend::field_getter(uword index,
+Option<Method> BytecodeBackend::field_getter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref_block<> protect(refs());
@@ -339,7 +339,7 @@ Data *BytecodeBackend::field_getter(uword index,
 }
 
 
-Data *BytecodeBackend::field_setter(uword index,
+Option<Method> BytecodeBackend::field_setter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref_block<> protect(refs());
@@ -440,10 +440,10 @@ Signal *BytecodeArchitecture::initialize_task(Task *task) {
 
 
 Signal *BytecodeArchitecture::setup(Runtime &runtime) {
-  @check Code *code = runtime.heap().new_code(1);
+  @alloc Code *code = runtime.heap().new_code(1);
   code->set(0, ocStackBottom);
   Roots &roots = runtime.roots();
-  @check Lambda *lambda = runtime.heap().new_lambda(0, 0, code,
+  @alloc Lambda *lambda = runtime.heap().new_lambda(0, 0, code,
       roots.empty_tuple(), 0, roots.dummy_context());
   bottom_ = runtime.refs().new_persistent(lambda);
   return Success::make();

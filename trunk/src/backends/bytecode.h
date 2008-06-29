@@ -60,14 +60,14 @@ public:
   void load_cell();
   void new_cell();
 
-  Data *field_getter(uword index,  ref<Selector> selector,
+  Option<Method> field_getter(uword index,  ref<Selector> selector,
       ref<Signature> signature, ref<Context> context);
-  Data *field_setter(uword index,  ref<Selector> selector,
+  Option<Method> field_setter(uword index,  ref<Selector> selector,
       ref<Signature> signature, ref<Context> context);
 
   void initialize() { pool().initialize(); }
-  Data *flush_code();
-  Data *flush_constant_pool();
+  Option<Code> flush_code();
+  Option<Tuple> flush_constant_pool();
 
   uint16_t constant_pool_index(ref<Value> value);
 

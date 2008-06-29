@@ -11,7 +11,7 @@ void Test::handles() {
   ref_block<> protect(refs);
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
-  Tuple *tuple = cast<Tuple>(heap.new_tuple(10));
+  Tuple *tuple = heap.new_tuple(10).value();
   ref<Tuple> tuple_ref = protect(tuple);
   CHECK_EQ(10, tuple_ref->length());
   ref<Value> zero = protect(tuple_ref->get(0));

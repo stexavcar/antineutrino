@@ -1,17 +1,19 @@
 def @check ${Type:\w+} \* ${name:[\w_]+} = ${operation:[^;]+}
-  Data *__${name}_val__ = ${operation};
-  if (is<Signal>(__${name}_val__)) return cast<Signal>(__${name}_val__);
-  ${Type}* ${name} = cast<${Type}>(__${name}_val__);
+  KLIDKIKS_CHECK_OBJ(${Type}, ${name}, ${operation})
 
 def @check ref < ${Type:\w+} > ${name:\w+} = ${operation:[^;]+}
-  Data *__${name}_val__ = ${operation};
-  if (is<Signal>(__${name}_val__)) return cast<Signal>(__${name}_val__);
-  ref<${Type}> ${name} = protect(cast<${Type}>(__${name}_val__));
+  Option<${Type}> __${name}_opt__ = ${operation};
+  if (__${name}_opt__.has_failed()) return __${name}_opt__.signal();
+  ref<${Type}> ${name} = protect(__${name}_opt__.value());
 
 def @alloc ${Type:\w+} \* ${name:\w+} = ${operation:[^;]+}
-  Data *__${name}_val__ = ${operation};
-  if (is<AllocationFailed>(__${name}_val__)) return cast<AllocationFailed>(__${name}_val__);
-  ${Type}* ${name} = cast<${Type}>(__${name}_val__);
+  KLIDKIKS_ALLOC(${Type}, ${name}, ${operation})
+
+def @objalloc ${Type:\w+} \* ${name:\w+} = ${operation:[^;]+}
+  KLIDKIKS_OBJALLOC(${Type}, ${name}, ${operation})
+
+def @bufalloc ${Type:\w+} \* ${name:\w+} = ${operation:[^;]+}
+  KLIDKIKS_BUFALLOC(${Type}, ${name}, ${operation})
 
 def @try ${operation:[^;]+}
   do {

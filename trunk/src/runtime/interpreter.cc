@@ -107,7 +107,7 @@ static void unresolved_global(Value *name) {
 static Signal *grow_stack(Task *task, Heap &heap) {
   Stack *old_stack = task->stack();
   uword new_size = grow_value(old_stack->height());
-  Data *value = heap.new_stack(new_size);
+  Data *value = heap.new_stack(new_size).data();
   if (is<Signal>(value)) return cast<Signal>(value);
   Stack *new_stack = cast<Stack>(value);
   old_stack->uncook_stack();
@@ -409,11 +409,11 @@ Data *Interpreter::interpret(InterpreterState &state) {
       Layout *layout_template = cast<Layout>(constant_pool[layout_template_index]);
       uword field_count = layout_template->instance_field_count();
       Protocol *proto = cast<Protocol>(frame[field_count]);
-      Data *layout_val = layout_template->clone(runtime().heap());
+      Data *layout_val = layout_template->clone(runtime().heap()).data();
       if (is<AllocationFailed>(layout_val)) RETURN(layout_val);
       Layout *layout = cast<Layout>(layout_val);
       layout->set_protocol(proto);
-      Data *val = runtime().heap().new_instance(layout);
+      Data *val = runtime().heap().new_instance(layout).data();
       if (is<Signal>(val)) RETURN(val);
       Instance *instance = cast<Instance>(val);
       for (word i = field_count - 1; i >= 0; i--)
@@ -426,7 +426,8 @@ Data *Interpreter::interpret(InterpreterState &state) {
     case ocLoadField: {
       uint16_t index = code[pc + 1];
       uint16_t argc = code[pc + 2];
-      Value *value = cast<Instance>(to<Instance>(frame.self(argc)))->get_field(index);
+      Option<Instance> self = to<Instance>(frame.self(argc));
+      Value *value = self.value()->get_field(index);
       frame.push(value);
       pc += OpcodeInfo<ocLoadField>::kSize;
       break;
@@ -435,7 +436,8 @@ Data *Interpreter::interpret(InterpreterState &state) {
       uint16_t index = code[pc + 1];
       uint16_t argc = code[pc + 2];
       Value *value = frame[0];
-      cast<Instance>(to<Instance>(frame.self(argc)))->set_field(index, value);
+      Option<Instance> self = to<Instance>(frame.self(argc));
+      self.value()->set_field(index, value);
       pc += OpcodeInfo<ocStoreField>::kSize;
       break;
     }
@@ -463,7 +465,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
     case ocForward: {
       Forwarder::Type type = static_cast<Forwarder::Type>(code[pc + 1]);
       Value *value = frame.pop();
-      Data *forw = runtime().heap().new_forwarder(type, value);
+      Data *forw = runtime().heap().new_forwarder(type, value).data();
       if (is<AllocationFailed>(forw)) RETURN(forw);
       frame.push(cast<Value>(forw));
       pc += OpcodeInfo<ocForward>::kSize;
@@ -566,7 +568,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
     }
     case ocTuple: {
       uint16_t length = code[pc + 1];
-      Data *val = runtime().heap().new_tuple(length);
+      Data *val = runtime().heap().new_tuple(length).data();
       if (is<Signal>(val)) RETURN(val);
       Tuple *result = cast<Tuple>(val);
       for (word i = length - 1; i >= 0; i--)
@@ -586,7 +588,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
       uword length = 0;
       for (uword i = 0; i < terms; i++)
         length += cast<String>(frame[i])->length();
-      Data *val = runtime().heap().new_string(length);
+      Data *val = runtime().heap().new_string(length).data();
       if (is<Signal>(val)) RETURN(val);
       String *result = cast<String>(val);
       uword cursor = 0;
@@ -605,12 +607,12 @@ Data *Interpreter::interpret(InterpreterState &state) {
       uword index = code[pc + 1];
       Lambda *lambda = cast<Lambda>(constant_pool[index]);
       uword outer_count = code[pc + 2];
-      Data *outers_val = runtime().heap().new_tuple(outer_count);
+      Data *outers_val = runtime().heap().new_tuple(outer_count).data();
       if (is<Signal>(outers_val)) RETURN(outers_val);
       Tuple *outers = cast<Tuple>(outers_val);
       for (uword i = 0; i < outer_count; i++)
         outers->set(outer_count - i - 1, frame.pop());
-      Data *clone_val = lambda->clone(runtime().heap());
+      Data *clone_val = lambda->clone(runtime().heap()).data();
       if (is<Signal>(clone_val)) RETURN(clone_val);
       Lambda *clone = cast<Lambda>(clone_val);
       clone->set_outers(outers);
@@ -621,7 +623,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
     case ocTask: {
       ref_block<> protect(runtime().refs());
       Lambda *lambda = cast<Lambda>(frame.pop());
-      Data *task_val = runtime().heap().new_task(runtime().architecture());
+      Data *task_val = runtime().heap().new_task(runtime().architecture()).data();
       if (is<Signal>(task_val)) RETURN(task_val);
       Task *task = cast<Task>(task_val);
       prepare_call(protect(task), protect(lambda), 0);
@@ -638,7 +640,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
     }
     case ocNewCell: {
       Value *value = frame.pop();
-      Data *val = runtime().heap().new_cell(value);
+      Data *val = runtime().heap().new_cell(value).data();
       if (is<AllocationFailed>(val)) RETURN(val);
       frame.push(cast<Cell>(val));
       pc += OpcodeInfo<ocNewCell>::kSize;

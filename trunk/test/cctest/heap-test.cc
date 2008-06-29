@@ -14,7 +14,7 @@ void Test::integers() {
 void Test::simple_string_operations() {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
-  String *str = cast<String>(heap.new_string("fop"));
+  String *str = heap.new_string("fop").value();
   CHECK_IS(String, str);
   CHECK_EQ(3, str->length());
   CHECK_EQ('f', str->get(0));
@@ -26,11 +26,11 @@ void Test::to_string() {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   CHECK(Smi::from_int(123)->to_string() == "123");
-  CHECK(heap.new_string("knallert")->to_string() == "\"knallert\"");
+  CHECK(heap.new_string("knallert").value()->to_string() == "\"knallert\"");
   CHECK(Smi::from_int(123)->to_short_string() == "123");
-  CHECK(heap.new_string("knallert")->to_short_string() == "\"knallert\"");
+  CHECK(heap.new_string("knallert").value()->to_short_string() == "\"knallert\"");
   CHECK(Nothing::make()->to_string() == "@<nothing>");
-  Tuple *tuple = cast<Tuple>(heap.new_tuple(3));
+  Tuple *tuple = heap.new_tuple(3).value();
   tuple->set(0, Smi::from_int(123));
   tuple->set(1, Smi::from_int(456));
   tuple->set(2, Smi::from_int(789));

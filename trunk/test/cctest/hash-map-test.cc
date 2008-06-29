@@ -7,42 +7,42 @@ using namespace neutrino;
 void Test::hash_map_simple() {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
-  HashMap *dict = cast<HashMap>(heap.new_hash_map());
+  HashMap *dict = heap.new_hash_map().value();
   // { }
-  CHECK_IS(Nothing, dict->get(cast<Value>(heap.new_string("flab"))));
-  CHECK_IS(Nothing, dict->get(cast<Value>(heap.new_string("foo"))));
-  CHECK_IS(Nothing, dict->get(cast<Value>(Smi::from_int(18))));
-  CHECK_IS(Nothing, dict->get(cast<Value>(heap.new_string("by"))));
+  CHECK_IS(Nothing, dict->get(heap.new_string("flab").value()));
+  CHECK_IS(Nothing, dict->get(heap.new_string("foo").value()));
+  CHECK_IS(Nothing, dict->get(Smi::from_int(18)));
+  CHECK_IS(Nothing, dict->get(heap.new_string("by").value()));
   // { "flab": 202 }
-  dict->set(heap, cast<Value>(heap.new_string("flab")), Smi::from_int(202));
-  CHECK_EQ(202, cast<Smi>(dict->get(cast<Value>(heap.new_string("flab"))))->value());
-  CHECK_IS(Nothing, dict->get(cast<Value>(heap.new_string("foo"))));
+  dict->set(heap, heap.new_string("flab").value(), Smi::from_int(202));
+  CHECK_EQ(202, cast<Smi>(dict->get(heap.new_string("flab").value()))->value());
+  CHECK_IS(Nothing, dict->get(heap.new_string("foo").value()));
   CHECK_IS(Nothing, dict->get(Smi::from_int(18)));
-  CHECK_IS(Nothing, dict->get(cast<Value>(heap.new_string("by"))));
+  CHECK_IS(Nothing, dict->get(heap.new_string("by").value()));
   // { "flab": 202, "foo": "123" }
-  dict->set(heap, cast<Value>(heap.new_string("foo")), cast<Value>(heap.new_string("123")));
-  CHECK_EQ(202, cast<Smi>(cast<Value>(dict->get(cast<Value>(heap.new_string("flab")))))->value());
-  CHECK(cast<Value>(heap.new_string("123"))->equals(cast<Value>(dict->get(cast<Value>(heap.new_string("foo"))))));
+  dict->set(heap, heap.new_string("foo").value(), heap.new_string("123").value());
+  CHECK_EQ(202, cast<Smi>(cast<Value>(dict->get(heap.new_string("flab").value())))->value());
+  CHECK(heap.new_string("123").value()->equals(cast<Value>(dict->get(heap.new_string("foo").value()))));
   CHECK_IS(Nothing, dict->get(Smi::from_int(18)));
-  CHECK_IS(Nothing, dict->get(cast<Value>(heap.new_string("by"))));
+  CHECK_IS(Nothing, dict->get(heap.new_string("by").value()));
   // { "flab": 202, "foo": "123", 18: 23 }
   dict->set(heap, Smi::from_int(18), Smi::from_int(23));
-  CHECK_EQ(202, cast<Smi>(dict->get(cast<Value>(heap.new_string("flab"))))->value());
-  CHECK(cast<Value>(heap.new_string("123"))->equals(cast<Value>(dict->get(cast<Value>(heap.new_string("foo"))))));
+  CHECK_EQ(202, cast<Smi>(dict->get(heap.new_string("flab").value()))->value());
+  CHECK(heap.new_string("123").value()->equals(cast<Value>(dict->get(heap.new_string("foo").value()))));
   CHECK(Smi::from_int(23)->equals(cast<Value>(dict->get(Smi::from_int(18)))));
-  CHECK_IS(Nothing, dict->get(cast<Value>(heap.new_string("by"))));
+  CHECK_IS(Nothing, dict->get(heap.new_string("by").value()));
   // { "flab": 202, "foo": "123", 18: 23, "by": "flab" }
-  dict->set(heap, cast<Value>(heap.new_string("by")), cast<Value>(heap.new_string("flab")));
-  CHECK_EQ(202, cast<Smi>(cast<Value>(dict->get(cast<Value>(heap.new_string("flab")))))->value());
-  CHECK(cast<Value>(heap.new_string("123"))->equals(cast<Value>(dict->get(cast<Value>(heap.new_string("foo"))))));
+  dict->set(heap, heap.new_string("by").value(), heap.new_string("flab").value());
+  CHECK_EQ(202, cast<Smi>(cast<Value>(dict->get(heap.new_string("flab").value())))->value());
+  CHECK(heap.new_string("123").value()->equals(cast<Value>(dict->get(heap.new_string("foo").value()))));
   CHECK(Smi::from_int(23)->equals(cast<Value>(dict->get(Smi::from_int(18)))));
-  CHECK(cast<Value>(heap.new_string("flab"))->equals(cast<Value>(dict->get(cast<Value>(heap.new_string("by"))))));
+  CHECK(heap.new_string("flab").value()->equals(cast<Value>(dict->get(heap.new_string("by").value()))));
 }
 
 void Test::hash_map_iterator() {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
-  HashMap *dict = cast<HashMap>(heap.new_hash_map());
+  HashMap *dict = heap.new_hash_map().value();
   const int kCount = 100;
   for (int i = 0; i < kCount; i++)
     dict->set(heap, Smi::from_int(i), Smi::from_int(i + 7));

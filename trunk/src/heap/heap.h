@@ -1,12 +1,13 @@
 #ifndef _HEAP
 #define _HEAP
 
+#include "compiler/ast.h"
 #include "heap/memory.h"
 #include "runtime/context.h"
 #include "utils/string.h"
-#include "values/values.h"
 
 namespace neutrino {
+
 
 class Heap {
 public:
@@ -19,98 +20,104 @@ public:
    * to contain object pointers must have been initialized before a
    * gc can be run.
    */
-  Data *allocate_object(uword size, Layout *layout);
-  
+  Allocation<Object> allocate_object(uword size, Layout *layout);
+
+  template <class C>
+  Allocation<C> allocate_object(uword size, Layout *layout);
+
   /**
    * Creates and initializes a new type object but does not check that
    * the object is valid.  This function should only be used directly
    * during bootstrapping.
    */
-  Data *allocate_layout(InstanceType instance_type);
-  
-  Data *allocate_empty_layout(InstanceType instance_type);
-  
-  Data *allocate_empty_protocol();
+  Allocation<Layout> allocate_layout(InstanceType instance_type);
 
-  Data *new_layout(InstanceType instance_type, uword instance_field_count,
-      Immediate *protocol, Tuple *methods);
-  
-  Data *new_protocol(Tuple *methods, Value *super, Immediate *name);
-  
-  Data *new_context();
-  
-  Data *new_task(Architecture &arch);
-  
-  Data *new_stack(uword height);
-  
-  Data *new_string(string value);
+  Allocation<Layout> allocate_empty_layout(InstanceType instance_type);
 
-  Data *new_string(uword length);
+  Allocation<Protocol> allocate_empty_protocol();
 
-  Data *new_tuple(uword length);
-  
-  Data *new_array(uword length);
-  
-  Data *new_singleton(Layout *layout);
-  
-  Data *new_symbol(Value *name);
-  
-  Data *new_local_variable(Symbol *symbol);
-  
-  Data *new_hash_map();
-  
-  Data *new_hash_map(Tuple *store);
-  
-  Data *new_lambda(uword argc, uword max_stack_height, Value *code,
-      Value *literals, Value *tree, Context *context);
-  
-  Data *new_cell(Value *value);
-  
-  Data *new_parameters(Smi *position_count, Tuple *params);
-  
-  Data *new_quote_template(SyntaxTree *body, Tuple *unquotes);
-  
-  Data *new_lambda_expression(Parameters *params, SyntaxTree *body,
+  Allocation<Layout> new_layout(InstanceType instance_type,
+      uword instance_field_count, Immediate *protocol, Tuple *methods);
+
+  Allocation<Protocol> new_protocol(Tuple *methods, Value *super,
+      Immediate *name);
+
+  Allocation<Context> new_context();
+
+  Option<Task> new_task(Architecture &arch);
+
+  Allocation<Stack> new_stack(uword height);
+
+  Allocation<String> new_string(string value);
+
+  Allocation<String> new_string(uword length);
+
+  Allocation<Tuple> new_tuple(uword length);
+
+  Allocation<Array> new_array(uword length);
+
+  Allocation<Singleton> new_singleton(Layout *layout);
+  template <class C> Allocation<C> new_singleton(Layout *layout);
+
+  Allocation<Symbol> new_symbol(Value *name);
+
+  Allocation<LocalVariable> new_local_variable(Symbol *symbol);
+
+  Allocation<HashMap> new_hash_map();
+
+  Allocation<HashMap> new_hash_map(Tuple *store);
+
+  Allocation<Lambda> new_lambda(uword argc, uword max_stack_height,
+      Value *code, Value *literals, Value *tree, Context *context);
+
+  Allocation<Cell> new_cell(Value *value);
+
+  Allocation<Parameters> new_parameters(Smi *position_count, Tuple *params);
+
+  Allocation<QuoteTemplate> new_quote_template(SyntaxTree *body, Tuple *unquotes);
+
+  Allocation<LambdaExpression> new_lambda_expression(Parameters *params, SyntaxTree *body,
       bool is_local);
-  
-  Data *new_return_expression(SyntaxTree *value);
-  
-  Data *new_literal_expression(Value *value);
-  
-  Data *allocate_lambda(uword argc);
-  
-  Data *allocate_channel();
-  
+
+  Allocation<ReturnExpression> new_return_expression(SyntaxTree *value);
+
+  Allocation<LiteralExpression> new_literal_expression(Value *value);
+
+  Allocation<Lambda> allocate_lambda(uword argc);
+
+  Allocation<Channel> allocate_channel();
+
 #define DECLARE_ALLOCATOR(n, Name, name)                             \
-  Data *allocate_##name();
+  Allocation<Name> allocate_##name();
 eBoilerplateAllocator(DECLARE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
-  
-  Data *new_abstract_buffer(uword size, Layout *layout);
-  
-  template <typename T> Data *new_buffer(uword size);
-  
-  Data *new_buffer(uword size);
 
-  Data *new_code(uword size);
+  Allocation<AbstractBuffer> new_abstract_buffer(uword size, Layout *layout);
 
-  Data *new_method(Selector *selector, Signature *signature, Lambda *lambda);
-  
-  Data *new_signature(Tuple *parameters);
+  template <typename T> Allocation<Buffer> new_buffer(uword size);
 
-  Data *new_instance(Layout *layout);
-  
-  Data *new_selector(Immediate *name, Smi *argc, Bool *is_accessor);
-  
-  Data *new_forwarder(Forwarder::Type type, Value *target);
-  Data *new_forwarder_descriptor(Forwarder::Type type, Value *target);
-  
+  Allocation<Buffer> new_buffer(uword size);
+
+  Allocation<Code> new_code(uword size);
+
+  Allocation<Method> new_method(Selector *selector, Signature *signature,
+      Lambda *lambda);
+
+  Allocation<Signature> new_signature(Tuple *parameters);
+
+  Allocation<Instance> new_instance(Layout *layout);
+
+  Allocation<Selector> new_selector(Immediate *name, Smi *argc, Bool *is_accessor);
+
+  Allocation<Forwarder> new_forwarder(Forwarder::Type type, Value *target);
+  Allocation<ForwarderDescriptor> new_forwarder_descriptor(Forwarder::Type type, Value *target);
+
   Memory &memory() { return memory_; }
   Roots &roots() { return roots_; }
 private:
   Roots &roots_;
   Memory memory_;
-  
+
   static Watch<Counter> &allocation_count() { return allocation_count_; }
   static Watch<Counter> allocation_count_;
 };

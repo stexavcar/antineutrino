@@ -136,7 +136,7 @@ void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
     case tString: {
       FString *img = image_raw_cast<FString>(obj);
       uword length = img->length();
-      String *str = cast<String>(heap.new_string(length));
+      String *str = heap.new_string(length).value();
       for (uword i = 0; i < length; i++)
         str->set(i, img->get(i));
       obj->point_forward(str);
@@ -145,7 +145,7 @@ void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
     case tCode: {
       FCode *img = image_raw_cast<FCode>(obj);
       uword length = img->length();
-      Code *code = cast<Code>(heap.new_code(length));
+      Code *code = heap.new_code(length).value();
       for (uword i = 0; i < length; i++)
         code->set(i, img->get(i));
       obj->point_forward(code);
@@ -154,7 +154,7 @@ void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
     case tTuple: {
       FTuple *img = image_raw_cast<FTuple>(obj);
       uword length = img->length();
-      Tuple *tuple = cast<Tuple>(heap.new_tuple(length));
+      Tuple *tuple = heap.new_tuple(length).value();
       obj->point_forward(tuple);
       break;
     }
@@ -164,21 +164,21 @@ void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
       if (obj->has_been_migrated()) return;
       FLayout *img = image_raw_cast<FLayout>(obj);
       InstanceType instance_type = static_cast<InstanceType>(img->instance_type());
-      Layout *layout = cast<Layout>(heap.allocate_empty_layout(instance_type));
+      Layout *layout = heap.allocate_empty_layout(instance_type).value();
       obj->point_forward(layout);
       break;
     }
     case tContext: {
       FContext *img = image_raw_cast<FContext>(obj);
       use(img);
-      Context *context = cast<Context>(heap.new_context());
+      Context *context = heap.new_context().value();
       obj->point_forward(context);
       break;
     }
     case tLambda: {
       FLambda *img = image_raw_cast<FLambda>(obj);
       uword argc = img->argc();
-      Lambda *lambda = cast<Lambda>(heap.allocate_lambda(argc));
+      Lambda *lambda = heap.allocate_lambda(argc).value();
       obj->point_forward(lambda);
       break;
     }
@@ -187,7 +187,7 @@ void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
     }
 #define MAKE_CASE(n, Name, name)                                     \
     case t##Name: {                                                  \
-      Name *heap_obj = cast<Name>(heap.allocate_##name());           \
+      Name *heap_obj = heap.allocate_##name().value();               \
       obj->point_forward(heap_obj);                                  \
       break;                                                         \
     }

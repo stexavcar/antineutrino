@@ -8,8 +8,15 @@
 namespace neutrino {
 
 template <typename T>
-Data *Heap::new_buffer(uword size) {
-  return new_abstract_buffer(sizeof(T) * size, roots().buffer_layout());
+Allocation<Buffer> Heap::new_buffer(uword size) {
+  KLIDKIKS_ALLOC(AbstractBuffer, result, new_abstract_buffer(sizeof(T) * size, roots().buffer_layout()));
+  return cast<Buffer>(result);
+}
+
+template <class C>
+Allocation<C> Heap::new_singleton(Layout *type) {
+  KLIDKIKS_ALLOC(Singleton, result, new_singleton(type));
+  return cast<C>(result);
 }
 
 } // neutrino

@@ -7,11 +7,12 @@ namespace neutrino {
 
 class Compiler {
 public:
-  static Data *compile(Runtime &runtime, ref<LambdaExpression> tree,
+  static Option<Lambda> compile(Runtime &runtime, ref<LambdaExpression> tree,
       ref<Context> context);
-  static Data *compile(Runtime &runtime, ref<SyntaxTree> tree,
+  static Option<Lambda> compile(Runtime &runtime, ref<SyntaxTree> tree,
       ref<Context> context);
-  static Signal *compile(Runtime &runtime, ref<Lambda> lambda, ref<Method> holder);
+  static Option<Lambda> compile(Runtime &runtime, ref<Lambda> lambda,
+      ref<Method> holder);
 };
 
 

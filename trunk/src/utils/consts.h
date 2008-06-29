@@ -46,8 +46,7 @@
   eGeneratableObjectTypes(VISIT)                           \
   eSyntaxTreeTypes(VISIT)
 
-
-#define eVirtualTypes(VISIT)                               \
+#define ePlainVirtualTypes(VISIT)                          \
   VISIT(25, Object,                object)                 \
   VISIT(26, Value,                 0)                      \
   VISIT(27, AbstractBuffer,        0)                      \
@@ -55,9 +54,14 @@
   VISIT(29, Singleton,             0)                      \
   VISIT(30, SyntaxTree,            0)                      \
   VISIT(31, Immediate,             0)                      \
-  VISIT(32, Bool,                  0)                      \
-  VISIT(33, Root,                  0)
+  VISIT(32, Bool,                  0)
 
+#define eVirtualTypes(VISIT)                               \
+  eSpecialTypes(VISIT)                                     \
+  ePlainVirtualTypes(VISIT)
+
+#define eSpecialTypes(VISIT)                               \
+  VISIT(33, Root,                  0)                      \
 
 #define eSignalTypes(VISIT)                                \
   VISIT(40, AllocationFailed,      0)                      \
@@ -67,19 +71,22 @@
   VISIT(44, StackOverflow,         0)                      \
   VISIT(45, Success,               0)
 
-
-#define eValueTypes(VISIT)                                 \
+#define eNormalTypes(VISIT)                                \
   VISIT(50, Smi,                   smi)                    \
-  VISIT(51, Signal,                0)                      \
-  VISIT(52, ForwardPointer,        0)                      \
   VISIT(53, Forwarder,             0)                      \
-  eSignalTypes(VISIT)                                      \
+  ePlainVirtualTypes(VISIT)                                \
   eObjectTypes(VISIT)
 
 
+#define eValueTypes(VISIT)                                 \
+  VISIT(51, Signal,                0)                      \
+  VISIT(52, ForwardPointer,        0)                      \
+  eNormalTypes(VISIT)                                      \
+  eSignalTypes(VISIT)
+
 #define eDeclaredTypes(VISIT)                              \
   eValueTypes(VISIT)                                       \
-  eVirtualTypes(VISIT)
+  eSpecialTypes(VISIT)
 
 
 #define eSyntaxTreeTypes(VISIT)                            \
@@ -414,11 +421,11 @@
   eSimpleInternalRootObjects(VISIT)
 
 #define eSimpleExternalRootObjects(VISIT)                                                                                    \
-  VISIT(0,  Void,       vhoid,                         VoidValue,             new_singleton(void_layout()))                  \
-  VISIT(1,  Null,       nuhll,                         NullValue,             new_singleton(null_layout()))                  \
-  VISIT(2,  True,       thrue,                         TrueValue,             new_singleton(true_layout()))                  \
-  VISIT(3,  False,      fahlse,                        FalseValue,            new_singleton(false_layout()))                 \
-  VISIT(4,  HashMap, toplevel,                      Toplevel,              new_hash_map())
+  VISIT(0,  Void,       vhoid,                         VoidValue,             new_singleton<Void>(void_layout()))                  \
+  VISIT(1,  Null,       nuhll,                         NullValue,             new_singleton<Null>(null_layout()))                  \
+  VISIT(2,  True,       thrue,                         TrueValue,             new_singleton<True>(true_layout()))                  \
+  VISIT(3,  False,      fahlse,                        FalseValue,            new_singleton<False>(false_layout()))                 \
+  VISIT(4,  HashMap, toplevel,                         Toplevel,              new_hash_map())
 
 #define eComplicatedRootLayouts(VISIT)                                                                                       \
   VISIT(5,  Layout,     layout_layout,                 Layout,                0)

@@ -476,7 +476,7 @@ void Instance::for_each_instance_field(FieldVisitor &visitor) {
 // --- L a m b d a ---
 // -------------------
 
-Data *Lambda::clone(Heap &heap) {
+Allocation<Lambda> Lambda::clone(Heap &heap) {
   return heap.new_lambda(argc(), max_stack_height(), code(),
       constant_pool(), tree(), context());
 }
@@ -601,16 +601,16 @@ public:
   typedef Value *key_t;
   typedef Value *value_t;
   typedef HashMap *map_t;
-  typedef Data *raw_table_t;
+  typedef Allocation<Tuple> raw_table_t;
   typedef Heap &data_t;
   static uword table_length(Tuple *t) { return t->length(); }
   static Value *&table_get(Tuple *t, uword i) { return t->get(i); }
   static void table_set(Tuple *t, uword i, Value *v) { t->set(i, v); }
-  static Data *allocate_table(uword s, Heap &h) { return h.new_tuple(s); }
+  static Allocation<Tuple> allocate_table(uword s, Heap &h) { return h.new_tuple(s); }
   static void free_table(Tuple *table) { }
   static bool keys_equal(Value *a, Value *b) { return a->equals(b); }
-  static Tuple *cast_to_table(Data *d) { return cast<Tuple>(d); }
-  static bool is_abort_value(Data *d) { return is<AllocationFailed>(d); }
+  static Tuple *cast_to_table(Allocation<Tuple> d) { return d.value(); }
+  static bool is_abort_value(Allocation<Tuple> d) { return d.has_failed(); }
   static void set_table(HashMap *d, Tuple *t) { d->set_table(t); }
 };
 
@@ -618,19 +618,19 @@ public:
 Data *HashMap::get(Value *key) {
   HashMapLookup<Value*> lookup;
   if (HashUtils<HashMapConfig>::lookup_entry(this->table(), key, lookup)) return *lookup.value;
-  else return Nothing::make();  
+  else return Nothing::make();
 }
 
 
 Data *HashMap::set(Heap &heap, Value *key, Value *value) {
   HashMapLookup<Value*> lookup;
-  Data *raw_table = Smi::from_int(0);
+  Allocation<Tuple> raw_table(table());
   if (HashUtils<HashMapConfig>::ensure_entry(this, this->table(), key, lookup,
       &raw_table, heap)) {
     *lookup.value = value;
     return this;
   } else {
-    return raw_table;
+    return raw_table.signal();
   }
 }
 
@@ -648,7 +648,7 @@ bool Layout::is_empty() {
   return protocol() == Smi::from_int(0);
 }
 
-Data *Layout::clone(Heap &heap) {
+Allocation<Layout> Layout::clone(Heap &heap) {
   return heap.new_layout(instance_type(), instance_field_count(),
       protocol(), methods());
 }

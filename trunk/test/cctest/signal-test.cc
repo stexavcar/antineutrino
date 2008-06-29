@@ -25,7 +25,7 @@ void Test::signals() {
 void Test::forward_pointers() {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
-  Code *code = cast<Code>(heap.new_code(4));
+  Code *code = heap.new_code(4).value();
   ForwardPointer *ptr = ForwardPointer::make(code);
   CHECK(is<ForwardPointer>(ptr));
   Object *target = ptr->target();

@@ -21,13 +21,13 @@ void walk_dont_run() {
 
 void Test::tuple() {
   LocalRuntime runtime;
-  
-  String *str1 = cast<String>(runtime.heap().new_string("one"));
-  String *str2 = cast<String>(runtime.heap().new_string("two"));
-  Tuple *tup = cast<Tuple>(runtime.heap().new_tuple(2));
+
+  String *str1 = runtime.heap().new_string("one").value();
+  String *str2 = runtime.heap().new_string("two").value();
+  Tuple *tup = runtime.heap().new_tuple(2).value();
   tup->set(0, str1);
   tup->set(1, str2);
-  
+
   Serializer stream;
   RawFValue *raw_tup = stream.marshal(tup);
   stream.flush();
@@ -39,8 +39,8 @@ void Test::simple_objects() {
   LocalRuntime runtime;
   Smi *smi_obj = Smi::from_int(10);
   string knirk = "knirk";
-  String *str_obj = cast<String>(runtime.heap().new_string(knirk));
-  Tuple *emp_obj = cast<Tuple>(runtime.heap().new_tuple(0));
+  String *str_obj = runtime.heap().new_string(knirk).value();
+  Tuple *emp_obj = runtime.heap().new_tuple(0).value();
 
   Serializer stream;
   RawFValue *raw_smi = stream.marshal(smi_obj);
@@ -52,7 +52,7 @@ void Test::simple_objects() {
   FImmediate *f_str = heap.cook(raw_str);
   FImmediate *f_emp = heap.cook(raw_emp);
   ExtendedValueDTable &dict = FrozenValueDTableImpl::instance();
-  
+
   p::Value smi_val = ApiUtils::new_value(dict, f_smi);
   CHECK_EQ(p::Value::vtInteger, smi_val.type());
   CHECK(p::is<p::Integer>(smi_val));
@@ -60,7 +60,7 @@ void Test::simple_objects() {
   CHECK(!p::is<p::Tuple>(smi_val));
   p::Integer smi = p::cast<p::Integer>(smi_val);
   CHECK_EQ(10, smi.value());
-  
+
   p::Value str_val = ApiUtils::new_value(dict, f_str);
   CHECK_EQ(p::Value::vtString, str_val.type());
   CHECK(!p::is<p::Integer>(str_val));
@@ -74,7 +74,7 @@ void Test::simple_objects() {
     CHECK_EQ(knirk[i], c_str[i]);
   }
   CHECK_EQ(0, c_str[str.length()]);
-  
+
   p::Value emp_val = ApiUtils::new_value(dict, f_emp);
   CHECK_EQ(p::Value::vtTuple, emp_val.type());
   CHECK(!p::is<p::Integer>(emp_val));

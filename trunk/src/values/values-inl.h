@@ -175,8 +175,13 @@ inline bool is<AbstractTuple>(Data *val) {
 
 template <>
 inline bool is<Singleton>(Data *val) {
-  UNREACHABLE();
-  return false;
+  if (!is<Value>(val)) return false;
+  switch (cast<Value>(val)->type()) {
+    case tNull: case tVoid: case tTrue: case tFalse:
+      return true;
+    default:
+      return false;
+  }
 }
 
 template <>
@@ -220,7 +225,7 @@ eSignalTypes(DEFINE_SIGNAL_QUERY)
  * This is the slow case in the 'to' function.  It gets called if the
  * object is not immediately an instance of C.
  */
-template <class C> Data *convert_object(Value *obj) {
+template <class C> Option<C> convert_object(Value *obj) {
   ASSERT(!is<C>(obj));
   if (is<Forwarder>(obj)) {
     return to<C>(cast<Forwarder>(obj)->descriptor()->target());
@@ -231,16 +236,18 @@ template <class C> Data *convert_object(Value *obj) {
 
 #define DEFINE_CONVERTER(n, Name, info)                              \
   template <>                                                        \
-  inline Data *to<Name>(Value *val) {                                \
-    return is<Name>(val) ? val : convert_object<Name>(val);          \
+  inline Option<Name> to<Name>(Value *val) {                         \
+    return is<Name>(val)                                             \
+        ? Option<Name>(cast<Name>(val))                              \
+        : convert_object<Name>(val);                                 \
   }
-eDeclaredTypes(DEFINE_CONVERTER)
+eNormalTypes(DEFINE_CONVERTER)
 #undef DEFINE_CONVERTER
 
 // All values can be converted to immediates so to<Immediate> can't
 // fail.
 inline Immediate *deref(Value *value) {
-  return cast<Immediate>(to<Immediate>(value));
+  return to<Immediate>(value).value();
 }
 
 // -----------------
@@ -610,6 +617,32 @@ uword ref_traits<Code>::length() {
 
 DEFINE_ACCESSORS(InstanceType, Layout, instance_type, InstanceType)
 DEFINE_ACCESSORS(uword, Layout, instance_field_count, InstanceFieldCount)
+
+
+// -------------------
+// --- O p t i o n ---
+// -------------------
+
+template <class T, class F>
+bool Option<T, F>::has_failed() {
+  return is<F>(data_);
+}
+
+template <class T, class F>
+T *Option<T, F>::value() {
+  return cast<T>(data_);
+}
+
+template <class T, class F>
+F *Option<T, F>::signal() {
+  return cast<F>(data_);
+}
+
+template <class T, class F>
+Option<T, F>::Option(T *value) : data_(value) { }
+
+template <class T, class F>
+Option<T, F>::Option(F *failure) : data_(failure) { }
 
 
 // ---------------------

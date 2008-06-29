@@ -7,6 +7,6 @@ using namespace neutrino;
 void Test::equality() {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
-  
-  CHECK_EQ(cast<Value>(heap.new_string("foo")), cast<Value>(heap.new_string("foo")));
+
+  CHECK_EQ(cast<Value>(heap.new_string("foo").value()), cast<Value>(heap.new_string("foo").value()));
 }

@@ -8,7 +8,7 @@ namespace neutrino {
 // --- C o m p i l i n g ---
 // -------------------------
 
-Data *ref_traits<ProtocolExpression>::compile(Runtime &runtime,
+Option<Protocol> ref_traits<ProtocolExpression>::compile(Runtime &runtime,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
   ref<ProtocolExpression> self = open(this);
@@ -24,7 +24,7 @@ Data *ref_traits<ProtocolExpression>::compile(Runtime &runtime,
   return factory.new_protocol(methods, protect(super()), protect(name()));
 }
 
-Data *ref_traits<MethodExpression>::compile(Runtime &runtime,
+Option<Method> ref_traits<MethodExpression>::compile(Runtime &runtime,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
   ref<MethodExpression> self = open(this);

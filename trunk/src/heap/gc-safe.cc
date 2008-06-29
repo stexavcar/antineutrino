@@ -32,15 +32,40 @@ namespace neutrino {
  * result in a handle and returns it.
  */
 #define RETURN_CHECKED(Type, operation) do {                         \
-  Data *result = operation;                                          \
-  if (is<AllocationFailed>(result)) {                                \
+  Option<Type, AllocationFailed> result = operation;                 \
+  if (result.has_failed()) {                                         \
     runtime().heap().memory().collect_garbage(runtime());            \
     result = operation;                                              \
-    if (is<AllocationFailed>(result)) {                              \
+    if (result.has_failed()) {                                       \
       return InternalError::make(InternalError::ieOutOfMemory);      \
     }                                                                \
   }                                                                  \
-  return cast<Type>(result);                                         \
+  return cast<Type>(result.value());                                 \
+} while (false)
+
+
+/**
+ * Performs the specified operation in a gc-protect manner, wraps the
+ * result in a handle and returns it.
+ */
+#define RETURN_SIGNAL_CHECKED(Type, operation) do {                  \
+  Option<Type> result = operation;                                   \
+  if (result.has_failed()) {                                         \
+    if (is<AllocationFailed>(result.signal())) {                     \
+      runtime().heap().memory().collect_garbage(runtime());          \
+      result = operation;                                            \
+      if (result.has_failed()) {                                     \
+        if (is<AllocationFailed>(result.signal())) {                 \
+          return InternalError::make(InternalError::ieOutOfMemory);  \
+        } else {                                                     \
+          return result;                                             \
+        }                                                            \
+      } else {                                                       \
+        return result;                                               \
+      }                                                              \
+    }                                                                \
+  }                                                                  \
+  return cast<Type>(result.value());                                 \
 } while (false)
 
 
@@ -60,108 +85,115 @@ void GcSafe::set(ref<HashMap> dict, ref<Value> key, ref<Value> value) {
   RETURN_CHECKED(Type, runtime().heap().allocator)
 
 
+/**
+ * Shorthand for performing a gc-protect allocation.
+ */
+#define ALLOCATE_SIGNAL_CHECKED(Type, allocator)                     \
+  RETURN_SIGNAL_CHECKED(Type, runtime().heap().allocator)
+
+
 Factory::Factory(Runtime &runtime)
   : runtime_(runtime) { }
 
 
-Data *Factory::new_string(string str) {
+Option<String> Factory::new_string(string str) {
   ALLOCATE_CHECKED(String, new_string(str));
 }
 
 
-Data *Factory::new_string(uword length) {
+Option<String> Factory::new_string(uword length) {
   ALLOCATE_CHECKED(String, new_string(length));
 }
 
 
-Data *Factory::new_tuple(uword size) {
+Option<Tuple> Factory::new_tuple(uword size) {
   ALLOCATE_CHECKED(Tuple, new_tuple(size));
 }
 
 
-Data *Factory::new_symbol(ref<Value> name) {
+Option<Symbol> Factory::new_symbol(ref<Value> name) {
   ALLOCATE_CHECKED(Symbol, new_symbol(*name));
 }
 
 
-Data *Factory::new_lambda(uword argc, uword max_stack_height,
+Option<Lambda> Factory::new_lambda(uword argc, uword max_stack_height,
     ref<Value> code, ref<Value> literals, ref<Value> tree,
     ref<Context> context) {
   ALLOCATE_CHECKED(Lambda, new_lambda(argc, max_stack_height, *code, *literals, *tree, *context));
 }
 
 
-Data *Factory::new_task(Architecture &arch) {
-  ALLOCATE_CHECKED(Task, new_task(arch));
+Option<Task> Factory::new_task(Architecture &arch) {
+  ALLOCATE_SIGNAL_CHECKED(Task, new_task(arch));
 }
 
 
-Data *Factory::new_parameters(ref<Smi> position_count,
+Option<Parameters> Factory::new_parameters(ref<Smi> position_count,
     ref<Tuple> params) {
   ALLOCATE_CHECKED(Parameters, new_parameters(*position_count, *params));
 }
 
 
-Data *Factory::new_lambda_expression(ref<Parameters> params,
+Option<LambdaExpression> Factory::new_lambda_expression(ref<Parameters> params,
     ref<SyntaxTree> body, bool is_local) {
   ALLOCATE_CHECKED(LambdaExpression, new_lambda_expression(*params, *body, is_local));
 }
 
 
-Data *Factory::new_return_expression(ref<SyntaxTree> value) {
+Option<ReturnExpression> Factory::new_return_expression(ref<SyntaxTree> value) {
   ALLOCATE_CHECKED(ReturnExpression, new_return_expression(*value));
 }
 
 
-Data *Factory::new_literal_expression(ref<Value> value) {
+Option<LiteralExpression> Factory::new_literal_expression(ref<Value> value) {
   ALLOCATE_CHECKED(LiteralExpression, new_literal_expression(*value));
 }
 
 
-Data *Factory::new_hash_map() {
+Option<HashMap> Factory::new_hash_map() {
   ALLOCATE_CHECKED(HashMap, new_hash_map());
 }
 
 
-Data *Factory::new_code(uword size) {
+Option<Code> Factory::new_code(uword size) {
   ALLOCATE_CHECKED(Code, new_code(size));
 }
 
 
-Data *Factory::new_signature(ref<Tuple> parameters) {
+Option<Signature> Factory::new_signature(ref<Tuple> parameters) {
   ALLOCATE_CHECKED(Signature, new_signature(*parameters));
 }
 
 
-Data *Factory::new_method(ref<Selector> selector, ref<Signature> signature,
+Option<Method> Factory::new_method(ref<Selector> selector, ref<Signature> signature,
     ref<Lambda> lambda) {
   ALLOCATE_CHECKED(Method, new_method(*selector, *signature, *lambda));
 }
 
 
-Data *Factory::allocate_empty_layout(InstanceType instance_type) {
+Option<Layout> Factory::allocate_empty_layout(InstanceType instance_type) {
   ALLOCATE_CHECKED(Layout, allocate_empty_layout(instance_type));
 }
 
 
-Data *Factory::new_layout(InstanceType instance_type,
+Option<Layout> Factory::new_layout(InstanceType instance_type,
     uword instance_field_count, ref<Immediate> protocol, ref<Tuple> methods) {
   ALLOCATE_CHECKED(Layout, new_layout(instance_type, instance_field_count, *protocol, *methods));
 }
 
 
-Data *Factory::new_protocol(ref<Tuple> methods, ref<Value> super,
+Option<Protocol> Factory::new_protocol(ref<Tuple> methods, ref<Value> super,
     ref<Immediate> name) {
   ALLOCATE_CHECKED(Protocol, new_protocol(*methods, *super, *name));
 }
 
 
-Data *Factory::new_instance(ref<Layout> layout) {
+Option<Instance> Factory::new_instance(ref<Layout> layout) {
   ALLOCATE_CHECKED(Instance, new_instance(*layout));
 }
 
 
-Data *Factory::new_selector(ref<Immediate> name, Smi *argc,
+Option<Selector> Factory::new_selector(ref<Immediate> name, Smi *argc,
     ref<Bool> is_accessor) {
   ALLOCATE_CHECKED(Selector, new_selector(*name, argc, *is_accessor));
 }

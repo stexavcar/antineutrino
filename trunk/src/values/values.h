@@ -621,7 +621,7 @@ public:
   DECLARE_FIELD(uword, max_stack_height);
   eLambdaFields(DECLARE_OBJECT_FIELD, 0)
 
-  Data *clone(Heap &heap);
+  Allocation<Lambda> clone(Heap &heap);
   void ensure_compiled(Runtime &runtime, Method *holder);
 
   static const uword kArgcOffset           = Object::kHeaderSize;
@@ -712,7 +712,7 @@ public:
   eLayoutFields(DECLARE_OBJECT_FIELD, 0)
 
   bool is_empty();
-  Data *clone(Heap &heap);
+  Allocation<Layout> clone(Heap &heap);
 
   IF_DEBUG(static uword tag_of(Data *value));
   static string name_for(InstanceType type);

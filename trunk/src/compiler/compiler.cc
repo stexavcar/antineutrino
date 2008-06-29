@@ -24,7 +24,7 @@ class Scope;
 class CompileSession {
 public:
   CompileSession(Runtime &runtime, ref<Context> context);
-  Data *compile(ref<LambdaExpression> that, CodeGenerator &enclosing);
+  Option<Lambda> compile(ref<LambdaExpression> that, CodeGenerator &enclosing);
   Signal *compile(ref<Lambda> tree, ref<Method> holder, CodeGenerator *enclosing);
   Signal *compile(ref<Lambda> tree, ref<Method> holder);
   Runtime &runtime() { return runtime_; }
@@ -833,7 +833,7 @@ CompileSession::CompileSession(Runtime &runtime, ref<Context> context)
     : runtime_(runtime), context_(context) { }
 
 
-Data *Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
+Option<Lambda> Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
   ref<Smi> zero = protect(Smi::from_int(0));
@@ -843,7 +843,7 @@ Data *Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
 }
 
 
-Data *Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
+Option<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
   @check ref<ReturnExpression> ret = runtime.factory().new_return_expression(tree);
@@ -860,14 +860,14 @@ Data *Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
 }
 
 
-Signal *Compiler::compile(Runtime &runtime, ref<Lambda> lambda, ref<Method> holder) {
+Option<Lambda> Compiler::compile(Runtime &runtime, ref<Lambda> lambda, ref<Method> holder) {
   ref_block<> protect(runtime.refs());
   CompileSession session(runtime, protect(lambda.context()));
   return session.compile(lambda, holder);
 }
 
 
-Data *CompileSession::compile(ref<LambdaExpression> that,
+Option<Lambda> CompileSession::compile(ref<LambdaExpression> that,
     CodeGenerator &enclosing) {
   ref_block<> protect(runtime().refs());
   ref<Smi> zero = protect(Smi::from_int(0));

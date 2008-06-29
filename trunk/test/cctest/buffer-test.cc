@@ -8,7 +8,7 @@ using namespace neutrino;
 void Test::memory() {
   LocalRuntime runtime;
   int kSize = 256;
-  Buffer *buffer = cast<Buffer>(runtime.heap().new_buffer<uint8_t>(kSize));
+  Buffer *buffer = runtime.heap().new_buffer<uint8_t>(kSize).value();
   CHECK_EQ(kSize, buffer->size<uint8_t>());
   CHECK_EQ(kSize / sizeof(uint16_t), buffer->size<uint16_t>());
   CHECK_EQ(kSize / sizeof(uword), buffer->size<uword>());
@@ -22,7 +22,7 @@ void Test::memory() {
 void Test::bounds_check() {
 #ifdef DEBUG
   LocalRuntime runtime;
-  Buffer *buffer = cast<Buffer>(runtime.heap().new_buffer<uint8_t>(128));
+  Buffer *buffer = runtime.heap().new_buffer<uint8_t>(128).value();
   CHECK_ABORTS(cnOutOfBounds, buffer->at<uint8_t>(128));
 #endif
 }
@@ -30,7 +30,7 @@ void Test::bounds_check() {
 void Test::bounds_check_partial() {
 #ifdef DEBUG
   LocalRuntime runtime;
-  Buffer *buffer = cast<Buffer>(runtime.heap().new_buffer<uint8_t>(129));
+  Buffer *buffer = runtime.heap().new_buffer<uint8_t>(129).value();
   buffer->at<uint8_t>(128);
   CHECK_ABORTS(cnOutOfBounds, buffer->at<uword>(128 / sizeof(uword)));
 #endif

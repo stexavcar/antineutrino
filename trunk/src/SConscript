@@ -23,7 +23,8 @@ def create_environment():
   apply_items(result, properties)
   return result
 
-klidkiks_spec = klidkiks.read_specification(open(join(config['etc'], 'annotations.kk'), "rt").read())
+klidkiks_spec_file = join(config['etc'], 'annotations.kk')
+klidkiks_spec = klidkiks.read_specification(open(klidkiks_spec_file, "rt").read())
 def process(target, source, env):
   contents = source[0].get_contents()
   output = open(target[0].rstr(), "wt")
@@ -38,7 +39,9 @@ env['BUILDERS']['KlidKiks'] = Builder(
 )
 
 def run_klidkiks(f):
-  return env.KlidKiks(f)
+  result = env.KlidKiks(f)
+  env.Depends(result, klidkiks_spec_file)
+  return result
 
 processed_source_files = [ run_klidkiks(f) for f in source_files ]
 processed_program_files = [ run_klidkiks(f) for f in program_files ]

@@ -347,7 +347,7 @@ template <>
 class ref_traits<ProtocolExpression> : public ref_traits<SyntaxTree> {
 public:
   eProtocolExpressionFields(DECLARE_REF_FIELD, 0)
-  Data *compile(Runtime &runtime, ref<Context> context);
+  Option<Protocol> compile(Runtime &runtime, ref<Context> context);
 };
 
 DEFINE_REF_CLASS(ProtocolExpression);
@@ -424,7 +424,7 @@ template <>
 class ref_traits<MethodExpression> : public ref_traits<SyntaxTree> {
 public:
   eMethodExpressionFields(DECLARE_REF_FIELD, 0)
-  Data *compile(Runtime &runtime, ref<Context> context);
+  Option<Method> compile(Runtime &runtime, ref<Context> context);
 };
 
 DEFINE_REF_CLASS(MethodExpression);
