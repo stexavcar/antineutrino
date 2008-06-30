@@ -1,7 +1,7 @@
 import re
 
 
-LINE_HEADER = r'^def\s+@(\w+)\s*(.*)$'
+LINE_HEADER = r'^def\s+@(\w+)\s*(\([^)]*\))?\s*(.*)$'
 GROUP = r'^\$\{\s*(\w+)\s*:(.*)\}$'
 
 
@@ -16,11 +16,25 @@ def pattern_to_regexp(parts):
     result.append(part)
   return "^\s*" + "\s*".join(result) + "\s*$"
 
+def to_template(str):
+  return re.sub(r'\$\{\s*(\w+)\s*\}', '%(\g<1>)s', str)
+
 def lines_to_template(lines):
   block = " ".join([ line.strip() for line in lines ])
   block = block.replace('%', '%%')
-  block = re.sub(r'\$\{\s*(\w+)\s*\}', '%(\g<1>)s', block)
+  block = to_template(block)
   return block
+
+def parse_params(match):
+  if not match: return []
+  match = match[1:-1]
+  match = match.split(',')
+  return [ (k.strip(), to_template(v)) for (k, v) in [ s.split('=') for s in match ] ]
+
+def parse_args(match):
+  if not match: return []
+  match = match[1:-1]
+  return [ s.strip() for s in match.split(',') ]
 
 def read_specification(data):
   last_header_match = None
@@ -29,10 +43,11 @@ def read_specification(data):
   def process_section():
     if not last_header_match: return
     tag = last_header_match.group(1)
-    pattern = pattern_to_regexp(last_header_match.group(2).split())
+    params = parse_params(last_header_match.group(2))
+    pattern = pattern_to_regexp(last_header_match.group(3).split())
     replacement = lines_to_template(lines)
     if not tag in tags: tags[tag] = []
-    tags[tag].append(Matcher(pattern, replacement))
+    tags[tag].append(Matcher(pattern, params, replacement))
   for line in data.split("\n"):
     if '#' in line: line = line[:line.index('#')]
     line = line.strip()
@@ -48,20 +63,27 @@ def read_specification(data):
   return KlidKiksProcessor(tags)
 
   
-ANNOTATED_STATEMENT = r'(\n[ \t]*)@(\w+)\s*([^;]*);(?=\n)'
+ANNOTATED_STATEMENT = r'(\n[ \t]*)@(\w+)\s*(\([^)]*\))?\s*([^;]*);(?=\n)'
 
 
 class Matcher(object):
 
-  def __init__(self, pattern, value):
+  def __init__(self, pattern, params, value):
     self.pattern = pattern
+    self.params = params
     self.value = value
   
-  def replace(self, input, counter):
+  def replace(self, input, args, counter):
     match = re.match(self.pattern, input)
     if match:
       dict = match.groupdict()
       dict['i'] = str(counter)
+      for i in xrange(len(self.params)):
+        (key, value) = self.params[i]
+        if i < len(args):
+          dict[key] = args[i]
+        else:
+          dict[key] = value % dict
       return self.value % dict
     else:
       return None
@@ -91,11 +113,12 @@ class KlidKiksProcessor(object):
   def process_match(self, match, counter):
     preamble = match.group(1)
     tag = match.group(2)
-    stmt = match.group(3)
+    args = parse_args(match.group(3))
+    stmt = match.group(4)
     list = self.matchers[tag]
     index = counter.next()
     for matcher in list:
-      replacement = matcher.replace(stmt, index)
+      replacement = matcher.replace(stmt, args, index)
       if replacement:
         return preamble + replacement + ';'
     return preamble + stmt + ';'

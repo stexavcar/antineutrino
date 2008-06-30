@@ -136,11 +136,7 @@ class maybe {
 public:
   inline maybe(Type *value);
   inline maybe(Failure *failure);
-  template <class T, class F>
-  inline maybe(const maybe<T, F> &other) : data_(other.data()) {
-    TYPE_CHECK(Type*, T*);
-    TYPE_CHECK(Failure*, F*);
-  }
+  template <class T, class F> inline maybe(const maybe<T, F> &other);
   inline bool has_failed();
   inline Type *value();
   inline Failure *signal();
@@ -172,22 +168,23 @@ public:
   __Type__* __name__ = cast<__Type__>(__##__name__##_opt__.value());
 
 
-#define KLIDKIKS_ALLOC(__Type__, __name__, __operation__)            \
-  allocation<__Type__> __##__name__##_alloc__ = __operation__;       \
-  if (__##__name__##_alloc__.has_failed()) return __##__name__##_alloc__.signal(); \
-  __Type__ *__name__ = __##__name__##_alloc__.value();
+#define KLIDKIKS_CHECK_REF(__Type__, __name__, __operation__)        \
+  maybe<__Type__> __##__name__##_opt__ = __operation__;              \
+  if (__##__name__##_opt__.has_failed()) return __##__name__##_opt__.signal(); \
+  ref<__Type__> __name__ = protect(__##__name__##_opt__.value());
 
 
-#define KLIDKIKS_OBJALLOC(__Type__, __name__, __operation__)         \
-  allocation<Object> __##__name__##_alloc__ = __operation__;         \
-  if (__##__name__##_alloc__.has_failed()) return __##__name__##_alloc__.signal(); \
-  __Type__ *__name__ = cast<__Type__>(__##__name__##_alloc__.value());
-
-
-#define KLIDKIKS_BUFALLOC(__Type__, __name__, __operation__)         \
-  allocation<AbstractBuffer> __##__name__##_alloc__ = __operation__; \
+#define KLIDKIKS_ALLOC(__Result__, __Type__, __name__, __operation__)\
+  allocation<__Result__> __##__name__##_alloc__ = __operation__;     \
   if (__##__name__##_alloc__.has_failed()) return __##__name__##_alloc__.signal(); \
   __Type__ *__name__ = cast<__Type__>(__##__name__##_alloc__.value());
+
+
+#define KLIDKIKS_TRY(__operation__, __i__)                           \
+  do {                                                               \
+    Signal *__try_##__i__##__ = __operation__;                       \
+    if (!is<Success>(__try_##__i__##__)) return __try_##__i__##__;   \
+  } while (false)
 
 
 } // neutrino

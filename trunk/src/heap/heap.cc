@@ -42,7 +42,7 @@ allocation<Layout> Heap::allocate_layout(InstanceType instance_type) {
 
 allocation<Lambda> Heap::new_lambda(uword argc, uword max_stack_height,
     Value *code, Value *constant_pool, Value *tree, Context *context) {
-  @objalloc Lambda *result = allocate_object(Lambda::kSize, roots().lambda_layout());
+  @alloc Lambda *result = allocate_object<Lambda>(Lambda::kSize, roots().lambda_layout());
   result->set_argc(argc);
   result->set_max_stack_height(max_stack_height);
   result->set_code(code);
@@ -55,14 +55,14 @@ allocation<Lambda> Heap::new_lambda(uword argc, uword max_stack_height,
 }
 
 allocation<Cell> Heap::new_cell(Value *value) {
-  @objalloc Cell *result = allocate_object(Cell::kSize, roots().cell_layout());
+  @alloc Cell *result = allocate_object<Cell>(Cell::kSize, roots().cell_layout());
   result->set_value(value);
   IF_PARANOID(result->validate());
   return result;
 }
 
 allocation<Parameters> Heap::new_parameters(Smi *position_count, Tuple *params) {
-  @objalloc Parameters *result = allocate_object(Parameters::kSize, roots().parameters_layout());
+  @alloc Parameters *result = allocate_object<Parameters>(Parameters::kSize, roots().parameters_layout());
   result->set_position_count(position_count);
   result->set_parameters(params);
   IF_PARANOID(result->validate());
@@ -71,7 +71,7 @@ allocation<Parameters> Heap::new_parameters(Smi *position_count, Tuple *params) 
 
 allocation<LambdaExpression> Heap::new_lambda_expression(
     Parameters *params, SyntaxTree *body, bool is_local) {
-  @objalloc LambdaExpression *result = allocate_object(LambdaExpression::kSize, roots().lambda_expression_layout());
+  @alloc LambdaExpression *result = allocate_object<LambdaExpression>(LambdaExpression::kSize, roots().lambda_expression_layout());
   result->set_parameters(params);
   result->set_body(body);
   result->set_is_local(is_local ? static_cast<Bool*>(roots().thrue()) : static_cast<Bool*>(roots().fahlse()));
@@ -80,27 +80,27 @@ allocation<LambdaExpression> Heap::new_lambda_expression(
 }
 
 allocation<LiteralExpression> Heap::new_literal_expression(Value *value) {
-  @objalloc LiteralExpression *result = allocate_object(LiteralExpression::kSize, roots().literal_expression_layout());
+  @alloc LiteralExpression *result = allocate_object<LiteralExpression>(LiteralExpression::kSize, roots().literal_expression_layout());
   result->set_value(value);
   IF_PARANOID(result->validate());
   return result;
 }
 
 allocation<ReturnExpression> Heap::new_return_expression(SyntaxTree *value) {
-  @objalloc ReturnExpression *result = allocate_object(ReturnExpression::kSize, roots().return_expression_layout());
+  @alloc ReturnExpression *result = allocate_object<ReturnExpression>(ReturnExpression::kSize, roots().return_expression_layout());
   result->set_value(value);
   IF_PARANOID(result->validate());
   return result;
 }
 
 allocation<Lambda> Heap::allocate_lambda(uword argc) {
-  @objalloc Lambda *result = allocate_object(Lambda::kSize, roots().lambda_layout());
+  @alloc Lambda *result = allocate_object<Lambda>(Lambda::kSize, roots().lambda_layout());
   result->set_argc(argc);
   return result;
 }
 
 allocation<Channel> Heap::allocate_channel() {
-  @objalloc Channel *result = allocate_object(Channel::kSize, roots().channel_layout());
+  @alloc Channel *result = allocate_object<Channel>(Channel::kSize, roots().channel_layout());
   result->set_is_connected(roots().fahlse());
   result->set_proxy(NULL);
   return result;
@@ -109,7 +109,7 @@ allocation<Channel> Heap::allocate_channel() {
 
 template <class C>
 allocation<C> Heap::allocate_object(uword size, Layout *layout) {
-  @objalloc C *result = allocate_object(size, layout);
+  @alloc(Object) C *result = allocate_object(size, layout);
   return result;
 }
 
@@ -143,14 +143,14 @@ allocation<Layout> Heap::new_layout(InstanceType instance_type,
 
 
 allocation<Context> Heap::new_context() {
-  @objalloc Context *result = allocate_object(Context::kSize, roots().context_layout());
+  @alloc Context *result = allocate_object<Context>(Context::kSize, roots().context_layout());
   IF_PARANOID(result->validate());
   return result;
 }
 
 
 allocation<Protocol> Heap::new_protocol(Tuple *methods, Value *super, Immediate *name) {
-  @objalloc Protocol *result = allocate_object(Protocol::kSize, roots().protocol_layout());
+  @alloc Protocol *result = allocate_object<Protocol>(Protocol::kSize, roots().protocol_layout());
   result->set_methods(methods);
   result->set_super(super);
   result->set_name(name);
@@ -159,12 +159,12 @@ allocation<Protocol> Heap::new_protocol(Tuple *methods, Value *super, Immediate 
 }
 
 allocation<Protocol> Heap::allocate_empty_protocol() {
-  @objalloc Protocol *result = allocate_object(Protocol::kSize, roots().protocol_layout());
+  @alloc Protocol *result = allocate_object<Protocol>(Protocol::kSize, roots().protocol_layout());
   return result;
 }
 
 allocation<Method> Heap::new_method(Selector *selector, Signature *signature, Lambda *lambda) {
-  @objalloc Method *result = allocate_object(Method::kSize, roots().method_layout());
+  @alloc Method *result = allocate_object<Method>(Method::kSize, roots().method_layout());
   result->set_selector(selector);
   result->set_signature(signature);
   result->set_lambda(lambda);
@@ -173,7 +173,7 @@ allocation<Method> Heap::new_method(Selector *selector, Signature *signature, La
 }
 
 allocation<Signature> Heap::new_signature(Tuple *parameters) {
-  @objalloc Signature *result = allocate_object(Signature::kSize, roots().signature_layout());
+  @alloc Signature *result = allocate_object<Signature>(Signature::kSize, roots().signature_layout());
   result->set_parameters(parameters);
   IF_PARANOID(result->validate());
   return result;
@@ -181,7 +181,7 @@ allocation<Signature> Heap::new_signature(Tuple *parameters) {
 
 allocation<String> Heap::new_string(string value) {
   uword size = String::size_for(value.length());
-  @objalloc String *result = allocate_object(size, roots().string_layout());
+  @alloc String *result = allocate_object<String>(size, roots().string_layout());
   result->set_length(value.length());
   for (uword i = 0; i < value.length(); i++)
     result->set(i, value[i]);
@@ -192,7 +192,7 @@ allocation<String> Heap::new_string(string value) {
 
 allocation<Stack> Heap::new_stack(uword height) {
   uword size = Stack::size_for(height);
-  @objalloc Stack *result = allocate_object(size, roots().stack_layout());
+  @alloc Stack *result = allocate_object<Stack>(size, roots().stack_layout());
   result->set_height(height);
   result->set_fp(0);
   result->set_sp(0);
@@ -205,7 +205,7 @@ allocation<Stack> Heap::new_stack(uword height) {
 
 maybe<Task> Heap::new_task(Architecture &arch) {
   @alloc Stack *stack = new_stack(Stack::kInitialHeight);
-  @objalloc Task *result = allocate_object(Task::kSize, roots().task_layout());
+  @alloc Task *result = allocate_object<Task>(Task::kSize, roots().task_layout());
   result->set_stack(stack);
   result->set_caller(roots().nuhll());
   IF_PARANOID(result->validate());
@@ -215,7 +215,7 @@ maybe<Task> Heap::new_task(Architecture &arch) {
 
 allocation<String> Heap::new_string(uword length) {
   uword size = String::size_for(length);
-  @objalloc String *result = allocate_object(size, roots().string_layout());
+  @alloc String *result = allocate_object<String>(size, roots().string_layout());
   result->set_length(length);
   ASSERT_EQ(size, result->size_in_memory());
   IF_PARANOID(result->validate());
@@ -223,19 +223,19 @@ allocation<String> Heap::new_string(uword length) {
 }
 
 allocation<Code> Heap::new_code(uword size) {
-  @bufalloc Code *result = new_abstract_buffer(sizeof(uint16_t) * size, roots().code_layout());
+  @alloc(AbstractBuffer) Code *result = new_abstract_buffer(sizeof(uint16_t) * size, roots().code_layout());
   IF_PARANOID(result->validate());
   return result;
 }
 
 allocation<Buffer> Heap::new_buffer(uword total_size) {
-  @bufalloc Buffer *result = new_abstract_buffer(total_size, roots().buffer_layout());
+  @alloc(AbstractBuffer) Buffer *result = new_abstract_buffer(total_size, roots().buffer_layout());
   return result;
 }
 
 allocation<AbstractBuffer> Heap::new_abstract_buffer(uword byte_count, Layout *type) {
   uword size = AbstractBuffer::size_for(byte_count);
-  @objalloc AbstractBuffer *result = allocate_object(size, type);
+  @alloc AbstractBuffer *result = allocate_object<AbstractBuffer>(size, type);
   result->set_size<uint8_t>(byte_count);
   ASSERT_EQ(size, result->size_in_memory());
   IF_PARANOID(result->validate());
@@ -244,7 +244,7 @@ allocation<AbstractBuffer> Heap::new_abstract_buffer(uword byte_count, Layout *t
 
 allocation<Tuple> Heap::new_tuple(uword length) {
   uword size = Tuple::size_for(length);
-  @objalloc Tuple *result = allocate_object(size, roots().tuple_layout());
+  @alloc Tuple *result = allocate_object<Tuple>(size, roots().tuple_layout());
   result->set_length(length);
   for (uword i = 0; i < length; i++)
     result->set(i, roots().nuhll());
@@ -255,7 +255,7 @@ allocation<Tuple> Heap::new_tuple(uword length) {
 
 allocation<Array> Heap::new_array(uword length) {
   uword size = Array::size_for(length);
-  @objalloc Array *result = allocate_object(size, roots().array_layout());
+  @alloc Array *result = allocate_object<Array>(size, roots().array_layout());
   result->set_length(length);
   for (uword i = 0; i < length; i++)
     result->set(i, roots().nuhll());
@@ -265,7 +265,7 @@ allocation<Array> Heap::new_array(uword length) {
 }
 
 allocation<Symbol> Heap::new_symbol(Value *name) {
-  @objalloc Symbol *result = allocate_object(Symbol::kSize, roots().symbol_layout());
+  @alloc Symbol *result = allocate_object<Symbol>(Symbol::kSize, roots().symbol_layout());
   result->set_name(name);
   result->set_data(roots().nuhll());
   IF_PARANOID(result->validate());
@@ -273,14 +273,14 @@ allocation<Symbol> Heap::new_symbol(Value *name) {
 }
 
 allocation<LocalVariable> Heap::new_local_variable(Symbol *symbol) {
-  @objalloc LocalVariable *result = allocate_object(LocalVariable::kSize, roots().local_variable_layout());
+  @alloc LocalVariable *result = allocate_object<LocalVariable>(LocalVariable::kSize, roots().local_variable_layout());
   result->set_symbol(symbol);
   IF_PARANOID(result->validate());
   return result;
 }
 
 allocation<Singleton> Heap::new_singleton(Layout *type) {
-  @objalloc Singleton *result = allocate_object(Singleton::kSize, type);
+  @alloc Singleton *result = allocate_object<Singleton>(Singleton::kSize, type);
   return result;
 }
 
@@ -290,7 +290,7 @@ allocation<HashMap> Heap::new_hash_map() {
 }
 
 allocation<HashMap> Heap::new_hash_map(Tuple *table) {
-  @objalloc HashMap *result = allocate_object(HashMap::kSize, roots().hash_map_layout());
+  @alloc HashMap *result = allocate_object<HashMap>(HashMap::kSize, roots().hash_map_layout());
   result->set_table(table);
   IF_PARANOID(result->validate());
   return result;
@@ -300,7 +300,7 @@ allocation<Instance> Heap::new_instance(Layout *layout) {
   ASSERT_EQ(tInstance, layout->instance_type());
   uword field_count = layout->instance_field_count();
   uword size = Instance::size_for(field_count);
-  @objalloc Instance *result = allocate_object(size, layout);
+  @alloc Instance *result = allocate_object<Instance>(size, layout);
   for (uword i = 0; i < field_count; i++)
     result->set_field(i, roots().vhoid());
   IF_PARANOID(result->validate());
@@ -308,7 +308,7 @@ allocation<Instance> Heap::new_instance(Layout *layout) {
 }
 
 allocation<Selector> Heap::new_selector(Immediate *name, Smi *argc, Bool *is_accessor) {
-  @objalloc Selector *result = allocate_object(Selector::kSize, roots().selector_layout());
+  @alloc Selector *result = allocate_object<Selector>(Selector::kSize, roots().selector_layout());
   result->set_name(name);
   result->set_argc(argc);
   result->set_keywords(roots().empty_tuple());
@@ -326,7 +326,7 @@ allocation<Forwarder> Heap::new_forwarder(Forwarder::Type type, Value *target) {
 }
 
 allocation<ForwarderDescriptor> Heap::new_forwarder_descriptor(Forwarder::Type type, Value *target) {
-  @objalloc ForwarderDescriptor *result = allocate_object(ForwarderDescriptor::kSize, roots().forwarder_descriptor_layout());
+  @alloc ForwarderDescriptor *result = allocate_object<ForwarderDescriptor>(ForwarderDescriptor::kSize, roots().forwarder_descriptor_layout());
   result->set_raw_type(type);
   result->set_target(target);
   IF_PARANOID(result->validate());

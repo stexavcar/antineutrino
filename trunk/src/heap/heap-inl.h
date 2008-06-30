@@ -9,14 +9,14 @@ namespace neutrino {
 
 template <typename T>
 allocation<Buffer> Heap::new_buffer(uword size) {
-  KLIDKIKS_ALLOC(AbstractBuffer, result, new_abstract_buffer(sizeof(T) * size, roots().buffer_layout()));
-  return cast<Buffer>(result);
+  KLIDKIKS_ALLOC(AbstractBuffer, Buffer, result, new_abstract_buffer(sizeof(T) * size, roots().buffer_layout()));
+  return result;
 }
 
 template <class C>
 allocation<C> Heap::new_singleton(Layout *type) {
-  KLIDKIKS_ALLOC(Singleton, result, new_singleton(type));
-  return cast<C>(result);
+  KLIDKIKS_ALLOC(Singleton, C, result, new_singleton(type));
+  return result;
 }
 
 } // neutrino

@@ -644,6 +644,13 @@ maybe<T, F>::maybe(T *value) : data_(value) { }
 template <class T, class F>
 maybe<T, F>::maybe(F *failure) : data_(failure) { }
 
+template <class Type, class Failure>
+template <class T, class F>
+maybe<Type, Failure>::maybe(const maybe<T, F> &other) : data_(other.data()) {
+  TYPE_CHECK(Type*, T*);
+  TYPE_CHECK(Failure*, F*);
+}
+
 
 // ---------------------
 // --- S i g n a l s ---
