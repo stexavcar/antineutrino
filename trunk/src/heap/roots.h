@@ -22,11 +22,11 @@ eRoots(DECLARE_ROOT_ENUM)
 class Roots {
 public:
   Roots();
-  
+
   /**
    * Set up the root objects.
    */
-  Signal *initialize(Heap& heap);
+  possibly initialize(Heap& heap);
 
   static const uword kExternalCount = 58;
   static const uword kInternalCount = 3;
@@ -43,7 +43,7 @@ eRoots(DECLARE_ROOT_ACCESSOR)
 private:
   friend class RootIterator;
   Value *entries_[kCount];
-  
+
 };
 
 /**

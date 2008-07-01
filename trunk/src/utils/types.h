@@ -117,6 +117,7 @@ class Visitor;
 class Void;
 class Signal;
 class String;
+class Success;
 class Symbol;
 class SyntaxTree;
 class Tuple;
@@ -134,9 +135,10 @@ class AbstractEnumInfo;
 template <class Type, class Failure = Signal>
 class maybe {
 public:
-  inline maybe(Type *value);
-  inline maybe(Failure *failure);
-  template <class T, class F> inline maybe(const maybe<T, F> &other);
+  // The constructors are defined like this so that they can be used
+  // even in places that can't see the definitions of the value types.
+  inline maybe(Type *value) : data_(reinterpret_cast<Data*>(value)) { }
+  inline maybe(Failure *failure) : data_(reinterpret_cast<Data*>(failure)) { }
   inline bool has_failed();
   inline Type *value();
   inline Failure *signal();
@@ -162,14 +164,28 @@ public:
 };
 
 
+class possibly : public maybe<Success, Signal> {
+public:
+  possibly(Success *value) : maybe<Success, Signal>(value) { }
+  possibly(Signal *value) : maybe<Success, Signal>(value) { }
+};
+
+
+class likely : public maybe<Success, FatalError> {
+public:
+  likely(Success *value) : maybe<Success, FatalError>(value) { }
+  likely(FatalError *value) : maybe<Success, FatalError>(value) { }
+};
+
+
 #define KLIDKIKS_CHECK_OBJ(__Type__, __name__, __operation__)        \
   maybe<__Type__> __##__name__##_opt__ = __operation__;              \
   if (__##__name__##_opt__.has_failed()) return __##__name__##_opt__.signal(); \
   __Type__* __name__ = cast<__Type__>(__##__name__##_opt__.value());
 
 
-#define KLIDKIKS_CHECK_REF(__Type__, __name__, __operation__)        \
-  maybe<__Type__> __##__name__##_opt__ = __operation__;              \
+#define KLIDKIKS_CHECK_REF(__likelihood__, __Type__, __name__, __operation__) \
+  __likelihood__<__Type__> __##__name__##_opt__ = __operation__; \
   if (__##__name__##_opt__.has_failed()) return __##__name__##_opt__.signal(); \
   ref<__Type__> __name__ = protect(__##__name__##_opt__.value());
 
@@ -180,10 +196,10 @@ public:
   __Type__ *__name__ = cast<__Type__>(__##__name__##_alloc__.value());
 
 
-#define KLIDKIKS_TRY(__operation__, __i__)                           \
+#define KLIDKIKS_TRY(__likelihood__, __operation__, __i__)           \
   do {                                                               \
-    Signal *__try_##__i__##__ = __operation__;                       \
-    if (!is<Success>(__try_##__i__##__)) return __try_##__i__##__;   \
+    __likelihood__ __try_##__i__##__ = __operation__;                \
+    if (__try_##__i__##__.has_failed()) return __try_##__i__##__.signal(); \
   } while (false)
 
 

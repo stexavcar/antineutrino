@@ -292,18 +292,18 @@ void BytecodeBackend::new_cell() {
 }
 
 
-maybe<Code> BytecodeBackend::flush_code() {
+probably<Code> BytecodeBackend::flush_code() {
   ref_block<> protect(refs());
-  @check ref<Code> result = factory().new_code(code().length());
+  @check(probably) ref<Code> result = factory().new_code(code().length());
   for (uword i = 0; i < result.length(); i++)
     result.set(i, code()[i]);
   return *result;
 }
 
 
-maybe<Tuple> BytecodeBackend::flush_constant_pool() {
+probably<Tuple> BytecodeBackend::flush_constant_pool() {
   ref_block<> protect(refs());
-  @check ref<Tuple> result = factory().new_tuple(pool().length());
+  @check(probably) ref<Tuple> result = factory().new_tuple(pool().length());
   for (uword i = 0; i < result->length(); i++)
     result->set(i, pool().get(i));
   return *result;
@@ -323,27 +323,27 @@ uint16_t BytecodeBackend::constant_pool_index(ref<Value> value) {
 }
 
 
-maybe<Method> BytecodeBackend::field_getter(uword index,
+probably<Method> BytecodeBackend::field_getter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref_block<> protect(refs());
-  @check ref<Code> ld_code = factory().new_code(4);
+  @check(probably) ref<Code> ld_code = factory().new_code(4);
   STATIC_CHECK(OpcodeInfo<ocLoadField>::kArgc == 2);
   ld_code->set(0, ocLoadField);
   ld_code->set(1, index);
   ld_code->set(2, 0);
   ld_code->set(3, ocReturn);
-  @check ref<Lambda> lambda = factory().new_lambda(0, 1, ld_code,
+  @check(probably) ref<Lambda> lambda = factory().new_lambda(0, 1, ld_code,
       runtime().empty_tuple(), runtime().nuhll(), context);
   return factory().new_method(selector, signature, lambda);
 }
 
 
-maybe<Method> BytecodeBackend::field_setter(uword index,
+probably<Method> BytecodeBackend::field_setter(uword index,
     ref<Selector> selector, ref<Signature> signature,
     ref<Context> context) {
   ref_block<> protect(refs());
-  @check ref<Code> st_code = factory().new_code(6);
+  @check(probably) ref<Code> st_code = factory().new_code(6);
   STATIC_CHECK(OpcodeInfo<ocStoreField>::kArgc == 2);
   STATIC_CHECK(OpcodeInfo<ocArgument>::kArgc == 1);
   st_code->set(0, ocArgument);
@@ -352,8 +352,8 @@ maybe<Method> BytecodeBackend::field_setter(uword index,
   st_code->set(3, index);
   st_code->set(4, 1);
   st_code->set(5, ocReturn);
-  @check ref<Lambda> lambda = factory().new_lambda(1, 1, st_code,
-    runtime().empty_tuple(), runtime().nuhll(), context);
+  @check(probably) ref<Lambda> lambda = factory().new_lambda(1, 1,
+      st_code, runtime().empty_tuple(), runtime().nuhll(), context);
   return factory().new_method(selector, signature, lambda);
 }
 

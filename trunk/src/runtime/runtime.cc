@@ -28,7 +28,7 @@ Signal *Runtime::initialize(Architecture *arch) {
 
 Signal *Runtime::start() {
   ref_block<> protect(refs());
-  @check ref<String> main_name = factory().new_string("entry_point");
+  @check(probably) ref<String> main_name = factory().new_string("entry_point");
   Data *entry_point = roots().toplevel()->get(*main_name);
   if (is<Nothing>(entry_point)) {
     Conditions::get().error_occurred("Error: no entry point '%' was defined.",
@@ -146,8 +146,8 @@ Signal *Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
   // First copy all elements into the tables so that we can iterate
   // through the elements independent of whether a gc occurs or not
   uword length = changes.size();
-  @check ref<Tuple> keys = factory().new_tuple(length);
-  @check ref<Tuple> values = factory().new_tuple(length);
+  @check(probably) ref<Tuple> keys = factory().new_tuple(length);
+  @check(probably) ref<Tuple> values = factory().new_tuple(length);
   HashMap::Iterator iter(*changes);
   HashMap::Iterator::Entry entry;
   for (uword i = 0; i < length; i++) {

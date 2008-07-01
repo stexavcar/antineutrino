@@ -16,7 +16,7 @@ Roots::Roots() {
     iter.next() = Smi::from_int(0);
 }
 
-Signal *Roots::initialize(Heap& heap) {
+possibly Roots::initialize(Heap& heap) {
   // Complicated roots
   allocation<Layout> layout_layout_val = heap.allocate_layout(tLayout);
   if (layout_layout_val.has_failed()) return layout_layout_val.signal();

@@ -346,7 +346,7 @@ Data *Builtins::compile_expression(BuiltinArguments &args) {
   @check SyntaxTree *raw_self = to<SyntaxTree>(args.self());
   ref<SyntaxTree> self = protect(raw_self);
   ref<Context> context = protect(args.lambda()->context());
-  @check ref<Lambda> code = Compiler::compile(args.runtime(), self, context);
+  @check(probably) ref<Lambda> code = Compiler::compile(args.runtime(), self, context);
   return *code;
 }
 

@@ -60,14 +60,14 @@ public:
   void load_cell();
   void new_cell();
 
-  maybe<Method> field_getter(uword index,  ref<Selector> selector,
+  probably<Method> field_getter(uword index,  ref<Selector> selector,
       ref<Signature> signature, ref<Context> context);
-  maybe<Method> field_setter(uword index,  ref<Selector> selector,
+  probably<Method> field_setter(uword index,  ref<Selector> selector,
       ref<Signature> signature, ref<Context> context);
 
   void initialize() { pool().initialize(); }
-  maybe<Code> flush_code();
-  maybe<Tuple> flush_constant_pool();
+  probably<Code> flush_code();
+  probably<Tuple> flush_constant_pool();
 
   uint16_t constant_pool_index(ref<Value> value);
 

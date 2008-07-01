@@ -24,9 +24,9 @@ class Scope;
 class CompileSession {
 public:
   CompileSession(Runtime &runtime, ref<Context> context);
-  maybe<Lambda> compile(ref<LambdaExpression> that, CodeGenerator &enclosing);
-  Signal *compile(ref<Lambda> tree, ref<Method> holder, CodeGenerator *enclosing);
-  Signal *compile(ref<Lambda> tree, ref<Method> holder);
+  probably<Lambda> compile(ref<LambdaExpression> that, CodeGenerator &enclosing);
+  likely compile(ref<Lambda> tree, ref<Method> holder, CodeGenerator *enclosing);
+  likely compile(ref<Lambda> tree, ref<Method> holder);
   Runtime &runtime() { return runtime_; }
   ref<Context> context() { return context_; }
 private:
@@ -388,7 +388,7 @@ Signal *Assembler<C>::visit_invoke_expression(ref<InvokeExpression> that) {
   if (raw_keymap.is_empty()) {
     keymap = raw_keymap;
   } else {
-    @check ref<Tuple> result_keymap = runtime().factory().new_tuple(raw_keymap->length());
+    @check(probably) ref<Tuple> result_keymap = runtime().factory().new_tuple(raw_keymap->length());
     keymap = result_keymap;
     uword argc = args->length();
     uword posc = args->length() - raw_keymap->length();
@@ -582,8 +582,8 @@ Signal *Assembler<C>::visit_interpolate_expression(ref<InterpolateExpression> th
       __ push(entry);
     } else {
       codegen(cast<SyntaxTree>(entry));
-      @check ref<String> name = factory().new_string("to_string");
-      @check ref<Selector> selector = factory().new_selector(name, Smi::from_int(0), runtime().fahlse());
+      @check(probably) ref<String> name = factory().new_string("to_string");
+      @check(probably) ref<Selector> selector = factory().new_selector(name, Smi::from_int(0), runtime().fahlse());
       __ invoke(selector, 0, runtime().empty_tuple());
     }
   }
@@ -638,7 +638,7 @@ template <class C>
 Signal *Assembler<C>::visit_lambda_expression(ref<LambdaExpression> that) {
   ref_block<> protect(refs());
   ClosureScope scope(*this, runtime());
-  @check ref<Lambda> lambda = session().compile(that, *this);
+  @check(probably) ref<Lambda> lambda = session().compile(that, *this);
   scope.unlink();
   if (scope.outers().length() > 0) {
     for (uword i = 0; i < scope.outers().length(); i++) {
@@ -690,14 +690,14 @@ template <class C>
 Signal *Assembler<C>::visit_do_on_expression(ref<DoOnExpression> that) {
   ref_block<> protect(refs());
   ref<Tuple> clauses = protect(that.clauses());
-  @check ref<Tuple> data = factory().new_tuple(2 * clauses->length());
+  @check(probably) ref<Tuple> data = factory().new_tuple(2 * clauses->length());
   for (uword i = 0; i < clauses->length(); i++) {
     ref<OnClause> clause = protect(cast<OnClause>(clauses->get(i)));
     ref<String> name = protect(clause.name());
     data->set(2 * i, *name);
     ref<LambdaExpression> handler = protect(clause.lambda());
     ClosureScope scope(*this, runtime());
-    @check ref<Lambda> lambda = session().compile(handler, *this);
+    @check(probably) ref<Lambda> lambda = session().compile(handler, *this);
     scope.unlink();
     // TODO(5): We need a lifo block mechanism to implement outers in
     //   condition handlers
@@ -729,18 +729,18 @@ Signal *Assembler<C>::visit_instantiate_expression(ref<InstantiateExpression> th
   ref_block<> protect(refs());
   ref<Tuple> terms = protect(that.terms());
   uword term_count = terms->length() / 2;
-  @check ref<Tuple> methods = factory().new_tuple(2 * term_count);
-  @check ref<Tuple> tuple = factory().new_tuple(0);
-  @check ref<Signature> signature = factory().new_signature(tuple);
+  @check(probably) ref<Tuple> methods = factory().new_tuple(2 * term_count);
+  @check(probably) ref<Tuple> tuple = factory().new_tuple(0);
+  @check(probably) ref<Signature> signature = factory().new_signature(tuple);
   codegen(protect(that.receiver()));
   for (uword i = 0; i < term_count; i++) {
     ref_block<> protect(refs());
     ref<String> ld_keyword = protect(cast<String>(terms->get(2 * i)));
 
     // Construct getter method for this field
-    @check ref<Selector> get_selector = factory().new_selector(ld_keyword,
+    @check(probably) ref<Selector> get_selector = factory().new_selector(ld_keyword,
         Smi::from_int(0), runtime().thrue());
-    @check ref<Method> getter = backend().field_getter(i, get_selector, signature, session().context());
+    @check(probably) ref<Method> getter = backend().field_getter(i, get_selector, signature, session().context());
     methods->set(2 * i, *getter);
 
     // Construct setter method for this field
@@ -748,17 +748,17 @@ Signal *Assembler<C>::visit_instantiate_expression(ref<InstantiateExpression> th
     string_buffer st_name;
     st_name.append(raw_name.start());
     st_name.append(":=");
-    @check ref<String> st_keyword = runtime().factory().new_string(st_name.raw_string());
-    @check ref<Selector> set_selector = factory().new_selector(st_keyword, Smi::from_int(1), runtime().thrue());
-    @check ref<Method> setter = backend().field_setter(i, set_selector, signature, session().context());
+    @check(probably) ref<String> st_keyword = runtime().factory().new_string(st_name.raw_string());
+    @check(probably) ref<Selector> set_selector = factory().new_selector(st_keyword, Smi::from_int(1), runtime().thrue());
+    @check(probably) ref<Method> setter = backend().field_setter(i, set_selector, signature, session().context());
     methods->set(2 * i + 1, *setter);
 
     // Load (initial) value for the field
     ref<SyntaxTree> value = protect(cast<SyntaxTree>(terms->get(2 * i + 1)));
     codegen(value);
   }
-  @check ref<Layout> layout = factory().new_layout(tInstance, term_count,
-      runtime().vhoid(), methods);
+  @check(probably) ref<Layout> layout = factory().new_layout(tInstance,
+      term_count, runtime().vhoid(), methods);
   __ instantiate(layout);
   return Success::make();
 }
@@ -833,7 +833,7 @@ CompileSession::CompileSession(Runtime &runtime, ref<Context> context)
     : runtime_(runtime), context_(context) { }
 
 
-maybe<Lambda> Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
+probably<Lambda> Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
   ref<Smi> zero = protect(Smi::from_int(0));
@@ -843,15 +843,15 @@ maybe<Lambda> Compiler::compile(Runtime &runtime, ref<LambdaExpression> expr,
 }
 
 
-maybe<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
+probably<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
-  @check ref<ReturnExpression> ret = runtime.factory().new_return_expression(tree);
-  @check ref<Parameters> params = runtime.factory().new_parameters(
+  @check(probably) ref<ReturnExpression> ret = runtime.factory().new_return_expression(tree);
+  @check(probably) ref<Parameters> params = runtime.factory().new_parameters(
       protect(Smi::from_int(0)),
       runtime.empty_tuple()
   );
-  @check ref<LambdaExpression> expr = runtime.factory().new_lambda_expression(
+  @check(probably) ref<LambdaExpression> expr = runtime.factory().new_lambda_expression(
       params,
       ret,
       false
@@ -860,22 +860,23 @@ maybe<Lambda> Compiler::compile(Runtime &runtime, ref<SyntaxTree> tree,
 }
 
 
-maybe<Lambda> Compiler::compile(Runtime &runtime, ref<Lambda> lambda, ref<Method> holder) {
+probably<Lambda> Compiler::compile(Runtime &runtime, ref<Lambda> lambda, ref<Method> holder) {
   ref_block<> protect(runtime.refs());
   CompileSession session(runtime, protect(lambda.context()));
-  return session.compile(lambda, holder);
+  @try(likely) session.compile(lambda, holder);
+  return *lambda;
 }
 
 
-maybe<Lambda> CompileSession::compile(ref<LambdaExpression> that,
+probably<Lambda> CompileSession::compile(ref<LambdaExpression> that,
     CodeGenerator &enclosing) {
   ref_block<> protect(runtime().refs());
   ref<Smi> zero = protect(Smi::from_int(0));
-  @check ref<Lambda> lambda = runtime().factory().new_lambda(
+  @check(probably) ref<Lambda> lambda = runtime().factory().new_lambda(
       that->parameters()->parameters()->length(), 0, zero, zero, that,
       context()
   );
-  @try compile(lambda, enclosing.method(), &enclosing);
+  @try(likely) compile(lambda, enclosing.method(), &enclosing);
   return *lambda;
 }
 
@@ -985,21 +986,21 @@ Signal *PostCompilationChecker::visit_local_definition(ref<LocalDefinition> that
 namespace neutrino {
 
 
-Signal *CompileSession::compile(ref<Lambda> lambda, ref<Method> holder) {
+likely CompileSession::compile(ref<Lambda> lambda, ref<Method> holder) {
   GarbageCollectionMonitor monitor(runtime().heap().memory());
   ref_block<> protect(runtime().refs());
   ref<SyntaxTree> body = protect(cast<LambdaExpression>(lambda.tree())->body());
 
   Analyzer analyzer(runtime());
-  @try body.accept(analyzer);
+  cast<Success>(body.accept(analyzer));
 
   // Generate code
-  @try compile(lambda, holder, NULL);
+  @try(likely) compile(lambda, holder, NULL);
 
 #ifdef PARANOID
   // Ensure that the syntax tree has been cleaned up propertly
   PostCompilationChecker checker(runtime());
-  @try body.accept(checker);
+  cast<Success>(body.accept(checker));
 #endif
 
   ASSERT(!monitor.has_collected_garbage());
@@ -1008,7 +1009,7 @@ Signal *CompileSession::compile(ref<Lambda> lambda, ref<Method> holder) {
 }
 
 
-Signal *CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
+likely CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
     CodeGenerator *enclosing) {
   ref_block<> protect(runtime().refs());
   ref<LambdaExpression> tree = protect(cast<LambdaExpression>(lambda.tree()));
@@ -1023,8 +1024,8 @@ Signal *CompileSession::compile(ref<Lambda> lambda, ref<Method> holder,
   FunctionScope scope(runtime(), assembler, params,
       tree->is_local() == runtime().roots().thrue());
   protect(tree.body()).accept(assembler);
-  @check ref<Code> code = backend.flush_code();
-  @check ref<Tuple> constant_pool = backend.flush_constant_pool();
+  @check(probably) ref<Code> code = backend.flush_code();
+  @check(probably) ref<Tuple> constant_pool = backend.flush_constant_pool();
   lambda->set_code(*code);
   lambda->set_constant_pool(*constant_pool);
   lambda->set_max_stack_height(backend.stack().max_height());

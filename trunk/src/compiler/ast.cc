@@ -8,31 +8,31 @@ namespace neutrino {
 // --- C o m p i l i n g ---
 // -------------------------
 
-maybe<Protocol> ref_traits<ProtocolExpression>::compile(Runtime &runtime,
+probably<Protocol> ref_traits<ProtocolExpression>::compile(Runtime &runtime,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
   ref<ProtocolExpression> self = open(this);
   Factory &factory = runtime.factory();
   ref<Tuple> method_asts = protect(methods());
-  @check ref<Tuple> methods = factory.new_tuple(method_asts->length());
+  @check(probably) ref<Tuple> methods = factory.new_tuple(method_asts->length());
   for (uword i = 0; i < method_asts->length(); i++) {
     ref_block<> protect(runtime.refs());
     ref<MethodExpression> method_ast = protect(cast<MethodExpression>(method_asts->get(i)));
-    @check ref<Method> method = method_ast.compile(runtime, context);
+    @check(probably) ref<Method> method = method_ast.compile(runtime, context);
     methods->set(i, *method);
   }
   return factory.new_protocol(methods, protect(super()), protect(name()));
 }
 
-maybe<Method> ref_traits<MethodExpression>::compile(Runtime &runtime,
+probably<Method> ref_traits<MethodExpression>::compile(Runtime &runtime,
     ref<Context> context) {
   ref_block<> protect(runtime.refs());
   ref<MethodExpression> self = open(this);
-  @check ref<Lambda> code = Compiler::compile(runtime, protect(self.lambda()), context);
+  @check(probably) ref<Lambda> code = Compiler::compile(runtime, protect(self.lambda()), context);
   Factory &factory = runtime.factory();
-  @check ref<Tuple> tuple = factory.new_tuple(0);
-  @check ref<Signature> signature = factory.new_signature(tuple);
-  @check ref<Method> result = factory.new_method(protect(selector()), signature, code);
+  @check(probably) ref<Tuple> tuple = factory.new_tuple(0);
+  @check(probably) ref<Signature> signature = factory.new_signature(tuple);
+  @check(probably) ref<Method> result = factory.new_method(protect(selector()), signature, code);
   return *result;
 }
 

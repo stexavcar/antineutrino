@@ -20,7 +20,7 @@ public:
   static Signal *run_system(list<char*> &args);
   static void on_option_error(string message);
   static Image *read_image(string name);
-  static Signal *build_arguments(Runtime &runtime);
+  static likely build_arguments(Runtime &runtime);
   static DynamicLibraryCollection *load_dynamic_libraries();
 };
 
@@ -68,7 +68,7 @@ Signal *Main::run_system(list<char*> &args) {
     bool loaded = runtime.load_image(**image);
     use(loaded); ASSERT(loaded);
   }
-  @try build_arguments(runtime);
+  @try(likely) build_arguments(runtime);
   Signal *start_sig = runtime.start();
   if (Options::print_stats_on_exit) {
     string_buffer stats;
@@ -78,15 +78,15 @@ Signal *Main::run_system(list<char*> &args) {
   return start_sig;
 }
 
-Signal *Main::build_arguments(Runtime &runtime) {
+likely Main::build_arguments(Runtime &runtime) {
   list<string> args = Options::args;
   ref_block<> protect(runtime.refs());
-  @check ref<Tuple> result = runtime.factory().new_tuple(args.length());
+  @check(probably) ref<Tuple> result = runtime.factory().new_tuple(args.length());
   for (uword i = 0; i < args.length(); i++) {
-    @check ref<String> arg = runtime.factory().new_string(args[i]);
+    @check(probably) ref<String> arg = runtime.factory().new_string(args[i]);
     result->set(i, *arg);
   }
-  @check ref<String> arguments = runtime.factory().new_string("arguments");
+  @check(probably) ref<String> arguments = runtime.factory().new_string("arguments");
   runtime.gc_safe().set(runtime.toplevel(), arguments, result);
   return Success::make();
 }
