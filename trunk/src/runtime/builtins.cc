@@ -57,7 +57,6 @@ Data *Builtins::string_eq(BuiltinArguments &args) {
   @check String *self = to<String>(args.self());
   @check Immediate *other = to<Immediate>(args[0]);
   if (!is<String>(other)) return args.runtime().roots().fahlse();
-  // nirk
   String *that = cast<String>(other);
   uword length = self->length();
   if (length != that->length())
