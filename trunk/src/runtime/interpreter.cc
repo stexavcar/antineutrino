@@ -29,11 +29,11 @@ public:
 
 Signal *Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda,
     uword argc) {
-  ASSERT_EQ(0, argc);
+  @assert 0 == argc;
   lambda.ensure_compiled(runtime(), NULL);
   Stack *stack = task->stack();
   ASSERT(stack->status().is_empty);
-  ASSERT_EQ(Stack::Status::ssParked, stack->status().state);
+  @assert Stack::Status::ssParked == stack->status().state;
   stack->status().is_empty = false;
   uword prev_pc = stack->pc();
   IF_DEBUG(stack->status().state = Stack::Status::ssRunning);
@@ -45,7 +45,7 @@ Signal *Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda,
 }
 
 void StackState::park(Stack *stack, uword pc) {
-  ASSERT_EQ(Stack::Status::ssRunning, stack->status().state);
+  @assert Stack::Status::ssRunning == stack->status().state;
   IF_DEBUG(stack->status().state = Stack::Status::ssParked);
   stack->set_fp(fp().value());
   stack->set_sp(sp().value());
@@ -164,9 +164,9 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
   StackState initial_frame(state.stack()->bound(state.stack()->fp()),
       state.stack()->bound(state.stack()->sp()));
   while (true) {
-    ASSERT_EQ(Stack::Status::ssParked, state.stack()->status().state);
+    @assert Stack::Status::ssParked == state.stack()->status().state;
     Data *value = interpret(state);
-    ASSERT_EQ(Stack::Status::ssParked, state.stack()->status().state);
+    @assert Stack::Status::ssParked == state.stack()->status().state;
     if (is<Signal>(value)) {
       if (Options::trace_signals)
         Log::get().info("Signal: %", elms(value));
@@ -500,7 +500,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
     }
     case ocAttach: {
       Task *task = cast<Task>(frame.pop());
-      ASSERT_EQ(Stack::Status::ssParked, task->stack()->status().state);
+      @assert Stack::Status::ssParked == task->stack()->status().state;
       ASSERT_IS(Null, task->caller());
       task->set_caller(state.task());
       frame.park(state.stack(), pc + OpcodeInfo<ocAttach>::kSize);
@@ -514,7 +514,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
       Value *value = frame[0];
       // Grab the caller of the current task
       Task *caller = cast<Task>(state.task()->caller());
-      ASSERT_EQ(Stack::Status::ssParked, caller->stack()->status().state);
+      @assert Stack::Status::ssParked == caller->stack()->status().state;
       // Park the current task
       state.task()->set_caller(runtime().roots().nuhll());
       frame.park(state.stack(), pc + OpcodeInfo<ocYield>::kSize);
@@ -693,7 +693,7 @@ void Stack::validate_stack() {
 void Stack::recook_stack() {
   if (status().is_empty) return;
   ASSERT(!status().is_cooked);
-  ASSERT_EQ(Stack::Status::ssParked, status().state);
+  @assert Stack::Status::ssParked == status().state;
   array<word> buf = buffer();
   set_fp(buf.from_offset(reinterpret_cast<uword>(fp())));
   set_sp(buf.from_offset(reinterpret_cast<uword>(sp())));
@@ -708,7 +708,7 @@ void Stack::recook_stack() {
 void Stack::uncook_stack() {
   if (status().is_empty) return;
   ASSERT(status().is_cooked);
-  ASSERT_EQ(Stack::Status::ssParked, status().state);
+  @assert Stack::Status::ssParked == status().state;
   StackState frame(bound(fp()), bound(sp()));
   array<word> buf = buffer();
   while (!frame.is_bottom()) {
@@ -725,7 +725,7 @@ void Stack::uncook_stack() {
 void Stack::for_each_stack_field(FieldVisitor &visitor) {
   if (status().is_empty) return;
   ASSERT(!status().is_cooked);
-  ASSERT_EQ(Stack::Status::ssParked, status().state);
+  @assert Stack::Status::ssParked == status().state;
   array<word> buf = buffer();
   StackState frame(bound(buf.from_offset(reinterpret_cast<uword>(fp()))),
       bound(buf.from_offset(reinterpret_cast<uword>(sp()))));

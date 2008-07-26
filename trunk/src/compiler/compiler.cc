@@ -89,7 +89,7 @@ public:
   void codegen(ref<SyntaxTree> that) {
     IF_DEBUG(uword height_before = backend().stack().height());
     that.accept(*this);
-    ASSERT_EQ(height_before + 1, backend().stack().height());
+    @assert height_before + 1 == backend().stack().height();
   }
 
   special_builtin get_special(uword index);
@@ -548,7 +548,7 @@ Signal *Assembler<C>::visit_conditional_expression(ref<ConditionalExpression> th
   __ ghoto(end);
   __ bind(then);
   backend().adjust_stack_height(-1);
-  ASSERT_EQ(height_before, backend().stack().height());
+  @assert height_before == backend().stack().height();
   codegen(protect(that.then_part()));
   __ bind(end);
   return Success::make();
@@ -621,7 +621,7 @@ Signal *Assembler<C>::visit_local_definition(ref<LocalDefinition> that) {
     uword height = backend().stack().height();
     codegen(protect(that.value()));
     if (SymbolInfo::from(that->symbol()->data())->type() == ltMaterialize) {
-      ASSERT_EQ(type, Smi::from_int(LocalDefinition::ldVar));
+      @assert type == Smi::from_int(LocalDefinition::ldVar);
       __ new_cell();
     }
     LocalScope scope(*this, protect(that.symbol()), height);
@@ -701,7 +701,7 @@ Signal *Assembler<C>::visit_do_on_expression(ref<DoOnExpression> that) {
     scope.unlink();
     // TODO(5): We need a lifo block mechanism to implement outers in
     //   condition handlers
-    ASSERT_EQ(0, scope.outers().length());
+    @assert 0 == scope.outers().length();
     data->set(2 * i + 1, *lambda);
   }
   __ mark(data);

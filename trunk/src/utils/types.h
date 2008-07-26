@@ -178,25 +178,25 @@ public:
 };
 
 
-#define KLIDKIKS_CHECK_OBJ(__Type__, __name__, __operation__)        \
+#define POLLOCK_CHECK_OBJ(__Type__, __name__, __operation__)        \
   maybe<__Type__> __##__name__##_opt__ = __operation__;              \
   if (__##__name__##_opt__.has_failed()) return __##__name__##_opt__.signal(); \
   __Type__* __name__ = cast<__Type__>(__##__name__##_opt__.value());
 
 
-#define KLIDKIKS_CHECK_REF(__likelihood__, __Type__, __name__, __operation__) \
+#define POLLOCK_CHECK_REF(__likelihood__, __Type__, __name__, __operation__) \
   __likelihood__<__Type__> __##__name__##_opt__ = __operation__; \
   if (__##__name__##_opt__.has_failed()) return __##__name__##_opt__.signal(); \
   ref<__Type__> __name__ = protect(__##__name__##_opt__.value());
 
 
-#define KLIDKIKS_ALLOC(__Result__, __Type__, __name__, __operation__)\
+#define POLLOCK_ALLOC(__Result__, __Type__, __name__, __operation__)\
   allocation<__Result__> __##__name__##_alloc__ = __operation__;     \
   if (__##__name__##_alloc__.has_failed()) return __##__name__##_alloc__.signal(); \
   __Type__ *__name__ = cast<__Type__>(__##__name__##_alloc__.value());
 
 
-#define KLIDKIKS_TRY(__likelihood__, __operation__, __i__)           \
+#define POLLOCK_TRY(__likelihood__, __operation__, __i__)           \
   do {                                                               \
     __likelihood__ __try_##__i__##__ = __operation__;                \
     if (__try_##__i__##__.has_failed()) return __try_##__i__##__.signal(); \

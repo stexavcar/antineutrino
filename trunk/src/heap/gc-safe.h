@@ -26,7 +26,7 @@ public:
   probably<Parameters> new_parameters(ref<Smi> position_count, ref<Tuple> params);
   probably<Lambda> new_lambda(uword argc, uword max_stack_height, ref<Value> code,
       ref<Value> literals, ref<Value> tree, ref<Context> context);
-  maybe<Task> new_task(Architecture &arch);
+  probably<Task> new_task(Architecture &arch);
   probably<LambdaExpression> new_lambda_expression(ref<Parameters> params,
       ref<SyntaxTree> body, bool is_local);
   probably<ReturnExpression> new_return_expression(ref<SyntaxTree> value);

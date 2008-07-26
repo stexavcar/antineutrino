@@ -1,8 +1,15 @@
 import re
+import os
+from os.path import join
 
 
 LINE_HEADER = r'^def\s+@(\w+)\s*(\([^)]*\))?\s*(.*)$'
 GROUP = r'^\$\{\s*(\w+)\s*:(.*)\}$'
+MATCHERS = {
+  'ident': r'[\w_]+',
+  'expr': r'[^;]+?',
+  'relation': r'(?:==|<=|>=|<|>|!=)'
+}
 
 
 def pattern_to_regexp(parts):
@@ -12,7 +19,7 @@ def pattern_to_regexp(parts):
     if group_match:
       name = group_match.group(1)
       body = group_match.group(2)
-      part = "(?P<%s>%s)" % (name, body)
+      part = "(?P<%s>%s)" % (name, MATCHERS[body])
     result.append(part)
   return "^\s*" + "\s*".join(result) + "\s*$"
 
@@ -36,10 +43,16 @@ def parse_args(match):
   match = match[1:-1]
   return [ s.strip() for s in match.split(',') ]
 
-def read_specification(data):
+def make_specificiation(dir):
+  files = [ f for f in os.listdir(dir) if f.endswith('.pollock') ]
+  tags = { }
+  for f in files:
+    read_specification(open(join(dir, f), "rt").read(), tags)
+  return PollockProcessor(tags)
+
+def read_specification(data, tags):
   last_header_match = None
   lines = []
-  tags = { }
   def process_section():
     if not last_header_match: return
     tag = last_header_match.group(1)
@@ -60,7 +73,6 @@ def read_specification(data):
     else:
       lines.append(line)
   process_section()
-  return KlidKiksProcessor(tags)
 
   
 ANNOTATED_STATEMENT = r'(\n[ \t]*)@(\w+)\s*(\([^)]*\))?\s*([^;]*);(?=\n)'
@@ -100,7 +112,7 @@ class Counter(object):
     return value
 
 
-class KlidKiksProcessor(object):
+class PollockProcessor(object):
 
   def __init__(self, matchers):
     self.matchers = matchers

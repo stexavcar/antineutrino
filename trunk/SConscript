@@ -1,0 +1,76 @@
+import sys
+import platform
+from os.path import abspath, join, dirname
+import os
+
+root = dirname(File('SConscript').rfile().abspath)
+sys.path.append(join(root, 'tools'))
+import buildcfg
+import pollock
+
+
+def get_option_checker(values):
+  def check_option(key, value, env):
+    if not values:
+      raise "A value must be specified for option '%s'" % key
+    if not value in values:
+      raise "Illegal value '%s' for option '%s'" % (value, key)
+  return check_option
+
+
+def get_built_in_settings():
+  result = { }
+  system = platform.system().lower()
+  system_list = [ system ]
+  if system in ['darwin', 'linux']:
+    system_list.append('posix')
+  system_list.append('any')
+  result['system'] = system_list
+  result['machine'] = [ platform.machine().lower(), 'any' ]
+  result['architecture'] = [ platform.architecture()[0].lower(), 'any' ]
+  result['processor'] = [ platform.processor().lower(), 'any' ]
+  return result
+
+
+spec_dir = join(root, 'etc', 'pollock')
+pollock_files = [ join(spec_dir, f) for f in os.listdir(spec_dir) if f.endswith('.pollock') ]
+pollock_spec = pollock.make_specificiation(spec_dir)
+
+
+def process_pollock(target, source, env):
+  contents = source[0].get_contents()
+  output = open(target[0].rstr(), "wt")
+  output.write(pollock_spec.process(source[0].rstr(), contents))
+  output.close()
+
+
+def setup_pollock(env):
+  env['BUILDERS']['Pollock'] = Builder(
+    action = process_pollock,
+    suffix = {'.cc': '.pp.cc', '.h': '.pp.h', '.c': '.pp.c'}
+  )
+
+def setup():
+  lists = [ join(root, 'src', 'library.list') ]
+  master_config = join(root, 'src', 'options.cfg')
+  variables = {'root': root}
+  config = buildcfg.build_configuration(root, lists, variables, master_config)
+  options = Options()
+  for (key, (values, default)) in config.options().items():
+    options.Add(key, "", default, get_option_checker(values))
+  env = Environment(options = options)
+  setup_pollock(env)
+  env.Help(options.GenerateHelpText(env))
+  settings = get_built_in_settings()
+  for key in config.options().keys():
+    settings[key] = [ env[key], 'any' ]
+  master_flags = config.get_master_flags(settings)
+  files = config.get_configured_files('main', settings)
+  processed = [ (env.Pollock(join('src', f.path)), f.flags) for f in files ]
+  for p in processed: env.Depends(p[0], pollock_files)
+  all = [ env.Object(name, **flags) for (name, flags) in processed ]
+  program = env.Program('neutrino', all, **master_flags)
+  env.Default(program)
+
+
+setup()

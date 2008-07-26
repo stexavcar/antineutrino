@@ -17,7 +17,7 @@ namespace neutrino {
 class Main {
 public:
   static void main(list<char*> &args);
-  static Signal *run_system(list<char*> &args);
+  static likely run_system(list<char*> &args);
   static void on_option_error(string message);
   static Image *read_image(string name);
   static likely build_arguments(Runtime &runtime);
@@ -45,37 +45,37 @@ DynamicLibraryCollection *Main::load_dynamic_libraries() {
 
 
 void Main::main(list<char*> &args) {
-  Signal *run_sig = run_system(args);
-  if (is<Success>(run_sig)) return;
+  @assert 2 == 3;
+  likely result = run_system(args);
+  if (!result.has_failed()) return;
   // Issue an error of some sort...
-  run_sig->to_string().println();
+  result.signal()->to_string().println();
   UNREACHABLE();
 }
 
 
-Signal *Main::run_system(list<char*> &args) {
-  if (!Abort::setup_signal_handler()) return Nothing::make();
+likely Main::run_system(list<char*> &args) {
+  if (!Abort::setup_signal_handler()) return FatalError::make(FatalError::feInitialization);
   FlagParser::parse_flags(args, on_option_error);
   own_ptr<DynamicLibraryCollection> dylibs(load_dynamic_libraries());
-  if (*dylibs == NULL) return Nothing::make();
+  if (*dylibs == NULL) return FatalError::make(FatalError::feInitialization);
   list<string> files = Options::images;
   Runtime runtime(*dylibs);
   BytecodeArchitecture arch(runtime);
-  @try runtime.initialize(&arch);
+  @try(likely) runtime.initialize(&arch);
   for (uword i = 0; i < files.length(); i++) {
     string file = files[i];
     own_ptr<Image> image(read_image(file));
-    bool loaded = runtime.load_image(**image);
-    use(loaded); ASSERT(loaded);
+    @try(likely) runtime.load_image(**image);
   }
   @try(likely) build_arguments(runtime);
-  Signal *start_sig = runtime.start();
+  likely start_result = runtime.start();
   if (Options::print_stats_on_exit) {
     string_buffer stats;
     Monitor::write_on(stats);
     stats.to_string().println();
   }
-  return start_sig;
+  return start_result;
 }
 
 likely Main::build_arguments(Runtime &runtime) {

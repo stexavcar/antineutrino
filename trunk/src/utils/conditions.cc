@@ -100,7 +100,7 @@ void Conditions::check_predicate_failed(string file_name, int line_number,
   notify(cause);
   static string kErrorMessage =
     "#\n"
-    "# %:%: % % %) failed\n"
+    "# %:%: @assert % % % failed\n"
     "#   expected: %\n"
     "#   found: %\n"
     "#\n";

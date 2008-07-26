@@ -19,14 +19,30 @@ Runtime::~Runtime() {
     architecture().dispose();
 }
 
-Signal *Runtime::initialize(Architecture *arch) {
-  @try roots().initialize(heap());
+likely Runtime::initialize(Architecture *arch) {
+  possibly init_result = roots().initialize(heap());
+  if (init_result.has_failed()) {
+    if (is<FatalError>(init_result.signal())) {
+      return cast<FatalError>(init_result.signal());
+    } else {
+      return FatalError::make(FatalError::feInitialization);
+    }
+  }
   architecture_ = arch;
-  if (arch == NULL) return Success::make();
-  else return architecture().setup(*this);
+  if (arch != NULL) {
+    possibly setup_result = architecture().setup(*this);
+    if (setup_result.has_failed()) {
+      if (is<FatalError>(setup_result.signal())) {
+        return cast<FatalError>(setup_result.signal());
+      } else {
+        return FatalError::make(FatalError::feInitialization);
+      }
+    }
+  }
+  return Success::make();
 }
 
-Signal *Runtime::start() {
+likely Runtime::start() {
   ref_block<> protect(refs());
   @check(probably) ref<String> main_name = factory().new_string("entry_point");
   Data *entry_point = roots().toplevel()->get(*main_name);
@@ -40,7 +56,7 @@ Signal *Runtime::start() {
     return FatalError::make(FatalError::feUnexpected);
   }
   ref<Lambda> lambda = protect(cast<Lambda>(entry_point));
-  @check ref<Task> task = factory().new_task(architecture());
+  @check(probably) ref<Task> task = factory().new_task(architecture());
   architecture().run(lambda, task);
   return Success::make();
 }
@@ -98,7 +114,7 @@ void Runtime::report_load_error(ImageLoadStatus &info) {
   }
 }
 
-Signal *Runtime::load_image(Image &image) {
+likely Runtime::load_image(Image &image) {
   ImageContext info(*this);
   image.initialize(info);
   if (info.has_error()) {
@@ -116,19 +132,19 @@ Signal *Runtime::load_image(Image &image) {
   }
 }
 
-Signal *Runtime::install_loaded_roots(ref<Tuple> roots) {
+likely Runtime::install_loaded_roots(ref<Tuple> roots) {
   for (uword i = 0; i < roots->length(); i++) {
     ref_block<> protect(refs());
     ref<Value> raw_changes = protect(roots->get(i));
     if (is<Smi>(raw_changes)) continue;
     ref<Object> changes = cast<Object>(raw_changes);
     ref<Object> root = get_root(i);
-    @try install_object(root, changes);
+    @try(likely) install_object(root, changes);
   }
   return Success::make();
 }
 
-Signal *Runtime::install_object(ref<Object> root, ref<Object> changes) {
+likely Runtime::install_object(ref<Object> root, ref<Object> changes) {
   InstanceType type = root.type();
   switch (type) {
     case tHashMap:
@@ -141,7 +157,7 @@ Signal *Runtime::install_object(ref<Object> root, ref<Object> changes) {
   }
 }
 
-Signal *Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
+likely Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
   ref_block<> protect(refs());
   // First copy all elements into the tables so that we can iterate
   // through the elements independent of whether a gc occurs or not
@@ -166,7 +182,7 @@ Signal *Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
   return Success::make();
 }
 
-Signal *Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
+likely Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
   if (!root->is_empty()) {
     scoped_string str(changes.name()->to_string());
     Conditions::get().error_occurred("Root class % is not empty.", elms(*str));

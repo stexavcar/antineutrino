@@ -185,7 +185,7 @@ allocation<String> Heap::new_string(string value) {
   result->set_length(value.length());
   for (uword i = 0; i < value.length(); i++)
     result->set(i, value[i]);
-  ASSERT_EQ(size, result->size_in_memory());
+  @assert size == result->size_in_memory();
   IF_PARANOID(result->validate());
   return result;
 }
@@ -217,7 +217,7 @@ allocation<String> Heap::new_string(uword length) {
   uword size = String::size_for(length);
   @alloc String *result = allocate_object<String>(size, roots().string_layout());
   result->set_length(length);
-  ASSERT_EQ(size, result->size_in_memory());
+  @assert size == result->size_in_memory();
   IF_PARANOID(result->validate());
   return result;
 }
@@ -237,7 +237,7 @@ allocation<AbstractBuffer> Heap::new_abstract_buffer(uword byte_count, Layout *t
   uword size = AbstractBuffer::size_for(byte_count);
   @alloc AbstractBuffer *result = allocate_object<AbstractBuffer>(size, type);
   result->set_size<uint8_t>(byte_count);
-  ASSERT_EQ(size, result->size_in_memory());
+  @assert size == result->size_in_memory();
   IF_PARANOID(result->validate());
   return result;
 }
@@ -248,7 +248,7 @@ allocation<Tuple> Heap::new_tuple(uword length) {
   result->set_length(length);
   for (uword i = 0; i < length; i++)
     result->set(i, roots().nuhll());
-  ASSERT_EQ(size, result->size_in_memory());
+  @assert size == result->size_in_memory();
   IF_PARANOID(result->validate());
   return result;
 }
@@ -259,7 +259,7 @@ allocation<Array> Heap::new_array(uword length) {
   result->set_length(length);
   for (uword i = 0; i < length; i++)
     result->set(i, roots().nuhll());
-  ASSERT_EQ(size, result->size_in_memory());
+  @assert size == result->size_in_memory();
   IF_PARANOID(result->validate());
   return result;
 }
@@ -297,7 +297,7 @@ allocation<HashMap> Heap::new_hash_map(Tuple *table) {
 }
 
 allocation<Instance> Heap::new_instance(Layout *layout) {
-  ASSERT_EQ(tInstance, layout->instance_type());
+  @assert tInstance == layout->instance_type();
   uword field_count = layout->instance_field_count();
   uword size = Instance::size_for(field_count);
   @alloc Instance *result = allocate_object<Instance>(size, layout);
@@ -320,7 +320,7 @@ allocation<Selector> Heap::new_selector(Immediate *name, Smi *argc, Bool *is_acc
 allocation<Forwarder> Heap::new_forwarder(Forwarder::Type type, Value *target) {
   // Right now the only kind of forwarder that makes any sense are
   // open ones.
-  ASSERT_EQ(Forwarder::fwOpen, type);
+  @assert Forwarder::fwOpen == type;
   @alloc ForwarderDescriptor *desc = new_forwarder_descriptor(type, target);
   return Forwarder::to(desc);
 }

@@ -1,5 +1,6 @@
 # These are the files that make up the neutrino library.
 
+[ library ]
 backends/bytecode.cc
 compiler/ast.cc
 compiler/compiler.cc
@@ -14,8 +15,8 @@ io/image.cc
 io/out-stream.cc
 main/options.cc
 monitor/monitor.cc
-platform/<platform>/abort.cc
-platform/<platform>/dylib.cc
+platform/<system>/abort.cc
+platform/<system>/dylib.cc
 plankton/c/channel.c
 plankton/c/plankton.c
 plankton/cpp/plankton.cc
@@ -29,3 +30,6 @@ utils/string.cc
 values/channel.cc
 values/method.cc
 values/values.cc
+
+[ main: library ]
+main/main.cc

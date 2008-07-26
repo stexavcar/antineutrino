@@ -14,11 +14,11 @@ namespace neutrino {
 class Architecture {
 public:
   Architecture(Runtime &runtime) : runtime_(runtime) { }
-  virtual Signal *setup(Runtime &runtime) = 0;
+  virtual possibly setup(Runtime &runtime) = 0;
   virtual void dispose() = 0;
   virtual void run(ref<Lambda> lambda, ref<Task> task) = 0;
   virtual void disassemble(Lambda *lambda, string_buffer &buf) = 0;
-  virtual Signal *initialize_task(Task *task) = 0;
+  virtual possibly initialize_task(Task *task) = 0;
 protected:
   Runtime &runtime() { return runtime_; }
   Runtime &runtime_;
@@ -29,11 +29,11 @@ public:
   BytecodeArchitecture(Runtime &runtime)
       : Architecture(runtime)
       , interpreter_(runtime) { }
-  virtual Signal *setup(Runtime &runtime);
+  virtual possibly setup(Runtime &runtime);
   virtual void dispose();
   virtual void run(ref<Lambda> lambda, ref<Task> task);
   virtual void disassemble(Lambda *lambda, string_buffer &buf);
-  virtual Signal *initialize_task(Task *task);
+  virtual possibly initialize_task(Task *task);
 private:
   Interpreter &interpreter() { return interpreter_; }
   persistent<Lambda> bottom() { return bottom_; }
@@ -48,15 +48,16 @@ class Runtime : public nocopy {
 public:
   Runtime(DynamicLibraryCollection *dylibs = 0);
   ~Runtime();
-  Signal *initialize(Architecture *arch);
+  likely initialize(Architecture *arch);
 
-  Signal *load_image(Image &image);
+  likely load_image(Image &image);
+  likely install_loaded_roots(ref<Tuple> roots);
+  likely install_object(ref<Object> root, ref<Object> changes);
+  likely install_hash_map(ref<HashMap> root, ref<HashMap> changes);
+  likely install_layout(ref<Layout> root, ref<Protocol> changes);
+  likely start();
+
   void report_load_error(ImageLoadStatus &info);
-  Signal *install_loaded_roots(ref<Tuple> roots);
-  Signal *install_object(ref<Object> root, ref<Object> changes);
-  Signal *install_hash_map(ref<HashMap> root, ref<HashMap> changes);
-  Signal *install_layout(ref<Layout> root, ref<Protocol> changes);
-  Signal *start();
 
   // Declare root field ref accessors
   #define DECLARE_ROOT_ACCESSOR(n, Type, name, Name, allocator)      \

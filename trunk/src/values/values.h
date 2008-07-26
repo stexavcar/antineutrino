@@ -759,7 +759,7 @@ public:
 };
 
 #define eFatalErrorTypes(VISIT)                                      \
-  VISIT(Unexpected) VISIT(OutOfMemory)
+  VISIT(Unexpected) VISIT(OutOfMemory) VISIT(Initialization)
 
 class FatalError : public Signal {
 public:

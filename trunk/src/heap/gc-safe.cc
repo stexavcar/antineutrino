@@ -58,14 +58,20 @@ namespace neutrino {
         if (is<AllocationFailed>(result.signal())) {                 \
           return FatalError::make(FatalError::feOutOfMemory);        \
         } else {                                                     \
-          return result;                                             \
+          goto propagate_error;                                      \
         }                                                            \
       } else {                                                       \
-        return result;                                               \
+        goto propagate_error;                                        \
       }                                                              \
     }                                                                \
   }                                                                  \
   return cast<Type>(result.value());                                 \
+propagate_error:                                                     \
+  if (is<FatalError>(result.signal())) {                             \
+    return cast<FatalError>(result.signal());                        \
+  } else {                                                           \
+    return FatalError::make(FatalError::feUnexpected);               \
+  }                                                                  \
 } while (false)
 
 
@@ -123,7 +129,7 @@ probably<Lambda> Factory::new_lambda(uword argc, uword max_stack_height,
 }
 
 
-maybe<Task> Factory::new_task(Architecture &arch) {
+probably<Task> Factory::new_task(Architecture &arch) {
   ALLOCATE_SIGNAL_CHECKED(Task, new_task(arch));
 }
 

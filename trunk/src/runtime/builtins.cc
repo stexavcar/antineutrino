@@ -36,13 +36,13 @@ ePlainBuiltinFunctions(MAKE_CASE)
 // -------------------
 
 Data *Builtins::string_length(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert 0 == args.count();
   @check String *self = to<String>(args.self());
   return Smi::from_int(self->length());
 }
 
 Data *Builtins::string_hash(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert 0 == args.count();
   @check String *self = to<String>(args.self());
   // TODO: This hash is exceedingly stupid.  Replace with something
   //   that gives a better distribution.
@@ -53,7 +53,7 @@ Data *Builtins::string_hash(BuiltinArguments &args) {
 }
 
 Data *Builtins::string_eq(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check String *self = to<String>(args.self());
   @check Immediate *other = to<Immediate>(args[0]);
   if (!is<String>(other)) return args.runtime().roots().fahlse();
@@ -69,7 +69,7 @@ Data *Builtins::string_eq(BuiltinArguments &args) {
 }
 
 Data *Builtins::string_plus(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check String *self = to<String>(args.self());
   @check String *that = to<String>(args[0]);
   uword length = self->length() + that->length();
@@ -82,7 +82,7 @@ Data *Builtins::string_plus(BuiltinArguments &args) {
 }
 
 Data *Builtins::string_get(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check String *self = to<String>(args.self());
   @check Smi *index = to<Smi>(args[0]);
   char c = self->get(index->value());
@@ -90,7 +90,7 @@ Data *Builtins::string_get(BuiltinArguments &args) {
 }
 
 Data *Builtins::is_whitespace(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert 0 == args.count();
   @check String *self = to<String>(args.self());
   for (uword i = 0; i < self->length(); i++) {
     if (!isspace(self->get(i)))
@@ -100,7 +100,7 @@ Data *Builtins::is_whitespace(BuiltinArguments &args) {
 }
 
 Data *Builtins::is_alpha(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert 0 == args.count();
   @check String *self = to<String>(args.self());
   for (uword i = 0; i < self->length(); i++) {
     if (!isalpha(self->get(i)))
@@ -110,7 +110,7 @@ Data *Builtins::is_alpha(BuiltinArguments &args) {
 }
 
 Data *Builtins::is_digit(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert 0 == args.count();
   @check String *self = to<String>(args.self());
   for (uword i = 0; i < self->length(); i++) {
     if (!isdigit(self->get(i)))
@@ -125,42 +125,42 @@ Data *Builtins::is_digit(BuiltinArguments &args) {
 // ---------------------------------
 
 Data *Builtins::smi_plus(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check Smi *self = to<Smi>(args.self());
   @check Smi *that = to<Smi>(args[0]);
   return Smi::from_int(self->value() + that->value());
 }
 
 Data *Builtins::smi_minus(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check Smi *self = to<Smi>(args.self());
   @check Smi *that = to<Smi>(args[0]);
   return Smi::from_int(self->value() - that->value());
 }
 
 Data *Builtins::smi_times(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check Smi *self = to<Smi>(args.self());
   @check Smi *that = to<Smi>(args[0]);
   return Smi::from_int(self->value() * that->value());
 }
 
 Data *Builtins::smi_divide(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check Smi *self = to<Smi>(args.self());
   @check Smi *that = to<Smi>(args[0]);
   return Smi::from_int(self->value() / that->value());
 }
 
 Data *Builtins::smi_modulo(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check Smi *self = to<Smi>(args.self());
   @check Smi *that = to<Smi>(args[0]);
   return Smi::from_int(self->value() % that->value());
 }
 
 Data *Builtins::smi_less(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check Smi *self = to<Smi>(args.self());
   @check Smi *that = to<Smi>(args[0]);
   return (self->value() < that->value())
@@ -169,7 +169,7 @@ Data *Builtins::smi_less(BuiltinArguments &args) {
 }
 
 Data *Builtins::smi_abs(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert 0 == args.count();
   @check Smi *self = to<Smi>(args.self());
   word value = self->value();
   if (value >= 0) return self;
@@ -182,7 +182,7 @@ Data *Builtins::smi_abs(BuiltinArguments &args) {
 // -------------------
 
 Data *Builtins::object_eq(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   Immediate *self = deref(args.self());
   Immediate *other = deref(args[0]);
   return (self == other)
@@ -191,7 +191,7 @@ Data *Builtins::object_eq(BuiltinArguments &args) {
 }
 
 Data *Builtins::object_to_string(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert 0 == args.count();
   scoped_string str(args.self()->to_string());
   return args.runtime().heap().new_string(*str).data();
 }
@@ -202,7 +202,7 @@ Data *Builtins::object_to_string(BuiltinArguments &args) {
 // ---------------------------------------
 
 Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert 0 == args.count();
   ref_block<> protect(args.runtime().refs());
   @check ProtocolExpression *raw_expr = to<ProtocolExpression>(args.self());
   ref<ProtocolExpression> expr = protect(raw_expr);
@@ -216,7 +216,7 @@ Data *Builtins::protocol_expression_evaluate(BuiltinArguments &args) {
 // -----------------
 
 Data *Builtins::protocol_new(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert 0 == args.count();
   Runtime &runtime = args.runtime();
   @check Protocol *protocol = to<Protocol>(args.self());
   if (protocol == runtime.roots().symbol_layout()->protocol()) {
@@ -233,7 +233,7 @@ Data *Builtins::protocol_new(BuiltinArguments &args) {
 // -----------------
 
 Data *Builtins::tuple_eq(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check Tuple *self = to<Tuple>(args.self());
   maybe<Tuple> other_opt = to<Tuple>(args[0]);
   if (other_opt.has_failed()) return args.runtime().roots().fahlse();
@@ -252,14 +252,14 @@ Data *Builtins::tuple_eq(BuiltinArguments &args) {
 }
 
 Data *Builtins::tuple_get(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check Tuple *self = to<Tuple>(args.self());
   @check Smi *index = to<Smi>(args[0]);
   return self->get(index->value());
 }
 
 Data *Builtins::tuple_length(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert 0 == args.count();
   @check Tuple *self = to<Tuple>(args.self());
   return Smi::from_int(self->length());
 }
@@ -270,7 +270,7 @@ Data *Builtins::tuple_length(BuiltinArguments &args) {
 // -----------------
 
 Data *Builtins::array_set(BuiltinArguments &args) {
-  ASSERT_EQ(2, args.count());
+  @assert 2 == args.count();
   @check Array *self = to<Array>(args.self());
   @check Smi *index = to<Smi>(args[0]);
   Value *value = args[1];
@@ -279,20 +279,20 @@ Data *Builtins::array_set(BuiltinArguments &args) {
 }
 
 Data *Builtins::array_get(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check Array *self = to<Array>(args.self());
   @check Smi *index = to<Smi>(args[0]);
   return self->get(index->value());
 }
 
 Data *Builtins::new_array(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert 1 == args.count();
   @check Smi *size = to<Smi>(args[0]);
   return args.runtime().heap().new_array(size->value()).data();
 }
 
 Data *Builtins::array_length(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert 0 == args.count();
   @check Array *self = to<Array>(args.self());
   return Smi::from_int(self->length());
 }

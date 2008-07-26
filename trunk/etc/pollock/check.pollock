@@ -1,0 +1,5 @@
+def @check ${Type:ident} \* ${name:ident} = ${operation:expr}
+  POLLOCK_CHECK_OBJ(${Type}, ${name}, ${operation})
+
+def @check(likelihood=maybe) ref < ${Type:ident} > ${name:ident} = ${operation:expr}
+  POLLOCK_CHECK_REF(${likelihood}, ${Type}, ${name}, ${operation})

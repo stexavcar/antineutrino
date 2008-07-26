@@ -420,9 +420,9 @@ void BytecodeArchitecture::disassemble(Lambda *lambda, string_buffer &buf) {
 }
 
 
-Signal *BytecodeArchitecture::initialize_task(Task *task) {
+possibly BytecodeArchitecture::initialize_task(Task *task) {
   Stack *stack = task->stack();
-  ASSERT_EQ(Stack::Status::ssUninitialized, stack->status().state);
+  @assert Stack::Status::ssUninitialized == stack->status().state;
   // Set up the bottom-most dummy activation
   word *bottom_fp = stack->bottom() + StackState::accessible_below_fp(0);
   StackState state(stack->bound(bottom_fp));
@@ -439,7 +439,7 @@ Signal *BytecodeArchitecture::initialize_task(Task *task) {
 }
 
 
-Signal *BytecodeArchitecture::setup(Runtime &runtime) {
+possibly BytecodeArchitecture::setup(Runtime &runtime) {
   @alloc Code *code = runtime.heap().new_code(1);
   code->set(0, ocStackBottom);
   Roots &roots = runtime.roots();

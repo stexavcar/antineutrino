@@ -1,0 +1,2 @@
+def @assert(likelihood=possibly) ${left:expr} == ${right:expr}
+  ASSERT_EQ(${left}, ${right})
