@@ -45,12 +45,12 @@ DynamicLibraryCollection *Main::load_dynamic_libraries() {
 
 
 void Main::main(list<char*> &args) {
-  @assert 2 == 3;
   likely result = run_system(args);
   if (!result.has_failed()) return;
-  // Issue an error of some sort...
-  result.signal()->to_string().println();
-  UNREACHABLE();
+  FatalError *error = result.signal();
+  string_buffer buf;
+  buf.printf("Aborting: %", elms(error));
+  buf.raw_string().println(stdout);
 }
 
 

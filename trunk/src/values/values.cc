@@ -35,6 +35,15 @@ eDeclaredTypes(MAKE_TYPE_CASE)
   }
 }
 
+string FatalError::get_name_for(FatalError::Type type) {
+  switch (type) {
+#define MAKE_TYPE_CASE(Name) case fe##Name: return #Name;
+eFatalErrorTypes(MAKE_TYPE_CASE)
+#undef MAKE_TYPE_CASE
+    default: return "<unknown>";
+  }
+}
+
 MAKE_ENUM_INFO_HEADER(InstanceType)
 #define MAKE_ENTRY(n, Name, info) MAKE_ENUM_INFO_ENTRY(t##Name)
 eDeclaredTypes(MAKE_ENTRY)
@@ -225,7 +234,8 @@ static void write_signal_short_on(Signal *obj, string_buffer &buf) {
     buf.append("@<allocation failed>");
     break;
   case Signal::sFatalError:
-    buf.append("@<internal error>");
+    FatalError::Type type = cast<FatalError>(obj)->fatal_error_type();
+    buf.printf("@<fatal error: %>", elms(FatalError::get_name_for(type)));
     break;
   case Signal::sStackOverflow: {
     uword height = cast<StackOverflow>(obj)->height();

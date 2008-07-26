@@ -501,7 +501,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
     case ocAttach: {
       Task *task = cast<Task>(frame.pop());
       @assert Stack::Status::ssParked == task->stack()->status().state;
-      ASSERT_IS(Null, task->caller());
+      @assert is<Null>(task->caller());
       task->set_caller(state.task());
       frame.park(state.stack(), pc + OpcodeInfo<ocAttach>::kSize);
       state.attach(task);

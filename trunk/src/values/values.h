@@ -769,7 +769,9 @@ public:
 eFatalErrorTypes(DECLARE_INTERNAL_ERROR_TYPE)
 #undef DECLARE_INTERNAL_ERROR_TYPE
   };
+  inline Type fatal_error_type();
   static inline FatalError *make(Type type);
+  static string get_name_for(Type type);
 };
 
 class TypeMismatch : public Signal {

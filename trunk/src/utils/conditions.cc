@@ -57,7 +57,7 @@ void Conditions::check_is_failed(string file_name, int line_number,
 #ifdef DEBUG
   static string kErrorMessage =
     "#\n"
-    "# %:%: CHECK_IS(%, %) failed\n"
+    "# %:%: is<%>(%) failed\n"
     "#   expected: %\n"
     "#   found: %\n"
     "#\n";
@@ -71,12 +71,12 @@ void Conditions::check_is_failed(string file_name, int line_number,
 #else // DEBUG
   static string kErrorMessage =
     "#\n"
-    "# %:%: CHECK_IS(%, %) failed\n"
+    "# %:%: is<%>(%) failed\n"
     "#\n";
   string_buffer buf;
   buf.printf(kErrorMessage, elms(file_name, line_number, type_name,
       value_source));
-#endif // DEBUG  
+#endif // DEBUG
   abort(buf.raw_string());
 }
 
@@ -100,7 +100,7 @@ void Conditions::check_predicate_failed(string file_name, int line_number,
   notify(cause);
   static string kErrorMessage =
     "#\n"
-    "# %:%: @assert % % % failed\n"
+    "# %:%: % % % failed\n"
     "#   expected: %\n"
     "#   found: %\n"
     "#\n";

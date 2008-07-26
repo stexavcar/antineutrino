@@ -938,7 +938,7 @@ Signal *Analyzer::visit_local_definition(ref<LocalDefinition> that) {
   ref_block<> protect(refs());
   ref<Symbol> sym = protect(that.symbol());
   LocalScope scope(*this, sym, 0);
-  ASSERT_IS(Null, sym->data());
+  @assert is<Null>(sym->data());
   if (that->type() == Smi::from_int(LocalDefinition::ldVar))
     sym->set_data(SymbolInfo::empty()->clone_with_def_type(LocalDefinition::ldVar));
   return Visitor::visit_local_definition(that);
@@ -972,7 +972,7 @@ private:
 
 
 Signal *PostCompilationChecker::visit_local_definition(ref<LocalDefinition> that) {
-  ASSERT_IS(Null, that->symbol()->data());
+  @assert is<Null>(that->symbol()->data());
   return Visitor::visit_local_definition(that);
 }
 

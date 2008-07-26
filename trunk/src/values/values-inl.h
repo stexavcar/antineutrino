@@ -4,6 +4,7 @@
 #include "compiler/ast.h"
 #include "heap/pointer-inl.h"
 #include "heap/ref-inl.h"
+#include "main/options.h"
 #include "runtime/context.h"
 #include "utils/array-inl.h"
 #include "utils/checks.h"
@@ -657,8 +658,14 @@ AllocationFailed *AllocationFailed::make(int size) {
 }
 
 FatalError *FatalError::make(FatalError::Type code) {
+  if (Options::trap_fatal_errors)
+    Conditions::get().abort("Fatal error occurred");
   Signal *result = ValuePointer::tag_as_signal(sFatalError, code);
   return cast<FatalError>(result);
+}
+
+FatalError::Type FatalError::fatal_error_type() {
+  return static_cast<FatalError::Type>(payload());
 }
 
 TypeMismatch *TypeMismatch::make(InstanceType expected, InstanceType found) {

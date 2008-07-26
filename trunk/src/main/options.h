@@ -10,6 +10,7 @@ class Options {
 public:
   static bool print_stats_on_exit;
   static bool trace_signals;
+  static bool trap_fatal_errors;
   static bool COND_FLAG(IS_PARANOID, check_stack_height, false);
   static bool COND_FLAG(IS_DEBUG, trace_interpreter, false);
   static list<string> images;

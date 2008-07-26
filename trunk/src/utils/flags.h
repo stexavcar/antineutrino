@@ -34,13 +34,13 @@ private:
   string name() { return name_; }
   word argc() { return argc_; }
   AbstractRegisterFlag *next() { return next_; }
-  
+
   string name_;
   word argc_;
   AbstractRegisterFlag *next_;
 
   static AbstractRegisterFlag *first_;
-  
+
   friend class FlagParser;
 };
 
