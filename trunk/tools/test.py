@@ -92,7 +92,7 @@ class PyneuTestCase(TestCase):
     runtime = join(self.config.context.buildspace, 'bin', 'neutrino')
     return [
       ['python', compiler, '-c', consts, '-o', 'temp.nc', test, libs],
-      [runtime, '--images[', 'temp.nc', ']']
+      [runtime, '--images[', 'temp.nc', ']', '--libs[', ']']
     ]
 
 

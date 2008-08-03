@@ -88,6 +88,10 @@ class Configuration(object):
     self.sections.append(section)
 
 
+def adjust_file_name(s):
+  return s.replace('/', os.path.sep)
+
+
 def read_sections_from(file):
   last_header = None
   last_entries = [ ]
@@ -105,10 +109,17 @@ def read_sections_from(file):
           last_entries += result[parent]
       continue
     else:
-      last_entries.append(line)
+      last_entries.append(adjust_file_name(line))
   if last_header:
     result[last_header] = last_entries
   return result
+
+
+def esc(s):
+  s = s.replace('\\', '\\\\')
+  s = s.replace('|', '\\')
+  s = s.replace('.', '\\.')
+  return s
 
 
 class InputFileSet(object):
@@ -139,7 +150,7 @@ class InputFileSet(object):
     for (section, entries) in read_sections_from(list).items():
       file_list = [ ]
       for entry in entries:
-        pattern_str = join(root, re.sub(r"<(\w+)>", r"(?P<\1>\\w+)", entry))
+        pattern_str = esc(join(root, re.sub(r"<(\w+)>", r"(?P<\1>|w+)", entry)))
         pattern = re.compile(pattern_str)
         matches = [ ]
         for f in all_files:
@@ -149,7 +160,7 @@ class InputFileSet(object):
             name = match.group(0)
             matches.append((name, wildcards))
         if not matches:
-          raise "Found no file matching %s" % line
+          raise "Found no file matching %s" % entry
         file_list.append(AbstractFile(matches, root))
       self.abstract_files[section] = file_list
 

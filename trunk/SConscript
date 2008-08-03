@@ -95,8 +95,18 @@ def setup_library_build():
   for p in processed: env.Depends(p[0], pollock_files)
   all += [ env.Object(name, **flags) for (name, flags) in processed ]
   program = env.Program('neutrino', all, **master_flags)
-  env.Alias('program', program)
-  env.Default(program)
+
+  # Set up natives build
+  natives_list = [ join(root, 'natives', 'files.list') ]
+  master_config = join(root, 'natives', 'options.cfg')
+  config = buildcfg.build_configuration(root, natives_list, variables, master_config)
+  natives_files = config.get_configured_files('library', settings)
+  processed = [ (env.Pollock(join('natives', f.path)), f.flags) for f in natives_files ]
+  natives_files = [ env.Object(name, **flags) for (name, flags) in processed ]
+  natives_lib = env.Library('natives', natives_files, **master_flags)
+
+  env.Alias('program', [ program, natives_lib ])
+  env.Default('program')
 
   return (env, settings, dirname(lib[0].rfile().abspath))
 

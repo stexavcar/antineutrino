@@ -112,6 +112,10 @@ class Counter(object):
     return value
 
 
+def escape(s):
+  return s.replace('\\', '\\\\')
+
+
 class PollockProcessor(object):
 
   def __init__(self, matchers):
@@ -120,7 +124,7 @@ class PollockProcessor(object):
   def process(self, name, str):
     counter = Counter()
     str = re.sub(ANNOTATED_STATEMENT, lambda x: self.process_match(x, counter), str)
-    return ('#line %i "%s" \n' % (1, name)) + str
+    return ('#line %i "%s" \n' % (1, escape(name))) + str
   
   def process_match(self, match, counter):
     preamble = match.group(1)
