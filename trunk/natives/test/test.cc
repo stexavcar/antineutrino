@@ -19,7 +19,7 @@ Value TestNativesChannel::receive(neutrino::IMessage &message) {
   return message.context().factory().new_integer(result);
 }
 
-SETUP_NEPTUNE_CHANNEL(test_natives)(neutrino::IExternalChannelConfiguration &config) {
+SETUP_NEUTRINO_CHANNEL(test_natives)(neutrino::IExternalChannelConfiguration &config) {
   TestNativesChannel *channel = new TestNativesChannel();
   config.bind(*channel);
 }

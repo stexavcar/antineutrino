@@ -29,7 +29,7 @@ Value ForkProcessChannel::receive(neutrino::IMessage &message) {
   exit(0);
 }
 
-SETUP_NEPTUNE_CHANNEL(fork_process)(neutrino::IExternalChannelConfiguration &config) {
+SETUP_NEUTRINO_CHANNEL(fork_process)(neutrino::IExternalChannelConfiguration &config) {
   ForkProcessChannel *channel = new ForkProcessChannel();
   config.bind(*channel);
 }

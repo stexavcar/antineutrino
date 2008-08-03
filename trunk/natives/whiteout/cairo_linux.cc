@@ -41,7 +41,7 @@ Value CairoChannel::receive(neutrino::IMessage &message) {
   return message.context().factory().get_null();
 }
 
-SETUP_NEPTUNE_CHANNEL(cairo)(neutrino::IExternalChannelConfiguration &config) {
+SETUP_NEUTRINO_CHANNEL(cairo)(neutrino::IExternalChannelConfiguration &config) {
   CairoChannel *cairo = new CairoChannel();
   config.bind(*cairo);
 }

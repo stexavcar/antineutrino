@@ -60,7 +60,7 @@ Value FileNativesChannel::receive(neutrino::IMessage &message) {
   }
 }
 
-SETUP_NEPTUNE_CHANNEL(file_natives)(neutrino::IExternalChannelConfiguration &config) {
+SETUP_NEUTRINO_CHANNEL(file_natives)(neutrino::IExternalChannelConfiguration &config) {
   FileNativesChannel *channel = new FileNativesChannel();
   config.bind(*channel);
 }

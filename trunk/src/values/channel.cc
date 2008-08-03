@@ -4,7 +4,7 @@
 namespace neutrino {
 
 
-static const string kConfiguratorNamePattern = "configure_neptune_%_channel";
+static const string kConfiguratorNamePattern = "configure_neutrino_%_channel";
 
 
 // ---------------------
