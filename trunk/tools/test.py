@@ -300,6 +300,7 @@ def main():
   context = Context(workspace, abspath('.'))
   for path in paths:
     reqs += root.get_build_requirements(path, context)
+  reqs = list(set(reqs))
   if len(reqs) > 0 and not build_requirements(workspace, reqs):
     return 1
 
