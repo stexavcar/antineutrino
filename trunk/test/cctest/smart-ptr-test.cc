@@ -1,4 +1,4 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "utils/smart-ptrs-inl.h"
 
 using namespace neutrino;
@@ -13,7 +13,7 @@ static bounded_ptr<word> ints_start() {
 }
 
 
-void Test::simple_bounded_ptr_test() {
+TEST(simple_bounded_ptr_test) {
   bounded_ptr<int> ints = ints_start();
   CHECK_EQ(9, ints[0]);
   CHECK_EQ(8, ints[1]);
@@ -25,7 +25,7 @@ void Test::simple_bounded_ptr_test() {
 }
 
 
-void Test::bounded_ptr_simple_arith_test() {
+TEST(bounded_ptr_simple_arith_test) {
   bounded_ptr<int> ints = ints_start();
   bounded_ptr<int> second = ints + 2;
   CHECK_EQ(7, second[0]);

@@ -1,4 +1,4 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "io/out-stream.h"
 #include "runtime/runtime.h"
 #include "values/channel.h"
@@ -19,7 +19,7 @@ void walk_dont_run() {
 }
 
 
-void Test::tuple() {
+TEST(tuple) {
   LocalRuntime runtime;
 
   String *str1 = runtime.heap().new_string("one").value();
@@ -35,7 +35,7 @@ void Test::tuple() {
 }
 
 
-void Test::simple_objects() {
+TEST(simple_objects) {
   LocalRuntime runtime;
   Smi *smi_obj = Smi::from_int(10);
   string knirk = "knirk";

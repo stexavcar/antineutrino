@@ -1,4 +1,4 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "heap/ref-inl.h"
 #include "heap/heap.h"
 #include "runtime/runtime.h"
@@ -6,7 +6,7 @@
 
 using namespace neutrino;
 
-void Test::handles() {
+TEST(handles) {
   RefManager refs;
   ref_block<> protect(refs);
   LocalRuntime runtime;
@@ -22,7 +22,7 @@ void Test::handles() {
   ref<Value> one_tuple_value = one_tuple;
 }
 
-void Test::too_many_refs() {
+TEST(too_many_refs) {
 #ifdef DEBUG
   RefManager refs;
   ref_block<2> protect(refs);
@@ -45,7 +45,7 @@ static void test_deep(RefManager &refs, uword n) {
   }
 }
 
-void Test::deep() {
+TEST(deep) {
   RefManager refs;
   test_deep(refs, 500);
 }
@@ -63,7 +63,7 @@ static void count_refs(RefManager &refs, uword expected) {
   CHECK_EQ(count, expected);
 }
 
-void Test::ref_iteration() {
+TEST(ref_iteration) {
   static const uword kRefCount = 1024;
   RefManager refs;
   ref_block<kRefCount> protect(refs);

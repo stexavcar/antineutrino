@@ -1,9 +1,9 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "utils/array-inl.h"
 
 using namespace neutrino;
 
-void Test::array() {
+TEST(array) {
   int int_array[4] = { 1, 2, 3, 4 };
   // The array is made one shorter than the array so that we can
   // safely read one element past the "last" element.

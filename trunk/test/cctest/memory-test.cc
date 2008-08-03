@@ -1,4 +1,4 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "heap/memory-inl.h"
 #include "heap/ref-inl.h"
 #include "heap/space.h"
@@ -7,7 +7,7 @@
 
 using namespace neutrino;
 
-void Test::simple_migration() {
+TEST(simple_migration) {
   LocalRuntime runtime;
   ref_block<> protect(runtime.refs());
   ref<Tuple> tuple = protect(runtime.factory().new_tuple(10).value());
@@ -24,7 +24,7 @@ void Test::simple_migration() {
   CHECK(new_space.contains(*tuple));
 }
 
-void Test::garbage_removed() {
+TEST(garbage_removed) {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   Memory &memory = heap.memory();
@@ -47,7 +47,7 @@ void Test::garbage_removed() {
   CHECK_EQ(space_after, space_after_after);
 }
 
-void Test::migrate_cycle() {
+TEST(migrate_cycle) {
   LocalRuntime runtime;
   ref_block<> protect(runtime.refs());
   Memory &memory = runtime.heap().memory();
@@ -65,7 +65,7 @@ void Test::migrate_cycle() {
   CHECK(value->get(2) == *value);
 }
 
-void Test::garbage_collector_monitor() {
+TEST(garbage_collector_monitor) {
   LocalRuntime runtime;
   Memory &memory = runtime.heap().memory();
   GarbageCollectionMonitor monitor(memory);
@@ -86,7 +86,7 @@ void Test::garbage_collector_monitor() {
   CHECK(monitor.has_collected_garbage());
 }
 
-void Test::disallow_garbage_collection() {
+TEST(disallow_garbage_collection) {
   LocalRuntime runtime;
   Memory &memory = runtime.heap().memory();
   DisallowGarbageCollection disallow(memory);

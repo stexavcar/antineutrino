@@ -1,10 +1,10 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "runtime/runtime.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
 
-void Test::singletons() {
+TEST(singletons) {
   LocalRuntime runtime;
   Roots &roots = runtime.roots();
 

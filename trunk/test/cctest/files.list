@@ -1,3 +1,4 @@
+[ tests ]
 array-test.cc
 buffer-test.cc
 builtin-string-test.cc
@@ -15,3 +16,6 @@ singleton-test.cc
 smart-ptr-test.cc
 tuple-test.cc
 validation-test.cc
+
+[ framework ]
+nunit.cc

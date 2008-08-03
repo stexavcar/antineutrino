@@ -1,10 +1,10 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "runtime/runtime.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
 
-void Test::validation() {
+TEST(validation) {
   LocalRuntime runtime;
   String *name = runtime.heap().new_string(0).value();
   Selector *selector = runtime.heap().new_selector(name, Smi::from_int(0), runtime.roots().fahlse()).value();

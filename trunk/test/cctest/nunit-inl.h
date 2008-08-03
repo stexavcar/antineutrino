@@ -1,8 +1,9 @@
-#ifndef _TEST_CCTEST_TESTS_INL
-#define _TEST_CCTEST_TESTS_INL
+#ifndef _CCTEST_NUNIT_INL
+#define _CCTEST_NUNIT_INL
 
 #include "runtime/runtime.h"
 #include "utils/nonlocal.h"
+#include "cctest/nunit.h"
 
 namespace neutrino {
 
@@ -51,6 +52,11 @@ public:
 
 #define ASSERT_ABORTS(TYPE, operation) IF_DEBUG(CHECK_ABORTS(TYPE, operation))
 
+#define TEST(name)                                                   \
+  static void nunit_test_##name();                                   \
+  static NUnitTest name(__FILE__, #name, nunit_test_##name);         \
+  static void nunit_test_##name()
+
 } // namespace neutrino
 
-#endif // _TEST_CCTEST_TESTS_INL
+#endif // _CCTEST_NUNIT_INL

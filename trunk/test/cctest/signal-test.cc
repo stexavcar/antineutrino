@@ -1,9 +1,9 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
 
-void Test::signals() {
+TEST(signals) {
   Signal *val = AllocationFailed::make(100);
   CHECK(!is<Smi>(val));
   CHECK(!is<Object>(val));
@@ -22,7 +22,7 @@ void Test::signals() {
   CHECK_IS(Nothing, no);
 }
 
-void Test::forward_pointers() {
+TEST(forward_pointers) {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   Code *code = heap.new_code(4).value();
@@ -32,7 +32,7 @@ void Test::forward_pointers() {
   CHECK(code == target);
 }
 
-void Test::type_mismatch() {
+TEST(type_mismatch) {
   Signal *val = TypeMismatch::make(tString, tTuple);
   CHECK_IS(TypeMismatch, val);
   CHECK_EQ(tString, cast<TypeMismatch>(val)->expected());

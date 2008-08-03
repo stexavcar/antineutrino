@@ -1,10 +1,10 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "runtime/runtime.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
 
-void Test::tuples() {
+TEST(tuples) {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   Tuple *tuple0 = heap.new_tuple(0).value();
@@ -26,7 +26,7 @@ void Test::tuples() {
   }
 }
 
-void Test::bounds_check() {
+TEST(bounds_check) {
 #ifdef DEBUG
   LocalRuntime runtime;
   Tuple *tuple = runtime.heap().new_tuple(10).value();

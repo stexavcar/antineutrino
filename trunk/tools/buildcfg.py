@@ -18,14 +18,14 @@ HEADER = re.compile(r"\[\s*(\w+)\s*(?:\:(.*))?\s*\]")
 
 
 class Section(object):
-  
+
   def __init__(self, name):
     self.name = name
     self.used = [ ]
     self.definitions = [ ]
     self.requirements = [ ]
     self.included = [ ]
-  
+
   def specialize(self, top, settings, result, files):
     for req in self.requirements:
       if not req.evaluate(settings):
@@ -47,43 +47,43 @@ class Section(object):
 
   def add_use(self, name):
     self.used.append(name)
-  
+
   def add_definition(self, name, op, value):
     assert type(value) is list
     self.definitions.append((name, op, value))
-  
+
   def add_requirement(self, expr):
     self.requirements.append(expr)
-  
+
   def add_include(self, path):
     self.included.append(path)
 
 
 class Configuration(object):
-  
+
   def __init__(self, parent):
     self.parent = parent
     self.sections = [ ]
     self.options = { }
-  
+
   def use(self, name, top, settings, result, files):
     if self.parent:
       self.parent.use(name, top, settings, result, files)
     for section in self.sections:
       if section.name == name:
         section.specialize(top, settings, result, files)
-  
+
   def specialize(self, top, settings, files):
     result = { }
     self.do_specialize(top, settings, result, files)
     return result
-  
+
   def do_specialize(self, top, settings, result, files):
     if self.parent:
       self.parent.do_specialize(top, settings, result, files)
     for section in self.sections:
       section.specialize(top, settings, result, files)
-  
+
   def add_section(self, section):
     self.sections.append(section)
 
@@ -112,14 +112,14 @@ def read_sections_from(file):
 
 
 class InputFileSet(object):
-  
+
   def __init__(self, lists, variables):
     self.lists = lists
     self.master_config_ = { }
     self.abstract_files = { }
     self.config_cache = { }
     self.variables = variables
-    
+
   def load(self, master_config):
     self.master_config_ = self.load_config([master_config], None)
     for l in self.lists:
@@ -152,14 +152,14 @@ class InputFileSet(object):
           raise "Found no file matching %s" % line
         file_list.append(AbstractFile(matches, root))
       self.abstract_files[section] = file_list
-  
+
   def sub_variable(self, match):
     return self.variables[match.group(1).lower()]
-  
+
   def process_value(self, value):
     parts = value.split()
     return [ re.sub(r'%\{(\w+)\}', self.sub_variable, p) for p in parts ]
-  
+
   def process_lines(self, lines, root, config):
     current_section = None
     for line in lines:
@@ -182,7 +182,7 @@ class InputFileSet(object):
         if len(defaults) == 1:
           default = defaults[0]
         else:
-          default = None 
+          default = None
         config.options[name] = (defaults + non_defaults, default)
         continue
       require_match = REQUIRE_DIRECTIVE.match(line)
@@ -210,11 +210,11 @@ class InputFileSet(object):
         current_section.add_use(used)
         continue
       raise "Unexpected line '%s'" % line
-  
+
   def parse_expression(self, expr):
     tokens = TokenStream(expr.split())
     return self.parse_binary_expression(tokens)
-  
+
   def parse_binary_expression(self, tokens):
     left = self.parse_atomic_expression(tokens)
     if tokens.has_more():
@@ -251,13 +251,16 @@ class InputFileSet(object):
         self.process_lines(lines, dirname(full_file), config)
       self.config_cache[tuple(files)] = config
     return self.config_cache[tuple(files)]
-  
+
   def get_configured_files(self, key, settings):
     result = [ ]
     for abf in self.abstract_files[key]:
       path = abf.specialize(settings)
       configuration = self.get_flags_for_file(path, abf.root)
-      flags = configuration.specialize(configuration, settings, self)
+      if configuration:
+        flags = configuration.specialize(configuration, settings, self)
+      else:
+        flags = { }
       relpath = path[len(commonprefix([path, abf.root]))+1:]
       result.append(ConfiguredFile(relpath, flags))
     return result
@@ -271,14 +274,14 @@ class InputFileSet(object):
       files = [ join(path, f) for f in os.listdir(path) if f.endswith('.cfg') ]
       self.config_cache[path] = self.load_config(files, parent)
     return self.config_cache[path]
-  
+
   def get_flags_for_file(self, filename, root):
     parent = dirname(filename)
     return self.get_flags_for_dir(parent, root)
 
   def options(self):
     return self.master_config_.options
-  
+
   def get_master_flags(self, settings):
     return self.master_config_.specialize(self.master_config_, settings, self)
 
@@ -287,17 +290,17 @@ class InputFileSet(object):
 
 
 class TokenStream(object):
-  
+
   def __init__(self, tokens):
     self.tokens = tokens
     self.pos = 0
-  
+
   def current(self):
     return self.tokens[self.pos]
-  
+
   def advance(self):
     self.pos += 1
-  
+
   def has_more(self):
     return self.pos < len(self.tokens)
 
@@ -308,7 +311,7 @@ class Operator(object):
     self.left = left
     self.op = op
     self.right = right
-  
+
   def evaluate(self, settings):
     left = self.left.evaluate(settings)
     right = self.right.evaluate(settings)
@@ -320,19 +323,19 @@ class Operator(object):
       raise "Unknown guard operator '%s'" % self.op
 
 class Variable(object):
-  
+
   def __init__(self, name):
     self.name = name
-  
+
   def evaluate(self, settings):
     return settings.get(self.name, [ ])
 
 
 class Literal(object):
-  
+
   def __init__(self, value):
     self.value = value
-  
+
   def evaluate(self, settings):
     return [ self.value ]
 
@@ -347,13 +350,13 @@ class AbstractFile(object):
   def __init__(self, names, root):
     self.names = names
     self.root = root
-  
+
   def pick_best(self, a, b, settings):
     """Returns true if 'a' is a better or more specific configuration
     than 'b'.
     """
     (name_a, config_a) = a
-    (name_b, config_b) = b    
+    (name_b, config_b) = b
     for (key, value) in config_a.items():
       if not key in config_b: return a
       if not key in settings: return a
@@ -377,7 +380,7 @@ class AbstractFile(object):
 
 
 class ConfiguredFile(object):
-  
+
   def __init__(self, path, flags):
     self.path = path
     self.flags = flags

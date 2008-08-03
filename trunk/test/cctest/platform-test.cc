@@ -1,3 +1,4 @@
+#include "cctest/nunit-inl.h"
 #include "values/values.h"
 
 using namespace neutrino;
@@ -7,7 +8,7 @@ using namespace neutrino;
 // trouble on some platforms.
 template <typename T> uword size() { return sizeof(T); }
 
-void Test::basic_data_types() {
+TEST(basic_data_types) {
   CHECK_EQ(4, size<uword>());
   CHECK_EQ(4, size<word>());
   CHECK_EQ(2, size<uint16_t>());
@@ -16,6 +17,6 @@ void Test::basic_data_types() {
   CHECK_EQ(1, size<int8_t>());
 }
 
-void Test::data_structures() {
+TEST(data_structures) {
   CHECK_LEQ(size<Stack::Status>(), size<word>());
 }

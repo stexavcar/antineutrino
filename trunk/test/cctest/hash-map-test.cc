@@ -1,10 +1,10 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "runtime/runtime-inl.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
 
-void Test::hash_map_simple() {
+TEST(hash_map_simple) {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   HashMap *dict = heap.new_hash_map().value();
@@ -39,7 +39,7 @@ void Test::hash_map_simple() {
   CHECK(heap.new_string("flab").value()->equals(cast<Value>(dict->get(heap.new_string("by").value()))));
 }
 
-void Test::hash_map_iterator() {
+TEST(hash_map_iterator) {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   HashMap *dict = heap.new_hash_map().value();

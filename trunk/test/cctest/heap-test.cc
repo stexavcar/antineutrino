@@ -1,17 +1,17 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "runtime/runtime.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
 
-void Test::integers() {
+TEST(integers) {
   for (int i = -100; i < 100; i++) {
     Smi *value = Smi::from_int(i);
     CHECK_EQ(i, value->value());
   }
 }
 
-void Test::simple_string_operations() {
+TEST(simple_string_operations) {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   String *str = heap.new_string("fop").value();
@@ -22,7 +22,7 @@ void Test::simple_string_operations() {
   CHECK_EQ('p', str->get(2));
 }
 
-void Test::to_string() {
+TEST(to_string) {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   CHECK(Smi::from_int(123)->to_string() == "123");
@@ -40,7 +40,7 @@ void Test::to_string() {
 }
 
 // Checks that the root indices are unique
-void Test::roots() {
+TEST(roots) {
   switch (0) {
 #define DECLARE_ROOT_CASE(n, Type, name, Name, allocator) case n:
 eRoots(DECLARE_ROOT_CASE)
@@ -49,7 +49,7 @@ eRoots(DECLARE_ROOT_CASE)
   }
 }
 
-void Test::cast_failure() {
+TEST(cast_failure) {
 #ifdef DEBUG
   Value *value = Smi::from_int(0);
   CHECK_ABORTS(cnCastError, cast<Tuple>(value));

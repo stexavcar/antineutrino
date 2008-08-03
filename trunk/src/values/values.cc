@@ -233,10 +233,11 @@ static void write_signal_short_on(Signal *obj, string_buffer &buf) {
   case Signal::sAllocationFailed:
     buf.append("@<allocation failed>");
     break;
-  case Signal::sFatalError:
+  case Signal::sFatalError: {
     FatalError::Type type = cast<FatalError>(obj)->fatal_error_type();
     buf.printf("@<fatal error: %>", elms(FatalError::get_name_for(type)));
     break;
+  }
   case Signal::sStackOverflow: {
     uword height = cast<StackOverflow>(obj)->height();
     buf.printf("@<stack overflow: %>", elms(height));

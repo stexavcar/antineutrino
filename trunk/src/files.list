@@ -31,5 +31,5 @@ values/channel.cc
 values/method.cc
 values/values.cc
 
-[ main: library ]
+[ main ]
 main/main.cc

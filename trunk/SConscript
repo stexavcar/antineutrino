@@ -50,8 +50,24 @@ def setup_pollock(env):
     suffix = {'.cc': '.pp.cc', '.h': '.pp.h', '.c': '.pp.c'}
   )
 
-def setup():
-  lists = [ join(root, 'src', 'library.list') ]
+
+def setup_cctest_build(env, settings, libpath):
+  lists = [ join(root, 'test', 'cctest', 'files.list') ]
+  cctest = join(root, 'test', 'cctest')
+  master_config = join(cctest, 'options.cfg')
+  variables = {'root': root, 'libpath': libpath}
+  config = buildcfg.build_configuration(cctest, lists, variables, master_config)
+  framework = config.get_configured_files('framework', settings)
+  framework_objs = [ env.Object(join(cctest, f.path), **f.flags) for f in framework ]
+  tests = config.get_configured_files('tests', settings)
+  objs = [ env.Object(join('test', 'cctest', f.path), **f.flags) for f in tests ]
+  master_flags = config.get_master_flags(settings)
+  program = env.Program('cctests', [objs, framework_objs], **master_flags)
+  env.Alias('cctests', program)
+
+
+def setup_library_build():
+  lists = [ join(root, 'src', 'files.list') ]
   master_config = join(root, 'src', 'options.cfg')
   variables = {'root': root}
   config = buildcfg.build_configuration(root, lists, variables, master_config)
@@ -65,12 +81,24 @@ def setup():
   for key in config.options().keys():
     settings[key] = [ env[key], 'any' ]
   master_flags = config.get_master_flags(settings)
-  files = config.get_configured_files('main', settings)
-  processed = [ (env.Pollock(join('src', f.path)), f.flags) for f in files ]
+
+  # Set up library build
+  library_files = config.get_configured_files('library', settings)
+  processed = [ (env.Pollock(join('src', f.path)), f.flags) for f in library_files ]
   for p in processed: env.Depends(p[0], pollock_files)
   all = [ env.Object(name, **flags) for (name, flags) in processed ]
+  lib = env.Library('neutrino', all, **master_flags)
+
+  # Set up program build
+  main_files = config.get_configured_files('main', settings)
+  processed = [ (env.Pollock(join('src', f.path)), f.flags) for f in main_files ]
+  for p in processed: env.Depends(p[0], pollock_files)
+  all += [ env.Object(name, **flags) for (name, flags) in processed ]
   program = env.Program('neutrino', all, **master_flags)
   env.Default(program)
 
+  return (env, settings, dirname(lib[0].rfile().abspath))
 
-setup()
+
+(env, settings, libpath) = setup_library_build()
+setup_cctest_build(env, settings, libpath)

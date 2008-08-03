@@ -1,10 +1,11 @@
+#include "cctest/nunit-inl.h"
 #include "runtime/runtime.h"
 #include "utils/string.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
 
-void Test::builtin_string_length() {
+TEST(builtin_string_length) {
   CHECK_EQ(0, string("").length());
   CHECK_EQ(1, string("f").length());
   CHECK_EQ(2, string("fo").length());
@@ -12,7 +13,7 @@ void Test::builtin_string_length() {
   CHECK_EQ(3, string("foo\0bar").length());
 }
 
-void Test::builtin_string_equality() {
+TEST(builtin_string_equality) {
   CHECK(string::equals("", ""));
   CHECK(!string::equals("", "ab"));
   CHECK(!string::equals("ab", ""));
@@ -23,7 +24,7 @@ void Test::builtin_string_equality() {
 
 // Tests that the extended_size computation stays within 1% of the
 // golden ratio for a range of large values
-void Test::grow_factor() {
+TEST(grow_factor) {
   static const double kGoldenRatio = 1.6180339887;
   static const double kDeviation = 0.01;
   static const double kLowerRatio = kGoldenRatio * (1 - kDeviation);
@@ -37,7 +38,7 @@ void Test::grow_factor() {
   }
 }
 
-void Test::string_buffer_basic() {
+TEST(string_buffer_basic) {
   string str;
   {
     string_buffer buf(1);
@@ -46,7 +47,7 @@ void Test::string_buffer_basic() {
     str.dispose();
     buf.append("foo");
     buf.append('-');
-    buf.append("bar"); 
+    buf.append("bar");
     str = buf.to_string();
     CHECK(str == "foo-bar");
     buf.clear();
@@ -60,7 +61,7 @@ void Test::string_buffer_basic() {
   str.dispose();
 }
 
-void Test::printf() {
+TEST(string_buffer_printf) {
   string_buffer buf;
   buf.printf("[$0 $1 $2]", elms("foo", "bar", "baz"));
   CHECK_EQ("[foo bar baz]", buf.to_string());
@@ -86,7 +87,7 @@ static string format(string form, const variant &arg) {
 }
 
 
-void Test::int_formats() {
+TEST(int_formats) {
   CHECK_EQ("0", format("%", 0));
   CHECK_EQ("10", format("%", 10));
   CHECK_EQ("10", format("%{01}", 10));
@@ -117,6 +118,6 @@ void Test::int_formats() {
 }
 
 
-void Test::string_null_print() {
+TEST(string_null_print) {
   CHECK_EQ(7, format("[%]", string("ab\0cd", 5)).length());
 }

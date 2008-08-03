@@ -1,10 +1,10 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "heap/heap-inl.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
 
-void Test::simple_forwarder() {
+TEST(simple_forwarder) {
   LocalRuntime runtime;
   Tuple *empty = runtime.roots().empty_tuple();
   Forwarder *forwarder = runtime.heap().new_forwarder(Forwarder::fwOpen, empty).value();
@@ -21,7 +21,7 @@ void Test::simple_forwarder() {
   CHECK_IS(TypeMismatch, string_val.signal());
 }
 
-void Test::smi_forwarder() {
+TEST(smi_forwarder) {
   LocalRuntime runtime;
   Value *obj = Smi::from_int(17);
   Forwarder *forwarder = runtime.heap().new_forwarder(Forwarder::fwOpen, obj).value();
@@ -35,7 +35,7 @@ void Test::smi_forwarder() {
   CHECK_IS(TypeMismatch, to<String>(forwarder).signal());
 }
 
-void Test::check_closed_immutable() {
+TEST(check_closed_immutable) {
 #ifdef DEBUG
   LocalRuntime runtime;
   Value *obj = Smi::from_int(17);
@@ -45,7 +45,7 @@ void Test::check_closed_immutable() {
 #endif // DEBUG
 }
 
-void Test::check_stay_closed() {
+TEST(check_stay_closed) {
 #ifdef DEBUG
   LocalRuntime runtime;
   Value *obj = Smi::from_int(17);

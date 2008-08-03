@@ -1,11 +1,11 @@
-#include "cctest/tests-inl.h"
+#include "cctest/nunit-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/nonlocal.h"
 #include "values/values-inl.h"
 
 using namespace neutrino;
 
-void Test::memory() {
+TEST(memory) {
   LocalRuntime runtime;
   int kSize = 256;
   Buffer *buffer = runtime.heap().new_buffer<uint8_t>(kSize).value();
@@ -19,7 +19,7 @@ void Test::memory() {
     ASSERT_EQ(i, buffer->at<uint8_t>(i));
 }
 
-void Test::bounds_check() {
+TEST(bounds_check) {
 #ifdef DEBUG
   LocalRuntime runtime;
   Buffer *buffer = runtime.heap().new_buffer<uint8_t>(128).value();
@@ -27,7 +27,7 @@ void Test::bounds_check() {
 #endif
 }
 
-void Test::bounds_check_partial() {
+TEST(bounds_check_partial) {
 #ifdef DEBUG
   LocalRuntime runtime;
   Buffer *buffer = runtime.heap().new_buffer<uint8_t>(129).value();
