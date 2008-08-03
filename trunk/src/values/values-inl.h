@@ -639,6 +639,10 @@ F *maybe<T, F>::signal() {
   return cast<F>(data_);
 }
 
+bool possibly::has_failed() {
+  return !is<Success>(data());
+}
+
 
 // ---------------------
 // --- S i g n a l s ---

@@ -16,7 +16,7 @@ namespace neutrino {
 
 class Main {
 public:
-  static void main(list<char*> &args);
+  static int main(list<char*> &args);
   static likely run_system(list<char*> &args);
   static void on_option_error(string message);
   static Image *read_image(string name);
@@ -44,13 +44,17 @@ DynamicLibraryCollection *Main::load_dynamic_libraries() {
 }
 
 
-void Main::main(list<char*> &args) {
+int Main::main(list<char*> &args) {
   likely result = run_system(args);
-  if (!result.has_failed()) return;
-  FatalError *error = result.signal();
-  string_buffer buf;
-  buf.printf("Aborting: %", elms(error));
-  buf.raw_string().println(stdout);
+  if (result.has_failed()) {
+    FatalError *error = result.signal();
+    string_buffer buf;
+    buf.printf("Aborting: %", elms(error));
+    buf.raw_string().println(stdout);
+    return 1;
+  } else {
+    return 0;
+  }
 }
 
 
@@ -131,6 +135,5 @@ Image *Main::read_image(string name) {
  */
 int main(int argc, char *argv[]) {
   neutrino::list<char*> args(argv, argc);
-  neutrino::Main::main(args);
-  return 0;
+  return neutrino::Main::main(args);
 }

@@ -22,6 +22,7 @@ Runtime::~Runtime() {
 likely Runtime::initialize(Architecture *arch) {
   possibly init_result = roots().initialize(heap());
   if (init_result.has_failed()) {
+    init_result.signal()->to_string().println();
     if (is<FatalError>(init_result.signal())) {
       return cast<FatalError>(init_result.signal());
     } else {

@@ -70,10 +70,12 @@ uword NUnitTest::run_all_tests() {
 
 int NUnitTest::main(list<const char*> args) {
   uword total_run_count = 0;
+  bool print_run_count = true;
   for (uword i = 1; i < args.length(); i++) {
     string arg = args[i];
     if (arg == "--list") {
       print_test_list();
+      print_run_count = false;
     } else if (arg == "--all") {
       run_all_tests();
     } else {
@@ -96,7 +98,8 @@ int NUnitTest::main(list<const char*> args) {
       total_run_count += current_run_count;
     }
   }
-  printf("Ran %i tests.\n", total_run_count);
+  if (print_run_count)
+    printf("Ran %i tests.\n", total_run_count);
   return 0;
 }
 

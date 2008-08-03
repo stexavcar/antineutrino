@@ -1,9 +1,0 @@
-Import('env build config prefix target')
-from os.path import join, exists
-
-# We have to manually construct the absolute path because otherwise
-# scons screws us over by creating an empty clone of the core folder
-# in the build directory and automagically using that.
-root = join(config['root'], 'test', 'language')
-assert exists(root)
-env.add_pyneu_tests_from(root)

@@ -168,6 +168,7 @@ class possibly : public maybe<Success, Signal> {
 public:
   possibly(Success *value) : maybe<Success, Signal>(value) { }
   possibly(Signal *value) : maybe<Success, Signal>(value) { }
+  inline bool has_failed();
 };
 
 

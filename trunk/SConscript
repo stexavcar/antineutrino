@@ -58,7 +58,7 @@ def setup_cctest_build(env, settings, libpath):
   variables = {'root': root, 'libpath': libpath}
   config = buildcfg.build_configuration(cctest, lists, variables, master_config)
   framework = config.get_configured_files('framework', settings)
-  framework_objs = [ env.Object(join(cctest, f.path), **f.flags) for f in framework ]
+  framework_objs = [ env.Object(join('test', 'cctest', f.path), **f.flags) for f in framework ]
   tests = config.get_configured_files('tests', settings)
   objs = [ env.Object(join('test', 'cctest', f.path), **f.flags) for f in tests ]
   master_flags = config.get_master_flags(settings)
@@ -95,6 +95,7 @@ def setup_library_build():
   for p in processed: env.Depends(p[0], pollock_files)
   all += [ env.Object(name, **flags) for (name, flags) in processed ]
   program = env.Program('neutrino', all, **master_flags)
+  env.Alias('program', program)
   env.Default(program)
 
   return (env, settings, dirname(lib[0].rfile().abspath))
