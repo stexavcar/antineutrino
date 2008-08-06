@@ -7,29 +7,7 @@ root = dirname(File('SConscript').rfile().abspath)
 sys.path.append(join(root, 'tools'))
 import buildcfg
 import pollock
-
-
-def get_option_checker(values):
-  def check_option(key, value, env):
-    if not values:
-      raise "A value must be specified for option '%s'" % key
-    if not value in values:
-      raise "Illegal value '%s' for option '%s'" % (value, key)
-  return check_option
-
-
-def get_built_in_settings():
-  result = { }
-  system = platform.system().lower()
-  system_list = [ system ]
-  if system in ['darwin', 'linux']:
-    system_list.append('posix')
-  system_list.append('any')
-  result['system'] = system_list
-  result['machine'] = [ platform.machine().lower(), 'any' ]
-  result['architecture'] = [ platform.architecture()[0].lower(), 'any' ]
-  result['processor'] = [ platform.processor().lower(), 'any' ]
-  return result
+Import('settings')
 
 
 spec_dir = join(root, 'etc', 'pollock')
@@ -63,7 +41,7 @@ def setup_cctest_build(env, settings, libpath):
   objs = [ env.Object(join('test', 'cctest', f.path), **f.flags) for f in tests ]
   master_flags = config.get_master_flags(settings)
   program = env.Program('cctests', [objs, framework_objs], **master_flags)
-  env.Alias('cctests', program)
+  env.Depends('tests', program)
 
 
 def setup_library_build():
@@ -71,15 +49,8 @@ def setup_library_build():
   master_config = join(root, 'src', 'options.cfg')
   variables = {'root': root}
   config = buildcfg.build_configuration(root, lists, variables, master_config)
-  options = Options()
-  for (key, (values, default)) in config.options().items():
-    options.Add(key, "", default, get_option_checker(values))
-  env = Environment(options = options)
+  env = Environment()
   setup_pollock(env)
-  env.Help(options.GenerateHelpText(env))
-  settings = get_built_in_settings()
-  for key in config.options().keys():
-    settings[key] = [ env[key], 'any' ]
   master_flags = config.get_master_flags(settings)
 
   # Set up library build
@@ -102,11 +73,11 @@ def setup_library_build():
   config = buildcfg.build_configuration(root, natives_list, variables, master_config)
   natives_files = config.get_configured_files('library', settings)
   processed = [ (env.Pollock(join('natives', f.path)), f.flags) for f in natives_files ]
-  natives_files = [ env.Object(name, **flags) for (name, flags) in processed ]
-  natives_lib = env.Library('natives', natives_files, **master_flags)
+  natives_files = [ env.SharedObject(name, **flags) for (name, flags) in processed ]
+  natives_lib = env.SharedLibrary('natives', natives_files, **master_flags)
+  env.Depends('natives', natives_lib)
 
-  env.Alias('program', [ program, natives_lib ])
-  env.Default('program')
+  env.Depends('program', [ program, natives_lib ])
 
   return (env, settings, dirname(lib[0].rfile().abspath))
 

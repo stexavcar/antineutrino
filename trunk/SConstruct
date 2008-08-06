@@ -1,5 +1,64 @@
-SConscript(
-  'SConscript',
-  build_dir='bin',
-  duplicate=False
-)
+from os.path import abspath, join, dirname
+import platform
+import sys
+root = dirname(File('SConstruct').rfile().abspath)
+sys.path.append(join(root, 'tools'))
+import buildcfg
+
+
+def get_option_checker(values):
+  def check_option(key, value, env):
+    for v in value.split(','):
+      if not v:
+        raise "A value must be specified for option '%s'" % key
+      if not v in values:
+        raise "Illegal value '%s' for option '%s'" % (v, key)
+  return check_option
+
+
+def get_built_in_settings():
+  result = { }
+  system = platform.system().lower()
+  system_list = [ system ]
+  if system in ['darwin', 'linux']:
+    system_list.append('posix')
+  system_list.append('any')
+  result['system'] = system_list
+  result['machine'] = [ platform.machine().lower(), 'any' ]
+  result['architecture'] = [ platform.architecture()[0].lower(), 'any' ]
+  result['processor'] = [ platform.processor().lower(), 'any' ]
+  return result
+
+
+def setup():
+  lists = [ join(root, 'src', 'files.list') ]
+  master_config = join(root, 'src', 'options.cfg')
+  variables = {'root': root}
+  config = buildcfg.build_configuration(root, lists, variables, master_config)
+  options = Options()
+  for (key, (values, default)) in config.options().items():
+    options.Add(key, "", default, get_option_checker(values))
+  env = Environment(options = options)
+  env.Help(options.GenerateHelpText(env))
+  env.Alias('program')
+  env.Alias('tests')
+  env.Alias('natives')
+  env.Default(['program', 'natives'])
+  
+  for mode in env['mode'].split(','):
+    settings = get_built_in_settings()
+    for key in config.options().keys():
+      if key == 'mode':
+        settings[key] = [ mode, 'any' ]
+      else:
+        settings[key] = [ env[key], 'any' ]
+    master_flags = config.get_master_flags(settings)
+    SConscript(
+      'SConscript',
+      build_dir=mode,
+      duplicate=False,
+      exports='settings'
+    )
+
+
+setup()

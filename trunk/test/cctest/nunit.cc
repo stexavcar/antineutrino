@@ -98,8 +98,8 @@ int NUnitTest::main(list<const char*> args) {
       total_run_count += current_run_count;
     }
   }
-  if (print_run_count)
-    printf("Ran %i tests.\n", total_run_count);
+  if (print_run_count == 0 && print_run_count)
+    printf("No tests were run.\n");
   return 0;
 }
 

@@ -4,9 +4,14 @@ import imp
 import optparse
 import os
 from os.path import join, dirname, abspath, basename
+import platform
 import subprocess
 import sys
+import time
 import utils
+
+
+VERBOSE = False
 
 
 class CommandOutput(object):
@@ -40,6 +45,7 @@ class TestOutput(object):
 
 
 def execute(args):
+  if VERBOSE: print " ".join(args)
   process = subprocess.Popen(
     args = args,
     stdout = subprocess.PIPE,
@@ -52,7 +58,7 @@ def execute(args):
 
 
 def execute_no_capture(args):
-  print " ".join(args)
+  if VERBOSE: print " ".join(args)
   process = subprocess.Popen(args = args)
   exit_code = process.wait()
   return CommandOutput(exit_code, "", "")
@@ -74,25 +80,39 @@ class TestConfiguration(object):
   def get_build_requirements(self):
     return [ ]
 
-  def list_tests(self, path):
+  def list_tests(self, path, mode):
     return [ ]
 
 
 class PyneuTestCase(TestCase):
 
-  def __init__(self, config, name):
+  def __init__(self, config, mode, name):
     self.name = name
     self.config = config
+    self.mode = mode
+
+  def full_name(self, name):
+    system = platform.system()
+    if system == 'Linux':
+      return 'lib%s.so' % name
+    elif system == 'Windows':
+      return '%s.dll' % name
+    else:
+      return name
+
+  def get_lib_list(self, raw_libs):
+    return [ join(self.mode, self.full_name(l)) for l in raw_libs ]    
 
   def commands(self):
     test = join(self.config.root, self.name + ".n")
     libs = join(self.config.context.workspace, 'lib')
     compiler = join(self.config.context.workspace, 'tools', 'pyneu', 'main.py')
     consts = join(self.config.context.workspace, 'src', 'utils', 'consts.h')
-    runtime = join(self.config.context.buildspace, 'bin', 'neutrino')
+    runtime = join(self.config.context.buildspace, self.mode, 'neutrino')
+    dylibs = self.get_lib_list(['natives'])
     return [
       ['python', compiler, '-c', consts, '-o', 'temp.nc', test, libs],
-      [runtime, '--images[', 'temp.nc', ']', '--libs[', ']']
+      [runtime, '--images[', 'temp.nc', ']', '--libs['] + dylibs + [']']
     ]
 
 
@@ -104,13 +124,13 @@ class PyneuTestConfiguration(TestConfiguration):
   def get_build_requirements(self):
     return [ 'program' ]
 
-  def list_tests(self, path):
+  def list_tests(self, path, mode):
     if len(path) > 1: return [ ]
     cases = [ c[:-2] for c in os.listdir(self.root) if c.endswith('.n') ]
     if len(path) == 0:
-      return [ PyneuTestCase(self, t) for t in cases ]
+      return [ PyneuTestCase(self, mode, t) for t in cases ]
     else:
-      return [ PyneuTestCase(self, t) for t in cases if t == path[0] ]
+      return [ PyneuTestCase(self, mode, t) for t in cases if t == path[0] ]
 
 
 class TestSuite(object):
@@ -147,8 +167,8 @@ class TestRepository(TestSuite):
   def get_build_requirements(self, path, context):
     return self.get_configuration(context).get_build_requirements()
 
-  def list_tests(self, path, context):
-    return self.get_configuration(context).list_tests(path)
+  def list_tests(self, path, context, mode):
+    return self.get_configuration(context).list_tests(path, mode)
 
 
 class LiteralTestSuite(TestSuite):
@@ -165,12 +185,12 @@ class LiteralTestSuite(TestSuite):
         result += test.get_build_requirements(rest, context)
     return result
 
-  def list_tests(self, path, context):
+  def list_tests(self, path, context, mode):
     (name, rest) = carcdr(path)
     result = [ ]
     for test in self.tests:
       if not name or name == test.name():
-        result += test.list_tests(rest, context)
+        result += test.list_tests(rest, context, mode)
     return result
 
 
@@ -181,21 +201,6 @@ class Context(object):
     self.buildspace = buildspace
 
 
-def build_options():
-  result = optparse.OptionParser()
-  return result
-
-
-def validate_options(options):
-  return True
-
-
-def build_requirements(workspace, requirements):
-  command_line = ['scons', '-Y', workspace] + requirements
-  output = execute_no_capture(command_line)
-  return output.exit_code == 0
-
-
 class ProgressIndicator(object):
 
   def __init__(self, cases):
@@ -203,6 +208,7 @@ class ProgressIndicator(object):
     self.succeeded = 0
     self.failed = 0
     self.remaining = len(self.cases)
+    self.total = len(self.cases)
     self.failed_tests = [ ]
 
   def run(self):
@@ -260,8 +266,7 @@ class VerboseProgressIndicator(MonochromeProgressIndicator):
       print "pass"
 
 
-
-class CompactProgressIndicator(MonochromeProgressIndicator):
+class DotsProgressIndicator(MonochromeProgressIndicator):
 
   def about_to_run(self, case):
     pass
@@ -275,10 +280,113 @@ class CompactProgressIndicator(MonochromeProgressIndicator):
       sys.stdout.flush()
 
 
+class CompactProgressIndicator(ProgressIndicator):
+
+  def __init__(self, cases, templates):
+    super(CompactProgressIndicator, self).__init__(cases)
+    self.templates = templates
+    self.last_status_length = 0
+    self.start_time = time.time()
+  
+  def starting(self):
+    pass
+  
+  def done(self):
+    self.print_progress('Done')
+  
+  def about_to_run(self, case):
+    self.print_progress(case.name)
+  
+  def has_run(self, output):
+  	if output.has_failed():
+  	  print "--- Failed: %s ---" % str(output.test.name)
+  	  print "Command: %s" % " ".join(output.command)
+  	stdout = output.output.stdout.strip()
+  	if len(stdout):
+  	  print self.templates['stdout'] % stdout
+  	stderr = output.output.stderr.strip()
+  	if len(stderr):
+  	  print self.templates['stderr'] % stderr
+
+  def truncate(self, str, length):
+    if length and (len(str) > (length - 3)):
+      return str[:(length-3)] + "..."
+    else:
+      return str
+
+  def print_progress(self, name):
+    self.clear_line(self.last_status_length)
+    elapsed = time.time() - self.start_time
+    status = self.templates['status_line'] % {
+      'passed': self.succeeded,
+      'remaining': (((self.total - self.remaining) * 100) // self.total),
+      'failed': self.failed,
+      'test': name,
+      'mins': int(elapsed) / 60,
+      'secs': int(elapsed) % 60
+    }
+    status = self.truncate(status, 78)
+    self.last_status_length = len(status)
+    print status,
+    sys.stdout.flush()
+
+
+class ColorProgressIndicator(CompactProgressIndicator):
+
+  def __init__(self, cases):
+    templates = {
+      'status_line': "[%(mins)02i:%(secs)02i|\033[34m%%%(remaining) 4d\033[0m|\033[32m+%(passed) 4d\033[0m|\033[31m-%(failed) 4d\033[0m]: %(test)s",
+      'stdout': "\033[1m%s\033[0m",
+      'stderr': "\033[31m%s\033[0m",
+    }
+    super(ColorProgressIndicator, self).__init__(cases, templates)
+  
+  def clear_line(self, last_line_length):
+    print "\033[1K\r",
+
+
+class MonoProgressIndicator(CompactProgressIndicator):
+
+  def __init__(self, cases):
+    templates = {
+      'status_line': "[%(mins)02i:%(secs)02i|%%%(remaining) 4d|+%(passed) 4d|-%(failed) 4d]: %(test)s",
+      'stdout': '%s',
+      'stderr': '%s',
+      'clear': lambda last_line_length: ("\r" + (" " * last_line_length) + "\r"),
+      'max_length': 78
+    }
+    super(MonoProgressIndicator, self).__init__(cases, templates)
+  
+  def clear_line(self, last_line_length):
+    print ("\r" + (" " * last_line_length) + "\r"),
+
+
 def run_test_cases(cases):
-  progress = VerboseProgressIndicator(cases)
+  progress = ColorProgressIndicator(cases)
   progress.run()
 
+
+def build_options():
+  result = optparse.OptionParser()
+  result.add_option("-m", "--mode", help="The test mode in which to run")
+  result.add_option("-v", "--verbose", help="Verbose output", default=False, action="store_true")
+  return result
+
+
+def validate_options(options):
+  mode = options.mode
+  if mode == 'all': mode = ['paranoid', 'debug', 'product']
+  elif not mode: mode = ['paranoid']
+  else: mode = [mode]
+  options.mode = mode
+  return True
+
+
+def build_requirements(workspace, requirements, mode):
+  command_line = ['scons', '-Y', workspace, 'mode=' + ",".join(mode)] + requirements
+  output = execute_no_capture(command_line)
+  return output.exit_code == 0
+  
 
 def main():
   parser = build_options()
@@ -286,14 +394,19 @@ def main():
   if not validate_options(options):
     parser.print_help()
     return 1
+  global VERBOSE
+  VERBOSE = options.verbose
   workspace = abspath(join(dirname(sys.argv[0]), '..'))
   tests = utils.read_lines_from(join(workspace, 'test', 'suites.list'))
   repositories = [TestRepository(join(workspace, 'test', name)) for name in tests]
   root = LiteralTestSuite(repositories)
-  paths = [ ]
-  for arg in args:
-    path = [ arg for arg in arg.split('/') if len(arg) > 0 ]
-    paths.append(path)
+  if len(args) == 0:
+    paths = [[]]
+  else:
+    paths = [ ]
+    for arg in args:
+      path = [ arg for arg in arg.split('/') if len(arg) > 0 ]
+      paths.append(path)
 
   # First build the required targets
   reqs = [ ]
@@ -301,14 +414,20 @@ def main():
   for path in paths:
     reqs += root.get_build_requirements(path, context)
   reqs = list(set(reqs))
-  if len(reqs) > 0 and not build_requirements(workspace, reqs):
-    return 1
+  if len(reqs) > 0:
+    if not build_requirements(workspace, reqs, options.mode):
+      return 1
 
   # Then list the tests
   cases = [ ]
   for path in paths:
-    cases += root.list_tests(path, context)
-  run_test_cases(cases)
+    for mode in options.mode:
+      cases += root.list_tests(path, context, mode)
+  
+  if len(cases) == 0:
+    print "No tests to run."
+  else:
+    run_test_cases(cases)
 
   return 0
 
