@@ -1,0 +1,15 @@
+def rec_value(a) {
+  assert a = get_void();
+  return [1, a];
+}
+
+def single_rec_test() {
+  rec a := rec_value(a);
+  assert a[0] = 1;
+  assert a[1] = a;
+  assert a[1][1][1][1][1][1][1][0] = 1;
+}
+
+def main() {
+  single_rec_test();
+}

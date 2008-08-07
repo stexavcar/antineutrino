@@ -1,0 +1,35 @@
+def test_lambda() {
+  def f := (fn (x) -> 4);
+  assert f() = 4;
+}
+
+def test_closure() {
+  def a := 6;
+  def f := (fn (x) -> a);
+  assert f() = 6;
+  assert ((fn (x) -> fn (y) -> x + y)(2)(3)) = 5;
+}
+
+def test_set_outer() {
+  var v := 5;
+  assert v = 5;
+  def add_to_v := fn (z) -> (v := v + z);
+  assert v = 5;
+  add_to_v(3);
+  assert v = 8;
+}
+
+def test_outer_side_effect() {
+  var v := 5;
+  def get_v := fn () -> v;
+  assert get_v() = 5;
+  v := 7;
+  assert get_v() = 7;
+}
+
+def main() {
+  test_lambda();
+  test_closure();
+  test_set_outer();
+  test_outer_side_effect();
+}

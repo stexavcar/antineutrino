@@ -1,0 +1,53 @@
+def truth_table_test_and() {
+  assert (false and false and false) = false;
+  assert (false and false and true) = false;
+  assert (false and true  and false) = false;
+  assert (false and true  and true) = false;
+  assert (true  and false and false) = false;
+  assert (true  and false and true) = false;
+  assert (true  and true  and false) = false;
+  assert (true  and true  and true) = true;
+}
+
+def truth_table_test_or() {
+  assert (false or false or false) = false;
+  assert (false or false or true) = true;
+  assert (false or true  or false) = true;
+  assert (false or true  or true) = true;
+  assert (true  or false or false) = true;
+  assert (true  or false or true) = true;
+  assert (true  or true  or false) = true;
+  assert (true  or true  or true) = true;
+}
+
+def truth_table_test_and_or() {
+  assert (false or false and false) = false;
+  assert (false or false and true) = false;
+  assert (false or true  and false) = false;
+  assert (false or true  and true) = true;
+  assert (true  or false and false) = true;
+  assert (true  or false and true) = true;
+  assert (true  or true  and false) = true;
+  assert (true  or true  and true) = true;
+  
+  assert (false and false or false) = false;
+  assert (false and false or true) = true;
+  assert (false and true  or false) = false;
+  assert (false and true  or true) = true;
+  assert (true  and false or false) = false;
+  assert (true  and false or true) = true;
+  assert (true  and true  or false) = true;
+  assert (true  and true  or true) = true;
+}
+
+def lazy_evaluation_test () {
+  assert (true  or  fail("1")) = true;
+  assert (false and fail("2")) = false;
+}
+
+def main() {
+  truth_table_test_and();
+  truth_table_test_or();
+  truth_table_test_and_or();
+  lazy_evaluation_test();
+}

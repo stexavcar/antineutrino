@@ -1,0 +1,8 @@
+internal def raw_print(value);
+def print(obj) -> raw_print(obj.to_string());
+
+def fail(message) {
+  raise failure(message);
+}
+
+def get_void() { }

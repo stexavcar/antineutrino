@@ -1,0 +1,74 @@
+protocol A {
+  def x(o) {
+    assert not o.a;
+    assert o.b;
+    assert o.c;
+    o.a := true;
+    return this;
+  }
+  static def y(o) {
+    assert not o.sa;
+    assert o.sb;
+    assert o.sc;
+    o.sa := true;
+    return this;
+  }
+}
+
+protocol B : A {
+  def x(o) {
+    assert not o.a;
+    assert not o.b;
+    assert o.c;
+    o.b := true;
+    return super.x(o);
+  }
+  static def y(o) {
+    assert not o.sa;
+    assert not o.sb;
+    assert o.sc;
+    o.sb := true;
+    return super.y(o);
+  }
+}
+
+protocol C : B {
+  def x(o) {
+    assert not o.a;
+    assert not o.b;
+    assert not o.c;
+    o.c := true;
+    return super.x(o);
+  }
+  static def y(o) {
+    assert not o.sa;
+    assert not o.sb;
+    assert not o.sc;
+    o.sc := true;
+    return super.y(o);
+  }
+}
+
+def test_normal_super() {
+  def o := new { a: false, b: false, c: false };
+  def c := new C();
+  def r := c.x(o);
+  assert r = c;
+  assert o.a;
+  assert o.b;
+  assert o.c;
+}
+
+def test_static_super() {
+  def o := new { sa: false, sb: false, sc: false };
+  def r := C.y(o);
+  assert r = C;
+  assert o.sa;
+  assert o.sb;
+  assert o.sc;
+}
+
+def main() {
+  test_normal_super();
+  test_static_super();
+}

@@ -1,0 +1,7 @@
+# The root of the neutrino protocol hierarchy
+protocol Object {
+
+  internal def =(that);
+  internal def to_string();
+
+}

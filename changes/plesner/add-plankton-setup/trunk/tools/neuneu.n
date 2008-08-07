@@ -1,0 +1,383 @@
+internal def whitespace?();
+internal def alpha?();
+internal def digit?();
+
+def ident_start?() -> alpha?() or (this = "_");
+def ident_part?() -> ident_start?() or digit?();
+
+
+(* --- T o k e n s --- *)
+
+
+protocol Token {
+  def end?() -> false;
+  def term?(name) -> false;
+  def value?() -> false;
+}
+
+
+protocol Identifier : Token {
+  def to_string() -> "#<identifier '${this.value}'>";
+  def value?() -> true;
+  static def make(value) -> new Identifier() { value: value };
+}
+
+
+protocol Number : Token {
+  def value?() -> true;
+  static def make(value) -> new Number() { value: value };
+}
+
+
+protocol Keyword : Token {
+  def to_string() -> "#<keyword ${this.name}>";
+  def term?(name) -> (name = this.name);
+  static def make(name) -> new Keyword() { name: name };
+}
+
+
+protocol Delimiter : Token {
+  def to_string() -> "#<delimiter ${this.name}>";
+  def term?(name) -> this.name = name;
+  static def make(name) -> new Delimiter() { name: name };
+}
+
+
+protocol End : Token {
+  def to_string() -> "#<end>";
+  def end?() -> true;
+  static def make() -> new End();
+}
+
+
+(* ---K e y w o r d s --- *)
+
+
+def keywords := ["def"];
+
+
+def delimiters := ["(", ")", "{", "}", "[", "]", ",", ":", ":=", ";"];
+
+
+(* --- S c a n n e r --- *)
+
+
+protocol Scanner {
+  
+  def has_more() -> (this.pos < |this.input|);
+  
+  def current -> this.input[this.pos];
+  
+  def advance() -> (this.pos := this.pos + 1);
+  
+  def substring(range) -> this.input.substring(range);
+  
+  def skip_whitespace() {
+    while (this.has_more() and this.current·whitespace?())
+      this.advance();
+  }
+  
+  def next_token() {
+    var result := null;
+    if (not this.has_more()) return End.make();
+    if (this.current·ident_start?()) {
+      result := this.scan_identifier();
+    } else if (delimiters ∋ this.current) {
+      result := this.scan_delimiter();
+    } else if (this.current·digit?()) {
+      result := this.scan_number();
+    } else {
+      def char := this.current;
+      raise unexpected_character(char);
+    }
+    this.skip_whitespace();
+    return result;
+  }
+  
+  def scan_number() {
+    def start := this.pos;
+    while (this.current·digit?())
+      this.advance();
+    def end := this.pos;
+    return Number.make(this.substring(start .. end));
+  }
+  
+  def scan_delimiter() {
+    var value := "";
+    while (this.has_more()) {
+      def prev_value := value;
+      value := value + this.current;
+      if (not delimiters ∋ value)
+        return Delimiter.make(prev_value);
+      else
+        this.advance();
+    }
+    // At this point we must have looped at least once and, since we
+    // looped again, the delimiters list must contain the value.
+    return Delimiter.make(value);
+  }
+  
+  def scan_identifier() {
+    def start := this.pos;
+    while (this.current·ident_part?())
+      this.advance();
+    def end := this.pos;
+    def value := this.substring(start .. end);
+    if (keywords ∋ value) return Keyword.make(value);
+    else return Identifier.make(value);
+  }
+  
+  # Factory methods for creating scanners processing the specified
+  # input
+  static def make(input) {
+    def scan := new Scanner() {
+      input: input,
+      pos: 0
+    };
+    scan.skip_whitespace();
+    return scan;
+  }
+  
+}
+
+
+(* --- G r a m m a r --- *)
+
+protocol Grammar {
+
+  def parse(start_name, tokens) {
+    def state := ParserState.make(tokens, 0, this);
+    def start := this.get_nonterm(start_name);
+    return start.parse(state);
+  }
+  
+  def get_nonterm(name) -> this.nonterms[name];
+
+  static def make(nonterms) -> new Grammar() { nonterms: nonterms };
+  
+}
+
+
+protocol ParserState {
+
+  def current() -> this.tokens[this.position];
+  
+  def advance() -> this.position := this.position + 1;
+
+  static def make(tokens, pos, gram) -> new ParserState() {
+    tokens: tokens,
+    position: pos,
+    grammar: gram
+  };
+
+}
+
+
+def term(value) -> new Term() { value: value };
+protocol Term {
+
+  def to_string() -> this.value;
+  
+  def parse(state) {
+    if (not state.current().term?(this.value))
+      return false;
+    state.advance();
+    return null;
+  }
+  
+}
+
+
+def value() -> new Value();
+protocol Value {
+
+  def to_string() -> "%";
+  
+  def parse(state) {
+    if (not state.current().value?())
+      return false;
+    def value := state.current().value;
+    state.advance();
+    return value;
+  }
+  
+}
+
+
+def seq(elms) -> new Sequence() { elms: elms };
+protocol Sequence {
+
+  def to_string() {
+    var result := "";
+    for (i in 0 .. |this.elms|) {
+      if (not i = 0) result := result + " ";
+      result := result + this.elms[i].to_string();
+    }
+    return result;
+  }
+  
+  def parse(state) {
+    var i := 0;
+    def values := new List();
+    def start := state.position;
+    while (i < |this.elms|) {
+      def value := this.elms[i].parse(state);
+      if (value = false) {
+        state.position := start;
+        return false;
+      } else if (not value = null) {
+        values.add(value);
+      }
+      i := i + 1;
+    }
+    if (values.empty?()) return null;
+    else if (|values| = 1) return values[0];
+    else return values;
+  }
+
+}
+
+
+def choice(elms) -> new Choice() { elms: elms };
+protocol Choice {
+  
+  def parse(state) {
+    var i := 0;
+    def start := state.position;
+    while (i < |this.elms|) {
+      def value := this.elms[i].parse(state);
+      if (value = false) {
+        state.position := start;
+      } else {
+        return value;
+      }
+      i := i + 1;
+    }
+    return false;
+  }
+  
+}
+
+
+def empty() -> new Empty() { };
+protocol Empty {
+  
+  def parse(state) -> null;
+  
+}
+
+
+def star(value) -> star_sep(value, empty());
+def star_sep(value, sep) -> new Repeat() { value: value, sep: sep };
+protocol Repeat {
+  
+  def parse(state) {
+    def values := new List();
+    def first := state.position;
+    def first_value := this.value.parse(state);
+    if (first_value = false) {
+      state.position = first;
+      return value;
+    }
+    values.add(first_value);
+    while (true) {
+      def start := state.position;
+      def sep := this.sep.parse(state);
+      if (sep = false) {
+        state.position = start;
+        return values;
+      }
+      def value := this.value.parse(state);
+      if (value = false) {
+        state.position = start;
+        return values;
+      }
+      values.add(value);
+    }
+  }
+
+}
+
+
+def nonterm(name) -> new Nonterm() { name: name };
+protocol Nonterm {
+  
+  def parse(state) -> return state.grammar.get_nonterm(this.name).parse(state);
+
+}
+
+
+def call(fun, body) -> new Call() { fun: fun, body: body };
+protocol Call {
+  
+  def parse(state) {
+    def value := this.body.parse(state);
+    if (value = false) return value;
+    return (this.fun)(value);
+  }
+  
+}
+
+
+(* --- A s t --- *)
+
+
+protocol Definition {
+  
+  def to_string() -> "def ${this.name} := ${this.value};";
+  static def make(name, value) -> new Definition() { name: name, value: value };
+
+}
+
+
+def get_void() { }
+
+
+def make_function(nodes) {
+  def name := nodes[0];
+  def params := nodes[1];
+  def body := new ReturnExpression(new LiteralExpression(get_void()));
+  return Definition.make(name, params);
+}
+
+
+def make_definition(nodes) {
+  def name := nodes[0];
+  def value := nodes[1];
+  return Definition.make(name, value);
+}
+
+
+(* --- M a i n --- *)
+
+
+def get_grammar() {
+  def nonterms := new Map();
+  
+  def function := seq([term("def"), value(), term("("), nonterm("params"), term(")"), term("{"), term("}")]);
+  def definition := seq([term("def"), value(), term(":="), value(), term(";")]);
+  nonterms["toplevel"] := choice([
+    call(make_definition, definition),
+    call(make_function, function)
+  ]);
+  
+  nonterms["program"] := star(nonterm("toplevel"));
+  
+  nonterms["params"] := star_sep(value(), term(","));
+  
+  return Grammar.make(nonterms);
+}
+
+
+def main() {
+  def file := open(arguments[0]);
+  def input := file.read();
+  file.close();
+  def gram := get_grammar();
+  def scan := Scanner.make(input);
+  def tokens := new List();
+  while (scan.has_more())
+    tokens.add(scan.next_token());
+  tokens.add(End.make());
+  print(gram.parse("program", tokens));
+}

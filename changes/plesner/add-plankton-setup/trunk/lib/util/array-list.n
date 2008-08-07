@@ -1,0 +1,37 @@
+def ensure_capacity() {
+  if (this.size < |this.elms|) return null;
+  def new_elms := new Array(size: |this.elms| × 2);
+  for (i in 0 .. |this.elms|)
+    new_elms[i] := this.elms[i];
+  this.elms := new_elms;
+}
+
+protocol ArrayList : List {
+
+  def [index] -> this.elms[index];
+
+  def | | -> this.size;
+
+  def add(elm) {
+    ensure_capacity();
+    this.elms[this.size] := elm;
+    this.size := this.size + 1;
+  }
+
+  static def new() -> new ArrayList() {
+    size: 0,
+    elms: new Array(size: 16)
+  };
+  
+  def to_string() {
+    var result := "[";
+    var first := true;
+    for (i in 0 .. |this|) {
+      if (first) first := false;
+      else result := result + ", ";
+      result := result + this[i].to_string();
+    }
+    return result + "]";
+  }
+
+}

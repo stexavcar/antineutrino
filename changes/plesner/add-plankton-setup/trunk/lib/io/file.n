@@ -1,0 +1,24 @@
+native channel def file_natives;
+
+# An open file.  Note that files are not closed automatically but must
+# be closed explicitly by calling =File.close=.
+protocol File {
+
+  # Closes this file.
+  def close() -> file_natives.send([2, this.handle]);
+  
+  # Reads the contents of this file and returns them in form of a
+  # string
+  def read() -> file_natives.send([1, this.handle]);
+
+  def to_string() -> "#<a File: ${this.name}>";
+
+}
+
+# Opens and returns the file with the specified name.  If an error
+# occurs while opening the file =null= is returned.
+def open(name) {
+  def handle := file_natives.send([0, name]);
+  if (handle = null) return null;
+  return new File() { handle: handle, name: name };
+}

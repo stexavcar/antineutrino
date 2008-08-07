@@ -1,0 +1,74 @@
+def simple_record_test() {
+  def x := new { a: 0, b: 1, c: 2 };
+  assert x.a = 0;
+  assert x.b = 1;
+  assert x.c = 2;
+  def y := new { c: "x", b: "y", a: "z" };
+  assert y.a = "z";
+  assert y.b = "y";
+  assert y.c = "x";
+}
+
+protocol Fooable {
+  def foo() -> 13;
+}
+
+def protocol_test() {
+  def x := new Fooable() { a: 0, b: 1 };
+  assert x.a = 0;
+  assert x.b = 1;
+  assert x.foo() = 13;
+}
+
+protocol Nirk {
+  def n() -> 2;
+  static def new(obj) {
+    assert not obj.was_called;
+    obj.was_called := true;
+    return null;
+  }
+}
+
+protocol Knirk : Nirk {
+  def k() -> 3;
+  static def new(obj) {
+    assert not obj.knirk;
+    assert obj.plirk;
+    obj.knirk := true;
+    return new super();
+  }
+}
+
+protocol Plirk : Knirk {
+  def p() -> 4;
+  static def new(obj) {
+    assert not obj.plirk;
+    assert not obj.knirk;
+    obj.plirk := true;
+    return new super(obj);
+  }
+}
+
+def simple_constructor_call_test() {
+  var o := new { was_called: false };
+  var n := new Nirk(o);
+  assert o.was_called;
+  assert n = null;
+}
+
+def chain_was_called() {
+  var o := new { plirk: false, knirk: false };
+  var n := new Plirk(o);
+  assert n.n() = 2;
+  assert n.k() = 3;
+  assert n.p() = 4;
+  assert o.plirk;
+  assert o.knirk;
+}
+
+def main() {
+  simple_record_test();
+  protocol_test();
+  simple_constructor_call_test();
+  chain_was_called();
+}

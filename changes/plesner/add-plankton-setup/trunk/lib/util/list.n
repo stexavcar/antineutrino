@@ -1,0 +1,7 @@
+protocol List {
+
+  def empty?() -> |this| = 0;
+
+  static def new() -> new ArrayList();
+
+}

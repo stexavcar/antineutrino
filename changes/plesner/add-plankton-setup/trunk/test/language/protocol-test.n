@@ -1,0 +1,27 @@
+protocol A {
+  def x() -> 4;
+}
+
+protocol B : A {
+  def x() -> 7;
+}
+
+def test_inheritance() {
+  def a := new A();
+  def b := new B();
+  assert a.x() = 4;
+  assert b.x() = 7;
+}
+
+protocol X {
+  static def foo() -> 8;
+}
+
+def test_statics() {
+  assert X.foo() = 8;
+}
+
+def main() {
+  test_inheritance();
+  test_statics();
+}

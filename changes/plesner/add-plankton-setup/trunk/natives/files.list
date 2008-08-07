@@ -1,0 +1,7 @@
+# These files are bundled together in one dynamic library that is
+# loaded with the neutrino library
+
+[ library ]
+core/file.cc
+test/test.cc
+whiteout/process.cc

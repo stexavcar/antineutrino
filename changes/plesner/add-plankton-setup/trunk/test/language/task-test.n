@@ -1,0 +1,14 @@
+def test_simple_task() {
+  def t := task {
+    yield 1;
+    yield 2;
+    yield 3;
+  };
+  assert t.attach() = 1;
+  assert t.attach() = 2;
+  assert t.attach() = 3;
+}
+
+def main() {
+  test_simple_task();
+}

@@ -1,0 +1,11 @@
+def access_test() {
+  def s := "foo";
+  assert |s| = 3;
+  assert s[0] = "f";
+  assert s[1] = "o";
+  assert s[2] = "o";
+}
+
+def main() {
+  access_test();
+}

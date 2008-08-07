@@ -1,0 +1,9 @@
+def circumfix_test() {
+  assert |"abcd"| = 4;
+  assert (|"a"| + |"b"| + |"c"|) = 3;
+  assert |4 - 5| = 1;
+}
+
+def main() {
+  circumfix_test();
+}

@@ -1,0 +1,17 @@
+internal protocol Tuple {
+
+  internal def | |;
+  internal def =(that);
+  internal def [index];
+
+  def ∋(that) {
+    var i := 0;
+    while (i < |this|) {
+      if (this[i] = that)
+        return true;
+      i := i + 1;
+    }
+    return false;
+  }
+
+}

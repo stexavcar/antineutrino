@@ -1,0 +1,43 @@
+def get_four() {
+  def x := 4;
+  return x;
+}
+
+def get_seven() {
+  def a := 3;
+  def b := 4;
+  return a + b;
+}
+
+def get_eight() {
+  def x := 8;
+  if (true) return x;
+  else return 6;
+}
+
+def get_nine() {
+  def x := 9;
+  if (false) return 6;
+  else return x;
+}
+
+def get_void() { }
+
+def single_definition() {
+  def x := 4;
+}
+
+def get_seventeen() -> def k := 17 in k;
+
+def local_test() {
+  assert get_four() = 4;
+  assert get_seven() = 7;
+  assert get_eight() = 8;
+  assert get_nine() = 9;
+  assert get_seventeen() = 17;
+  assert single_definition() = get_void();
+}
+
+def main() {
+  local_test();
+}

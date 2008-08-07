@@ -1,0 +1,19 @@
+def simple_test() {
+  var x := 9;
+  assert x = 9;
+  x := 3;
+  assert x = 3; 
+  var y := 4;
+  assert x = 3;
+  assert y = 4;
+  y := 7;
+  assert x = 3;
+  assert y = 7;
+  x := 6;
+  assert x = 6;
+  assert y = 7;
+}
+
+def main() {
+  simple_test();
+}

@@ -1,0 +1,25 @@
+def simple_forwarder() {
+  def x := new Forwarder("foo");
+  assert x = "foo";
+  assert |x| = 3;
+  assert (x + "bar") = "foobar";
+  x·set_target("nirk");
+  assert x = "nirk";
+  assert |x| = 4;
+  assert (x + "bar") = "nirkbar";
+}
+
+def record_forwarder() {
+  def r := new { x: 2, y: 3 };
+  def f := new Forwarder(r);
+  assert f = r;
+  assert f.x = 2;
+  assert f.y = 3;
+  f·set_target(null);
+  assert f = null;
+}
+
+def main() {
+  simple_forwarder();
+  record_forwarder();
+}

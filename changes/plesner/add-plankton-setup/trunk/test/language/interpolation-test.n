@@ -1,0 +1,20 @@
+def interpolation_test() {
+  assert "${"a"}${"b"}${"c"}" = "abc";
+  assert "a${"a${"b${"b"}"}"}" = "aabb";
+}
+
+def local_test(a, b, c) {
+  assert "[${a}]" = "[1]";
+  assert "${c}-${b}-${a}" = "3-2-1";
+}
+
+def trailing_whitespace_test() {
+  def x := 4;
+  assert "[ ${x} ]" = "[ 4 ]";
+}
+
+def main() {
+  interpolation_test();
+  local_test(1, 2, 3);
+  trailing_whitespace_test();
+}

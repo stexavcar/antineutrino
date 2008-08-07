@@ -1,0 +1,5 @@
+def @assert ${left:expr} == ${right:expr}
+  ASSERT_EQ(${left}, ${right})
+
+def @assert is < ${Type:ident} > \( ${value:expr} \)
+  ASSERT_IS(${Type}, ${value})

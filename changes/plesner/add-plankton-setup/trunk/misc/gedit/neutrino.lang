@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE language SYSTEM "language.dtd">
+<language name="Neutrino" version="1.0" _section="Sources" mimetypes="text/neutrino">
+
+  <escape-char>\</escape-char>
+
+  <block-comment _name = "Block Comment" style= "Comment">
+    <start-regex>\(\*</start-regex>
+    <end-regex>\*\)</end-regex>
+  </block-comment>
+
+  <line-comment _name = "Line Comment" style= "Comment">
+    <start-regex>//</start-regex>
+  </line-comment>
+  
+  <line-comment _name = "Doc" style= "Comment">
+    <start-regex>#</start-regex>
+  </line-comment>
+  
+  <string _name = "String" style = "String" end-at-line-end = "TRUE">
+    <start-regex>&quot;</start-regex>
+    <end-regex>&quot;</end-regex>
+  </string>
+  
+  <pattern-item _name = "Decimal" style = "Decimal">
+    <regex>\b([0-9]*)\b</regex>
+  </pattern-item>
+
+<!-- begin keywords -->
+
+  <keyword-list _name = "All" style = "Keyword" case-sensitive="TRUE">
+    <keyword>def</keyword>
+    <keyword>this</keyword>
+    <keyword>is</keyword>
+    <keyword>if</keyword>
+    <keyword>else</keyword>
+    <keyword>while</keyword>
+    <keyword>do</keyword>
+    <keyword>return</keyword>
+    <keyword>null</keyword>
+    <keyword>true</keyword>
+    <keyword>false</keyword>
+    <keyword>internal</keyword>
+    <keyword>operator</keyword>
+    <keyword>new</keyword>
+    <keyword>in</keyword>
+    <keyword>fn</keyword>
+    <keyword>and</keyword>
+    <keyword>or</keyword>
+    <keyword>not</keyword>
+    <keyword>on</keyword>
+    <keyword>raise</keyword>
+    <keyword>protocol</keyword>
+    <keyword>native</keyword>
+    <keyword>static</keyword>
+    <keyword>task</keyword>
+    <keyword>var</keyword>
+    <keyword>yield</keyword>
+    <keyword>channel</keyword>
+    <keyword>assert</keyword>
+    <keyword>super</keyword>
+    <keyword>factory</keyword>
+    <keyword>rec</keyword>
+    <keyword>for</keyword>
+  </keyword-list>
+
+<!-- end keywords -->
+
+</language>
