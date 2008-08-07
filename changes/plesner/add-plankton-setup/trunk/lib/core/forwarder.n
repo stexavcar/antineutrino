@@ -1,7 +1,0 @@
-internal def new_forwarder();
-internal def set_target(value);
-internal def close();
-
-protocol Forwarder {
-  static def new(value) -> value·new_forwarder();
-}

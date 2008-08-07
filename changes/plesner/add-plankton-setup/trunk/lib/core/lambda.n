@@ -1,5 +1,0 @@
-internal protocol Lambda {
-
-  internal def disassemble();
-
-}

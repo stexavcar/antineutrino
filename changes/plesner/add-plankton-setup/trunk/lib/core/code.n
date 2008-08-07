@@ -1,7 +1,0 @@
-internal protocol Code {
-
-}
-
-internal protocol Method {
-
-}

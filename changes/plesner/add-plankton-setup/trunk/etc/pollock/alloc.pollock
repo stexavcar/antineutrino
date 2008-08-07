@@ -1,2 +1,0 @@
-def @alloc(Result=${Type}) ${Type:ident} \* ${name:ident} = ${operation:expr}
-  POLLOCK_ALLOC(${Result}, ${Type}, ${name}, ${operation})

@@ -1,5 +1,0 @@
-internal protocol Protocol {
-  
-  internal factory def new();
-  
-}

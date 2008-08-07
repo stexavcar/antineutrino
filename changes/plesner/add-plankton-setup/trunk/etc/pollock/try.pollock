@@ -1,2 +1,0 @@
-def @try(likelihood=possibly) ${operation:expr}
-  POLLOCK_TRY(${likelihood}, ${operation}, ${i})
