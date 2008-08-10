@@ -11,8 +11,8 @@ class Tuple;
 
 class Value {
 public:
-  enum Tag { vtInteger, vtString, vtTuple, vtProxy, vtNull, vtUnknown };
-  
+  enum Tag { vtInteger, vtString, vtTuple, vtProxy, vtNull, vtVoid, vtUnknown };
+
   /**
    * This class holds all nontrivial methods used in the api.  This is
    * done in order to factor our all nontrivial functionality, while
@@ -29,13 +29,13 @@ public:
     Value (Tuple::*tuple_get_)(unsigned index);
     void *(Value::*proxy_deref_)(unsigned size);
   };
-  
+
   inline void *origin() { return origin_; }
   DTable &dtable() { return *dtable_; }
 
   inline Tag type() { return (this->*(dtable().value_type_))(); }
   inline Value nothing() { return Value(dtable(), 0); }
-  
+
   inline Value(DTable &dtable, void *origin) : dtable_(&dtable), origin_(origin) { };
 
 private:
@@ -79,7 +79,7 @@ class Tuple : public Value {
 public:
   static const Value::Tag kTag = vtTuple;
   inline unsigned length() { return (this->*(dtable().tuple_length_))(); }
-  inline Value operator[](int index) { return (this->*(dtable().tuple_get_))(index); }  
+  inline Value operator[](int index) { return (this->*(dtable().tuple_get_))(index); }
 };
 
 
@@ -97,11 +97,17 @@ class Null : public Value {
 };
 
 
+class Void : public Value {
+  static const Value::Tag kTag = vtVoid;
+};
+
+
 class IBuilder {
 public:
   virtual Integer new_integer(int value) = 0;
   virtual String new_string(const char *data, unsigned length) = 0;
   virtual Null get_null() = 0;
+  virtual Void get_void() = 0;
   template <typename T> Proxy<T> new_proxy();
 private:
   virtual Value new_raw_proxy(unsigned size) = 0;

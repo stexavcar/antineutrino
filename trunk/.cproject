@@ -47,6 +47,7 @@
 <option id="gnu.cpp.compiler.option.include.paths.1589623047" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/neutrino/src}&quot;"/>
 <listOptionValue builtIn="false" value="&quot;${cairo_path}&quot;"/>
+<listOptionValue builtIn="false" value="&quot;${workspace_loc:/neutrino/natives}&quot;"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.666290822" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>

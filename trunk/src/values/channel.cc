@@ -94,6 +94,7 @@ public:
   virtual plankton::Integer new_integer(word value);
   virtual plankton::String new_string(const char *data, unsigned length);
   virtual plankton::Null get_null();
+  virtual plankton::Void get_void();
   virtual plankton::Value new_raw_proxy(unsigned size);
 private:
   Runtime &runtime() { return runtime_; }
@@ -150,6 +151,12 @@ plankton::String BuilderImpl::new_string(const char *data, unsigned length) {
 plankton::Null BuilderImpl::get_null() {
   Null *nuhll = runtime().roots().nuhll();
   return ApiUtils::wrap<plankton::Null>(nuhll);
+}
+
+
+plankton::Void BuilderImpl::get_void() {
+  Void *vhoid = runtime().roots().vhoid();
+  return ApiUtils::wrap<plankton::Void>(vhoid);
 }
 
 

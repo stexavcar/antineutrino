@@ -577,6 +577,7 @@ Signal *Assembler<C>::visit_interpolate_expression(ref<InterpolateExpression> th
   ref_block<> protect(refs());
   ref<Tuple> terms = protect(that.terms());
   for (uword i = 0; i < terms->length(); i++) {
+    ref_block<> protect(refs());
     ref<Value> entry = protect(terms->get(i));
     if (is<String>(entry)) {
       __ push(entry);
