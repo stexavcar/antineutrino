@@ -3,7 +3,7 @@
 #include "heap/ref-inl.h"
 #include "heap/space.h"
 #include "utils/checks.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 using namespace neutrino;
 
@@ -11,7 +11,7 @@ TEST(simple_migration) {
   LocalRuntime runtime;
   ref_block<> protect(runtime.refs());
   ref<Tuple> tuple = protect(runtime.factory().new_tuple(10).value());
-  CHECK_IS(Tuple, *tuple);
+  @check is<Tuple>(*tuple);
   Tuple *old_tuple = *tuple;
   Memory &memory = runtime.heap().memory();
   SemiSpace &old_space = memory.young_space();
@@ -20,7 +20,7 @@ TEST(simple_migration) {
   SemiSpace &new_space = memory.young_space();
   CHECK(&old_space != &new_space);
   CHECK(*tuple != old_tuple);
-  CHECK_IS(Tuple, *tuple);
+  @check is<Tuple>(*tuple);
   CHECK(new_space.contains(*tuple));
 }
 
@@ -32,19 +32,19 @@ TEST(garbage_removed) {
   for (uword i = 0; i < 10; i++)
     heap.new_tuple(10);
   ref<True> value = runtime.thrue();
-  CHECK_IS(True, *value);
+  @check is<True>(*value);
   CHECK(old_space.contains(*value));
   uword space_before = old_space.bytes_allocated();
   memory.collect_garbage(runtime);
   SemiSpace &new_space = memory.young_space();
   CHECK(&old_space != &new_space);
   uword space_after = new_space.bytes_allocated();
-  CHECK_IS(True, *value);
+  @check is<True>(*value);
   CHECK(new_space.contains(*value));
   CHECK(space_before > space_after);
   memory.collect_garbage(runtime);
   uword space_after_after = memory.young_space().bytes_allocated();
-  CHECK_EQ(space_after, space_after_after);
+  @check space_after_after == space_after;
 }
 
 TEST(migrate_cycle) {
@@ -53,13 +53,13 @@ TEST(migrate_cycle) {
   Memory &memory = runtime.heap().memory();
   SemiSpace &old_space = memory.young_space();
   ref<Tuple> value = protect(runtime.factory().new_tuple(3).value());
-  CHECK_IS(Tuple, *value);
+  @check is<Tuple>(*value);
   value->set(0, *value);
   value->set(1, *value);
   value->set(2, *value);
   CHECK(old_space.contains(*value));
   memory.collect_garbage(runtime);
-  CHECK_IS(Tuple, *value);
+  @check is<Tuple>(*value);
   CHECK(value->get(0) == *value);
   CHECK(value->get(1) == *value);
   CHECK(value->get(2) == *value);

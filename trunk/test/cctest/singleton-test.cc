@@ -1,6 +1,6 @@
 #include "cctest/nunit-inl.h"
 #include "runtime/runtime.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 using namespace neutrino;
 
@@ -8,10 +8,10 @@ TEST(singletons) {
   LocalRuntime runtime;
   Roots &roots = runtime.roots();
 
-  CHECK_IS(Void, roots.vhoid());
-  CHECK_IS(Null, roots.nuhll());
-  CHECK_IS(True, roots.thrue());
-  CHECK_IS(False, roots.fahlse());
+  @check is<Void>(roots.vhoid());
+  @check is<Null>(roots.nuhll());
+  @check is<True>(roots.thrue());
+  @check is<False>(roots.fahlse());
 
   CHECK(!is<Null>(roots.vhoid()));
   CHECK(!is<True>(roots.vhoid()));

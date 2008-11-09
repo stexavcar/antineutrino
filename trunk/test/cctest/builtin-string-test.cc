@@ -1,16 +1,16 @@
 #include "cctest/nunit-inl.h"
 #include "runtime/runtime.h"
 #include "utils/string.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 using namespace neutrino;
 
 TEST(builtin_string_length) {
-  CHECK_EQ(0, string("").length());
-  CHECK_EQ(1, string("f").length());
-  CHECK_EQ(2, string("fo").length());
-  CHECK_EQ(3, string("foo").length());
-  CHECK_EQ(3, string("foo\0bar").length());
+  @check string("").length() == 0;
+  @check string("f").length() == 1;
+  @check string("fo").length() == 2;
+  @check string("foo").length() == 3;
+  @check string("foo\0bar").length() == 3;
 }
 
 TEST(builtin_string_equality) {
@@ -64,7 +64,7 @@ TEST(string_buffer_basic) {
 TEST(string_buffer_printf) {
   string_buffer buf;
   buf.printf("[$0 $1 $2]", elms("foo", "bar", "baz"));
-  CHECK_EQ("[foo bar baz]", buf.to_string());
+  @check buf.to_string() == "[foo bar baz]";
   buf.clear();
   buf.printf("[% % %]", elms("foo", "bar", "baz"));
   CHECK(buf.to_string() == "[foo bar baz]");
@@ -88,36 +88,36 @@ static string format(string form, const variant &arg) {
 
 
 TEST(int_formats) {
-  CHECK_EQ("0", format("%", 0));
-  CHECK_EQ("10", format("%", 10));
-  CHECK_EQ("10", format("%{01}", 10));
-  CHECK_EQ("10", format("%{02}", 10));
-  CHECK_EQ("010", format("%{03}", 10));
-  CHECK_EQ("0010", format("%{04}", 10));
-  CHECK_EQ("0000000010", format("%{010}", 10));
-  CHECK_EQ("10", format("%{1}", 10));
-  CHECK_EQ("10", format("%{2}", 10));
-  CHECK_EQ(" 10", format("%{3}", 10));
-  CHECK_EQ("  10", format("%{4}", 10));
-  CHECK_EQ("        10", format("%{10}", 10));
-  CHECK_EQ("10", format("%{-1}", 10));
-  CHECK_EQ("10", format("%{-2}", 10));
-  CHECK_EQ("10 ", format("%{-3}", 10));
-  CHECK_EQ("10  ", format("%{-4}", 10));
-  CHECK_EQ("10        ", format("%{-10}", 10));
-  CHECK_EQ("a", format("%{x1}", 10));
-  CHECK_EQ(" a", format("%{x2}", 10));
-  CHECK_EQ("  a", format("%{x3}", 10));
-  CHECK_EQ("   a", format("%{x4}", 10));
-  CHECK_EQ("         a", format("%{x10}", 10));
-  CHECK_EQ("-10", format("%", -10));
-  CHECK_EQ("-10", format("%{01}", -10));
-  CHECK_EQ("-10", format("%{02}", -10));
-  CHECK_EQ("-10", format("%{03}", -10));
-  CHECK_EQ("-010", format("%{04}", -10));
+  @check format("%", 0) == "0";
+  @check format("%", 10) == "10";
+  @check format("%{01}", 10) == "10";
+  @check format("%{02}", 10) == "10";
+  @check format("%{03}", 10) == "010";
+  @check format("%{04}", 10) == "0010";
+  @check format("%{010}", 10) == "0000000010";
+  @check format("%{1}", 10) == "10";
+  @check format("%{2}", 10) == "10";
+  @check format("%{3}", 10) == " 10";
+  @check format("%{4}", 10) == "  10";
+  @check format("%{10}", 10) == "        10";
+  @check format("%{-1}", 10) == "10";
+  @check format("%{-2}", 10) == "10";
+  @check format("%{-3}", 10) == "10 ";
+  @check format("%{-4}", 10) == "10  ";
+  @check format("%{-10}", 10) == "10        ";
+  @check format("%{x1}", 10) == "a";
+  @check format("%{x2}", 10) == " a";
+  @check format("%{x3}", 10) == "  a";
+  @check format("%{x4}", 10) == "   a";
+  @check format("%{x10}", 10) == "         a";
+  @check format("%", -10) == "-10";
+  @check format("%{01}", -10) == "-10";
+  @check format("%{02}", -10) == "-10";
+  @check format("%{03}", -10) == "-10";
+  @check format("%{04}", -10) == "-010";
 }
 
 
 TEST(string_null_print) {
-  CHECK_EQ(7, format("[%]", string("ab\0cd", 5)).length());
+  @check format("[%]", string("ab\0cd", 5)).length() == 7;
 }

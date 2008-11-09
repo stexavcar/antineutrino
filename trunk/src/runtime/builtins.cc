@@ -4,7 +4,7 @@
 #include "runtime/runtime-inl.h"
 #include "utils/checks.h"
 #include "utils/globals.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 #include <ctype.h>
 
@@ -333,7 +333,7 @@ Data *Builtins::lambda_expression_body(BuiltinArguments &args) {
 // -------------------------
 
 Data *Builtins::raw_print(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert args.count() == 1;
   @check String *str_obj = to<String>(args[0]);
   for (uword i = 0; i < str_obj->length(); i++)
     putc(str_obj->get(i), stdout);
@@ -370,7 +370,7 @@ Data *Builtins::process_unquote(BuiltinArguments &args) {
 // ---------------------
 
 Data *Builtins::channel_send(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert args.count() == 1;
   @check Channel *self = to<Channel>(args.self());
   @check Immediate *message = to<Immediate>(args[0]);
   return self->send(args.runtime(), message);
@@ -382,19 +382,19 @@ Data *Builtins::channel_send(BuiltinArguments &args) {
 // ---------------
 
 Data *Builtins::new_forwarder(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert args.count() == 0;
   return args.runtime().heap().new_forwarder(Forwarder::fwOpen, args.self()).data();
 }
 
 Data *Builtins::set_target(BuiltinArguments &args) {
-  ASSERT_EQ(1, args.count());
+  @assert args.count() == 1;
   Forwarder *forwarder = cast<Forwarder>(args.self());
   forwarder->descriptor()->set_target(args[0]);
   return args.runtime().roots().vhoid();
 }
 
 Data *Builtins::close(BuiltinArguments &args) {
-  ASSERT_EQ(0, args.count());
+  @assert args.count() == 0;
   Forwarder *forwarder = cast<Forwarder>(args.self());
   forwarder->descriptor()->set_type(Forwarder::fwClosed);
   return args.runtime().roots().vhoid();

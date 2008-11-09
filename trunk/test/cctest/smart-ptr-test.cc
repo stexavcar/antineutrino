@@ -15,20 +15,20 @@ static bounded_ptr<word> ints_start() {
 
 TEST(simple_bounded_ptr_test) {
   bounded_ptr<int> ints = ints_start();
-  CHECK_EQ(9, ints[0]);
-  CHECK_EQ(8, ints[1]);
-  CHECK_EQ(7, ints[2]);
+  @check ints[0] == 9;
+  @check ints[1] == 8;
+  @check ints[2] == 7;
   // Paranoid mode does bounds checking
   IF_PARANOID(CHECK_ABORTS(cnOutOfBounds, ints[3]));
   // Non-paranoid mode doesn't
-  IF_NOT_PARANOID(CHECK_EQ(6, ints[3]));
+  IF_NOT_PARANOID(@check ints[3] == 6);
 }
 
 
 TEST(bounded_ptr_simple_arith_test) {
   bounded_ptr<int> ints = ints_start();
   bounded_ptr<int> second = ints + 2;
-  CHECK_EQ(7, second[0]);
+  @check second[0] == 7;
   IF_PARANOID(CHECK_ABORTS(cnOutOfBounds, second[1]));
-  IF_NOT_PARANOID(CHECK_EQ(6, second[1]));
+  IF_NOT_PARANOID(@check second[1] == 6);
 }

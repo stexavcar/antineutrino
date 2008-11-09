@@ -1,7 +1,7 @@
 #include "cctest/nunit-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/nonlocal.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 using namespace neutrino;
 
@@ -9,14 +9,14 @@ TEST(memory) {
   LocalRuntime runtime;
   int kSize = 256;
   Buffer *buffer = runtime.heap().new_buffer<uint8_t>(kSize).value();
-  CHECK_EQ(kSize, buffer->size<uint8_t>());
-  CHECK_EQ(kSize / sizeof(uint16_t), buffer->size<uint16_t>());
-  CHECK_EQ(kSize / sizeof(uword), buffer->size<uword>());
-  CHECK_EQ(kSize / sizeof(double), buffer->size<double>());
+  @check buffer->size<uint8_t>() == kSize;
+  @check buffer->size<uint16_t>() == kSize / sizeof(uint16_t);
+  @check buffer->size<uword>() == kSize / sizeof(uword);
+  @check buffer->size<double>() == kSize / sizeof(double);
   for (int i = 0; i < kSize; i++)
     buffer->at<uint8_t>(i) = i;
   for (int i = 0; i < kSize; i++)
-    ASSERT_EQ(i, buffer->at<uint8_t>(i));
+    @check buffer->at<uint8_t>(i) == i;
 }
 
 TEST(bounds_check) {

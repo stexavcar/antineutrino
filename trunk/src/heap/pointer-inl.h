@@ -18,7 +18,7 @@ uword ValuePointer::offset_of(void *obj) {
 }
 
 Object *ValuePointer::tag_as_object(address addr) {
-  ASSERT_EQ(0, reinterpret_cast<word>(addr) & kObjectTagMask);
+  @assert (reinterpret_cast<word>(addr) & kObjectTagMask) == 0;
   return reinterpret_cast<Object*>(reinterpret_cast<word>(addr) + kObjectTag);
 }
 
@@ -27,7 +27,7 @@ void *ValuePointer::tag_offset_as_object(word addr) {
 }
 
 uword ValuePointer::tag_as_object(void *addr) {
-  ASSERT_EQ(0, reinterpret_cast<word>(addr) & kObjectTagMask);
+  @assert (reinterpret_cast<word>(addr) & kObjectTagMask) == 0;
   return reinterpret_cast<word>(addr) + kObjectTag;
 }
 
@@ -47,7 +47,7 @@ Smi *ValuePointer::tag_as_smi(word val) {
 }
 
 Forwarder *ValuePointer::tag_as_forwarder(address addr) {
-  ASSERT_EQ(0, reinterpret_cast<word>(addr) & kForwarderTagMask);
+  @assert (reinterpret_cast<word>(addr) & kForwarderTagMask) == 0;
   return reinterpret_cast<Forwarder*>(reinterpret_cast<word>(addr) + kForwarderTag);
 }
 
@@ -70,7 +70,7 @@ bool ValuePointer::has_signal_tag(void *val) {
 }
 
 uword ValuePointer::tag_as_signal(address addr) {
-  ASSERT_EQ(0, reinterpret_cast<word>(addr) & kObjectTagMask);
+  @assert (reinterpret_cast<word>(addr) & kObjectTagMask) == 0;
   return reinterpret_cast<word>(addr) | kSignalTag;
 }
 
@@ -80,8 +80,8 @@ uword ValuePointer::un_signal_tag(void *value) {
 }
 
 Signal *ValuePointer::tag_as_signal(uword type, uword payload) {
-  ASSERT_EQ(0, type & ~kSignalTypeMask);
-  ASSERT_EQ(0, payload & ~kSignalPayloadMask);
+  @assert (type & ~kSignalTypeMask) == 0;
+  @assert (payload & ~kSignalPayloadMask) == 0;
   word value = (payload << (kObjectTagSize + kSignalTypeSize))
              | (type << kObjectTagSize)
              | kSignalTag;

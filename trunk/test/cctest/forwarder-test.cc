@@ -1,6 +1,6 @@
 #include "cctest/nunit-inl.h"
-#include "heap/heap-inl.h"
-#include "values/values-inl.h"
+#include "heap/heap-inl.pp.h"
+#include "values/values-inl.pp.h"
 
 using namespace neutrino;
 
@@ -11,14 +11,14 @@ TEST(simple_forwarder) {
   CHECK(!is<Smi>(forwarder));
   CHECK(!is<Object>(forwarder));
   CHECK(!is<Signal>(forwarder));
-  CHECK_IS(Forwarder, forwarder);
-  CHECK_IS(Value, forwarder);
+  @check is<Forwarder>(forwarder);
+  @check is<Value>(forwarder);
   CHECK(forwarder->descriptor()->target() == empty);
   maybe<Tuple> target_val = to<Tuple>(forwarder);
-  CHECK_IS(Tuple, target_val.value());
+  @check is<Tuple>(target_val.value());
   CHECK(target_val.value() == empty);
   maybe<String> string_val = to<String>(forwarder);
-  CHECK_IS(TypeMismatch, string_val.signal());
+  @check is<TypeMismatch>(string_val.signal());
 }
 
 TEST(smi_forwarder) {
@@ -28,11 +28,11 @@ TEST(smi_forwarder) {
   CHECK(!is<Smi>(forwarder));
   CHECK(!is<Object>(forwarder));
   CHECK(!is<Signal>(forwarder));
-  CHECK_IS(Forwarder, forwarder);
-  CHECK_IS(Value, forwarder);
+  @check is<Forwarder>(forwarder);
+  @check is<Value>(forwarder);
   CHECK(to<Smi>(forwarder).value() == obj);
   CHECK(to<Immediate>(forwarder).value() == obj);
-  CHECK_IS(TypeMismatch, to<String>(forwarder).signal());
+  @check is<TypeMismatch>(to<String>(forwarder).signal());
 }
 
 TEST(check_closed_immutable) {

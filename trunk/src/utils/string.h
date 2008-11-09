@@ -22,14 +22,14 @@ public:
   inline uword operator[](uword index) const;
   inline string substring(uword start);
   inline string substring(uword start, uword length);
-  
+
   /**
    * Returns the characters of this string.  The value returned is
    * a pointer to the internal buffer of this string so it will be
    * deleted when the string is.
    */
   inline const char *chars() { return chars_; }
-  
+
   bool operator==(string that) const;
   bool operator!=(string that) const { return !(this->operator==(that)); }
   void dispose();
@@ -38,7 +38,7 @@ public:
   bool is_empty() { return chars_ == NULL; }
   static string dup(string arg);
   static bool equals(const char* a, const char* b);
-  
+
 private:
   const char *chars_;
   uword length_;
@@ -64,12 +64,10 @@ class variant : public nocopy {
 public:
   variant() : tag_(eEmpty) { }
   variant(double v) : tag_(eDouble) { value_.u_double = v; }
-  variant(uint16_t v) : tag_(eInt) { value_.u_int = v; }
-  variant(int16_t v) : tag_(eInt) { value_.u_int = v; }
-  variant(uint32_t v) : tag_(eInt) { value_.u_int = v; }
   variant(int32_t v) : tag_(eInt) { value_.u_int = v; }
-  variant(uint64_t v) : tag_(eInt) { value_.u_int = static_cast<word>(v); }
+  variant(uint32_t v) : tag_(eInt) { value_.u_int = v; }
   variant(int64_t v) : tag_(eInt) { value_.u_int = static_cast<word>(v); }
+  variant(uint64_t v) : tag_(eInt) { value_.u_int = static_cast<word>(v); }
   variant(const char *v) : tag_(eCStr) { value_.u_c_str = v; }
   variant(const string &v) : tag_(eString) { value_.u_string = &v; }
   variant(Data *v) : tag_(eObject) { value_.u_object = v; }
@@ -102,7 +100,7 @@ public:
   uword size() const { return size_; }
   virtual const variant &operator[](uword index) const = 0;
 private:
-  uword size_;  
+  uword size_;
 };
 
 
@@ -210,12 +208,12 @@ public:
   void append(string str);
   void append(char c);
   void clear();
-  
+
   /**
    * Creates and return a copy of the contents of this buffer.
    */
   string to_string();
-  
+
   /**
    * Returns a string backed by the raw internal data of this buffer,
    * which avoids copying.
@@ -227,7 +225,7 @@ public:
    * specified elements.
    */
   void printf(string format, const var_args &args);
-  
+
 private:
   void ensure_capacity(int required);
   char *data_;

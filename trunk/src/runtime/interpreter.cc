@@ -2,7 +2,7 @@
 #include "heap/ref-inl.h"
 #include "main/options.h"
 #include "runtime/builtins-inl.h"
-#include "runtime/interpreter-inl.h"
+#include "runtime/interpreter-inl.pp.h"
 #include "runtime/runtime-inl.h"
 #include "utils/checks.h"
 #include "utils/smart-ptrs-inl.h"
@@ -33,7 +33,7 @@ Signal *Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda,
   lambda.ensure_compiled(runtime(), NULL);
   Stack *stack = task->stack();
   ASSERT(stack->status().is_empty);
-  @assert Stack::Status::ssParked == stack->status().state;
+  @assert stack->status().state == Stack::Status::ssParked;
   stack->status().is_empty = false;
   uword prev_pc = stack->pc();
   IF_DEBUG(stack->status().state = Stack::Status::ssRunning);
@@ -45,7 +45,7 @@ Signal *Interpreter::prepare_call(ref<Task> task, ref<Lambda> lambda,
 }
 
 void StackState::park(Stack *stack, uword pc) {
-  @assert Stack::Status::ssRunning == stack->status().state;
+  @assert stack->status().state == Stack::Status::ssRunning;
   IF_DEBUG(stack->status().state = Stack::Status::ssParked);
   stack->set_fp(fp().value());
   stack->set_sp(sp().value());
@@ -164,9 +164,9 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
   StackState initial_frame(state.stack()->bound(state.stack()->fp()),
       state.stack()->bound(state.stack()->sp()));
   while (true) {
-    @assert Stack::Status::ssParked == state.stack()->status().state;
+    @assert state.stack()->status().state == Stack::Status::ssParked;
     Data *value = interpret(state);
-    @assert Stack::Status::ssParked == state.stack()->status().state;
+    @assert state.stack()->status().state == Stack::Status::ssParked;
     if (is<Signal>(value)) {
       if (Options::trace_signals)
         Log::get().info("Signal: %", elms(value));
@@ -500,7 +500,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
     }
     case ocAttach: {
       Task *task = cast<Task>(frame.pop());
-      @assert Stack::Status::ssParked == task->stack()->status().state;
+      @assert task->stack()->status().state == Stack::Status::ssParked;
       @assert is<Null>(task->caller());
       task->set_caller(state.task());
       frame.park(state.stack(), pc + OpcodeInfo<ocAttach>::kSize);
@@ -514,7 +514,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
       Value *value = frame[0];
       // Grab the caller of the current task
       Task *caller = cast<Task>(state.task()->caller());
-      @assert Stack::Status::ssParked == caller->stack()->status().state;
+      @assert caller->stack()->status().state == Stack::Status::ssParked;
       // Park the current task
       state.task()->set_caller(runtime().roots().nuhll());
       frame.park(state.stack(), pc + OpcodeInfo<ocYield>::kSize);
@@ -579,7 +579,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
     }
     case ocCheckHeight: {
       uint16_t expected = code[pc + 1];
-      CHECK_EQ(expected, frame.locals());
+      @check frame.locals() == expected;
       pc += OpcodeInfo<ocCheckHeight>::kSize;
       break;
     }
@@ -693,7 +693,7 @@ void Stack::validate_stack() {
 void Stack::recook_stack() {
   if (status().is_empty) return;
   ASSERT(!status().is_cooked);
-  @assert Stack::Status::ssParked == status().state;
+  @assert status().state == Stack::Status::ssParked;
   array<word> buf = buffer();
   set_fp(buf.from_offset(reinterpret_cast<uword>(fp())));
   set_sp(buf.from_offset(reinterpret_cast<uword>(sp())));
@@ -708,7 +708,7 @@ void Stack::recook_stack() {
 void Stack::uncook_stack() {
   if (status().is_empty) return;
   ASSERT(status().is_cooked);
-  @assert Stack::Status::ssParked == status().state;
+  @assert status().state == Stack::Status::ssParked;
   StackState frame(bound(fp()), bound(sp()));
   array<word> buf = buffer();
   while (!frame.is_bottom()) {
@@ -725,7 +725,7 @@ void Stack::uncook_stack() {
 void Stack::for_each_stack_field(FieldVisitor &visitor) {
   if (status().is_empty) return;
   ASSERT(!status().is_cooked);
-  @assert Stack::Status::ssParked == status().state;
+  @assert status().state == Stack::Status::ssParked;
   array<word> buf = buffer();
   StackState frame(bound(buf.from_offset(reinterpret_cast<uword>(fp()))),
       bound(buf.from_offset(reinterpret_cast<uword>(sp()))));

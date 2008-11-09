@@ -3,3 +3,9 @@ def @check ${Type:ident} \* ${name:ident} = ${operation:expr}
 
 def @check(likelihood=maybe) ref < ${Type:ident} > ${name:ident} = ${operation:expr}
   POLLOCK_CHECK_REF(${likelihood}, ${Type}, ${name}, ${operation})
+
+def @check(cause=cnUnknown) is < ${Type:ident} > \( ${operation:expr} \)
+  POLLOCK_CHECK_IS(${Type}, ${operation}, ${cause})
+
+def @check(cause=cnUnknown) ${left:expr} == ${right:expr}
+  POLLOCK_CHECK_EQ(${left}, ${right}, ${cause})

@@ -1,12 +1,12 @@
 #include "compiler/ast-inl.h"
-#include "heap/heap-inl.h"
+#include "heap/heap-inl.pp.h"
 #include "heap/memory-inl.h"
 #include "heap/pointer.h"
 #include "heap/roots.h"
 #include "monitor/monitor-inl.h"
 #include "utils/string-inl.h"
 #include "utils/types-inl.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 namespace neutrino {
 

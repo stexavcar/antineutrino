@@ -3,7 +3,7 @@
 #include "heap/memory-inl.h"
 #include "monitor/monitor-inl.h"
 #include "main/options.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 namespace neutrino {
 

@@ -1,7 +1,7 @@
 #ifndef _RUNTIME_INTERPRETER_INL
 #define _RUNTIME_INTERPRETER_INL
 
-#include "heap/pointer-inl.h"
+#include "heap/pointer-inl.pp.h"
 #include "runtime/interpreter.h"
 #include "utils/checks.h"
 #include "utils/smart-ptrs-inl.h"
@@ -46,7 +46,7 @@ void Marker::unwind() {
 // -----------------
 
 uword StackState::unpark(Stack *stack) {
-  ASSERT_EQ(Stack::Status::ssParked, stack->status().state);
+  @assert stack->status().state == Stack::Status::ssParked;
   IF_DEBUG(stack->status().state = Stack::Status::ssRunning);
   fp_ = stack->bound(stack->fp());
   sp_ = stack->bound(stack->sp());

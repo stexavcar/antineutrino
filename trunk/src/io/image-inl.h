@@ -1,11 +1,11 @@
 #ifndef _IO_IMAGE_INL
 #define _IO_IMAGE_INL
 
-#include "heap/pointer-inl.h"
+#include "heap/pointer-inl.pp.h"
 #include "io/image.h"
 #include "runtime/runtime-inl.h"
 #include "utils/types-inl.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 namespace neutrino {
 

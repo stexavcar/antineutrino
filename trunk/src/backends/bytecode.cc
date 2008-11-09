@@ -1,9 +1,9 @@
 #include "backends/bytecode.h"
 #include "compiler/compile-utils-inl.h"
 #include "main/options.h"
-#include "runtime/interpreter-inl.h"
+#include "runtime/interpreter-inl.pp.h"
 #include "utils/string-inl.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 
 namespace neutrino {
@@ -422,7 +422,7 @@ void BytecodeArchitecture::disassemble(Lambda *lambda, string_buffer &buf) {
 
 possibly BytecodeArchitecture::initialize_task(Task *task) {
   Stack *stack = task->stack();
-  @assert Stack::Status::ssUninitialized == stack->status().state;
+  @assert stack->status().state == Stack::Status::ssUninitialized;
   // Set up the bottom-most dummy activation
   word *bottom_fp = stack->bottom() + StackState::accessible_below_fp(0);
   StackState state(stack->bound(bottom_fp));

@@ -1,6 +1,6 @@
 #include "heap/gc-safe.h"
 #include "heap/ref-inl.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 #include "runtime/runtime.h"
 
 namespace neutrino {

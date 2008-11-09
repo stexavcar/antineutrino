@@ -2,7 +2,7 @@
 #include "io/image.h"
 #include "runtime/runtime-inl.h"
 #include "utils/checks.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 namespace neutrino {
 

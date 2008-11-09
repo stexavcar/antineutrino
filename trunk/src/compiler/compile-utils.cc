@@ -2,7 +2,7 @@
 #include "heap/gc-safe.h"
 #include "heap/ref-inl.h"
 #include "runtime/runtime-inl.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 namespace neutrino {
 

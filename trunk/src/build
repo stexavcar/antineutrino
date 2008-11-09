@@ -1,0 +1,95 @@
+flags (
+  name = 'library',
+  flags = {
+    'CPPPATH': ['src'],
+    'CCFLAGS': [
+      '$DIALECTFLAGS',
+      '$WARNINGFLAGS',
+      cond('mode', {
+        'product': ['-O3'],
+        'debug': ['-g', '-O0'],
+        'paranoid': ['-g', '-O0']
+      }),
+      cond('wordsize', {
+        '32': ['-m32'],
+        '64': ['-m64']
+      })
+    ],
+    'DIALECTFLAGS': ['-ansi', '-pedantic'],
+    'WARNINGFLAGS': [
+      '-Wall', '-W', '-Wno-unused-parameter', '-Wno-non-virtual-dtor'
+    ],
+    'CXXFLAGS': ['$CCFLAGS', '-fno-exceptions', '-fno-rtti'],
+    'CPPDEFINES': [
+      cond('wordsize', {
+        '32': ['M32'],
+        '64': ['M64']
+      }),
+      cond('toolchain', {
+        'gcc': ['GCC'],
+        'msvc': ['MSVC']
+      }),
+      cond('mode', {
+        'product': ['PRODUCT'],
+        'debug': ['DEBUG'],
+        'paranoid': ['DEBUG', 'PARANOID']
+      }),
+    ],
+    'LIBS': ['dl']
+  }
+)
+
+
+library (
+  name = 'neutrino',
+  flags = ['library'],
+  files = [
+    'backends/bytecode.cc',
+    'compiler/ast.cc',
+    'compiler/compiler.cc',
+    'compiler/compile-utils.cc',
+    'heap/gc-safe.cc',
+    'heap/heap.cc',
+    'heap/memory.cc',
+    'heap/ref.cc',
+    'heap/roots.cc',
+    'heap/space.cc',
+    'io/image.cc',
+    'io/out-stream.cc',
+    'main/options.cc',
+    'monitor/monitor.cc',
+    'platform/{%os|any}/abort.cc',
+    'platform/{%os|any}/dylib.cc',
+    'plankton/c/channel.c',
+    'plankton/c/plankton.c',
+    'plankton/cpp/plankton.cc',
+    'runtime/builtins.cc',
+    'runtime/interpreter.cc',
+    'runtime/runtime.cc',
+    'utils/conditions.cc',
+    'utils/flags.cc',
+    'utils/nonlocal.cc',
+    'utils/string.cc',
+    'values/channel.cc',
+    'values/method.cc',
+    'values/values.cc',
+  ],
+  headers = [
+    'heap/heap-inl.h',
+    'heap/pointer-inl.h',
+    'runtime/interpreter-inl.h',
+    'values/values-inl.h',
+  ]
+)
+
+
+program (
+  name = 'nsh',
+  flags = ['library'],
+  files = [
+    'main/main.cc'
+  ],
+  libs = [
+    'neutrino'
+  ]
+)

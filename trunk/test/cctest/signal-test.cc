@@ -1,5 +1,5 @@
 #include "cctest/nunit-inl.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 using namespace neutrino;
 
@@ -9,17 +9,17 @@ TEST(signals) {
   CHECK(!is<Object>(val));
   CHECK(is<Signal>(val));
   Signal *signal = cast<Signal>(val);
-  CHECK_EQ(Signal::sAllocationFailed, signal->type());
+  @check signal->type() == Signal::sAllocationFailed;
   CHECK(is<AllocationFailed>(signal));
   CHECK(!is<FatalError>(signal));
-  CHECK_EQ(100, cast<AllocationFailed>(signal)->payload());
+  @check cast<AllocationFailed>(signal)->payload() == 100;
   Signal *ie = FatalError::make(FatalError::feUnexpected);
   CHECK(is<Signal>(ie));
   CHECK(is<FatalError>(ie));
   CHECK(!is<AllocationFailed>(ie));
-  CHECK_EQ(FatalError::feUnexpected, cast<FatalError>(ie)->payload());
+  @check cast<FatalError>(ie)->payload() == FatalError::feUnexpected;
   Signal *no = Nothing::make();
-  CHECK_IS(Nothing, no);
+  @check is<Nothing>(no);
 }
 
 TEST(forward_pointers) {
@@ -34,7 +34,7 @@ TEST(forward_pointers) {
 
 TEST(type_mismatch) {
   Signal *val = TypeMismatch::make(tString, tTuple);
-  CHECK_IS(TypeMismatch, val);
-  CHECK_EQ(tString, cast<TypeMismatch>(val)->expected());
-  CHECK_EQ(tTuple, cast<TypeMismatch>(val)->found());
+  @check is<TypeMismatch>(val);
+  @check cast<TypeMismatch>(val)->expected() == tString;
+  @check cast<TypeMismatch>(val)->found() == tTuple;
 }

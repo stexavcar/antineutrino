@@ -1,13 +1,10 @@
-import sys
-import platform
-from os.path import abspath, join, dirname
-import os
+Import('config root')
 
-root = dirname(File('SConscript').rfile().abspath)
+import os
+from os.path import join, dirname, abspath
+import sys
 sys.path.append(join(root, 'tools'))
-import buildcfg
 import pollock
-Import('settings')
 
 
 spec_dir = join(root, 'etc', 'pollock')
@@ -25,62 +22,38 @@ def process_pollock(target, source, env):
 def setup_pollock(env):
   env['BUILDERS']['Pollock'] = Builder(
     action = process_pollock,
-    suffix = {'.cc': '.pp.cc', '.h': '.pp.h', '.c': '.pp.c'}
+    suffix = {
+      '.cc': '.pp.cc',
+      '.c': '.pp.c',
+      '.h': '.pp.h'
+    }
   )
 
 
-def setup_cctest_build(env, settings, libpath):
-  lists = [ join(root, 'test', 'cctest', 'files.list') ]
-  cctest = join(root, 'test', 'cctest')
-  master_config = join(cctest, 'options.cfg')
-  variables = {'root': root, 'libpath': libpath}
-  config = buildcfg.build_configuration(cctest, lists, variables, master_config)
-  framework = config.get_configured_files('framework', settings)
-  framework_objs = [ env.Object(join('test', 'cctest', f.path), **f.flags) for f in framework ]
-  tests = config.get_configured_files('tests', settings)
-  objs = [ env.Object(join('test', 'cctest', f.path), **f.flags) for f in tests ]
-  master_flags = config.get_master_flags(settings)
-  program = env.Program('cctests', [objs, framework_objs], **master_flags)
-  env.Depends('tests', program)
-
-
-def setup_library_build():
-  lists = [ join(root, 'src', 'files.list') ]
-  master_config = join(root, 'src', 'options.cfg')
-  variables = {'root': root}
-  config = buildcfg.build_configuration(root, lists, variables, master_config)
-  env = Environment()
+def setup():
+  env = Environment(builddir=abspath('.'))
   setup_pollock(env)
-  master_flags = config.get_master_flags(settings)
-
-  # Set up library build
-  library_files = config.get_configured_files('library', settings)
-  processed = [ (env.Pollock(join('src', f.path)), f.flags) for f in library_files ]
-  for p in processed: env.Depends(p[0], pollock_files)
-  all = [ env.Object(name, **flags) for (name, flags) in processed ]
-  lib = env.Library('neutrino', all, **master_flags)
-
-  # Set up program build
-  main_files = config.get_configured_files('main', settings)
-  processed = [ (env.Pollock(join('src', f.path)), f.flags) for f in main_files ]
-  for p in processed: env.Depends(p[0], pollock_files)
-  all += [ env.Object(name, **flags) for (name, flags) in processed ]
-  program = env.Program('neutrino', all, **master_flags)
-
-  # Set up natives build
-  natives_list = [ join(root, 'natives', 'files.list') ]
-  master_config = join(root, 'natives', 'options.cfg')
-  config = buildcfg.build_configuration(root, natives_list, variables, master_config)
-  natives_files = config.get_configured_files('library', settings)
-  processed = [ (env.Pollock(join('natives', f.path)), f.flags) for f in natives_files ]
-  natives_files = [ env.SharedObject(name, **flags) for (name, flags) in processed ]
-  natives_lib = env.SharedLibrary('natives', natives_files, **master_flags)
-  env.Depends('natives', natives_lib)
-
-  env.Depends('program', [ program, natives_lib ])
-
-  return (env, settings, dirname(lib[0].rfile().abspath))
+  for lib in config.libraries.values():
+    name = lib.name
+    sub_env = env.Copy()
+    sub_env.Replace(**lib.get_flags(config))
+    files = [env.Pollock(f) for f in lib.get_files(config)]
+    headers = [env.Pollock(h) for h in lib.get_headers(config)]
+    sub_env.Depends(files + headers, pollock_files)
+    obj = sub_env.Library(name, files)
+    lib.object = obj
+    sub_env.Alias(name, obj)
+  for prog in config.programs.values():
+    name = prog.name
+    sub_env = env.Copy()
+    sub_env.Replace(**prog.get_flags(config))
+    files = [env.Pollock(f) for f in prog.get_files(config)]
+    headers = [env.Pollock(h) for h in prog.get_headers(config)]
+    sub_env.Depends(files + headers, pollock_files)
+    for lib in prog.libs:
+      files.append(config.libraries[lib].object)
+    obj = sub_env.Program(name, files)
+    sub_env.Alias(name, obj)
 
 
-(env, settings, libpath) = setup_library_build()
-setup_cctest_build(env, settings, libpath)
+setup()

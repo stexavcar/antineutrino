@@ -2,7 +2,7 @@
 #include "heap/ref-inl.h"
 #include "heap/heap.h"
 #include "runtime/runtime.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 using namespace neutrino;
 
@@ -13,7 +13,7 @@ TEST(handles) {
   Heap &heap = runtime.heap();
   Tuple *tuple = heap.new_tuple(10).value();
   ref<Tuple> tuple_ref = protect(tuple);
-  CHECK_EQ(10, tuple_ref->length());
+  @check tuple_ref->length() == 10;
   ref<Value> zero = protect(tuple_ref->get(0));
   CHECK(is<Null>(zero));
   tuple_ref->set(1, *tuple_ref);
@@ -41,7 +41,7 @@ static void test_deep(RefManager &refs, uword n) {
     rs[i] = protect(Smi::from_int(n + (i << 16)));
   test_deep(refs, n - 1);
   for (int i = 0; i < kCount; i++) {
-    CHECK_EQ(rs[i]->value(), n + (i << 16));
+    @check n + (i << 16) == rs[i]->value();
   }
 }
 
@@ -56,11 +56,11 @@ static void count_refs(RefManager &refs, uword expected) {
   while (iter.has_next()) {
     CHECK(count < expected);
     Value *val = iter.next();
-    CHECK_IS(Smi, val);
-    CHECK_EQ(count, cast<Smi>(val)->value());
+    @check is<Smi>(val);
+    @check cast<Smi>(val)->value() == count;
     count++;
   }
-  CHECK_EQ(count, expected);
+  @check expected == count;
 }
 
 TEST(ref_iteration) {

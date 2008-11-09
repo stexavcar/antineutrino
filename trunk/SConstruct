@@ -1,64 +1,183 @@
-from os.path import abspath, join, dirname
-import platform
+from os.path import dirname, join, basename, exists
+import re
 import sys
+
 root = dirname(File('SConstruct').rfile().abspath)
 sys.path.append(join(root, 'tools'))
-import buildcfg
+import utils
 
 
-def get_option_checker(values):
-  def check_option(key, value, env):
-    for v in value.split(','):
-      if not v:
-        raise "A value must be specified for option '%s'" % key
-      if not v in values:
-        raise "Illegal value '%s' for option '%s'" % (v, key)
-  return check_option
+class BuildOption(object):
+  
+  def __init__(self, args):
+    self.name = args['name']
+    self.values = args['values']
+    self.default = args.get('default', None)
+    self.help = args.get('help', '')
 
 
-def get_built_in_settings():
-  result = { }
-  system = platform.system().lower()
-  system_list = [ system ]
-  if system in ['darwin', 'linux']:
-    system_list.append('posix')
-  system_list.append('any')
-  result['system'] = system_list
-  result['machine'] = [ platform.machine().lower(), 'any' ]
-  result['architecture'] = [ platform.architecture()[0].lower(), 'any' ]
-  result['processor'] = [ platform.processor().lower(), 'any' ]
-  return result
+class BuildObject(object):
+  
+  SELECT_PATTERN = re.compile(r'\{([\w%|]*)\}')
+  
+  def __init__(self):
+    self.object = None
+
+  def get_file_name(self, config, file):
+    full_name = join(self.root, *file.split('/'))
+    placeholder = BuildObject.SELECT_PATTERN.search(file)
+    if not placeholder:
+      return full_name
+    def expand(p):
+      if p.startswith('%'):
+        return config.option_values[p[1:]]
+      else:
+        return p
+    values = [ expand(p) for p in placeholder.group(1).split('|') ]
+    for value in values:
+      expanded = BuildObject.SELECT_PATTERN.sub(value, full_name)
+      if exists(join(root, expanded)):
+        return expanded
+    return full_name
+  
+  def get_files(self, config):
+    return [self.get_file_name(config, f) for f in self.files]
+
+  def get_headers(self, config):
+    return [self.get_file_name(config, h) for h in self.headers]
+
+  def expand_value(self, value, config):
+    if type(value) is list:
+      result = []
+      for e in value:
+        exp = self.expand_value(e, config)
+        if type(exp) is list:
+          result += exp
+        else:
+          result.append(exp)
+      return result
+    elif isinstance(value, ConditionalFlag):
+      return value.evaluate(config)
+    else:
+      return value
+  
+  def add_flags(self, result, config, flags):
+    for name in flags:
+      obj = config.flags[name]
+      self.add_flags(result, config, obj.includes)
+      for key, value in obj.flags.items():
+        value = self.expand_value(value, config)
+        if key in result:
+          result[key] += value
+        else:
+          result[key] = value
+  
+  def get_flags(self, config):
+    result = {}
+    self.add_flags(result, config, self.flags)
+    return result
+
+
+class BuildLibrary(BuildObject):
+  
+  def __init__(self, root, args):
+    super(BuildLibrary, self).__init__()
+    self.name = args['name']
+    self.root = root
+    self.files = args.get('files', [])
+    self.libs = args.get('libs', [])
+    self.flags = args.get('flags', [])
+    self.headers = args.get('headers', [])
+
+
+class BuildProgram(BuildObject):
+  
+  def __init__(self, root, args):
+    super(BuildProgram, self).__init__()
+    self.name = args['name']
+    self.root = root
+    self.files = args.get('files', [])
+    self.libs = args.get('libs', [])
+    self.flags = args.get('flags', [])
+    self.headers = args.get('headers', [])
+
+
+class BuildFlags(object):
+  
+  def __init__(self, args):
+    self.name = args['name']
+    self.flags = args['flags']
+    self.includes = args.get('include', [])
+
+
+class ConditionalFlag(object):
+  
+  def __init__(self, name, map):
+    self.name = name
+    self.map = map
+  
+  def evaluate(self, config):
+    return self.map[config.option_values[self.name]]
+
+
+class BuildConfiguration(object):
+  
+  def __init__(self):
+    self.options = []
+    self.libraries = {}
+    self.programs = {}
+    self.flags = {}
+    self.option_values = {}
+
+
+def load_build_config_into(name, root, target):
+  contents = File(join(root, name)).get_contents()
+  def option(**args):
+    target.options.append(BuildOption(args))
+  def library(**args):
+    target.libraries[args['name']] = BuildLibrary(root, args)
+  def program(**args):
+    target.programs[args['name']] = BuildProgram(root, args)
+  def include(file_name):
+    path = join(root, *file_name.split('/'))
+    load_build_config_into(basename(path), dirname(path), target)
+  def flags(**args):
+    target.flags[args['name']] = BuildFlags(args)
+  def cond(name, map):
+    return ConditionalFlag(name, map)
+  exec contents in {
+    'option': option,
+    'library': library,
+    'program': program,
+    'utils': utils,
+    'include': include,
+    'flags': flags,
+    'cond': cond
+  }
+  return target
+
+
+def load_build_config(name):
+  return load_build_config_into(name, dirname(name), BuildConfiguration())
 
 
 def setup():
-  lists = [ join(root, 'src', 'files.list') ]
-  master_config = join(root, 'src', 'options.cfg')
-  variables = {'root': root}
-  config = buildcfg.build_configuration(root, lists, variables, master_config)
-  options = Options()
-  for (key, (values, default)) in config.options().items():
-    options.Add(key, "", default, get_option_checker(values))
-  env = Environment(options = options)
-  env.Help(options.GenerateHelpText(env))
-  env.Alias('program')
-  env.Alias('tests')
-  env.Alias('natives')
-  env.Default(['program', 'natives'])
-  
-  for mode in env['mode'].split(','):
-    settings = get_built_in_settings()
-    for key in config.options().keys():
-      if key == 'mode':
-        settings[key] = [ mode, 'any' ]
-      else:
-        settings[key] = [ env[key], 'any' ]
-    master_flags = config.get_master_flags(settings)
-    SConscript(
-      'SConscript',
-      build_dir=mode,
-      duplicate=False,
-      exports='settings'
-    )
+  config = load_build_config('build')
+
+  # Set up and load command-line options
+  opts = Options()
+  for opt in config.options:
+    opts.Add(EnumOption(opt.name, opt.help, opt.default,
+        allowed_values=opt.values))
+  env = Environment(options = opts)
+  Help(opts.GenerateHelpText(env))
+  for opt in config.options:
+    config.option_values[opt.name] = env.Dictionary()[opt.name]
+
+  env.SConscript(
+    'SConscript',
+    exports='config root',
+  )
 
 
 setup()

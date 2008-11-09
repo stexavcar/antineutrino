@@ -3,19 +3,19 @@
 
 #include "heap/heap.h"
 #include "heap/roots.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 namespace neutrino {
 
 template <typename T>
 allocation<Buffer> Heap::new_buffer(uword size) {
-  POLLOCK_ALLOC(AbstractBuffer, Buffer, result, new_abstract_buffer(sizeof(T) * size, roots().buffer_layout()));
+  @alloc(AbstractBuffer) Buffer *result = new_abstract_buffer(sizeof(T) * size, roots().buffer_layout());
   return result;
 }
 
 template <class C>
 allocation<C> Heap::new_singleton(Layout *type) {
-  POLLOCK_ALLOC(Singleton, C, result, new_singleton(type));
+  @alloc(Singleton) C *result = new_singleton(type);
   return result;
 }
 

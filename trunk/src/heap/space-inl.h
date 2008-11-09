@@ -1,7 +1,7 @@
 #ifndef _HEAP_SPACE_INL
 #define _HEAP_SPACE_INL
 
-#include "heap/pointer-inl.h"
+#include "heap/pointer-inl.pp.h"
 #include "heap/space.h"
 
 namespace neutrino {

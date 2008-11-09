@@ -9,12 +9,12 @@ using namespace neutrino;
 template <typename T> uword size() { return sizeof(T); }
 
 TEST(basic_data_types) {
-  CHECK_EQ(4, size<uword>());
-  CHECK_EQ(4, size<word>());
-  CHECK_EQ(2, size<uint16_t>());
-  CHECK_EQ(2, size<int16_t>());
-  CHECK_EQ(1, size<uint8_t>());
-  CHECK_EQ(1, size<int8_t>());
+  @check size<uword>() == 4;
+  @check size<word>() == 4;
+  @check size<uint16_t>() == 2;
+  @check size<int16_t>() == 2;
+  @check size<uint8_t>() == 1;
+  @check size<int8_t>() == 1;
 }
 
 TEST(data_structures) {

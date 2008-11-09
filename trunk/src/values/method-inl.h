@@ -1,7 +1,7 @@
 #ifndef _METHOD_INL
 #define _METHOD_INL
 
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 namespace neutrino {
 

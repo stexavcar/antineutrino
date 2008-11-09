@@ -8,7 +8,7 @@ GROUP = r'^\$\{\s*(\w+)\s*:(.*)\}$'
 MATCHERS = {
   'ident': r'[\w_]+',
   'expr': r'[^;]+?',
-  'relation': r'(?:==|<=|>=|<|>|!=)'
+  'relation': r'(?:==|<=|>=|\s<\s|\s>\s|!=)'
 }
 
 
@@ -75,7 +75,7 @@ def read_specification(data, tags):
   process_section()
 
   
-ANNOTATED_STATEMENT = r'(\n[ \t]*)@(\w+)\s*(\([^)]*\))?\s*([^;]*);(?=\n)'
+ANNOTATED_STATEMENT = r'(\n[ \t]*)@(\w+)(\([^)]*?\))?\s*([^;]*);(?=\n)'
 
 
 class Matcher(object):

@@ -1,11 +1,11 @@
 #include "compiler/ast-inl.h"
 #include "heap/heap.h"
 #include "heap/ref-inl.h"
-#include "runtime/interpreter-inl.h"
+#include "runtime/interpreter-inl.pp.h"
 #include "runtime/runtime-inl.h"
 #include "utils/hash-inl.h"
 #include "utils/string-inl.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 namespace neutrino {
 

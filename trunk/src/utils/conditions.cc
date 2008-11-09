@@ -2,7 +2,7 @@
 
 #include "platform/abort.h"
 #include "utils/checks.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 namespace neutrino {
 

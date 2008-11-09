@@ -2,7 +2,7 @@
 #define _HEAP_VALUES_INL
 
 #include "compiler/ast.h"
-#include "heap/pointer-inl.h"
+#include "heap/pointer-inl.pp.h"
 #include "heap/ref-inl.h"
 #include "main/options.h"
 #include "runtime/context.h"
@@ -51,7 +51,7 @@ public:
 
 template <class To, class From>
 inline To *cast(From *from) {
-  ASSERT_IS_C(cnCastError, To, from);
+  @assert(cnCastError) is<To>(from);
   return static_cast<To*>(from);
 }
 
@@ -65,7 +65,7 @@ inline To *gc_safe_cast(From *from) {
 
 template <class To, class From>
 inline ref<To> cast(ref<From> from) {
-  ASSERT_IS_C(cnCastError, To, *from);
+  @assert(cnCastError) is<To>(*from);
   return ref<To>(reinterpret_cast<To**>(from.cell()));
 }
 
@@ -528,7 +528,7 @@ Forwarder::Type &ForwarderDescriptor::type() {
 }
 
 void ForwarderDescriptor::set_type(Forwarder::Type value) {
-  ASSERT_EQ_C(cnForwarderState, Forwarder::fwOpen, type());
+  @assert(cnForwarderState) type() == Forwarder::fwOpen;
   set_raw_type(value);
 }
 
@@ -541,7 +541,7 @@ Value *&ForwarderDescriptor::target() {
 }
 
 void ForwarderDescriptor::set_target(Value *value) {
-  ASSERT_EQ_C(cnForwarderState, Forwarder::fwOpen, type());
+  @assert(cnForwarderState) type() == Forwarder::fwOpen;
   ValuePointer::set_field<Value*>(this, ForwarderDescriptor::kTargetOffset, value);
 }
 

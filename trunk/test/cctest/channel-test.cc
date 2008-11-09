@@ -2,7 +2,7 @@
 #include "io/out-stream.h"
 #include "runtime/runtime.h"
 #include "values/channel.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 #include "utils/checks.h"
 #include "utils/string-inl.h"
 
@@ -54,32 +54,32 @@ TEST(simple_objects) {
   ExtendedValueDTable &dict = FrozenValueDTableImpl::instance();
 
   p::Value smi_val = ApiUtils::new_value(dict, f_smi);
-  CHECK_EQ(p::Value::vtInteger, smi_val.type());
+  @check smi_val.type() == p::Value::vtInteger;
   CHECK(p::is<p::Integer>(smi_val));
   CHECK(!p::is<p::String>(smi_val));
   CHECK(!p::is<p::Tuple>(smi_val));
   p::Integer smi = p::cast<p::Integer>(smi_val);
-  CHECK_EQ(10, smi.value());
+  @check smi.value() == 10;
 
   p::Value str_val = ApiUtils::new_value(dict, f_str);
-  CHECK_EQ(p::Value::vtString, str_val.type());
+  @check str_val.type() == p::Value::vtString;
   CHECK(!p::is<p::Integer>(str_val));
   CHECK(p::is<p::String>(str_val));
   CHECK(!p::is<p::Tuple>(str_val));
   p::String str = p::cast<p::String>(str_val);
-  CHECK_EQ(knirk.length(), str.length());
+  @check str.length() == knirk.length();
   const char *c_str = str.c_str();
   for (unsigned i = 0; i < str.length(); i++) {
-    CHECK_EQ(knirk[i], str[i]);
-    CHECK_EQ(knirk[i], c_str[i]);
+    @check str[i] == knirk[i];
+    @check c_str[i] == knirk[i];
   }
-  CHECK_EQ(0, c_str[str.length()]);
+  @check c_str[str.length()] == 0;
 
   p::Value emp_val = ApiUtils::new_value(dict, f_emp);
-  CHECK_EQ(p::Value::vtTuple, emp_val.type());
+  @check emp_val.type() == p::Value::vtTuple;
   CHECK(!p::is<p::Integer>(emp_val));
   CHECK(!p::is<p::String>(emp_val));
   CHECK(p::is<p::Tuple>(emp_val));
   p::Tuple emp = p::cast<p::Tuple>(emp_val);
-  CHECK_EQ(0, emp.length());
+  @check emp.length() == 0;
 }

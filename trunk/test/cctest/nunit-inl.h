@@ -47,7 +47,7 @@ public:
       );                                                             \
     }                                                                \
     CHECK(__has_aborted__);                                          \
-    CHECK_EQ(TYPE, __type__);                                        \
+    POLLOCK_CHECK_EQ(__type__, TYPE, cnUnknown);                     \
   } while (false)
 
 #define ASSERT_ABORTS(TYPE, operation) IF_DEBUG(CHECK_ABORTS(TYPE, operation))

@@ -26,7 +26,7 @@ public:
 
 class Checks {
 public:
-  
+
   struct Equals {
     template <typename T>
     static inline bool compare(const T &a, const T &b) { return CheckComparer<T>::compare(a, b); }
@@ -57,7 +57,7 @@ public:
   // the strings whenever there is an assertion, since debug mode
   // doesn't optimize strlen of literal strings.  This should be protect
   // since there are no null characters in file names of source code.
-  
+
   static inline void check(const char *file_name, int line_number,
       const char *source, bool value, Condition cause = cnUnknown) {
     if (!value) {
@@ -65,7 +65,7 @@ public:
           source, value, cause);
     }
   }
-  
+
   template <class Comparer, typename T>
   static inline void check_predicate(const char *file_name,
       int line_number, const T &expected, const char *expected_source,
@@ -77,10 +77,10 @@ public:
           Comparer::name(), cause);
     }
   }
-  
+
   static inline void check_is(const char *file_name, int line_number,
       const char *type_name, uword type_tag, Data *data,
-      const char *value_source, bool holds, Condition cause = cnUnknown) {
+      const char *value_source, bool holds, Condition cause) {
     if (!holds) {
       Conditions::get().check_is_failed(file_name, line_number,
           type_name, type_tag, data, value_source, cause);
@@ -101,7 +101,7 @@ public:
   static inline void check(const char *file_name, int line_number,
       const E &expected, const char *expected_source, const A &actual,
       const char *actual_source, Condition cause = cnUnknown) {
-    check_helper<A>(file_name, line_number, expected, expected_source,
+    check_helper<E>(file_name, line_number, expected, expected_source,
         actual, actual_source, cause);
   }
 private:
@@ -136,8 +136,7 @@ private:
 #define CHECK_C(COND, value) neutrino::Checks::check(__FILE__,       \
     __LINE__, #value, value, COND)
 
-#define CHECK_EQ(expected, value) CHECK_PREDICATE(Equals, expected, value)
-#define CHECK_EQ_C(COND, expected, value) CHECK_PREDICATE_C(COND, Equals, expected, value)
+#define POLLOCK_CHECK_EQ(expected, value, COND) CHECK_PREDICATE_C(COND, Equals, expected, value)
 
 #define CHECK_GEQ(value, limit) CHECK_PREDICATE(GreaterOrEquals, value, limit)
 
@@ -146,11 +145,7 @@ private:
 
 #define CHECK_LEQ(value, limit) CHECK_PREDICATE(LessOrEquals, value, limit)
 
-#define CHECK_IS(Type, value)                                        \
-    neutrino::Checks::check_is(__FILE__, __LINE__, #Type,            \
-        ValueInfo<Type>::kTag, value, #value, is<Type>(value))
-
-#define CHECK_IS_C(COND, Type, value)                                \
+#define POLLOCK_CHECK_IS(Type, value, COND)                          \
     neutrino::Checks::check_is(__FILE__, __LINE__, #Type,            \
         ValueInfo<Type>::kTag, value, #value, is<Type>(value), COND)
 
@@ -211,13 +206,11 @@ public:
 
 #define ASSERT(value)                      IF_DEBUG(CHECK(value))
 #define ASSERT_C(cond, value)              IF_DEBUG(CHECK_C(cond, value))
-#define ASSERT_EQ(expected, value)         IF_DEBUG(CHECK_EQ(expected, value))
-#define ASSERT_EQ_C(COND, expected, value) IF_DEBUG(CHECK_EQ_C(COND, expected, value))
+#define POLLOCK_ASSERT_EQ(expected, value, COND) IF_DEBUG(POLLOCK_CHECK_EQ(expected, value, COND))
 #define ASSERT_GE(expected, value)         IF_DEBUG(CHECK_GE(expected, value))
 #define ASSERT_LT(expected, value)         IF_DEBUG(CHECK_LT(expected, value))
 #define ASSERT_LT_C(COND, expected, value) IF_DEBUG(CHECK_LT_C(COND, expected, value))
-#define ASSERT_IS(Type, value)             IF_DEBUG(CHECK_IS(Type, value))
-#define ASSERT_IS_C(COND, Type, value)     IF_DEBUG(CHECK_IS_C(COND, Type, value))
+#define POLLOCK_ASSERT_IS(Type, value, COND) IF_DEBUG(POLLOCK_CHECK_IS(Type, value, COND))
 
 
 // -----------------------------------------

@@ -1,13 +1,13 @@
 #include "cctest/nunit-inl.h"
 #include "runtime/runtime.h"
-#include "values/values-inl.h"
+#include "values/values-inl.pp.h"
 
 using namespace neutrino;
 
 TEST(integers) {
   for (int i = -100; i < 100; i++) {
     Smi *value = Smi::from_int(i);
-    CHECK_EQ(i, value->value());
+    @check value->value() == i;
   }
 }
 
@@ -15,11 +15,11 @@ TEST(simple_string_operations) {
   LocalRuntime runtime;
   Heap &heap = runtime.heap();
   String *str = heap.new_string("fop").value();
-  CHECK_IS(String, str);
-  CHECK_EQ(3, str->length());
-  CHECK_EQ('f', str->get(0));
-  CHECK_EQ('o', str->get(1));
-  CHECK_EQ('p', str->get(2));
+  @check is<String>(str);
+  @check str->length() == 3;
+  @check str->get(0) == 'f';
+  @check str->get(1) == 'o';
+  @check str->get(2) == 'p';
 }
 
 TEST(to_string) {

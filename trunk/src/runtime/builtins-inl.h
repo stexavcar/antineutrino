@@ -2,8 +2,8 @@
 #define _RUNTIME_BUILTINS_INL
 
 #include "runtime/builtins.h"
-#include "runtime/interpreter-inl.h"
-#include "values/values-inl.h"
+#include "runtime/interpreter-inl.pp.h"
+#include "values/values-inl.pp.h"
 
 namespace neutrino {
 
