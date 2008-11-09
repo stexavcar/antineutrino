@@ -4,7 +4,7 @@
 [ library ]
 core/file.cc
 test/test.cc
-whiteout/process.cc
-whiteout/cairo_<platform>.cc
+# whiteout/process.cc
+# whiteout/cairo_<platform>.cc
 whiteout/backend.cc
-whiteout/backend_xlib.cc
+# whiteout/backend_xlib.cc
