@@ -1,5 +1,5 @@
-def @assert(cause=cnUnknown) ${left:expr} == ${right:expr}
+def @assert(cause=neutrino::cnUnknown) ${left:expr} == ${right:expr}
   POLLOCK_ASSERT_EQ(${left}, ${right}, ${cause})
 
-def @assert(cause=cnUnknown) is < ${Type:ident} > \( ${value:expr} \)
+def @assert(cause=neutrino::cnUnknown) is < ${Type:ident} > \( ${value:expr} \)
   POLLOCK_ASSERT_IS(${Type}, ${value}, ${cause})

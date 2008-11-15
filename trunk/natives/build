@@ -21,8 +21,10 @@ flags (
 program (
   name = 'whiteout',
   flags = ['whiteout'],
+  libs = ['neutrino'],
   files = [
     'whiteout/cairo-backend.cc',
-    'whiteout/main_mac.cc'
+    'whiteout/main-mac.cc',
+    'whiteout/wtk.cc'
   ],
 )
