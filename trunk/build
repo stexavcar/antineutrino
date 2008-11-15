@@ -1,0 +1,38 @@
+option (
+  name = 'mode',
+  values = ['product', 'debug', 'paranoid'],
+  default = 'paranoid'
+)
+
+
+option (
+  name = 'wordsize',
+  values = ['32', '64'],
+  default = '32'
+)
+
+
+option (
+  name = 'toolchain',
+  values = ['msvc', 'gcc'],
+  default = utils.guess_toolchain()
+)
+
+
+option (
+  name = 'os',
+  values = ['win32', 'linux', 'darwin'],
+  default = utils.guess_os()
+)
+
+
+include('src/build')
+include('test/cctest/build')
+
+
+program (
+  name = 'whiteout',
+  files = [
+    'natives/whiteout/backend_xlib.cc'
+  ]
+)
