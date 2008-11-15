@@ -23,7 +23,7 @@
 <folderInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.672268600." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.macosx.exe.debug.344966796" name="MacOSX GCC" resourceTypeBasedDiscovery="true" superClass="cdt.managedbuild.toolchain.gnu.macosx.exe.debug">
 <targetPlatform binaryParser="org.eclipse.cdt.core.MachO;org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.macosx.exe.debug.352478929" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.macosx.exe.debug"/>
-<builder arguments="-Y .. mode=paranoid nsh cctest" autoBuildTarget="" buildPath="${workspace_loc:/neutrino/}/lbld" cleanBuildTarget="-c" command="${SCONS}" enableAutoBuild="true" enableCleanBuild="true" enabledIncrementalBuild="true" id="cdt.managedbuild.target.gnu.builder.macosx.exe.debug.768995472" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="4" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.debug">
+<builder arguments="-Y .. mode=paranoid whiteout" autoBuildTarget="" buildPath="${workspace_loc:/neutrino/}/xbld" cleanBuildTarget="-c" command="${SCONS}" enableAutoBuild="true" enableCleanBuild="true" enabledIncrementalBuild="true" id="cdt.managedbuild.target.gnu.builder.macosx.exe.debug.768995472" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="4" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.debug">
 <outputEntries>
 <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="build"/>
 <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name=""/>
@@ -46,9 +46,9 @@
 <option id="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level.425613297" name="Debug Level" superClass="gnu.cpp.compiler.macosx.exe.debug.option.debugging.level" value="gnu.cpp.compiler.debugging.level.max" valueType="enumerated"/>
 <option id="gnu.cpp.compiler.option.include.paths.1589623047" name="Include paths (-I)" superClass="gnu.cpp.compiler.option.include.paths" valueType="includePath">
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/neutrino/src}&quot;"/>
-<listOptionValue builtIn="false" value="&quot;${cairo_path}&quot;"/>
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/neutrino/natives}&quot;"/>
 <listOptionValue builtIn="false" value="&quot;${workspace_loc:/neutrino/lbld/src}&quot;"/>
+<listOptionValue builtIn="false" value="/opt/local/include/cairo"/>
 </option>
 <inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.666290822" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 </tool>

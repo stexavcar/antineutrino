@@ -178,6 +178,8 @@ def setup():
     'SConscript',
     exports='config root',
   )
+  
+  Default('natives')
 
 
 setup()

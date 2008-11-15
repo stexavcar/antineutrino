@@ -28,11 +28,4 @@ option (
 
 include('src/build')
 include('test/cctest/build')
-
-
-program (
-  name = 'whiteout',
-  files = [
-    'natives/whiteout/backend_xlib.cc'
-  ]
-)
+include('natives/build')
