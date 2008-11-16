@@ -11,14 +11,14 @@ void CairoBackend::paint(PaintContext &context) {
   current_ = &context;
   cairo_t *cr = context.cr();
   Info info(this, 0, 0, context.width(), context.height());
-  cairo_scale(cr, 1, 1);
-  cairo_set_source_rgb(cr, 1, 1, 1);
+  cairo_translate(cr, 0, context.height());
+  cairo_scale(cr, 1.0, -1.0);
+  cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
   cairo_rectangle(cr, 0, 0, info.width(), info.height());
   cairo_fill(cr);
-  cairo_set_source_rgb(cr, 1.0, 0.0, 0.0);
-  cairo_set_line_width(cr, 3.0);
+  cairo_set_source_rgb(cr, 0.0, 0.0, 1.0);
+  cairo_set_line_width(cr, 2.0);
   graphics().root().accept(*this);
-  cairo_stroke(cr);
   current_ = NULL;
 }
 
@@ -29,9 +29,8 @@ void CairoBackend::visit_circle(wtk::Circle &that) {
   float least = neutrino::min(info.width(), info.height());
   float r = that.radius().fix(least / 2);
   cairo_t *cr = current().cr();
-  cairo_save(cr);
   cairo_arc(cr, x, y, r, 0, 2 * kPi);
-  cairo_restore(cr);
+  cairo_stroke(cr);
 }
 
 void CairoBackend::visit_rect(wtk::Rect &that) {
@@ -62,6 +61,17 @@ void CairoBackend::visit_rect(wtk::Rect &that) {
     cairo_stroke(cr);
     cairo_restore(cr);
   }
+}
+
+void CairoBackend::visit_text(wtk::Text &that) {
+  Info &info = this->info();
+  cairo_t *cr = current().cr();
+  float left = info.left() + that.top_left().x().fix(info.width());
+  float top = info.top() + that.top_left().y().fix(info.height());
+  cairo_save(cr);
+  cairo_move_to(cr, left, top);
+  cairo_show_text(cr, that.value().chars());
+  cairo_restore(cr);
 }
 
 void CairoBackend::visit_container(wtk::Container &that) {

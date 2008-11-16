@@ -59,12 +59,14 @@ private:
 class Circle;
 class Rect;
 class Container;
+class Text;
 
 class ElementVisitor {
 public:
   virtual void visit_circle(Circle &that) = 0;
   virtual void visit_rect(Rect &that) = 0;
   virtual void visit_container(Container &that) = 0;
+  virtual void visit_text(Text &that) = 0;
 };
 
 class Element {
@@ -114,6 +116,19 @@ private:
   Point top_left_;
   Size size_;
   neutrino::list_buffer<Element*> children_;
+};
+
+class Text : public Element {
+public:
+  Text(const Point &top_left, const neutrino::string &value)
+    : top_left_(top_left)
+    , value_(value) { }
+  virtual void accept(ElementVisitor &visitor) { visitor.visit_text(*this); }
+  Point &top_left() { return top_left_; }
+  neutrino::string &value() { return value_; }
+private:
+  Point top_left_;
+  neutrino::string value_;
 };
 
 class Animator {

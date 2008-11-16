@@ -42,6 +42,7 @@ public:
   virtual void visit_circle(wtk::Circle &that);
   virtual void visit_rect(wtk::Rect &that);
   virtual void visit_container(wtk::Container &that);
+  virtual void visit_text(wtk::Text &that);
   wtk::Graphics &graphics() { return graphics_; }
 private:
   wtk::Graphics &graphics_;

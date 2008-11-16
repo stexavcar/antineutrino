@@ -5,99 +5,11 @@
 
 #include "whiteout/cairo-backend.h"
 
-/*
-static pascal OSStatus TestWindowEventHandler( EventHandlerCallRef inCallRef, EventRef inEvent, void* inUserData ) {
-    OSStatus    err     = eventNotHandledErr;
-    UInt32  eventKind       = GetEventKind(inEvent);
-    UInt32  eventClass      = GetEventClass(inEvent);
-    WindowRef   window      = (WindowRef)inUserData;
-
-
-    switch (eventClass)
-    {
-    case kEventClassWindow:
-        if (eventKind == kEventWindowDrawContent)
-        {
-        CGContextRef    context;
-        cairo_t     *cr;
-        cairo_surface_t *surface;
-        int     width, height;
-
-
-        width = gRect.right - gRect.left;
-        height = gRect.bottom - gRect.top;
-
-        QDBeginCGContext(GetWindowPort(window), &context);
-
-        surface = cairo_quartz_surface_create_for_cg_context(context, width, height);
-        cr = cairo_create(surface);
-
-
-        // Draw one of the Cairo snippets
-        cairo_scale(cr, width/1.0, height/1.0);
-        cairo_rectangle(cr, 0,0, 1.0, 1.0);
-        cairo_set_source_rgb(cr, 1,1,1);
-        cairo_fill(cr);
-        cairo_set_source_rgb(cr, 0.0, 0.0, 0.0);
-        cairo_set_line_width(cr, 0.04);
-
-            cairo_text_extents_t extents;
-
-            const char *utf8 = "cairo";
-            double x,y;
-
-            cairo_select_font_face(cr, "Times",
-                       CAIRO_FONT_SLANT_NORMAL,
-                       CAIRO_FONT_WEIGHT_NORMAL);
-
-            count = (count + 1) % 10;
-            cairo_set_font_size(cr, 0.4 + (count / 100.0));
-            cairo_text_extents(cr, utf8, &extents);
-
-            x=0.1;
-            y=0.6;
-
-            cairo_move_to(cr, x,y);
-            cairo_show_text(cr, utf8);
-
-            // draw helping lines
-            cairo_set_source_rgba(cr, 1,0.2,0.2,0.6);
-            cairo_arc(cr, x, y, 0.05, 0, 2*M_PI);
-            cairo_fill(cr);
-            cairo_move_to(cr, x,y);
-            cairo_rel_line_to(cr, 0, -extents.height);
-            cairo_rel_line_to(cr, extents.width, 0);
-            cairo_rel_line_to(cr, extents.x_bearing, -extents.y_bearing);
-            cairo_stroke(cr);
-
-        cairo_destroy(cr);
-
-        CGContextFlush(context);
-
-        QDEndCGContext(GetWindowPort(window), &context);
-
-
-        err = noErr;
-        }
-        else if (eventKind == kEventWindowClickContentRgn)
-        {
-        Point   mouseLoc;
-
-        GetGlobalMouse(&mouseLoc);
-        DragWindow(window, mouseLoc, NULL);
-        }
-        break;
-    }
-
-    return err;
-}
-*/
-
 class CairoQuartz {
 public:
-  CairoQuartz(int width, int height, whiteout::CairoBackend &backend)
-    : width_(width), height_(height), backend_(backend) { }
-  bool initialize();
+  CairoQuartz(whiteout::CairoBackend &backend)
+    : backend_(backend) { }
+  bool initialize(int width, int height);
   void run();
 private:
   OSStatus repaint(EventHandlerCallRef call_ref, EventRef event);
@@ -105,13 +17,9 @@ private:
   static OSStatus repaint_bridge(EventHandlerCallRef call_ref,
     EventRef event, void *data);
   static void tick_bridge(EventLoopTimerRef timer, void *data);
-  int width() { return width_; }
-  int height() { return height_; }
   whiteout::CairoBackend &backend() { return backend_; }
   WindowRef window() { return window_; }
   Rect rect() { return rect_; }
-  int width_;
-  int height_;
   whiteout::CairoBackend &backend_;
   WindowRef window_;
   Rect rect_;
@@ -137,14 +45,13 @@ OSStatus CairoQuartz::repaint(EventHandlerCallRef call_ref, EventRef event) {
           QDEndCGContext(GetWindowPort(window()), &context);
           return noErr;
         }
-        case kEventWindowClose: {
-          QuitAppModalLoopForWindow(window());
+        case kEventWindowBoundsChanged: {
+          GetEventParameter(event, kEventParamCurrentBounds, typeQDRectangle,
+              NULL, sizeof(Rect), NULL, &rect_);
           return noErr;
         }
-        case kEventWindowClickContentRgn: {
-          Point mouse_loc;
-          GetGlobalMouse(&mouse_loc);
-          DragWindow(window(), mouse_loc, NULL);
+        case kEventWindowClose: {
+          QuitApplicationEventLoop();
           return noErr;
         }
         break;
@@ -156,7 +63,8 @@ OSStatus CairoQuartz::repaint(EventHandlerCallRef call_ref, EventRef event) {
 void CairoQuartz::tick() {
   backend().graphics().animator().tick();
   Rect window_rect;
-  SetRect(&window_rect, 0, 0, width_, height_);
+  SetRect(&window_rect, rect().left, rect().top, rect().right - rect().left,
+      rect().bottom - rect().top);
   InvalWindowRect(window_, &window_rect);
 }
 
@@ -170,42 +78,36 @@ void CairoQuartz::tick_bridge(EventLoopTimerRef timer, void *data) {
 }
 
 
-bool CairoQuartz::initialize() {
-  SetRect(&rect_, 30, 60, 30 + width_, 60 + height_);
+bool CairoQuartz::initialize(int width, int height) {
+  SetRect(&rect_, 30, 60, 30 + width, 60 + height);
 
-  OSStatus err = CreateNewWindow(kDocumentWindowClass,
-      kWindowCloseBoxAttribute | kWindowStandardHandlerAttribute
-      | kWindowAsyncDragAttribute,
-      &rect_,
+  int attribs = kWindowStandardHandlerAttribute
+    | kWindowAsyncDragAttribute | kWindowStandardDocumentAttributes
+    | kWindowLiveResizeAttribute;
+  OSStatus err = CreateNewWindow(kUtilityWindowClass, attribs, &rect_,
       &window_);
   if (err != noErr)
     return false;
 
-  const EventTypeSpec windowEvents[] = {
-    { kEventClassWindow, kEventWindowClickContentRgn},
+  const EventTypeSpec window_events[] = {
     { kEventClassWindow, kEventWindowDrawContent},
-    { kEventClassWindow, kEventWindowClose }
+    { kEventClassWindow, kEventWindowClose },
+    { kEventClassWindow, kEventWindowBoundsChanged }
   };
-  EventHandlerUPP gTestWindowEventProc = NewEventHandlerUPP(repaint_bridge);
-  err = InstallWindowEventHandler(window_,
-      gTestWindowEventProc, GetEventTypeCount(windowEvents),
-      windowEvents, this, NULL);
+  EventHandlerUPP event_proc = NewEventHandlerUPP(repaint_bridge);
+  err = InstallWindowEventHandler(window(), event_proc,
+      GetEventTypeCount(window_events), window_events, this, NULL);
 
-   EventLoopTimerRef redraw_timer;
-   InstallEventLoopTimer(GetMainEventLoop(),
-       0.0,
-       0.03 * kEventDurationSecond,
-       NewEventLoopTimerUPP(tick_bridge),
-       this,
-       &redraw_timer);
-
-   return err == noErr;
+  EventLoopTimerRef redraw_timer;
+  InstallEventLoopTimer(GetMainEventLoop(), 0.0, kEventDurationSecond / 24,
+      NewEventLoopTimerUPP(tick_bridge), this, &redraw_timer);
+  return err == noErr;
 }
 
 
 void CairoQuartz::run() {
   ShowWindow(window());
-  RunAppModalLoopForWindow(window());
+  RunApplicationEventLoop();
 }
 
 
@@ -216,10 +118,12 @@ int main(int argc, char *argv[]) {
   root.add(rect);
   wtk::Circle circle(wtk::Point(0.5, 0.5), 0.9);
   root.add(circle);
+  wtk::Text text(wtk::Point(0.5, 0.5), "Hello World");
+  root.add(text);
   wtk::Graphics graphics(root);
   whiteout::CairoBackend backend(graphics);
-  CairoQuartz cairo_quartz(640, 480, backend);
-  if (!cairo_quartz.initialize())
+  CairoQuartz cairo_quartz(backend);
+  if (!cairo_quartz.initialize(640, 480))
     return 1;
   cairo_quartz.run();
   return 0;
