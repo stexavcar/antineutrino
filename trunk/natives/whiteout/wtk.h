@@ -71,17 +71,20 @@ private:
 
 class Rect : public Element {
 public:
-  Rect(const Point &top_left, const Quant &length, const Quant &width)
+  Rect(const Point &top_left, const Quant &width, const Quant &height)
     : top_left_(top_left)
-    , length_(length)
     , width_(width)
+    , height_(height)
     , rx_(0)
     , ry_(0) { }
   virtual void accept(ElementVisitor &visitor) { visitor.visit_rect(*this); }
+  Point &top_left() { return top_left_; }
+  Quant &width() { return width_; }
+  Quant &height() { return height_; }
 private:
   Point top_left_;
-  Quant length_;
   Quant width_;
+  Quant height_;
   Quant rx_;
   Quant ry_;
 };

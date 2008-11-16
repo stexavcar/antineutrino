@@ -137,6 +137,10 @@ OSStatus CairoQuartz::repaint(EventHandlerCallRef call_ref, EventRef event) {
           QDEndCGContext(GetWindowPort(window()), &context);
           return noErr;
         }
+        case kEventWindowClose: {
+          QuitAppModalLoopForWindow(window());
+          return noErr;
+        }
         case kEventWindowClickContentRgn: {
           Point mouse_loc;
           GetGlobalMouse(&mouse_loc);
@@ -168,22 +172,24 @@ void CairoQuartz::tick_bridge(EventLoopTimerRef timer, void *data) {
 
 bool CairoQuartz::initialize() {
   SetRect(&rect_, 30, 60, 30 + width_, 60 + height_);
-  OSStatus err = CreateNewWindow(kPlainWindowClass,
-      kWindowStandardHandlerAttribute | kWindowAsyncDragAttribute,
+
+  OSStatus err = CreateNewWindow(kDocumentWindowClass,
+      kWindowCloseBoxAttribute | kWindowStandardHandlerAttribute
+      | kWindowAsyncDragAttribute,
       &rect_,
       &window_);
   if (err != noErr)
     return false;
 
   const EventTypeSpec windowEvents[] = {
-    { kEventClassWindow,    kEventWindowClickContentRgn},
-    { kEventClassWindow,    kEventWindowDrawContent}
+    { kEventClassWindow, kEventWindowClickContentRgn},
+    { kEventClassWindow, kEventWindowDrawContent},
+    { kEventClassWindow, kEventWindowClose }
   };
   EventHandlerUPP gTestWindowEventProc = NewEventHandlerUPP(repaint_bridge);
   err = InstallWindowEventHandler(window_,
       gTestWindowEventProc, GetEventTypeCount(windowEvents),
       windowEvents, this, NULL);
-
 
    EventLoopTimerRef redraw_timer;
    InstallEventLoopTimer(GetMainEventLoop(),
@@ -198,17 +204,14 @@ bool CairoQuartz::initialize() {
 
 
 void CairoQuartz::run() {
-  ShowWindow(window_);
-  RunApplicationEventLoop();
+  ShowWindow(window());
+  RunAppModalLoopForWindow(window());
 }
 
 
 int main(int argc, char *argv[]) {
-  wtk::Circle circle(wtk::Point(0.5, 0.5), 0.25);
+  wtk::Rect circle(wtk::Point(0.25, 0.25), 0.5, 0.5);
   wtk::Graphics graphics(circle);
-  graphics.animator().add(24, 0.20, 0.30, &circle.radius());
-  graphics.animator().add(72, 0.4, 0.6, &circle.center().x());
-  graphics.animator().add(48, 0.6, 0.4, &circle.center().y());
   whiteout::CairoBackend backend(graphics);
   CairoQuartz cairo_quartz(640, 480, backend);
   if (!cairo_quartz.initialize())
