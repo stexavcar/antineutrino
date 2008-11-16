@@ -23,18 +23,24 @@ void CairoBackend::paint(PaintContext &context) {
 }
 
 void CairoBackend::visit_circle(wtk::Circle &that) {
-  float x = info().left() + that.center().x().fix(info().width());
-  float y = info().top() + that.center().y().fix(info().height());
-  float r = that.radius().fix((info().width() + info().height()) / 2);
-  cairo_arc(current().cr(), x, y, r, 0, 2 * kPi);
+  Info &info = this->info();
+  float x = info.left() + that.center().x().fix(info.width());
+  float y = info.top() + that.center().y().fix(info.height());
+  float least = neutrino::min(info.width(), info.height());
+  float r = that.radius().fix(least / 2);
+  cairo_t *cr = current().cr();
+  cairo_save(cr);
+  cairo_arc(cr, x, y, r, 0, 2 * kPi);
+  cairo_restore(cr);
 }
 
 void CairoBackend::visit_rect(wtk::Rect &that) {
   Info &info = this->info();
-  float left = info.top() + that.top_left().x().fix(info.width());
-  float top = info.left() + that.top_left().y().fix(info.height());
+  float left = info.left() + that.top_left().x().fix(info.width());
+  float top = info.top() + that.top_left().y().fix(info.height());
   float width = that.size().width().fix(info.width());
   float height = that.size().height().fix(info.height());
+  cairo_t *cr = current().cr();
   wtk::Quant &corner_radius = that.corner_radius();
   if (corner_radius.is_zero()) {
     cairo_rectangle(current().cr(), left, top, width, height);
@@ -43,7 +49,7 @@ void CairoBackend::visit_rect(wtk::Rect &that) {
     float r = corner_radius.fix(least);
     if (r > least / 4)
       r = least / 4;
-    cairo_t *cr = current().cr();
+    cairo_save(cr);
     cairo_move_to(cr, left + r, top);
     cairo_line_to(cr, left + width - r, top);
     cairo_arc(cr, left + width - r, top + r, r, -kPi / 2, 0);
@@ -53,7 +59,20 @@ void CairoBackend::visit_rect(wtk::Rect &that) {
     cairo_arc(cr, left + r, top + height - r, r, kPi / 2, kPi);
     cairo_line_to(cr, left, top + r);
     cairo_arc(cr, left + r, top + r, r, kPi, -kPi / 2);
+    cairo_stroke(cr);
+    cairo_restore(cr);
   }
+}
+
+void CairoBackend::visit_container(wtk::Container &that) {
+  Info &info = this->info();
+  float left = info.left() + that.top_left().x().fix(info.width());
+  float top = info.top() + that.top_left().y().fix(info.height());
+  float width = that.size().width().fix(info.width());
+  float height = that.size().height().fix(info.height());
+  Info inner(this, left, top, width, height);
+  for (unsigned i = 0; i < that.children().length(); i++)
+    that.children()[i]->accept(*this);
 }
 
 } // namespace whiteout

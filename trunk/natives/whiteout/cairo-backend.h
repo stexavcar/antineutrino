@@ -24,16 +24,16 @@ class CairoBackend : public wtk::ElementVisitor {
 public:
   class Info {
   public:
-    inline Info(CairoBackend* backend, int top, int left, int width,
-        int height);
+    inline Info(CairoBackend* backend, float left, float top, float width,
+        float height);
     inline ~Info();
-    int top() { return top_; }
-    int left() { return left_; }
-    int width() { return width_; }
-    int height() { return height_; }
+    float top() { return top_; }
+    float left() { return left_; }
+    float width() { return width_; }
+    float height() { return height_; }
   private:
     CairoBackend* backend_;
-    int top_, left_, width_, height_;
+    float left_, top_, width_, height_;
     Info* prev_;
   };
   explicit CairoBackend(wtk::Graphics &graphics)
@@ -41,6 +41,7 @@ public:
   void paint(PaintContext &context);
   virtual void visit_circle(wtk::Circle &that);
   virtual void visit_rect(wtk::Rect &that);
+  virtual void visit_container(wtk::Container &that);
   wtk::Graphics &graphics() { return graphics_; }
 private:
   wtk::Graphics &graphics_;
@@ -50,9 +51,9 @@ private:
   Info *info_;
 };
 
-CairoBackend::Info::Info(CairoBackend* backend, int top, int left, int width,
-    int height)
-    : backend_(backend), top_(top), left_(left), width_(width), height_(height) {
+CairoBackend::Info::Info(CairoBackend* backend, float left, float top,
+    float width, float height)
+    : backend_(backend), left_(left), top_(top), width_(width), height_(height) {
   prev_ = backend->info_;
   backend->info_ = this;
 }

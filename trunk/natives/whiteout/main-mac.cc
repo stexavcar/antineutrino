@@ -210,9 +210,13 @@ void CairoQuartz::run() {
 
 
 int main(int argc, char *argv[]) {
-  wtk::Rect rect(wtk::Point(0.25, 0.25), wtk::Size(0.5, 0.5));
+  wtk::Container root(wtk::Point(0.25, 0.25), wtk::Size(0.5, 0.5));
+  wtk::Rect rect(wtk::Point(0.0, 0.0), wtk::Size(1.0, 1.0));
   rect.corner_radius() = 0.02;
-  wtk::Graphics graphics(rect);
+  root.add(rect);
+  wtk::Circle circle(wtk::Point(0.5, 0.5), 0.9);
+  root.add(circle);
+  wtk::Graphics graphics(root);
   whiteout::CairoBackend backend(graphics);
   CairoQuartz cairo_quartz(640, 480, backend);
   if (!cairo_quartz.initialize())

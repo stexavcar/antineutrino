@@ -58,11 +58,13 @@ private:
 
 class Circle;
 class Rect;
+class Container;
 
 class ElementVisitor {
 public:
   virtual void visit_circle(Circle &that) = 0;
   virtual void visit_rect(Rect &that) = 0;
+  virtual void visit_container(Container &that) = 0;
 };
 
 class Element {
@@ -96,6 +98,22 @@ private:
   Point top_left_;
   Size size_;
   Quant corner_radius_;
+};
+
+class Container : public Element {
+public:
+  Container(const Point &top_left, const Size &size)
+    : top_left_(top_left)
+    , size_(size) { }
+  virtual void accept(ElementVisitor &visitor) { visitor.visit_container(*this); }
+  Point &top_left() { return top_left_; }
+  Size &size() { return size_; }
+  void add(Element &child) { children().append(&child); }
+  neutrino::list_buffer<Element*>& children() { return children_; }
+private:
+  Point top_left_;
+  Size size_;
+  neutrino::list_buffer<Element*> children_;
 };
 
 class Animator {
