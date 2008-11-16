@@ -24,6 +24,7 @@ public:
         return 0;
     }
   }
+  bool is_zero() { return quantity_ == 0; }
   static Quant scale(const Quant &from, const Quant &to, float t);
 private:
   Quant(Type type, int quantity) : type_(type), quantity_(quantity) { }
@@ -41,6 +42,18 @@ public:
 private:
   Quant x_;
   Quant y_;
+};
+
+class Size {
+public:
+  Size(const Quant &width, const Quant &height)
+    : width_(width), height_(height) { }
+  Quant &width() { return width_; }
+  Quant &height() { return height_; }
+  bool is_empty() { return width().is_zero() && height().is_zero(); }
+private:
+  Quant width_;
+  Quant height_;
 };
 
 class Circle;
@@ -71,22 +84,18 @@ private:
 
 class Rect : public Element {
 public:
-  Rect(const Point &top_left, const Quant &width, const Quant &height)
+  Rect(const Point &top_left, const Size &size)
     : top_left_(top_left)
-    , width_(width)
-    , height_(height)
-    , rx_(0)
-    , ry_(0) { }
+    , size_(size)
+    , corner_radius_(0) { }
   virtual void accept(ElementVisitor &visitor) { visitor.visit_rect(*this); }
   Point &top_left() { return top_left_; }
-  Quant &width() { return width_; }
-  Quant &height() { return height_; }
+  Size &size() { return size_; }
+  Quant &corner_radius() { return corner_radius_; }
 private:
   Point top_left_;
-  Quant width_;
-  Quant height_;
-  Quant rx_;
-  Quant ry_;
+  Size size_;
+  Quant corner_radius_;
 };
 
 class Animator {
