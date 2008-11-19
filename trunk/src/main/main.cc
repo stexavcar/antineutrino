@@ -2,6 +2,7 @@
 
 #include "heap/ref-inl.h"
 #include "io/image.h"
+#include "main/main.h"
 #include "main/options.h"
 #include "monitor/monitor.h"
 #include "platform/abort.h"
@@ -13,16 +14,6 @@
 #include "utils/array.h"
 
 namespace neutrino {
-
-class Main {
-public:
-  static int main(list<char*> &args);
-  static likely run_system(list<char*> &args);
-  static void on_option_error(string message);
-  static Image *read_image(string name);
-  static likely build_arguments(Runtime &runtime);
-  static DynamicLibraryCollection *load_dynamic_libraries();
-};
 
 void Main::on_option_error(string message) {
   message.println();
@@ -128,12 +119,4 @@ Image *Main::read_image(string name) {
   return new Image(list<word>(buffer.release().start(), size));
 }
 
-}
-
-/**
- * Entry point.
- */
-int main(int argc, char *argv[]) {
-  neutrino::list<char*> args(argv, argc);
-  return neutrino::Main::main(args);
-}
+} // namespace neutrino

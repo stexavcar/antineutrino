@@ -18,9 +18,10 @@ namespace neutrino {
 
 class Channel : public Object {
 public:
+  typedef void (*Initializer)(IExternalChannelConfiguration&);
   DECLARE_FIELD(void*, proxy);
   eChannelFields(DECLARE_OBJECT_FIELD, 0)
-  
+
   Data *send(Runtime &runtime, Immediate *message);
   IExternalChannel *ensure_proxy(Runtime &runtime);
 
@@ -28,7 +29,10 @@ public:
   static const uword kIsConnectedOffset = kNameOffset + kPointerSize;
   static const uword kProxyOffset       = kIsConnectedOffset + kPointerSize;
   static const uword kSize              = kProxyOffset + kPointerSize;
+private:
+  static Initializer lookup_internal(string name);
 };
+
 
 template <> class ref_traits<Channel> : public ref_traits<Object> {
 public:
@@ -48,7 +52,7 @@ public:
   template <class C> static C *open(plankton::Value *obj);
   template <class C> static C wrap(Value *obj);
   static void *close(FImmediate *value);
-  static plankton::Value new_value(ExtendedValueDTable &methods, void *origin);  
+  static plankton::Value new_value(ExtendedValueDTable &methods, void *origin);
   static plankton::Value new_value_from(plankton::Value *source, void *origin);
   static Data *send_message(Runtime &runtime, IExternalChannel &channel,
       Immediate *message);

@@ -70,6 +70,7 @@ class Data;
 class HashMap;
 class DoClause;
 class DoOnExpression;
+class DynamicLibraryCollection;
 class ExtendedValueDTable;
 class Factory;
 class False;

@@ -194,4 +194,6 @@ likely Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
   return Success::make();
 }
 
-}
+RegisterInternalChannel *RegisterInternalChannel::top_ = NULL;
+
+} // namespace neutrino

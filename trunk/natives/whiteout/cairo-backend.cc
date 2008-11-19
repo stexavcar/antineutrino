@@ -70,7 +70,8 @@ void CairoBackend::visit_text(wtk::Text &that) {
   float top = info.top() + that.top_left().y().fix(info.height());
   cairo_save(cr);
   cairo_move_to(cr, left, top);
-  cairo_show_text(cr, that.value().chars());
+  neutrino::string str = that.value();
+  cairo_show_text(cr, str.chars());
   cairo_restore(cr);
 }
 

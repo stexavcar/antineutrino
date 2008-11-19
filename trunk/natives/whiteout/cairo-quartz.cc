@@ -1,29 +1,12 @@
 #include <cstdio>
 #include <cairo-quartz.h>
-#include <Carbon/Carbon.h>
 
 
-#include "whiteout/cairo-backend.h"
+#include "whiteout/cairo-quartz.h"
 
-class CairoQuartz {
-public:
-  CairoQuartz(whiteout::CairoBackend &backend)
-    : backend_(backend) { }
-  bool initialize(int width, int height);
-  void run();
-private:
-  OSStatus repaint(EventHandlerCallRef call_ref, EventRef event);
-  void tick();
-  static OSStatus repaint_bridge(EventHandlerCallRef call_ref,
-    EventRef event, void *data);
-  static void tick_bridge(EventLoopTimerRef timer, void *data);
-  whiteout::CairoBackend &backend() { return backend_; }
-  WindowRef window() { return window_; }
-  Rect rect() { return rect_; }
-  whiteout::CairoBackend &backend_;
-  WindowRef window_;
-  Rect rect_;
-};
+
+namespace whiteout {
+
 
 OSStatus CairoQuartz::repaint(EventHandlerCallRef call_ref, EventRef event) {
   UInt32 event_kind = GetEventKind(event);
@@ -111,20 +94,4 @@ void CairoQuartz::run() {
 }
 
 
-int main(int argc, char *argv[]) {
-  wtk::Container root(wtk::Point(0.25, 0.25), wtk::Size(0.5, 0.5));
-  wtk::Rect rect(wtk::Point(0.0, 0.0), wtk::Size(1.0, 1.0));
-  rect.corner_radius() = 0.02;
-  root.add(rect);
-  wtk::Circle circle(wtk::Point(0.5, 0.5), 0.9);
-  root.add(circle);
-  wtk::Text text(wtk::Point(0.5, 0.5), "Hello World");
-  root.add(text);
-  wtk::Graphics graphics(root);
-  whiteout::CairoBackend backend(graphics);
-  CairoQuartz cairo_quartz(backend);
-  if (!cairo_quartz.initialize(640, 480))
-    return 1;
-  cairo_quartz.run();
-  return 0;
-}
+} // namespace whiteout

@@ -1,4 +1,5 @@
 #include <dlfcn.h>
+#include <errno.h>
 
 #include "platform/dylib.h"
 #include "utils/list-inl.h"

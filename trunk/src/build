@@ -13,7 +13,8 @@ flags (
       cond('wordsize', {
         '32': ['-m32'],
         '64': ['-m64']
-      })
+      }),
+      
     ],
     'DIALECTFLAGS': ['-ansi', '-pedantic'],
     'WARNINGFLAGS': [
@@ -58,8 +59,8 @@ library (
     'io/out-stream.cc',
     'main/options.cc',
     'monitor/monitor.cc',
-    'platform/{%os|any}/abort.cc',
-    'platform/{%os|any}/dylib.cc',
+    'platform/{%os|posix|any}/abort.cc',
+    'platform/{%os|posix|any}/dylib.cc',
     'plankton/c/channel.c',
     'plankton/c/plankton.c',
     'plankton/cpp/plankton.cc',
@@ -73,6 +74,7 @@ library (
     'values/channel.cc',
     'values/method.cc',
     'values/values.cc',
+    'main/main.cc'
   ],
   headers = [
     'heap/heap-inl.h',

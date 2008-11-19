@@ -30,19 +30,28 @@ def setup_pollock(env):
   )
 
 
+def ensure_built(env, lib):
+  if lib.object:
+    return
+  name = lib.name
+  sub_env = env.Copy()
+  sub_env.Replace(**lib.get_flags(config))
+  files = [env.Pollock(f) for f in lib.get_files(config)]
+  headers = [env.Pollock(h) for h in lib.get_headers(config)]
+  sub_env.Depends(files + headers, pollock_files)
+  for dep in lib.libs:
+    ensure_built(env, config.libraries[dep])
+    files.append(config.libraries[dep].object)
+  obj = sub_env.Library(name, files)
+  lib.object = obj
+  sub_env.Alias(name, obj)
+
+
 def setup():
   env = Environment(builddir=abspath('.'))
   setup_pollock(env)
   for lib in config.libraries.values():
-    name = lib.name
-    sub_env = env.Copy()
-    sub_env.Replace(**lib.get_flags(config))
-    files = [env.Pollock(f) for f in lib.get_files(config)]
-    headers = [env.Pollock(h) for h in lib.get_headers(config)]
-    sub_env.Depends(files + headers, pollock_files)
-    obj = sub_env.Library(name, files)
-    lib.object = obj
-    sub_env.Alias(name, obj)
+    ensure_built(env, lib)
   for prog in config.programs.values():
     name = prog.name
     sub_env = env.Copy()

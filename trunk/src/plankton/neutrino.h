@@ -38,6 +38,28 @@ public:
 };
 
 
+class RegisterInternalChannel {
+public:
+  typedef void (*ConfigCallback)(IExternalChannelConfiguration&);
+  inline RegisterInternalChannel(string name, ConfigCallback callback)
+      : name_(name)
+      , callback_(callback)
+      , prev_(top_) {
+    top_ = this;
+  }
+private:
+  friend class Channel;
+  static RegisterInternalChannel *top() { return top_; }
+  string name() { return name_; }
+  ConfigCallback callback() { return callback_; }
+  RegisterInternalChannel *prev() { return prev_; }
+  string name_;
+  ConfigCallback callback_;
+  RegisterInternalChannel *prev_;
+  static RegisterInternalChannel *top_;
+};
+
+
 } // neutrino
 
 #endif // _PUBLIC_CHANNEL

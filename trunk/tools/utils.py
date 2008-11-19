@@ -7,7 +7,8 @@ def read_lines_from(name):
   list = []
   for line in open(name):
     if '#' in line:
-      line = line[:line.find('#')].strip()
+      line = line[:line.find('#')]
+    line = line.strip()
     if len(line) == 0: continue
     list.append(line)
   return list
