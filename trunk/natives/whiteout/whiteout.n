@@ -1,0 +1,51 @@
+native channel def whiteout;
+
+protocol Scale {
+  static def new(s) -> new Scale() { s: s };
+}
+
+protocol Point {
+  static def new(x, y) -> new Point() {
+    x: x, y: y
+  };
+  def to_string() -> "a Point(${this.x}, ${this.y})";
+}
+
+protocol Container {
+  def add(elm) -> this.children.add(elm);
+  static def new(top_left, size) -> new Container() {
+    top_left: top_left,
+    size: size,
+    children: new List()
+  };
+}
+
+protocol Rectangle {
+  static def new(top_left, size) -> new Rectangle() {
+    top_left: top_left, size: size, corner_radius: 0
+  };
+}
+
+protocol Circle {
+  static def new(center, radius) -> new Circle() {
+    center: center, radius: radius
+  };
+}
+
+protocol Text {
+  static def new(pos, text) -> new Text() {
+    pos: pos, text: text
+  };
+}
+
+def main() {
+  def root := new Container(new Point(25, 25), new Point(50, 50));
+  def rect := new Rectangle(new Point(0, 0), new Point(100, 100));
+  rect.corner_radius = 2;
+  root.add(rect);
+  def circle := new Circle(new Point(50, 50), 90);
+  root.add(circle);
+  def text := new Text(new Point(50, 50), "Hello World");
+  root.add(text);
+  whiteout.send([0]);
+}
