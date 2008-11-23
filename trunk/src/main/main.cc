@@ -120,3 +120,8 @@ Image *Main::read_image(string name) {
 }
 
 } // namespace neutrino
+
+int main(int argc, char *argv[]) {
+  neutrino::list<char*> args(argv, argc);
+  return neutrino::Main::main(args);
+}

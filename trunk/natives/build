@@ -1,6 +1,7 @@
 library (
   name = 'natives',
   flags = ['library'],
+  shared = True,
   files = [
     'core/file.cc',
     'test/test.cc'

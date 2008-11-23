@@ -88,6 +88,7 @@ class BuildLibrary(BuildObject):
     self.libs = args.get('libs', [])
     self.flags = args.get('flags', [])
     self.headers = args.get('headers', [])
+    self.shared = args.get('shared', False)
 
 
 class BuildProgram(BuildObject):

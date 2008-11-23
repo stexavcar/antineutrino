@@ -30,19 +30,31 @@ def setup_pollock(env):
   )
 
 
+def unfold_dependencies(lib, elms):
+  for dep in lib.libs:
+    if not dep in elms:
+      elms.append(dep)
+      unfold_dependencies(config.libraries[dep], elms)
+  return elms
+
+
 def ensure_built(env, lib):
   if lib.object:
     return
   name = lib.name
-  sub_env = env.Copy()
+  sub_env = env.Clone()
   sub_env.Replace(**lib.get_flags(config))
   files = [env.Pollock(f) for f in lib.get_files(config)]
   headers = [env.Pollock(h) for h in lib.get_headers(config)]
   sub_env.Depends(files + headers, pollock_files)
-  for dep in lib.libs:
+  all_deps = unfold_dependencies(lib, [])
+  for dep in all_deps:
     ensure_built(env, config.libraries[dep])
     files.append(config.libraries[dep].object)
-  obj = sub_env.Library(name, files)
+  if lib.shared:
+    obj = sub_env.SharedLibrary(name, files)
+  else:
+    obj = sub_env.StaticLibrary(name, files)
   lib.object = obj
   sub_env.Alias(name, obj)
 
@@ -54,12 +66,13 @@ def setup():
     ensure_built(env, lib)
   for prog in config.programs.values():
     name = prog.name
-    sub_env = env.Copy()
+    sub_env = env.Clone()
     sub_env.Replace(**prog.get_flags(config))
     files = [env.Pollock(f) for f in prog.get_files(config)]
     headers = [env.Pollock(h) for h in prog.get_headers(config)]
     sub_env.Depends(files + headers, pollock_files)
-    for lib in prog.libs:
+    all_deps = unfold_dependencies(prog, [])
+    for lib in all_deps:
       files.append(config.libraries[lib].object)
     obj = sub_env.Program(name, files)
     sub_env.Alias(name, obj)

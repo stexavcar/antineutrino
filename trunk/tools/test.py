@@ -97,18 +97,20 @@ class PyneuTestCase(TestCase):
       return 'lib%s.so' % name
     elif system == 'Windows':
       return '%s.dll' % name
+    elif system == 'Darwin':
+      return 'lib%s.dylib' % name
     else:
       return name
 
   def get_lib_list(self, raw_libs):
-    return [ join(self.mode, self.full_name(l)) for l in raw_libs ]    
+    return [ self.full_name(l) for l in raw_libs ]    
 
   def commands(self):
     test = join(self.config.root, self.name + ".n")
     libs = join(self.config.context.workspace, 'lib')
     compiler = join(self.config.context.workspace, 'tools', 'pyneu', 'main.py')
     consts = join(self.config.context.workspace, 'src', 'utils', 'consts.h')
-    runtime = join(self.config.context.buildspace, self.mode, 'neutrino')
+    runtime = join(self.config.context.buildspace, 'nsh')
     dylibs = self.get_lib_list(['natives'])
     return [
       ['python', compiler, '-c', consts, '-o', 'temp.nc', test, libs],
@@ -122,7 +124,7 @@ class PyneuTestConfiguration(TestConfiguration):
     super(PyneuTestConfiguration, self).__init__(context, root)
 
   def get_build_requirements(self):
-    return [ 'program' ]
+    return ['nsh', 'natives']
 
   def list_tests(self, path, mode):
     if len(path) > 1: return [ ]

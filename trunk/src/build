@@ -36,14 +36,26 @@ flags (
         'paranoid': ['DEBUG', 'PARANOID']
       }),
     ],
-    'LIBS': ['dl']
+    'LIBS': ['dl', 'stdc++']
   }
+)
+
+
+library (
+  name = 'base',
+  flags = ['library'],
+  files = [
+    'utils/conditions.cc',
+    'utils/string.cc',
+    'platform/{%os|posix|any}/abort.cc',
+  ]
 )
 
 
 library (
   name = 'neutrino',
   flags = ['library'],
+  libs = ['base'],
   files = [
     'backends/bytecode.cc',
     'compiler/ast.cc',
@@ -59,7 +71,6 @@ library (
     'io/out-stream.cc',
     'main/options.cc',
     'monitor/monitor.cc',
-    'platform/{%os|posix|any}/abort.cc',
     'platform/{%os|posix|any}/dylib.cc',
     'plankton/c/channel.c',
     'plankton/c/plankton.c',
@@ -67,10 +78,8 @@ library (
     'runtime/builtins.cc',
     'runtime/interpreter.cc',
     'runtime/runtime.cc',
-    'utils/conditions.cc',
     'utils/flags.cc',
     'utils/nonlocal.cc',
-    'utils/string.cc',
     'values/channel.cc',
     'values/method.cc',
     'values/values.cc',
@@ -88,10 +97,6 @@ library (
 program (
   name = 'nsh',
   flags = ['library'],
-  files = [
-    'main/main.cc'
-  ],
-  libs = [
-    'neutrino'
-  ]
+  files = [ ],
+  libs = ['neutrino']
 )

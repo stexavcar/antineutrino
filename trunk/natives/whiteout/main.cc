@@ -40,15 +40,3 @@ plankton::Value WhiteoutChannel::receive(neutrino::IMessage &message) {
   }
   return factory.get_void();
 }
-
-
-INTERNAL_NEUTRINO_CHANNEL(whiteout)(neutrino::IExternalChannelConfiguration &config) {
-  WhiteoutChannel *channel = new WhiteoutChannel();
-  config.bind(*channel);
-}
-
-
-int main(int argc, char *argv[]) {
-  neutrino::list<char*> args(argv, argc);
-  return neutrino::Main::main(args);
-}

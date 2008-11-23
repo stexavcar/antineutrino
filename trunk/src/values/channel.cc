@@ -37,39 +37,20 @@ void ExternalChannelConfigurationImpl::bind(IExternalChannel &channel) {
 }
 
 
-Channel::Initializer Channel::lookup_internal(string name) {
-  RegisterInternalChannel *current = RegisterInternalChannel::top();
-  while (current != NULL) {
-    if (current->name() == name)
-      return current->callback();
-    current = current->prev();
-  }
-  return NULL;
-}
-
-
 IExternalChannel *Channel::ensure_proxy(Runtime &runtime) {
   if (is<True>(is_connected()))
     return static_cast<IExternalChannel*>(proxy());
   set_is_connected(runtime.roots().thrue());
   // First try to find an internal channel.
-  Initializer init = NULL;
-  if (RegisterInternalChannel::top() != NULL) {
-    string_buffer buf;
-    buf.printf("%", elms(name()));
-    init = lookup_internal(buf.to_string());
-  }
-  if (init == NULL) {
-    // Then try an external one.
-    DynamicLibraryCollection *dylibs = runtime.dylibs();
-    if (dylibs == NULL) return NULL;
-    string_buffer buf;
-    buf.printf(kConfiguratorNamePattern, elms(name()));
-    string name = buf.raw_string();
-    void *ptr = dylibs->lookup(name);
-    if (ptr == NULL) return NULL;
-    init = function_cast<Initializer>(ptr);
-  }
+  // Then try an external one.
+  DynamicLibraryCollection *dylibs = runtime.dylibs();
+  if (dylibs == NULL) return NULL;
+  string_buffer buf;
+  buf.printf(kConfiguratorNamePattern, elms(name()));
+  string name = buf.raw_string();
+  void *ptr = dylibs->lookup(name);
+  if (ptr == NULL) return NULL;
+  Initializer init = function_cast<Initializer>(ptr);
   ExternalChannelConfigurationImpl config;
   init(config);
   if (config.channel() == NULL) return NULL;

@@ -50,37 +50,6 @@ eConditions(MAKE_ENTRY)
 MAKE_ENUM_INFO_FOOTER()
 
 
-void Conditions::check_is_failed(string file_name, int line_number,
-    string type_name, uword type_tag, Data *data,
-    string value_source, Condition cause) {
-  notify(cause);
-#ifdef DEBUG
-  static string kErrorMessage =
-    "#\n"
-    "# %:%: is<%>(%) failed\n"
-    "#   expected: %\n"
-    "#   found: %\n"
-    "#\n";
-  EnumInfo<InstanceType> enum_info;
-  string expected_name = Layout::layout_name(type_tag);
-  uword value_tag = Layout::tag_of(data);
-  string value_type_name = Layout::layout_name(value_tag);
-  string_buffer buf;
-  buf.printf(kErrorMessage, elms(file_name, line_number, type_name,
-      value_source, expected_name, value_type_name));
-#else // DEBUG
-  static string kErrorMessage =
-    "#\n"
-    "# %:%: is<%>(%) failed\n"
-    "#\n";
-  string_buffer buf;
-  buf.printf(kErrorMessage, elms(file_name, line_number, type_name,
-      value_source));
-#endif // DEBUG
-  abort(buf.raw_string());
-}
-
-
 void Conditions::check_failed(string file_name, int line_number,
     string source, bool value, Condition cause) {
   notify(cause);

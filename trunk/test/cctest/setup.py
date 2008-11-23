@@ -10,7 +10,7 @@ class CcTestCase(test.TestCase):
     self.config = config
 
   def commands(self):
-    cctests = join(self.config.context.buildspace, self.mode, 'cctests')
+    cctests = join(self.config.context.buildspace, 'cctest')
     return [ [cctests, self.name] ]
 
 
@@ -31,12 +31,12 @@ class CcTestConfiguration(test.TestConfiguration):
     self.test_list = None
 
   def get_build_requirements(self):
-    return ['tests']
+    return ['cctest']
 
   def get_test_list(self, mode):
     if not self.has_test_list:
       self.has_test_list = True
-      cctests = join(self.context.buildspace, mode, 'cctests')
+      cctests = join(self.context.buildspace, 'cctest')
       output = test.execute([cctests, '--list'])
       if output.exit_code != 0:
         print output.stdout
