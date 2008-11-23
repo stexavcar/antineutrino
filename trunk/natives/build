@@ -1,6 +1,7 @@
 library (
   name = 'natives',
   flags = ['library'],
+  libs = ['neutrino'],
   shared = True,
   files = [
     'core/file.cc',

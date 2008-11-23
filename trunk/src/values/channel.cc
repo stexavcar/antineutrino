@@ -11,20 +11,20 @@ static const string kConfiguratorNamePattern = "configure_neutrino_%_channel";
 // --- C h a n n e l ---
 // ---------------------
 
-Data *Channel::send(Runtime &runtime, Immediate *message) {
-  IExternalChannel *proxy = ensure_proxy(runtime);
+Data *Channel::send(Runtime &runtime, String *name, Immediate *message) {
+  IObjectProxy *proxy = ensure_proxy(runtime);
   if (proxy == NULL) return runtime.roots().vhoid();
-  return ApiUtils::send_message(runtime, *proxy, message);
+  return ApiUtils::send_message(runtime, *proxy, name, message);
 }
 
 
-class ExternalChannelConfigurationImpl : public IExternalChannelConfiguration {
+class ExternalChannelConfigurationImpl : public IProxyConfiguration {
 public:
   ExternalChannelConfigurationImpl();
-  virtual void bind(IExternalChannel &channel);
-  IExternalChannel *channel() { return channel_; }
+  virtual void bind(IObjectProxy &channel);
+  IObjectProxy *channel() { return channel_; }
 private:
-  IExternalChannel *channel_;
+  IObjectProxy *channel_;
 };
 
 
@@ -32,14 +32,14 @@ ExternalChannelConfigurationImpl::ExternalChannelConfigurationImpl()
   : channel_(NULL) { }
 
 
-void ExternalChannelConfigurationImpl::bind(IExternalChannel &channel) {
+void ExternalChannelConfigurationImpl::bind(IObjectProxy &channel) {
   channel_ = &channel;
 }
 
 
-IExternalChannel *Channel::ensure_proxy(Runtime &runtime) {
+IObjectProxy *Channel::ensure_proxy(Runtime &runtime) {
   if (is<True>(is_connected()))
-    return static_cast<IExternalChannel*>(proxy());
+    return static_cast<IObjectProxy*>(proxy());
   set_is_connected(runtime.roots().thrue());
   // First try to find an internal channel.
   // Then try an external one.
@@ -123,18 +123,6 @@ private:
   plankton::Value contents_;
   IMessageContext &context_;
 };
-
-
-Data *ApiUtils::send_message(Runtime &runtime, IExternalChannel &channel,
-    Immediate *contents) {
-  plankton::Value value = new_value(LiveValueDTableImpl::instance(), contents);
-  BuilderImpl factory(runtime);
-  MessageContextImpl context(factory);
-  MessageImpl message(value, context);
-  plankton::Value result = channel.receive(message);
-  ExtendedValueDTable &methods = static_cast<ExtendedValueDTable&>(result.dtable());
-  return (result.*(methods.value_to_data_))();
-}
 
 
 plankton::Integer BuilderImpl::new_integer(word value) {
@@ -349,6 +337,20 @@ unsigned FrozenNTuple::length_impl() {
 plankton::Value FrozenNTuple::get_impl(unsigned index) {
   FImmediate *result = ApiUtils::open<FTuple>(this)->at(index);
   return ApiUtils::new_value_from(this, result);
+}
+
+Data *ApiUtils::send_message(Runtime &runtime, IObjectProxy &channel,
+    String *name, Immediate *contents) {
+  plankton::Value value = new_value(LiveValueDTableImpl::instance(), contents);
+  BuilderImpl factory(runtime);
+  MessageContextImpl context(factory);
+  MessageImpl message(value, context);
+  IObjectProxyDescriptor &descriptor = channel.descriptor();
+  IObjectProxy::method handler = descriptor.get_method(ApiUtils::wrap<plankton::String>(name));
+  if (handler == NULL) return runtime.heap().roots().vhoid();
+  plankton::Value result = (channel.*handler)(message);
+  ExtendedValueDTable &methods = static_cast<ExtendedValueDTable&>(result.dtable());
+  return (result.*(methods.value_to_data_))();
 }
 
 } // neutrino

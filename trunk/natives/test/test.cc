@@ -4,12 +4,12 @@
 
 namespace plankton {
 
-class TestNativesChannel : public neutrino::IExternalChannel {
+class TestNativesChannel : public neutrino::MappingObjectProxy {
 public:
-  virtual Value receive(neutrino::IMessage &value);
+  Value min(neutrino::IMessage &value);
 };
 
-Value TestNativesChannel::receive(neutrino::IMessage &message) {
+Value TestNativesChannel::min(neutrino::IMessage &message) {
   Tuple args = cast<Tuple>(message.contents());
   Integer a_obj = cast<Integer>(args[0]);
   int a = a_obj.value();
@@ -19,8 +19,10 @@ Value TestNativesChannel::receive(neutrino::IMessage &message) {
   return message.context().factory().new_integer(result);
 }
 
-SETUP_NEUTRINO_CHANNEL(test_natives)(neutrino::IExternalChannelConfiguration &config) {
+SETUP_NEUTRINO_CHANNEL(test_natives)(neutrino::IProxyConfiguration &config) {
   TestNativesChannel *channel = new TestNativesChannel();
+  neutrino::MappingObjectProxyDescriptor &desc = channel->descriptor();
+  desc.register_method("min", &TestNativesChannel::min);
   config.bind(*channel);
 }
 

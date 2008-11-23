@@ -4,24 +4,26 @@
 
 namespace plankton {
 
-class FileNativesChannel : public neutrino::IExternalChannel {
+class FileNativesChannel : public neutrino::MappingObjectProxy {
 public:
-  virtual Value receive(neutrino::IMessage &value);
+  Value open(neutrino::IMessage &message);
+  Value read(neutrino::IMessage &message);
+  Value close(neutrino::IMessage &message);
 };
 
 
-static Value open_file(IBuilder &factory, Value name_val) {
-  const char *name = cast<String>(name_val).c_str();
+Value FileNativesChannel::open(neutrino::IMessage &message) {
+  const char *name = cast<String>(message.contents()).c_str();
   FILE *file = stdc_fopen(name, "r");
-  if (file == NULL) return factory.get_null();
-  Proxy<FILE*> buffer = factory.new_proxy<FILE*>();
+  if (file == NULL) return message.context().factory().get_null();
+  Proxy<FILE*> buffer = message.context().factory().new_proxy<FILE*>();
   buffer.set(file);
   return buffer;
 }
 
 
-static Value read_file(IBuilder &factory, Value file_obj) {
-  FILE *file = cast< Proxy<FILE*> >(file_obj).get();
+Value FileNativesChannel::read(neutrino::IMessage &message) {
+  FILE *file = cast< Proxy<FILE*> >(message.contents()).get();
   fseek(file, 0, SEEK_END);
   unsigned size = ftell(file);
   rewind(file);
@@ -35,33 +37,25 @@ static Value read_file(IBuilder &factory, Value file_obj) {
       result[offset] = bytes[i];
   }
   result[size] = '\0';
-  return factory.new_string(result, size);
+  return message.context().factory().new_string(result, size);
 }
 
 
-static Value close_file(IBuilder &factory, Value file_obj) {
-  Proxy<FILE*> buf = cast< Proxy<FILE*> >(file_obj);
+Value FileNativesChannel::close(neutrino::IMessage &message) {
+  Proxy<FILE*> buf = cast< Proxy<FILE*> >(message.contents());
   FILE *file = buf.get();
   buf.set(NULL);
   fclose(file);
-  return factory.get_null();
+  return message.context().factory().get_null();
 }
 
 
-Value FileNativesChannel::receive(neutrino::IMessage &message) {
-  Tuple args = cast<Tuple>(message.contents());
-  IBuilder &factory = message.context().factory();
-  int operation = cast<Integer>(args[0]).value();
-  switch (operation) {
-    case 0: return open_file(factory, args[1]);
-    case 1: return read_file(factory, args[1]);
-    case 2: return close_file(factory, args[1]);
-    default: return factory.get_null();
-  }
-}
-
-SETUP_NEUTRINO_CHANNEL(file_natives)(neutrino::IExternalChannelConfiguration &config) {
+SETUP_NEUTRINO_CHANNEL(file_natives)(neutrino::IProxyConfiguration &config) {
   FileNativesChannel *channel = new FileNativesChannel();
+  neutrino::MappingObjectProxyDescriptor &desc = channel->descriptor();
+  desc.register_method("open", &FileNativesChannel::open);
+  desc.register_method("read", &FileNativesChannel::read);
+  desc.register_method("close", &FileNativesChannel::close);
   config.bind(*channel);
 }
 

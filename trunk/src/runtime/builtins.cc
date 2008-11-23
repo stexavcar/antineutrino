@@ -370,10 +370,11 @@ Data *Builtins::process_unquote(BuiltinArguments &args) {
 // ---------------------
 
 Data *Builtins::channel_send(BuiltinArguments &args) {
-  @assert args.count() == 1;
+  @assert args.count() == 2;
   @check Channel *self = to<Channel>(args.self());
-  @check Immediate *message = to<Immediate>(args[0]);
-  return self->send(args.runtime(), message);
+  @check String *name = to<String>(args[0]);
+  @check Immediate *message = to<Immediate>(args[1]);
+  return self->send(args.runtime(), name, message);
 }
 
 

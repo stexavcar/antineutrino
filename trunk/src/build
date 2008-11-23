@@ -45,18 +45,32 @@ library (
   name = 'base',
   flags = ['library'],
   files = [
-    'utils/conditions.cc',
-    'utils/string.cc',
-    'platform/{%os|posix|any}/abort.cc',
-  ]
+  ],
+)
+
+
+library (
+  name = 'plankton',
+  flags = ['library'],
+  files = [
+  ],
 )
 
 
 library (
   name = 'neutrino',
   flags = ['library'],
-  libs = ['base'],
+  libs = [],
   files = [
+    'utils/conditions.cc',
+    'utils/string.cc',
+    'platform/{%os|posix|any}/abort.cc',
+
+    'plankton/c/channel.c',
+    'plankton/c/plankton.c',
+    'plankton/cpp/plankton.cc',
+    'plankton/neutrino.cc',
+  
     'backends/bytecode.cc',
     'compiler/ast.cc',
     'compiler/compiler.cc',
@@ -72,9 +86,6 @@ library (
     'main/options.cc',
     'monitor/monitor.cc',
     'platform/{%os|posix|any}/dylib.cc',
-    'plankton/c/channel.c',
-    'plankton/c/plankton.c',
-    'plankton/cpp/plankton.cc',
     'runtime/builtins.cc',
     'runtime/interpreter.cc',
     'runtime/runtime.cc',

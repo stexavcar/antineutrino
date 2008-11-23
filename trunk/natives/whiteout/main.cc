@@ -4,7 +4,7 @@
 #include "whiteout/cairo-quartz.h"
 
 
-class WhiteoutChannel : public neutrino::IExternalChannel {
+class WhiteoutChannel : public neutrino::IObjectProxy {
 public:
   virtual plankton::Value receive(neutrino::IMessage &value);
 };

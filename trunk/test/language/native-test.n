@@ -1,6 +1,6 @@
 native channel def test_natives;
 
-def min(a, b) -> test_natives.send([a, b]);
+def min(a, b) -> test_natives.send("min", [a, b]);
 
 def test_simple_native() {
   assert min(1, 2) = 1;
