@@ -1,5 +1,7 @@
+#include "runtime/builtins-inl.h"
 #include "values/values.h"
 #include "io/image-inl.h"
+#include "utils/log.h"
 
 namespace neutrino {
 
@@ -11,29 +13,29 @@ static const string kConfiguratorNamePattern = "configure_neutrino_%_channel";
 // --- C h a n n e l ---
 // ---------------------
 
-Data *Channel::send(Runtime &runtime, String *name, Immediate *message) {
-  IObjectProxy *proxy = ensure_proxy(runtime);
-  if (proxy == NULL) return runtime.roots().vhoid();
-  return ApiUtils::send_message(runtime, *proxy, name, message);
+Data *Channel::send(Selector *selector, BuiltinArguments &args) {
+  IObjectProxy *proxy = ensure_proxy(args.runtime());
+  if (proxy == NULL) return args.runtime().roots().vhoid();
+  return ApiUtils::send_message(*proxy, selector, args);
 }
 
 
 class ExternalChannelConfigurationImpl : public IProxyConfiguration {
 public:
   ExternalChannelConfigurationImpl();
-  virtual void bind(IObjectProxy &channel);
-  IObjectProxy *channel() { return channel_; }
+  virtual void bind(IObjectProxy &proxy);
+  IObjectProxy *proxy() { return proxy_; }
 private:
-  IObjectProxy *channel_;
+  IObjectProxy *proxy_;
 };
 
 
 ExternalChannelConfigurationImpl::ExternalChannelConfigurationImpl()
-  : channel_(NULL) { }
+  : proxy_(NULL) { }
 
 
-void ExternalChannelConfigurationImpl::bind(IObjectProxy &channel) {
-  channel_ = &channel;
+void ExternalChannelConfigurationImpl::bind(IObjectProxy &proxy) {
+  proxy_ = &proxy;
 }
 
 
@@ -41,21 +43,48 @@ IObjectProxy *Channel::ensure_proxy(Runtime &runtime) {
   if (is<True>(is_connected()))
     return static_cast<IObjectProxy*>(proxy());
   set_is_connected(runtime.roots().thrue());
+  Initializer init = NULL;
   // First try to find an internal channel.
-  // Then try an external one.
-  DynamicLibraryCollection *dylibs = runtime.dylibs();
-  if (dylibs == NULL) return NULL;
-  string_buffer buf;
-  buf.printf(kConfiguratorNamePattern, elms(name()));
-  string name = buf.raw_string();
-  void *ptr = dylibs->lookup(name);
-  if (ptr == NULL) return NULL;
-  Initializer init = function_cast<Initializer>(ptr);
+  {
+    RegisterInternalChannel *current = RegisterInternalChannel::first();
+    string_buffer buf;
+    buf.printf("%", elms(name()));
+    string str = buf.raw_string();
+    while (current != NULL) {
+      if (str == current->name()) {
+        LOG().info("Proxy % resolved to internal channel", elms(name()));
+        init = current->callback();
+        break;
+      }
+      current = current->prev();
+    }
+  }
+  if (init == NULL) {
+    // Then try an external one.
+    DynamicLibraryCollection *dylibs = runtime.dylibs();
+    if (dylibs == NULL) {
+      LOG().error("Dynamic libraries not loaded during proxy initialization", elms());
+      return NULL;
+    }
+    string_buffer buf;
+    buf.printf(kConfiguratorNamePattern, elms(name()));
+    string name = buf.raw_string();
+    void *ptr = dylibs->lookup(name);
+    if (ptr == NULL) {
+      LOG().error("Proxy configurator for % could not be found", elms(this->name()));
+      return NULL;
+    }
+    LOG().info("Proxy % resolved to external channel", elms(this->name()));
+    init = function_cast<Initializer>(ptr);
+  }
   ExternalChannelConfigurationImpl config;
   init(config);
-  if (config.channel() == NULL) return NULL;
-  set_proxy(config.channel());
-  return config.channel();
+  if (config.proxy() == NULL) {
+    LOG().error("Configurator for % did not bind a proxy", elms(this->name()));
+    return NULL;
+  }
+  set_proxy(config.proxy());
+  return config.proxy();
 }
 
 
@@ -114,13 +143,16 @@ private:
 
 class MessageImpl : public IMessage {
 public:
-  MessageImpl(plankton::Value contents, IMessageContext &context)
-    : contents_(contents)
+  MessageImpl(BuiltinArguments &args, IMessageContext &context)
+    : args_(args)
     , context_(context) { }
-  virtual plankton::Value contents() { return contents_; }
+  virtual plankton::Value operator[](int index) {
+    return ApiUtils::new_value(LiveValueDTableImpl::instance(), args()[index]);
+  }
   virtual IMessageContext &context() { return context_; }
+  BuiltinArguments &args() { return args_; }
 private:
-  plankton::Value contents_;
+  BuiltinArguments &args_;
   IMessageContext &context_;
 };
 
@@ -339,15 +371,20 @@ plankton::Value FrozenNTuple::get_impl(unsigned index) {
   return ApiUtils::new_value_from(this, result);
 }
 
-Data *ApiUtils::send_message(Runtime &runtime, IObjectProxy &channel,
-    String *name, Immediate *contents) {
-  plankton::Value value = new_value(LiveValueDTableImpl::instance(), contents);
-  BuilderImpl factory(runtime);
+Data *ApiUtils::send_message(IObjectProxy &channel, Selector *name,
+    BuiltinArguments &args) {
+//  plankton::Value value = new_value(LiveValueDTableImpl::instance(), contents);
+  BuilderImpl factory(args.runtime());
   MessageContextImpl context(factory);
-  MessageImpl message(value, context);
+  MessageImpl message(args, context);
   IObjectProxyDescriptor &descriptor = channel.descriptor();
-  IObjectProxy::method handler = descriptor.get_method(ApiUtils::wrap<plankton::String>(name));
-  if (handler == NULL) return runtime.heap().roots().vhoid();
+  IObjectProxy::method handler = descriptor.get_method(
+    ApiUtils::wrap<plankton::String>(cast<String>(name->name())),
+    name->argc()->value());
+  if (handler == NULL) {
+    LOG().error("Message % not understood by channel", elms(name));
+    return args.runtime().heap().roots().vhoid();
+  }
   plankton::Value result = (channel.*handler)(message);
   ExtendedValueDTable &methods = static_cast<ExtendedValueDTable&>(result.dtable());
   return (result.*(methods.value_to_data_))();

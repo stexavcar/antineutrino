@@ -758,9 +758,9 @@ Signal *Assembler<C>::visit_instantiate_expression(ref<InstantiateExpression> th
     ref<SyntaxTree> value = protect(cast<SyntaxTree>(terms->get(2 * i + 1)));
     codegen(value);
   }
-  @check(probably) ref<Layout> layout = factory().new_layout(tInstance,
+  @check(probably) ref<InstanceLayout> layout = factory().new_instance_layout(
       term_count, runtime().vhoid(), methods);
-  __ instantiate(layout);
+  __ instantiate(cast<InstanceLayout>(layout));
   return Success::make();
 }
 

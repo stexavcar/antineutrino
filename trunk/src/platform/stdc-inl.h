@@ -31,18 +31,15 @@ static inline int stdc_snprintf(char *str, size_t size, const char *format, ...)
 
 #else
 
-#define SETUP_NEUTRINO_CHANNEL(name) extern "C" void configure_neutrino_##name##_channel
+#define SETUP_NEUTRINO_CHANNEL(name)                                 \
+  extern "C" void configure_neutrino_##name##_channel(neutrino::IProxyConfiguration&); \
+  static neutrino::RegisterInternalChannel register_##name(#name, configure_neutrino_##name##_channel); \
+  extern "C" void configure_neutrino_##name##_channel
 
 #define stdc_fopen fopen
 #define stdc_snprintf snprintf
 
 #endif
-
-
-#define INTERNAL_NEUTRINO_CHANNEL(name)                              \
-  extern "C" void configure_neutrino_##name##_channel(neutrino::IExternalChannelConfiguration&); \
-  static neutrino::RegisterInternalChannel register_##name(#name, configure_neutrino_##name##_channel); \
-  SETUP_NEUTRINO_CHANNEL(name)                                       \
 
 
 } // neutrino

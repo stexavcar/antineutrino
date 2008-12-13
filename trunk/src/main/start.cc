@@ -2,8 +2,8 @@
 
 #include "heap/ref-inl.h"
 #include "io/image.h"
-#include "main/main.h"
 #include "main/options.h"
+#include "main/start.h"
 #include "monitor/monitor.h"
 #include "platform/abort.h"
 #include "platform/stdc-inl.h"
@@ -15,12 +15,14 @@
 
 namespace neutrino {
 
-void Main::on_option_error(string message) {
+bool Library::has_been_initialized_ = false;
+
+void Library::on_option_error(string message) {
   message.println();
   exit(1);
 }
 
-DynamicLibraryCollection *Main::load_dynamic_libraries() {
+DynamicLibraryCollection *Library::load_dynamic_libraries() {
   // To begin with the result is owned by this scope so it will be
   // correctly cleaned up on premature return.
   own_ptr<DynamicLibraryCollection> result(&DynamicLibraryCollection::create());
@@ -35,8 +37,19 @@ DynamicLibraryCollection *Main::load_dynamic_libraries() {
 }
 
 
-int Main::main(list<char*> &args) {
-  likely result = run_system(args);
+likely Library::start(list<char*> &args) {
+  Runtime runtime;
+  @try(likely) Library::initialize_runtime(args, runtime);
+  return run(runtime);
+}
+
+
+int Library::main(list<char*> &args) {
+  return report_result(start(args));
+}
+
+
+int Library::report_result(likely result) {
   if (result.has_failed()) {
     FatalError *error = result.signal();
     string_buffer buf;
@@ -49,21 +62,33 @@ int Main::main(list<char*> &args) {
 }
 
 
-likely Main::run_system(list<char*> &args) {
-  if (!Abort::setup_signal_handler()) return FatalError::make(FatalError::feInitialization);
+likely Library::initialize(list<char*> &args) {
+  if (has_been_initialized_) return Success::make();
+  if (!Abort::setup_signal_handler())
+    return FatalError::make(FatalError::feInitialization);
   FlagParser::parse_flags(args, on_option_error);
+  has_been_initialized_ = true;
+  return Success::make();
+}
+
+
+likely Library::initialize_runtime(list<char*> &args, Runtime &runtime) {
+  @try(likely) initialize(args);
   own_ptr<DynamicLibraryCollection> dylibs(load_dynamic_libraries());
   if (*dylibs == NULL) return FatalError::make(FatalError::feInitialization);
   list<string> files = Options::images;
-  Runtime runtime(*dylibs);
-  BytecodeArchitecture arch(runtime);
-  @try(likely) runtime.initialize(&arch);
+  BytecodeArchitecture *arch = new BytecodeArchitecture(runtime);
+  @try(likely) runtime.initialize(arch);
   for (uword i = 0; i < files.length(); i++) {
     string file = files[i];
     own_ptr<Image> image(read_image(file));
     @try(likely) runtime.load_image(**image);
   }
-  @try(likely) build_arguments(runtime);
+  return build_arguments(runtime);
+}
+
+
+likely Library::run(Runtime &runtime) {
   likely start_result = runtime.start();
   if (Options::print_stats_on_exit) {
     string_buffer stats;
@@ -73,7 +98,7 @@ likely Main::run_system(list<char*> &args) {
   return start_result;
 }
 
-likely Main::build_arguments(Runtime &runtime) {
+likely Library::build_arguments(Runtime &runtime) {
   list<string> args = Options::args;
   ref_block<> protect(runtime.refs());
   @check(probably) ref<Tuple> result = runtime.factory().new_tuple(args.length());
@@ -90,7 +115,7 @@ likely Main::build_arguments(Runtime &runtime) {
 /**
  * Reads the contents of the specified file into a string.
  */
-Image *Main::read_image(string name) {
+Image *Library::read_image(string name) {
   FILE *file = stdc_fopen(name.chars(), "rb");
   if (file == NULL) {
     Conditions::get().error_occurred("Unable to open %.\n", elms(name));
@@ -120,8 +145,3 @@ Image *Main::read_image(string name) {
 }
 
 } // namespace neutrino
-
-int main(int argc, char *argv[]) {
-  neutrino::list<char*> args(argv, argc);
-  return neutrino::Main::main(args);
-}

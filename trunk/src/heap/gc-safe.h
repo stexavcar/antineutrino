@@ -19,7 +19,8 @@ private:
 class Factory {
 public:
   Factory(Runtime &heap);
-  probably<Layout> allocate_empty_layout(InstanceType instance_type);
+  probably<SimpleLayout> allocate_empty_simple_layout(InstanceType instance_type);
+  probably<InstanceLayout> allocate_empty_instance_layout();
   probably<String> new_string(string str);
   probably<String> new_string(uword length);
   probably<Tuple> new_tuple(uword size);
@@ -38,12 +39,13 @@ public:
   probably<Symbol> new_symbol(ref<Value> value);
   probably<HashMap> new_hash_map();
   probably<Code> new_code(uword size);
-  probably<Layout> new_layout(InstanceType instance_type,
-      uword instance_field_count, ref<Immediate> protocol,
-      ref<Tuple> methods);
+  probably<SimpleLayout> new_simple_layout(InstanceType instance_type,
+      ref<Immediate> protocol, ref<Tuple> methods);
+  probably<InstanceLayout> new_instance_layout(uword instance_field_count,
+      ref<Immediate> protocol, ref<Tuple> methods);
   probably<Protocol> new_protocol(ref<Tuple> methods, ref<Value> super,
       ref<Immediate> name);
-  probably<Instance> new_instance(ref<Layout> layout);
+  probably<Instance> new_instance(ref<InstanceLayout> layout);
   probably<Selector> new_selector(ref<Immediate> name, Smi *argc, ref<Bool> is_accessor);
 private:
   Runtime &runtime() { return runtime_; }

@@ -36,7 +36,7 @@ program (
   libs = ['neutrino'],
   files = [
     'whiteout/cairo-backend.cc',
-    'whiteout/main.cc',
+    'whiteout/whiteout.cc',
     cond('os', {
         'darwin': ['whiteout/cairo-quartz.cc'],
     }),

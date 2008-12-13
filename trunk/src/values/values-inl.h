@@ -119,6 +119,22 @@ eSyntaxTreeTypes(MAKE_CASE)
 eObjectTypes(DEFINE_QUERY)
 #undef DEFINE_QUERY
 
+template <>
+inline bool is<InstanceLayout>(Data *val) {
+  return is<Layout>(val) && cast<Layout>(val)->instance_type() == tInstance;
+}
+
+template <>
+inline bool is<SimpleLayout>(Data *val) {
+  if (!is<Layout>(val)) return false;
+  switch (cast<Layout>(val)->instance_type()) {
+    case tInstance:
+      return false;
+    default:
+      return true;
+  }
+}
+
 #ifdef DEBUG
 
 #define DELEGATE_GC_SAFE_IS(Type)                                    \
@@ -360,6 +376,10 @@ Layout *Object::gc_safe_layout() {
     return reinterpret_cast<Layout*>(header);
   }
 }
+
+InstanceLayout *Instance::gc_safe_layout() {
+  return cast<InstanceLayout>(Object::gc_safe_layout());
+}
 #endif
 
 DEFINE_FIELD_ACCESSORS(Layout, layout, Header, Object)
@@ -439,6 +459,10 @@ void Instance::set_field(uword index, Value *value) {
 
 uword Instance::size_for(uword fields) {
   return Instance::kHeaderSize + fields * kPointerSize;
+}
+
+InstanceLayout *Instance::layout() {
+  return cast<InstanceLayout>(Object::layout());
 }
 
 
@@ -612,12 +636,21 @@ uword ref_traits<Code>::length() {
 }
 
 
-// -----------------
-// --- C l a s s ---
-// -----------------
+// -------------------
+// --- L a y o u t ---
+// -------------------
 
 DEFINE_ACCESSORS(InstanceType, Layout, instance_type, InstanceType)
-DEFINE_ACCESSORS(uword, Layout, instance_field_count, InstanceFieldCount)
+DEFINE_ACCESSORS(uword, InstanceLayout, instance_field_count, InstanceFieldCount)
+
+uword Layout::size_for(InstanceType type) {
+  switch (type) {
+    case tInstance:
+      return InstanceLayout::kSize;
+    default:
+      return SimpleLayout::kSize;
+  }
+}
 
 
 // -------------------

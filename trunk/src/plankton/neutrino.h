@@ -24,24 +24,29 @@ public:
 
 class IObjectProxyDescriptor {
 public:
-  virtual IObjectProxy::method get_method(plankton::String name) = 0;
+  virtual IObjectProxy::method get_method(plankton::String name, int argc) = 0;
 };
 
 
 class MappingObjectProxyDescriptor : public IObjectProxyDescriptor {
 public:
-  virtual IObjectProxy::method get_method(plankton::String name);
+  virtual IObjectProxy::method get_method(plankton::String name, int argc);
   template <typename T>
-  void register_method(const char *name, plankton::Value (T::*method)(IMessage&));
+  void register_method(const char *name, int argc, plankton::Value (T::*method)(IMessage&));
 private:
-  class cmp_string {
+  class selector {
   public:
-    cmp_string(const char *str) : str_(str) { }
-    int operator<(const cmp_string &b) const { return strcmp(str_, b.str_); }
+    selector(const char *name, int argc) : name_(name), argc_(argc) { }
+    int operator<(const selector &b) const {
+      int diff = argc_ - b.argc_;
+      if (diff != 0) return diff;
+      else return strcmp(name_, b.name_);
+    }
   private:
-    const char *str_;
+    const char *name_;
+    int argc_;
   };
-  typedef std::map<cmp_string, IObjectProxy::method> method_map;
+  typedef std::map<selector, IObjectProxy::method> method_map;
   method_map &methods() { return methods_; }
   method_map methods_;
 };
@@ -49,8 +54,8 @@ private:
 
 template <typename T>
 void MappingObjectProxyDescriptor::register_method(const char *name,
-    plankton::Value (T::*method)(IMessage&)) {
-  methods()[name] = static_cast<IObjectProxy::method>(method);
+    int argc, plankton::Value (T::*method)(IMessage&)) {
+  methods()[selector(name, argc)] = static_cast<IObjectProxy::method>(method);
 }
 
 
@@ -70,7 +75,7 @@ public:
 
 class IMessage {
 public:
-  virtual plankton::Value contents() = 0;
+  virtual plankton::Value operator[](int index) = 0;
   virtual IMessageContext &context() = 0;
 };
 
@@ -78,6 +83,22 @@ public:
 class IMessageContext {
 public:
   virtual plankton::IBuilder &factory() = 0;
+};
+
+
+class RegisterInternalChannel {
+public:
+  typedef void (callback_t)(neutrino::IProxyConfiguration&);
+  RegisterInternalChannel(const char *name, callback_t *callback);
+  const char *name() { return name_; }
+  callback_t *callback() { return callback_; }
+  RegisterInternalChannel *prev() { return prev_; }
+  static RegisterInternalChannel *first() { return first_; }
+private:
+  const char *name_;
+  callback_t *callback_;
+  RegisterInternalChannel *prev_;
+  static RegisterInternalChannel *first_;
 };
 
 

@@ -33,7 +33,7 @@ public:
   void attach();
   void invoke(ref<Selector> selector, uint16_t argc, ref<Tuple> keymap);
   void invoke_super(ref<Selector> selector, uint16_t argc, ref<Tuple> keymap, ref<Signature> current);
-  void instantiate(ref<Layout> layout);
+  void instantiate(ref<InstanceLayout> layout);
   void raise(ref<String> name, uint16_t argc);
   void call(uint16_t argc);
   void tuple(uint16_t size);

@@ -30,12 +30,23 @@ allocation<Object> Heap::allocate_object(uword size, Layout *type) {
   return result;
 }
 
-allocation<Layout> Heap::allocate_layout(InstanceType instance_type) {
-  allocation<Object> val = allocate_object(Layout::kSize, roots().layout_layout());
-  if (val.has_failed()) return allocation<Layout>(val.signal());
-  Layout *result = reinterpret_cast<Layout*>(cast<Object>(val.data()));
+allocation<SimpleLayout> Heap::allocate_simple_layout(InstanceType instance_type) {
+  @assert instance_type != tInstance;
+  allocation<Object> val = allocate_object(SimpleLayout::kSize, roots().layout_layout());
+  if (val.has_failed()) return allocation<SimpleLayout>(val.signal());
+  SimpleLayout *result = reinterpret_cast<SimpleLayout*>(cast<Object>(val.data()));
   result->set_layout(roots().layout_layout());
   result->set_instance_type(instance_type);
+  result->set_protocol(Smi::from_int(0));
+  return result;
+}
+
+allocation<InstanceLayout> Heap::allocate_instance_layout() {
+  allocation<Object> val = allocate_object(InstanceLayout::kSize, roots().layout_layout());
+  if (val.has_failed()) return allocation<InstanceLayout>(val.signal());
+  InstanceLayout *result = reinterpret_cast<InstanceLayout*>(cast<Object>(val.data()));
+  result->set_layout(roots().layout_layout());
+  result->set_instance_type(tInstance);
   result->set_protocol(Smi::from_int(0));
   return result;
 }
@@ -122,8 +133,8 @@ eBoilerplateAllocator(MAKE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
 
 
-allocation<Layout> Heap::allocate_empty_layout(InstanceType instance_type) {
-  @alloc Layout *result = allocate_layout(instance_type);
+allocation<InstanceLayout> Heap::allocate_empty_instance_layout() {
+  @alloc InstanceLayout *result = allocate_instance_layout();
   result->set_instance_field_count(0);
   result->set_protocol(Smi::from_int(0));
   ASSERT(result->is_empty());
@@ -131,15 +142,34 @@ allocation<Layout> Heap::allocate_empty_layout(InstanceType instance_type) {
 }
 
 
-allocation<Layout> Heap::new_layout(InstanceType instance_type,
-    uword instance_field_count, Immediate *protocol, Tuple *methods) {
-  @alloc Layout *result = allocate_layout(instance_type);
+allocation<InstanceLayout> Heap::new_instance_layout(uword instance_field_count,
+    Immediate *protocol, Tuple *methods) {
+  @alloc InstanceLayout *result = allocate_instance_layout();
   result->set_instance_field_count(instance_field_count);
   result->set_protocol(protocol);
   result->set_methods(methods);
   IF_PARANOID(result->validate());
   return result;
 }
+
+
+allocation<SimpleLayout> Heap::allocate_empty_simple_layout(InstanceType instance_type) {
+  @alloc SimpleLayout *result = allocate_simple_layout(instance_type);
+  result->set_protocol(Smi::from_int(0));
+  ASSERT(result->is_empty());
+  return cast<SimpleLayout>(result);
+}
+
+
+allocation<SimpleLayout> Heap::new_simple_layout(InstanceType instance_type,
+    Immediate *protocol, Tuple *methods) {
+  @alloc SimpleLayout *result = allocate_simple_layout(instance_type);
+  result->set_protocol(protocol);
+  result->set_methods(methods);
+  IF_PARANOID(result->validate());
+  return result;
+}
+
 
 
 allocation<Context> Heap::new_context() {
@@ -296,7 +326,7 @@ allocation<HashMap> Heap::new_hash_map(Tuple *table) {
   return result;
 }
 
-allocation<Instance> Heap::new_instance(Layout *layout) {
+allocation<Instance> Heap::new_instance(InstanceLayout *layout) {
   @assert tInstance == layout->instance_type();
   uword field_count = layout->instance_field_count();
   uword size = Instance::size_for(field_count);

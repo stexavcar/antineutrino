@@ -61,6 +61,7 @@ class AllocationFailed;
 class Architecture;
 class Arguments;
 template <class Config> class Assembler;
+class BuiltinArguments;
 class Layout;
 class LocalVariable;
 class Code;
@@ -84,11 +85,13 @@ class ImageLoadStatus;
 class FImmediate;
 class Immediate;
 class Instance;
+class InstanceLayout;
 class InterpreterState;
 class Lambda;
 class LambdaExpression;
 class LiteralExpression;
 class Method;
+class MethodLookup;
 class Mirror;
 class Null;
 class Object;
@@ -144,6 +147,8 @@ public:
   inline Type *value();
   inline Failure *signal();
   inline Data *data() const { return data_; }
+protected:
+  inline maybe(Data *data) : data_(data) { }
 private:
   Data *data_;
 };
@@ -153,6 +158,10 @@ template <class T>
 class allocation : public maybe<T, AllocationFailed> {
 public:
   allocation(T *value) : maybe<T, AllocationFailed>(value) { }
+  template <class S>
+  allocation(allocation<S> value) : maybe<T, AllocationFailed>(value.data()) {
+    TYPE_CHECK(T*, S*);
+  }
   allocation(AllocationFailed *value) : maybe<T, AllocationFailed>(value) { }
 };
 

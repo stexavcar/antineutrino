@@ -376,8 +376,12 @@ DEFINE_REF_CLASS(Task);
 
 class Instance : public Object {
 public:
+  IF_DEBUG(inline InstanceLayout *gc_safe_layout());
+
   inline Value *&get_field(uword index);
   inline void set_field(uword index, Value *value);
+
+  inline InstanceLayout *layout();
 
   void for_each_instance_field(FieldVisitor &visitor);
   static inline uword size_for(uword elms);
@@ -697,9 +701,9 @@ public:
 DEFINE_REF_CLASS(Protocol);
 
 
-// -----------------
-// --- C l a s s ---
-// -----------------
+// -------------------
+// --- L a y o u t ---
+// -------------------
 
 #define eLayoutFields(VISIT, arg)                            \
   VISIT(Immediate, protocol, Protocol, arg)                          \
@@ -708,7 +712,6 @@ DEFINE_REF_CLASS(Protocol);
 class Layout : public Object {
 public:
   DECLARE_FIELD(InstanceType, instance_type);
-  DECLARE_FIELD(uword, instance_field_count);
   eLayoutFields(DECLARE_OBJECT_FIELD, 0)
 
   bool is_empty();
@@ -716,21 +719,38 @@ public:
 
   IF_DEBUG(static uword tag_of(Data *value));
   static string name_for(InstanceType type);
+  static inline uword size_for(InstanceType type);
 
   static const char *layout_name(uword tag);
   static const uword kInstanceTypeOffset       = Object::kHeaderSize;
-  static const uword kInstanceFieldCountOffset = kInstanceTypeOffset + kPointerSize;
-  static const uword kProtocolOffset           = kInstanceFieldCountOffset + kPointerSize;
+  static const uword kProtocolOffset           = kInstanceTypeOffset + kPointerSize;
   static const uword kMethodsOffset            = kProtocolOffset + kPointerSize;
-  static const uword kSize                     = kMethodsOffset + kPointerSize;
+  static const uword kHeaderSize               = kMethodsOffset + kPointerSize;
 };
+
 
 template <> class ref_traits<Layout> {
 public:
   eLayoutFields(DECLARE_REF_FIELD, 0)
 };
 
+
 DEFINE_REF_CLASS(Layout);
+
+
+class SimpleLayout : public Layout {
+public:
+  static const uword kSize = Layout::kHeaderSize;
+};
+
+
+class InstanceLayout : public Layout {
+public:
+  DECLARE_FIELD(uword, instance_field_count);
+
+  static const uword kInstanceFieldCountOffset = Layout::kHeaderSize;
+  static const uword kSize                     = kInstanceFieldCountOffset + kPointerSize;
+};
 
 
 // ---------------------

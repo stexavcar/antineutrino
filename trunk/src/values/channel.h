@@ -22,7 +22,7 @@ public:
   DECLARE_FIELD(void*, proxy);
   eChannelFields(DECLARE_OBJECT_FIELD, 0)
 
-  Data *send(Runtime &runtime, String *name, Immediate *message);
+  Data *send(Selector *selector, BuiltinArguments &args);
   IObjectProxy *ensure_proxy(Runtime &runtime);
 
   static const uword kNameOffset        = Object::kHeaderSize;
@@ -54,8 +54,8 @@ public:
   static void *close(FImmediate *value);
   static plankton::Value new_value(ExtendedValueDTable &methods, void *origin);
   static plankton::Value new_value_from(plankton::Value *source, void *origin);
-  static Data *send_message(Runtime &runtime, IObjectProxy &channel,
-      String *name, Immediate *message);
+  static Data *send_message(IObjectProxy &channel, Selector *name,
+      BuiltinArguments &args);
 };
 
 

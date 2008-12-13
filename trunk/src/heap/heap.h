@@ -30,14 +30,19 @@ public:
    * the object is valid.  This function should only be used directly
    * during bootstrapping.
    */
-  allocation<Layout> allocate_layout(InstanceType instance_type);
+  allocation<SimpleLayout> allocate_simple_layout(InstanceType instance_type);
+  allocation<InstanceLayout> allocate_instance_layout();
 
-  allocation<Layout> allocate_empty_layout(InstanceType instance_type);
+  allocation<SimpleLayout> allocate_empty_simple_layout(InstanceType instance_type);
+  allocation<InstanceLayout> allocate_empty_instance_layout();
 
   allocation<Protocol> allocate_empty_protocol();
 
-  allocation<Layout> new_layout(InstanceType instance_type,
-      uword instance_field_count, Immediate *protocol, Tuple *methods);
+  allocation<SimpleLayout> new_simple_layout(InstanceType instance_type,
+      Immediate *protocol, Tuple *methods);
+
+  allocation<InstanceLayout> new_instance_layout(uword instance_field_count,
+      Immediate *protocol, Tuple *methods);
 
   allocation<Protocol> new_protocol(Tuple *methods, Value *super,
       Immediate *name);
@@ -105,7 +110,7 @@ eBoilerplateAllocator(DECLARE_ALLOCATOR)
 
   allocation<Signature> new_signature(Tuple *parameters);
 
-  allocation<Instance> new_instance(Layout *layout);
+  allocation<Instance> new_instance(InstanceLayout *layout);
 
   allocation<Selector> new_selector(Immediate *name, Smi *argc, Bool *is_accessor);
 

@@ -3,7 +3,7 @@
 namespace neutrino {
 
 bool Selector::selector_equals(Selector *that) {
-  return name()->equals(that->name()) 
+  return name()->equals(that->name())
       && argc() == that->argc()
       && keywords()->equals(that->keywords())
       && is_accessor()->equals(that->is_accessor());
@@ -34,8 +34,7 @@ void MethodLookup::lookup_in_dictionary(Tuple *methods, Selector *selector,
 
 
 /**
- * Returns the method with the specified name in the given class.  If
- * no method is found Nothing is returned.
+ * Returns the method with the specified name in the given class.
  */
 void MethodLookup::lookup_method(Layout *layout, Selector *selector) {
   // Look up any layout-local methods

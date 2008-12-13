@@ -98,13 +98,14 @@ library (
     'values/channel.cc',
     'values/method.cc',
     'values/values.cc',
-    'main/main.cc'
+    'main/start.cc'
   ],
   headers = [
     'heap/heap-inl.h',
     'heap/pointer-inl.h',
     'runtime/interpreter-inl.h',
     'values/values-inl.h',
+    'utils/worklist-inl.h'
   ]
 )
 
@@ -112,6 +113,8 @@ library (
 program (
   name = 'nsh',
   flags = ['library'],
-  files = [ ],
+  files = [
+    'main/main.cc'
+  ],
   libs = ['neutrino']
 )

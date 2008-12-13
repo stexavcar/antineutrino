@@ -62,7 +62,8 @@ Layout *Interpreter::get_layout(Immediate *value) {
 }
 
 
-Data *Interpreter::lookup_method(Layout *layout, Selector *selector) {
+Data *Interpreter::lookup_method(Immediate *recv, Layout *layout,
+    Selector *selector) {
   MethodLookup lookup(0);
   lookup.lookup_method(layout, selector);
   ASSERT(!lookup.is_ambiguous());
@@ -319,24 +320,42 @@ Data *Interpreter::interpret(InterpreterState &state) {
       Selector *selector = cast<Selector>(constant_pool[selector_index]);
       Tuple *keymap = cast<Tuple>(constant_pool[code[pc + 3]]);
       Value *recv = frame[argc];
-      Layout *layout = get_layout(deref(recv));
-      Data *lookup_result = lookup_method(layout, selector);
-      if (is<Nothing>(lookup_result)) {
-        scoped_string selector_str(selector->to_string());
-        scoped_string recv_str(recv->to_short_string());
-        Conditions::get().error_occurred("Lookup failure: %::%",
-            elms(*recv_str, *selector_str));
+      Immediate *immed = deref(recv);
+      if (is<Channel>(immed)) {
+        Channel *channel = cast<Channel>(immed);
+        BuiltinArguments args(runtime(), argc, frame);
+        Data *value = channel->send(selector, args);
+        if (is<Signal>(value)) {
+          if (is<AllocationFailed>(value)) {
+            RETURN(value);
+          } else {
+            Conditions::get().error_occurred("Problem calling channel: %", elms(value));
+          }
+        } else {
+          frame.push(cast<Value>(value));
+          pc += OpcodeInfo<ocInvoke>::kSize;
+        }
+        break;
+      } else {
+        Layout *layout = get_layout(immed);
+        Data *lookup_result = lookup_method(immed, layout, selector);
+        if (is<Nothing>(lookup_result)) {
+          scoped_string selector_str(selector->to_string());
+          scoped_string recv_str(recv->to_short_string());
+          Conditions::get().error_occurred("Lookup failure: %::%",
+              elms(*recv_str, *selector_str));
+        }
+        Method *method = cast<Method>(lookup_result);
+        Lambda *target = method->lambda();
+        target->ensure_compiled(runtime(), method);
+        CHECK_STACK_HEIGHT(target);
+        frame.push_activation(pc + OpcodeInfo<ocInvoke>::kSize, target);
+        PREPARE_EXECUTION(target);
+        if (!keymap->is_empty())
+          frame.push(keymap);
+        pc = 0;
+        break;
       }
-      Method *method = cast<Method>(lookup_result);
-      Lambda *target = method->lambda();
-      target->ensure_compiled(runtime(), method);
-      CHECK_STACK_HEIGHT(target);
-      frame.push_activation(pc + OpcodeInfo<ocInvoke>::kSize, target);
-      PREPARE_EXECUTION(target);
-      if (!keymap->is_empty())
-        frame.push(keymap);
-      pc = 0;
-      break;
     }
     case ocInvokeSuper: {
       uint16_t selector_index = code[pc + 1];
@@ -407,12 +426,12 @@ Data *Interpreter::interpret(InterpreterState &state) {
     }
     case ocNew: {
       uint16_t layout_template_index = code[pc + 1];
-      Layout *layout_template = cast<Layout>(constant_pool[layout_template_index]);
+      InstanceLayout *layout_template = cast<InstanceLayout>(constant_pool[layout_template_index]);
       uword field_count = layout_template->instance_field_count();
       Protocol *proto = cast<Protocol>(frame[field_count]);
       Data *layout_val = layout_template->clone(runtime().heap()).data();
       if (is<AllocationFailed>(layout_val)) RETURN(layout_val);
-      Layout *layout = cast<Layout>(layout_val);
+      InstanceLayout *layout = cast<InstanceLayout>(layout_val);
       layout->set_protocol(proto);
       Data *val = runtime().heap().new_instance(layout).data();
       if (is<Signal>(val)) RETURN(val);

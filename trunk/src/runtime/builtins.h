@@ -2,6 +2,7 @@
 #define _RUNTIME_BUILTINS
 
 #include "runtime/interpreter.h"
+#include "utils/checks.h"
 #include "utils/types.h"
 
 namespace neutrino {

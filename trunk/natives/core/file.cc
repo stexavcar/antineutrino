@@ -13,7 +13,7 @@ public:
 
 
 Value FileNativesChannel::open(neutrino::IMessage &message) {
-  const char *name = cast<String>(message.contents()).c_str();
+  const char *name = cast<String>(message[0]).c_str();
   FILE *file = stdc_fopen(name, "r");
   if (file == NULL) return message.context().factory().get_null();
   Proxy<FILE*> buffer = message.context().factory().new_proxy<FILE*>();
@@ -23,7 +23,7 @@ Value FileNativesChannel::open(neutrino::IMessage &message) {
 
 
 Value FileNativesChannel::read(neutrino::IMessage &message) {
-  FILE *file = cast< Proxy<FILE*> >(message.contents()).get();
+  FILE *file = cast< Proxy<FILE*> >(message[0]).get();
   fseek(file, 0, SEEK_END);
   unsigned size = ftell(file);
   rewind(file);
@@ -42,7 +42,7 @@ Value FileNativesChannel::read(neutrino::IMessage &message) {
 
 
 Value FileNativesChannel::close(neutrino::IMessage &message) {
-  Proxy<FILE*> buf = cast< Proxy<FILE*> >(message.contents());
+  Proxy<FILE*> buf = cast< Proxy<FILE*> >(message[0]);
   FILE *file = buf.get();
   buf.set(NULL);
   fclose(file);
@@ -53,9 +53,9 @@ Value FileNativesChannel::close(neutrino::IMessage &message) {
 SETUP_NEUTRINO_CHANNEL(file_natives)(neutrino::IProxyConfiguration &config) {
   FileNativesChannel *channel = new FileNativesChannel();
   neutrino::MappingObjectProxyDescriptor &desc = channel->descriptor();
-  desc.register_method("open", &FileNativesChannel::open);
-  desc.register_method("read", &FileNativesChannel::read);
-  desc.register_method("close", &FileNativesChannel::close);
+  desc.register_method("open", 1, &FileNativesChannel::open);
+  desc.register_method("read", 1, &FileNativesChannel::read);
+  desc.register_method("close", 1, &FileNativesChannel::close);
   config.bind(*channel);
 }
 

@@ -39,9 +39,11 @@ bool PosixDynamicLibraryCollection::load(string path) {
 }
 
 void *PosixDynamicLibraryCollection::lookup(string name) {
+  void *result = dlsym(RTLD_SELF, name.chars());
+  if (result != NULL) return result;
   for (uword i = 0; i < handles().length(); i++) {
     library_handle library = handles()[i];
-    void *result = dlsym(library, name.chars());
+    result = dlsym(library, name.chars());
     if (result != NULL) return result;
   }
   return NULL;

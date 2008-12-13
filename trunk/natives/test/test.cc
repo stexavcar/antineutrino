@@ -10,10 +10,9 @@ public:
 };
 
 Value TestNativesChannel::min(neutrino::IMessage &message) {
-  Tuple args = cast<Tuple>(message.contents());
-  Integer a_obj = cast<Integer>(args[0]);
+  Integer a_obj = cast<Integer>(message[0]);
   int a = a_obj.value();
-  Integer b_obj = cast<Integer>(args[1]);
+  Integer b_obj = cast<Integer>(message[1]);
   int b = b_obj.value();
   int result = (a < b) ? a : b;
   return message.context().factory().new_integer(result);
@@ -22,7 +21,7 @@ Value TestNativesChannel::min(neutrino::IMessage &message) {
 SETUP_NEUTRINO_CHANNEL(test_natives)(neutrino::IProxyConfiguration &config) {
   TestNativesChannel *channel = new TestNativesChannel();
   neutrino::MappingObjectProxyDescriptor &desc = channel->descriptor();
-  desc.register_method("min", &TestNativesChannel::min);
+  desc.register_method("min", 2, &TestNativesChannel::min);
   config.bind(*channel);
 }
 

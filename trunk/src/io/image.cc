@@ -164,7 +164,16 @@ void Image::copy_object_shallow(FObject *obj, ImageContext &info) {
       if (obj->has_been_migrated()) return;
       FLayout *img = image_raw_cast<FLayout>(obj);
       InstanceType instance_type = static_cast<InstanceType>(img->instance_type());
-      Layout *layout = heap.allocate_empty_layout(instance_type).value();
+      Layout *layout;
+      switch (instance_type) {
+        case tInstance: {
+          layout = heap.allocate_empty_instance_layout().value();
+          break;
+        default:
+          layout = heap.allocate_empty_simple_layout(instance_type).value();
+          break;
+        }
+      }
       obj->point_forward(layout);
       break;
     }

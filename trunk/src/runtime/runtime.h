@@ -8,6 +8,7 @@
 #include "heap/roots.h"
 #include "platform/dylib.h"
 #include "runtime/interpreter.h"
+#include "utils/worklist.h"
 
 namespace neutrino {
 
@@ -74,7 +75,6 @@ public:
   GcSafe &gc_safe() { return gc_safe_; }
   Heap &heap() { return heap_; }
   Roots &roots() { return roots_; }
-
 
 private:
   Roots roots_;

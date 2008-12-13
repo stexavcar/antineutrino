@@ -33,6 +33,12 @@ public:
     static inline string name() { return "=="; }
   };
 
+  struct NotEquals {
+    template <typename T>
+    static inline bool compare(const T &a, const T &b) { return !CheckComparer<T>::compare(a, b); }
+    static inline string name() { return "!="; }
+  };
+
   struct LessThan {
     template <typename T>
     static inline bool compare(const T &a, const T &b) { return a < b; }
@@ -137,6 +143,7 @@ private:
     __LINE__, #value, value, COND)
 
 #define POLLOCK_CHECK_EQ(expected, value, COND) CHECK_PREDICATE_C(COND, Equals, expected, value)
+#define POLLOCK_CHECK_NE(expected, value, COND) CHECK_PREDICATE_C(COND, NotEquals, expected, value)
 
 #define CHECK_GEQ(value, limit) CHECK_PREDICATE(GreaterOrEquals, value, limit)
 
@@ -207,6 +214,7 @@ public:
 #define ASSERT(value)                      IF_DEBUG(CHECK(value))
 #define ASSERT_C(cond, value)              IF_DEBUG(CHECK_C(cond, value))
 #define POLLOCK_ASSERT_EQ(expected, value, COND) IF_DEBUG(POLLOCK_CHECK_EQ(expected, value, COND))
+#define POLLOCK_ASSERT_NE(expected, value, COND) IF_DEBUG(POLLOCK_CHECK_NE(expected, value, COND))
 #define ASSERT_GE(expected, value)         IF_DEBUG(CHECK_GE(expected, value))
 #define ASSERT_LT(expected, value)         IF_DEBUG(CHECK_LT(expected, value))
 #define ASSERT_LT_C(COND, expected, value) IF_DEBUG(CHECK_LT_C(COND, expected, value))

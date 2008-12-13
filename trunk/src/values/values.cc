@@ -393,6 +393,8 @@ uword Object::size_in_memory() {
     return Stack::size_for(cast<Stack>(this)->height());
   case tInstance:
     return Instance::size_for(cast<Instance>(this)->layout()->instance_field_count());
+  case tLayout:
+    return Layout::size_for(cast<Layout>(this)->instance_type());
   case tCode: case tBuffer:
     return AbstractBuffer::size_for(cast<AbstractBuffer>(this)->size<uint8_t>());
 #define MAKE_CASE(n, Name, name) case t##Name: return Name::kSize;
@@ -694,8 +696,12 @@ bool Layout::is_empty() {
 }
 
 allocation<Layout> Layout::clone(Heap &heap) {
-  return heap.new_layout(instance_type(), instance_field_count(),
-      protocol(), methods());
+  if (is<InstanceLayout>(this)) {
+    InstanceLayout *self = cast<InstanceLayout>(this);
+    return heap.new_instance_layout(self->instance_field_count(), protocol(), methods());
+  } else {
+    return heap.new_simple_layout(instance_type(), protocol(), methods());
+  }
 }
 
 

@@ -222,7 +222,7 @@ Data *Builtins::protocol_new(BuiltinArguments &args) {
   if (protocol == runtime.roots().symbol_layout()->protocol()) {
     return runtime.heap().new_symbol(runtime.roots().vhoid()).data();
   } else {
-    @alloc Layout *layout = runtime.heap().new_layout(tInstance, 0, protocol, runtime.roots().empty_tuple());
+    @alloc InstanceLayout *layout = runtime.heap().new_instance_layout(0, protocol, runtime.roots().empty_tuple());
     return runtime.heap().new_instance(layout).data();
   }
 }
@@ -362,19 +362,6 @@ Data *Builtins::process_unquote(BuiltinArguments &args) {
   } else {
     return self;
   }
-}
-
-
-// ---------------------
-// --- C h a n n e l ---
-// ---------------------
-
-Data *Builtins::channel_send(BuiltinArguments &args) {
-  @assert args.count() == 2;
-  @check Channel *self = to<Channel>(args.self());
-  @check String *name = to<String>(args[0]);
-  @check Immediate *message = to<Immediate>(args[1]);
-  return self->send(args.runtime(), name, message);
 }
 
 

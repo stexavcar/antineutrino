@@ -177,14 +177,25 @@ probably<Method> Factory::new_method(ref<Selector> selector, ref<Signature> sign
 }
 
 
-probably<Layout> Factory::allocate_empty_layout(InstanceType instance_type) {
-  ALLOCATE_CHECKED(Layout, allocate_empty_layout(instance_type));
+probably<SimpleLayout> Factory::allocate_empty_simple_layout(InstanceType instance_type) {
+  ALLOCATE_CHECKED(SimpleLayout, allocate_empty_simple_layout(instance_type));
 }
 
 
-probably<Layout> Factory::new_layout(InstanceType instance_type,
-    uword instance_field_count, ref<Immediate> protocol, ref<Tuple> methods) {
-  ALLOCATE_CHECKED(Layout, new_layout(instance_type, instance_field_count, *protocol, *methods));
+probably<InstanceLayout> Factory::allocate_empty_instance_layout() {
+  ALLOCATE_CHECKED(InstanceLayout, allocate_empty_instance_layout());
+}
+
+
+probably<SimpleLayout> Factory::new_simple_layout(InstanceType instance_type,
+    ref<Immediate> protocol, ref<Tuple> methods) {
+  ALLOCATE_CHECKED(SimpleLayout, new_simple_layout(instance_type, *protocol, *methods));
+}
+
+
+probably<InstanceLayout> Factory::new_instance_layout(uword instance_field_count,
+    ref<Immediate> protocol, ref<Tuple> methods) {
+  ALLOCATE_CHECKED(InstanceLayout, new_instance_layout(instance_field_count, *protocol, *methods));
 }
 
 
@@ -194,7 +205,7 @@ probably<Protocol> Factory::new_protocol(ref<Tuple> methods, ref<Value> super,
 }
 
 
-probably<Instance> Factory::new_instance(ref<Layout> layout) {
+probably<Instance> Factory::new_instance(ref<InstanceLayout> layout) {
   ALLOCATE_CHECKED(Instance, new_instance(*layout));
 }
 

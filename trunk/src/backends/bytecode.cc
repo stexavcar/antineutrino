@@ -40,7 +40,7 @@ void BytecodeBackend::invoke_super(ref<Selector> selector, uint16_t argc,
 }
 
 
-void BytecodeBackend::instantiate(ref<Layout> layout) {
+void BytecodeBackend::instantiate(ref<InstanceLayout> layout) {
   STATIC_CHECK(OpcodeInfo<ocNew>::kArgc == 1);
   uint16_t layout_index = constant_pool_index(layout);
   code().append(ocNew);

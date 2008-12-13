@@ -47,5 +47,5 @@ def main() {
   root.add(circle);
   def text := new Text(new Point(50, 50), "Hello World");
   root.add(text);
-  whiteout.send("init", null);
+  whiteout.init();
 }

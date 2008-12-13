@@ -16,7 +16,7 @@
 
 
 #define eGeneratableObjectTypes(VISIT)                     \
-  VISIT(1,  HashMap,            hash_map)             \
+  VISIT(1,  HashMap,               hash_map)               \
   VISIT(2,  Method,                method)                 \
   VISIT(3,  Protocol,              protocol)               \
   VISIT(4,  Task,                  task)                   \
@@ -84,9 +84,14 @@
   eNormalTypes(VISIT)                                      \
   eSignalTypes(VISIT)
 
+#define eLayoutTypes(VISIT)                                \
+  VISIT(90, SimpleLayout,          0)                      \
+  VISIT(91, InstanceLayout,        0)
+
 #define eDeclaredTypes(VISIT)                              \
   eValueTypes(VISIT)                                       \
-  eSpecialTypes(VISIT)
+  eSpecialTypes(VISIT)                                     \
+  eLayoutTypes(VISIT)
 
 
 #define eSyntaxTreeTypes(VISIT)                            \
@@ -215,7 +220,6 @@
 #define eBoilerplateSizeInHeap(VISIT)                      \
   eGeneratableTypes(VISIT)                                 \
   VISIT(0, Lambda, 0)                                      \
-  VISIT(0, Layout, 0)                                      \
   VISIT(0, Context, 0)                                     \
   VISIT(0, BuiltinCall, 0)                                 \
   VISIT(0, Channel, 0)                                     \
@@ -431,56 +435,56 @@
   VISIT(5,  Layout,     layout_layout,                 Layout,                0)
 
 #define eSimpleExternalRootLayouts(VISIT)                                                                                    \
-  VISIT(6,  Layout,     protocol_layout,               Protocol,              allocate_empty_layout(tProtocol))              \
-  VISIT(7,  Layout,     string_layout,                 String,                allocate_empty_layout(tString))                \
-  VISIT(8,  Layout,     tuple_layout,                  Tuple,                 allocate_empty_layout(tTuple))                 \
-  VISIT(9,  Layout,     void_layout,                   Void,                  allocate_empty_layout(tVoid))                  \
-  VISIT(10, Layout,     null_layout,                   Null,                  allocate_empty_layout(tNull))                  \
-  VISIT(11, Layout,     true_layout,                   True,                  allocate_empty_layout(tTrue))                  \
-  VISIT(12, Layout,     false_layout,                  False,                 allocate_empty_layout(tFalse))                 \
-  VISIT(13, Layout,     literal_expression_layout,     LiteralExpression,     allocate_empty_layout(tLiteralExpression))     \
-  VISIT(14, Layout,     hash_map_layout,             HashMap,            allocate_empty_layout(tHashMap))            \
-  VISIT(15, Layout,     lambda_layout,                 Lambda,                allocate_empty_layout(tLambda))                \
-  VISIT(16, Layout,     buffer_layout,                 Buffer,                allocate_empty_layout(tBuffer))                \
-  VISIT(17, Layout,     code_layout,                   Code,                  allocate_empty_layout(tCode))                  \
-  VISIT(18, Layout,     method_layout,                 Method,                allocate_empty_layout(tMethod))                \
-  VISIT(19, Layout,     smi_layout,                    SmallInteger,          allocate_empty_layout(tSmi))                   \
-  VISIT(20, Layout,     invoke_expression_layout,      InvokeExpression,      allocate_empty_layout(tInvokeExpression))      \
-  VISIT(21, Layout,     protocol_expression_layout,    ProtocolExpression,    allocate_empty_layout(tProtocolExpression))    \
-  VISIT(22, Layout,     return_expression_layout,      ReturnExpression,      allocate_empty_layout(tReturnExpression))      \
-  VISIT(23, Layout,     method_expression_layout,      MethodExpression,      allocate_empty_layout(tMethodExpression))      \
-  VISIT(24, Layout,     sequence_expression_layout,    SequenceExpression,    allocate_empty_layout(tSequenceExpression))    \
-  VISIT(25, Layout,     tuple_expression_layout,       TupleExpression,       allocate_empty_layout(tTupleExpression))       \
-  VISIT(26, Layout,     global_variable_layout,        GlobalVariable,        allocate_empty_layout(tGlobalVariable))        \
-  VISIT(27, Layout,     symbol_layout,                 Symbol,                allocate_empty_layout(tSymbol))                \
-  VISIT(28, Layout,     call_expression_layout,        CallExpression,        allocate_empty_layout(tCallExpression))        \
-  VISIT(29, Layout,     conditional_expression_layout, ConditionalExpression, allocate_empty_layout(tConditionalExpression)) \
-  VISIT(30, Layout,     this_expression_layout,        ThisExpression,        allocate_empty_layout(tThisExpression))        \
-  VISIT(31, Layout,     lambda_expression_layout,      LambdaExpression,      allocate_empty_layout(tLambdaExpression))      \
-  VISIT(32, Layout,     builtin_call_layout,           BuiltinCall,           allocate_empty_layout(tBuiltinCall))           \
-  VISIT(33, Layout,     interpolate_expression_layout, InterpolateExpression, allocate_empty_layout(tInterpolateExpression)) \
-  VISIT(34, Layout,     local_definition_layout,       LocalDefinition,       allocate_empty_layout(tLocalDefinition))       \
-  VISIT(35, Layout,     stack_layout,                  Stack,                 allocate_empty_layout(tStack))                 \
-  VISIT(36, Layout,     task_layout,                   Task,                  allocate_empty_layout(tTask))                  \
-  VISIT(37, Layout,     raise_expression_layout,       RaiseExpression,       allocate_empty_layout(tRaiseExpression))       \
-  VISIT(38, Layout,     on_clause_layout,              OnClause,              allocate_empty_layout(tOnClause))              \
-  VISIT(39, Layout,     do_on_expression_layout,       DoOnExpression,        allocate_empty_layout(tDoOnExpression))        \
-  VISIT(40, Layout,     instantiate_expression_layout, InstantiateExpression, allocate_empty_layout(tInstantiateExpression)) \
-  VISIT(41, Layout,     context_layout,                Context,               allocate_empty_layout(tContext))               \
-  VISIT(42, Layout,     signature_layout,              Signature,             allocate_empty_layout(tSignature))             \
-  VISIT(43, Layout,     forwarder_descriptor_layout,   ForwarderDescriptor,   allocate_empty_layout(tForwarderDescriptor))   \
-  VISIT(44, Layout,     arguments_layout,              Arguments,             allocate_empty_layout(tArguments))             \
-  VISIT(45, Layout,     selector_layout,               Selector,              allocate_empty_layout(tSelector))              \
-  VISIT(46, Layout,     task_expression_layout,        TaskExpression,        allocate_empty_layout(tTaskExpression))        \
-  VISIT(47, Layout,     yield_expression_layout,       YieldExpression,       allocate_empty_layout(tYieldExpression))       \
-  VISIT(48, Layout,     assignment_layout,             Assignment,            allocate_empty_layout(tAssignment))            \
-  VISIT(49, Layout,     parameters_layout,             Parameters,            allocate_empty_layout(tParameters))            \
-  VISIT(50, Layout,     channel_layout,                Channel,               allocate_empty_layout(tChannel))               \
-  VISIT(51, Layout,     while_expression_layout,       WhileExpression,       allocate_empty_layout(tWhileExpression))       \
-  VISIT(52, Layout,     super_expression_layout,       SuperExpression,       allocate_empty_layout(tSuperExpression))       \
-  VISIT(53, Layout,     array_layout,                  Array,                 allocate_empty_layout(tArray))                 \
-  VISIT(54, Layout,     local_variable_layout,         LocalVariable,         allocate_empty_layout(tLocalVariable))         \
-  VISIT(55, Layout,     cell_layout,                   Cell,                  allocate_empty_layout(tCell))
+  VISIT(6,  SimpleLayout,     protocol_layout,               Protocol,              allocate_empty_simple_layout(tProtocol))              \
+  VISIT(7,  SimpleLayout,     string_layout,                 String,                allocate_empty_simple_layout(tString))                \
+  VISIT(8,  SimpleLayout,     tuple_layout,                  Tuple,                 allocate_empty_simple_layout(tTuple))                 \
+  VISIT(9,  SimpleLayout,     void_layout,                   Void,                  allocate_empty_simple_layout(tVoid))                  \
+  VISIT(10, SimpleLayout,     null_layout,                   Null,                  allocate_empty_simple_layout(tNull))                  \
+  VISIT(11, SimpleLayout,     true_layout,                   True,                  allocate_empty_simple_layout(tTrue))                  \
+  VISIT(12, SimpleLayout,     false_layout,                  False,                 allocate_empty_simple_layout(tFalse))                 \
+  VISIT(13, SimpleLayout,     literal_expression_layout,     LiteralExpression,     allocate_empty_simple_layout(tLiteralExpression))     \
+  VISIT(14, SimpleLayout,     hash_map_layout,               HashMap,               allocate_empty_simple_layout(tHashMap))            \
+  VISIT(15, SimpleLayout,     lambda_layout,                 Lambda,                allocate_empty_simple_layout(tLambda))                \
+  VISIT(16, SimpleLayout,     buffer_layout,                 Buffer,                allocate_empty_simple_layout(tBuffer))                \
+  VISIT(17, SimpleLayout,     code_layout,                   Code,                  allocate_empty_simple_layout(tCode))                  \
+  VISIT(18, SimpleLayout,     method_layout,                 Method,                allocate_empty_simple_layout(tMethod))                \
+  VISIT(19, SimpleLayout,     smi_layout,                    SmallInteger,          allocate_empty_simple_layout(tSmi))                   \
+  VISIT(20, SimpleLayout,     invoke_expression_layout,      InvokeExpression,      allocate_empty_simple_layout(tInvokeExpression))      \
+  VISIT(21, SimpleLayout,     protocol_expression_layout,    ProtocolExpression,    allocate_empty_simple_layout(tProtocolExpression))    \
+  VISIT(22, SimpleLayout,     return_expression_layout,      ReturnExpression,      allocate_empty_simple_layout(tReturnExpression))      \
+  VISIT(23, SimpleLayout,     method_expression_layout,      MethodExpression,      allocate_empty_simple_layout(tMethodExpression))      \
+  VISIT(24, SimpleLayout,     sequence_expression_layout,    SequenceExpression,    allocate_empty_simple_layout(tSequenceExpression))    \
+  VISIT(25, SimpleLayout,     tuple_expression_layout,       TupleExpression,       allocate_empty_simple_layout(tTupleExpression))       \
+  VISIT(26, SimpleLayout,     global_variable_layout,        GlobalVariable,        allocate_empty_simple_layout(tGlobalVariable))        \
+  VISIT(27, SimpleLayout,     symbol_layout,                 Symbol,                allocate_empty_simple_layout(tSymbol))                \
+  VISIT(28, SimpleLayout,     call_expression_layout,        CallExpression,        allocate_empty_simple_layout(tCallExpression))        \
+  VISIT(29, SimpleLayout,     conditional_expression_layout, ConditionalExpression, allocate_empty_simple_layout(tConditionalExpression)) \
+  VISIT(30, SimpleLayout,     this_expression_layout,        ThisExpression,        allocate_empty_simple_layout(tThisExpression))        \
+  VISIT(31, SimpleLayout,     lambda_expression_layout,      LambdaExpression,      allocate_empty_simple_layout(tLambdaExpression))      \
+  VISIT(32, SimpleLayout,     builtin_call_layout,           BuiltinCall,           allocate_empty_simple_layout(tBuiltinCall))           \
+  VISIT(33, SimpleLayout,     interpolate_expression_layout, InterpolateExpression, allocate_empty_simple_layout(tInterpolateExpression)) \
+  VISIT(34, SimpleLayout,     local_definition_layout,       LocalDefinition,       allocate_empty_simple_layout(tLocalDefinition))       \
+  VISIT(35, SimpleLayout,     stack_layout,                  Stack,                 allocate_empty_simple_layout(tStack))                 \
+  VISIT(36, SimpleLayout,     task_layout,                   Task,                  allocate_empty_simple_layout(tTask))                  \
+  VISIT(37, SimpleLayout,     raise_expression_layout,       RaiseExpression,       allocate_empty_simple_layout(tRaiseExpression))       \
+  VISIT(38, SimpleLayout,     on_clause_layout,              OnClause,              allocate_empty_simple_layout(tOnClause))              \
+  VISIT(39, SimpleLayout,     do_on_expression_layout,       DoOnExpression,        allocate_empty_simple_layout(tDoOnExpression))        \
+  VISIT(40, SimpleLayout,     instantiate_expression_layout, InstantiateExpression, allocate_empty_simple_layout(tInstantiateExpression)) \
+  VISIT(41, SimpleLayout,     context_layout,                Context,               allocate_empty_simple_layout(tContext))               \
+  VISIT(42, SimpleLayout,     signature_layout,              Signature,             allocate_empty_simple_layout(tSignature))             \
+  VISIT(43, SimpleLayout,     forwarder_descriptor_layout,   ForwarderDescriptor,   allocate_empty_simple_layout(tForwarderDescriptor))   \
+  VISIT(44, SimpleLayout,     arguments_layout,              Arguments,             allocate_empty_simple_layout(tArguments))             \
+  VISIT(45, SimpleLayout,     selector_layout,               Selector,              allocate_empty_simple_layout(tSelector))              \
+  VISIT(46, SimpleLayout,     task_expression_layout,        TaskExpression,        allocate_empty_simple_layout(tTaskExpression))        \
+  VISIT(47, SimpleLayout,     yield_expression_layout,       YieldExpression,       allocate_empty_simple_layout(tYieldExpression))       \
+  VISIT(48, SimpleLayout,     assignment_layout,             Assignment,            allocate_empty_simple_layout(tAssignment))            \
+  VISIT(49, SimpleLayout,     parameters_layout,             Parameters,            allocate_empty_simple_layout(tParameters))            \
+  VISIT(50, SimpleLayout,     channel_layout,                Channel,               allocate_empty_simple_layout(tChannel))               \
+  VISIT(51, SimpleLayout,     while_expression_layout,       WhileExpression,       allocate_empty_simple_layout(tWhileExpression))       \
+  VISIT(52, SimpleLayout,     super_expression_layout,       SuperExpression,       allocate_empty_simple_layout(tSuperExpression))       \
+  VISIT(53, SimpleLayout,     array_layout,                  Array,                 allocate_empty_simple_layout(tArray))                 \
+  VISIT(54, SimpleLayout,     local_variable_layout,         LocalVariable,         allocate_empty_simple_layout(tLocalVariable))         \
+  VISIT(55, SimpleLayout,     cell_layout,                   Cell,                  allocate_empty_simple_layout(tCell))
 
 #define eSimpleInternalRootObjects(VISIT)                                                                                    \
   VISIT(56, Tuple,      empty_tuple,                   EmptyTuple,            new_tuple(0))                                  \
@@ -543,7 +547,6 @@
   VISIT(42, lambda,                 disassemble, "disassemble")      \
   VISIT(43, lambda_expression,      params,      "parameters")       \
   VISIT(44, lambda_expression,      body,        "body")             \
-  VISIT(45, channel,                send,        "send")             \
   VISIT(49, array,                  get,         "[]")               \
   VISIT(51, array,                  length,      "||")               \
   VISIT(52, array,                  set,         "[]:=")             \

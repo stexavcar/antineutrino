@@ -67,7 +67,7 @@ public:
   inline void set_data(Value *value);
   inline bool is_bottom();
   inline void unwind();
-  
+
   static const uword kPrevMpOffset = 0;
   static const uword kDataOffset   = kPrevMpOffset + 1;
   static const uword kSize         = kDataOffset + 1;
@@ -120,26 +120,26 @@ public:
   inline void push_activation(uword prev_pc, Lambda *lambda);
   inline Marker push_marker();
   inline Marker pop_marker();
-  
+
   void park(Stack *stack, uword pc);
   inline uword unpark(Stack *stack);
-  
+
   /**
    * Unwinds a stack frame in a cooked stack.
    */
   inline void unwind(Stack *stack);
-  
+
   /**
    * Unwinds a stack frame in an uncooked stack, where the given
    * array is the stack buffer.
    */
   inline void unwind(array<word> buffer, uword height);
-  
+
   inline void push(Value *value);
   inline bool is_bottom();
   bounded_ptr<word> fp() { return fp_; }
   bounded_ptr<word> sp() { return sp_; }
-  
+
   /**
    * Returns the number of stack entries below the current fp that may
    * be accessed through this stack frame.
@@ -153,7 +153,7 @@ public:
 
 private:
   friend class Stack;
-  
+
   bounded_ptr<word> fp_;
   bounded_ptr<word> sp_;
 };
@@ -183,7 +183,7 @@ private:
   Signal *prepare_call(ref<Task> task, ref<Lambda> lambda, uword argc);
   Data *interpret(InterpreterState &state);
   Layout *get_layout(Immediate *val);
-  Data *lookup_method(Layout *layout, Selector *selector);
+  Data *lookup_method(Immediate *recv, Layout *layout, Selector *selector);
   Data *lookup_super_method(Layout *layout, Selector *selector,
       Signature *current);
   Runtime &runtime() { return runtime_; }
