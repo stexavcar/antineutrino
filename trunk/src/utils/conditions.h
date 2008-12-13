@@ -21,17 +21,6 @@ eConditions(DECLARE_ENUM)
 };
 
 
-class Log {
-public:
-
-  void info(string format, const var_args &args);
-  static Log &get() { return instance_; }
-
-private:
-  static Log instance_;
-};
-
-
 /**
  * The conditions are functions that can be called when something
  * unexpected or problematic occurs.  When this happens the condition

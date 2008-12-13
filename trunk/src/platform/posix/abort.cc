@@ -12,8 +12,8 @@ Resource *Abort::first_ = NULL;
 Resource *Abort::last_ = NULL;
 
 struct EnumValueInfo {
-  char *name;
-  char *desc;
+  const char *name;
+  const char *desc;
 };
 
 static bool get_signal_info(int signum, EnumValueInfo *info) {
@@ -95,7 +95,7 @@ static void print_error_report(int signum, siginfo_t *info, void *ptr) {
   if (get_signal_info(info->si_signo, &enum_info))
     fprintf(stderr, "signal: %s (%s)\n", enum_info.name, enum_info.desc);
   if (get_code_info(info->si_signo, info->si_code, &enum_info))
-    fprintf(stderr, "code:   %s (%s)\n", enum_info.name, enum_info.desc);    
+    fprintf(stderr, "code:   %s (%s)\n", enum_info.name, enum_info.desc);
   switch (info->si_signo) {
     case SIGSEGV: case SIGILL: case SIGFPE: case SIGBUS:
       fprintf(stderr, "addr:   %x\n", static_cast<uint32_t>(reinterpret_cast<uword>(info->si_addr)));
@@ -112,7 +112,7 @@ static bool install_handler(int signum, void (*handler)(int, siginfo_t*, void*))
   struct sigaction action;
   memset(&action, 0, sizeof(action));
   action.sa_sigaction = handler;
-  action.sa_flags = SA_SIGINFO;  
+  action.sa_flags = SA_SIGINFO;
   return sigaction(signum, &action, NULL) >= 0;
 }
 

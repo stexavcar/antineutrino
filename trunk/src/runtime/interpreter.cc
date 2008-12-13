@@ -4,9 +4,10 @@
 #include "runtime/builtins-inl.h"
 #include "runtime/interpreter-inl.pp.h"
 #include "runtime/runtime-inl.h"
-#include "utils/checks.h"
-#include "utils/smart-ptrs-inl.h"
 #include "utils/array-inl.h"
+#include "utils/checks.h"
+#include "utils/log.h"
+#include "utils/smart-ptrs-inl.h"
 #include "values/method-inl.h"
 
 namespace neutrino {
@@ -169,7 +170,7 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
     @assert state.stack()->status().state == Stack::Status::ssParked;
     if (is<Signal>(value)) {
       if (Options::trace_signals)
-        Log::get().info("Signal: %", elms(value));
+        LOG().info("Signal: %", elms(value));
       if (is<StackOverflow>(value)) {
         value = grow_stack(state.task(), runtime().heap());
         // If grow_stack is not successful then we have to fall through

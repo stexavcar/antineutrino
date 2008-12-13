@@ -40,7 +40,8 @@ class Heap(object):
   kRootCount         = 58
   
   def __init__(self, roots):
-    self.data_ = array.array('l')
+    self.data_ = array.array('i')
+    assert self.data_.itemsize == 4
     self.cursor_ = 0
     # Hex literals in python don't automatically overflow into
     # negative numbers (which is a good thing, really) so we manually

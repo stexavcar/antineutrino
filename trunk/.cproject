@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <?fileVersion 4.0.0?>
 
 <cproject>
@@ -23,7 +23,7 @@
 <folderInfo id="cdt.managedbuild.config.gnu.macosx.exe.debug.672268600." name="/" resourcePath="">
 <toolChain id="cdt.managedbuild.toolchain.gnu.macosx.exe.debug.344966796" name="MacOSX GCC" resourceTypeBasedDiscovery="true" superClass="cdt.managedbuild.toolchain.gnu.macosx.exe.debug">
 <targetPlatform binaryParser="org.eclipse.cdt.core.MachO;org.eclipse.cdt.core.ELF" id="cdt.managedbuild.target.gnu.platform.macosx.exe.debug.352478929" name="Debug Platform" superClass="cdt.managedbuild.target.gnu.platform.macosx.exe.debug"/>
-<builder arguments="-Y .. mode=paranoid neutrino whiteout cctest natives" autoBuildTarget="" buildPath="${workspace_loc:/neutrino/}/xbld" cleanBuildTarget="-c" command="${SCONS}" enableAutoBuild="true" enableCleanBuild="true" enabledIncrementalBuild="true" id="cdt.managedbuild.target.gnu.builder.macosx.exe.debug.768995472" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="4" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.debug">
+<builder arguments="-Y .. mode=paranoid wordsize=32 neutrino whiteout cctest natives nsh" autoBuildTarget="" buildPath="${workspace_loc:/neutrino/}/xbld" cleanBuildTarget="-c" command="${SCONS}" enableAutoBuild="true" enableCleanBuild="true" enabledIncrementalBuild="true" id="cdt.managedbuild.target.gnu.builder.macosx.exe.debug.768995472" incrementalBuildTarget="" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" parallelBuildOn="true" parallelizationNumber="4" superClass="cdt.managedbuild.target.gnu.builder.macosx.exe.debug">
 <outputEntries>
 <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name="build"/>
 <entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="outputPath" name=""/>

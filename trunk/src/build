@@ -14,8 +14,11 @@ flags (
         '32': ['-m32'],
         '64': ['-m64']
       }),
-      
     ],
+    'LINKFLAGS': cond('wordsize', {
+        '32': ['-m32'],
+        '64': ['-m64']
+    }),
     'DIALECTFLAGS': ['-ansi', '-pedantic'],
     'WARNINGFLAGS': [
       '-Wall', '-W', '-Wno-unused-parameter', '-Wno-non-virtual-dtor'
@@ -90,6 +93,7 @@ library (
     'runtime/interpreter.cc',
     'runtime/runtime.cc',
     'utils/flags.cc',
+    'utils/log.cc',
     'utils/nonlocal.cc',
     'values/channel.cc',
     'values/method.cc',

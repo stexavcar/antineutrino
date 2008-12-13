@@ -42,7 +42,8 @@ class BuildObject(object):
     return full_name
   
   def get_files(self, config):
-    return [self.get_file_name(config, f) for f in self.files]
+    files = self.expand_value(self.files, config)
+    return [self.get_file_name(config, f) for f in files]
 
   def get_headers(self, config):
     return [self.get_file_name(config, h) for h in self.headers]
@@ -57,7 +58,7 @@ class BuildObject(object):
         else:
           result.append(exp)
       return result
-    elif isinstance(value, ConditionalFlag):
+    elif isinstance(value, Conditional):
       return value.evaluate(config)
     else:
       return value
@@ -112,14 +113,14 @@ class BuildFlags(object):
     self.includes = args.get('include', [])
 
 
-class ConditionalFlag(object):
+class Conditional(object):
   
   def __init__(self, name, map):
     self.name = name
     self.map = map
   
   def evaluate(self, config):
-    return self.map[config.option_values[self.name]]
+    return self.map.get(config.option_values[self.name], [])
 
 
 class BuildConfiguration(object):
@@ -146,7 +147,7 @@ def load_build_config_into(name, root, target):
   def flags(**args):
     target.flags[args['name']] = BuildFlags(args)
   def cond(name, map):
-    return ConditionalFlag(name, map)
+    return Conditional(name, map)
   exec contents in {
     'option': option,
     'library': library,

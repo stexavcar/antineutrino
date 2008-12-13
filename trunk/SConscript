@@ -54,7 +54,7 @@ def ensure_built(env, lib):
     ensure_built(env, config.libraries[dep])
     static_deps.append(config.libraries[dep].static_object)
     shared_deps.append(config.libraries[dep].shared_object)
-  lib.shared_object = sub_env.SharedLibrary(name, files + shared_deps)
+  lib.shared_object = sub_env.SharedLibrary(name, files, LIBS=shared_deps)
   lib.static_object = sub_env.StaticLibrary(name, files + static_deps)
   if lib.shared:
     sub_env.Alias(name, lib.shared_object)

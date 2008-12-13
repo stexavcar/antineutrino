@@ -3,6 +3,7 @@
 
 #include "platform/dylib.h"
 #include "utils/list-inl.h"
+#include "utils/log.h"
 
 namespace neutrino {
 
@@ -29,7 +30,10 @@ PosixDynamicLibraryCollection::~PosixDynamicLibraryCollection() {
 
 bool PosixDynamicLibraryCollection::load(string path) {
   library_handle handle = dlopen(path.chars(), RTLD_LAZY);
-  if (handle == NULL) return false;
+  if (handle == NULL) {
+    LOG().error("%s", elms(dlerror()));
+    return false;
+  }
   handles().push(handle);
   return true;
 }

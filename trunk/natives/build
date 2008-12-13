@@ -15,8 +15,18 @@ flags (
   flags = {
     'LIBS': ['cairo'],
     'LIBPATH': '/opt/local/lib',
-    'CPPPATH': ['natives', '/opt/local/include/cairo'],
-    'LINKFLAGS': ['-framework', 'Carbon'],
+    'CPPPATH': [
+      'natives',
+      cond('os', {
+        'darwin': ['/opt/local/include/cairo'],
+        'linux': ['/usr/include/cairo']
+      })
+    ],
+    'LINKFLAGS': [
+      cond('os', {
+        'darwin': ['-framework', 'Carbon'],
+      })
+    ],
   }
 )
 
@@ -26,8 +36,10 @@ program (
   libs = ['neutrino'],
   files = [
     'whiteout/cairo-backend.cc',
-    'whiteout/cairo-quartz.cc',
     'whiteout/main.cc',
+    cond('os', {
+        'darwin': ['whiteout/cairo-quartz.cc'],
+    }),
     'whiteout/wtk.cc'
   ],
 )
