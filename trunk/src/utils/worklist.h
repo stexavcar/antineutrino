@@ -6,6 +6,7 @@
 
 namespace neutrino {
 
+
 template <typename T>
 class ListNode {
 public:
@@ -23,6 +24,7 @@ private:
   ListNode<T> *prev_;
   ListNode<T> *next_;
 };
+
 
 template <typename T>
 class DoublyLinkedList {
@@ -47,28 +49,14 @@ private:
 
 };
 
-class Action {
-
-};
 
 template <typename T>
 class WorkList {
 public:
-  void initialize() {
-    mutex().initialize();
-    added().initialize();
-  }
-  void offer(const T &e) {
-    Mutex::With with(mutex());
-    elements().add_last(e);
-    added().signal();
-  }
-  T take() {
-    Mutex::With with(mutex());
-    while (elements().is_empty())
-      added().wait(mutex());
-    return elements().remove_first();
-  }
+  void initialize();
+  void offer(const T &e);
+  T take();
+  bool is_empty();
 private:
   DoublyLinkedList<T> &elements() { return elements_; }
   Mutex &mutex() { return mutex_; }
@@ -78,6 +66,8 @@ private:
   ConditionVariable added_;
 };
 
+
 } // namespace neutrino
+
 
 #endif // _UTILS_WORKLIST

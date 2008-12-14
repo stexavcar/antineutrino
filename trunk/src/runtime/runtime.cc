@@ -2,6 +2,8 @@
 #include "io/image.h"
 #include "runtime/runtime-inl.h"
 #include "utils/checks.h"
+#include "utils/string-inl.pp.h"
+#include "utils/worklist-inl.pp.h"
 #include "values/values-inl.pp.h"
 
 namespace neutrino {
@@ -20,6 +22,8 @@ Runtime::~Runtime() {
 }
 
 likely Runtime::initialize(Architecture *arch) {
+  worklist().initialize();
+  sync_action_mutex().initialize();
   possibly init_result = roots().initialize(heap());
   if (init_result.has_failed()) {
     init_result.signal()->to_string().println();
@@ -43,10 +47,10 @@ likely Runtime::initialize(Architecture *arch) {
   return Success::make();
 }
 
-likely Runtime::start() {
-  ref_block<> protect(refs());
-  @check(probably) ref<String> main_name = factory().new_string("entry_point");
-  Data *entry_point = roots().toplevel()->get(*main_name);
+likely RunMain::run(Runtime &runtime) {
+  ref_block<> protect(runtime.refs());
+  @check(probably) ref<String> main_name = runtime.factory().new_string("entry_point");
+  Data *entry_point = runtime.roots().toplevel()->get(*main_name);
   if (is<Nothing>(entry_point)) {
     Conditions::get().error_occurred("Error: no entry point '%' was defined.",
         elms(main_name));
@@ -57,8 +61,8 @@ likely Runtime::start() {
     return FatalError::make(FatalError::feUnexpected);
   }
   ref<Lambda> lambda = protect(cast<Lambda>(entry_point));
-  @check(probably) ref<Task> task = factory().new_task(architecture());
-  architecture().run(lambda, task);
+  @check(probably) ref<Task> task = runtime.factory().new_task(runtime.architecture());
+  runtime.architecture().run(lambda, task);
   return Success::make();
 }
 
@@ -192,6 +196,51 @@ likely Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
   root->set_protocol(*changes);
   ASSERT(!root->is_empty());
   return Success::make();
+}
+
+likely Runtime::start(bool stop_when_empty) {
+  while (true) {
+    if (stop_when_empty && worklist().is_empty())
+      return Success::make();
+    Action *action = worklist().take();
+    if (action == NULL) {
+      return Success::make();
+    } else if (action->is_synchronous()) {
+      Mutex::With with(sync_action_mutex());
+      action->begin().signal();
+      action->end().wait(sync_action_mutex());
+    } else {
+      @try(likely) action->run(*this);
+    }
+  }
+}
+
+void Runtime::schedule_interrupt() {
+  worklist().offer(NULL);
+}
+
+void Runtime::schedule_async(Action &action) {
+  action.is_synchronous_ = false;
+  worklist().offer(&action);
+}
+
+likely Runtime::schedule_sync(Action &action) {
+  action.is_synchronous_ = true;
+  action.begin().initialize();
+  action.end().initialize();
+  // Grab the synchronous action mutex before doing anything.
+  Mutex::With with(sync_action_mutex());
+  worklist().offer(&action);
+  // When the scheduler gets to this action the is_synchronous flag
+  // tells it not to execute it but to signal the condition.  Wait for
+  // that to happen.
+  action.begin().wait(sync_action_mutex());
+  // After signalling the scheduler will wait for the end signal before
+  // continuing.  That's when we can execute the action.
+  likely result = action.run(*this);
+  // Tell the scheduler that it can continue.
+  action.end().signal();
+  return result;
 }
 
 } // namespace neutrino

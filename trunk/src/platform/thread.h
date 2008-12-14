@@ -2,6 +2,9 @@
 #define _PLATFORM_THREAD
 
 
+#include "utils/globals.h"
+
+
 namespace neutrino {
 
 
@@ -27,6 +30,7 @@ public:
   void initialize();
   void lock();
   void unlock();
+  bool initialized() { return data() != NULL; }
 
   class With {
   public:
@@ -52,6 +56,7 @@ public:
   void wait(Mutex &mutex);
   void signal();
   void initialize();
+  bool initialized() { return data() != NULL; }
 
 private:
   class Data;

@@ -4,6 +4,7 @@
 #include "platform/dylib.h"
 #include "utils/list-inl.h"
 #include "utils/log.h"
+#include "utils/string-inl.pp.h"
 
 namespace neutrino {
 

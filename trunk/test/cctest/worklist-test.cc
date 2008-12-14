@@ -1,5 +1,6 @@
 #include "cctest/nunit-inl.h"
 #include "utils/list-inl.h"
+#include "utils/string-inl.pp.h"
 #include "utils/worklist-inl.pp.h"
 
 using namespace neutrino;

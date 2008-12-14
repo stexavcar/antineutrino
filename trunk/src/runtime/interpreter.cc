@@ -8,6 +8,7 @@
 #include "utils/checks.h"
 #include "utils/log.h"
 #include "utils/smart-ptrs-inl.h"
+#include "utils/string-inl.pp.h"
 #include "values/method-inl.h"
 
 namespace neutrino {

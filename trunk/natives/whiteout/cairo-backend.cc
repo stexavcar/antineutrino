@@ -1,4 +1,5 @@
 #include "utils/misc.h"
+#include "utils/string-inl.h"
 #include "whiteout/cairo-backend.h"
 #include <cairo.h>
 #include <cstdio>

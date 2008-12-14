@@ -57,6 +57,7 @@ public:
 namespace neutrino {
 
 class AbstractWatch;
+class Action;
 class AllocationFailed;
 class Architecture;
 class Arguments;

@@ -12,6 +12,7 @@
 #include "utils/log.h"
 #include "utils/flags.h"
 #include "utils/smart-ptrs-inl.h"
+#include "utils/string-inl.pp.h"
 #include "utils/array.h"
 
 namespace neutrino {
@@ -90,7 +91,9 @@ likely Library::initialize_runtime(list<char*> &args, Runtime &runtime) {
 
 
 likely Library::run(Runtime &runtime) {
-  likely start_result = runtime.start();
+  RunMain run_main;
+  runtime.schedule_async(run_main);
+  likely start_result = runtime.start(true);
   if (Options::print_stats_on_exit) {
     string_buffer stats;
     Monitor::write_on(stats);

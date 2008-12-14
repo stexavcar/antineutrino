@@ -28,7 +28,7 @@ public:
    * a pointer to the internal buffer of this string so it will be
    * deleted when the string is.
    */
-  inline array<const char> chars() { return NEW_ARRAY(chars_, length_); }
+  inline array<const char> chars();
 
   bool operator==(string that) const;
   bool operator!=(string that) const { return !(this->operator==(that)); }
@@ -42,26 +42,6 @@ public:
 private:
   const char *chars_;
   uword length_;
-};
-
-class scoped_string {
-public:
-  scoped_string(string str) : value_(str) { }
-  ~scoped_string() { value_.dispose(); }
-  string &operator*() { return value_; }
-  string *operator->() { return &value_; }
-  const array<const char> chars() { return value_.chars(); }
-private:
-  string value_;
-};
-
-class c_string {
-public:
-  c_string(string str) : value_(string::dup(str)) { }
-  ~c_string() { value_.dispose(); }
-  const char *operator*() { return value_.chars().start(); }
-private:
-  string value_;
 };
 
 /**

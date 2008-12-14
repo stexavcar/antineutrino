@@ -42,6 +42,25 @@ private:
   persistent<Lambda> bottom_;
 };
 
+class Action {
+public:
+  Action() : is_synchronous_(false) { }
+  virtual likely run(Runtime &runtime) = 0;
+private:
+  friend class Runtime;
+  ConditionVariable &begin() { return begin_; }
+  ConditionVariable &end() { return end_; }
+  bool is_synchronous() { return is_synchronous_; }
+  bool is_synchronous_;
+  ConditionVariable begin_;
+  ConditionVariable end_;
+};
+
+class RunMain : public Action {
+public:
+  virtual likely run(Runtime &runtime);
+};
+
 /**
  * A neutrino runtime encapsulated in a single object.
  */
@@ -56,7 +75,7 @@ public:
   likely install_object(ref<Object> root, ref<Object> changes);
   likely install_hash_map(ref<HashMap> root, ref<HashMap> changes);
   likely install_layout(ref<Layout> root, ref<Protocol> changes);
-  likely start();
+  likely start(bool stop_when_empty);
 
   void report_load_error(ImageLoadStatus &info);
 
@@ -68,6 +87,20 @@ public:
 
   inline ref<Object> get_root(uword index);
 
+  // Schedules an action that causes the scheduler to stop processing
+  // actions and return.
+  void schedule_interrupt();
+
+  // Schedules an action to be executed eventually and returns
+  // immediately.  The action will be executed by the thread that
+  // started the runtime.
+  void schedule_async(Action &action);
+
+  // Schedules an action to be executed eventually and blocks util
+  // the action has been executed.  The action will be executed by
+  // the calling thread.
+  likely schedule_sync(Action &action);
+
   DynamicLibraryCollection *dylibs() { return dylibs_; }
   RefManager &refs() { return refs_; }
   Architecture &architecture() { return *architecture_; }
@@ -77,6 +110,9 @@ public:
   Roots &roots() { return roots_; }
 
 private:
+  WorkList<Action*> &worklist() { return worklist_; }
+  Mutex &sync_action_mutex() { return sync_action_mutex_; }
+
   Roots roots_;
   Heap heap_;
   Factory factory_;
@@ -84,6 +120,8 @@ private:
   Architecture *architecture_;
   DynamicLibraryCollection *dylibs_;
   RefManager refs_;
+  WorkList<Action*> worklist_;
+  Mutex sync_action_mutex_;
 };
 
 } // neutrino

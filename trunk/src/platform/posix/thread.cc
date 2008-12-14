@@ -2,6 +2,8 @@
 
 #include <pthread.h>
 
+#include "utils/checks.h"
+
 namespace neutrino {
 
 class NativeThread::Data {
@@ -40,22 +42,29 @@ private:
 };
 
 Mutex::Mutex()
-  : data_(new Data()) { }
+  : data_(NULL) { }
 
 Mutex::~Mutex() {
-  pthread_mutex_destroy(&data()->mutex());
-  delete data();
+  if (initialized()) {
+    pthread_mutex_destroy(&data()->mutex());
+    delete data();
+    data_ = NULL;
+  }
 }
 
 void Mutex::initialize() {
+  @assert !initialized();
+  data_ = new Data();
   pthread_mutex_init(&data()->mutex(), NULL);
 }
 
 void Mutex::lock() {
+  @assert initialized();
   pthread_mutex_lock(&data()->mutex());
 }
 
 void Mutex::unlock() {
+  @assert initialized();
   pthread_mutex_unlock(&data()->mutex());
 }
 
@@ -67,23 +76,31 @@ private:
 };
 
 ConditionVariable::ConditionVariable()
-  : data_(new Data()) { }
+  : data_(NULL) { }
 
 ConditionVariable::~ConditionVariable() {
-  pthread_cond_destroy(&data()->cond());
-  delete data_;
+  if (initialized()) {
+    pthread_cond_destroy(&data()->cond());
+    delete data_;
+    data_ = NULL;
+  }
+}
+
+void ConditionVariable::initialize() {
+  @assert !initialized();
+  data_ = new Data();
+  pthread_cond_init(&data()->cond(), NULL);
 }
 
 void ConditionVariable::wait(Mutex &mutex) {
+  @assert initialized();
+  @assert mutex.initialized();
   pthread_cond_wait(&data()->cond(), &mutex.data()->mutex());
 }
 
 void ConditionVariable::signal() {
+  @assert initialized();
   pthread_cond_signal(&data()->cond());
-}
-
-void ConditionVariable::initialize() {
-  pthread_cond_init(&data()->cond(), NULL);
 }
 
 } // neutrino

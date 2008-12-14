@@ -61,6 +61,33 @@ T DoublyLinkedList<T>::remove_last() {
   return result;
 }
 
+template <typename T>
+void WorkList<T>::initialize() {
+  mutex().initialize();
+  added().initialize();
+}
+
+template <typename T>
+bool WorkList<T>::is_empty() {
+  Mutex::With with(mutex());
+  return elements().is_empty();
+}
+
+template <typename T>
+void WorkList<T>::offer(const T &e) {
+  Mutex::With with(mutex());
+  elements().add_last(e);
+  added().signal();
+}
+
+template <typename T>
+T WorkList<T>::take() {
+  Mutex::With with(mutex());
+  while (elements().is_empty())
+    added().wait(mutex());
+  return elements().remove_first();
+}
+
 } // namespace neutrino
 
 #endif // _UTILS_WORKLIST_INL
