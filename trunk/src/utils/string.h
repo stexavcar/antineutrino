@@ -28,7 +28,7 @@ public:
    * a pointer to the internal buffer of this string so it will be
    * deleted when the string is.
    */
-  inline const char *chars() { return chars_; }
+  inline array<const char> chars() { return NEW_ARRAY(chars_, length_); }
 
   bool operator==(string that) const;
   bool operator!=(string that) const { return !(this->operator==(that)); }
@@ -50,11 +50,19 @@ public:
   ~scoped_string() { value_.dispose(); }
   string &operator*() { return value_; }
   string *operator->() { return &value_; }
-  const char *chars() { return value_.chars(); }
+  const array<const char> chars() { return value_.chars(); }
 private:
   string value_;
 };
 
+class c_string {
+public:
+  c_string(string str) : value_(string::dup(str)) { }
+  ~c_string() { value_.dispose(); }
+  const char *operator*() { return value_.chars().start(); }
+private:
+  string value_;
+};
 
 /**
  * Formatter element.  Utility class used to wrap an printf argument

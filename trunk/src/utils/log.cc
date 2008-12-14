@@ -5,6 +5,9 @@
 namespace neutrino {
 
 
+Log::Verbosity Log::verbosity_ = Log::WARN;
+
+
 // Note that because of the call to localtime this function is not
 // thread protect.  Who came up with the idea of sharing the result
 // value between all invocations of localtime?!?
@@ -25,6 +28,7 @@ string SourceLocation::short_name() {
 
 
 void Log::info(string format, const var_args &args) {
+  if (verbosity() < INFO) return;
   string_buffer buf;
   list_value<char, 16> time_buf;
   buf.printf("[%] I %:%: ",
@@ -36,6 +40,7 @@ void Log::info(string format, const var_args &args) {
 
 
 void Log::warn(string format, const var_args &args) {
+  if (verbosity() < WARN) return;
   string_buffer buf;
   list_value<char, 16> time_buf;
   buf.printf("[%] W %:%: ",
@@ -47,6 +52,7 @@ void Log::warn(string format, const var_args &args) {
 
 
 void Log::error(string format, const var_args &args) {
+  if (verbosity() < ERROR) return;
   string_buffer buf;
   list_value<char, 16> time_buf;
   buf.printf("[%] E %:%: ",

@@ -9,6 +9,7 @@
 #include "platform/stdc-inl.h"
 #include "runtime/runtime-inl.h"
 #include "utils/list-inl.h"
+#include "utils/log.h"
 #include "utils/flags.h"
 #include "utils/smart-ptrs-inl.h"
 #include "utils/array.h"
@@ -29,7 +30,7 @@ DynamicLibraryCollection *Library::load_dynamic_libraries() {
   list<string> &libs = Options::libs;
   for (uword i = 0; i < libs.length(); i++) {
     if (!result->load(libs[i])) {
-      Conditions::get().error_occurred("Error loading library %", elms(libs[i]));
+      LOG().error("Error loading library %", elms(libs[i]));
       return NULL;
     }
   }
@@ -38,7 +39,9 @@ DynamicLibraryCollection *Library::load_dynamic_libraries() {
 
 
 likely Library::start(list<char*> &args) {
-  Runtime runtime;
+  @try(likely) ensure_initialized(args);
+  own_ptr<DynamicLibraryCollection> dylibs(load_dynamic_libraries());
+  Runtime runtime(dylibs.release());
   @try(likely) Library::initialize_runtime(args, runtime);
   return run(runtime);
 }
@@ -62,7 +65,7 @@ int Library::report_result(likely result) {
 }
 
 
-likely Library::initialize(list<char*> &args) {
+likely Library::ensure_initialized(list<char*> &args) {
   if (has_been_initialized_) return Success::make();
   if (!Abort::setup_signal_handler())
     return FatalError::make(FatalError::feInitialization);
@@ -73,9 +76,7 @@ likely Library::initialize(list<char*> &args) {
 
 
 likely Library::initialize_runtime(list<char*> &args, Runtime &runtime) {
-  @try(likely) initialize(args);
-  own_ptr<DynamicLibraryCollection> dylibs(load_dynamic_libraries());
-  if (*dylibs == NULL) return FatalError::make(FatalError::feInitialization);
+  @try(likely) ensure_initialized(args);
   list<string> files = Options::images;
   BytecodeArchitecture *arch = new BytecodeArchitecture(runtime);
   @try(likely) runtime.initialize(arch);
@@ -116,7 +117,8 @@ likely Library::build_arguments(Runtime &runtime) {
  * Reads the contents of the specified file into a string.
  */
 Image *Library::read_image(string name) {
-  FILE *file = stdc_fopen(name.chars(), "rb");
+  c_string c_str(name);
+  FILE *file = stdc_fopen(*c_str, "rb");
   if (file == NULL) {
     Conditions::get().error_occurred("Unable to open %.\n", elms(name));
   }

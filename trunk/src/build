@@ -68,6 +68,7 @@ library (
     'utils/conditions.cc',
     'utils/string.cc',
     'platform/{%os|posix|any}/abort.cc',
+    'platform/{%os|posix|any}/thread.cc',
 
     'plankton/c/channel.c',
     'plankton/c/plankton.c',
@@ -105,7 +106,8 @@ library (
     'heap/pointer-inl.h',
     'runtime/interpreter-inl.h',
     'values/values-inl.h',
-    'utils/worklist-inl.h'
+    'utils/string-inl.h',
+    'utils/worklist-inl.h',
   ]
 )
 

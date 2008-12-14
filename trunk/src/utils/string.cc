@@ -1,5 +1,5 @@
 #include "utils/list-inl.h"
-#include "utils/string-inl.h"
+#include "utils/string-inl.pp.h"
 #include "platform/stdc-inl.h"
 #include "heap/ref-inl.h"
 
@@ -11,7 +11,7 @@ using namespace neutrino;
 
 string string::dup(string arg) {
   char *result = new char[arg.length() + 1];
-  memcpy(result, arg.chars(), arg.length());
+  memcpy(result, arg.chars().start(), arg.length());
   result[arg.length()] = '\0';
   return string(result, arg.length());
 }
@@ -76,7 +76,7 @@ void string_buffer::append(char c) {
 void string_buffer::clear() {
   cursor_ = 0;
 }
-  
+
 void string_buffer::ensure_capacity(int required) {
   uword previous_capacity = cursor_ + required;
   if (previous_capacity < capacity_) return;

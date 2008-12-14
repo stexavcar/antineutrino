@@ -29,7 +29,8 @@ PosixDynamicLibraryCollection::~PosixDynamicLibraryCollection() {
 }
 
 bool PosixDynamicLibraryCollection::load(string path) {
-  library_handle handle = dlopen(path.chars(), RTLD_LAZY);
+  c_string c_str(path);
+  library_handle handle = dlopen(*c_str, RTLD_LAZY);
   if (handle == NULL) {
     LOG().error("%s", elms(dlerror()));
     return false;
@@ -39,11 +40,10 @@ bool PosixDynamicLibraryCollection::load(string path) {
 }
 
 void *PosixDynamicLibraryCollection::lookup(string name) {
-  void *result = dlsym(RTLD_SELF, name.chars());
-  if (result != NULL) return result;
+  c_string c_str(name);
   for (uword i = 0; i < handles().length(); i++) {
     library_handle library = handles()[i];
-    result = dlsym(library, name.chars());
+    void *result = dlsym(library, *c_str);
     if (result != NULL) return result;
   }
   return NULL;

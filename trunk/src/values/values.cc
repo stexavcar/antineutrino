@@ -4,7 +4,7 @@
 #include "runtime/interpreter-inl.pp.h"
 #include "runtime/runtime-inl.h"
 #include "utils/hash-inl.h"
-#include "utils/string-inl.h"
+#include "utils/string-inl.pp.h"
 #include "values/values-inl.pp.h"
 
 namespace neutrino {

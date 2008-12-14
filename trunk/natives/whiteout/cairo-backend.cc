@@ -71,7 +71,7 @@ void CairoBackend::visit_text(wtk::Text &that) {
   cairo_save(cr);
   cairo_move_to(cr, left, top);
   neutrino::string str = that.value();
-  cairo_show_text(cr, str.chars());
+  cairo_show_text(cr, str.chars().start());
   cairo_restore(cr);
 }
 

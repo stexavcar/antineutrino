@@ -6,3 +6,6 @@ def @assert(cause=neutrino::cnUnknown) ${left:expr} != ${right:expr}
 
 def @assert(cause=neutrino::cnUnknown) is < ${Type:ident} > \( ${value:expr} \)
   POLLOCK_ASSERT_IS(${Type}, ${value}, ${cause})
+
+def @assert(cause=neutrino::cnUnknown) ${operation:expr}
+  ASSERT(${operation})

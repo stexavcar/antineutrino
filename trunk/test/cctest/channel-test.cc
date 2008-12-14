@@ -4,7 +4,7 @@
 #include "values/channel.h"
 #include "values/values-inl.pp.h"
 #include "utils/checks.h"
-#include "utils/string-inl.h"
+#include "utils/string-inl.pp.h"
 
 namespace p = plankton;
 using namespace neutrino;

@@ -1,6 +1,6 @@
 #include "utils/flags.h"
 #include "utils/list-inl.h"
-#include "utils/string-inl.h"
+#include "utils/string-inl.pp.h"
 
 namespace neutrino {
 

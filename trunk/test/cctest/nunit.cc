@@ -11,8 +11,8 @@ NUnitTest::NUnitTest(string file, string name, test_callback_t *callback)
   : name_(name)
   , callback_(callback) {
   // Find the base name of this test.
-  char *basename = strrchr(file.chars(), '/');
-  if (!basename) basename = strdup(file.chars());
+  char *basename = strrchr(file.chars().start(), '/');
+  if (!basename) basename = strdup(file.chars().start());
   else basename = strdup(basename + 1);
   // Drop the extension, if there is one.
   char *extension = strrchr(basename, '.');
@@ -26,7 +26,8 @@ NUnitTest::NUnitTest(string file, string name, test_callback_t *callback)
 void NUnitTest::print_test_list() {
   NUnitTest *current = first_;
   while (current != NULL) {
-    printf("%s:%s\n", current->file_.chars(), current->name_.chars());
+    printf("%s:%s\n", current->file_.chars().start(),
+        current->name_.chars().start());
     current = current->prev_;
   }
 }
@@ -80,7 +81,7 @@ int NUnitTest::main(list<const char*> args) {
       run_all_tests();
     } else {
       uword current_run_count = 0;
-      own_array<char> str_copy(NEW_ARRAY(strdup(arg.chars()), arg.length()));
+      own_array<const char> str_copy(string::dup(arg).chars());
       char *testname = strchr(str_copy.start(), ':');
       if (testname) {
         // Split the string in two by nulling the colon
@@ -93,7 +94,7 @@ int NUnitTest::main(list<const char*> args) {
         current_run_count = run_matching_tests(arg);
       }
       if (current_run_count == 0) {
-        printf("No tests matched '%s'.\n", arg.chars());
+        printf("No tests matched '%s'.\n", arg.chars().start());
       }
       total_run_count += current_run_count;
     }

@@ -19,7 +19,7 @@ private:
 
   static WatchData *first_;
   static const uword kNameLength = 32;
-  
+
   friend class Monitor;
 };
 
@@ -82,5 +82,5 @@ private:
 };
 
 } // neutrino
- 
+
 #endif // _MONITOR_MONITOR

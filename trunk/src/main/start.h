@@ -15,7 +15,7 @@ public:
   static int report_result(likely result);
 
 private:
-  static likely initialize(list<char*> &args);
+  static likely ensure_initialized(list<char*> &args);
   static void on_option_error(string message);
   static Image *read_image(string name);
   static likely build_arguments(Runtime &runtime);

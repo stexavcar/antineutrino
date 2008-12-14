@@ -4,7 +4,7 @@
 #include "heap/pointer.h"
 #include "heap/roots.h"
 #include "monitor/monitor-inl.h"
-#include "utils/string-inl.h"
+#include "utils/string-inl.pp.h"
 #include "utils/types-inl.h"
 #include "values/values-inl.pp.h"
 

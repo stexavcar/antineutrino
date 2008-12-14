@@ -19,6 +19,7 @@ program (
     'hash-map-test.cc',
     'heap-test.cc',
     'memory-test.cc',
+    'thread-test.cc',
     'platform-test.cc',
     'ref-test.cc',
     'runtime-test.cc',

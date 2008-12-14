@@ -2,7 +2,7 @@
 #include "compiler/compile-utils-inl.h"
 #include "main/options.h"
 #include "runtime/interpreter-inl.pp.h"
-#include "utils/string-inl.h"
+#include "utils/string-inl.pp.h"
 #include "values/values-inl.pp.h"
 
 

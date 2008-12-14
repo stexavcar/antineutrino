@@ -2,6 +2,7 @@
 #define _UTILS_WORKLIST
 
 #include "utils/types.h"
+#include "platform/thread.h"
 
 namespace neutrino {
 
@@ -44,6 +45,37 @@ private:
   ListNode<T> *tail_;
   int size_;
 
+};
+
+class Action {
+
+};
+
+template <typename T>
+class WorkList {
+public:
+  void initialize() {
+    mutex().initialize();
+    added().initialize();
+  }
+  void offer(const T &e) {
+    Mutex::With with(mutex());
+    elements().add_last(e);
+    added().signal();
+  }
+  T take() {
+    Mutex::With with(mutex());
+    while (elements().is_empty())
+      added().wait(mutex());
+    return elements().remove_first();
+  }
+private:
+  DoublyLinkedList<T> &elements() { return elements_; }
+  Mutex &mutex() { return mutex_; }
+  ConditionVariable &added() { return added_; }
+  DoublyLinkedList<T> elements_;
+  Mutex mutex_;
+  ConditionVariable added_;
 };
 
 } // namespace neutrino

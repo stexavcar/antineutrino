@@ -4,6 +4,7 @@
 #include "runtime/runtime-inl.h"
 #include "utils/checks.h"
 #include "utils/globals.h"
+#include "utils/string-inl.pp.h"
 #include "values/values-inl.pp.h"
 
 #include <ctype.h>
