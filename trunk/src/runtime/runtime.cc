@@ -2,6 +2,7 @@
 #include "io/image.h"
 #include "runtime/runtime-inl.h"
 #include "utils/checks.h"
+#include "utils/log.h"
 #include "utils/string-inl.pp.h"
 #include "utils/worklist-inl.pp.h"
 #include "values/values-inl.pp.h"
@@ -52,11 +53,10 @@ likely RunMain::run(Runtime &runtime) {
   @check(probably) ref<String> main_name = runtime.factory().new_string("entry_point");
   Data *entry_point = runtime.roots().toplevel()->get(*main_name);
   if (is<Nothing>(entry_point)) {
-    Conditions::get().error_occurred("Error: no entry point '%' was defined.",
-        elms(main_name));
+    LOG().error("No entry point '%' was defined.", elms(main_name));
     return FatalError::make(FatalError::feUnexpected);
   } else if (!is<Lambda>(entry_point)) {
-    Conditions::get().error_occurred("Entry point '%' is not a function.",
+    LOG().error("Entry point '%' is not a function.",
         elms(main_name));
     return FatalError::make(FatalError::feUnexpected);
   }
@@ -76,13 +76,13 @@ void Runtime::report_load_error(ImageLoadStatus &info) {
       string expected_str = Layout::layout_name(info.error_info.type_mismatch.expected);
       string found_str = Layout::layout_name(info.error_info.type_mismatch.found);
       const char *location = info.error_info.type_mismatch.location;
-      Conditions::get().error_occurred(kErrorMessage, elms(location,
+      LOG().error(kErrorMessage, elms(location,
           expected_str, found_str));
       return;
     }
     case ImageLoadStatus::lsInvalidImage: {
       static string kErrorMessage = "Invalid image";
-      Conditions::get().error_occurred(kErrorMessage, elms());
+      LOG().error(kErrorMessage, elms());
       return;
     }
     case ImageLoadStatus::lsRootCount: {
@@ -90,7 +90,7 @@ void Runtime::report_load_error(ImageLoadStatus &info) {
         "Invalid root count\n"
         "  Expected: %\n"
         "  Found: %";
-      Conditions::get().error_occurred(kErrorMessage,
+      LOG().error(kErrorMessage,
           elms(info.error_info.root_count.expected,
               info.error_info.root_count.found));
       return;
@@ -100,7 +100,7 @@ void Runtime::report_load_error(ImageLoadStatus &info) {
         "Invalid image\n"
         "  Expected magic number: 0x%{08X}\n"
         "  Found: 0x%{08X}";
-      Conditions::get().error_occurred(kErrorMessage,
+      LOG().error(kErrorMessage,
           elms(Image::kMagicNumber, info.error_info.magic.found));
       return;
     }
@@ -109,7 +109,7 @@ void Runtime::report_load_error(ImageLoadStatus &info) {
         "Invalid image\n"
         "  Expected version: %\n"
         "  Found: %";
-      Conditions::get().error_occurred(kErrorMessage,
+      LOG().error(kErrorMessage,
           elms(Image::kCurrentVersion, info.error_info.version.found));
       return;
     }
@@ -190,7 +190,7 @@ likely Runtime::install_hash_map(ref<HashMap> root, ref<HashMap> changes) {
 likely Runtime::install_layout(ref<Layout> root, ref<Protocol> changes) {
   if (!root->is_empty()) {
     scoped_string str(changes.name()->to_string());
-    Conditions::get().error_occurred("Root class % is not empty.", elms(*str));
+    LOG().error("Root class % is not empty.", elms(*str));
     return FatalError::make(FatalError::feUnexpected);
   }
   root->set_protocol(*changes);

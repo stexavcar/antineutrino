@@ -93,6 +93,7 @@ class LambdaExpression;
 class LiteralExpression;
 class Method;
 class MethodLookup;
+class MessageArguments;
 class Mirror;
 class Null;
 class Object;
@@ -187,6 +188,9 @@ class likely : public maybe<Success, FatalError> {
 public:
   likely(Success *value) : maybe<Success, FatalError>(value) { }
   likely(FatalError *value) : maybe<Success, FatalError>(value) { }
+  static likely from_data(Data *data) { return likely(data); }
+private:
+  likely(Data *data) : maybe<Success, FatalError>(data) { }
 };
 
 

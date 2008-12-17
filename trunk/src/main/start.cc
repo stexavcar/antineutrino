@@ -123,7 +123,8 @@ Image *Library::read_image(string name) {
   c_string c_str(name);
   FILE *file = stdc_fopen(*c_str, "rb");
   if (file == NULL) {
-    Conditions::get().error_occurred("Unable to open %.\n", elms(name));
+    LOG().error("Unable to open %.\n", elms(name));
+    return NULL;
   }
   fseek(file, 0, SEEK_END);
   uword size = ftell(file);

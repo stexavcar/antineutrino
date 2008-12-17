@@ -21,17 +21,17 @@ NativeThread::~NativeThread() {
 }
 
 static void *run_bridge(void *arg) {
-  static_cast<NativeThread*>(arg)->run();
-  return NULL;
+  return static_cast<NativeThread*>(arg)->run().data();
 }
 
 void NativeThread::start() {
   pthread_create(&data()->thread(), NULL, run_bridge, this);
 }
 
-void NativeThread::join() {
+likely NativeThread::join() {
   void *value = NULL;
   pthread_join(data()->thread(), &value);
+  return likely::from_data(static_cast<neutrino::Data*>(value));
 }
 
 class Mutex::Data {

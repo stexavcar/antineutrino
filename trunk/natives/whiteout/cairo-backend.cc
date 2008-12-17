@@ -8,6 +8,7 @@ namespace whiteout {
 
 #define kPi 3.141592645f
 
+/*
 void CairoBackend::paint(PaintContext &context) {
   current_ = &context;
   cairo_t *cr = context.cr();
@@ -86,5 +87,6 @@ void CairoBackend::visit_container(wtk::Container &that) {
   for (unsigned i = 0; i < that.children().length(); i++)
     that.children()[i]->accept(*this);
 }
+*/
 
 } // namespace whiteout

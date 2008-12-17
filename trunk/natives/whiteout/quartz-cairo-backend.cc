@@ -1,14 +1,45 @@
 #include <cstdio>
 #include <cairo-quartz.h>
+#include <Carbon/Carbon.h>
 
-
-#include "whiteout/cairo-quartz.h"
+#include "whiteout/cairo-backend.h"
 
 
 namespace whiteout {
 
 
-OSStatus CairoQuartz::repaint(EventHandlerCallRef call_ref, EventRef event) {
+class CairoBackend::Data {
+public:
+  bool initialize(int width, int height);
+  void open();
+private:
+  OSStatus repaint(EventHandlerCallRef call_ref, EventRef event);
+  void tick();
+  static OSStatus repaint_bridge(EventHandlerCallRef call_ref,
+      EventRef event, void *data);
+  static void tick_bridge(EventLoopTimerRef timer, void *data);
+  WindowRef window() { return window_; }
+  Rect rect() { return rect_; }
+  WindowRef window_;
+  Rect rect_;
+};
+
+
+CairoBackend::CairoBackend()
+    : data_(new Data()) { }
+
+
+void CairoBackend::initialize(int width, int height) {
+  data()->initialize(width, height);
+}
+
+
+void CairoBackend::open() {
+  data()->open();
+}
+
+
+OSStatus CairoBackend::Data::repaint(EventHandlerCallRef call_ref, EventRef event) {
   UInt32 event_kind = GetEventKind(event);
   UInt32 event_class = GetEventClass(event);
   switch (event_class) {
@@ -21,8 +52,8 @@ OSStatus CairoQuartz::repaint(EventHandlerCallRef call_ref, EventRef event) {
           QDBeginCGContext(GetWindowPort(window()), &context);
           cairo_surface_t *surface = cairo_quartz_surface_create_for_cg_context(context, width, height);
           cairo_t *cr = cairo_create(surface);
-          whiteout::PaintContext paint_context(cr, width, height);
-          backend().paint(paint_context);
+//          whiteout::PaintContext paint_context(cr, width, height);
+//          backend().paint(paint_context);
           cairo_destroy(cr);
           CGContextFlush(context);
           QDEndCGContext(GetWindowPort(window()), &context);
@@ -43,25 +74,25 @@ OSStatus CairoQuartz::repaint(EventHandlerCallRef call_ref, EventRef event) {
   return eventNotHandledErr;
 }
 
-void CairoQuartz::tick() {
-  backend().graphics().animator().tick();
+void CairoBackend::Data::tick() {
+//  backend().graphics().animator().tick();
   Rect window_rect;
   SetRect(&window_rect, rect().left, rect().top, rect().right - rect().left,
       rect().bottom - rect().top);
   InvalWindowRect(window_, &window_rect);
 }
 
-OSStatus CairoQuartz::repaint_bridge(EventHandlerCallRef call_ref,
+OSStatus CairoBackend::Data::repaint_bridge(EventHandlerCallRef call_ref,
     EventRef event, void *data) {
-  return static_cast<CairoQuartz*>(data)->repaint(call_ref, event);
+  return static_cast<CairoBackend::Data*>(data)->repaint(call_ref, event);
 }
 
-void CairoQuartz::tick_bridge(EventLoopTimerRef timer, void *data) {
-  static_cast<CairoQuartz*>(data)->tick();
+void CairoBackend::Data::tick_bridge(EventLoopTimerRef timer, void *data) {
+  static_cast<CairoBackend::Data*>(data)->tick();
 }
 
 
-bool CairoQuartz::initialize(int width, int height) {
+bool CairoBackend::Data::initialize(int width, int height) {
   SetRect(&rect_, 30, 60, 30 + width, 60 + height);
 
   int attribs = kWindowStandardHandlerAttribute
@@ -88,7 +119,7 @@ bool CairoQuartz::initialize(int width, int height) {
 }
 
 
-void CairoQuartz::run() {
+void CairoBackend::Data::open() {
   ShowWindow(window());
   RunApplicationEventLoop();
 }

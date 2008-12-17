@@ -95,7 +95,7 @@ static void unhandled_condition(Value *name, BuiltinArguments &args) {
     args[i]->write_on(buf);
   }
   buf.append(")");
-  Conditions::get().error_occurred("%", elms(buf.raw_string()));
+  LOG().error("%", elms(buf.raw_string()));
 }
 
 
@@ -103,7 +103,7 @@ static void unresolved_global(Value *name) {
   string_buffer buf;
   buf.append("Unresolved global: ");
   name->write_on(buf, Data::UNQUOTED);
-  Conditions::get().error_occurred("%", elms(buf.raw_string()));
+  LOG().error("%", elms(buf.raw_string()));
 }
 
 
@@ -185,7 +185,7 @@ Value *Interpreter::call(ref<Lambda> lambda, ref<Task> initial_task) {
         runtime().heap().memory().collect_garbage(runtime());
         capture.restore(state);
       } else {
-        Conditions::get().error_occurred("Unexpected signal: %", elms(value));
+        LOG().error("Unexpected signal: %", elms(value));
       }
     } else {
       state.stack()->status().is_empty = true;
@@ -324,13 +324,13 @@ Data *Interpreter::interpret(InterpreterState &state) {
       Immediate *immed = deref(recv);
       if (is<Channel>(immed)) {
         Channel *channel = cast<Channel>(immed);
-        BuiltinArguments args(runtime(), argc, frame);
+        MessageArguments args(runtime(), argc, frame);
         Data *value = channel->send(selector, args);
         if (is<Signal>(value)) {
           if (is<AllocationFailed>(value)) {
             RETURN(value);
           } else {
-            Conditions::get().error_occurred("Problem calling channel: %", elms(value));
+            LOG().error("Problem calling channel: %", elms(value));
           }
         } else {
           frame.push(cast<Value>(value));
@@ -343,7 +343,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
         if (is<Nothing>(lookup_result)) {
           scoped_string selector_str(selector->to_string());
           scoped_string recv_str(recv->to_short_string());
-          Conditions::get().error_occurred("Lookup failure: %::%",
+          LOG().error("Lookup failure: %::%",
               elms(*recv_str, *selector_str));
         }
         Method *method = cast<Method>(lookup_result);
@@ -370,7 +370,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
       if (is<Nothing>(lookup_result)) {
         scoped_string selector_str(selector->to_string());
         scoped_string recv_str(recv->to_short_string());
-        Conditions::get().error_occurred("Lookup failure: %::%",
+        LOG().error("Lookup failure: %::%",
             elms(*recv_str, *selector_str));
       }
       Method *method = cast<Method>(lookup_result);
@@ -511,7 +511,7 @@ Data *Interpreter::interpret(InterpreterState &state) {
         if (is<AllocationFailed>(value)) {
           RETURN(value);
         } else {
-          Conditions::get().error_occurred("Problem executing builtin %: %", elms(index, value));
+          LOG().error("Problem executing builtin %: %", elms(index, value));
         }
       } else {
         frame.push(cast<Value>(value));

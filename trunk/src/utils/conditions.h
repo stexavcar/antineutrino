@@ -49,7 +49,6 @@ public:
       string enum_name, word value, AbstractEnumInfo &info,
       Condition cause);
 
-  void error_occurred(string format, const var_args &args);
   virtual void notify(Condition cause);
   void abort(string message);
 

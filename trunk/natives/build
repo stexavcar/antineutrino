@@ -38,7 +38,7 @@ program (
     'whiteout/cairo-backend.cc',
     'whiteout/whiteout.cc',
     cond('os', {
-        'darwin': ['whiteout/cairo-quartz.cc'],
+        'darwin': ['whiteout/quartz-cairo-backend.cc'],
     }),
     'whiteout/wtk.cc'
   ],

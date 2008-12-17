@@ -13,8 +13,8 @@ public:
   NativeThread();
   virtual ~NativeThread();
   void start();
-  void join();
-  virtual void run() = 0;
+  likely join();
+  virtual likely run() = 0;
 
 private:
   class Data;

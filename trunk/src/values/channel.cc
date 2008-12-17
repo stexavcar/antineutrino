@@ -13,7 +13,7 @@ static const string kConfiguratorNamePattern = "configure_neutrino_%_channel";
 // --- C h a n n e l ---
 // ---------------------
 
-Data *Channel::send(Selector *selector, BuiltinArguments &args) {
+Data *Channel::send(Selector *selector, MessageArguments &args) {
   IObjectProxy *proxy = ensure_proxy(args.runtime());
   if (proxy == NULL) return args.runtime().roots().vhoid();
   return ApiUtils::send_message(*proxy, selector, args);
@@ -143,16 +143,16 @@ private:
 
 class MessageImpl : public IMessage {
 public:
-  MessageImpl(BuiltinArguments &args, IMessageContext &context)
+  MessageImpl(MessageArguments &args, IMessageContext &context)
     : args_(args)
     , context_(context) { }
   virtual plankton::Value operator[](int index) {
     return ApiUtils::new_value(LiveValueDTableImpl::instance(), args()[index]);
   }
   virtual IMessageContext &context() { return context_; }
-  BuiltinArguments &args() { return args_; }
 private:
-  BuiltinArguments &args_;
+  MessageArguments &args() { return args_; }
+  MessageArguments &args_;
   IMessageContext &context_;
 };
 
@@ -242,6 +242,8 @@ plankton::Value::Tag LiveNValue::type_impl() {
       return vtTuple;
     case tBuffer:
       return vtProxy;
+    case tVoid:
+      return vtVoid;
     default:
       UNHANDLED(InstanceType, type);
       return vtUnknown;
@@ -372,8 +374,7 @@ plankton::Value FrozenNTuple::get_impl(unsigned index) {
 }
 
 Data *ApiUtils::send_message(IObjectProxy &channel, Selector *name,
-    BuiltinArguments &args) {
-//  plankton::Value value = new_value(LiveValueDTableImpl::instance(), contents);
+    MessageArguments &args) {
   BuilderImpl factory(args.runtime());
   MessageContextImpl context(factory);
   MessageImpl message(args, context);

@@ -86,13 +86,6 @@ void Conditions::unhandled(string file_name, int line_number,
 }
 
 
-void Conditions::error_occurred(string format, const var_args &args) {
-  string_buffer buf;
-  buf.printf(format, args);
-  abort(buf.raw_string());
-}
-
-
 void Conditions::abort(string message) {
   Abort::abort(message);
 }

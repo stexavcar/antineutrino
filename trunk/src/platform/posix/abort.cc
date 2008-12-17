@@ -1,6 +1,6 @@
 #include "platform/posix/abort.h"
-#include "utils/conditions.h"
 #include "utils/globals.h"
+#include "utils/log.h"
 
 #include <errno.h>
 
@@ -127,7 +127,7 @@ bool Abort::setup_signal_handler() {
   success = success && install_handler(SIGTERM, signal_cleanup_resources);
   atexit(cleanup_resources);
   if (!success) {
-    Conditions::get().error_occurred("Error setting up signal handlers.", elms());
+    LOG().error("Error setting up signal handlers.", elms());
     return false;
   }
   return true;

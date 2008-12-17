@@ -22,6 +22,19 @@ private:
   StackState &frame_;
 };
 
+class MessageArguments {
+public:
+  inline MessageArguments(Runtime &runtime, uword count, StackState &stack);
+  inline Value *operator[](uword index);
+  Runtime &runtime() { return runtime_; }
+private:
+  StackState &frame() { return frame_; }
+  uword count() { return count_; }
+  Runtime &runtime_;
+  uword count_;
+  StackState &frame_;
+};
+
 typedef Data *(builtin)(BuiltinArguments&);
 
 class Builtins {

@@ -25,6 +25,16 @@ Value *BuiltinArguments::operator[](uword index) {
   return frame().argument(count() - index - 1);
 }
 
+MessageArguments::MessageArguments(Runtime &runtime, uword count, StackState &frame)
+    : runtime_(runtime)
+    , count_(count)
+    , frame_(frame) { }
+
+Value *MessageArguments::operator[](uword index) {
+  ASSERT(index < count());
+  return frame()[count() - index - 1];
+}
+
 } // neutrino
 
 #endif // _RUNTIME_BUILTINS_INL

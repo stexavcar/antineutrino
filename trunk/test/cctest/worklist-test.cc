@@ -84,7 +84,7 @@ public:
     data_ = &data;
     index_ = index;
   }
-  virtual void run();
+  virtual likely run();
   SharedData &data() { return *data_; }
   int index() { return index_; }
 private:
@@ -92,12 +92,13 @@ private:
   int index_;
 };
 
-void MultiTestThread::run() {
+likely MultiTestThread::run() {
   while (true) {
     int value = data().worklist().take();
     if (value == -1) break;
     data().set(value);
   }
+  return Success::make();
 }
 
 TEST(multi_thread) {
