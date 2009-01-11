@@ -1,6 +1,7 @@
 #ifndef _UTILS_CHECK
 #define _UTILS_CHECK
 
+#include "utils/global.h"
 #include "utils/string.h"
 
 namespace positron {
@@ -32,13 +33,13 @@ public:
 class Check {
 public:
   template <class P, typename S, typename T>
-  static inline void predicate(const S &a, const T &b, const char *a_src,
-      const char *b_src);
+  static inline void predicate(SourceLocation location, const S &a,
+      const T &b, const char *a_src, const char *b_src);
   static void predicate_failed(SourceLocation here, string format,
       string details, const var_args &args);
 };
 
-#define cCheckPred(expected, Pred, value) positron::Check::predicate<Pred>(expected, value, #expected, #value)
+#define cCheckPred(expected, Pred, value) positron::Check::predicate<Pred>(dHere, expected, value, #expected, #value)
 
 #define cCheckEq(left, right) cCheckPred(left, positron::Eq, right)
 #define cCheckLt(left, right) cCheckPred(left, positron::Lt, right)

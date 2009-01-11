@@ -47,7 +47,7 @@ private:
   word line_;
 };
 
-#define dHere SourceLocation(__FILE__, __LINE__)
+#define dHere positron::SourceLocation(__FILE__, __LINE__)
 
 } // namespace positron
 

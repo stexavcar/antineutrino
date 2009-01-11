@@ -9,6 +9,9 @@ template <typename T>
 class array {
 public:
   array(T *data, size_t length) : data_(data), length_(length) { }
+  T &operator[](size_t offset);
+  T *start() { return data_; }
+  size_t length() { return length_; }
 private:
   T *data_;
   size_t length_;

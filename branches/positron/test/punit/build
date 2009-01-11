@@ -1,8 +1,13 @@
 program (
   name = 'punit',
   domain = 'Punit',
+  flags = mode,
   srcs = [
     'string-test.cc',
+    'type-test.cc',
+    'test.cc',
+    'test.h',
+    'test-inl.h',
     'check.h',
     ':positron'
   ]

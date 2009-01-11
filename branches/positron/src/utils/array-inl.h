@@ -6,6 +6,12 @@
 
 namespace positron {
 
+template <typename T>
+T &array<T>::operator[](size_t offset) {
+  assert offset < length_;
+  return data_[offset];
+}
+
 template <typename T, word L>
 T &embed_array<T, L>::operator[](word offset) {
   assert offset < L;

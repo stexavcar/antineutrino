@@ -3,6 +3,8 @@
 
 
 #include <cstring>
+#include <cstdio>
+
 
 #include "utils/array.h"
 #include "utils/buffer.h"
@@ -26,6 +28,8 @@ public:
   size_t length() const { return length_; }
   const char *start() { return chars_; }
   const char &operator[](word i) const { return chars_[i]; }
+  static string dup(string arg);
+  array<const char> chars() { return array<const char>(chars_, length_); }
 private:
   const char *chars_;
   size_t length_;
@@ -55,21 +59,23 @@ public:
 // can be added by specializing the Coerce struct.
 template <typename T> struct coerce { typedef T type; };
 template <> struct coerce<int> { typedef word type; };
-template <> struct coerce<const char*> { typedef string type; };
-
+template <> struct coerce<size_t> { typedef word type; };
 
 class variant {
 public:
   template <typename T>
   inline variant(const T &t)
     : type_(variant_type_impl<typename coerce<T>::type>::kInstance)
-    , data_(variant_type_impl<typename coerce<T>::type>::encode(t)) { }
+    , data_(variant_type_impl<typename coerce<T>::type>::encode(t))
+    , index_(current_index_++) { }
   void print_on(string_stream &stream, string modifiers) const;
 private:
   variant_type &type() const { return type_; }
   const void *data() const { return data_; }
   variant_type &type_;
   const void *data_;
+  int index_;
+  static int current_index_;
 };
 
 

@@ -34,6 +34,21 @@ class Expression(Matcher):
   def __init__(self, key):
     super(Expression, self).__init__(key)
   
+  def isident(self, char):
+    return char.isalnum() or char == '_';
+  
+  def match_parent(self, scan):
+    assert scan.current() == '('
+    height = 1
+    scan.advance()
+    while scan.has_more() and height > 0:
+      if scan.current() == ')':
+        height -= 1
+      elif scan.current() == '(':
+        height += 1
+      scan.advance()
+    return (True, scan.position())
+  
   def match(self, scan):
     # Skip spaces
     while scan.has_more() and scan.current().isspace():
@@ -41,10 +56,13 @@ class Expression(Matcher):
     if not scan.has_more():
       return (False, None)
     # Skip identifier / number
-    if scan.current().isalnum():
-      while scan.has_more() and scan.current().isalnum():
+    if self.isident(scan.current()):
+      while scan.has_more() and self.isident(scan.current()):
         scan.advance()
-      return (True, scan.position())
+      if scan.has_more() and scan.current() == '(':
+        return self.match_parent(scan)
+      else:
+        return (True, scan.position())
     if scan.current() == "'":
       scan.advance()
       while scan.has_more() and scan.current() != "'":
@@ -52,6 +70,8 @@ class Expression(Matcher):
       if scan.has_more():
         scan.advance()
       return (True, scan.position())
+    if scan.current() == '(':
+      return self.match_parent(scan)
     return (False, None)
 
 

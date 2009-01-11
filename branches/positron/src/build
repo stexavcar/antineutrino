@@ -18,6 +18,8 @@ library (
     'utils/string.h',
     'utils/string-inl.h',
     'utils/string.cc',
+    'utils/smart-ptrs.h',
+    'utils/smart-ptrs-inl.h',
     '$platform-files'
   ]
 )
