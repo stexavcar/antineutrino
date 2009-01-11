@@ -1,3 +1,4 @@
+include('config/flags.config')
 include('config/$os.config')
 include('src/build')
 include('test/punit/build')

@@ -28,9 +28,10 @@ def configure_dependencies(env, sect):
 def ensure_library(env, libmap, name):
   if name in libmap: return libmap[name]
   lib = config.get_library(name)
+  flags = lib.get_flags()
   (srcs, hdrs) = configure_dependencies(env, lib)
   lib_deps = library_dependencies(env, libmap, lib)
-  lib_obj = env.Library(name, srcs + lib_deps)
+  lib_obj = env.Library(name, srcs + lib_deps, **flags)
   env.Depends(lib_obj, hdrs)
   env.Alias(name, lib_obj)
   libmap[name] = lib_obj
@@ -46,9 +47,7 @@ def library_dependencies(env, libmap, sect):
 
 def configure():
   env = Environment(
-    CPPPATH=join('pollock', 'src'),
-    CPPDEFINES=['DEBUG'],
-    CXXFLAGS=['-g', '-O0']
+    CPPPATH=join('pollock', 'src')
   )
   configure_pollock(env)
   # Configure libraries

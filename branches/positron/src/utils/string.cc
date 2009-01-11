@@ -27,6 +27,8 @@ void string_stream::add(string format, const var_args &args) {
           assert '0' <= c;
           assert c <= '9';
           index = (c - '0');
+        } else {
+          index = 0;
         }
         const variant &var = args[index];
         string modifiers;

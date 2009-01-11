@@ -1,6 +1,7 @@
 library (
   name = 'positron',
   domain = 'Positron',
+  flags = mode,
   srcs = [
     'main/main.cc',
     'main/main.h',
