@@ -1,0 +1,69 @@
+from os.path import abspath, join
+Import('config pollock_processor')
+
+
+def configure_pollock(env):
+  def pollock(source, target, env):
+    vars = env['VARS']
+    contents = source[0].get_contents()
+    output = open(target[0].rstr(), "wt")
+    output.write(pollock_processor.process(source[0].rstr(), contents, vars))
+    output.close()
+  env['BUILDERS']['Pollock'] = Builder(
+    action = pollock
+  )
+
+
+def configure_dependencies(env, sect):
+  vars = { 'domain': sect.get_domain() }
+  raw_srcs = sect.get_sources()
+  srcs = [ env.Pollock(join('pollock', s), s, VARS=vars) for s in raw_srcs ]
+  raw_hdrs = sect.get_headers()
+  hdrs = [ env.Pollock(join('pollock', h), h, VARS=vars) for h in raw_hdrs ]
+  deps = pollock_processor.get_files() + [join('tools', 'pollock.py')]
+  env.Depends(srcs + hdrs, deps)
+  return (srcs, hdrs)
+
+
+def ensure_library(env, libmap, name):
+  if name in libmap: return libmap[name]
+  lib = config.get_library(name)
+  (srcs, hdrs) = configure_dependencies(env, lib)
+  lib_deps = library_dependencies(env, libmap, lib)
+  lib_obj = env.Library(name, srcs + lib_deps)
+  env.Depends(lib_obj, hdrs)
+  env.Alias(name, lib_obj)
+  libmap[name] = lib_obj
+  return lib_obj
+
+
+def library_dependencies(env, libmap, sect):
+  result = [ ]
+  for name in sect.get_libraries():
+    result.append(ensure_library(env, libmap, name))
+  return result
+
+
+def configure():
+  env = Environment(
+    CPPPATH=join('pollock', 'src'),
+    CPPDEFINES=['DEBUG'],
+    CXXFLAGS=['-g', '-O0']
+  )
+  configure_pollock(env)
+  # Configure libraries
+  libs = config.get_libraries()
+  libmap = { }
+  for (name, lib) in libs.items():
+    ensure_library(env, libmap, name)
+  # Configure programs
+  progs = config.get_programs()
+  for (name, prog) in progs.items():
+    (srcs, hdrs) = configure_dependencies(env, prog)
+    lib_deps = library_dependencies(env, libmap, prog)
+    prog_obj = env.Program(name, srcs + lib_deps)
+    env.Depends(prog_obj, hdrs)
+    env.Alias(name, prog_obj)
+
+
+configure()

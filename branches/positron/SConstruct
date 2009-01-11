@@ -1,0 +1,20 @@
+import sys
+from os.path import dirname, join, basename, exists, abspath
+
+root = dirname(File('SConstruct').rfile().abspath)
+sys.path.append(root)
+from tools import build, pollock
+
+
+def configure(relative_root, build_config, pollock_path):
+  config = build.read_build_file(relative_root, build_config)
+  pollock_processor = pollock.read_processor(pollock_path)
+  SConscript(
+    'SConscript',
+    exports = 'config pollock_processor',
+    duplicate = False,
+    build_dir = 'obj'
+  )
+
+
+configure('.', join(root, 'build'), join(root, 'src', 'pollock'))

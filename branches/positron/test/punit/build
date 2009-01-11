@@ -1,0 +1,9 @@
+program (
+  name = 'punit',
+  domain = 'Punit',
+  srcs = [
+    'string-test.cc',
+    'check.h',
+    ':positron'
+  ]
+)
