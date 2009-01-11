@@ -14,12 +14,12 @@ void string_stream::add(char c) {
 }
 
 void string_stream::add(string format, const var_args &args) {
-  int arg_cursor = 0;
+  word arg_cursor = 0;
   for (size_t i = 0; i < format.length(); i++) {
     char c = format[i];
     switch (c) {
       case '%': case '@': {
-        int index;
+        word index;
         if (c == '%') {
           index = arg_cursor++;
         } else if (i + 1 < format.length()) {
@@ -35,7 +35,7 @@ void string_stream::add(string format, const var_args &args) {
         // If there are modifiers read them into 'modifiers'.
         if (i + 1 < format.length() && format[i + 1] == '{') {
           i++;
-          int start = i + 1;
+          word start = i + 1;
           while (i < format.length() && format[i] != '}')
             i++;
           modifiers = string(&format[start], i - start);
@@ -65,28 +65,28 @@ void variant::print_on(string_stream &stream, string modifiers) const {
   type().print_on(data(), modifiers, stream);
 }
 
-variant_type_impl<int> variant_type_impl<int>::kInstance;
+variant_type_impl<word> variant_type_impl<word>::kInstance;
 
-static int digit_to_char(int digit) {
+static word digit_to_char(word digit) {
   if (digit < 10) return '0' + digit;
   else return 'a' + (digit - 10);
 }
 
-void variant_type_impl<int>::print_on(const void *data, string modifiers,
+void variant_type_impl<word>::print_on(const void *data, string modifiers,
     string_stream &buf) {
   // Configuration parameters
   bool flush_right = true;
-  int min_length = 0;
-  int pad_char = ' ';
-  int radix = 10;
+  word min_length = 0;
+  word pad_char = ' ';
+  word radix = 10;
 
   // Convert the number to a string in a temporary buffer
   const char kTempSize = 24;
   embed_array<char, kTempSize> temp;
-  int value = reinterpret_cast<int>(data);
+  word value = reinterpret_cast<long>(data);
   bool is_negative = (value < 0);
   if (is_negative) value = -value;
-  int offset = 0;
+  word offset = 0;
   if (value == 0) {
     temp[offset] = '0';
     offset++;
@@ -97,16 +97,16 @@ void variant_type_impl<int>::print_on(const void *data, string modifiers,
       offset = offset + 1;
     }
   }
-  int padding = min_length - (offset + (is_negative ? 1 : 0));
+  word padding = min_length - (offset + (is_negative ? 1 : 0));
   if (is_negative) buf.add('-');
   if (flush_right) {
-    for (int i = 0; i < padding; i++)
+    for (word i = 0; i < padding; i++)
       buf.add(pad_char);
   }
-  for (int i = offset - 1; i >= 0; i--)
+  for (word i = offset - 1; i >= 0; i--)
     buf.add(temp[i]);
   if (!flush_right) {
-    for (int i = 0; i < padding; i++)
+    for (word i = 0; i < padding; i++)
       buf.add(pad_char);
   }
 }
@@ -126,7 +126,7 @@ variant_type_impl<char> variant_type_impl<char>::kInstance;
 
 void variant_type_impl<char>::print_on(const void *data,
     string modifiers, string_stream &buf) {
-  int value = reinterpret_cast<int>(data);
+  long value = reinterpret_cast<long>(data);
   buf.add(value);
 }
 

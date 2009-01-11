@@ -7,11 +7,11 @@
 
 namespace positron {
 
-template <class P, typename T>
-void Check::predicate(const T &a, const T &b, const char *a_src,
+template <class P, typename S, typename T>
+void Check::predicate(const S &a, const T &b, const char *a_src,
     const char *b_src) {
   if (!P::compare(a, b)) {
-    predicate_failed(dHere, P::format(), P::details(), args(a, b, string(a_src), string(b_src)));
+    predicate_failed(dHere, P::format(), P::details(), args(a, b, a_src, b_src));
   }
 }
 

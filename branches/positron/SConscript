@@ -28,10 +28,9 @@ def configure_dependencies(env, sect):
 def ensure_library(env, libmap, name):
   if name in libmap: return libmap[name]
   lib = config.get_library(name)
-  flags = lib.get_flags()
   (srcs, hdrs) = configure_dependencies(env, lib)
   lib_deps = library_dependencies(env, libmap, lib)
-  lib_obj = env.Library(name, srcs + lib_deps, **flags)
+  lib_obj = env.Library(name, srcs + lib_deps, **lib.get_flags())
   env.Depends(lib_obj, hdrs)
   env.Alias(name, lib_obj)
   libmap[name] = lib_obj
@@ -60,7 +59,7 @@ def configure():
   for (name, prog) in progs.items():
     (srcs, hdrs) = configure_dependencies(env, prog)
     lib_deps = library_dependencies(env, libmap, prog)
-    prog_obj = env.Program(name, srcs + lib_deps)
+    prog_obj = env.Program(name, srcs + lib_deps, **prog.get_flags())
     env.Depends(prog_obj, hdrs)
     env.Alias(name, prog_obj)
 

@@ -25,7 +25,7 @@ public:
   bool contains(char c);
   size_t length() const { return length_; }
   const char *start() { return chars_; }
-  const char &operator[](int i) const { return chars_[i]; }
+  const char &operator[](word i) const { return chars_[i]; }
 private:
   const char *chars_;
   size_t length_;
@@ -49,12 +49,21 @@ public:
 };
 
 
+// This little trick defines some implicit conversions that must be
+// performed before wrapping a value in a variant.  The default "type
+// conversion" is to leave the type as it is, but additional conversions
+// can be added by specializing the Coerce struct.
+template <typename T> struct coerce { typedef T type; };
+template <> struct coerce<int> { typedef word type; };
+template <> struct coerce<const char*> { typedef string type; };
+
+
 class variant {
 public:
   template <typename T>
   inline variant(const T &t)
-    : type_(variant_type_impl<T>::kInstance)
-    , data_(variant_type_impl<T>::encode(t)) { }
+    : type_(variant_type_impl<typename coerce<T>::type>::kInstance)
+    , data_(variant_type_impl<typename coerce<T>::type>::encode(t)) { }
   void print_on(string_stream &stream, string modifiers) const;
 private:
   variant_type &type() const { return type_; }
@@ -67,15 +76,15 @@ private:
 class var_args {
 public:
   virtual size_t length() const = 0;
-  virtual const variant &operator[](int i) const = 0;
+  virtual const variant &operator[](word i) const = 0;
 };
 
 
-template <int L>
+template <word L>
 class var_args_impl : public var_args {
 public:
   virtual size_t length() const { return L; }
-  virtual const variant &operator[](int i) const;
+  virtual const variant &operator[](word i) const;
   embed_array<const variant*, L> elms_;
 };
 
@@ -117,14 +126,14 @@ private:
 
 
 template <>
-class variant_type_impl<int> : public variant_type {
+class variant_type_impl<word> : public variant_type {
 public:
-  static inline const void *encode(const int &t) {
+  static inline const void *encode(const word &t) {
     return reinterpret_cast<const void*>(t);
   }
   virtual void print_on(const void *data, string modifiers,
       string_stream &stream);
-  static variant_type_impl<int> kInstance;
+  static variant_type_impl<word> kInstance;
 };
 
 
@@ -156,7 +165,7 @@ template <>
 class variant_type_impl<char> : public variant_type {
 public:
   static inline const void *encode(const char &t) {
-    return reinterpret_cast<const void*>(static_cast<int>(t));
+    return reinterpret_cast<const void*>(static_cast<word>(t));
   }
   virtual void print_on(const void *data, string modifiers,
       string_stream &stream);

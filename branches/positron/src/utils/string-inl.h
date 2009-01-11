@@ -7,8 +7,8 @@
 
 namespace positron {
 
-template <int L>
-const variant &var_args_impl<L>::operator[](int i) const {
+template <word L>
+const variant &var_args_impl<L>::operator[](word i) const {
   assert 0 <= i;
   assert i < L;
   return *elms_[i];

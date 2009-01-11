@@ -82,18 +82,22 @@ class Flags(object):
     parent = self.args.get('extend', None)
     if parent:
       self.flags = { }
-      self.flags.update(**self.config.flags[parent].to_dict())
+      for (key, value) in self.config.flags[parent].to_dict().items():
+        self.flags[key] = list(value)
     else:
       self.flags = {
         'CXXFLAGS': [ '$WARNINGFLAGS' ],
         'WARNINGFLAGS': [ ],
-        'CPPDEFINES': [ ]
+        'CPPDEFINES': [ ],
+        'LINKFLAGS': [ ]
       }
     self.process_warnings(self.args.get('warnings', []))
     self.process_dialects(self.args.get('dialect', []))
+    self.process_codegen(self.args.get('codegen', []))
     self.process_defines(self.args.get('defines', []))
     self.process_optimize(self.args.get('optimize', None))
     self.process_debug(self.args.get('debug', 'off'))
+    self.process_wordsize(self.args.get('wordsize', None))
     return self.flags
 
 
@@ -101,18 +105,29 @@ class GccFlags(Flags):
 
   kDialect = {
     'ansi': '-ansi',
-    'pedantic': '-pedantic'
+    'pedantic': '-pedantic',
+  }
+  
+  kCodegen = {
+    'no-rtti': '-fno-rtti',
+    'no-exceptions': '-fno-exceptions'
   }
   
   kWarning = {
     'all': '-Wall',
+    'extra': '-Wextra',
     'no-unused-parameter': '-Wno-unused-parameter',
-    'no-non-virtual-dtor': '-Wno-non-virtual-dtor'
+    'no-non-virtual-dtor': '-Wno-non-virtual-dtor',
   }
   
   kOptimize = {
     'no': '-O0',
     'speed': '-O3'
+  }
+  
+  kWordsize = {
+    '32': '-m32',
+    '64': '-m64'
   }
 
   def __init__(self, config, args):
@@ -124,11 +139,18 @@ class GccFlags(Flags):
   def process_warnings(self, warnings):
     self.apply_flag_map(warnings, GccFlags.kWarning, self.flags['WARNINGFLAGS'])
   
+  def process_codegen(self, codegen):
+    self.apply_flag_map(codegen, GccFlags.kCodegen, self.flags['CXXFLAGS'])
+    
   def process_defines(self, defines):
     self.flags['CPPDEFINES'] += defines
   
   def process_optimize(self, level):
     self.apply_flag_map(level, GccFlags.kOptimize, self.flags['CXXFLAGS'])
+
+  def process_wordsize(self, size):
+    self.apply_flag_map(size, GccFlags.kWordsize, self.flags['CXXFLAGS'])
+    self.apply_flag_map(size, GccFlags.kWordsize, self.flags['LINKFLAGS'])
   
   def process_debug(self, mode):
     if mode == 'on':

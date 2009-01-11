@@ -1,9 +1,15 @@
 #ifndef _UTILS_GLOBAL
 #define _UTILS_GLOBAL
 
+#include <cstdlib>
+
 #include "utils/pollock.h"
 
 namespace positron {
+
+
+typedef long word;
+
 
 /**
  * Utility class that, if used as a base class, precludes instances
@@ -24,21 +30,21 @@ private:
  * increase in size by the golden ratio but is computed purely with
  * simple integer operations.
  */
-static inline int grow_value(int n) {
+static inline size_t grow_value(size_t n) {
   return ((n << 3) + (n << 2) + n) >> 3;
 }
 
 class SourceLocation {
 public:
-  SourceLocation(const char *file, int line)
+  SourceLocation(const char *file, word line)
     : file_(file), line_(line) { }
   // Uses const char* rather than string to not get a dependency on
   // string.h from global.h.
   const char *file() const { return file_; }
-  int line() const { return line_; }
+  word line() const { return line_; }
 private:
   const char *file_;
-  int line_;
+  word line_;
 };
 
 #define dHere SourceLocation(__FILE__, __LINE__)

@@ -15,17 +15,17 @@ public:
   T remove_last();
   T pop();
   const T &peek();
-  T &operator[](int index);
+  T &operator[](word index);
   T *start() { return data_; }
-  int length() { return length_; }
-  void ensure_capacity(int length);
+  size_t length() { return length_; }
+  void ensure_capacity(size_t length);
 
 private:
-  void extend_capacity(int required);
-  static const int kInitialCapacity = 4;
+  void extend_capacity(size_t required);
+  static const word kInitialCapacity = 4;
   T *data_;
-  int length_;
-  int capacity_;
+  size_t length_;
+  size_t capacity_;
 
 };
 

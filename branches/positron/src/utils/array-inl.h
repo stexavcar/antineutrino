@@ -6,14 +6,14 @@
 
 namespace positron {
 
-template <typename T, int L>
-T &embed_array<T, L>::operator[](int offset) {
+template <typename T, word L>
+T &embed_array<T, L>::operator[](word offset) {
   assert offset < L;
   return base_[offset];
 }
 
-template <typename T, int L>
-const T &embed_array<T, L>::operator[](int offset) const {
+template <typename T, word L>
+const T &embed_array<T, L>::operator[](word offset) const {
   assert offset < L;
   return base_[offset];
 }

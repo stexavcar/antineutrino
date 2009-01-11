@@ -1,22 +1,24 @@
 #ifndef _UTILS_ARRAY
 #define _UTILS_ARRAY
 
+#include "utils/global.h"
+
 namespace positron {
 
 template <typename T>
 class array {
 public:
-  array(T *data, int length) : data_(data), length_(length) { }
+  array(T *data, size_t length) : data_(data), length_(length) { }
 private:
   T *data_;
-  int length_;
+  size_t length_;
 };
 
-template <typename T, int L>
+template <typename T, word L>
 class embed_array {
 public:
-  T &operator[](int offset);
-  const T &operator[](int offset) const;
+  T &operator[](word offset);
+  const T &operator[](word offset) const;
 private:
   T base_[L];
 };
