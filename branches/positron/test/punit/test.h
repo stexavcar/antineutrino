@@ -30,6 +30,17 @@ private:
   UnitTest *prev_;
 };
 
+class PseudoRandom {
+public:
+  PseudoRandom(word seed, word other = 257)
+    : a_(seed)
+    , b_(other) { }
+  word next();
+private:
+  word a_;
+  word b_;
+};
+
 } // positron
 
 #endif // _PUNIT_TEST

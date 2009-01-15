@@ -5,6 +5,11 @@ library (
   srcs = [
     'main/main.cc',
     'main/main.h',
+    'plankton/builder.h',
+    'plankton/builder.cc',
+    'plankton/codec.h',
+    'plankton/codec-inl.h',
+    'plankton/plankton.h',
     'platform/abort.h',
     'utils/array.h',
     'utils/array-inl.h',

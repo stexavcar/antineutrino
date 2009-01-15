@@ -12,16 +12,10 @@ T &array<T>::operator[](size_t offset) {
   return data_[offset];
 }
 
-template <typename T, word L>
-T &embed_array<T, L>::operator[](word offset) {
-  assert offset < L;
-  return base_[offset];
-}
-
-template <typename T, word L>
-const T &embed_array<T, L>::operator[](word offset) const {
-  assert offset < L;
-  return base_[offset];
+template <typename T>
+const T &array<T>::operator[](size_t offset) const {
+  assert offset < length_;
+  return data_[offset];
 }
 
 } // namespace positron

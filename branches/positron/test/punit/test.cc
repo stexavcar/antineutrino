@@ -27,7 +27,7 @@ UnitTest::UnitTest(string file, string name, test_callback_t *callback)
 void UnitTest::print_test_list() {
   UnitTest *current = first_;
   while (current != NULL) {
-    printf("%s:%s\n", current->file_.start(),
+    printf("%s/%s\n", current->file_.start(),
         current->name_.start());
     current = current->prev_;
   }
@@ -83,7 +83,7 @@ int UnitTest::main(array<const char*> args) {
     } else {
       word current_run_count = 0;
       own_array<const char> str_copy(string::dup(arg).chars());
-      char *testname = strchr(str_copy.start(), ':');
+      char *testname = strchr(str_copy.start(), '/');
       if (testname) {
         // Split the string in two by nulling the colon
         *testname = 0;
@@ -103,6 +103,12 @@ int UnitTest::main(array<const char*> args) {
   if (print_run_count == 0 && print_run_count)
     printf("No tests were run.\n");
   return 0;
+}
+
+word PseudoRandom::next() {
+  a_ = (1351 * a_) + (2963 * b_) + 9373;
+  b_ = (5197 * b_) + (9399 * a_) + 5137;
+  return (9113 * a_) + (7437 * b_) + 6927;
 }
 
 } // positron

@@ -3,6 +3,7 @@ program (
   domain = 'Punit',
   flags = mode,
   srcs = [
+    'builder-test.cc',
     'string-test.cc',
     'type-test.cc',
     'test.cc',

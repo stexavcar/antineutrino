@@ -10,6 +10,7 @@ class array {
 public:
   array(T *data, size_t length) : data_(data), length_(length) { }
   T &operator[](size_t offset);
+  const T &operator[](size_t offset) const;
   T *start() { return data_; }
   size_t length() { return length_; }
 private:
@@ -18,10 +19,9 @@ private:
 };
 
 template <typename T, word L>
-class embed_array {
+class embed_array : public array<T> {
 public:
-  T &operator[](word offset);
-  const T &operator[](word offset) const;
+  embed_array() : array<T>(base_, L) { }
 private:
   T base_[L];
 };

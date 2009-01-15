@@ -2,6 +2,7 @@
 #define _UTILS_GLOBAL
 
 #include <cstdlib>
+#include <stdint.h>
 
 #include "utils/pollock.h"
 
