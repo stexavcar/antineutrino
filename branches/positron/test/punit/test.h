@@ -3,7 +3,7 @@
 
 #include "check.h"
 #include "utils/string.h"
-#include "utils/array.h"
+#include "utils/vector.h"
 
 namespace positron {
 
@@ -12,7 +12,7 @@ typedef void (test_callback_t)();
 class UnitTest {
 public:
   UnitTest(string file, string name, test_callback_t *callback);
-  static int main(array<const char *> args);
+  static int main(vector<const char *> args);
   string file() { return file_; }
   string name() { return name_; }
   UnitTest *prev() { return prev_; }

@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 #include "utils/pollock.h"
+#include "utils/types.h"
 
 namespace positron {
 
@@ -49,6 +50,21 @@ private:
 };
 
 #define dHere positron::SourceLocation(__FILE__, __LINE__)
+
+#ifdef DEBUG
+#define ARRAY_BOUNDS_CHECKS
+#define ccArrayBoundsChecks(then_part, else_part) then_part
+#define ccDebug(then_part, else_part) then_part
+#else
+#define ccDebug(then_part, else_part) else_part
+#define ccArrayBoundsChecks(then_part, else_part) else_part
+#endif
+
+#define SEMI_STATIC_JOIN(a, b) SEMI_STATIC_JOIN_HELPER(a, b)
+#define SEMI_STATIC_JOIN_HELPER(a, b) a##b
+
+#define IF(ccCond, then_part) ccCond(then_part, typedef void SEMI_STATIC_JOIN(__If__, __LINE__))
+#define IF_ELSE(ccCond, then_part, else_part) ccCond(then_part, else_part)
 
 } // namespace positron
 

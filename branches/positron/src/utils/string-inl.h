@@ -1,7 +1,7 @@
 #ifndef UTILS_STRING_INL
 #define UTILS_STRING_INL
 
-#include "utils/array-inl.h"
+#include "utils/vector-inl.h"
 #include "utils/buffer-inl.h"
 #include "utils/string.h"
 

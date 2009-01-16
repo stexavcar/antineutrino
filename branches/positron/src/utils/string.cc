@@ -1,4 +1,4 @@
-#include "utils/array-inl.h"
+#include "utils/vector-inl.h"
 #include "utils/buffer-inl.h"
 #include "utils/string.h"
 #include <cstdio>
@@ -82,8 +82,8 @@ void variant_type_impl<word>::print_on(const void *data, string modifiers,
 
   // Convert the number to a string in a temporary buffer
   const char kTempSize = 24;
-  embed_array<char, kTempSize> temp;
-  word value = reinterpret_cast<long>(data);
+  embed_vector<char, kTempSize> temp;
+  word value = reinterpret_cast<word>(data);
   bool is_negative = (value < 0);
   if (is_negative) value = -value;
   word offset = 0;
@@ -126,8 +126,16 @@ variant_type_impl<char> variant_type_impl<char>::kInstance;
 
 void variant_type_impl<char>::print_on(const void *data,
     string modifiers, string_stream &buf) {
-  long value = reinterpret_cast<long>(data);
+  word value = reinterpret_cast<word>(data);
   buf.add(value);
+}
+
+variant_type_impl<bool> variant_type_impl<bool>::kInstance;
+
+void variant_type_impl<bool>::print_on(const void *data,
+    string modifiers, string_stream &buf) {
+  word value = reinterpret_cast<word>(data);
+  buf.add(value ? "true" : "false");
 }
 
 variant_type_impl<format_bundle> variant_type_impl<format_bundle>::kInstance;

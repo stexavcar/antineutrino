@@ -6,13 +6,14 @@ library (
     'main/main.cc',
     'main/main.h',
     'plankton/builder.h',
+    'plankton/builder-inl.h',
     'plankton/builder.cc',
     'plankton/codec.h',
     'plankton/codec-inl.h',
     'plankton/plankton.h',
     'platform/abort.h',
     'utils/array.h',
-    'utils/array-inl.h',
+#    'utils/array-inl.h',
     'utils/buffer.h',
     'utils/buffer-inl.h',
     'utils/check.h',
@@ -25,6 +26,9 @@ library (
     'utils/string.cc',
     'utils/smart-ptrs.h',
     'utils/smart-ptrs-inl.h',
+    'utils/types.h',
+    'utils/vector.h',
+    'utils/vector-inl.h',
     '$platform-files'
   ]
 )

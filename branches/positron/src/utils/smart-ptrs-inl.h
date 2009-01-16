@@ -19,13 +19,13 @@ inline T *own_ptr<T, D>::release() {
 }
 
 template <typename T>
-own_array<T>::~own_array() {
+own_vector<T>::~own_vector() {
   delete[] value_.start();
 }
 
 template <typename T>
-array<T> own_array<T>::release() {
-  array<T> result = value_;
+vector<T> own_vector<T>::release() {
+  vector<T> result = value_;
   value_ = NEW_ARRAY(static_cast<T*>(NULL), 0);
   return result;
 }

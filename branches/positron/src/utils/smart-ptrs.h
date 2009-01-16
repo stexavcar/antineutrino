@@ -2,7 +2,7 @@
 #define _UTILS_SMART_PTRS
 
 #include "utils/global.h"
-#include "utils/array.h"
+#include "utils/vector.h"
 
 namespace positron {
 
@@ -46,16 +46,16 @@ private:
 
 
 template <typename T>
-class own_array : public nocopy {
+class own_vector : public nocopy {
 public:
-  own_array(array<T> value) : value_(value) { }
-  ~own_array();
+  own_vector(vector<T> value) : value_(value) { }
+  ~own_vector();
 
   inline T *start() { return value_.start(); }
   inline T &operator[](word index) { return value_[index]; }
-  inline array<T> release();
+  inline vector<T> release();
 private:
-  array<T> value_;
+  vector<T> value_;
 };
 
 

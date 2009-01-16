@@ -1,7 +1,7 @@
 #include <cstdio>
 
 #include "test-inl.h"
-#include "utils/array-inl.h"
+#include "utils/vector-inl.h"
 #include "utils/smart-ptrs-inl.h"
 
 namespace positron {
@@ -70,7 +70,7 @@ word UnitTest::run_all_tests() {
   return run_count;
 }
 
-int UnitTest::main(array<const char*> args) {
+int UnitTest::main(vector<const char*> args) {
   word total_run_count = 0;
   bool print_run_count = true;
   for (size_t i = 1; i < args.length(); i++) {
@@ -82,7 +82,7 @@ int UnitTest::main(array<const char*> args) {
       run_all_tests();
     } else {
       word current_run_count = 0;
-      own_array<const char> str_copy(string::dup(arg).chars());
+      own_vector<const char> str_copy(string::dup(arg).chars());
       char *testname = strchr(str_copy.start(), '/');
       if (testname) {
         // Split the string in two by nulling the colon
@@ -114,6 +114,6 @@ word PseudoRandom::next() {
 } // positron
 
 int main(int argc, const char *argv[]) {
-  positron::array<const char*> args(argv, argc);
+  positron::vector<const char*> args(argv, argc);
   return positron::UnitTest::main(args);
 }

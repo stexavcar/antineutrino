@@ -8,14 +8,17 @@ namespace positron {
 template <typename T>
 class array {
 public:
+#ifdef ARRAY_BOUNDS_CHECKS
   array(T *data, size_t length) : data_(data), length_(length) { }
+#else
+  array(T *data) : data_(data) { }
+#endif // ARRAY_BOUNDS_CHECKS
   T &operator[](size_t offset);
   const T &operator[](size_t offset) const;
   T *start() { return data_; }
-  size_t length() { return length_; }
 private:
   T *data_;
-  size_t length_;
+  IF(ccArrayBoundsChecks, size_t length_);
 };
 
 template <typename T, word L>
@@ -25,6 +28,12 @@ public:
 private:
   T base_[L];
 };
+
+#ifdef ARRAY_BOUNDS_CHECKS
+#define TO_ARRAY(data, length) array(data, length)
+#else
+#define TO_ARRAY(data, length) array(data)
+#endif
 
 } // namespace positron
 

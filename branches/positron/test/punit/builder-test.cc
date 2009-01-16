@@ -1,17 +1,17 @@
 #include "plankton/builder.h"
 #include "plankton/codec-inl.h"
-#include "utils/array-inl.h"
+#include "utils/vector-inl.h"
 #include "test-inl.h"
 
 using namespace positron;
 
 class StaticOutStream {
 public:
-  StaticOutStream(array<uint8_t> &data) : pos_(0), data_(data) { }
+  StaticOutStream(vector<uint8_t> &data) : pos_(0), data_(data) { }
   void write(uint8_t val);
 private:
   int pos_;
-  array<uint8_t> &data_;
+  vector<uint8_t> &data_;
 };
 
 void StaticOutStream::write(uint8_t val) {
@@ -20,11 +20,11 @@ void StaticOutStream::write(uint8_t val) {
 
 class StaticInStream {
 public:
-  StaticInStream(array<uint8_t> &data) : pos_(0), data_(data) { }
+  StaticInStream(vector<uint8_t> &data) : pos_(0), data_(data) { }
   uint8_t read();
 private:
   int pos_;
-  array<uint8_t> &data_;
+  vector<uint8_t> &data_;
 };
 
 uint8_t StaticInStream::read() {
@@ -32,7 +32,7 @@ uint8_t StaticInStream::read() {
 }
 
 static void test_codec(uint32_t value) {
-  embed_array<uint8_t, Codec::kMaxEncodedInt32Size> data;
+  embed_vector<uint8_t, Codec::kMaxEncodedInt32Size> data;
   StaticOutStream out(data);
   Encoder<StaticOutStream>::encode_uint32(value, out);
   StaticInStream in(data);
@@ -51,9 +51,12 @@ TEST(encode) {
 }
 
 TEST(builder) {
-  for (int i = 0; i < 100; i++) {
+  for (word i = 0; i < 100; i++) {
     Builder builder;
-    plankton::Integer val = builder.new_integer(5);
-    printf("%i %i\n", val.type(), val.value());
+    plankton::Integer val = builder.new_integer(i);
+    assert (val.value()) == i;
   }
+  Builder builder;
+  plankton::String val = builder.new_string("foobar");
+  assert (val.length()) == 6u;
 }

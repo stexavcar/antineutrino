@@ -6,7 +6,7 @@
 #include <cstdio>
 
 
-#include "utils/array.h"
+#include "utils/vector.h"
 #include "utils/buffer.h"
 
 
@@ -29,7 +29,7 @@ public:
   const char *start() { return chars_; }
   const char &operator[](word i) const { return chars_[i]; }
   static string dup(string arg);
-  array<const char> chars() { return array<const char>(chars_, length_); }
+  vector<const char> chars() { return vector<const char>(chars_, length_); }
   bool is_empty() { return chars_ == NULL; }
 private:
   const char *chars_;
@@ -91,7 +91,7 @@ class var_args_impl : public var_args {
 public:
   virtual size_t length() const { return L; }
   virtual const variant &operator[](word i) const;
-  embed_array<const variant*, L> elms_;
+  embed_vector<const variant*, L> elms_;
 };
 
 
@@ -176,6 +176,18 @@ public:
   virtual void print_on(const void *data, string modifiers,
       string_stream &stream);
   static variant_type_impl<char> kInstance;
+};
+
+
+template <>
+class variant_type_impl<bool> : public variant_type {
+public:
+  static inline const void *encode(const bool &t) {
+    return reinterpret_cast<const void*>(static_cast<word>(t));
+  }
+  virtual void print_on(const void *data, string modifiers,
+      string_stream &stream);
+  static variant_type_impl<bool> kInstance;
 };
 
 
