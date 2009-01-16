@@ -18,8 +18,8 @@ buffer<T>::~buffer() {
 }
 
 template <typename T>
-T &buffer<T>::operator[](word index) {
-  // assert index < length();
+T &buffer<T>::operator[](size_t index) {
+  assert index < length();
   return start()[index];
 }
 

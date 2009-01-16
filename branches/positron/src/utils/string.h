@@ -75,7 +75,6 @@ private:
   variant_type &type_;
   const void *data_;
   int index_;
-  static int current_index_;
 };
 
 

@@ -15,7 +15,7 @@ public:
   T remove_last();
   T pop();
   const T &peek();
-  T &operator[](word index);
+  T &operator[](size_t index);
   T *start() { return data_; }
   size_t length() { return length_; }
   void ensure_capacity(size_t length);
