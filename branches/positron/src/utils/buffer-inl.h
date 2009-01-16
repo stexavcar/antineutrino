@@ -19,7 +19,7 @@ buffer<T>::~buffer() {
 
 template <typename T>
 T &buffer<T>::operator[](size_t index) {
-  assert index < length();
+  assert index < capacity_;
   return start()[index];
 }
 
@@ -36,7 +36,7 @@ void buffer<T>::push(const T &obj) {
 
 template <typename T>
 T buffer<T>::remove_last() {
-  // ASSERT(length() > 0);
+  assert length() > 0;
   T result = start()[length_ - 1];
   length_--;
   return result;
@@ -44,7 +44,7 @@ T buffer<T>::remove_last() {
 
 template <typename T>
 const T &buffer<T>::peek() {
-  // ASSERT(length() > 0);
+  assert length() > 0;
   return start()[length_ - 1];
 }
 

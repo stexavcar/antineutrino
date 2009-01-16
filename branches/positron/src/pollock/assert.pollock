@@ -6,3 +6,6 @@ emit: p${domain}AssertLeq(${x}, ${y});
 
 case: assert ${x:expr} < ${y:expr} ;
 emit: p${domain}AssertLt(${x}, ${y});
+
+case: assert ${x:expr} > ${y:expr} ;
+emit: p${domain}AssertGt(${x}, ${y});

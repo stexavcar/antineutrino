@@ -60,6 +60,7 @@ public:
 // can be added by specializing the Coerce struct.
 template <typename T> struct coerce { typedef T type; };
 template <> struct coerce<int> { typedef word type; };
+template <> struct coerce<unsigned> { typedef word type; };
 template <> struct coerce<size_t> { typedef word type; };
 
 class variant {
