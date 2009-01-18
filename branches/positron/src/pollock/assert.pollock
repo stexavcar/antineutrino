@@ -1,5 +1,11 @@
+case: assert is < ${type:expr} > ( ${x:expr} ) ;
+emit: p${domain}Assert(is<${type}>(${x}));
+
 case: assert ${x:expr} == ${y:expr} ;
 emit: p${domain}AssertEq(${x}, ${y});
+
+case: assert ${x:expr} != ${y:expr} ;
+emit: p${domain}AssertNeq(${x}, ${y});
 
 case: assert ${x:expr} <= ${y:expr} ;
 emit: p${domain}AssertLeq(${x}, ${y});
@@ -7,5 +13,11 @@ emit: p${domain}AssertLeq(${x}, ${y});
 case: assert ${x:expr} < ${y:expr} ;
 emit: p${domain}AssertLt(${x}, ${y});
 
+case: assert ${x:expr} >= ${y:expr} ;
+emit: p${domain}AssertGeq(${x}, ${y});
+
 case: assert ${x:expr} > ${y:expr} ;
 emit: p${domain}AssertGt(${x}, ${y});
+
+case: assert ${x:expr} ;
+emit: p${domain}Assert(${x});

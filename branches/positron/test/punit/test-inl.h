@@ -7,7 +7,7 @@ namespace neutrino {
 
 #define TEST(name)                                                   \
   static void punit_test_##name();                                   \
-  static UnitTest name(__FILE__, #name, punit_test_##name);         \
+  static UnitTest punit_##name(__FILE__, #name, punit_test_##name);  \
   static void punit_test_##name()
 
 } // namespace neutrino

@@ -43,14 +43,15 @@ class string_stream;
 class variant_type {
 public:
   virtual void print_on(const void *data, string modifiers,
-      string_stream &stream) = 0;
+      string_stream &stream);
+  static variant_type kInstance;
 };
 
 
 template <typename T>
 class variant_type_impl : public variant_type {
 public:
-  static inline const void *encode(const T &t);
+  static inline const void *encode(const T &t) { return NULL; }
 };
 
 
@@ -62,6 +63,7 @@ template <typename T> struct coerce { typedef T type; };
 template <> struct coerce<int> { typedef word type; };
 template <> struct coerce<unsigned> { typedef word type; };
 template <> struct coerce<size_t> { typedef word type; };
+
 
 class variant {
 public:

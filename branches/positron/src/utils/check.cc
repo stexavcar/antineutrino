@@ -18,7 +18,16 @@ void Check::predicate_failed(SourceLocation here, string format,
   }
   buf.add("\n#\n");
   Abort::abort("%", args(buf.raw_c_str()));
+}
 
+void Check::check_failed(SourceLocation here, string source) {
+  static const char *kMessage =
+    "#\n"
+    "# %:%: % failed\n"
+    "#\n";
+  string_stream buf;
+  buf.add(kMessage, args(string(here.file()), here.line(), source));
+  Abort::abort("%", args(buf.raw_c_str()));
 }
 
 } // namespace positron

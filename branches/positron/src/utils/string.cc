@@ -65,6 +65,13 @@ void variant::print_on(string_stream &stream, string modifiers) const {
   type().print_on(data(), modifiers, stream);
 }
 
+variant_type variant_type::kInstance;
+
+void variant_type::print_on(const void *data, string modifiers,
+    string_stream &stream) {
+  stream.add("#<unknown>");
+}
+
 variant_type_impl<word> variant_type_impl<word>::kInstance;
 
 static word digit_to_char(word digit) {

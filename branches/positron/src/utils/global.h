@@ -11,6 +11,7 @@ namespace positron {
 
 
 typedef long word;
+typedef unsigned long uword;
 
 
 /**

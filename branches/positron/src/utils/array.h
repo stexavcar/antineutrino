@@ -14,6 +14,7 @@ public:
   array(T *data) : data_(data) { }
 #endif // ARRAY_BOUNDS_CHECKS
   T &operator[](word offset);
+  array<T> from(word start);
   const T &operator[](word offset) const;
   T *start() { return data_; }
 private:
@@ -30,9 +31,9 @@ private:
 };
 
 #ifdef ARRAY_BOUNDS_CHECKS
-#define TO_ARRAY(data, length) array(data, length)
+#define TO_ARRAY(T, data, length) array<T>(data, length)
 #else
-#define TO_ARRAY(data, length) array(data)
+#define TO_ARRAY(T, data, length) array<T>(data)
 #endif
 
 } // namespace positron

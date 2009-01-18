@@ -2,6 +2,7 @@
 #define _UTILS_BUFFER_INL
 
 #include "utils/buffer.h"
+#include "utils/array.h"
 
 namespace positron {
 
@@ -54,6 +55,14 @@ T buffer<T>::pop() {
 }
 
 template <typename T>
+array<T> buffer<T>::allocate(word size) {
+  ensure_capacity(length_ + size);
+  array<T> result = TO_ARRAY(T, start() + length_, size);
+  length_ += size;
+  return result;
+}
+
+template <typename T>
 void buffer<T>::ensure_capacity(word length) {
   if (length > capacity_)
     extend_capacity(length);
@@ -68,6 +77,11 @@ void buffer<T>::extend_capacity(word required) {
   delete[] data_;
   data_ = new_data;
   capacity_ = new_capacity;
+}
+
+template <typename T>
+array<T> buffer<T>::raw_data() {
+  return TO_ARRAY(T, start(), length());
 }
 
 } // namespace positron

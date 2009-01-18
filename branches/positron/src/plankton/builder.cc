@@ -1,5 +1,6 @@
 #include "plankton/builder-inl.h"
 #include "plankton/codec-inl.h"
+#include "utils/array-inl.h"
 #include "utils/check-inl.h"
 
 namespace positron {
@@ -9,51 +10,81 @@ namespace positron {
 
 class ValueImpl {
 public:
-  static plankton::Value::Type value_type(plankton::Value *that);
-  static int32_t integer_value(plankton::Integer *that);
-  static word string_length(plankton::String *that);
+  static p_value::Type value_type(const p_value *that);
+  static int32_t integer_value(const p_integer *that);
+  static word string_length(const p_string *that);
+  static uint32_t string_get(const p_string *that, word index);
+  static word string_compare(const p_string *that, const string &other);
+  static word array_length(const p_array *that);
+  static p_value array_get(const p_array *that, word index);
+  static void array_set(p_array *that, word index, p_value value);
 private:
-  static uint8_t *open(plankton::Value *obj);
+  static object open(const p_value *obj);
 };
 
-static inline void *tag_object(word offset) {
-  return reinterpret_cast<void*>((offset << 1) | 1);
-}
-
-
-static inline word untag_object(void *value) {
-  return reinterpret_cast<word>(value) >> 1;
-}
-
-
-static inline void *tag_smi(word value) {
-  return reinterpret_cast<void*>(value << 1);
-}
-
-plankton::Value::Type ValueImpl::value_type(plankton::Value *that) {
-  word value = reinterpret_cast<word>(that->data());
-  if ((value & 1) == 0) {
-    return plankton::Value::vtInteger;
+p_value::Type ValueImpl::value_type(const p_value *that) {
+  uint32_t data = that->data();
+  if (Raw::has_integer_tag(data)) {
+    return p_value::vtInteger;
+  } else if (Raw::has_object_tag(data)) {
+    object obj = open(that);
+    return static_cast<p_value::Type>(obj.at<uint32_t>(0));
   } else {
-    return plankton::Value::vtInteger;
+    assert Raw::has_singleton_tag(data);
+    return Raw::untag_singleton(data);
   }
 }
 
-int32_t ValueImpl::integer_value(plankton::Integer *that) {
-  return reinterpret_cast<word>(that->data()) >> 1;
+int32_t ValueImpl::integer_value(const p_integer *that) {
+  return Raw::untag_integer(that->data());
 }
 
-word ValueImpl::string_length(plankton::String *that) {
-  //uint8_t *ptr = ValueImpl::open(that);
-  return 6;
+word ValueImpl::string_length(const p_string *that) {
+  return ValueImpl::open(that).at<uint32_t>(1);
 }
 
-uint8_t *Builder::resolve(word offset) {
-  return data().start() + offset;
+uint32_t ValueImpl::string_get(const p_string *that, word index) {
+  assert index >= 0;
+  assert index < that->length();
+  return ValueImpl::open(that).at<uint32_t>(2 + index);
 }
 
-uint8_t *ValueImpl::open(plankton::Value *obj) {
-  word offset = untag_object(obj->data());
+word ValueImpl::string_compare(const p_string *that, const string &other) {
+  if (that->length() != other.length())
+    return that->length() - other.length();
+  object str = ValueImpl::open(that);
+  for (word i = 0; i < other.length(); i++) {
+    uint32_t ac = str.at<uint32_t>(2 + i);
+    uint32_t bc = static_cast<uint32_t>(other[i]);
+    if (ac != bc)
+      return ac - bc;
+  }
+  return 0;
+}
+
+void ValueImpl::array_set(p_array *that, word index, p_value value) {
+  assert index >= 0;
+  assert index < that->length();
+  ValueImpl::open(that).at<uint32_t>(2 + index) = value.data();
+}
+
+word ValueImpl::array_length(const p_array *that) {
+  return ValueImpl::open(that).at<uint32_t>(1);
+}
+
+p_value ValueImpl::array_get(const p_array *that, word index) {
+  assert index >= 0;
+  assert index < that->length();
+  uint32_t data = ValueImpl::open(that).at<uint32_t>(2 + index);
+  return p_value(data, that->dtable());
+}
+
+object Builder::resolve(word offset) {
+  return object(data().raw_data().from(offset));
+}
+
+object ValueImpl::open(const p_value *obj) {
+  word offset = Raw::untag_object(obj->data());
   return static_cast<DTableImpl&>(obj->dtable()).builder().resolve(offset);
 }
 
@@ -63,40 +94,52 @@ DTableImpl::DTableImpl(Builder *builder) : builder_(builder) {
   value_type = &ValueImpl::value_type;
   integer_value = &ValueImpl::integer_value;
   string_length = &ValueImpl::string_length;
+  string_get = &ValueImpl::string_get;
+  string_compare = &ValueImpl::string_compare;
+  array_length = &ValueImpl::array_length;
+  array_get = &ValueImpl::array_get;
+  array_set = &ValueImpl::array_set;
 }
 
 // --- F a c t o r y   m e t h o d s ---
 
-
-plankton::Integer Builder::new_integer(int32_t value) {
-  return plankton::Integer(tag_smi(value), DTableImpl::static_instance());
+p_integer Builder::new_integer(int32_t value) {
+  return p_integer(Raw::tag_integer(value), DTableImpl::static_instance());
 }
 
-plankton::String Builder::new_string(string value) {
-  BuilderStream stream(*this);
-  word offset = stream.offset();
-  stream.write(plankton::Value::vtString);
-  Encoder<BuilderStream>::encode_uint32(value.length(), stream);
+p_string Builder::new_string(string value) {
+  object obj = allocate(p_value::vtString, 2 + value.length());
+  obj.at<uint32_t>(1) = value.length();
   for (word i = 0; i < value.length(); i++)
-    Encoder<BuilderStream>::encode_uint32(value[i], stream);
-  return plankton::String(tag_object(offset), dtable());
+    obj.at<uint32_t>(2 + i) = value[i];
+  return to_plankton<p_string>(obj);
+}
+
+p_array Builder::new_array(word length) {
+  assert length >= 0;
+  object obj = allocate(p_value::vtArray, 2 + length);
+  obj.at<uint32_t>(1) = length;
+  uint32_t null = get_null().data();
+  for (word i = 0; i < length; i++)
+    obj.at<uint32_t>(2 + i) = null;
+  return to_plankton<p_array>(obj);
+}
+
+p_null Builder::get_null() {
+  return p_null(Raw::tag_singleton(p_value::vtNull), DTableImpl::static_instance());
 }
 
 // --- B u i l d e r ---
 
 Builder::Builder()
-  : dtable_(this)
-  , is_open_(true) {
+  : dtable_(this) {
 }
 
-BuilderStream::BuilderStream(Builder &builder)
-    : builder_(builder) {
-  assert (builder.is_open()) == true;
-  builder.set_is_open(false);
-}
-
-BuilderStream::~BuilderStream() {
-  builder().set_is_open(true);
+object Builder::allocate(p_value::Type type, word size) {
+  assert size >= 1;
+  object result = object(data().allocate(sizeof(uint32_t) * size));
+  result.at<uint32_t>(0) = type;
+  return result;
 }
 
 } // namespace positron

@@ -5,6 +5,11 @@
 namespace positron {
 
 class Builder;
+class p_array;
+class p_integer;
+class p_null;
+class p_string;
+
 
 } // namespace positron
 

@@ -1,10 +1,13 @@
+#include "platform/abort.h"
+#include "utils/string-inl.h"
+
 #include <cstdio>
 #include <cstdlib>
 #include <signal.h>
 #include <errno.h>
-
-#include "platform/abort.h"
-#include "utils/string-inl.h"
+#include <dlfcn.h>
+#include <cxxabi.h>
+#include <string>
 
 namespace positron {
 
@@ -22,25 +25,6 @@ static bool install_handler(int signum, void (*handler)(int, siginfo_t*, void*))
   action.sa_flags = SA_SIGINFO;
   return sigaction(signum, &action, NULL) >= 0;
 }
-
-/*
-fprintf(stderr, "--- Crash ---\n");
-EnumValueInfo enum_info;
-if (get_signal_info(info->si_signo, &enum_info))
-  fprintf(stderr, "signal: %s (%s)\n", enum_info.name, enum_info.desc);
-if (get_code_info(info->si_signo, info->si_code, &enum_info))
-  fprintf(stderr, "code:   %s (%s)\n", enum_info.name, enum_info.desc);
-switch (info->si_signo) {
-  case SIGSEGV: case SIGILL: case SIGFPE: case SIGBUS:
-    fprintf(stderr, "addr:   %x\n", static_cast<uint32_t>(reinterpret_cast<uword>(info->si_addr)));
-    break;
-}
-fprintf(stderr, "status: %i\n", info->si_status);
-if (info->si_errno)
-  fprintf(stderr, "errno:  %s\n", strerror(errno));
-print_stack_trace(ptr, "neutrino::");
-exit(signum);
-*/
 
 #define eSignalCodes(VISIT)                                          \
   VISIT(0,       SI_USER,     "user signal")                         \
@@ -86,6 +70,54 @@ eSignalCodes(MAKE_CASE);
 return false;
 }
 
+/**
+ * Removes all occurrences of the given substring from the string.
+ */
+static void remove_substring(char *str, string substr) {
+  word p = 0;
+  word i = 0;
+  while (str[p]) {
+    word j;
+    for (j = 0; j < substr.length() && str[p + j] == substr[j]; j++)
+      ;
+    if (j < substr.length()) {
+      str[i] = str[p];
+      p++;
+      i++;
+    } else {
+      p += j;
+    }
+  }
+  str[i] = '\0';
+}
+
+static void print_stack_trace(void *ptr, string prefix) {
+  fprintf(stderr, "--- Stack ---\n");
+  void *pc = reinterpret_cast<void*>(__builtin_return_address(0));
+  void **fp = reinterpret_cast<void**>(__builtin_frame_address(1));
+  while (fp && pc) {
+    Dl_info info;
+    if (dladdr(pc, &info)) {
+      const char *mangled = info.dli_sname;
+      int status = 0;
+      char *demangled = abi::__cxa_demangle(mangled, 0, 0, &status);
+      if (status == 0 && demangled != NULL) {
+        remove_substring(demangled, prefix);
+        fprintf(stderr, "%s\n", demangled);
+        free(demangled);
+      } else {
+        fprintf(stderr, "%s(...)\n", mangled);
+        if (strcmp("main", mangled) == 0)
+          break;
+      }
+    } else {
+      fprintf(stderr, "<anonymous frame>\n");
+    }
+    pc = fp[1];
+    fp = static_cast<void**>(fp[0]);
+  }
+}
+
 static void print_error_report(int signum, siginfo_t *siginfo, void *ptr) {
   fprintf(stderr, "--- Crash ---\n");
   SignalInfo info;
@@ -101,6 +133,7 @@ static void print_error_report(int signum, siginfo_t *siginfo, void *ptr) {
   if (siginfo->si_errno) {
     fprintf(stderr, "errno:  %s\n", strerror(errno));
   }
+  print_stack_trace(ptr, "positron::");
   exit(signum);
 }
 

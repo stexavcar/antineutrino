@@ -1,6 +1,7 @@
 #ifndef _UTILS_BUFFER
 #define _UTILS_BUFFER
 
+#include "utils/array.h"
 #include "utils/global.h"
 
 namespace positron {
@@ -19,6 +20,8 @@ public:
   T *start() { return data_; }
   word length() { return length_; }
   void ensure_capacity(word length);
+  array<T> allocate(word length);
+  array<T> raw_data();
 
 private:
   void extend_capacity(word required);
