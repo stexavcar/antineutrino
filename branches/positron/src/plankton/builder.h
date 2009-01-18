@@ -12,8 +12,8 @@ class DTableImpl : public plankton::Value::DTable {
 public:
   DTableImpl(Builder *builder);
   static DTableImpl &static_instance() { return kStaticInstance; }
-private:
   Builder &builder() { return *builder_; }
+private:
   Builder *builder_;
   static DTableImpl kStaticInstance;
 };
@@ -24,6 +24,7 @@ public:
   plankton::Integer new_integer(int32_t value);
   plankton::String new_string(string value);
 
+  uint8_t *resolve(word offset);
   bool is_open() { return is_open_; }
   void set_is_open(bool v) { is_open_ = v; }
   buffer<uint8_t> &data() { return data_; }

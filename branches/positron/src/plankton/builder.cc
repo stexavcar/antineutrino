@@ -11,9 +11,9 @@ class ValueImpl {
 public:
   static plankton::Value::Type value_type(plankton::Value *that);
   static int32_t integer_value(plankton::Integer *that);
-  static size_t string_length(plankton::String *that);
+  static word string_length(plankton::String *that);
 private:
-  static int8_t *open(plankton::Value *obj);
+  static uint8_t *open(plankton::Value *obj);
 };
 
 static inline void *tag_object(word offset) {
@@ -43,14 +43,18 @@ int32_t ValueImpl::integer_value(plankton::Integer *that) {
   return reinterpret_cast<word>(that->data()) >> 1;
 }
 
-size_t ValueImpl::string_length(plankton::String *that) {
-  int8_t *ptr = ValueImpl::open(that);
+word ValueImpl::string_length(plankton::String *that) {
+  //uint8_t *ptr = ValueImpl::open(that);
   return 6;
 }
 
-int8_t *ValueImpl::open(plankton::Value *obj) {
+uint8_t *Builder::resolve(word offset) {
+  return data().start() + offset;
+}
+
+uint8_t *ValueImpl::open(plankton::Value *obj) {
   word offset = untag_object(obj->data());
-  return static_cast<DTableImpl&>(obj->dtable()).resolve(offset);
+  return static_cast<DTableImpl&>(obj->dtable()).builder().resolve(offset);
 }
 
 DTableImpl DTableImpl::kStaticInstance(NULL);
@@ -73,7 +77,7 @@ plankton::String Builder::new_string(string value) {
   word offset = stream.offset();
   stream.write(plankton::Value::vtString);
   Encoder<BuilderStream>::encode_uint32(value.length(), stream);
-  for (size_t i = 0; i < value.length(); i++)
+  for (word i = 0; i < value.length(); i++)
     Encoder<BuilderStream>::encode_uint32(value[i], stream);
   return plankton::String(tag_object(offset), dtable());
 }

@@ -20,12 +20,12 @@ public:
   inline string(const char *chars)
     : chars_(chars)
     , length_(strlen(chars)) { }
-  inline string(const char *chars, size_t length)
+  inline string(const char *chars, word length)
     : chars_(chars)
     , length_(length) { }
   bool operator==(const string &that) const;
   bool contains(char c);
-  size_t length() const { return length_; }
+  word length() const { return length_; }
   const char *start() { return chars_; }
   const char &operator[](word i) const { return chars_[i]; }
   static string dup(string arg);
@@ -33,7 +33,7 @@ public:
   bool is_empty() { return chars_ == NULL; }
 private:
   const char *chars_;
-  size_t length_;
+  word length_;
 };
 
 
@@ -81,7 +81,7 @@ private:
 
 class var_args {
 public:
-  virtual size_t length() const = 0;
+  virtual word length() const = 0;
   virtual const variant &operator[](word i) const = 0;
 };
 
@@ -89,7 +89,7 @@ public:
 template <word L>
 class var_args_impl : public var_args {
 public:
-  virtual size_t length() const { return L; }
+  virtual word length() const { return L; }
   virtual const variant &operator[](word i) const;
   embed_vector<const variant*, L> elms_;
 };

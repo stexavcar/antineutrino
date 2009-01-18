@@ -9,6 +9,7 @@ namespace positron {
 class Abort {
 public:
   static void abort(string format, const var_args &args);
+  static void install_signal_handlers();
 };
 
 } // namespace positron

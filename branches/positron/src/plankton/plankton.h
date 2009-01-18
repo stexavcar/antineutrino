@@ -16,7 +16,8 @@ public:
   struct DTable {
     Type (*value_type)(Value *that);
     int32_t (*integer_value)(Integer *that);
-    size_t (*string_length)(String *that);
+    word (*string_length)(String *that);
+    uint32_t (*string_get)(String *that, word offset);
   };
 
   inline Type type() { return dtable().value_type(this); }
@@ -41,7 +42,8 @@ public:
 
 class String : public Value {
 public:
-  inline size_t length() { return dtable().string_length(this); }
+  inline word length() { return dtable().string_length(this); }
+  inline uint32_t operator[](word index) { return dtable().string_get(this, index); }
   inline String(void *data, DTable &dtable) : Value(data, dtable) { }
 };
 

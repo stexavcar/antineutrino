@@ -8,14 +8,14 @@ namespace positron {
 void string_stream::add(char c) {
   buf().append(c);
   if (c == '\n') {
-    for (size_t i = 0; i < indent().length(); i++)
+    for (word i = 0; i < indent().length(); i++)
       buf().append(indent()[i]);
   }
 }
 
 void string_stream::add(string format, const var_args &args) {
   word arg_cursor = 0;
-  for (size_t i = 0; i < format.length(); i++) {
+  for (word i = 0; i < format.length(); i++) {
     char c = format[i];
     switch (c) {
       case '%': case '@': {
@@ -51,7 +51,7 @@ void string_stream::add(string format, const var_args &args) {
 }
 
 void string_stream::add(string str) {
-  for (size_t i = 0; i < str.length(); i++)
+  for (word i = 0; i < str.length(); i++)
     add(str[i]);
 }
 
@@ -148,7 +148,7 @@ void variant_type_impl<format_bundle>::print_on(const void *data,
 
 bool string::operator==(const string &that) const {
   if (length() != that.length()) return false;
-  for (size_t i = 0; i < length(); i++) {
+  for (word i = 0; i < length(); i++) {
     if (this->operator[](i) != that[i])
       return false;
   }
@@ -156,7 +156,7 @@ bool string::operator==(const string &that) const {
 }
 
 bool string::contains(char c) {
-  for (size_t i = 0; i < length(); i++) {
+  for (word i = 0; i < length(); i++) {
     if (operator[](i) == c)
       return true;
   }

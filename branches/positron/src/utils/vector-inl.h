@@ -7,13 +7,13 @@
 namespace positron {
 
 template <typename T>
-T &vector<T>::operator[](size_t offset) {
+T &vector<T>::operator[](word offset) {
   assert offset < length_;
   return data_[offset];
 }
 
 template <typename T>
-const T &vector<T>::operator[](size_t offset) const {
+const T &vector<T>::operator[](word offset) const {
   assert offset < length_;
   return data_[offset];
 }

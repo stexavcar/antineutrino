@@ -1,5 +1,5 @@
 from os.path import abspath, join
-Import('config pollock_processor')
+Import('config pollock_processor target_dir')
 
 
 def configure_pollock(env):
@@ -32,7 +32,7 @@ def ensure_library(env, libmap, name):
   lib_deps = library_dependencies(env, libmap, lib)
   lib_obj = env.Library(name, srcs, LIBS=lib_deps, **lib.get_flags())
   env.Depends(lib_obj, hdrs)
-  env.Alias(name, lib_obj)
+  env.Alias(name, env.Install(target_dir, lib_obj))
   libmap[name] = lib_obj
   return lib_obj
 
@@ -45,9 +45,7 @@ def library_dependencies(env, libmap, sect):
 
 
 def configure():
-  env = Environment(
-    CPPPATH=join('pollock', 'src')
-  )
+  env = Environment(CPPPATH=join('pollock', 'src'))
   configure_pollock(env)
   # Configure libraries
   libs = config.get_libraries()
@@ -61,7 +59,7 @@ def configure():
     lib_deps = library_dependencies(env, libmap, prog)
     prog_obj = env.Program(name, srcs, LIBS=lib_deps, **prog.get_flags())
     env.Depends(prog_obj, hdrs)
-    env.Alias(name, prog_obj)
+    env.Alias(name, env.Install(target_dir, prog_obj))
 
 
 configure()

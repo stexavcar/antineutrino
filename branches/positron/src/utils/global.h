@@ -32,7 +32,7 @@ private:
  * increase in size by the golden ratio but is computed purely with
  * simple integer operations.
  */
-static inline size_t grow_value(size_t n) {
+static inline word grow_value(word n) {
   return ((n << 3) + (n << 2) + n) >> 3;
 }
 

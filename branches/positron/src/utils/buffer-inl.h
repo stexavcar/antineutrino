@@ -18,7 +18,7 @@ buffer<T>::~buffer() {
 }
 
 template <typename T>
-T &buffer<T>::operator[](size_t index) {
+T &buffer<T>::operator[](word index) {
   assert index < capacity_;
   return start()[index];
 }
@@ -54,16 +54,16 @@ T buffer<T>::pop() {
 }
 
 template <typename T>
-void buffer<T>::ensure_capacity(size_t length) {
+void buffer<T>::ensure_capacity(word length) {
   if (length > capacity_)
     extend_capacity(length);
 }
 
 template <typename T>
-void buffer<T>::extend_capacity(size_t required) {
-  size_t new_capacity = grow_value(required);
+void buffer<T>::extend_capacity(word required) {
+  word new_capacity = grow_value(required);
   T *new_data = new T[new_capacity];
-  for (size_t i = 0; i < length_; i++)
+  for (word i = 0; i < length_; i++)
     new_data[i] = start()[i];
   delete[] data_;
   data_ = new_data;

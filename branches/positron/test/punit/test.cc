@@ -71,9 +71,10 @@ word UnitTest::run_all_tests() {
 }
 
 int UnitTest::main(vector<const char*> args) {
+  Abort::install_signal_handlers();
   word total_run_count = 0;
   bool print_run_count = true;
-  for (size_t i = 1; i < args.length(); i++) {
+  for (word i = 1; i < args.length(); i++) {
     string arg = args[i];
     if (arg == "--list") {
       print_test_list();

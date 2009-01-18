@@ -6,34 +6,36 @@ sys.path.append(root)
 from tools import build, pollock
 
 
-kOptions = {
-  'mode': {
+kOptions = [
+  ('mode', {
     'values': ['debug', 'release'],
     'default': 'release'
-  },
-  'wordsize': {
+  }),
+  ('wordsize', {
     'values': ['32', '64'],
     'default': '32'
-  }
-}
+  })
+]
 
 
 def configure(relative_root, build_config, pollock_path):
   opts = Options()
-  for (key, value) in kOptions.items():
+  for (key, value) in kOptions:
     opts.Add(EnumOption(key, '', value['default'], allowed_values=value['values']))
   env = Environment(options = opts)
   Help(opts.GenerateHelpText(env))
   options = { }
-  for key in kOptions.keys():
+  for (key, value) in kOptions:
     options[key] = env.Dictionary()[key]
   config = build.read_build_file(relative_root, build_config, options)
   pollock_processor = pollock.read_processor(pollock_path)
+  variant = "-".join([options[n[0]] for n in kOptions])
+  target_dir = abspath('.')
   SConscript(
     'SConscript',
-    exports = 'config pollock_processor options',
+    exports = 'config pollock_processor options target_dir',
     duplicate = False,
-    build_dir = 'obj'
+    build_dir = join('obj', variant)
   )
 
 

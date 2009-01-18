@@ -57,6 +57,9 @@ TEST(builder) {
     assert (val.value()) == i;
   }
   Builder builder;
-  plankton::String val = builder.new_string("foobar");
-  assert (val.length()) == 6u;
+  string foobar = "foobar";
+  plankton::String val = builder.new_string(foobar);
+  assert val.length() == foobar.length();
+  for (word i = 0; i < val.length(); i++)
+    assert val[i] == static_cast<uint32_t>(foobar[i]);
 }

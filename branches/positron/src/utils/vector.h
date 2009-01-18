@@ -8,14 +8,14 @@ namespace positron {
 template <typename T>
 class vector {
 public:
-  vector(T *data, size_t length) : data_(data), length_(length) { }
-  T &operator[](size_t offset);
-  const T &operator[](size_t offset) const;
+  vector(T *data, word length) : data_(data), length_(length) { }
+  T &operator[](word offset);
+  const T &operator[](word offset) const;
   T *start() { return data_; }
-  size_t length() { return length_; }
+  word length() { return length_; }
 private:
   T *data_;
-  size_t length_;
+  word length_;
 };
 
 template <typename T, word L>
