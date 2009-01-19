@@ -26,6 +26,10 @@ TEST(simple) {
     assert is<p_integer>(obj);
     assert (cast<p_integer>(obj)).value() == i;
   }
+  MessageBuffer buffer;
+  p_value last = buffer.receive(child.socket());
+  assert is<p_string>(last);
+  assert (cast<p_string>(last)) == "bye!";
   assert child.wait() == 0;
 }
 
@@ -39,4 +43,6 @@ TEST(child) {
     MessageBuffer builder;
     builder.send(builder.new_integer(i), parent.socket());
   }
+  MessageBuffer builder;
+  builder.send(builder.new_string("bye!"), parent.socket());
 }

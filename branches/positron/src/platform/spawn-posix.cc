@@ -71,11 +71,15 @@ private:
 };
 
 word FileSocket::write(const vector<uint8_t> &data) {
-  return ::write(out(), data.start(), data.length());
+  int bytes = ::write(out(), data.start(), data.length());
+  assert bytes == data.length();
+  return bytes;
 }
 
 word FileSocket::read(vector<uint8_t> &data) {
-  return ::read(in(), data.start(), data.length());
+  int bytes = ::read(in(), data.start(), data.length());
+  assert bytes == data.length();
+  return bytes;
 }
 
 class ChildProcess::Data {

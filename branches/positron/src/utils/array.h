@@ -25,7 +25,11 @@ private:
 template <typename T, word L>
 class embed_array : public array<T> {
 public:
+#ifdef ARRAY_BOUNDS_CHECKS
   embed_array() : array<T>(base_, L) { }
+#else
+  embed_array() : array<T>(base_) { }
+#endif
 private:
   T base_[L];
 };

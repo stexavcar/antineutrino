@@ -149,19 +149,36 @@ object MessageBuffer::allocate(p_value::Type type, word size) {
   return result;
 }
 
+struct MessageHeader {
+  uint32_t size;
+  uint32_t entry_point;
+};
+
 bool MessageBuffer::send(p_value value, ISocket &socket) {
-  uint32_t ptr = value.data();
-  vector<uint8_t> ptr_vector(reinterpret_cast<uint8_t*>(&ptr), sizeof(uint32_t));
-  socket.write(ptr_vector);
-  socket.write(data().as_vector());
+  union {
+    MessageHeader header;
+    uint8_t bytes[sizeof(MessageHeader)];
+  } block;
+  vector<uint8_t> buffer = data().as_vector();
+  block.header.entry_point = value.data();
+  block.header.size = buffer.length();
+  socket.write(vector<uint8_t>(block.bytes, sizeof(MessageHeader)));
+  socket.write(buffer);
   return true;
 }
 
 p_value MessageBuffer::receive(ISocket &socket) {
-  uint32_t ptr = 0;
-  vector<uint8_t> ptr_vector(reinterpret_cast<uint8_t*>(&ptr), sizeof(uint32_t));
-  socket.read(ptr_vector);
-  return p_value(ptr, dtable());
+  assert data().length() == 0;
+  union {
+    MessageHeader header;
+    uint8_t bytes[sizeof(MessageHeader)];
+  } block;
+  vector<uint8_t> vect(block.bytes, sizeof(MessageHeader));
+  socket.read(vect);
+  array<uint8_t> chunk = data().allocate(block.header.size);
+  vector<uint8_t> buffer(chunk.start(), block.header.size);
+  socket.read(buffer);
+  return p_value(block.header.entry_point, dtable());
 }
 
 } // namespace positron
