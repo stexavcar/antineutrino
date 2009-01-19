@@ -84,6 +84,11 @@ array<T> buffer<T>::raw_data() {
   return TO_ARRAY(T, start(), length());
 }
 
+template <typename T>
+vector<T> buffer<T>::as_vector() {
+  return vector<T>(start(), length());
+}
+
 } // namespace positron
 
 #endif // _UTILS_BUFFER_INL

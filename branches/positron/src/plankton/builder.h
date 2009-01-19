@@ -10,11 +10,11 @@ namespace positron {
 
 class DTableImpl : public p_value::DTable {
 public:
-  DTableImpl(Builder *builder);
+  DTableImpl(MessageBuffer *builder);
   static DTableImpl &static_instance() { return kStaticInstance; }
-  Builder &builder() { return *builder_; }
+  MessageBuffer &builder() { return *builder_; }
 private:
-  Builder *builder_;
+  MessageBuffer *builder_;
   static DTableImpl kStaticInstance;
 };
 
@@ -29,9 +29,15 @@ private:
   array<uint8_t> data_;
 };
 
-class Builder {
+class ISocket {
 public:
-  Builder();
+  virtual word write(const vector<uint8_t> &data) = 0;
+  virtual word read(vector<uint8_t> &data) = 0;
+};
+
+class MessageBuffer {
+public:
+  MessageBuffer();
   static p_integer new_integer(int32_t value);
   static p_null get_null();
   p_string new_string(string value);
@@ -39,6 +45,12 @@ public:
 
   object resolve(word offset);
   buffer<uint8_t> &data() { return data_; }
+
+  // Sends the specified value on the specified socket.  Note that all
+  // objects created with this builder will be sent, potentially
+  // including objects that are not part of the specified value.
+  bool send(p_value value, ISocket &socket);
+  p_value receive(ISocket &socket);
 
 private:
   template <typename T> T to_plankton(object &obj);

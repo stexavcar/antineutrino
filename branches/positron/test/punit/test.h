@@ -17,12 +17,16 @@ public:
   string name() { return name_; }
   UnitTest *prev() { return prev_; }
   void run() { callback_(); }
+  static vector<const char*> &args() { return args_; }
+  static bool spawned() { return spawned_; }
 private:
   static void print_test_list();
   static word run_matching_tests(string file_or_name);
   static word run_matching_tests(string file, string name);
   static word run_all_tests();
 
+  static vector<const char*> args_;
+  static bool spawned_;
   static UnitTest *first_;
   string file_;
   string name_;

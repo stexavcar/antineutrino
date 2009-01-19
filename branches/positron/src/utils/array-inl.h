@@ -20,6 +20,13 @@ T &array<T>::operator[](word offset) {
   return data_[offset];
 }
 
+template <typename T>
+const T &array<T>::operator[](word offset) const {
+  assert offset >= 0;
+  assert offset < length_;
+  return data_[offset];
+}
+
 } // namespace positron
 
 #endif // _UTILS_ARRAY_INL

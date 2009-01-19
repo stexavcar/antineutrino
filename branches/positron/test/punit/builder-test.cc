@@ -53,7 +53,7 @@ TEST(encode) {
 
 TEST(integer) {
   for (word i = 0; i < 100; i++) {
-    Builder builder;
+    MessageBuffer builder;
     p_integer val = builder.new_integer(i);
     assert val.type() == p_value::vtInteger;
     assert val.value() == i;
@@ -66,7 +66,7 @@ TEST(string) {
     "foobar", "", "a b c"
   };
   for (word i = 0; i < kTestStringCount; i++) {
-    Builder builder;
+    MessageBuffer builder;
     string str = kTestStrings[i];
     p_string val = builder.new_string(str);
     assert val.type() == p_value::vtString;
@@ -78,7 +78,7 @@ TEST(string) {
 }
 
 TEST(string_comparison) {
-  Builder builder;
+  MessageBuffer builder;
   assert builder.new_string("") < string("a");
   assert builder.new_string("a") < string("aa");
   assert builder.new_string("aa") < string("aaa");
@@ -91,13 +91,13 @@ TEST(string_comparison) {
 }
 
 TEST(null) {
-  Builder builder;
+  MessageBuffer builder;
   p_null null = builder.get_null();
   assert null.type() == p_value::vtNull;
 }
 
 TEST(array) {
-  Builder builder;
+  MessageBuffer builder;
   static const word kSize = 5;
   static const string kElements[kSize] = {
     "foo", "bar", "baz", "quux", "bleh"
@@ -115,4 +115,6 @@ TEST(array) {
     p_string str = cast<p_string>(val);
     assert str == kElements[i];
   }
+  array.set(0, array);
+  assert array[0] == array;
 }

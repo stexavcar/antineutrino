@@ -22,6 +22,7 @@ public:
   void ensure_capacity(word length);
   array<T> allocate(word length);
   array<T> raw_data();
+  vector<T> as_vector();
 
 private:
   void extend_capacity(word required);

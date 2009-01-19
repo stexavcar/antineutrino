@@ -29,6 +29,7 @@ public:
 template < typename T, class D = ptr_delete<T> >
 class own_ptr : public nocopy {
 public:
+  own_ptr() : value_(NULL) { }
   own_ptr(T *value) : value_(value) { }
   ~own_ptr();
 
@@ -37,6 +38,7 @@ public:
    * retain ownership.
    */
   inline T *operator *() { return value_; }
+  inline void set(T *t) { value_ = t; }
   inline T *release();
   inline T *operator ->() { return value_; }
 

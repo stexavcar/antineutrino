@@ -70,7 +70,11 @@ word UnitTest::run_all_tests() {
   return run_count;
 }
 
+vector<const char*> UnitTest::args_;
+bool UnitTest::spawned_ = false;
+
 int UnitTest::main(vector<const char*> args) {
+  args_ = args;
   Abort::install_signal_handlers();
   word total_run_count = 0;
   bool print_run_count = true;
@@ -81,6 +85,8 @@ int UnitTest::main(vector<const char*> args) {
       print_run_count = false;
     } else if (arg == "--all") {
       run_all_tests();
+    } else if (arg == "--spawned") {
+      spawned_ = true;
     } else {
       word current_run_count = 0;
       own_vector<const char> str_copy(string::dup(arg).chars());

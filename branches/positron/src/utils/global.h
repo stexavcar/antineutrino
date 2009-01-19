@@ -44,6 +44,7 @@ public:
   // Uses const char* rather than string to not get a dependency on
   // string.h from global.h.
   const char *file() const { return file_; }
+  const char *short_name() const;
   word line() const { return line_; }
 private:
   const char *file_;

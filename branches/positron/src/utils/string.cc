@@ -69,7 +69,7 @@ variant_type variant_type::kInstance;
 
 void variant_type::print_on(const void *data, string modifiers,
     string_stream &stream) {
-  stream.add("#<unknown>");
+  stream.add("#<cannot display>");
 }
 
 variant_type_impl<word> variant_type_impl<word>::kInstance;
@@ -175,6 +175,12 @@ string string::dup(string arg) {
   memcpy(result, arg.start(), arg.length());
   result[arg.length()] = '\0';
   return string(result, arg.length());
+}
+
+void string::println(FILE *out) {
+  for (word i = 0; i < length(); i++)
+    fputc(this->operator[](i), out);
+  fputc('\n', out);
 }
 
 } // namespace positron

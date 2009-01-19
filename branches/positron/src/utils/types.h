@@ -4,7 +4,7 @@
 
 namespace positron {
 
-class Builder;
+class MessageBuffer;
 class p_array;
 class p_integer;
 class p_null;

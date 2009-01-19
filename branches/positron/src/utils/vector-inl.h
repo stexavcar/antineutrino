@@ -1,5 +1,5 @@
-#ifndef _UTILS_ARRAY_INL
-#define _UTILS_ARRAY_INL
+#ifndef _UTILS_VECTOR_INL
+#define _UTILS_VECTOR_INL
 
 #include "utils/vector.h"
 #include "utils/check-inl.h"
@@ -18,6 +18,12 @@ const T &vector<T>::operator[](word offset) const {
   return data_[offset];
 }
 
+template <typename T>
+void pair<T>::set(const T &a, const T &b) {
+  this->operator[](0) = a;
+  this->operator[](1) = b;
+}
+
 } // namespace positron
 
-#endif // _UTILS_ARRAY_INL
+#endif // _UTILS_VECTOR_INL

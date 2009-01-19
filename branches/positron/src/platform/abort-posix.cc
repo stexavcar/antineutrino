@@ -134,6 +134,7 @@ static void print_error_report(int signum, siginfo_t *siginfo, void *ptr) {
     fprintf(stderr, "errno:  %s\n", strerror(errno));
   }
   print_stack_trace(ptr, "positron::");
+  Abort::finalize();
   exit(signum);
 }
 

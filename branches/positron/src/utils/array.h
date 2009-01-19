@@ -14,8 +14,8 @@ public:
   array(T *data) : data_(data) { }
 #endif // ARRAY_BOUNDS_CHECKS
   T &operator[](word offset);
-  array<T> from(word start);
   const T &operator[](word offset) const;
+  array<T> from(word start);
   T *start() { return data_; }
 private:
   T *data_;

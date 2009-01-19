@@ -12,16 +12,18 @@ public:
 
   struct DTable {
     Type (*value_type)(const p_value *that);
+    bool (*value_eq)(const p_value *that, p_value other);
     int32_t (*integer_value)(const p_integer *that);
     word (*string_length)(const p_string *that);
     uint32_t (*string_get)(const p_string *that, word offset);
     word (*array_length)(const p_array *that);
     p_value (*array_get)(const p_array *that, word index);
-    void (*array_set)(p_array *that, word index, p_value value);
+    bool (*array_set)(p_array *that, word index, p_value value);
     word (*string_compare)(const p_string *that, const string &other);
   };
 
   inline Type type() const { return dtable().value_type(this); }
+  inline bool operator==(p_value that) const { return dtable().value_eq(this, that); }
   uint32_t data() const { return data_; }
   DTable &dtable() const { return dtable_; }
 
@@ -70,7 +72,7 @@ class p_array : public p_value {
 public:
   inline word length() const { return dtable().array_length(this); }
   inline p_value operator[](word index) const { return dtable().array_get(this, index); }
-  inline void set(word index, p_value value) { return dtable().array_set(this, index, value); }
+  inline bool set(word index, p_value value) { return dtable().array_set(this, index, value); }
   inline p_array(uint32_t data, DTable &dtable) : p_value(data, dtable) { }
   static const p_value::Type kTypeTag = p_value::vtArray;
 };

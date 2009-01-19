@@ -49,7 +49,7 @@ bool Raw::has_singleton_tag(uint32_t data) {
 }
 
 template <typename T>
-T Builder::to_plankton(object &obj) {
+T MessageBuffer::to_plankton(object &obj) {
   word offset = obj.start() - this->data().start();
   return T(Raw::tag_object(static_cast<uint32_t>(offset)), this->dtable());
 }

@@ -26,11 +26,13 @@ public:
   bool operator==(const string &that) const;
   bool contains(char c);
   word length() const { return length_; }
-  const char *start() { return chars_; }
+  const char *start() const { return chars_; }
+  const char *end() const { return chars_ + length_; }
   const char &operator[](word i) const { return chars_[i]; }
   static string dup(string arg);
   vector<const char> chars() { return vector<const char>(chars_, length_); }
   bool is_empty() { return chars_ == NULL; }
+  void println(FILE *out = stdout);
 private:
   const char *chars_;
   word length_;
