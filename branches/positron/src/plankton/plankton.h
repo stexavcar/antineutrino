@@ -24,13 +24,13 @@ public:
 
   inline Type type() const { return dtable().value_type(this); }
   inline bool operator==(p_value that) const { return dtable().value_eq(this, that); }
-  uint32_t data() const { return data_; }
+  word data() const { return data_; }
   DTable &dtable() const { return dtable_; }
 
-  inline p_value(uint32_t data, DTable &dtable) : data_(data), dtable_(dtable) { }
+  inline p_value(word data, DTable &dtable) : data_(data), dtable_(dtable) { }
 
 private:
-  uint32_t data_;
+  word data_;
   DTable &dtable_;
 };
 

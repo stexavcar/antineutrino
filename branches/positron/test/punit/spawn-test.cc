@@ -5,21 +5,41 @@
 
 
 #include <stdlib.h>
+#include <unistd.h>
 
 
 using namespace positron;
 
 
-TEST(simple) {
+class TestChildProcess : public ChildProcess {
+public:
+  bool open(const string &test_name);
+  ~TestChildProcess();
+};
+
+
+TestChildProcess::~TestChildProcess() {
+  assert wait() == 0;
+}
+
+
+bool TestChildProcess::open(const string &test_name) {
   string self = UnitTest::args()[0];
   embed_vector<string, 3> args;
   args[0] = self;
   args[1] = "--spawned";
-  args[2] = "spawn-test/child";
+  string_stream full_test_name;
+  full_test_name.add("spawn-test/%", positron::args(test_name));
+  args[2] = full_test_name.raw_c_str();
   embed_vector<pair<string>, 2> env;
   env[0].set("foo", "bar");
-  ChildProcess child(self, args, env);
-  assert child.open();
+  return ChildProcess::open(self, args, env);
+}
+
+
+TEST(hul_igennem) {
+  TestChildProcess child;
+  assert child.open("hul_igennem_child");
   for (word i = 0; i < 100; i++) {
     MessageBuffer buffer;
     p_value obj = buffer.receive(child.socket());
@@ -30,11 +50,10 @@ TEST(simple) {
   p_value last = buffer.receive(child.socket());
   assert is<p_string>(last);
   assert (cast<p_string>(last)) == "bye!";
-  assert child.wait() == 0;
 }
 
 
-TEST(child) {
+TEST(hul_igennem_child) {
   if (!UnitTest::spawned()) return;
   assert string("bar") == string(getenv("foo"));
   ParentProcess parent;
@@ -45,4 +64,43 @@ TEST(child) {
   }
   MessageBuffer builder;
   builder.send(builder.new_string("bye!"), parent.socket());
+}
+
+
+TEST(waiting) {
+  TestChildProcess child;
+  assert child.open("waiting_child");
+  {
+    MessageBuffer builder;
+    p_value message = builder.receive(child.socket());
+    assert (cast<p_string>(message)) == string("ping");
+  }
+  printf("parent pinged\n");
+  // Wait .1 second to give the child a chance to wait.
+  ::usleep(100000);
+  {
+    MessageBuffer builder;
+    builder.send(builder.new_string("pong"), child.socket());
+  }
+  printf("parent ponged\n");
+}
+
+
+TEST(waiting_child) {
+  if (!UnitTest::spawned()) return;
+  ParentProcess parent;
+  assert parent.open();
+  // Wait .1 second to give the parent a chance to wait.
+  ::usleep(100000);
+  {
+    MessageBuffer builder;
+    builder.send(builder.new_string("ping"), parent.socket());
+  }
+  printf("child pinged\n");
+  {
+    MessageBuffer builder;
+    p_value message = builder.receive(parent.socket());
+    assert (cast<p_string>(message)) == string("pong");
+  }
+  printf("child ponged\n");
 }

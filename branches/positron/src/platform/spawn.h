@@ -23,21 +23,14 @@ private:
 class ChildProcess {
 public:
   class Data;
-  ChildProcess(string &command, vector<string> &args,
-      vector< pair<string> > &env)
-    : data_(NULL), command_(command), args_(args), env_(env) { }
+  ChildProcess()
+    : data_(NULL) { }
   ISocket &socket();
-  bool open();
+  bool open(string &command, vector<string> &args, vector< pair<string> > &env);
   word wait();
 private:
   Data *data() { return data_; }
-  string &command() { return command_; }
-  vector<string> &args() { return args_; }
-  vector< pair<string> > &env() { return env_; }
   Data *data_;
-  string &command_;
-  vector<string> &args_;
-  vector< pair<string> > env_;
 };
 
 } // namespace positron

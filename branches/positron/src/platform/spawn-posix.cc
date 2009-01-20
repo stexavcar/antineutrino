@@ -105,7 +105,7 @@ private:
 bool Pipe::open() {
   embed_array<int, 2> pipes;
   if (::pipe(pipes.start()) == -1) {
-    LOG().error("Error creating pipe (%)", positron::args(string(::strerror(errno))));
+    LOG().error("Error creating pipe (%)", args(string(::strerror(errno))));
     return false;
   }
   read_fd_ = pipes[0];
@@ -120,7 +120,7 @@ bool HalfChannel::set_remain_open_on_exec() {
 
 bool HalfChannel::set_remain_open_on_exec(int fd) {
   if (::fcntl(fd, F_SETFD, 0) == -1) {
-    LOG().error("Error fcntl-ing pipe (%)", positron::args(string(::strerror(errno))));
+    LOG().error("Error fcntl-ing pipe (%)", args(string(::strerror(errno))));
     return false;
   }
   return true;
@@ -130,7 +130,8 @@ bool Channel::open() {
   return to().open() && from().open();
 }
 
-bool ChildProcess::open() {
+bool ChildProcess::open(string &command, vector<string> &args,
+    vector< pair<string> > &env) {
   // Create a full communication channel.
   Channel channel;
   if (!channel.open())
@@ -147,27 +148,27 @@ bool ChildProcess::open() {
     return false;
   } else if (pid == 0) {
     // We've successfully created the child process.  Now run the executable.
-    const char *file = command().start();
+    const char *file = command.start();
     // Copy arguments into raw null-terminated array.
     array<char*> arg_arr = TO_ARRAY(char*,
-        new char*[args().length() + 1], args().length() + 1);
-    for (word i = 0; i < args().length(); i++)
-      arg_arr[i] = ::strdup(args()[i].start());
-    arg_arr[args().length()] = NULL;
+        new char*[args.length() + 1], args.length() + 1);
+    for (word i = 0; i < args.length(); i++)
+      arg_arr[i] = ::strdup(args[i].start());
+    arg_arr[args.length()] = NULL;
     // Copy environmant pairs ("x", "y") into a null-terminated list of
     // strings "x=y" strings.
     array<char*> env_arr = TO_ARRAY(char*,
-        new char*[env().length() + 2], env().length() + 2);
-    for (word i = 0; i < env().length(); i++) {
+        new char*[env.length() + 2], env.length() + 2);
+    for (word i = 0; i < env.length(); i++) {
       string_stream stream;
-      stream.add("%=%", positron::args(env()[i][0], env()[i][1]));
+      stream.add("%=%", positron::args(env[i][0], env[i][1]));
       env_arr[i] = strdup(stream.raw_c_str().start());
     }
     string_stream stream;
     stream.add("%=%:%", positron::args(kMasterEnvVariable, there.in_fd(),
         there.out_fd()));
-    env_arr[env().length()] = strdup(stream.raw_c_str().start());
-    env_arr[env().length() + 1] = NULL;
+    env_arr[env.length()] = strdup(stream.raw_c_str().start());
+    env_arr[env.length() + 1] = NULL;
     ::execve(file, arg_arr.start(), env_arr.start());
     assert false;
     return true;
@@ -183,33 +184,39 @@ ISocket &ChildProcess::socket() {
 }
 
 word ChildProcess::wait() {
-  int stat;
-  ::waitpid(data()->child(), &stat, 0);
-  return stat;
+  int stat = 0;
+  pid_t pid = ::waitpid(data()->child(), &stat, 0);
+  if (pid == -1) {
+    LOG().error("Error waiting for child (%)", positron::args(string(::strerror(errno))));
+    return -1;
+  } else {
+    assert pid == data()->child();
+    return stat;
+  }
 }
 
 bool ParentProcess::open() {
   const char *raw_master = getenv(kMasterEnvVariable.start());
   if (raw_master == NULL) {
-    LOG().error("Could not read master variable", positron::args(0));
+    LOG().error("Could not read master variable", args(0));
     return false;
   }
   string master = raw_master;
   char *end = NULL;
   int in_fd = strtol(master.start(), &end, 10);
   if (*end != ':') {
-    LOG().error("Error parsing master fd %", positron::args(master));
+    LOG().error("Error parsing master fd %", args(master));
     return false;
   }
   end++;
   int out_fd = strtol(end, &end, 10);
   if (end != master.end()) {
-    LOG().error("Error parsing master fd %", positron::args(master));
+    LOG().error("Error parsing master fd %", args(master));
     return false;
   }
   FileSocket socket(HalfChannel(in_fd, out_fd));
   data_ = new ParentProcess::Data(socket);
-  LOG().info("Opened connection to master through %", positron::args(master));
+  LOG().info("Opened connection to master through %", args(master));
   return true;
 }
 
