@@ -102,7 +102,10 @@ class Flags(object):
 
 
 def get_flag_processor(config, args):
-  return MsvcFlags(config, args)
+  if config.vars.get('toolchain', None) == 'msvc':
+    return MsvcFlags(config, args)
+  else:
+    return GccFlags(config, args)
 
 
 class MsvcFlags(Flags):
@@ -110,10 +113,21 @@ class MsvcFlags(Flags):
   def __init__(self, config, args):
     super(MsvcFlags, self).__init__(config, args)
   
-  kDialect = { }
+  kDialect = {
+    'nologo': '/nologo'
+  }
+  
   kWarning = { }
-  kCodegen = { }
-  kOptimize = { }
+
+  kCodegen = {
+    'no-rtti': '/GR-',
+    'no-exceptions': '/EHs-c-'
+  }
+
+  kOptimize = {
+    'speed': '/O2'
+  }
+
   kWordsize = { }
   
   def process_dialects(self, dialects):
@@ -136,7 +150,8 @@ class MsvcFlags(Flags):
     self.apply_flag_map(size, MsvcFlags.kWordsize, self.flags['LINKFLAGS'])
   
   def process_debug(self, mode):
-    pass
+    if mode == 'debug':
+      self.flags['CXXFLAGS'].append('/Zi')
 
 
 class GccFlags(Flags):

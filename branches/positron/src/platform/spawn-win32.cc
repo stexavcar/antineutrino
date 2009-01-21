@@ -1,4 +1,7 @@
 #include "platform/spawn.h"
+#include "utils/log.h"
+#include "utils/string-inl.h"
+#include <windows.h>
 
 
 namespace positron {
@@ -23,7 +26,17 @@ ISocket &ChildProcess::socket() {
 
 bool ChildProcess::open(string &command, vector<string> &args,
     vector< pair<string> > &env) {
-  return false;
+  STARTUPINFOA si_startup_info;
+  PROCESS_INFORMATION pi_process_info;
+  memset(&si_startup_info, 0, sizeof(si_startup_info));
+  memset(&pi_process_info, 0, sizeof(pi_process_info));
+  si_startup_info.cb = sizeof(si_startup_info);
+  if (!CreateProcess(command.start(), 0, 0, 0, true, 0, 0, 0,
+        &si_startup_info, &pi_process_info)) {
+    LOG().error("Error creating process (%)", positron::args(GetLastError()));
+    return false;
+  }
+  return true;
 }
 
 word ChildProcess::wait() {
