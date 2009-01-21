@@ -39,6 +39,10 @@ class PyRule(Rule):
     return self.expander(**vars)
 
 
+def escape(str):
+  return str.replace('\\', '\\\\')
+
+
 kPartPattern = re.compile(r'\$\{\s*(\w+)\s*:\s*(\w+)\s*\}')
 kPlaceholderPattern = re.compile(r'\$\{\s*(\w+)\s*\}')
 class PollockProcessor(object):
@@ -132,7 +136,7 @@ class PollockProcessor(object):
     return """\
 #line 1 "%(path)s"
 %(source)s""" % {
-      'path': path,
+      'path': escape(path),
       'source': self.process_source(source, path, vars)
     }
 

@@ -101,6 +101,44 @@ class Flags(object):
     return self.flags
 
 
+def get_flag_processor(config, args):
+  return MsvcFlags(config, args)
+
+
+class MsvcFlags(Flags):
+
+  def __init__(self, config, args):
+    super(MsvcFlags, self).__init__(config, args)
+  
+  kDialect = { }
+  kWarning = { }
+  kCodegen = { }
+  kOptimize = { }
+  kWordsize = { }
+  
+  def process_dialects(self, dialects):
+    self.apply_flag_map(dialects, MsvcFlags.kDialect, self.flags['CXXFLAGS'])
+  
+  def process_warnings(self, warnings):
+    self.apply_flag_map(warnings, MsvcFlags.kWarning, self.flags['WARNINGFLAGS'])
+  
+  def process_codegen(self, codegen):
+    self.apply_flag_map(codegen, MsvcFlags.kCodegen, self.flags['CXXFLAGS'])
+    
+  def process_defines(self, defines):
+    self.flags['CPPDEFINES'] += defines
+  
+  def process_optimize(self, level):
+    self.apply_flag_map(level, MsvcFlags.kOptimize, self.flags['CXXFLAGS'])
+
+  def process_wordsize(self, size):
+    self.apply_flag_map(size, MsvcFlags.kWordsize, self.flags['CXXFLAGS'])
+    self.apply_flag_map(size, MsvcFlags.kWordsize, self.flags['LINKFLAGS'])
+  
+  def process_debug(self, mode):
+    pass
+
+
 class GccFlags(Flags):
 
   kDialect = {
@@ -208,7 +246,7 @@ class IncludeEnvironment(object):
     self.config.vars[name] = value
 
   def flags(self, name, **args):
-    flags = GccFlags(self.config, args)
+    flags = get_flag_processor(self.config, args)
     self.config.flags[name] = flags
 
   def get_exec_environment(self):

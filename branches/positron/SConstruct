@@ -6,6 +6,16 @@ sys.path.append(root)
 from tools import build, pollock
 
 
+def guess_toolchain():
+  tools = Environment()['TOOLS']
+  if 'gcc' in tools:
+    return 'gcc'
+  elif 'msvc' in tools:
+    return 'msvc'
+  else:
+    return None
+
+
 kOptions = [
   ('mode', {
     'values': ['debug', 'release'],
@@ -14,6 +24,10 @@ kOptions = [
   ('wordsize', {
     'values': ['32', '64'],
     'default': '32'
+  }),
+  ('toolchain', {
+    'values': ['msvc', 'gcc'],
+    'default': guess_toolchain()
   })
 ]
 

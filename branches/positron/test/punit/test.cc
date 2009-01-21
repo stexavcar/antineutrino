@@ -12,9 +12,8 @@ UnitTest::UnitTest(string file, string name, test_callback_t *callback)
   : name_(name)
   , callback_(callback) {
   // Find the base name of this test.
-  char *basename = strrchr(file.start(), '/');
-  if (!basename) basename = strdup(file.start());
-  else basename = strdup(basename + 1);
+  const char *found_basename = strrchr(file.start(), '/');
+  char *basename = strdup(found_basename ? found_basename + 1 : file.start());
   // Drop the extension, if there is one.
   char *extension = strrchr(basename, '.');
   if (extension) *extension = 0;
@@ -90,7 +89,7 @@ int UnitTest::main(vector<const char*> args) {
     } else {
       word current_run_count = 0;
       own_vector<const char> str_copy(string::dup(arg).chars());
-      char *testname = strchr(str_copy.start(), '/');
+      char *testname = strchr(const_cast<char*>(str_copy.start()), '/');
       if (testname) {
         // Split the string in two by nulling the colon
         *testname = 0;

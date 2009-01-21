@@ -5,7 +5,6 @@
 
 
 #include <stdlib.h>
-#include <unistd.h>
 
 
 using namespace positron;
@@ -75,14 +74,11 @@ TEST(waiting) {
     p_value message = builder.receive(child.socket());
     assert (cast<p_string>(message)) == string("ping");
   }
-  printf("parent pinged\n");
   // Wait .1 second to give the child a chance to wait.
-  ::usleep(100000);
   {
     MessageBuffer builder;
     builder.send(builder.new_string("pong"), child.socket());
   }
-  printf("parent ponged\n");
 }
 
 
@@ -91,16 +87,13 @@ TEST(waiting_child) {
   ParentProcess parent;
   assert parent.open();
   // Wait .1 second to give the parent a chance to wait.
-  ::usleep(100000);
   {
     MessageBuffer builder;
     builder.send(builder.new_string("ping"), parent.socket());
   }
-  printf("child pinged\n");
   {
     MessageBuffer builder;
     p_value message = builder.receive(parent.socket());
     assert (cast<p_string>(message)) == string("pong");
   }
-  printf("child ponged\n");
 }

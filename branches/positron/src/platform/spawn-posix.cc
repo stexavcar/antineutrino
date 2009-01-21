@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <sys/wait.h>
 
 namespace positron {
 
