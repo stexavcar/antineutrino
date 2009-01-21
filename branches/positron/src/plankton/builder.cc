@@ -61,8 +61,11 @@ word ValueImpl::string_compare(const p_string *that, const string &other) {
   for (word i = 0; i < other.length(); i++) {
     uint32_t ac = str.at<uint32_t>(2 + i);
     uint32_t bc = static_cast<uint32_t>(other[i]);
-    if (ac != bc)
-      return ac - bc;
+    if (ac != bc) {
+      // The values have to be cast to words first, or a 32-bit negative
+      // number may be zero-extended to 64 bits, making it positive.
+      return static_cast<word>(ac) - static_cast<word>(bc);
+    }
   }
   return 0;
 }

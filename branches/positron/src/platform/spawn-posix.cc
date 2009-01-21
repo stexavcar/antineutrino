@@ -185,14 +185,19 @@ ISocket &ChildProcess::socket() {
 }
 
 word ChildProcess::wait() {
-  int stat = 0;
-  pid_t pid = ::waitpid(data()->child(), &stat, 0);
-  if (pid == -1) {
-    LOG().error("Error waiting for child (%)", positron::args(string(::strerror(errno))));
-    return -1;
-  } else {
-    assert pid == data()->child();
-    return stat;
+  while (true) {
+    int stat = 0;
+    pid_t pid = ::waitpid(data()->child(), &stat, 0);
+    if (pid != -1) {
+      assert pid == data()->child();
+      return stat;
+    } else if (errno == EINTR) {
+      // If the system call gets interrupted we just try again.
+      continue;
+    } else {
+      LOG().error("Error waiting for child (%)", positron::args(string(::strerror(errno))));
+      return -1;
+    }
   }
 }
 
