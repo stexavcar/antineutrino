@@ -41,13 +41,13 @@ TEST(hul_igennem) {
   assert child.open("hul_igennem_child");
   p_object proxy = child.proxy();
   for (word i = 0; i < 100; i++) {
-    MessageBuffer buffer;
-    p_value obj = proxy.send(buffer.new_string("next_int"));
+    MessageOut buffer;
+    p_value obj = proxy.send_sync(buffer.new_string("next_int"));
     assert is<p_integer>(obj);
     assert (cast<p_integer>(obj)).value() == i;
   }
-  MessageBuffer buffer;
-  p_value obj = proxy.send(buffer.new_string("exit"));
+  MessageOut buffer;
+  p_value obj = proxy.send_sync(buffer.new_string("exit"));
   assert is<p_string>(obj);
   assert (cast<p_string>(obj)) == string("bye");
 }
@@ -60,13 +60,12 @@ TEST(hul_igennem_child) {
   assert parent.open();
   word count = 0;
   while (true) {
-    Message message;
-    if (!parent.receive(message))
-      return;
+    MessageIn message;
+    assert parent.receive(message);
     if (message.selector() == "next_int") {
-      message.reply(MessageBuffer::new_integer(count++));
+      message.reply(MessageOut::new_integer(count++));
     } else if (message.selector() == "exit") {
-      MessageBuffer buf;
+      MessageOut buf;
       message.reply(buf.new_string("bye"));
       return;
     }
@@ -74,36 +73,59 @@ TEST(hul_igennem_child) {
 }
 
 
-/*
-TEST(waiting) {
+TEST(sequence) {
   TestChildProcess child;
-  assert child.open("waiting_child");
-  {
-    MessageBuffer builder;
-    p_value message = builder.receive(child.socket());
-    assert (cast<p_string>(message)) == string("ping");
+  assert child.open("sequence_child");
+  for (word i = 0; i < 1000; i++) {
+    MessageOut message;
+    p_value v = child.proxy().send_sync(message.new_string("ping"));
+    assert (cast<p_integer>(v).value()) == i * 3;
   }
-  // Wait .1 second to give the child a chance to wait.
-  {
-    MessageBuffer builder;
-    builder.send(builder.new_string("pong"), child.socket());
+  for (word i = 0; i < 1000; i++) {
+    MessageIn message;
+    child.receive(message);
+    assert message.selector() == string("pong");
+    message.reply(MessageOut::new_integer(i + 8));
   }
 }
 
 
-TEST(waiting_child) {
+TEST(sequence_child) {
   if (!UnitTest::spawned()) return;
   ParentProcess parent;
   assert parent.open();
-  // Wait .1 second to give the parent a chance to wait.
-  {
-    MessageBuffer builder;
-    builder.send(builder.new_string("ping"), parent.socket());
+  for (word i = 0; i < 1000; i++) {
+    MessageIn message;
+    assert parent.receive(message);
+    assert message.selector() == string("ping");
+    message.reply(MessageOut::new_integer(i * 3));
   }
-  {
-    MessageBuffer builder;
-    p_value message = builder.receive(parent.socket());
-    assert (cast<p_string>(message)) == string("pong");
+  for (word i = 0; i < 1000; i++) {
+    MessageOut message;
+    p_value v = parent.proxy().send_sync(message.new_string("pong"));
+    assert (cast<p_integer>(v).value()) == i + 8;
   }
 }
-*/
+
+
+TEST(sync_auto_reply) {
+  TestChildProcess child;
+  assert child.open("sync_auto_reply_child");
+  for (word i = 0; i < 100; i++) {
+    MessageOut message;
+    p_value v = child.proxy().send_sync(message.new_string("pang"));
+    assert is<p_void>(v);
+  }
+}
+
+
+TEST(sync_auto_reply_child) {
+  if (!UnitTest::spawned()) return;
+  ParentProcess parent;
+  assert parent.open();
+  for (word i = 0; i < 100; i++) {
+    MessageIn message;
+    assert parent.receive(message);
+    assert message.selector() == string("pang");
+  }
+}

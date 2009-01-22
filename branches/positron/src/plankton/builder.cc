@@ -93,11 +93,11 @@ p_value ValueImpl::array_get(const p_array *that, word index) {
   return p_value(data, that->dtable());
 }
 
-FrozenObject PHeap::resolve(word offset) {
+FrozenObject MessageHeap::resolve(word offset) {
   return FrozenObject(memory().as_array().from(offset));
 }
 
-PHeap::PHeap()
+MessageHeap::MessageHeap()
   : dtable_(this) {
 }
 
@@ -108,7 +108,7 @@ FrozenObject ValueImpl::open(const p_value *obj) {
 
 DTableImpl DTableImpl::kStaticInstance(NULL);
 
-DTableImpl::DTableImpl(PHeap *heap) : heap_(heap) {
+DTableImpl::DTableImpl(MessageHeap *heap) : heap_(heap) {
   value.type = &ValueImpl::value_type;
   value.eq = &ValueImpl::value_eq;
   value.impl_id = &ValueImpl::value_impl_id;
@@ -123,11 +123,11 @@ DTableImpl::DTableImpl(PHeap *heap) : heap_(heap) {
 
 // --- F a c t o r y   m e t h o d s ---
 
-p_integer MessageBuffer::new_integer(int32_t value) {
+p_integer MessageOut::new_integer(int32_t value) {
   return p_integer(Raw::tag_integer(value), &DTableImpl::static_instance());
 }
 
-p_string MessageBuffer::new_string(string value) {
+p_string MessageOut::new_string(string value) {
   FrozenObject obj = allocate(p_value::vtString, 2 + value.length());
   obj.at<uint32_t>(1) = value.length();
   for (word i = 0; i < value.length(); i++)
@@ -135,7 +135,7 @@ p_string MessageBuffer::new_string(string value) {
   return to_plankton<p_string>(obj);
 }
 
-p_array MessageBuffer::new_array(word length) {
+p_array MessageOut::new_array(word length) {
   assert length >= 0;
   FrozenObject obj = allocate(p_value::vtArray, 2 + length);
   obj.at<uint32_t>(1) = length;
@@ -145,30 +145,35 @@ p_array MessageBuffer::new_array(word length) {
   return to_plankton<p_array>(obj);
 }
 
-p_null MessageBuffer::get_null() {
+p_null MessageOut::get_null() {
   return p_null(Raw::tag_singleton(p_value::vtNull), &DTableImpl::static_instance());
+}
+
+p_void MessageOut::get_void() {
+  return p_void(Raw::tag_singleton(p_value::vtVoid), &DTableImpl::static_instance());
 }
 
 // --- B u i l d e r ---
 
 
-PHeap *PHeap::get(p_value::DTable *dtable) {
+MessageHeap *MessageHeap::get(p_value::DTable *dtable) {
   return dtable ? &static_cast<DTableImpl*>(dtable)->heap() : NULL;
 }
 
-vector<uint8_t> MessageBuffer::memory() {
+vector<uint8_t> MessageOut::memory() {
   return data().as_vector();
 }
 
-FrozenObject MessageBuffer::allocate(p_value::Type type, word size) {
+FrozenObject MessageOut::allocate(p_value::Type type, word size) {
   assert size >= 1;
   FrozenObject result = FrozenObject(data().allocate(sizeof(uint32_t) * size));
   result.at<uint32_t>(0) = type;
   return result;
 }
 
-bool Message::reply(p_value value) {
+bool MessageIn::reply(p_value value) {
   assert stream_ != static_cast<void*>(NULL);
+  has_replied_ = true;
   return stream_->send_reply(*this, value);
 }
 

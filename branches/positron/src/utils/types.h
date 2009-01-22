@@ -19,9 +19,9 @@ typedef unsigned __int64 uint64_t;
 namespace positron {
 
 
-class PHeap;
-class Message;
-class MessageBuffer;
+class MessageHeap;
+class MessageIn;
+class MessageOut;
 class p_array;
 class p_integer;
 class p_null;

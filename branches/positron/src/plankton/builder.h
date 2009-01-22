@@ -11,11 +11,11 @@ namespace positron {
 
 class DTableImpl : public p_value::DTable {
 public:
-  DTableImpl(PHeap *heap);
+  DTableImpl(MessageHeap *heap);
   static DTableImpl &static_instance() { return kStaticInstance; }
-  PHeap &heap() { return *heap_; }
+  MessageHeap &heap() { return *heap_; }
 private:
-  PHeap *heap_;
+  MessageHeap *heap_;
   static DTableImpl kStaticInstance;
 };
 
@@ -30,22 +30,22 @@ private:
   array<uint8_t> data_;
 };
 
-class PHeap {
+class MessageHeap {
 public:
-  PHeap();
-  virtual ~PHeap() { }
+  MessageHeap();
+  virtual ~MessageHeap() { }
   virtual vector<uint8_t> memory() = 0;
   FrozenObject resolve(word offset);
   template <typename T> T to_plankton(FrozenObject &obj);
 
   static void *id() { return &DTableImpl::static_instance(); }
-  static PHeap *get(p_value::DTable *dtable);
+  static MessageHeap *get(p_value::DTable *dtable);
   DTableImpl &dtable() { return dtable_; }
 private:
   DTableImpl dtable_;
 };
 
-class FrozenHeap : public PHeap {
+class FrozenHeap : public MessageHeap {
 public:
   FrozenHeap(vector<uint8_t> data) : data_(data) { }
   virtual vector<uint8_t> memory() { return data(); }
@@ -54,10 +54,11 @@ private:
   own_vector<uint8_t> data_;
 };
 
-class MessageBuffer : public PHeap {
+class MessageOut : public MessageHeap {
 public:
   static p_integer new_integer(int32_t value);
   static p_null get_null();
+  static p_void get_void();
   p_string new_string(string value);
   p_array new_array(word length);
 
@@ -71,22 +72,27 @@ private:
 
 class IStream {
 public:
-  virtual bool send_reply(Message &message, p_value value) = 0;
+  virtual bool send_reply(MessageIn &message, p_value value) = 0;
 };
 
-class Message {
+class MessageIn {
 public:
-  Message() : stream_(NULL) { }
+  MessageIn() : stream_(NULL), is_synchronous_(false), has_replied_(false) { }
+  inline ~MessageIn();
   bool reply(p_value value);
   void set_selector(p_string v) { selector_ = v; }
   p_string selector() { return selector_; }
   void set_args(p_array v) { args_ = v; }
   p_array args() { return args_; }
   void set_stream(IStream *v) { stream_ = v; }
+  void set_is_synchronous(bool v) { is_synchronous_ = v; }
+  bool is_synchronous() { return is_synchronous_; }
 private:
   IStream *stream_;
   p_string selector_;
   p_array args_;
+  bool is_synchronous_;
+  bool has_replied_;
 };
 
 class Raw {

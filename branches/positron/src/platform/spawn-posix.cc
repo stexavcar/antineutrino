@@ -62,10 +62,11 @@ public:
     , out_(channel.out_fd()) { }
   word write(const vector<uint8_t> &data);
   word read(vector<uint8_t> data);
-  void send_message(PHeap &heap, p_string name, p_array args);
-  bool receive_message(Message &message);
-  bool send_reply(Message &message, p_value value);
-  p_value receive_reply(PHeap &heap);
+  void send_message(MessageHeap &heap, p_string name, p_array args,
+      bool is_synchronous);
+  bool receive_message(MessageIn &message);
+  bool send_reply(MessageIn &message, p_value value);
+  p_value receive_reply(MessageHeap &heap);
 private:
   HalfChannel &channel() { return channel_; }
   int in() { return in_; }
@@ -86,6 +87,7 @@ struct MessageHeader {
     uint32_t heap_size;
     uint32_t name;
     uint32_t args;
+    uint32_t is_synchronous;
   };
   union {
     Data data;
@@ -104,18 +106,19 @@ struct ReplyHeader {
   };
 };
 
-void FileSocket::send_message(PHeap &heap, p_string name,
-    p_array args) {
+void FileSocket::send_message(MessageHeap &heap, p_string name,
+    p_array args, bool is_synchronous) {
   MessageHeader header;
   vector<uint8_t> memory = heap.memory();
   header.data.heap_size = memory.length();
   header.data.name = static_cast<uint32_t>(name.data());
   header.data.args = static_cast<uint32_t>(args.data());
+  header.data.is_synchronous = is_synchronous;
   write(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
   write(memory);
 }
 
-bool FileSocket::receive_message(Message &message) {
+bool FileSocket::receive_message(MessageIn &message) {
   MessageHeader header;
   read(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
   own_vector<uint8_t> memory(vector<uint8_t>::allocate(header.data.heap_size));
@@ -124,13 +127,18 @@ bool FileSocket::receive_message(Message &message) {
   message.set_selector(p_string(header.data.name, &heap->dtable()));
   message.set_args(p_array(header.data.args, &heap->dtable()));
   message.set_stream(this);
+  message.set_is_synchronous(header.data.is_synchronous);
   return true;
 }
 
-bool FileSocket::send_reply(Message &message, p_value value) {
-  assert value.impl_id() == PHeap::id();
+bool FileSocket::send_reply(MessageIn &message, p_value value) {
+  if (!message.is_synchronous()) {
+    LOG().warn("Reply to asynchronous message ignored.", args());
+    return false;
+  }
+  assert value.impl_id() == MessageHeap::id();
   ReplyHeader header;
-  PHeap *heap = PHeap::get(value.dtable());
+  MessageHeap *heap = MessageHeap::get(value.dtable());
   vector<uint8_t> memory;
   if (heap != NULL)
     memory = heap->memory();
@@ -141,7 +149,7 @@ bool FileSocket::send_reply(Message &message, p_value value) {
   return true;
 }
 
-p_value FileSocket::receive_reply(PHeap &heap) {
+p_value FileSocket::receive_reply(MessageHeap &heap) {
   ReplyHeader header;
   read(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
   own_vector<uint8_t> memory(vector<uint8_t>::allocate(header.data.heap_size));
@@ -166,29 +174,51 @@ public:
   pid_t child() { return child_; }
   FileSocket &socket() { return socket_; }
   static p_value send_bridge(const p_object *obj, p_string name,
-      p_array args);
+      p_array args, bool is_synchronous);
 private:
   pid_t child_;
   FileSocket socket_;
 };
 
 p_value ChildProcess::Data::send_bridge(const p_object *obj,
-    p_string name, p_array args) {
+    p_string name, p_array args, bool is_synchronous) {
   ChildProcess::Data *data = static_cast<ChildProcess::Data*>(obj->dtable());
-  assert name.impl_id() == PHeap::id();
-  PHeap &buffer = *PHeap::get(name.dtable());
+  assert name.impl_id() == MessageHeap::id();
+  MessageHeap &buffer = *MessageHeap::get(name.dtable());
   FileSocket &socket = data->socket();
-  socket.send_message(buffer, name, args);
-  return socket.receive_reply(buffer);
+  socket.send_message(buffer, name, args, is_synchronous);
+  if (is_synchronous) {
+    return socket.receive_reply(buffer);
+  } else {
+    return p_value();
+  }
 }
 
-class ParentProcess::Data {
+class ParentProcess::Data : public p_value::DTable {
 public:
-  Data(const FileSocket &socket) : socket_(socket) { }
+  Data(const FileSocket &socket) : socket_(socket) {
+    object.send = send_bridge;
+  }
   FileSocket &socket() { return socket_; }
+  static p_value send_bridge(const p_object *obj, p_string name,
+      p_array args, bool is_synchronous);
 private:
   FileSocket socket_;
 };
+
+p_value ParentProcess::Data::send_bridge(const p_object *obj, p_string name,
+      p_array args, bool is_synchronous) {
+  ParentProcess::Data *data = static_cast<ParentProcess::Data*>(obj->dtable());
+  assert name.impl_id() == MessageHeap::id();
+  MessageHeap &buffer = *MessageHeap::get(name.dtable());
+  FileSocket &socket = data->socket();
+  socket.send_message(buffer, name, args, is_synchronous);
+  if (is_synchronous) {
+    return socket.receive_reply(buffer);
+  } else {
+    return p_value();
+  }
+}
 
 bool Pipe::open() {
   embed_array<int, 2> pipes;
@@ -271,6 +301,10 @@ p_object ChildProcess::proxy() {
   return p_object(0, data());
 }
 
+p_object ParentProcess::proxy() {
+  return p_object(0, data());
+}
+
 word ChildProcess::wait() {
   while (true) {
     int stat = 0;
@@ -314,7 +348,11 @@ bool ParentProcess::open() {
   return true;
 }
 
-bool ParentProcess::receive(Message &message) {
+bool ParentProcess::receive(MessageIn &message) {
+  return data()->socket().receive_message(message);
+}
+
+bool ChildProcess::receive(MessageIn &message) {
   return data()->socket().receive_message(message);
 }
 

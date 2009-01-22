@@ -13,8 +13,9 @@ class ParentProcess {
 public:
   class Data;
   ParentProcess() : data_(NULL) { }
+  p_object proxy();
   bool open();
-  bool receive(Message &message);
+  bool receive(MessageIn &message);
 private:
   Data *data() { return data_; }
   Data *data_;
@@ -28,7 +29,7 @@ public:
   p_object proxy();
   bool open(string &command, vector<string> &args, vector< pair<string> > &env);
   word wait();
-  bool receive(Message &message);
+  bool receive(MessageIn &message);
 private:
   Data *data() { return data_; }
   Data *data_;

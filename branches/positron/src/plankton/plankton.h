@@ -8,7 +8,7 @@ namespace positron {
 
 class p_value {
 public:
-  enum Type { vtInteger, vtString, vtNull, vtArray, vtObject };
+  enum Type { vtInteger, vtString, vtNull, vtVoid, vtArray, vtObject };
 
   struct DTable {
     struct ValueDTable {
@@ -30,7 +30,8 @@ public:
       bool (*set)(p_array *that, word index, p_value value);
     };
     struct ObjectDTable {
-      p_value (*send)(const p_object *that, p_string name, p_array args);
+      p_value (*send)(const p_object *that, p_string name, p_array args,
+          bool is_synchronous);
     };
     ValueDTable value;
     IntegerDTable integer;
@@ -73,6 +74,13 @@ public:
 };
 
 
+class p_void : public p_value {
+public:
+  inline p_void(word data, DTable *dtable) : p_value(data, dtable) { }
+  static const p_value::Type kTypeTag = p_value::vtVoid;
+};
+
+
 class p_string : public p_value {
 public:
   inline word length() const { return dtable()->string.length(this); }
@@ -102,7 +110,8 @@ public:
 
 class p_object : public p_value {
 public:
-  inline p_value send(p_string name, p_array args = p_array()) { return dtable()->object.send(this, name, args); }
+  inline p_value send_sync(p_string name, p_array args = p_array()) { return dtable()->object.send(this, name, args, true); }
+  inline void send_async(p_string name, p_array args = p_array()) { dtable()->object.send(this, name, args, false); }
   inline p_object(word data, DTable *table) : p_value(data, table) { }
   static const p_value::Type kTypeTag = p_value::vtObject;
 };

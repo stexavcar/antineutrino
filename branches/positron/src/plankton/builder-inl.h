@@ -49,7 +49,7 @@ bool Raw::has_singleton_tag(uint32_t data) {
 }
 
 template <typename T>
-T PHeap::to_plankton(FrozenObject &obj) {
+T MessageHeap::to_plankton(FrozenObject &obj) {
   vector<uint8_t> heap = memory();
   word offset = obj.start() - heap.start();
   return T(Raw::tag_object(static_cast<uint32_t>(offset)), &dtable());
@@ -58,6 +58,11 @@ T PHeap::to_plankton(FrozenObject &obj) {
 template <typename T>
 T &FrozenObject::at(word offset) {
   return *reinterpret_cast<uint32_t*>(&data()[sizeof(T) * offset]);
+}
+
+MessageIn::~MessageIn() {
+  if (is_synchronous_ && !has_replied_)
+    reply(MessageOut::get_void());
 }
 
 } // namespace positron
