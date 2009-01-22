@@ -13,8 +13,8 @@ class ParentProcess {
 public:
   class Data;
   ParentProcess() : data_(NULL) { }
-  ISocket &socket();
   bool open();
+  bool receive(Message &message);
 private:
   Data *data() { return data_; }
   Data *data_;
@@ -25,9 +25,10 @@ public:
   class Data;
   ChildProcess()
     : data_(NULL) { }
-  ISocket &socket();
+  p_object proxy();
   bool open(string &command, vector<string> &args, vector< pair<string> > &env);
   word wait();
+  bool receive(Message &message);
 private:
   Data *data() { return data_; }
   Data *data_;

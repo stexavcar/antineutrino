@@ -54,14 +54,18 @@ private:
   Pipe from_;
 };
 
-class FileSocket : public ISocket {
+class FileSocket : public IStream {
 public:
   explicit FileSocket(const HalfChannel &channel)
     : channel_(channel)
     , in_(channel.in_fd())
     , out_(channel.out_fd()) { }
-  virtual word write(const vector<uint8_t> &data);
-  virtual word read(vector<uint8_t> &data);
+  word write(const vector<uint8_t> &data);
+  word read(vector<uint8_t> data);
+  void send_message(PHeap &heap, p_string name, p_array args);
+  bool receive_message(Message &message);
+  bool send_reply(Message &message, p_value value);
+  p_value receive_reply(PHeap &heap);
 private:
   HalfChannel &channel() { return channel_; }
   int in() { return in_; }
@@ -77,23 +81,106 @@ word FileSocket::write(const vector<uint8_t> &data) {
   return bytes;
 }
 
-word FileSocket::read(vector<uint8_t> &data) {
+struct MessageHeader {
+  struct Data {
+    uint32_t heap_size;
+    uint32_t name;
+    uint32_t args;
+  };
+  union {
+    Data data;
+    uint8_t bytes[sizeof(Data)];
+  };
+};
+
+struct ReplyHeader {
+  struct Data {
+    uint32_t heap_size;
+    uint32_t value;
+  };
+  union {
+    Data data;
+    uint8_t bytes[sizeof(Data)];
+  };
+};
+
+void FileSocket::send_message(PHeap &heap, p_string name,
+    p_array args) {
+  MessageHeader header;
+  vector<uint8_t> memory = heap.memory();
+  header.data.heap_size = memory.length();
+  header.data.name = static_cast<uint32_t>(name.data());
+  header.data.args = static_cast<uint32_t>(args.data());
+  write(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
+  write(memory);
+}
+
+bool FileSocket::receive_message(Message &message) {
+  MessageHeader header;
+  read(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
+  own_vector<uint8_t> memory(vector<uint8_t>::allocate(header.data.heap_size));
+  read(memory.as_vector());
+  FrozenHeap *heap = new FrozenHeap(memory.release());
+  message.set_selector(p_string(header.data.name, &heap->dtable()));
+  message.set_args(p_array(header.data.args, &heap->dtable()));
+  message.set_stream(this);
+  return true;
+}
+
+bool FileSocket::send_reply(Message &message, p_value value) {
+  assert value.impl_id() == PHeap::id();
+  ReplyHeader header;
+  PHeap *heap = PHeap::get(value.dtable());
+  vector<uint8_t> memory;
+  if (heap != NULL)
+    memory = heap->memory();
+  header.data.heap_size = memory.length();
+  header.data.value = value.data();
+  write(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
+  write(memory);
+  return true;
+}
+
+p_value FileSocket::receive_reply(PHeap &heap) {
+  ReplyHeader header;
+  read(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
+  own_vector<uint8_t> memory(vector<uint8_t>::allocate(header.data.heap_size));
+  read(memory.as_vector());
+  FrozenHeap *new_heap = new FrozenHeap(memory.release());
+  return p_value(header.data.value, &new_heap->dtable());
+}
+
+word FileSocket::read(vector<uint8_t> data) {
   int bytes = ::read(in(), data.start(), data.length());
   assert bytes == data.length();
   return bytes;
 }
 
-class ChildProcess::Data {
+class ChildProcess::Data : public p_value::DTable {
 public:
   Data(pid_t child, const FileSocket &socket)
     : child_(child)
-    , socket_(socket) { }
+    , socket_(socket) {
+    object.send = send_bridge;
+  }
   pid_t child() { return child_; }
   FileSocket &socket() { return socket_; }
+  static p_value send_bridge(const p_object *obj, p_string name,
+      p_array args);
 private:
   pid_t child_;
   FileSocket socket_;
 };
+
+p_value ChildProcess::Data::send_bridge(const p_object *obj,
+    p_string name, p_array args) {
+  ChildProcess::Data *data = static_cast<ChildProcess::Data*>(obj->dtable());
+  assert name.impl_id() == PHeap::id();
+  PHeap &buffer = *PHeap::get(name.dtable());
+  FileSocket &socket = data->socket();
+  socket.send_message(buffer, name, args);
+  return socket.receive_reply(buffer);
+}
 
 class ParentProcess::Data {
 public:
@@ -180,8 +267,8 @@ bool ChildProcess::open(string &command, vector<string> &args,
   }
 }
 
-ISocket &ChildProcess::socket() {
-  return data()->socket();
+p_object ChildProcess::proxy() {
+  return p_object(0, data());
 }
 
 word ChildProcess::wait() {
@@ -192,10 +279,11 @@ word ChildProcess::wait() {
       assert pid == data()->child();
       return stat;
     } else if (errno == EINTR) {
-      // If the system call gets interrupted we just try again.
+      // If the system call gets interrupted we just try again.  Note
+      // that this requires errno to be thread local.
       continue;
     } else {
-      LOG().error("Error waiting for child (%)", positron::args(string(::strerror(errno))));
+      LOG().error("Error waiting for child (%)", args(string(::strerror(errno))));
       return -1;
     }
   }
@@ -226,8 +314,8 @@ bool ParentProcess::open() {
   return true;
 }
 
-ISocket &ParentProcess::socket() {
-  return data()->socket();
+bool ParentProcess::receive(Message &message) {
+  return data()->socket().receive_message(message);
 }
 
 } // namespace positron

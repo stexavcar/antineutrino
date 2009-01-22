@@ -19,10 +19,13 @@ typedef unsigned __int64 uint64_t;
 namespace positron {
 
 
+class PHeap;
+class Message;
 class MessageBuffer;
 class p_array;
 class p_integer;
 class p_null;
+class p_object;
 class p_string;
 
 

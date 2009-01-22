@@ -22,6 +22,11 @@ static inline var_args_impl<1> args(const variant &a0) {
 }
 
 
+static inline var_args_impl<1> args() {
+  return args(0);
+}
+
+
 static inline var_args_impl<2> args(const variant &a0, const variant &a1) {
   var_args_impl<2> result;
   result.elms_[0] = &a0;

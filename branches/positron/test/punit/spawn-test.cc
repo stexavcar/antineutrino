@@ -39,16 +39,17 @@ bool TestChildProcess::open(const string &test_name) {
 TEST(hul_igennem) {
   TestChildProcess child;
   assert child.open("hul_igennem_child");
+  p_object proxy = child.proxy();
   for (word i = 0; i < 100; i++) {
     MessageBuffer buffer;
-    p_value obj = buffer.receive(child.socket());
+    p_value obj = proxy.send(buffer.new_string("next_int"));
     assert is<p_integer>(obj);
     assert (cast<p_integer>(obj)).value() == i;
   }
   MessageBuffer buffer;
-  p_value last = buffer.receive(child.socket());
-  assert is<p_string>(last);
-  assert (cast<p_string>(last)) == "bye!";
+  p_value obj = proxy.send(buffer.new_string("exit"));
+  assert is<p_string>(obj);
+  assert (cast<p_string>(obj)) == string("bye");
 }
 
 
@@ -57,15 +58,23 @@ TEST(hul_igennem_child) {
   assert string("bar") == string(getenv("foo"));
   ParentProcess parent;
   assert parent.open();
-  for (word i = 0; i < 100; i++) {
-    MessageBuffer builder;
-    builder.send(builder.new_integer(i), parent.socket());
+  word count = 0;
+  while (true) {
+    Message message;
+    if (!parent.receive(message))
+      return;
+    if (message.selector() == "next_int") {
+      message.reply(MessageBuffer::new_integer(count++));
+    } else if (message.selector() == "exit") {
+      MessageBuffer buf;
+      message.reply(buf.new_string("bye"));
+      return;
+    }
   }
-  MessageBuffer builder;
-  builder.send(builder.new_string("bye!"), parent.socket());
 }
 
 
+/*
 TEST(waiting) {
   TestChildProcess child;
   assert child.open("waiting_child");
@@ -97,3 +106,4 @@ TEST(waiting_child) {
     assert (cast<p_string>(message)) == string("pong");
   }
 }
+*/

@@ -26,7 +26,7 @@ own_vector<T>::~own_vector() {
 template <typename T>
 vector<T> own_vector<T>::release() {
   vector<T> result = value_;
-  value_ = NEW_ARRAY(static_cast<T*>(NULL), 0);
+  value_ = vector<T>(static_cast<T*>(NULL), 0);
   return result;
 }
 

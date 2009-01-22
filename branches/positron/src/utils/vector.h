@@ -1,6 +1,7 @@
 #ifndef _UTILS_VECTOR
 #define _UTILS_VECTOR
 
+#include "utils/array.h"
 #include "utils/global.h"
 
 namespace positron {
@@ -15,6 +16,8 @@ public:
   T *start() { return data_; }
   const T *start() const { return data_; }
   word length() const { return length_; }
+  static vector<T> allocate(word length);
+  array<T> as_array();
 private:
   T *data_;
   word length_;

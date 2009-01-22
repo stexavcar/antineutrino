@@ -5,22 +5,23 @@
 #include "utils/array.h"
 #include "utils/buffer.h"
 #include "utils/string.h"
+#include "utils/smart-ptrs.h"
 
 namespace positron {
 
 class DTableImpl : public p_value::DTable {
 public:
-  DTableImpl(MessageBuffer *builder);
+  DTableImpl(PHeap *heap);
   static DTableImpl &static_instance() { return kStaticInstance; }
-  MessageBuffer &builder() { return *builder_; }
+  PHeap &heap() { return *heap_; }
 private:
-  MessageBuffer *builder_;
+  PHeap *heap_;
   static DTableImpl kStaticInstance;
 };
 
-class object {
+class FrozenObject {
 public:
-  object(array<uint8_t> data) : data_(data) { }
+  FrozenObject(array<uint8_t> data) : data_(data) { }
   uint8_t *start() { return data().start(); }
   template <typename T>
   inline T &at(word offset);
@@ -29,35 +30,63 @@ private:
   array<uint8_t> data_;
 };
 
-class ISocket {
+class PHeap {
 public:
-  virtual word write(const vector<uint8_t> &data) = 0;
-  virtual word read(vector<uint8_t> &data) = 0;
+  PHeap();
+  virtual ~PHeap() { }
+  virtual vector<uint8_t> memory() = 0;
+  FrozenObject resolve(word offset);
+  template <typename T> T to_plankton(FrozenObject &obj);
+
+  static void *id() { return &DTableImpl::static_instance(); }
+  static PHeap *get(p_value::DTable *dtable);
+  DTableImpl &dtable() { return dtable_; }
+private:
+  DTableImpl dtable_;
 };
 
-class MessageBuffer {
+class FrozenHeap : public PHeap {
 public:
-  MessageBuffer();
+  FrozenHeap(vector<uint8_t> data) : data_(data) { }
+  virtual vector<uint8_t> memory() { return data(); }
+private:
+  vector<uint8_t> data() { return data_.as_vector(); }
+  own_vector<uint8_t> data_;
+};
+
+class MessageBuffer : public PHeap {
+public:
   static p_integer new_integer(int32_t value);
   static p_null get_null();
   p_string new_string(string value);
   p_array new_array(word length);
 
-  object resolve(word offset);
   buffer<uint8_t> &data() { return data_; }
-
-  // Sends the specified value on the specified socket.  Note that all
-  // objects created with this builder will be sent, potentially
-  // including objects that are not part of the specified value.
-  bool send(p_value value, ISocket &socket);
-  p_value receive(ISocket &socket);
+  virtual vector<uint8_t> memory();
 
 private:
-  template <typename T> T to_plankton(object &obj);
-  object allocate(p_value::Type type, word size);
-  DTableImpl &dtable() { return dtable_; }
-  DTableImpl dtable_;
+  FrozenObject allocate(p_value::Type type, word size);
   buffer<uint8_t> data_;
+};
+
+class IStream {
+public:
+  virtual bool send_reply(Message &message, p_value value) = 0;
+};
+
+class Message {
+public:
+  Message() : stream_(NULL) { }
+  bool reply(p_value value);
+  void set_selector(p_string v) { selector_ = v; }
+  p_string selector() { return selector_; }
+  void set_args(p_array v) { args_ = v; }
+  p_array args() { return args_; }
+  void set_stream(IStream *v) { stream_ = v; }
+private:
+  IStream *stream_;
+  p_string selector_;
+  p_array args_;
 };
 
 class Raw {

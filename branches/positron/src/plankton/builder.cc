@@ -12,6 +12,7 @@ class ValueImpl {
 public:
   static p_value::Type value_type(const p_value *that);
   static bool value_eq(const p_value *that, p_value other);
+  static void *value_impl_id(const p_value *that);
   static int32_t integer_value(const p_integer *that);
   static word string_length(const p_string *that);
   static uint32_t string_get(const p_string *that, word index);
@@ -20,7 +21,7 @@ public:
   static p_value array_get(const p_array *that, word index);
   static bool array_set(p_array *that, word index, p_value value);
 private:
-  static object open(const p_value *obj);
+  static FrozenObject open(const p_value *obj);
 };
 
 p_value::Type ValueImpl::value_type(const p_value *that) {
@@ -28,7 +29,7 @@ p_value::Type ValueImpl::value_type(const p_value *that) {
   if (Raw::has_integer_tag(data)) {
     return p_value::vtInteger;
   } else if (Raw::has_object_tag(data)) {
-    object obj = open(that);
+    FrozenObject obj = open(that);
     return static_cast<p_value::Type>(obj.at<uint32_t>(0));
   } else {
     assert Raw::has_singleton_tag(data);
@@ -38,6 +39,10 @@ p_value::Type ValueImpl::value_type(const p_value *that) {
 
 bool ValueImpl::value_eq(const p_value *that, p_value other) {
   return that->data() == other.data();
+}
+
+void *ValueImpl::value_impl_id(const p_value *that) {
+  return &DTableImpl::static_instance();
 }
 
 int32_t ValueImpl::integer_value(const p_integer *that) {
@@ -57,7 +62,7 @@ uint32_t ValueImpl::string_get(const p_string *that, word index) {
 word ValueImpl::string_compare(const p_string *that, const string &other) {
   if (that->length() != other.length())
     return that->length() - other.length();
-  object str = ValueImpl::open(that);
+  FrozenObject str = ValueImpl::open(that);
   for (word i = 0; i < other.length(); i++) {
     uint32_t ac = str.at<uint32_t>(2 + i);
     uint32_t bc = static_cast<uint32_t>(other[i]);
@@ -88,37 +93,42 @@ p_value ValueImpl::array_get(const p_array *that, word index) {
   return p_value(data, that->dtable());
 }
 
-object MessageBuffer::resolve(word offset) {
-  return object(data().raw_data().from(offset));
+FrozenObject PHeap::resolve(word offset) {
+  return FrozenObject(memory().as_array().from(offset));
 }
 
-object ValueImpl::open(const p_value *obj) {
+PHeap::PHeap()
+  : dtable_(this) {
+}
+
+FrozenObject ValueImpl::open(const p_value *obj) {
   word offset = Raw::untag_object(obj->data());
-  return static_cast<DTableImpl&>(obj->dtable()).builder().resolve(offset);
+  return static_cast<DTableImpl*>(obj->dtable())->heap().resolve(offset);
 }
 
 DTableImpl DTableImpl::kStaticInstance(NULL);
 
-DTableImpl::DTableImpl(MessageBuffer *builder) : builder_(builder) {
-  value_type = &ValueImpl::value_type;
-  value_eq = &ValueImpl::value_eq;
-  integer_value = &ValueImpl::integer_value;
-  string_length = &ValueImpl::string_length;
-  string_get = &ValueImpl::string_get;
-  string_compare = &ValueImpl::string_compare;
-  array_length = &ValueImpl::array_length;
-  array_get = &ValueImpl::array_get;
-  array_set = &ValueImpl::array_set;
+DTableImpl::DTableImpl(PHeap *heap) : heap_(heap) {
+  value.type = &ValueImpl::value_type;
+  value.eq = &ValueImpl::value_eq;
+  value.impl_id = &ValueImpl::value_impl_id;
+  integer.value = &ValueImpl::integer_value;
+  string.length = &ValueImpl::string_length;
+  string.get = &ValueImpl::string_get;
+  string.compare = &ValueImpl::string_compare;
+  array.length = &ValueImpl::array_length;
+  array.get = &ValueImpl::array_get;
+  array.set = &ValueImpl::array_set;
 }
 
 // --- F a c t o r y   m e t h o d s ---
 
 p_integer MessageBuffer::new_integer(int32_t value) {
-  return p_integer(Raw::tag_integer(value), DTableImpl::static_instance());
+  return p_integer(Raw::tag_integer(value), &DTableImpl::static_instance());
 }
 
 p_string MessageBuffer::new_string(string value) {
-  object obj = allocate(p_value::vtString, 2 + value.length());
+  FrozenObject obj = allocate(p_value::vtString, 2 + value.length());
   obj.at<uint32_t>(1) = value.length();
   for (word i = 0; i < value.length(); i++)
     obj.at<uint32_t>(2 + i) = value[i];
@@ -127,7 +137,7 @@ p_string MessageBuffer::new_string(string value) {
 
 p_array MessageBuffer::new_array(word length) {
   assert length >= 0;
-  object obj = allocate(p_value::vtArray, 2 + length);
+  FrozenObject obj = allocate(p_value::vtArray, 2 + length);
   obj.at<uint32_t>(1) = length;
   uint32_t null = get_null().data();
   for (word i = 0; i < length; i++)
@@ -136,52 +146,30 @@ p_array MessageBuffer::new_array(word length) {
 }
 
 p_null MessageBuffer::get_null() {
-  return p_null(Raw::tag_singleton(p_value::vtNull), DTableImpl::static_instance());
+  return p_null(Raw::tag_singleton(p_value::vtNull), &DTableImpl::static_instance());
 }
 
 // --- B u i l d e r ---
 
-MessageBuffer::MessageBuffer()
-  : dtable_(this) {
+
+PHeap *PHeap::get(p_value::DTable *dtable) {
+  return dtable ? &static_cast<DTableImpl*>(dtable)->heap() : NULL;
 }
 
-object MessageBuffer::allocate(p_value::Type type, word size) {
+vector<uint8_t> MessageBuffer::memory() {
+  return data().as_vector();
+}
+
+FrozenObject MessageBuffer::allocate(p_value::Type type, word size) {
   assert size >= 1;
-  object result = object(data().allocate(sizeof(uint32_t) * size));
+  FrozenObject result = FrozenObject(data().allocate(sizeof(uint32_t) * size));
   result.at<uint32_t>(0) = type;
   return result;
 }
 
-struct MessageHeader {
-  uint32_t size;
-  uint32_t entry_point;
-};
-
-bool MessageBuffer::send(p_value value, ISocket &socket) {
-  union {
-    MessageHeader header;
-    uint8_t bytes[sizeof(MessageHeader)];
-  } block;
-  vector<uint8_t> buffer = data().as_vector();
-  block.header.entry_point = value.data();
-  block.header.size = buffer.length();
-  socket.write(vector<uint8_t>(block.bytes, sizeof(MessageHeader)));
-  socket.write(buffer);
-  return true;
-}
-
-p_value MessageBuffer::receive(ISocket &socket) {
-  assert data().length() == 0;
-  union {
-    MessageHeader header;
-    uint8_t bytes[sizeof(MessageHeader)];
-  } block;
-  vector<uint8_t> vect(block.bytes, sizeof(MessageHeader));
-  socket.read(vect);
-  array<uint8_t> chunk = data().allocate(block.header.size);
-  vector<uint8_t> buffer(chunk.start(), block.header.size);
-  socket.read(buffer);
-  return p_value(block.header.entry_point, dtable());
+bool Message::reply(p_value value) {
+  assert stream_ != static_cast<void*>(NULL);
+  return stream_->send_reply(*this, value);
 }
 
 } // namespace positron

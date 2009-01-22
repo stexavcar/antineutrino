@@ -49,13 +49,14 @@ bool Raw::has_singleton_tag(uint32_t data) {
 }
 
 template <typename T>
-T MessageBuffer::to_plankton(object &obj) {
-  word offset = obj.start() - this->data().start();
-  return T(Raw::tag_object(static_cast<uint32_t>(offset)), this->dtable());
+T PHeap::to_plankton(FrozenObject &obj) {
+  vector<uint8_t> heap = memory();
+  word offset = obj.start() - heap.start();
+  return T(Raw::tag_object(static_cast<uint32_t>(offset)), &dtable());
 }
 
 template <typename T>
-T &object::at(word offset) {
+T &FrozenObject::at(word offset) {
   return *reinterpret_cast<uint32_t*>(&data()[sizeof(T) * offset]);
 }
 

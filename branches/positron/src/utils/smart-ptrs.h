@@ -56,6 +56,7 @@ public:
   inline T *start() { return value_.start(); }
   inline T &operator[](word index) { return value_[index]; }
   inline vector<T> release();
+  inline vector<T> as_vector() { return value_; }
 private:
   vector<T> value_;
 };

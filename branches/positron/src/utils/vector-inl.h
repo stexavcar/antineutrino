@@ -24,6 +24,16 @@ void pair<T>::set(const T &a, const T &b) {
   this->operator[](1) = b;
 }
 
+template <typename T>
+array<T> vector<T>::as_array() {
+  return TO_ARRAY(T, data_, length_);
+}
+
+template <typename T>
+vector<T> vector<T>::allocate(word length) {
+  return vector<T>(new T[length], length);
+}
+
 } // namespace positron
 
 #endif // _UTILS_VECTOR_INL
