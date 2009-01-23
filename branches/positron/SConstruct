@@ -19,7 +19,8 @@ def guess_toolchain():
 kOptions = [
   ('mode', {
     'values': ['debug', 'release'],
-    'default': 'release'
+    'default': 'release',
+    'always_in_variant': True
   }),
   ('wordsize', {
     'values': ['32', '64'],
@@ -39,11 +40,16 @@ def configure(relative_root, build_config, pollock_path):
   env = Environment(options = opts)
   Help(opts.GenerateHelpText(env))
   options = { }
+  variant_parts = [ ]
   for (key, value) in kOptions:
-    options[key] = env.Dictionary()[key]
+    setting = env.Dictionary()[key]
+    options[key] = setting
+    is_default = (setting == value['default'])
+    if not is_default or value.get('always_in_variant', False):
+      variant_parts.append(setting) 
   config = build.read_build_file(relative_root, build_config, options)
   pollock_processor = pollock.read_processor(pollock_path)
-  variant = "-".join([options[n[0]] for n in kOptions])
+  variant = "-".join(variant_parts)
   target_dir = abspath('.')
   SConscript(
     'SConscript',
