@@ -27,7 +27,7 @@ void Abort::unregister_resource(abstract_resource &that) {
 bool Abort::has_cleaned_up_ = false;
 void Abort::release_resources() {
   if (has_cleaned_up_) return;
-  LOG().info("Releasing resources", args(0));
+  LOG().info("Releasing resources on abort", args(0));
   has_cleaned_up_ = true;
   while (first_ != NULL)
     first_->release();

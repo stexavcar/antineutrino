@@ -9,8 +9,17 @@ namespace neutrino {
 class Abort {
 public:
   static void abort(string format, const var_args &args);
+
+  // Installs neutrino-specific signal handlers.
   static void install_signal_handlers();
+
+  // Removes neutrino's signal handlers.
+  static void uninstall_signal_handlers();
+
+  // Disposes all open resources.  Should only be used when terminating
+  // abruptly since resources will otherwise clean themselves up.
   static void release_resources();
+
   static void register_resource(abstract_resource &that);
   static void unregister_resource(abstract_resource &that);
   static word resource_count();
