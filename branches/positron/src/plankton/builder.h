@@ -36,12 +36,14 @@ public:
   virtual ~MessageHeap() { }
   virtual vector<uint8_t> memory() = 0;
   FrozenObject resolve(word offset);
+  void take_ownership(MessageHeap *that);
   template <typename T> T to_plankton(FrozenObject &obj);
 
   static void *id() { return &DTableImpl::static_instance(); }
   static MessageHeap *get(p_value::DTable *dtable);
   DTableImpl &dtable() { return dtable_; }
 private:
+  own_ptr<MessageHeap> owned_;
   DTableImpl dtable_;
 };
 
@@ -87,12 +89,14 @@ public:
   void set_stream(IStream *v) { stream_ = v; }
   void set_is_synchronous(bool v) { is_synchronous_ = v; }
   bool is_synchronous() { return is_synchronous_; }
+  void take_ownership(MessageHeap *that);
 private:
   IStream *stream_;
   p_string selector_;
   p_array args_;
   bool is_synchronous_;
   bool has_replied_;
+  own_ptr<MessageHeap> owned_;
 };
 
 class Raw {

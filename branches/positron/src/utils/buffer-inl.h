@@ -89,6 +89,12 @@ vector<T> buffer<T>::as_vector() {
   return vector<T>(start(), length());
 }
 
+template <typename T, class D>
+own_buffer<T, D>::~own_buffer() {
+  for (word i = 0; i < this->length(); i++)
+    D::dispose(this->operator[](i));
+}
+
 } // namespace positron
 
 #endif // _UTILS_BUFFER_INL

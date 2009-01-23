@@ -128,6 +128,7 @@ bool FileSocket::receive_message(MessageIn &message) {
   message.set_args(p_array(header.data.args, &heap->dtable()));
   message.set_stream(this);
   message.set_is_synchronous(header.data.is_synchronous);
+  message.take_ownership(heap);
   return true;
 }
 
@@ -155,6 +156,7 @@ p_value FileSocket::receive_reply(MessageHeap &heap) {
   own_vector<uint8_t> memory(vector<uint8_t>::allocate(header.data.heap_size));
   read(memory.as_vector());
   FrozenHeap *new_heap = new FrozenHeap(memory.release());
+  heap.take_ownership(new_heap);
   return p_value(header.data.value, &new_heap->dtable());
 }
 
@@ -244,6 +246,12 @@ bool HalfChannel::set_remain_open_on_exec(int fd) {
   return true;
 }
 
+// ---
+// C h i l d   P r o c e s s
+// ---
+
+ChildProcess::~ChildProcess() { }
+
 bool Channel::open() {
   return to().open() && from().open();
 }
@@ -292,16 +300,12 @@ bool ChildProcess::open(string &command, vector<string> &args,
     return true;
   } else {
     // Continue in the parent process.
-    data_ = new ChildProcess::Data(pid, own_socket);
+    data_.set(new ChildProcess::Data(pid, own_socket));
     return true;
   }
 }
 
 p_object ChildProcess::proxy() {
-  return p_object(0, data());
-}
-
-p_object ParentProcess::proxy() {
   return p_object(0, data());
 }
 
@@ -323,6 +327,16 @@ word ChildProcess::wait() {
   }
 }
 
+bool ChildProcess::receive(MessageIn &message) {
+  return data()->socket().receive_message(message);
+}
+
+// ---
+// P a r e n t   P r o c e s s
+// ---
+
+ParentProcess::~ParentProcess() { }
+
 bool ParentProcess::open() {
   const char *raw_master = getenv(kMasterEnvVariable.start());
   if (raw_master == NULL) {
@@ -343,7 +357,7 @@ bool ParentProcess::open() {
     return false;
   }
   FileSocket socket(HalfChannel(in_fd, out_fd));
-  data_ = new ParentProcess::Data(socket);
+  data_.set(new ParentProcess::Data(socket));
   LOG().info("Opened connection to master through %", args(master));
   return true;
 }
@@ -352,8 +366,8 @@ bool ParentProcess::receive(MessageIn &message) {
   return data()->socket().receive_message(message);
 }
 
-bool ChildProcess::receive(MessageIn &message) {
-  return data()->socket().receive_message(message);
+p_object ParentProcess::proxy() {
+  return p_object(0, data());
 }
 
 } // namespace positron

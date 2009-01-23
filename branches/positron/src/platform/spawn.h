@@ -13,26 +13,27 @@ class ParentProcess {
 public:
   class Data;
   ParentProcess() : data_(NULL) { }
+  ~ParentProcess();
   p_object proxy();
   bool open();
   bool receive(MessageIn &message);
 private:
-  Data *data() { return data_; }
-  Data *data_;
+  Data *data() { return *data_; }
+  own_ptr<Data> data_;
 };
 
 class ChildProcess {
 public:
   class Data;
-  ChildProcess()
-    : data_(NULL) { }
+  ChildProcess() : data_(NULL) { }
+  ~ChildProcess();
   p_object proxy();
   bool open(string &command, vector<string> &args, vector< pair<string> > &env);
   word wait();
   bool receive(MessageIn &message);
 private:
-  Data *data() { return data_; }
-  Data *data_;
+  Data *data() { return *data_; }
+  own_ptr<Data> data_;
 };
 
 } // namespace positron

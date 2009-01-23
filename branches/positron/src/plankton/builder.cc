@@ -93,6 +93,11 @@ p_value ValueImpl::array_get(const p_array *that, word index) {
   return p_value(data, that->dtable());
 }
 
+void MessageHeap::take_ownership(MessageHeap *that) {
+  assert !owned_.is_set();
+  owned_.set(that);
+}
+
 FrozenObject MessageHeap::resolve(word offset) {
   return FrozenObject(memory().as_array().from(offset));
 }
@@ -175,6 +180,11 @@ bool MessageIn::reply(p_value value) {
   assert stream_ != static_cast<void*>(NULL);
   has_replied_ = true;
   return stream_->send_reply(*this, value);
+}
+
+void MessageIn::take_ownership(MessageHeap *that) {
+  assert !owned_.is_set();
+  owned_.set(that);
 }
 
 } // namespace positron

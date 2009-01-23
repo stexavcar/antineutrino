@@ -3,6 +3,7 @@
 
 #include "utils/array.h"
 #include "utils/global.h"
+#include "utils/smart-ptrs.h"
 
 namespace positron {
 
@@ -31,6 +32,13 @@ private:
   word length_;
   word capacity_;
 
+};
+
+template <typename T, class D = ptr_delete<T> >
+class own_buffer : public buffer<T*> {
+public:
+  inline own_buffer() : buffer<T*>() { }
+  ~own_buffer();
 };
 
 }

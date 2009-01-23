@@ -39,6 +39,7 @@ public:
    */
   inline T *operator *() { return value_; }
   inline void set(T *t) { value_ = t; }
+  inline bool is_set() { return value_ != NULL; }
   inline T *release();
   inline T *operator ->() { return value_; }
 
