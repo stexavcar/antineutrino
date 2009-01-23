@@ -7,7 +7,7 @@
 #include "utils/buffer.h"
 #include "utils/string.h"
 
-namespace positron {
+namespace neutrino {
 
 uint32_t Raw::tag_object(word offset) {
   return static_cast<uint32_t>((offset << kTagSize) | kObjectTag);
@@ -65,6 +65,6 @@ MessageIn::~MessageIn() {
     reply(MessageOut::get_void());
 }
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _PLANKTON_BUILDER_INL

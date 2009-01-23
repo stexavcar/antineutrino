@@ -3,7 +3,7 @@
 
 #include "plankton/codec.h"
 
-namespace positron {
+namespace neutrino {
 
 
 template <typename Out>
@@ -24,7 +24,7 @@ uint32_t Decoder<In>::decode_uint32(In &in) {
 }
 
 
-} // namespace positron
+} // namespace neutrino
 
 
 #endif // _PLANKTON_CODEC_INL

@@ -5,7 +5,7 @@
 #include "utils/string.h"
 #include "utils/vector.h"
 
-namespace positron {
+namespace neutrino {
 
 typedef void (test_callback_t)();
 
@@ -45,6 +45,6 @@ private:
   word b_;
 };
 
-} // positron
+} // neutrino
 
 #endif // _PUNIT_TEST

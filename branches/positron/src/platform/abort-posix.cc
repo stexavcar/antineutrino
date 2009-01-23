@@ -9,7 +9,7 @@
 #include <cxxabi.h>
 #include <string>
 
-namespace positron {
+namespace neutrino {
 
 void Abort::abort(string format, const var_args &vars) {
   string_stream buf;
@@ -133,7 +133,7 @@ static void print_error_report(int signum, siginfo_t *siginfo, void *ptr) {
   if (siginfo->si_errno) {
     fprintf(stderr, "errno:  %s\n", strerror(errno));
   }
-  print_stack_trace(ptr, "positron::");
+  print_stack_trace(ptr, "neutrino::");
   Abort::finalize();
   exit(signum);
 }
@@ -146,4 +146,4 @@ void Abort::install_signal_handlers() {
   success = success && install_handler(SIGBUS, print_error_report);
 }
 
-} // namespace positron
+} // namespace neutrino

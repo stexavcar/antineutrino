@@ -2,7 +2,7 @@
 #include "utils/log.h"
 #include "utils/string-inl.h"
 
-namespace positron {
+namespace neutrino {
 
 Finalized *Abort::first_ = NULL;
 Finalized *Abort::last_ = NULL;
@@ -43,5 +43,5 @@ void Abort::finalize() {
   }
 }
 
-} // namespace positron
+} // namespace neutrino
 

@@ -2,7 +2,7 @@
 #include "test-inl.h"
 
 
-using namespace positron;
+using namespace neutrino;
 
 
 static void try_format(string format, const var_args &args,

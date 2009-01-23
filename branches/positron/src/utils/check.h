@@ -4,7 +4,7 @@
 #include "utils/global.h"
 #include "utils/string.h"
 
-namespace positron {
+namespace neutrino {
 
 class Eq {
 public:
@@ -66,17 +66,17 @@ public:
   static void check_failed(SourceLocation location, string source);
 };
 
-#define cCheckPred(expected, Pred, value) positron::Check::predicate<Pred>(dHere, expected, value, #expected, #value)
-#define cCheck(expr) positron::Check::check(dHere, expr, #expr)
+#define cCheckPred(expected, Pred, value) neutrino::Check::predicate<Pred>(dHere, expected, value, #expected, #value)
+#define cCheck(expr) neutrino::Check::check(dHere, expr, #expr)
 
-#define cCheckEq(left, right) cCheckPred(left, positron::Eq, right)
-#define cCheckNeq(left, right) cCheckPred(left, positron::Neq, right)
-#define cCheckLt(left, right) cCheckPred(left, positron::Lt, right)
-#define cCheckLeq(left, right) cCheckPred(left, positron::Leq, right)
-#define cCheckGt(left, right) cCheckPred(left, positron::Gt, right)
-#define cCheckGeq(left, right) cCheckPred(left, positron::Geq, right)
+#define cCheckEq(left, right) cCheckPred(left, neutrino::Eq, right)
+#define cCheckNeq(left, right) cCheckPred(left, neutrino::Neq, right)
+#define cCheckLt(left, right) cCheckPred(left, neutrino::Lt, right)
+#define cCheckLeq(left, right) cCheckPred(left, neutrino::Leq, right)
+#define cCheckGt(left, right) cCheckPred(left, neutrino::Gt, right)
+#define cCheckGeq(left, right) cCheckPred(left, neutrino::Geq, right)
 
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _UTILS_CHECK

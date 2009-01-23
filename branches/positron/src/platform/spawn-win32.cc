@@ -4,7 +4,7 @@
 #include <windows.h>
 
 
-namespace positron {
+namespace neutrino {
 
 class DummySocket : public ISocket {
 public:
@@ -33,7 +33,7 @@ bool ChildProcess::open(string &command, vector<string> &args,
   si_startup_info.cb = sizeof(si_startup_info);
   if (!CreateProcess(command.start(), 0, 0, 0, true, 0, 0, 0,
         &si_startup_info, &pi_process_info)) {
-    LOG().error("Error creating process (%)", positron::args(GetLastError()));
+    LOG().error("Error creating process (%)", neutrino::args(GetLastError()));
     return false;
   }
   return true;
@@ -43,4 +43,4 @@ word ChildProcess::wait() {
   return -1;
 }
 
-} // namespace positron
+} // namespace neutrino

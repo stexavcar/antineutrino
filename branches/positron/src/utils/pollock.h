@@ -8,29 +8,29 @@
 
 #ifdef DEBUG
 
-#define pPositronAssertEq(left, right) cCheckEq(left, right)
-#define pPositronAssertNeq(left, right) cCheckNeq(left, right)
-#define pPositronAssertLt(left, right) cCheckLt(left, right)
-#define pPositronAssertLeq(left, right) cCheckLeq(left, right)
-#define pPositronAssertGeq(left, right) cCheckGeq(left, right)
-#define pPositronAssert(expr) cCheck(expr)
+#define pNeutrinoAssertEq(left, right) cCheckEq(left, right)
+#define pNeutrinoAssertNeq(left, right) cCheckNeq(left, right)
+#define pNeutrinoAssertLt(left, right) cCheckLt(left, right)
+#define pNeutrinoAssertLeq(left, right) cCheckLeq(left, right)
+#define pNeutrinoAssertGeq(left, right) cCheckGeq(left, right)
+#define pNeutrinoAssert(expr) cCheck(expr)
 
 #else
 
-#define pPositronAssertEq(left, right)
-#define pPositronAssertNeq(left, right)
-#define pPositronAssertLt(left, right)
-#define pPositronAssertLeq(left, right)
-#define pPositronAssertGeq(left, right)
-#define pPositronAssert(expr)
+#define pNeutrinoAssertEq(left, right)
+#define pNeutrinoAssertNeq(left, right)
+#define pNeutrinoAssertLt(left, right)
+#define pNeutrinoAssertLeq(left, right)
+#define pNeutrinoAssertGeq(left, right)
+#define pNeutrinoAssert(expr)
 
 #endif
 
-#define pPositronTry(__expr__)                                       \
+#define pNeutrinoTry(__expr__)                                       \
   do {                                                               \
     boole __value__ = (__expr__);                                    \
     if (!__value__.has_succeeded())                                  \
-      return __value__;                                              \
+      return __value__.failure();                                    \
   } while (false)
 
 #endif // _UTILS_POLLOCK

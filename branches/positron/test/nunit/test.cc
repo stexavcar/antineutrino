@@ -4,7 +4,7 @@
 #include "utils/vector-inl.h"
 #include "utils/smart-ptrs-inl.h"
 
-namespace positron {
+namespace neutrino {
 
 UnitTest *UnitTest::first_ = NULL;
 
@@ -117,9 +117,9 @@ word PseudoRandom::next() {
   return (9113 * a_) + (7437 * b_) + 6927;
 }
 
-} // positron
+} // neutrino
 
 int main(int argc, const char *argv[]) {
-  positron::vector<const char*> args(argv, argc);
-  return positron::UnitTest::main(args);
+  neutrino::vector<const char*> args(argv, argc);
+  return neutrino::UnitTest::main(args);
 }

@@ -3,7 +3,7 @@
 #include "utils/array-inl.h"
 #include "utils/check-inl.h"
 
-namespace positron {
+namespace neutrino {
 
 // --- V a l u e   I m p l e m e n t a t i o n ---
 
@@ -187,4 +187,4 @@ void MessageIn::take_ownership(MessageHeap *that) {
   owned_.set(that);
 }
 
-} // namespace positron
+} // namespace neutrino

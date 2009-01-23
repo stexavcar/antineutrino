@@ -16,7 +16,7 @@ typedef unsigned __int64 uint64_t;
 #endif
 
 
-namespace positron {
+namespace neutrino {
 
 
 class MessageHeap;
@@ -29,7 +29,7 @@ class p_object;
 class p_string;
 
 
-} // namespace positron
+} // namespace neutrino
 
 
 #endif // _UTILS_TYPES

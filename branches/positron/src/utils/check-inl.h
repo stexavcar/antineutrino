@@ -5,7 +5,7 @@
 #include "platform/abort.h"
 #include "utils/string-inl.h"
 
-namespace positron {
+namespace neutrino {
 
 template <class P, typename S, typename T>
 void Check::predicate(SourceLocation location, S a, T b,
@@ -22,7 +22,7 @@ void Check::check(SourceLocation location, bool value, const char *src) {
   }
 }
 
-} // namespace positron
+} // namespace neutrino
 
 
 #endif // _UTILS_CHECKS_INL

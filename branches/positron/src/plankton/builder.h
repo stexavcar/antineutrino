@@ -8,7 +8,7 @@
 #include "utils/smart-ptrs.h"
 #include "value/condition.h"
 
-namespace positron {
+namespace neutrino {
 
 class DTableImpl : public p_value::DTable {
 public:
@@ -118,6 +118,6 @@ public:
   static const uword kSingletonTag = 2;
 };
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _PLANKTON_BUILDER

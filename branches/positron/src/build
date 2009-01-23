@@ -1,6 +1,6 @@
 library (
-  name = 'positron',
-  domain = 'Positron',
+  name = 'neutrino',
+  domain = 'Neutrino',
   flags = mode,
   srcs = [
     'main/main.cc',

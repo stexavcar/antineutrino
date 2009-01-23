@@ -9,7 +9,7 @@
 #include <fcntl.h>
 #include <sys/wait.h>
 
-namespace positron {
+namespace neutrino {
 
 static const string kMasterEnvVariable = "POSITRON_MASTER";
 
@@ -135,7 +135,7 @@ boole FileSocket::receive_message(MessageIn &message) {
 boole FileSocket::send_reply(MessageIn &message, p_value value) {
   if (!message.is_synchronous()) {
     LOG().warn("Reply to asynchronous message ignored.", args());
-    return Failure::make();
+    return Success::make();
   }
   assert value.impl_id() == MessageHeap::id();
   ReplyHeader header;
@@ -226,7 +226,7 @@ boole Pipe::open() {
   embed_array<int, 2> pipes;
   if (::pipe(pipes.start()) == -1) {
     LOG().error("Error creating pipe (%)", args(string(::strerror(errno))));
-    return Failure::make();
+    return InternalError::make(InternalError::ieSystem);
   }
   read_fd_ = pipes[0];
   write_fd_ = pipes[1];
@@ -241,7 +241,7 @@ boole HalfChannel::set_remain_open_on_exec() {
 boole HalfChannel::set_remain_open_on_exec(int fd) {
   if (::fcntl(fd, F_SETFD, 0) == -1) {
     LOG().error("Error fcntl-ing pipe (%)", args(string(::strerror(errno))));
-    return Failure::make();
+    return InternalError::make(InternalError::ieSystem);
   }
   return Success::make();
 }
@@ -269,8 +269,8 @@ boole ChildProcess::open(string &command, vector<string> &args,
   try there.set_remain_open_on_exec();
   pid_t pid = ::fork();
   if (pid == -1) {
-    LOG().error("Error forking (%)", positron::args(string(::strerror(errno))));
-    return Failure::make();
+    LOG().error("Error forking (%)", neutrino::args(string(::strerror(errno))));
+    return InternalError::make(InternalError::ieSystem);
   } else if (pid == 0) {
     // We've successfully created the child process.  Now run the executable.
     const char *file = command.start();
@@ -286,11 +286,11 @@ boole ChildProcess::open(string &command, vector<string> &args,
         new char*[env.length() + 2], env.length() + 2);
     for (word i = 0; i < env.length(); i++) {
       string_stream stream;
-      stream.add("%=%", positron::args(env[i][0], env[i][1]));
+      stream.add("%=%", neutrino::args(env[i][0], env[i][1]));
       env_arr[i] = strdup(stream.raw_c_str().start());
     }
     string_stream stream;
-    stream.add("%=%:%", positron::args(kMasterEnvVariable, there.in_fd(),
+    stream.add("%=%:%", neutrino::args(kMasterEnvVariable, there.in_fd(),
         there.out_fd()));
     env_arr[env.length()] = strdup(stream.raw_c_str().start());
     env_arr[env.length() + 1] = NULL;
@@ -340,20 +340,20 @@ boole ParentProcess::open() {
   const char *raw_master = getenv(kMasterEnvVariable.start());
   if (raw_master == NULL) {
     LOG().error("Could not read master variable", args(0));
-    return Failure::make();
+    return InternalError::make(InternalError::ieEnvironment);
   }
   string master = raw_master;
   char *end = NULL;
   int in_fd = strtol(master.start(), &end, 10);
   if (*end != ':') {
     LOG().error("Error parsing master fd %", args(master));
-    return Failure::make();
+    return InternalError::make(InternalError::ieEnvironment);
   }
   end++;
   int out_fd = strtol(end, &end, 10);
   if (end != master.end()) {
     LOG().error("Error parsing master fd %", args(master));
-    return Failure::make();
+    return InternalError::make(InternalError::ieEnvironment);
   }
   FileSocket socket(HalfChannel(in_fd, out_fd));
   data_.set(new ParentProcess::Data(socket));
@@ -369,4 +369,4 @@ p_object ParentProcess::proxy() {
   return p_object(0, data());
 }
 
-} // namespace positron
+} // namespace neutrino

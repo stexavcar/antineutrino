@@ -4,7 +4,7 @@
 #include "utils/buffer.h"
 #include "utils/array.h"
 
-namespace positron {
+namespace neutrino {
 
 template <typename T>
 buffer<T>::buffer() {
@@ -95,6 +95,6 @@ own_buffer<T, D>::~own_buffer() {
     D::dispose(this->operator[](i));
 }
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _UTILS_BUFFER_INL

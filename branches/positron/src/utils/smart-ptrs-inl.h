@@ -4,7 +4,7 @@
 #include "utils/check.h"
 #include "utils/smart-ptrs.h"
 
-namespace positron {
+namespace neutrino {
 
 template <typename T, class D>
 own_ptr<T, D>::~own_ptr() {
@@ -31,6 +31,6 @@ vector<T> own_vector<T>::release() {
 }
 
 
-} // positron
+} // neutrino
 
 #endif // _UTILS_SMART_PTRS_INL

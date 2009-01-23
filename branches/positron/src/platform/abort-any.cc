@@ -4,7 +4,7 @@
 #include "platform/abort.h"
 #include "utils/string-inl.h"
 
-namespace positron {
+namespace neutrino {
 
 void Abort::abort(string format, const var_args &vars) {
   string_stream buf;
@@ -17,4 +17,4 @@ void Abort::install_signal_handlers() {
   // no default implementation
 }
 
-} // namespace positron
+} // namespace neutrino

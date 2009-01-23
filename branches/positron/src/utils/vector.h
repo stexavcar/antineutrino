@@ -4,7 +4,7 @@
 #include "utils/array.h"
 #include "utils/global.h"
 
-namespace positron {
+namespace neutrino {
 
 template <typename T>
 class vector {
@@ -38,6 +38,6 @@ public:
   void set(const T &a, const T &b);
 };
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _UTILS_VECTOR

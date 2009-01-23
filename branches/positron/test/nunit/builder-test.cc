@@ -4,7 +4,7 @@
 #include "utils/vector-inl.h"
 #include "test-inl.h"
 
-using namespace positron;
+using namespace neutrino;
 
 class StaticOutStream {
 public:

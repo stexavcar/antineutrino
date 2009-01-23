@@ -5,7 +5,7 @@
 #include "utils/global.h"
 #include "utils/smart-ptrs.h"
 
-namespace positron {
+namespace neutrino {
 
 template <typename T>
 class buffer : public nocopy {

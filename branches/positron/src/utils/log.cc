@@ -5,7 +5,7 @@
 #include "utils/string-inl.h"
 
 
-namespace positron {
+namespace neutrino {
 
 
 Log::Verbosity Log::verbosity_ = Log::INFO;
@@ -63,4 +63,4 @@ void Log::error(string format, const var_args &elms) {
 }
 
 
-} // namespace positron
+} // namespace neutrino

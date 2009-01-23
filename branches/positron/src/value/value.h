@@ -3,7 +3,7 @@
 
 #include "utils/global.h"
 
-namespace positron {
+namespace neutrino {
 
 class Data {
 
@@ -17,8 +17,9 @@ static inline C *cast(Data *data);
 
 class Signal : public Data {
 public:
-  enum Type { sSuccess, sFailure };
+  enum Type { sSuccess, sInternalError };
   inline Type type();
+  inline word payload();
 };
 
 class Success : public Signal {
@@ -27,10 +28,14 @@ public:
 };
 
 class Failure : public Signal {
-public:
-  static inline Failure *make();
 };
 
-} // namespace positron
+class InternalError : public Failure {
+public:
+  enum Type { ieUnknown, ieSystem, ieEnvironment };
+  static inline InternalError *make(Type type);
+};
+
+} // namespace neutrino
 
 #endif // _VALUE_VALUE

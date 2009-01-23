@@ -5,7 +5,7 @@
 #include "utils/buffer-inl.h"
 #include "utils/string.h"
 
-namespace positron {
+namespace neutrino {
 
 template <word L>
 const variant &var_args_impl<L>::operator[](word i) const {
@@ -56,6 +56,6 @@ static inline var_args_impl<4> args(const variant &a0, const variant &a1,
 }
 
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _UTILS_STRING_INL

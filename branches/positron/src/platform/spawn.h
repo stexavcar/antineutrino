@@ -8,7 +8,7 @@
 #include "utils/smart-ptrs.h"
 #include "value/condition-inl.h"
 
-namespace positron {
+namespace neutrino {
 
 class ParentProcess {
 public:
@@ -37,6 +37,6 @@ private:
   own_ptr<Data> data_;
 };
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _PLATFORM_SOCKET

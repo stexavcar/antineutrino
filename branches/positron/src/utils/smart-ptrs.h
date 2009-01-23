@@ -4,7 +4,7 @@
 #include "utils/global.h"
 #include "utils/vector.h"
 
-namespace positron {
+namespace neutrino {
 
 
 template <typename T>

@@ -6,7 +6,7 @@
 #include "utils/pollock.h"
 #include "utils/types.h"
 
-namespace positron {
+namespace neutrino {
 
 
 typedef signed long word;
@@ -50,7 +50,7 @@ private:
   word line_;
 };
 
-#define dHere positron::SourceLocation(__FILE__, __LINE__)
+#define dHere neutrino::SourceLocation(__FILE__, __LINE__)
 
 #ifdef DEBUG
 #define ARRAY_BOUNDS_CHECKS
@@ -67,6 +67,6 @@ private:
 #define IF(ccCond, then_part) ccCond(then_part, typedef void SEMI_STATIC_JOIN(__If__, __LINE__))
 #define IF_ELSE(ccCond, then_part, else_part) ccCond(then_part, else_part)
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _UTILS_GLOBAL

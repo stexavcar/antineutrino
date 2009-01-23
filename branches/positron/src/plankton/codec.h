@@ -3,7 +3,7 @@
 
 #include "utils/global.h"
 
-namespace positron {
+namespace neutrino {
 
 template <typename Out>
 class Encoder {
@@ -22,6 +22,6 @@ public:
   static const word kMaxEncodedInt32Size = 4;
 };
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _PLANKTON_CODEC

@@ -4,7 +4,7 @@
 #include "plankton/plankton.h"
 #include "utils/check-inl.h"
 
-namespace positron {
+namespace neutrino {
 
 
 template <class T>
@@ -19,7 +19,7 @@ static inline T cast(p_value obj) {
   return T(obj.data(), obj.dtable());
 }
 
-} // namespace positron
+} // namespace neutrino
 
 
 #endif // _PLANKTON_PLANKTON_INL

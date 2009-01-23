@@ -1,7 +1,7 @@
 #include "utils/check-inl.h"
 #include "utils/string-inl.h"
 
-namespace positron {
+namespace neutrino {
 
 void Check::predicate_failed(SourceLocation here, string format,
     string details, const var_args &vars) {
@@ -30,4 +30,4 @@ void Check::check_failed(SourceLocation here, string source) {
   Abort::abort("%", args(buf.raw_c_str()));
 }
 
-} // namespace positron
+} // namespace neutrino

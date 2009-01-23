@@ -4,13 +4,13 @@
 #include "value/condition.h"
 #include "value/value-inl.h"
 
-namespace positron {
+namespace neutrino {
 
 template <typename S, typename F>
 bool maybe<S, F>::has_succeeded() {
   return is<S>(data_);
 }
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _CONDITION_H

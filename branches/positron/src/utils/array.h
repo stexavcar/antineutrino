@@ -3,7 +3,7 @@
 
 #include "utils/global.h"
 
-namespace positron {
+namespace neutrino {
 
 template <typename T>
 class array {
@@ -40,6 +40,6 @@ private:
 #define TO_ARRAY(T, data, length) array<T>(data)
 #endif
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _UTILS_ARRAY

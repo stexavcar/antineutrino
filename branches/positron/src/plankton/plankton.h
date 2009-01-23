@@ -4,7 +4,7 @@
 #include "utils/global.h"
 #include "utils/string.h"
 
-namespace positron {
+namespace neutrino {
 
 class p_value {
 public:
@@ -125,6 +125,6 @@ template <class T>
 static inline T cast(p_value obj);
 
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _PLANKTON_PLANKTON

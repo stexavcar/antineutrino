@@ -10,7 +10,7 @@
 #include "utils/buffer.h"
 
 
-namespace positron {
+namespace neutrino {
 
 
 class string {
@@ -194,6 +194,6 @@ public:
 };
 
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _UTILS_STRING

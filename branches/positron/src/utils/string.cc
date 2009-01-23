@@ -3,7 +3,7 @@
 #include "utils/string.h"
 #include <cstdio>
 
-namespace positron {
+namespace neutrino {
 
 void string_stream::add(char c) {
   buf().append(c);
@@ -183,4 +183,4 @@ void string::println(FILE *out) {
   fputc('\n', out);
 }
 
-} // namespace positron
+} // namespace neutrino

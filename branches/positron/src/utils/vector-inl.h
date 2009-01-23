@@ -4,7 +4,7 @@
 #include "utils/vector.h"
 #include "utils/check-inl.h"
 
-namespace positron {
+namespace neutrino {
 
 template <typename T>
 T &vector<T>::operator[](word offset) {
@@ -34,6 +34,6 @@ vector<T> vector<T>::allocate(word length) {
   return vector<T>(new T[length], length);
 }
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _UTILS_VECTOR_INL

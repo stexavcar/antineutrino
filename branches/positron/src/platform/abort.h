@@ -4,7 +4,7 @@
 #include "utils/global.h"
 #include "utils/string.h"
 
-namespace positron {
+namespace neutrino {
 
 class Finalized {
 public:
@@ -34,6 +34,6 @@ private:
   static Finalized *last_;
 };
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _PLATFORM_ABORT

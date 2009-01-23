@@ -5,7 +5,7 @@
 #include "utils/string.h"
 #include "utils/types.h"
 
-namespace positron {
+namespace neutrino {
 
 class Log {
 public:

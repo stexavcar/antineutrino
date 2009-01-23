@@ -2,7 +2,7 @@
 #include "test-inl.h"
 
 
-using namespace positron;
+using namespace neutrino;
 
 
 TEST(basic_types) {

@@ -4,7 +4,7 @@
 #include "utils/array.h"
 #include "utils/check-inl.h"
 
-namespace positron {
+namespace neutrino {
 
 template <typename T>
 array<T> array<T>::from(word offset) {
@@ -27,6 +27,6 @@ const T &array<T>::operator[](word offset) const {
   return data_[offset];
 }
 
-} // namespace positron
+} // namespace neutrino
 
 #endif // _UTILS_ARRAY_INL
