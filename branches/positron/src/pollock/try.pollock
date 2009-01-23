@@ -1,0 +1,2 @@
+case: try ${x:expr} ;
+emit: p${domain}Try(${x});

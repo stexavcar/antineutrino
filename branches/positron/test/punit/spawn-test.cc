@@ -12,7 +12,7 @@ using namespace positron;
 
 class TestChildProcess : public ChildProcess {
 public:
-  bool open(const string &test_name);
+  boole open(const string &test_name);
   ~TestChildProcess();
 };
 
@@ -22,7 +22,7 @@ TestChildProcess::~TestChildProcess() {
 }
 
 
-bool TestChildProcess::open(const string &test_name) {
+boole TestChildProcess::open(const string &test_name) {
   string self = UnitTest::args()[0];
   embed_vector<string, 3> args;
   args[0] = self;
@@ -38,7 +38,7 @@ bool TestChildProcess::open(const string &test_name) {
 
 TEST(hul_igennem) {
   TestChildProcess child;
-  assert child.open("hul_igennem_child");
+  try child.open("hul_igennem_child");
   p_object proxy = child.proxy();
   for (word i = 0; i < 100; i++) {
     MessageOut buffer;
@@ -57,11 +57,11 @@ TEST(hul_igennem_child) {
   if (!UnitTest::spawned()) return;
   assert string("bar") == string(getenv("foo"));
   ParentProcess parent;
-  assert parent.open();
+  try parent.open();
   word count = 0;
   while (true) {
     MessageIn message;
-    assert parent.receive(message);
+    try parent.receive(message);
     if (message.selector() == "next_int") {
       message.reply(MessageOut::new_integer(count++));
     } else if (message.selector() == "exit") {
@@ -75,7 +75,7 @@ TEST(hul_igennem_child) {
 
 TEST(sequence) {
   TestChildProcess child;
-  assert child.open("sequence_child");
+  try child.open("sequence_child");
   for (word i = 0; i < 1000; i++) {
     MessageOut message;
     p_value v = child.proxy().send_sync(message.new_string("ping"));
@@ -93,10 +93,10 @@ TEST(sequence) {
 TEST(sequence_child) {
   if (!UnitTest::spawned()) return;
   ParentProcess parent;
-  assert parent.open();
+  try parent.open();
   for (word i = 0; i < 1000; i++) {
     MessageIn message;
-    assert parent.receive(message);
+    try parent.receive(message);
     assert message.selector() == string("ping");
     message.reply(MessageOut::new_integer(i * 3));
   }
@@ -110,7 +110,7 @@ TEST(sequence_child) {
 
 TEST(sync_auto_reply) {
   TestChildProcess child;
-  assert child.open("sync_auto_reply_child");
+  try child.open("sync_auto_reply_child");
   for (word i = 0; i < 100; i++) {
     MessageOut message;
     p_value v = child.proxy().send_sync(message.new_string("pang"));
@@ -122,10 +122,10 @@ TEST(sync_auto_reply) {
 TEST(sync_auto_reply_child) {
   if (!UnitTest::spawned()) return;
   ParentProcess parent;
-  assert parent.open();
+  try parent.open();
   for (word i = 0; i < 100; i++) {
     MessageIn message;
-    assert parent.receive(message);
+    try parent.receive(message);
     assert message.selector() == string("pang");
   }
 }

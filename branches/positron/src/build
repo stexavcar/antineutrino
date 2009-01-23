@@ -34,6 +34,12 @@ library (
     'utils/types.h',
     'utils/vector.h',
     'utils/vector-inl.h',
+    'value/condition.h',
+    'value/condition-inl.h',
+    'value/value.h',
+    'value/value-inl.h',
+    'value/pointer.h',
+    'value/pointer-inl.h',
     '$platform-files'
   ]
 )

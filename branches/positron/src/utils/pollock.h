@@ -3,6 +3,7 @@
 
 // Pollock macros
 #define assert
+#define try
 
 
 #ifdef DEBUG
@@ -24,5 +25,12 @@
 #define pPositronAssert(expr)
 
 #endif
+
+#define pPositronTry(__expr__)                                       \
+  do {                                                               \
+    boole __value__ = (__expr__);                                    \
+    if (!__value__.has_succeeded())                                  \
+      return __value__;                                              \
+  } while (false)
 
 #endif // _UTILS_POLLOCK

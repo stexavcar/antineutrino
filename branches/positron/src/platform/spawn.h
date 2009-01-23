@@ -6,6 +6,7 @@
 #include "utils/global.h"
 #include "utils/string.h"
 #include "utils/smart-ptrs.h"
+#include "value/condition-inl.h"
 
 namespace positron {
 
@@ -15,8 +16,8 @@ public:
   ParentProcess() : data_(NULL) { }
   ~ParentProcess();
   p_object proxy();
-  bool open();
-  bool receive(MessageIn &message);
+  boole open();
+  boole receive(MessageIn &message);
 private:
   Data *data() { return *data_; }
   own_ptr<Data> data_;
@@ -28,9 +29,9 @@ public:
   ChildProcess() : data_(NULL) { }
   ~ChildProcess();
   p_object proxy();
-  bool open(string &command, vector<string> &args, vector< pair<string> > &env);
+  boole open(string &command, vector<string> &args, vector< pair<string> > &env);
   word wait();
-  bool receive(MessageIn &message);
+  boole receive(MessageIn &message);
 private:
   Data *data() { return *data_; }
   own_ptr<Data> data_;

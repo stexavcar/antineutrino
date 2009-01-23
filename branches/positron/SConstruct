@@ -46,7 +46,7 @@ def configure(relative_root, build_config, pollock_path):
     options[key] = setting
     is_default = (setting == value['default'])
     if not is_default or value.get('always_in_variant', False):
-      variant_parts.append(setting) 
+      variant_parts.append(setting)
   config = build.read_build_file(relative_root, build_config, options)
   pollock_processor = pollock.read_processor(pollock_path)
   variant = "-".join(variant_parts)

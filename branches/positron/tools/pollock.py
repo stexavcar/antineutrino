@@ -109,15 +109,14 @@ class PollockProcessor(object):
     match = self.matcher.search(source)
     parts = [ ]
     while match:
-      if False and source[match.start()-8:match.start()-1] == '#define':
-        match = self.matcher.search(source, match.end())
-      else:
-        parts.append(source[last:match.start()])
-        rules = self.rules[match.group(1)]
-        had_match = False
-        offset = None
+      parts.append(source[last:match.start()])
+      rules = self.rules[match.group(1)]
+      had_match = False
+      offset = None
+      body = match.group(2)
+      if len(body.splitlines()) == 1:
         for rule in rules:
-          captures = rule.replace(match.group(2))
+          captures = rule.replace(body)
           if captures:
             captures.update(**vars)
             output = rule.emit(captures)
@@ -127,8 +126,11 @@ class PollockProcessor(object):
             break
         if not had_match:
           self.report_error(source, name, match.start(0), match.group(1))
-        last = offset
-        match = self.matcher.search(source, last)
+      else:
+        parts.append(match.group(1))
+        offset = match.end(1)
+      last = offset
+      match = self.matcher.search(source, last)
     parts.append(source[last:])
     return ''.join(parts)
 

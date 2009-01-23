@@ -176,7 +176,7 @@ FrozenObject MessageOut::allocate(p_value::Type type, word size) {
   return result;
 }
 
-bool MessageIn::reply(p_value value) {
+boole MessageIn::reply(p_value value) {
   assert stream_ != static_cast<void*>(NULL);
   has_replied_ = true;
   return stream_->send_reply(*this, value);

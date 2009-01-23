@@ -18,7 +18,7 @@ static const string kMasterEnvVariable = "POSITRON_MASTER";
 class Pipe {
 public:
   Pipe() : read_fd_(0), write_fd_(0) { }
-  bool open();
+  boole open();
   int read_fd() { return read_fd_; }
   int write_fd() { return write_fd_; }
 private:
@@ -32,11 +32,11 @@ class HalfChannel {
 public:
   HalfChannel(int in_fd, int out_fd)
     : in_fd_(in_fd), out_fd_(out_fd) { }
-  bool set_remain_open_on_exec();
+  boole set_remain_open_on_exec();
   int in_fd() const { return in_fd_; }
   int out_fd() const { return out_fd_; }
 private:
-  static bool set_remain_open_on_exec(int fd);
+  static boole set_remain_open_on_exec(int fd);
   int in_fd_;
   int out_fd_;
 };
@@ -44,7 +44,7 @@ private:
 // A duplex communication channel made up of two pipes.
 class Channel {
 public:
-  bool open();
+  boole open();
   HalfChannel there() { return HalfChannel(to().read_fd(), from().write_fd()); }
   HalfChannel here() { return HalfChannel(from().read_fd(), to().write_fd()); }
 private:
@@ -64,8 +64,8 @@ public:
   word read(vector<uint8_t> data);
   void send_message(MessageHeap &heap, p_string name, p_array args,
       bool is_synchronous);
-  bool receive_message(MessageIn &message);
-  bool send_reply(MessageIn &message, p_value value);
+  boole receive_message(MessageIn &message);
+  boole send_reply(MessageIn &message, p_value value);
   p_value receive_reply(MessageHeap &heap);
 private:
   HalfChannel &channel() { return channel_; }
@@ -118,7 +118,7 @@ void FileSocket::send_message(MessageHeap &heap, p_string name,
   write(memory);
 }
 
-bool FileSocket::receive_message(MessageIn &message) {
+boole FileSocket::receive_message(MessageIn &message) {
   MessageHeader header;
   read(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
   own_vector<uint8_t> memory(vector<uint8_t>::allocate(header.data.heap_size));
@@ -129,13 +129,13 @@ bool FileSocket::receive_message(MessageIn &message) {
   message.set_stream(this);
   message.set_is_synchronous(header.data.is_synchronous);
   message.take_ownership(heap);
-  return true;
+  return Success::make();
 }
 
-bool FileSocket::send_reply(MessageIn &message, p_value value) {
+boole FileSocket::send_reply(MessageIn &message, p_value value) {
   if (!message.is_synchronous()) {
     LOG().warn("Reply to asynchronous message ignored.", args());
-    return false;
+    return Failure::make();
   }
   assert value.impl_id() == MessageHeap::id();
   ReplyHeader header;
@@ -147,7 +147,7 @@ bool FileSocket::send_reply(MessageIn &message, p_value value) {
   header.data.value = value.data();
   write(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
   write(memory);
-  return true;
+  return Success::make();
 }
 
 p_value FileSocket::receive_reply(MessageHeap &heap) {
@@ -222,28 +222,28 @@ p_value ParentProcess::Data::send_bridge(const p_object *obj, p_string name,
   }
 }
 
-bool Pipe::open() {
+boole Pipe::open() {
   embed_array<int, 2> pipes;
   if (::pipe(pipes.start()) == -1) {
     LOG().error("Error creating pipe (%)", args(string(::strerror(errno))));
-    return false;
+    return Failure::make();
   }
   read_fd_ = pipes[0];
   write_fd_ = pipes[1];
-  return true;
+  return Success::make();
 }
 
-bool HalfChannel::set_remain_open_on_exec() {
-  return set_remain_open_on_exec(in_fd_)
-      && set_remain_open_on_exec(out_fd_);
+boole HalfChannel::set_remain_open_on_exec() {
+  try set_remain_open_on_exec(in_fd_);
+  return set_remain_open_on_exec(out_fd_);
 }
 
-bool HalfChannel::set_remain_open_on_exec(int fd) {
+boole HalfChannel::set_remain_open_on_exec(int fd) {
   if (::fcntl(fd, F_SETFD, 0) == -1) {
     LOG().error("Error fcntl-ing pipe (%)", args(string(::strerror(errno))));
-    return false;
+    return Failure::make();
   }
-  return true;
+  return Success::make();
 }
 
 // ---
@@ -252,26 +252,25 @@ bool HalfChannel::set_remain_open_on_exec(int fd) {
 
 ChildProcess::~ChildProcess() { }
 
-bool Channel::open() {
-  return to().open() && from().open();
+boole Channel::open() {
+  try to().open();
+  return from().open();
 }
 
-bool ChildProcess::open(string &command, vector<string> &args,
+boole ChildProcess::open(string &command, vector<string> &args,
     vector< pair<string> > &env) {
   // Create a full communication channel.
   Channel channel;
-  if (!channel.open())
-    return false;
+  try channel.open();
   FileSocket own_socket(channel.here());
   // Make the child's end of the channel stay open after the process
   // has been replaced.
   HalfChannel there = channel.there();
-  if (!there.set_remain_open_on_exec())
-    return false;
+  try there.set_remain_open_on_exec();
   pid_t pid = ::fork();
   if (pid == -1) {
     LOG().error("Error forking (%)", positron::args(string(::strerror(errno))));
-    return false;
+    return Failure::make();
   } else if (pid == 0) {
     // We've successfully created the child process.  Now run the executable.
     const char *file = command.start();
@@ -297,11 +296,11 @@ bool ChildProcess::open(string &command, vector<string> &args,
     env_arr[env.length() + 1] = NULL;
     ::execve(file, arg_arr.start(), env_arr.start());
     assert false;
-    return true;
+    return Success::make();
   } else {
     // Continue in the parent process.
     data_.set(new ChildProcess::Data(pid, own_socket));
-    return true;
+    return Success::make();
   }
 }
 
@@ -327,7 +326,7 @@ word ChildProcess::wait() {
   }
 }
 
-bool ChildProcess::receive(MessageIn &message) {
+boole ChildProcess::receive(MessageIn &message) {
   return data()->socket().receive_message(message);
 }
 
@@ -337,32 +336,32 @@ bool ChildProcess::receive(MessageIn &message) {
 
 ParentProcess::~ParentProcess() { }
 
-bool ParentProcess::open() {
+boole ParentProcess::open() {
   const char *raw_master = getenv(kMasterEnvVariable.start());
   if (raw_master == NULL) {
     LOG().error("Could not read master variable", args(0));
-    return false;
+    return Failure::make();
   }
   string master = raw_master;
   char *end = NULL;
   int in_fd = strtol(master.start(), &end, 10);
   if (*end != ':') {
     LOG().error("Error parsing master fd %", args(master));
-    return false;
+    return Failure::make();
   }
   end++;
   int out_fd = strtol(end, &end, 10);
   if (end != master.end()) {
     LOG().error("Error parsing master fd %", args(master));
-    return false;
+    return Failure::make();
   }
   FileSocket socket(HalfChannel(in_fd, out_fd));
   data_.set(new ParentProcess::Data(socket));
   LOG().info("Opened connection to master through %", args(master));
-  return true;
+  return Success::make();
 }
 
-bool ParentProcess::receive(MessageIn &message) {
+boole ParentProcess::receive(MessageIn &message) {
   return data()->socket().receive_message(message);
 }
 

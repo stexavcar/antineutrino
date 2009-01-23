@@ -6,6 +6,7 @@
 #include "utils/buffer.h"
 #include "utils/string.h"
 #include "utils/smart-ptrs.h"
+#include "value/condition.h"
 
 namespace positron {
 
@@ -74,14 +75,14 @@ private:
 
 class IStream {
 public:
-  virtual bool send_reply(MessageIn &message, p_value value) = 0;
+  virtual boole send_reply(MessageIn &message, p_value value) = 0;
 };
 
 class MessageIn {
 public:
   MessageIn() : stream_(NULL), is_synchronous_(false), has_replied_(false) { }
   inline ~MessageIn();
-  bool reply(p_value value);
+  boole reply(p_value value);
   void set_selector(p_string v) { selector_ = v; }
   p_string selector() { return selector_; }
   void set_args(p_array v) { args_ = v; }
