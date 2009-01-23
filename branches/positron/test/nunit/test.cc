@@ -108,6 +108,7 @@ int UnitTest::main(vector<const char*> args) {
   }
   if (print_run_count == 0 && print_run_count)
     printf("No tests were run.\n");
+  assert Abort::resource_count() == 0;
   return 0;
 }
 

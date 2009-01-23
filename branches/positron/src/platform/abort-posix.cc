@@ -134,7 +134,7 @@ static void print_error_report(int signum, siginfo_t *siginfo, void *ptr) {
     fprintf(stderr, "errno:  %s\n", strerror(errno));
   }
   print_stack_trace(ptr, "neutrino::");
-  Abort::finalize();
+  Abort::release_resources();
   exit(signum);
 }
 

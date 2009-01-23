@@ -4,44 +4,43 @@
 
 namespace neutrino {
 
-Finalized *Abort::first_ = NULL;
-Finalized *Abort::last_ = NULL;
+abstract_resource *Abort::first_ = NULL;
+abstract_resource *Abort::last_ = NULL;
 
-void Finalized::install() {
-  prev_ = Abort::last_;
-  next_ = NULL;
-  if (Abort::first_ == NULL) Abort::first_ = this;
-  if (Abort::last_ != NULL) Abort::last_->next_ = this;
-  Abort::last_ = this;
+void Abort::register_resource(abstract_resource &that) {
+  assert that.prev_ == ((void*) NULL);
+  assert that.next_ == ((void*) NULL);
+  that.prev_ = last_;
+  that.next_ = NULL;
+  if (first_ == NULL) first_ = &that;
+  if (last_ != NULL) last_->next_ = &that;
+  last_ = &that;
 }
 
-void Finalized::uninstall() {
-  if (prev_ == NULL) Abort::first_ = next_;
-  else prev_->next_ = next_;
-  if (next_ == NULL) Abort::last_ = prev_;
-  else next_->prev_ = prev_;
-}
-
-Finalized::Finalized() : has_been_finalized_(false) {
-  install();
-}
-
-Finalized::~Finalized() {
-  uninstall();
-  has_been_finalized_ = true;
+void Abort::unregister_resource(abstract_resource &that) {
+  if (that.prev_ == NULL) first_ = that.next_;
+  else that.prev_->next_ = that.next_;
+  if (that.next_ == NULL) last_ = that.prev_;
+  else that.next_->prev_ = that.prev_;
 }
 
 bool Abort::has_cleaned_up_ = false;
-void Abort::finalize() {
+void Abort::release_resources() {
   if (has_cleaned_up_) return;
-  LOG().info("Finalizing objects", args(0));
+  LOG().info("Releasing resources", args(0));
   has_cleaned_up_ = true;
-  Finalized *current = Abort::first_;
+  while (first_ != NULL)
+    first_->release();
+}
+
+word Abort::resource_count() {
+  int count = 0;
+  abstract_resource *current = first_;
   while (current != NULL) {
-    current->cleanup();
+    count++;
     current = current->next_;
   }
+  return count;
 }
 
 } // namespace neutrino
-

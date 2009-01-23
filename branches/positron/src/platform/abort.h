@@ -6,32 +6,18 @@
 
 namespace neutrino {
 
-class Finalized {
-public:
-  Finalized();
-  virtual ~Finalized();
-  virtual void cleanup() = 0;
-  void install();
-  void uninstall();
-  bool has_been_finalized() { return has_been_finalized_; }
-private:
-  friend class Abort;
-  bool has_been_finalized_;
-  static Finalized *first_;
-  Finalized *prev_;
-  Finalized *next_;
-};
-
 class Abort {
 public:
   static void abort(string format, const var_args &args);
   static void install_signal_handlers();
-  static void finalize();
+  static void release_resources();
+  static void register_resource(abstract_resource &that);
+  static void unregister_resource(abstract_resource &that);
+  static word resource_count();
 private:
-  friend class Finalized;
   static bool has_cleaned_up_;
-  static Finalized *first_;
-  static Finalized *last_;
+  static abstract_resource *first_;
+  static abstract_resource *last_;
 };
 
 } // namespace neutrino

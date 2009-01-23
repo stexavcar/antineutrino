@@ -13,6 +13,14 @@ namespace neutrino {
 
 static const string kMasterEnvVariable = "POSITRON_MASTER";
 
+class close_file_descriptor {
+public:
+  static void release(int fd) {
+    LOG().info("Closed file descriptor %", args(fd));
+    close(fd);
+  }
+};
+
 // A single pipe with two end-points, one that input can be written
 // into and one that it can be read from.
 class Pipe {
@@ -69,11 +77,11 @@ public:
   p_value receive_reply(MessageHeap &heap);
 private:
   HalfChannel &channel() { return channel_; }
-  int in() { return in_; }
-  int out() { return out_; }
+  int in() { return *in_; }
+  int out() { return *out_; }
   HalfChannel channel_;
-  int in_;
-  int out_;
+  own_resource<int, close_file_descriptor> in_;
+  own_resource<int, close_file_descriptor> out_;
 };
 
 word FileSocket::write(const vector<uint8_t> &data) {
@@ -168,9 +176,9 @@ word FileSocket::read(vector<uint8_t> data) {
 
 class ChildProcess::Data : public p_value::DTable {
 public:
-  Data(pid_t child, const FileSocket &socket)
+  Data(pid_t child, const HalfChannel &channel)
     : child_(child)
-    , socket_(socket) {
+    , socket_(channel) {
     object.send = send_bridge;
   }
   pid_t child() { return child_; }
@@ -198,7 +206,7 @@ p_value ChildProcess::Data::send_bridge(const p_object *obj,
 
 class ParentProcess::Data : public p_value::DTable {
 public:
-  Data(const FileSocket &socket) : socket_(socket) {
+  Data(const HalfChannel &channel) : socket_(channel) {
     object.send = send_bridge;
   }
   FileSocket &socket() { return socket_; }
@@ -230,6 +238,7 @@ boole Pipe::open() {
   }
   read_fd_ = pipes[0];
   write_fd_ = pipes[1];
+  LOG().info("Opened pipe, read: %, write: %", args(read_fd_, write_fd_));
   return Success::make();
 }
 
@@ -262,7 +271,6 @@ boole ChildProcess::open(string &command, vector<string> &args,
   // Create a full communication channel.
   Channel channel;
   try channel.open();
-  FileSocket own_socket(channel.here());
   // Make the child's end of the channel stay open after the process
   // has been replaced.
   HalfChannel there = channel.there();
@@ -299,7 +307,7 @@ boole ChildProcess::open(string &command, vector<string> &args,
     return Success::make();
   } else {
     // Continue in the parent process.
-    data_.set(new ChildProcess::Data(pid, own_socket));
+    data_.set(new ChildProcess::Data(pid, channel.here()));
     return Success::make();
   }
 }
@@ -355,8 +363,7 @@ boole ParentProcess::open() {
     LOG().error("Error parsing master fd %", args(master));
     return InternalError::make(InternalError::ieEnvironment);
   }
-  FileSocket socket(HalfChannel(in_fd, out_fd));
-  data_.set(new ParentProcess::Data(socket));
+  data_.set(new ParentProcess::Data(HalfChannel(in_fd, out_fd)));
   LOG().info("Opened connection to master through %", args(master));
   return Success::make();
 }

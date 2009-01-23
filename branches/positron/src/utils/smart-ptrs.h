@@ -47,6 +47,32 @@ private:
   T *value_;
 };
 
+class abstract_resource {
+public:
+  abstract_resource() : prev_(NULL), next_(NULL) { }
+  virtual void release() = 0;
+private:
+  friend class Abort;
+  abstract_resource *prev_;
+  abstract_resource *next_;
+};
+
+template <typename T, class D>
+class own_resource : public abstract_resource, public nocopy {
+public:
+  enum State { rsEmpty, rsActive, rsReleased };
+  inline ~own_resource();
+  inline own_resource(const T &t);
+  inline own_resource();
+  void acquire(const T &t);
+  const T &operator*() { return value_; }
+  virtual void release();
+  State state() { return state_; }
+private:
+  T value_;
+  State state_;
+};
+
 
 template <typename T>
 class own_vector : public nocopy {

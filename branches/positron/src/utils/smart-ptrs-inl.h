@@ -30,6 +30,37 @@ vector<T> own_vector<T>::release() {
   return result;
 }
 
+template <typename T, typename D>
+own_resource<T, D>::own_resource(const T &t)
+  : state_(rsEmpty) {
+  acquire(t);
+}
+
+template <typename T, typename D>
+own_resource<T, D>::own_resource()
+  : state_(rsEmpty) { }
+
+template <typename T, typename D>
+own_resource<T, D>::~own_resource() {
+  release();
+}
+
+template <typename T, typename D>
+void own_resource<T, D>::release() {
+  if (state() == rsActive) {
+    D::release(this->operator*());
+    Abort::unregister_resource(*this);
+    state_ = rsReleased;
+  }
+}
+
+template <typename T, typename D>
+void own_resource<T, D>::acquire(const T &t) {
+  assert state() == rsEmpty;
+  state_ = rsActive;
+  value_ = t;
+  Abort::register_resource(*this);
+}
 
 } // neutrino
 
