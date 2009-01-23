@@ -11,6 +11,7 @@ namespace neutrino {
 
 typedef signed long word;
 typedef unsigned long uword;
+typedef uint32_t code_point;
 
 
 /**
@@ -26,6 +27,8 @@ private:
   const nocopy &operator=(const nocopy&);
 };
 
+static const word kWordSize = sizeof(word);
+
 /**
  * Returns the new extended capacity given that the current capacity
  * is the given value.  The result approximates (to within 1%) an
@@ -35,6 +38,8 @@ private:
 static inline word grow_value(word n) {
   return ((n << 3) + (n << 2) + n) >> 3;
 }
+
+#define KB * 1024
 
 class SourceLocation {
 public:

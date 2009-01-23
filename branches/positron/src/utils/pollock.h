@@ -4,6 +4,7 @@
 // Pollock macros
 #define assert
 #define try
+#define parse
 
 
 #ifdef DEBUG
@@ -12,6 +13,7 @@
 #define pNeutrinoAssertNeq(left, right) cCheckNeq(left, right)
 #define pNeutrinoAssertLt(left, right) cCheckLt(left, right)
 #define pNeutrinoAssertLeq(left, right) cCheckLeq(left, right)
+#define pNeutrinoAssertGt(left, right) cCheckGt(left, right)
 #define pNeutrinoAssertGeq(left, right) cCheckGeq(left, right)
 #define pNeutrinoAssert(expr) cCheck(expr)
 
@@ -21,6 +23,7 @@
 #define pNeutrinoAssertNeq(left, right)
 #define pNeutrinoAssertLt(left, right)
 #define pNeutrinoAssertLeq(left, right)
+#define pNeutrinoAssertGt(left, right)
 #define pNeutrinoAssertGeq(left, right)
 #define pNeutrinoAssert(expr)
 

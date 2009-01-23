@@ -77,12 +77,14 @@ private:
 template <typename T>
 class own_vector : public nocopy {
 public:
+  own_vector() { }
   own_vector(vector<T> value) : value_(value) { }
   ~own_vector();
 
   inline T *start() { return value_.start(); }
   inline T &operator[](word index) { return value_[index]; }
   inline vector<T> release();
+  inline void set(vector<T> v) { value_ = v; }
   inline vector<T> as_vector() { return value_; }
 private:
   vector<T> value_;

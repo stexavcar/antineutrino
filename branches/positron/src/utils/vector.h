@@ -14,9 +14,14 @@ public:
   T &operator[](word offset);
   const T &operator[](word offset) const;
   T *start() { return data_; }
+  T *end() { return start() + length(); }
+  T &first();
+  T &last();
+  bool is_empty() { return length_ == 0; }
   const T *start() const { return data_; }
   word length() const { return length_; }
   static vector<T> allocate(word length);
+  static vector<T> allocate(Arena &arena, word length);
   array<T> as_array();
 private:
   T *data_;

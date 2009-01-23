@@ -8,7 +8,7 @@
 namespace neutrino {
 
 
-Log::Verbosity Log::verbosity_ = Log::INFO;
+Log::Verbosity Log::verbosity_ = Log::WARN;
 
 
 const char *SourceLocation::short_name() const {

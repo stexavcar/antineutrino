@@ -8,9 +8,16 @@
 namespace neutrino {
 
 template <typename T>
+class new_delete_allocator {
+public:
+  T *allocate(size_t size) { return new T[size]; }
+  void dispose(T *obj) { delete[] obj; }
+};
+
+template < typename T, class A = new_delete_allocator<T> >
 class buffer : public nocopy {
 public:
-  inline buffer();
+  inline buffer(A allocator = A());
   inline ~buffer();
   void append(const T &obj);
   void push(const T &obj);
@@ -27,11 +34,12 @@ public:
 
 private:
   void extend_capacity(word required);
+  A allocator() { return allocator_; }
   static const word kInitialCapacity = 4;
   T *data_;
   word length_;
   word capacity_;
-
+  A allocator_;
 };
 
 template <typename T, class D = ptr_delete<T> >

@@ -34,6 +34,23 @@ vector<T> vector<T>::allocate(word length) {
   return vector<T>(new T[length], length);
 }
 
+template <typename T>
+vector<T> vector<T>::allocate(Arena &arena, word length) {
+  return vector<T>(new (arena) T[length], length);
+}
+
+template <typename T>
+T &vector<T>::first() {
+  assert !is_empty();
+  return this->operator[](0);
+}
+
+template <typename T>
+T &vector<T>::last() {
+  assert !is_empty();
+  return this->operator[](length() - 1);
+}
+
 } // namespace neutrino
 
 #endif // _UTILS_VECTOR_INL

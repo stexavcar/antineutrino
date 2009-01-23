@@ -82,7 +82,6 @@ TEST(sequence) {
     assert (cast<p_integer>(v).value()) == i * 3;
   }
   for (word i = 0; i < 1000; i++) {
-    ((int*) 0)[0] = 5;
     MessageIn message;
     child.receive(message);
     assert message.selector() == string("pong");

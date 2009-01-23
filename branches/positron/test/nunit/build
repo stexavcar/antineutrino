@@ -3,7 +3,9 @@ program (
   domain = 'Nunit',
   flags = mode,
   srcs = [
+    'arena-test.cc',
     'builder-test.cc',
+    'read-test.cc',
     'string-test.cc',
     'spawn-test.cc',
     'type-test.cc',

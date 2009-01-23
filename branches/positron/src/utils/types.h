@@ -19,6 +19,7 @@ typedef unsigned __int64 uint64_t;
 namespace neutrino {
 
 
+class Arena;
 class MessageHeap;
 class MessageIn;
 class MessageOut;

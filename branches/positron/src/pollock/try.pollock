@@ -1,2 +1,5 @@
+case: try parse ${type:expr} * ${name:expr} = ${value:expr} ;
+emit: pTryParse(${type}, ${name}, ${value});
+
 case: try ${x:expr} ;
 emit: p${domain}Try(${x});
