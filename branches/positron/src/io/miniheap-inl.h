@@ -81,19 +81,20 @@ void ObjectProxyDTable<T>::add_method(p::String name,
 }
 
 template <typename T>
-p::Object ObjectProxyDTable<T>::to_object(T &proxy) {
-  return p::Object(reinterpret_cast<word>(&proxy), this);
+p::Object ObjectProxyDTable<T>::proxy_for(T &object) {
+  return p::Object(reinterpret_cast<word>(&object), this);
 }
 
 template <typename T>
 p::Value ObjectProxyDTable<T>::object_send(p::Object self, p::String name,
-    p::Array args, bool is_synchronous) {
+    p::Array args, p::MessageData *data, bool is_synchronous) {
   ObjectProxyDTable<T> *dtable = static_cast<ObjectProxyDTable<T>*>(self.dtable());
   method_t method = dtable->methods().get(name, static_cast<method_t>(NULL));
   if (method == NULL)
     return Factory::get_void();
   T *proxy = static_cast<T*>(reinterpret_cast<void*>(self.data()));
-  return (proxy->*method)(self, name, args);
+  Message message(self, name, args, data, is_synchronous);
+  return (proxy->*method)(message);
 }
 
 } // namespace neutrino

@@ -169,10 +169,10 @@ TEST(literal_array) {
 class TestObjectProxy {
 public:
   TestObjectProxy();
-  p::Object as_object() { return dtable().to_object(*this); }
-  p::Value inc(p::Object self, p::String name, p::Array args);
-  p::Value dec(p::Object self, p::String name, p::Array args);
-  p::Value set(p::Object self, p::String name, p::Array args);
+  p::Object as_object() { return dtable().proxy_for(*this); }
+  p::Value inc(Message &message);
+  p::Value dec(Message &message);
+  p::Value set(Message &message);
   word value() { return value_; }
 private:
   word value_;
@@ -186,22 +186,22 @@ TestObjectProxy::TestObjectProxy() : value_(0) {
   dtable().add_method("set", &TestObjectProxy::set);
 }
 
-p::Value TestObjectProxy::inc(p::Object self, p::String name, p::Array args) {
-  assert args.length() == 0;
+p::Value TestObjectProxy::inc(Message &message) {
+  assert message.args().length() == 0;
   value_++;
   return Factory::get_void();
 }
 
-p::Value TestObjectProxy::dec(p::Object self, p::String name, p::Array args) {
-  assert args.length() == 0;
+p::Value TestObjectProxy::dec(Message &message) {
+  assert message.args().length() == 0;
   value_--;
   return Factory::get_void();
 }
 
-p::Value TestObjectProxy::set(p::Object self, p::String name, p::Array args) {
-  assert args.length() == 1;
-  assert is<p::Integer>(args[0]);
-  assert cast<p::Integer>(args[0]).value() == 27;
+p::Value TestObjectProxy::set(Message &message) {
+  assert message.args().length() == 1;
+  assert (is<p::Integer>(message.args()[0]));
+  assert cast<p::Integer>(message.args()[0]).value() == 27;
   return Factory::get_void();
 }
 

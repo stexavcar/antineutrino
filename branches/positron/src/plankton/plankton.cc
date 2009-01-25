@@ -198,5 +198,12 @@ Object ServiceRegistryEntry::get_instance() {
   return instance_;
 }
 
+MessageData::MessageData() { }
+MessageData::~MessageData() { }
+
+void MessageData::acquire_resource(IMessageResource &resource) {
+  resources().append(&resource);
+}
+
 } // namespace plankton
 } // namespace neutrino

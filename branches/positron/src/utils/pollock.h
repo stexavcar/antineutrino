@@ -2,10 +2,11 @@
 #define _UTILS_POLLOCK
 
 // Pollock macros
+#if !defined(M32) && !defined(M64)
 #define assert
 #define try
 #define parse
-
+#endif
 
 #ifdef DEBUG
 

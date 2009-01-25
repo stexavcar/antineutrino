@@ -57,7 +57,7 @@ private:
   own_vector<uint8_t> data_;
 };
 
-class Factory : public MiniHeap {
+class Factory : public MiniHeap, public p::IMessageResource {
 public:
   p::String new_string(string value);
   p::Array new_array(word length);
@@ -134,17 +134,38 @@ public:
 
 // --- O b j e c t s ---
 
+class Message {
+public:
+  Message(p::Object self, p::String name, p::Array args, p::MessageData *data,
+      bool is_synchronous)
+    : self_(self)
+    , name_(name)
+    , args_(args)
+    , data_(data)
+    , is_synchronous_(is_synchronous) { }
+  p::Object self() { return self_; }
+  p::String name() { return name_; }
+  p::Array args() { return args_; }
+  p::MessageData *data() { return data_; }
+  bool is_synchronous() { return is_synchronous_; }
+private:
+  p::Object self_;
+  p::String name_;
+  p::Array args_;
+  p::MessageData *data_;
+  bool is_synchronous_;
+};
+
 template <typename T>
 class ObjectProxyDTable : public p::Value::DTable {
 public:
-  typedef p::Value (T::*method_t)(p::Object self, p::String name,
-      p::Array args);
+  typedef p::Value (T::*method_t)(Message &message);
   ObjectProxyDTable();
   void add_method(p::String name, method_t method);
-  p::Object to_object(T &proxy);
+  p::Object proxy_for(T &object);
 private:
   static p::Value object_send(p::Object self, p::String name, p::Array args,
-      bool is_synchronous);
+      p::MessageData *data, bool is_synchronous);
   hash_map<p::String, method_t> &methods() { return methods_; }
   hash_map<p::String, method_t> methods_;
 };

@@ -37,6 +37,16 @@ ServiceRegistryEntry::ServiceRegistryEntry(const char *name, instance_allocator 
   first_ = this;
 }
 
+class MessageData {
+public:
+  MessageData();
+  ~MessageData();
+  void acquire_resource(IMessageResource &resource);
+private:
+  buffer<IMessageResource*> &resources() { return resources_; }
+  own_buffer<IMessageResource> resources_;
+};
+
 } // namespace plankton
 } // namespace neutrino
 

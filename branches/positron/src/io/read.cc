@@ -1,3 +1,4 @@
+#include "io/miniheap-inl.h"
 #include "io/read.h"
 #include "utils/arena-inl.h"
 #include "utils/buffer-inl.h"
@@ -10,10 +11,26 @@ namespace neutrino {
 // S c a n n e r
 // ---
 
+class ReadService {
+public:
+  ReadService();
+  p::Value parse(Message &message);
+  ObjectProxyDTable<ReadService> &dtable() { return dtable_; }
+private:
+  ObjectProxyDTable<ReadService> dtable_;
+};
+
+ReadService::ReadService() {
+  dtable().add_method("parse", &ReadService::parse);
+}
+
 REGISTER_SERVICE(neutrino.io.read, s_exp::create_service);
 
 p::Object s_exp::create_service() {
-  return p::Object(0, NULL);
+  static ReadService *service = NULL;
+  if (service == NULL)
+    service = new ReadService();
+  return service->dtable().proxy_for(*service);
 }
 
 SexpScanner::SexpScanner(string str, Arena &arena)
@@ -191,6 +208,13 @@ s_exp *s_exp::read(string input, Arena &arena) {
   SexpParser parser(input, arena);
   try parse s_exp *result = parser.parse_exp();
   return result;
+}
+
+p::Value ReadService::parse(Message &message) {
+  assert message.data() != static_cast<void*>(NULL);
+  own_ptr<Factory> factory(new Factory());
+  message.data()->acquire_resource(*factory.release());
+  return Factory::get_void();
 }
 
 // ---

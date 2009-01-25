@@ -28,6 +28,7 @@ namespace plankton {
 
 class Array;
 class Integer;
+class MessageData;
 class Null;
 class Object;
 class String;

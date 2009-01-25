@@ -185,14 +185,14 @@ public:
   pid_t child() { return child_; }
   FileSocket &socket() { return socket_; }
   static p::Value send_bridge(p::Object obj, p::String name,
-      p::Array args, bool is_synchronous);
+      p::Array args, p::MessageData *data, bool is_synchronous);
 private:
   pid_t child_;
   FileSocket socket_;
 };
 
-p::Value ChildProcess::Data::send_bridge(p::Object obj,
-    p::String name, p::Array args, bool is_synchronous) {
+p::Value ChildProcess::Data::send_bridge(p::Object obj, p::String name,
+    p::Array args, p::MessageData *mdata, bool is_synchronous) {
   ChildProcess::Data *data = static_cast<ChildProcess::Data*>(obj.dtable());
   assert name.impl_id() == MiniHeap::id();
   MiniHeap &buffer = *MiniHeap::get(name.dtable());
@@ -212,13 +212,13 @@ public:
   }
   FileSocket &socket() { return socket_; }
   static p::Value send_bridge(p::Object obj, p::String name,
-      p::Array args, bool is_synchronous);
+      p::Array args, p::MessageData *data, bool is_synchronous);
 private:
   FileSocket socket_;
 };
 
-p::Value ParentProcess::Data::send_bridge(p::Object obj,
-    p:: String name, p::Array args, bool is_synchronous) {
+p::Value ParentProcess::Data::send_bridge(p::Object obj, p::String name,
+    p::Array args, p::MessageData *mdata, bool is_synchronous) {
   ParentProcess::Data *data = static_cast<ParentProcess::Data*>(obj.dtable());
   assert name.impl_id() == MiniHeap::id();
   MiniHeap &buffer = *MiniHeap::get(name.dtable());

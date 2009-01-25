@@ -8,7 +8,7 @@ class TestService {
 public:
   TestService();
   ObjectProxyDTable<TestService> &dtable() { return dtable_; }
-  p::Value echo(p::Object self, p::String name, p::Array args);
+  p::Value echo(Message &message);
 private:
   ObjectProxyDTable<TestService> dtable_;
 };
@@ -17,16 +17,16 @@ TestService::TestService() {
   dtable().add_method("echo", &TestService::echo);
 }
 
-p::Value TestService::echo(p::Object self, p::String name, p::Array args) {
-  assert args.length() == 1;
-  return args[0];
+p::Value TestService::echo(Message &message) {
+  assert message.args().length() == 1;
+  return message.args()[0];
 }
 
 static p::Object make_test_service() {
   static TestService *proxy = NULL;
   if (proxy == NULL)
     proxy = new TestService();
-  return proxy->dtable().to_object(*proxy);
+  return proxy->dtable().proxy_for(*proxy);
 }
 
 REGISTER_SERVICE(nunit.test.echo, make_test_service);
@@ -41,4 +41,13 @@ TEST(service_lookup) {
     assert (cast<p::Integer>(response)).value() == n;
   }
   assert (is<p::Void>(obj.send("some_undefined_message")));
+}
+
+TEST(read_service) {
+  p::Object read_service = p::ServiceRegistry::lookup("neutrino.io.read");
+  assert !read_service.is_empty();
+  p::MessageData data;
+  p::Value expr = read_service.send("parse", p::Array::of("( foo )"), &data);
+  assert (is<p::Array>(expr));
+  assert (cast<p::Array>(expr)).length() == 1;
 }

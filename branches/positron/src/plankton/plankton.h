@@ -33,8 +33,8 @@ public:
       bool (*set)(Array that, word index, Value value);
     };
     struct ObjectDTable {
-      Value (*send)(Object tthat, String name, Array args,
-          bool is_synchronous);
+      Value (*send)(Object that, String name, Array args,
+          MessageData *data, bool is_synchronous);
     };
     ValueDTable value;
     IntegerDTable integer;
@@ -145,10 +145,16 @@ private:
 };
 
 
+class IMessageResource {
+public:
+  virtual ~IMessageResource() { }
+};
+
+
 class Object : public Value {
 public:
-  inline Value send(String name, Array args = Array::empty()) { return dtable()->object.send(*this, name, args, true); }
-  inline void send_async(String name, Array args = Array::empty()) { dtable()->object.send(*this, name, args, false); }
+  inline Value send(String name, Array args = Array::empty(), MessageData *data = NULL) { return dtable()->object.send(*this, name, args, data, true); }
+  inline void send_async(String name, Array args = Array::empty(), MessageData *data = NULL) { dtable()->object.send(*this, name, args, data, false); }
   inline Object(word data, DTable *table) : Value(data, table) { }
   inline Object() : Value() { }
   static const Value::Type kTypeTag = Value::vtObject;
