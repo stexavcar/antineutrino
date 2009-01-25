@@ -1,4 +1,4 @@
-#include "plankton/plankton.h"
+#include "plankton/plankton-inl.h"
 #include "utils/hash-map-inl.h"
 #include "test-inl.h"
 

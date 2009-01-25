@@ -1,3 +1,4 @@
+#include "plankton/plankton-inl.h"
 #include "platform/spawn.h"
 #include "utils/check-inl.h"
 #include "utils/smart-ptrs-inl.h"
@@ -259,6 +260,8 @@ boole HalfChannel::set_remain_open_on_exec(int fd) {
 // C h i l d   P r o c e s s
 // ---
 
+ChildProcess::ChildProcess() : data_(NULL) { }
+
 ChildProcess::~ChildProcess() { }
 
 boole Channel::open() {
@@ -341,6 +344,8 @@ boole ChildProcess::receive(MessageIn &message) {
 // ---
 // P a r e n t   P r o c e s s
 // ---
+
+ParentProcess::ParentProcess() : data_(NULL) { }
 
 ParentProcess::~ParentProcess() { }
 

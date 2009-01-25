@@ -132,6 +132,23 @@ public:
   static const uword kSingletonTag = 2;
 };
 
+// --- O b j e c t s ---
+
+template <typename T>
+class ObjectProxyDTable : public p::Value::DTable {
+public:
+  typedef p::Value (T::*method_t)(p::Object self, p::String name,
+      p::Array args);
+  ObjectProxyDTable();
+  void add_method(p::String name, method_t method);
+  p::Object to_object(T &proxy);
+private:
+  static p::Value object_send(p::Object self, p::String name, p::Array args,
+      bool is_synchronous);
+  hash_map<p::String, method_t> &methods() { return methods_; }
+  hash_map<p::String, method_t> methods_;
+};
+
 } // namespace neutrino
 
 #endif // _PLANKTON_BUILDER

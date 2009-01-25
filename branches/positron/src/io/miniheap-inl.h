@@ -2,9 +2,10 @@
 #define _PLANKTON_BUILDER_INL
 
 #include "io/miniheap.h"
-#include "plankton/plankton.h"
+#include "plankton/plankton-inl.h"
 #include "utils/array-inl.h"
 #include "utils/buffer.h"
+#include "utils/hash-map-inl.h"
 #include "utils/string.h"
 
 namespace neutrino {
@@ -63,6 +64,36 @@ T &MiniHeapObject::at(word offset) {
 MessageIn::~MessageIn() {
   if (is_synchronous_ && !has_replied_)
     reply(MessageOut::get_void());
+}
+
+template <>
+uword hash<p::String>(const p::String &obj);
+
+template <typename T>
+ObjectProxyDTable<T>::ObjectProxyDTable() {
+  object.send = object_send;
+}
+
+template <typename T>
+void ObjectProxyDTable<T>::add_method(p::String name,
+    method_t method) {
+  methods().put(name, method);
+}
+
+template <typename T>
+p::Object ObjectProxyDTable<T>::to_object(T &proxy) {
+  return p::Object(reinterpret_cast<word>(&proxy), this);
+}
+
+template <typename T>
+p::Value ObjectProxyDTable<T>::object_send(p::Object self, p::String name,
+    p::Array args, bool is_synchronous) {
+  ObjectProxyDTable<T> *dtable = static_cast<ObjectProxyDTable<T>*>(self.dtable());
+  method_t method = dtable->methods().get(name, static_cast<method_t>(NULL));
+  if (method == NULL)
+    return Factory::get_void();
+  T *proxy = static_cast<T*>(reinterpret_cast<void*>(self.data()));
+  return (proxy->*method)(self, name, args);
 }
 
 } // namespace neutrino

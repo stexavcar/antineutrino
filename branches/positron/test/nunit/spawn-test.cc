@@ -42,12 +42,12 @@ TEST(hul_igennem) {
   p::Object proxy = child.proxy();
   for (word i = 0; i < 100; i++) {
     MessageOut buffer;
-    p::Value obj = proxy.send_sync(buffer.new_string("next_int"));
+    p::Value obj = proxy.send(buffer.new_string("next_int"));
     assert is<p::Integer>(obj);
     assert (cast<p::Integer>(obj)).value() == i;
   }
   MessageOut buffer;
-  p::Value obj = proxy.send_sync(buffer.new_string("exit"));
+  p::Value obj = proxy.send(buffer.new_string("exit"));
   assert is<p::String>(obj);
   assert (cast<p::String>(obj)) == "bye";
 }
@@ -78,7 +78,7 @@ TEST(sequence) {
   try child.open("sequence_child");
   for (word i = 0; i < 1000; i++) {
     MessageOut message;
-    p::Value v = child.proxy().send_sync(message.new_string("ping"));
+    p::Value v = child.proxy().send(message.new_string("ping"));
     assert (cast<p::Integer>(v).value()) == i * 3;
   }
   for (word i = 0; i < 1000; i++) {
@@ -102,7 +102,7 @@ TEST(sequence_child) {
   }
   for (word i = 0; i < 1000; i++) {
     MessageOut message;
-    p::Value v = parent.proxy().send_sync(message.new_string("pong"));
+    p::Value v = parent.proxy().send(message.new_string("pong"));
     assert (cast<p::Integer>(v).value()) == i + 8;
   }
 }
@@ -113,7 +113,7 @@ TEST(sync_auto_reply) {
   try child.open("sync_auto_reply_child");
   for (word i = 0; i < 100; i++) {
     MessageOut message;
-    p::Value v = child.proxy().send_sync(message.new_string("pang"));
+    p::Value v = child.proxy().send(message.new_string("pang"));
     assert is<p::Void>(v);
   }
 }

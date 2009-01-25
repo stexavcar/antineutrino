@@ -4,25 +4,18 @@
 
 using namespace neutrino;
 
-class TestServiceDTable : public p::Value::DTable {
+/*
+
+class TestObjectProxy : public ObjectProxyDTable<TestObjectProxy> {
 public:
-  TestServiceDTable();
-  static p::Value send(p::Object obj, p::String name,
-      p::Array args, bool is_synchronous);
+  ObjectProxyDTable<TestObjectProxy> &dtable() { return *this; }
 };
 
-TestServiceDTable::TestServiceDTable() {
-  object.send = send;
-}
-
-p::Value TestServiceDTable::send(p::Object obj, p::String name,
-    p::Array args, bool is_sync) {
-  return MessageOut::get_null();
-}
-
 static p::Object make_test_service() {
-  static TestServiceDTable *dtable = new TestServiceDTable();
-  return p::Object(0, dtable);
+  static TestObjectProxy *proxy = NULL;
+  if (proxy == NULL)
+    proxy = new TestObjectProxy();
+  return proxy->dtable().to_object(*proxy);
 }
 
 REGISTER_SERVICE(nunit.test, make_test_service);
@@ -31,3 +24,5 @@ TEST(service_lookup) {
   p::Object obj = p::ServiceRegistry::lookup("nunit.test");
   assert (is<p::Null>(obj.send_sync("foo")));
 }
+
+*/

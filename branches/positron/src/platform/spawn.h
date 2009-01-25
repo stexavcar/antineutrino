@@ -13,7 +13,7 @@ namespace neutrino {
 class ParentProcess {
 public:
   class Data;
-  ParentProcess() : data_(NULL) { }
+  ParentProcess();
   ~ParentProcess();
   p::Object proxy();
   boole open();
@@ -26,7 +26,7 @@ private:
 class ChildProcess {
 public:
   class Data;
-  ChildProcess() : data_(NULL) { }
+  ChildProcess();
   ~ChildProcess();
   p::Object proxy();
   boole open(string &command, vector<string> &args,

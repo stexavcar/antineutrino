@@ -7,7 +7,6 @@ namespace neutrino {
 
 // --- V a l u e   I m p l e m e n t a t i o n ---
 
-
 class ValueImpl {
 public:
   static p::Value::Type value_type(p::Value that);
@@ -152,8 +151,19 @@ p::Void Factory::get_void() {
       &MiniHeapDTable::static_instance());
 }
 
-// --- B u i l d e r ---
+template <>
+uword hash<p::String>(const p::String &str) {
+  uword hash = 0;
+  uword rotand = 0;
+  for (word i = 0; str[i]; i++) {
+    uword c = str[i];
+    rotand ^= c & ((8 * sizeof(uword)) - 1);
+    hash = ((hash << rotand) | (hash >> rotand)) ^ c;
+  }
+  return hash;
+}
 
+// --- B u i l d e r ---
 
 MiniHeap *MiniHeap::get(p::Value::DTable *dtable) {
   return dtable ? &static_cast<MiniHeapDTable*>(dtable)->heap() : NULL;

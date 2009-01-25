@@ -24,7 +24,7 @@ private:
 };
 
 template < typename K, typename V, class A = new_delete_array_allocator< hash_map_entry<K, V> > >
-class hash_map {
+class hash_map : public nocopy {
 public:
   hash_map(A allocator = A());
   ~hash_map();

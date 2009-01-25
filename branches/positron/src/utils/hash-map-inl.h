@@ -1,6 +1,7 @@
 #ifndef _UTILS_HASH_MAP_INL
 #define _UTILS_HASH_MAP_INL
 
+#include "utils/check.h"
 #include "utils/hash-map.h"
 #include "utils/smart-ptrs-inl.h"
 

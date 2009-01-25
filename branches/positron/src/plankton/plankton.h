@@ -13,6 +13,7 @@ public:
 
   class DTable {
   public:
+    DTable();
     struct ValueDTable {
       Type (*type)(Value that);
       bool (*eq)(Value that, Value other);
@@ -51,6 +52,8 @@ public:
 
   inline Value(word data, DTable *dtable) : data_(data), dtable_(dtable) { }
   inline Value() : data_(0), dtable_(NULL) { }
+  inline Value(word value);
+  inline Value(const char *str);
 
 private:
   word data_;
@@ -62,6 +65,9 @@ public:
   inline int32_t value() const { return dtable()->integer.value(*this); }
   inline Integer(word data, DTable *dtable) : Value(data, dtable) { }
   static const Value::Type kTypeTag = Value::vtInteger;
+private:
+  friend class Value;
+  static Value::DTable *literal_adapter();
 };
 
 
@@ -94,16 +100,17 @@ public:
   inline bool operator<=(String other) const { return dtable()->string.compare(*this, other) <= 0; }
   inline bool operator>(String other) const { return dtable()->string.compare(*this, other) > 0; }
   inline bool operator>=(String other) const { return dtable()->string.compare(*this, other) >= 0; }
-  inline String(const char *str) : Value(reinterpret_cast<word>(str), c_string_dtable()) { }
+  inline String(const char *str) : Value(str) { }
   inline String(word data, DTable *dtable) : Value(data, dtable) { }
   inline String() : Value() { }
   static const Value::Type kTypeTag = Value::vtString;
   static word generic_string_compare(String that, String other);
 private:
-  static Value::DTable *c_string_dtable();
-  static Value::DTable *c_string_dtable_;
+  friend class Value;
+  static Value::DTable *char_ptr_adapter();
 };
 
+class LiteralArray;
 
 class Array : public Value {
 public:
@@ -112,14 +119,36 @@ public:
   inline bool set(word index, Value value) { return dtable()->array.set(*this, index, value); }
   inline Array(word data, DTable *dtable) : Value(data, dtable) { }
   inline Array() : Value() { }
+  static Array empty() { return Array(0, empty_array_adapter()); }
   static const Value::Type kTypeTag = Value::vtArray;
+
+  // Returns a transient array that can be used as an argument to a
+  // call, but disappears immediately after the invokation it is used
+  // in completes.
+  static inline LiteralArray of(Value v0 = Value(), Value v1 = Value(),
+      Value v2 = Value(), Value v3 = Value(), Value v4 = Value(),
+      Value v5 = Value());
+
+private:
+  static Value::DTable *empty_array_adapter();
+};
+
+
+class LiteralArray : public Array {
+public:
+  inline LiteralArray(Value v0, Value v1, Value v2, Value v4, Value v4, Value v5);
+  ~LiteralArray() { }
+  static const word kMaxSize = 6;
+private:
+  static Value::DTable *literal_array_adapter();
+  Value values_[kMaxSize];
 };
 
 
 class Object : public Value {
 public:
-  inline Value send_sync(String name, Array args = Array()) { return dtable()->object.send(*this, name, args, true); }
-  inline void send_async(String name, Array args = Array()) { dtable()->object.send(*this, name, args, false); }
+  inline Value send(String name, Array args = Array::empty()) { return dtable()->object.send(*this, name, args, true); }
+  inline void send_async(String name, Array args = Array::empty()) { dtable()->object.send(*this, name, args, false); }
   inline Object(word data, DTable *table) : Value(data, table) { }
   inline Object() : Value() { }
   static const Value::Type kTypeTag = Value::vtObject;

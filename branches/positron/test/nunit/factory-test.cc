@@ -1,4 +1,4 @@
-#include "io/miniheap.h"
+#include "io/miniheap-inl.h"
 #include "plankton/plankton-inl.h"
 #include "plankton/codec-inl.h"
 #include "utils/vector-inl.h"
@@ -142,4 +142,80 @@ TEST(c_str) {
   assert str < "flampe";
   assert str > "flamo";
   assert str < "flamq";
+}
+
+TEST(empty_array) {
+  p::Array empty = p::Array::empty();
+  assert (is<p::Array>(empty));
+  assert empty.length() == 0;
+}
+
+static void test_literal_array(p::Value val) {
+  assert (is<p::Array>(val));
+  p::Array that = cast<p::Array>(val);
+  assert that.length() == 3;
+  assert (cast<p::Integer>(that[0])).value() == 1;
+  assert (cast<p::String>(that[1])) == "foo";
+  p::Array inner = cast<p::Array>(that[2]);
+  assert inner.length() == 2;
+  assert (cast<p::String>(inner[0])) == "bar";
+  assert (cast<p::Integer>(inner[1])).value() == 6;
+}
+
+TEST(literal_array) {
+  test_literal_array(p::Array::of(1, "foo", p::Array::of("bar", 6)));
+}
+
+class TestObjectProxy {
+public:
+  TestObjectProxy();
+  p::Object as_object() { return dtable().to_object(*this); }
+  p::Value inc(p::Object self, p::String name, p::Array args);
+  p::Value dec(p::Object self, p::String name, p::Array args);
+  p::Value set(p::Object self, p::String name, p::Array args);
+  word value() { return value_; }
+private:
+  word value_;
+  ObjectProxyDTable<TestObjectProxy> &dtable() { return dtable_; }
+  ObjectProxyDTable<TestObjectProxy> dtable_;
+};
+
+TestObjectProxy::TestObjectProxy() : value_(0) {
+  dtable().add_method("inc", &TestObjectProxy::inc);
+  dtable().add_method("dec", &TestObjectProxy::dec);
+  dtable().add_method("set", &TestObjectProxy::set);
+}
+
+p::Value TestObjectProxy::inc(p::Object self, p::String name, p::Array args) {
+  assert args.length() == 0;
+  value_++;
+  return Factory::get_void();
+}
+
+p::Value TestObjectProxy::dec(p::Object self, p::String name, p::Array args) {
+  assert args.length() == 0;
+  value_--;
+  return Factory::get_void();
+}
+
+p::Value TestObjectProxy::set(p::Object self, p::String name, p::Array args) {
+  assert args.length() == 1;
+  assert is<p::Integer>(args[0]);
+  assert cast<p::Integer>(args[0]).value() == 27;
+  return Factory::get_void();
+}
+
+TEST(proxy) {
+  TestObjectProxy proxy;
+  p::Object obj = proxy.as_object();
+  assert proxy.value() == 0;
+  assert (is<p::Void>(obj.send("inc")));
+  assert proxy.value() == 1;
+  for (word i = 0; i < 10; i++)
+    obj.send("inc");
+  assert proxy.value() == 11;
+  for (word i = 0; i < 5; i++)
+    obj.send("dec");
+  assert proxy.value() == 6;
+  obj.send("set", p::Array::of(27));
 }
