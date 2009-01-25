@@ -35,6 +35,10 @@ uint32_t CStringDTable::string_get(String str, word index) {
 }
 
 word CStringDTable::string_compare(String that, String other) {
+  return String::generic_string_compare(that, other);
+}
+
+word String::generic_string_compare(String that, String other) {
   for (word i = 0; true; i++) {
     uint32_t ca = that[i];
     uint32_t cb = other[i];

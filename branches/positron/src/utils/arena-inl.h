@@ -16,20 +16,20 @@ inline void *Arena::allocate(size_t size) {
 }
 
 template <typename T>
-class arena_allocator {
+class arena_array_allocator {
 public:
-  arena_allocator(Arena &arena) : arena_(arena) { }
-  T *allocate(size_t size) { return new (arena()) T[size]; }
-  void dispose(T *obj) { /* ignore */ }
+  arena_array_allocator(Arena &arena) : arena_(arena) { }
+  array<T> allocate(size_t size) { return TO_ARRAY(T, new (arena()) T[size], size); }
+  void dispose(array<T> obj) { /* ignore */ }
 private:
   Arena &arena() { return arena_; }
   Arena &arena_;
 };
 
 template <typename T>
-class arena_buffer : public buffer< T, arena_allocator<T> > {
+class arena_buffer : public buffer< T, arena_array_allocator<T> > {
 public:
-  arena_buffer(Arena &arena) : buffer< T, arena_allocator<T> >(arena_allocator<T>(arena)) { }
+  arena_buffer(Arena &arena) : buffer< T, arena_array_allocator<T> >(arena_array_allocator<T>(arena)) { }
 };
 
 } // namespace neutrino

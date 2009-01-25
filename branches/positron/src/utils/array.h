@@ -10,8 +10,10 @@ class array {
 public:
 #ifdef ARRAY_BOUNDS_CHECKS
   array(T *data, word length) : data_(data), length_(length) { }
+  array() : data_(NULL), length_(0) { }
 #else
   array(T *data) : data_(data) { }
+  array() : data_(NULL) { }
 #endif // ARRAY_BOUNDS_CHECKS
   T &operator[](word offset);
   const T &operator[](word offset) const;
@@ -39,6 +41,13 @@ private:
 #else
 #define TO_ARRAY(T, data, length) array<T>(data)
 #endif
+
+template <typename T>
+class new_delete_array_allocator {
+public:
+  array<T> allocate(size_t size) { return TO_ARRAY(T, new T[size], size); }
+  void dispose(array<T> obj) { delete[] obj.start(); }
+};
 
 } // namespace neutrino
 

@@ -19,24 +19,19 @@ const T &vector<T>::operator[](word offset) const {
 }
 
 template <typename T>
-void pair<T>::set(const T &a, const T &b) {
-  this->operator[](0) = a;
-  this->operator[](1) = b;
-}
-
-template <typename T>
 array<T> vector<T>::as_array() {
   return TO_ARRAY(T, data_, length_);
 }
 
 template <typename T>
 vector<T> vector<T>::allocate(word length) {
-  return vector<T>(new T[length], length);
+  return allocate(new_delete_array_allocator<T>(), length);
 }
 
 template <typename T>
-vector<T> vector<T>::allocate(Arena &arena, word length) {
-  return vector<T>(new (arena) T[length], length);
+template <class A>
+vector<T> vector<T>::allocate(A allocator, word length) {
+  return vector<T>(allocator.allocate(length), length);
 }
 
 template <typename T>

@@ -98,6 +98,7 @@ public:
   inline String(word data, DTable *dtable) : Value(data, dtable) { }
   inline String() : Value() { }
   static const Value::Type kTypeTag = Value::vtString;
+  static word generic_string_compare(String that, String other);
 private:
   static Value::DTable *c_string_dtable();
   static Value::DTable *c_string_dtable_;

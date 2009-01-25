@@ -53,8 +53,8 @@ TEST(encode) {
 
 TEST(integer) {
   for (word i = 0; i < 100; i++) {
-    MessageOut builder;
-    p::Integer val = builder.new_integer(i);
+    Factory factory;
+    p::Integer val = factory.new_integer(i);
     assert val.type() == p::Value::vtInteger;
     assert val.value() == i;
   }
@@ -66,9 +66,9 @@ TEST(string) {
     "foobar", "", "a b c"
   };
   for (word i = 0; i < kTestStringCount; i++) {
-    MessageOut builder;
+    Factory factory;
     string str = kTestStrings[i];
-    p::String val = builder.new_string(str);
+    p::String val = factory.new_string(str);
     assert val.type() == p::Value::vtString;
     assert val.length() == str.length();
     for (word j = 0; j < val.length(); j++)
@@ -93,31 +93,31 @@ TEST(string_comparison) {
   assert factory.new_string("aa") < "aaa";
   assert factory.new_string("a") < "b";
   assert factory.new_string("aaaaa") < "aaaab";
-  assert factory.new_string("bbb") < "aaaa";
+  assert factory.new_string("bbb") > "aaaa";
   assert factory.new_string("x") != "y";
   assert factory.new_string("") == "";
   assert factory.new_string("abc") == "abc";
 }
 
 TEST(null) {
-  MessageOut builder;
-  p::Null null = builder.get_null();
+  Factory factory;
+  p::Null null = factory.get_null();
   assert null.type() == p::Value::vtNull;
 }
 
 TEST(array) {
-  MessageOut builder;
+  Factory factory;
   static const word kSize = 5;
   static const char *kElements[kSize] = {
     "foo", "bar", "baz", "quux", "bleh"
   };
-  p::Array array = builder.new_array(kSize);
+  p::Array array = factory.new_array(kSize);
   assert array.type() == p::Value::vtArray;
   assert array.length() == kSize;
   for (word i = 0; i < kSize; i++)
     assert array[i].type() == p::Value::vtNull;
   for (word i = 0; i < kSize; i++)
-    array.set(i, builder.new_string(kElements[i]));
+    array.set(i, factory.new_string(kElements[i]));
   for (word i = 0; i < kSize; i++) {
     p::Value val = array[i];
     assert is<p::String>(val);

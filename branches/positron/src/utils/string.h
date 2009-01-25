@@ -8,6 +8,7 @@
 
 #include "utils/vector.h"
 #include "utils/buffer.h"
+#include "utils/hash-map.h"
 
 
 namespace neutrino {
@@ -38,6 +39,9 @@ private:
   const char *chars_;
   word length_;
 };
+
+
+template <> uword hash<string>(const string &str);
 
 
 class string_stream;

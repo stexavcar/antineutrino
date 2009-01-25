@@ -1,6 +1,7 @@
 #ifndef _UTILS_SMART_PTRS_INL
 #define _UTILS_SMART_PTRS_INL
 
+#include "platform/abort.h"
 #include "utils/check.h"
 #include "utils/smart-ptrs.h"
 

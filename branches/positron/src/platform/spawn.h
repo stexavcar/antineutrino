@@ -29,7 +29,8 @@ public:
   ChildProcess() : data_(NULL) { }
   ~ChildProcess();
   p::Object proxy();
-  boole open(string &command, vector<string> &args, vector< pair<string> > &env);
+  boole open(string &command, vector<string> &args,
+      vector< pair<string, string> > &env);
   word wait();
   boole receive(MessageIn &message);
 private:

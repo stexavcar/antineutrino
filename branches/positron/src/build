@@ -30,6 +30,8 @@ library (
     'utils/check-inl.h',
     'utils/check.cc',
     'utils/global.h',
+    'utils/hash-map.h',
+    'utils/hash-map-inl.h',
     'utils/log.h',
     'utils/log.cc',
     'utils/pollock.h',

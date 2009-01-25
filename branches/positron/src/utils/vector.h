@@ -11,6 +11,7 @@ class vector {
 public:
   vector() : data_(NULL), length_(0) { }
   vector(T *data, word length) : data_(data), length_(length) { }
+  vector(array<T> data, word length) : data_(data.start()), length_(length) { }
   T &operator[](word offset);
   const T &operator[](word offset) const;
   T *start() { return data_; }
@@ -21,7 +22,7 @@ public:
   const T *start() const { return data_; }
   word length() const { return length_; }
   static vector<T> allocate(word length);
-  static vector<T> allocate(Arena &arena, word length);
+  template <class A> static vector<T> allocate(A allocator, word length);
   array<T> as_array();
 private:
   T *data_;
@@ -36,11 +37,16 @@ private:
   T base_[L];
 };
 
-template <typename T>
-class pair : public embed_vector<T, 2> {
+template <typename F, typename S>
+class pair {
 public:
-  pair() : embed_vector<T, 2>() { }
-  void set(const T &a, const T &b);
+  pair() { }
+  pair(const F &first, const S &second) : first_(first), second_(second) { }
+  F &first() { return first_; }
+  S &second() { return second_; }
+private:
+  F first_;
+  S second_;
 };
 
 } // namespace neutrino

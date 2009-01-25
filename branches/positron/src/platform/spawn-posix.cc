@@ -267,7 +267,7 @@ boole Channel::open() {
 }
 
 boole ChildProcess::open(string &command, vector<string> &args,
-    vector< pair<string> > &env) {
+    vector< pair<string, string> > &env) {
   // Create a full communication channel.
   Channel channel;
   try channel.open();
@@ -294,7 +294,7 @@ boole ChildProcess::open(string &command, vector<string> &args,
         new char*[env.length() + 2], env.length() + 2);
     for (word i = 0; i < env.length(); i++) {
       string_stream stream;
-      stream.add("%=%", neutrino::args(env[i][0], env[i][1]));
+      stream.add("%=%", neutrino::args(env[i].first(), env[i].second()));
       env_arr[i] = strdup(stream.raw_c_str().start());
     }
     string_stream stream;

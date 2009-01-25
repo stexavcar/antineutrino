@@ -64,19 +64,7 @@ uint32_t ValueImpl::string_get(p::String that, word index) {
 }
 
 word ValueImpl::string_compare(p::String that, p::String other) {
-  if (that.length() != other.length())
-    return that.length() - other.length();
-  MiniHeapObject str = ValueImpl::open(that);
-  for (word i = 0; i < other.length(); i++) {
-    uint32_t ac = str.at<uint32_t>(2 + i);
-    uint32_t bc = static_cast<uint32_t>(other[i]);
-    if (ac != bc) {
-      // The values have to be cast to words first, or a 32-bit negative
-      // number may be zero-extended to 64 bits, making it positive.
-      return static_cast<word>(ac) - static_cast<word>(bc);
-    }
-  }
-  return 0;
+  return p::String::generic_string_compare(that, other);
 }
 
 bool ValueImpl::array_set(p::Array that, word index, p::Value value) {

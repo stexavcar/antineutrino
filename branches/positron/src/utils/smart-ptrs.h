@@ -83,6 +83,7 @@ public:
 
   inline T *start() { return value_.start(); }
   inline T &operator[](word index) { return value_[index]; }
+  word length() { return value_.length(); }
   inline vector<T> release();
   inline void set(vector<T> v) { value_ = v; }
   inline vector<T> as_vector() { return value_; }

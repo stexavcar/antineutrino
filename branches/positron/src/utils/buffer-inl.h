@@ -1,7 +1,7 @@
 #ifndef _UTILS_BUFFER_INL
 #define _UTILS_BUFFER_INL
 
-#include "utils/array.h"
+#include "utils/array-inl.h"
 #include "utils/buffer.h"
 #include "utils/check.h"
 
@@ -73,7 +73,7 @@ void buffer<T, A>::ensure_capacity(word length) {
 template <typename T, class A>
 void buffer<T, A>::extend_capacity(word required) {
   word new_capacity = grow_value(required);
-  T *new_data = allocator().allocate(new_capacity);
+  array<T> new_data = allocator().allocate(new_capacity);
   for (word i = 0; i < length_; i++)
     new_data[i] = start()[i];
   allocator().dispose(data_);

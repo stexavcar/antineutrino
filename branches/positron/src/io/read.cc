@@ -71,7 +71,7 @@ vector<uint8_t> SexpScanner::scan_token() {
   while (is_token_character(current()))
     advance();
   word length = cursor() - start;
-  vector<uint8_t> chars = vector<uint8_t>::allocate(arena(), length);
+  vector<uint8_t> chars = vector<uint8_t>::allocate(arena_array_allocator<uint8_t>(arena()), length);
   for (word i = 0; i < length; i++)
     chars[i] = str()[start + i];
   return chars;

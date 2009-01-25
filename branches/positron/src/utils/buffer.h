@@ -7,14 +7,7 @@
 
 namespace neutrino {
 
-template <typename T>
-class new_delete_allocator {
-public:
-  T *allocate(size_t size) { return new T[size]; }
-  void dispose(T *obj) { delete[] obj; }
-};
-
-template < typename T, class A = new_delete_allocator<T> >
+template < typename T, class A = new_delete_array_allocator<T> >
 class buffer : public nocopy {
 public:
   inline buffer(A allocator = A());
@@ -25,7 +18,7 @@ public:
   T pop();
   const T &peek();
   T &operator[](word index);
-  T *start() { return data_; }
+  T *start() { return data_.start(); }
   word length() { return length_; }
   void ensure_capacity(word length);
   array<T> allocate(word length);
@@ -36,7 +29,7 @@ private:
   void extend_capacity(word required);
   A allocator() { return allocator_; }
   static const word kInitialCapacity = 4;
-  T *data_;
+  array<T> data_;
   word length_;
   word capacity_;
   A allocator_;

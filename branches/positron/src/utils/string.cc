@@ -192,4 +192,16 @@ void string::println(FILE *out) {
   fputc('\n', out);
 }
 
+template <>
+uword hash<string>(const string &str) {
+  uword hash = 0;
+  uword rotand = 0;
+  for (word i = 0; i < str.length(); i++) {
+    uword c = str[i];
+    rotand ^= c & ((8 * sizeof(uword)) - 1);
+    hash = ((hash << rotand) | (hash >> rotand)) ^ c;
+  }
+  return hash;
+}
+
 } // namespace neutrino
