@@ -1,18 +1,10 @@
-#include "io/read-inl.h"
+#include "io/read.h"
+#include "io/write.h"
+#include "plankton/plankton-inl.h"
 #include "utils/arena-inl.h"
 #include "test-inl.h"
 
 using namespace neutrino;
-
-static bool operator==(vector<uint8_t> vect, string str) {
-  if (vect.length() != str.length())
-    return false;
-  for (word i = 0; i < vect.length(); i++) {
-    if (vect[i] != str[i])
-      return false;
-  }
-  return true;
-}
 
 TEST(trivial_scan) {
   Arena arena;
@@ -40,37 +32,55 @@ TEST(tokens) {
 }
 
 TEST(parser) {
+  p::Object reader = p::ServiceRegistry::lookup("neutrino.io.read");
+  assert !reader.is_empty();
   {
-    Arena arena;
-    s_exp *expr = s_exp::read("foo", arena);
-    assert is<s_string>(expr);
-    assert cast<s_string>(expr)->chars() == "foo";
+    p::MessageData data;
+    p::Value expr = reader.send("parse", p::Array::of("foo"), &data);
+    assert is<p::String>(expr);
+    assert cast<p::String>(expr) == "foo";
   }
   {
-    Arena arena;
-    s_exp *expr = s_exp::read("(foo bar baz)", arena);
-    assert is<s_list>(expr);
-    s_list *list = cast<s_list>(expr);
-    assert list->length() == 3;
-    assert cast<s_string>(list->get(0))->chars() == "foo";
-    assert cast<s_string>(list->get(1))->chars() == "bar";
-    assert cast<s_string>(list->get(2))->chars() == "baz";
+    p::MessageData data;
+    p::Value expr = reader.send("parse", p::Array::of("(foo bar baz)"), &data);
+    assert is<p::Array>(expr);
+    p::Array list = cast<p::Array>(expr);
+    assert list.length() == 3;
+    assert cast<p::String>(list[0]) == "foo";
+    assert cast<p::String>(list[1]) == "bar";
+    assert cast<p::String>(list[2]) == "baz";
   }
   {
-    Arena arena;
-    s_exp *expr = s_exp::read("(foo (bar baz) quux)", arena);
-    assert is<s_list>(expr);
-    s_list *list = cast<s_list>(expr);
-    assert list->length() == 3;
-    assert cast<s_string>(list->get(0))->chars() == "foo";
-    s_list *inner = cast<s_list>(list->get(1));
-    assert inner->length() == 2;
-    assert cast<s_string>(inner->get(0))->chars() == "bar";
-    assert cast<s_string>(inner->get(1))->chars() == "baz";
-    assert cast<s_string>(list->get(2))->chars() == "quux";
+    p::MessageData data;
+    p::Value expr = reader.send("parse", p::Array::of("(foo (bar baz) quux)"),
+        &data);
+    assert is<p::Array>(expr);
+    p::Array list = cast<p::Array>(expr);
+    assert list.length() == 3;
+    assert cast<p::String>(list[0]) == "foo";
+    p::Array inner = cast<p::Array>(list[1]);
+    assert inner.length() == 2;
+    assert cast<p::String>(inner[0]) == "bar";
+    assert cast<p::String>(inner[1]) == "baz";
+    assert cast<p::String>(list[2]) == "quux";
   }
 }
 
+TEST(write) {
+  Write::load();
+  p::Object reader = p::ServiceRegistry::lookup("neutrino.io.read");
+  assert !reader.is_empty();
+  p::Object writer = p::ServiceRegistry::lookup("neutrino.io.write");
+  assert !writer.is_empty();
+  p::MessageData data;
+  p::Value expr = reader.send("parse", p::Array::of(" ( a ( b c ) d ( e ( f ) ) ) "),
+      &data);
+  assert !expr.is_empty();
+  p::Value written = writer.send("unparse", p::Array::of(expr), &data);
+  assert cast<p::String>(written) == "(a (b c) d (e (f)))";
+}
+
+/*
 TEST(match) {
   {
     Arena arena;
@@ -103,3 +113,4 @@ TEST(match) {
     assert selected == "e";
   }
 }
+*/

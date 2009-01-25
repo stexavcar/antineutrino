@@ -24,19 +24,20 @@ ReadService::ReadService() {
   dtable().add_method("parse", &ReadService::parse);
 }
 
-REGISTER_SERVICE(neutrino.io.read, s_exp::create_service);
-
-p::Object s_exp::create_service() {
+static p::Object create_service() {
   static ReadService *service = NULL;
   if (service == NULL)
     service = new ReadService();
   return service->dtable().proxy_for(*service);
 }
 
-SexpScanner::SexpScanner(string str, Arena &arena)
+REGISTER_SERVICE(neutrino.io.read, create_service);
+
+SexpScanner::SexpScanner(p::String str, Arena &arena)
   : arena_(arena)
   , str_(str)
-  , pos_(0) {
+  , cursor_(-1)
+  , at_end_(false) {
   advance();
   skip_whitespace();
 }
@@ -74,30 +75,27 @@ static bool is_token_character(code_point cp) {
 }
 
 void SexpScanner::advance() {
-  if (pos_ < str().length()) {
-    current_ = str()[pos_];
-    pos_++;
-  } else if (pos_ == str().length()) {
-    current_ = '\0';
-    pos_++;
-  }
+  if (at_end_) return;
+  current_ = str()[++cursor_];
+  if (current_ == '\0')
+    at_end_ = true;
 }
 
-vector<uint8_t> SexpScanner::scan_token() {
+string SexpScanner::scan_token() {
   word start = cursor();
   while (is_token_character(current()))
     advance();
   word length = cursor() - start;
-  vector<uint8_t> chars = vector<uint8_t>::allocate(arena_array_allocator<uint8_t>(arena()), length);
+  vector<char> chars = vector<char>::allocate(arena_array_allocator<char>(arena()), length);
   for (word i = 0; i < length; i++)
     chars[i] = str()[start + i];
-  return chars;
+  return string(chars.start(), chars.length());
 }
 
 SexpScanner::Token SexpScanner::next() {
   SexpScanner::Token result;
   code_point cp = current();
-  last_string_ = vector<uint8_t>();
+  last_string_ = string();
   switch (cp) {
     case '\0':
       result = tEnd;
@@ -135,29 +133,32 @@ void SexpScanner::skip_whitespace() {
 
 class parse_result {
 public:
-  parse_result(s_exp *value) : value_(value) { }
-  bool is_failure() { return value_ == NULL; }
-  s_exp *value() { return value_; }
+  parse_result(p::Value value) : value_(value) { }
+  bool is_failure() { return value().is_empty(); }
+  p::Value value() { return value_; }
 private:
-  s_exp *value_;
+  p::Value value_;
 };
 
 class SexpParser {
 public:
-  SexpParser(string input, Arena &arena);
+  SexpParser(p::String input, Factory &factory, Arena &arena);
   parse_result parse_exp();
 private:
   void advance();
   SexpScanner &scan() { return scan_; }
+  Factory &factory() { return factory_; }
   Arena &arena() { return arena_; }
   SexpScanner::Token current() { return current_; }
   SexpScanner scan_;
+  Factory &factory_;
   Arena &arena_;
   SexpScanner::Token current_;
 };
 
-SexpParser::SexpParser(string input, Arena &arena)
+SexpParser::SexpParser(p::String input, Factory &factory, Arena &arena)
   : scan_(input, arena)
+  , factory_(factory)
   , arena_(arena) {
   advance();
 }
@@ -167,86 +168,51 @@ void SexpParser::advance() {
 }
 
 #define pTryParse(Type, name, expr)                                  \
-  Type *name;                                                        \
+  Type name;                                                         \
   do {                                                               \
     parse_result __result__ = expr;                                  \
     if (__result__.is_failure())                                     \
-      return NULL;                                                   \
+      return p::Value();                                             \
     name = __result__.value();                                       \
   } while (false)
 
 parse_result SexpParser::parse_exp() {
   switch (current()) {
     case SexpScanner::tString: {
-      vector<uint8_t> str = scan().last_string();
+      string str = scan().last_string();
       advance();
-      return new (arena()) s_string(str);
+      return factory().new_string(str);
     }
     case SexpScanner::tLeft: {
-      arena_buffer<s_exp*> buffer(arena());
+      arena_buffer<p::Value> buffer(arena());
       advance();
       while (current() != SexpScanner::tRight && current() != SexpScanner::tEnd) {
-        try parse s_exp *next = parse_exp();
+        try parse p::Value ~ next = parse_exp();
         buffer.append(next);
       }
       if (current() == SexpScanner::tEnd)
-        return NULL;
+        return p::Value();
       advance();
-      vector<s_exp*> elements = buffer.as_vector();
-      // Watch out: this appears to be unsafe, since we're returning
-      // a vector backed by a buffer that will be deleted when we
-      // return.  It works because it's an arena buffer that doesn't
-      // dispose its underlying storage.
-      return new (arena()) s_list(elements);
+      p::Array elements = factory().new_array(buffer.length());
+      for (word i = 0; i < buffer.length(); i++)
+        elements.set(i, buffer[i]);
+      return elements;
     }
     default:
-      return NULL;
+      return p::Value();
   }
-}
-
-s_exp *s_exp::read(string input, Arena &arena) {
-  SexpParser parser(input, arena);
-  try parse s_exp *result = parser.parse_exp();
-  return result;
 }
 
 p::Value ReadService::parse(Message &message) {
   assert message.data() != static_cast<void*>(NULL);
+  assert message.args().length() == 1;
+  p::String str = cast<p::String>(message.args()[0]);
   own_ptr<Factory> factory(new Factory());
+  Arena arena;
+  SexpParser parser(str, *(*factory), arena);
+  try parse p::Value ~ result = parser.parse_exp();
   message.data()->acquire_resource(*factory.release());
-  return Factory::get_void();
-}
-
-// ---
-// M a t c h i n g
-// ---
-
-bool s_string::match(const pattern &p) {
-  return p.match_string(this);
-}
-
-bool s_list::match(const pattern &p) {
-  return p.match_list(this);
-}
-
-bool m_string::match_string(s_string *that) const {
-  if (!str().is_empty()) {
-    return str() == that->chars();
-  } else {
-    *str_ptr() = that->chars();
-    return true;
-  }
-}
-
-bool m_list::match_list(s_list *that) const {
-  word length = that->length();
-  if (length > 0 && !that->get(0)->match(e0_)) return false;
-  if (length > 1 && !that->get(1)->match(e1_)) return false;
-  if (length > 2 && !that->get(2)->match(e2_)) return false;
-  if (length > 3 && !that->get(3)->match(e3_)) return false;
-  if (length > 4 && !that->get(4)->match(e4_)) return false;
-  if (length > 5 && !that->get(5)->match(e5_)) return false;
-  return true;
+  return result;
 }
 
 } // namespace neutrino

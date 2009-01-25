@@ -47,7 +47,7 @@ TEST(read_service) {
   p::Object read_service = p::ServiceRegistry::lookup("neutrino.io.read");
   assert !read_service.is_empty();
   p::MessageData data;
-  p::Value expr = read_service.send("parse", p::Array::of("( foo )"), &data);
+  p::Value expr = read_service.send("parse", p::Array::of(" ( foo ) "), &data);
   assert (is<p::Array>(expr));
   assert (cast<p::Array>(expr)).length() == 1;
 }

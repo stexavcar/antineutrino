@@ -187,7 +187,7 @@ private:
 
 
 #define REGISTER_SERVICE(name, allocator)                            \
-  static p::ServiceRegistryEntry SEMI_STATIC_JOIN(__entry__, __LINE__)(#name, allocator)
+  p::ServiceRegistryEntry SEMI_STATIC_JOIN(__entry__, __LINE__)(#name, allocator)
 
 
 } // namespace plankton
