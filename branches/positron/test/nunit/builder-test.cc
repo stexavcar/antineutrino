@@ -1,4 +1,4 @@
-#include "plankton/builder.h"
+#include "io/miniheap.h"
 #include "plankton/plankton-inl.h"
 #include "plankton/codec-inl.h"
 #include "utils/vector-inl.h"
@@ -54,22 +54,22 @@ TEST(encode) {
 TEST(integer) {
   for (word i = 0; i < 100; i++) {
     MessageOut builder;
-    p_integer val = builder.new_integer(i);
-    assert val.type() == p_value::vtInteger;
+    p::Integer val = builder.new_integer(i);
+    assert val.type() == p::Value::vtInteger;
     assert val.value() == i;
   }
 }
 
 TEST(string) {
   static const word kTestStringCount = 3;
-  static const string kTestStrings[kTestStringCount] = {
+  static const char *kTestStrings[kTestStringCount] = {
     "foobar", "", "a b c"
   };
   for (word i = 0; i < kTestStringCount; i++) {
     MessageOut builder;
     string str = kTestStrings[i];
-    p_string val = builder.new_string(str);
-    assert val.type() == p_value::vtString;
+    p::String val = builder.new_string(str);
+    assert val.type() == p::Value::vtString;
     assert val.length() == str.length();
     for (word j = 0; j < val.length(); j++)
       assert val[j] == static_cast<uint32_t>(str[j]);
@@ -77,44 +77,69 @@ TEST(string) {
   }
 }
 
+TEST(string_end) {
+  Factory factory;
+  p::String str = factory.new_string("foo");
+  assert str[0] == static_cast<uint32_t>('f');
+  assert str[1] == static_cast<uint32_t>('o');
+  assert str[2] == static_cast<uint32_t>('o');
+  assert str[3] == static_cast<uint32_t>('\0');
+}
+
 TEST(string_comparison) {
-  MessageOut builder;
-  assert builder.new_string("") < string("a");
-  assert builder.new_string("a") < string("aa");
-  assert builder.new_string("aa") < string("aaa");
-  assert builder.new_string("a") < string("b");
-  assert builder.new_string("aaaaa") < string("aaaab");
-  assert builder.new_string("bbb") < string("aaaa");
-  assert builder.new_string("x") != string("y");
-  assert builder.new_string("") == string("");
-  assert builder.new_string("abc") == string("abc");
+  Factory factory;
+  assert factory.new_string("") < "a";
+  assert factory.new_string("a") < "aa";
+  assert factory.new_string("aa") < "aaa";
+  assert factory.new_string("a") < "b";
+  assert factory.new_string("aaaaa") < "aaaab";
+  assert factory.new_string("bbb") < "aaaa";
+  assert factory.new_string("x") != "y";
+  assert factory.new_string("") == "";
+  assert factory.new_string("abc") == "abc";
 }
 
 TEST(null) {
   MessageOut builder;
-  p_null null = builder.get_null();
-  assert null.type() == p_value::vtNull;
+  p::Null null = builder.get_null();
+  assert null.type() == p::Value::vtNull;
 }
 
 TEST(array) {
   MessageOut builder;
   static const word kSize = 5;
-  static const string kElements[kSize] = {
+  static const char *kElements[kSize] = {
     "foo", "bar", "baz", "quux", "bleh"
   };
-  p_array array = builder.new_array(kSize);
-  assert array.type() == p_value::vtArray;
+  p::Array array = builder.new_array(kSize);
+  assert array.type() == p::Value::vtArray;
   assert array.length() == kSize;
   for (word i = 0; i < kSize; i++)
-    assert array[i].type() == p_value::vtNull;
+    assert array[i].type() == p::Value::vtNull;
   for (word i = 0; i < kSize; i++)
     array.set(i, builder.new_string(kElements[i]));
   for (word i = 0; i < kSize; i++) {
-    p_value val = array[i];
-    assert is<p_string>(val);
-    p_string str = cast<p_string>(val);
+    p::Value val = array[i];
+    assert is<p::String>(val);
+    p::String str = cast<p::String>(val);
     assert str == kElements[i];
   }
   array.set(0, array);
   assert array[0] == array;
+}
+
+TEST(c_str) {
+  p::String str = "flamp";
+  assert str[0] == static_cast<uint32_t>('f');
+  assert str[1] == static_cast<uint32_t>('l');
+  assert str[2] == static_cast<uint32_t>('a');
+  assert str[3] == static_cast<uint32_t>('m');
+  assert str[4] == static_cast<uint32_t>('p');
+  assert str[5] == static_cast<uint32_t>('\0');
+  assert str.length() == 5;
+  assert str == "flamp";
+  assert str > "flam";
+  assert str < "flampe";
+  assert str > "flamo";
+  assert str < "flamq";
 }

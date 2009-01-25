@@ -12,8 +12,8 @@ namespace neutrino {
 
 REGISTER_SERVICE(neutrino.io.read, s_exp::create_service);
 
-p_object s_exp::create_service() {
-  return p_object(0, NULL);
+p::Object s_exp::create_service() {
+  return p::Object(0, NULL);
 }
 
 SexpScanner::SexpScanner(string str, Arena &arena)

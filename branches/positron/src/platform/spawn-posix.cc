@@ -70,11 +70,11 @@ public:
     , out_(channel.out_fd()) { }
   word write(const vector<uint8_t> &data);
   word read(vector<uint8_t> data);
-  void send_message(MessageHeap &heap, p_string name, p_array args,
+  void send_message(MiniHeap &heap, p::String name, p::Array args,
       bool is_synchronous);
   boole receive_message(MessageIn &message);
-  boole send_reply(MessageIn &message, p_value value);
-  p_value receive_reply(MessageHeap &heap);
+  boole send_reply(MessageIn &message, p::Value value);
+  p::Value receive_reply(MiniHeap &heap);
 private:
   HalfChannel &channel() { return channel_; }
   int in() { return *in_; }
@@ -114,8 +114,8 @@ struct ReplyHeader {
   };
 };
 
-void FileSocket::send_message(MessageHeap &heap, p_string name,
-    p_array args, bool is_synchronous) {
+void FileSocket::send_message(MiniHeap &heap, p::String name,
+    p::Array args, bool is_synchronous) {
   MessageHeader header;
   vector<uint8_t> memory = heap.memory();
   header.data.heap_size = memory.length();
@@ -131,23 +131,23 @@ boole FileSocket::receive_message(MessageIn &message) {
   read(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
   own_vector<uint8_t> memory(vector<uint8_t>::allocate(header.data.heap_size));
   read(memory.as_vector());
-  FrozenHeap *heap = new FrozenHeap(memory.release());
-  message.set_selector(p_string(header.data.name, &heap->dtable()));
-  message.set_args(p_array(header.data.args, &heap->dtable()));
+  FrozenMiniHeap *heap = new FrozenMiniHeap(memory.release());
+  message.set_selector(p::String(header.data.name, &heap->dtable()));
+  message.set_args(p::Array(header.data.args, &heap->dtable()));
   message.set_stream(this);
   message.set_is_synchronous(header.data.is_synchronous);
   message.take_ownership(heap);
   return Success::make();
 }
 
-boole FileSocket::send_reply(MessageIn &message, p_value value) {
+boole FileSocket::send_reply(MessageIn &message, p::Value value) {
   if (!message.is_synchronous()) {
     LOG().warn("Reply to asynchronous message ignored.", args());
     return Success::make();
   }
-  assert value.impl_id() == MessageHeap::id();
+  assert value.impl_id() == MiniHeap::id();
   ReplyHeader header;
-  MessageHeap *heap = MessageHeap::get(value.dtable());
+  MiniHeap *heap = MiniHeap::get(value.dtable());
   vector<uint8_t> memory;
   if (heap != NULL)
     memory = heap->memory();
@@ -158,14 +158,14 @@ boole FileSocket::send_reply(MessageIn &message, p_value value) {
   return Success::make();
 }
 
-p_value FileSocket::receive_reply(MessageHeap &heap) {
+p::Value FileSocket::receive_reply(MiniHeap &heap) {
   ReplyHeader header;
   read(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
   own_vector<uint8_t> memory(vector<uint8_t>::allocate(header.data.heap_size));
   read(memory.as_vector());
-  FrozenHeap *new_heap = new FrozenHeap(memory.release());
+  FrozenMiniHeap *new_heap = new FrozenMiniHeap(memory.release());
   heap.take_ownership(new_heap);
-  return p_value(header.data.value, &new_heap->dtable());
+  return p::Value(header.data.value, &new_heap->dtable());
 }
 
 word FileSocket::read(vector<uint8_t> data) {
@@ -174,7 +174,7 @@ word FileSocket::read(vector<uint8_t> data) {
   return bytes;
 }
 
-class ChildProcess::Data : public p_value::DTable {
+class ChildProcess::Data : public p::Value::DTable {
 public:
   Data(pid_t child, const HalfChannel &channel)
     : child_(child)
@@ -183,50 +183,50 @@ public:
   }
   pid_t child() { return child_; }
   FileSocket &socket() { return socket_; }
-  static p_value send_bridge(const p_object *obj, p_string name,
-      p_array args, bool is_synchronous);
+  static p::Value send_bridge(p::Object obj, p::String name,
+      p::Array args, bool is_synchronous);
 private:
   pid_t child_;
   FileSocket socket_;
 };
 
-p_value ChildProcess::Data::send_bridge(const p_object *obj,
-    p_string name, p_array args, bool is_synchronous) {
-  ChildProcess::Data *data = static_cast<ChildProcess::Data*>(obj->dtable());
-  assert name.impl_id() == MessageHeap::id();
-  MessageHeap &buffer = *MessageHeap::get(name.dtable());
+p::Value ChildProcess::Data::send_bridge(p::Object obj,
+    p::String name, p::Array args, bool is_synchronous) {
+  ChildProcess::Data *data = static_cast<ChildProcess::Data*>(obj.dtable());
+  assert name.impl_id() == MiniHeap::id();
+  MiniHeap &buffer = *MiniHeap::get(name.dtable());
   FileSocket &socket = data->socket();
   socket.send_message(buffer, name, args, is_synchronous);
   if (is_synchronous) {
     return socket.receive_reply(buffer);
   } else {
-    return p_value();
+    return p::Value();
   }
 }
 
-class ParentProcess::Data : public p_value::DTable {
+class ParentProcess::Data : public p::Value::DTable {
 public:
   Data(const HalfChannel &channel) : socket_(channel) {
     object.send = send_bridge;
   }
   FileSocket &socket() { return socket_; }
-  static p_value send_bridge(const p_object *obj, p_string name,
-      p_array args, bool is_synchronous);
+  static p::Value send_bridge(p::Object obj, p::String name,
+      p::Array args, bool is_synchronous);
 private:
   FileSocket socket_;
 };
 
-p_value ParentProcess::Data::send_bridge(const p_object *obj, p_string name,
-      p_array args, bool is_synchronous) {
-  ParentProcess::Data *data = static_cast<ParentProcess::Data*>(obj->dtable());
-  assert name.impl_id() == MessageHeap::id();
-  MessageHeap &buffer = *MessageHeap::get(name.dtable());
+p::Value ParentProcess::Data::send_bridge(p::Object obj,
+    p:: String name, p::Array args, bool is_synchronous) {
+  ParentProcess::Data *data = static_cast<ParentProcess::Data*>(obj.dtable());
+  assert name.impl_id() == MiniHeap::id();
+  MiniHeap &buffer = *MiniHeap::get(name.dtable());
   FileSocket &socket = data->socket();
   socket.send_message(buffer, name, args, is_synchronous);
   if (is_synchronous) {
     return socket.receive_reply(buffer);
   } else {
-    return p_value();
+    return p::Value();
   }
 }
 
@@ -312,8 +312,8 @@ boole ChildProcess::open(string &command, vector<string> &args,
   }
 }
 
-p_object ChildProcess::proxy() {
-  return p_object(0, data());
+p::Object ChildProcess::proxy() {
+  return p::Object(0, data());
 }
 
 word ChildProcess::wait() {
@@ -372,8 +372,8 @@ boole ParentProcess::receive(MessageIn &message) {
   return data()->socket().receive_message(message);
 }
 
-p_object ParentProcess::proxy() {
-  return p_object(0, data());
+p::Object ParentProcess::proxy() {
+  return p::Object(0, data());
 }
 
 } // namespace neutrino

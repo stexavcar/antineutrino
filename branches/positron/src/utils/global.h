@@ -14,6 +14,9 @@ typedef unsigned long uword;
 typedef uint32_t code_point;
 
 
+namespace p = plankton;
+
+
 /**
  * Utility class that, if used as a base class, precludes instances
  * from being copied.  Inspired by (stolen from, really) boost.

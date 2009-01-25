@@ -5,32 +5,34 @@
 #include "utils/string.h"
 
 namespace neutrino {
+namespace plankton {
 
-class p_value {
+class Value {
 public:
   enum Type { vtInteger, vtString, vtNull, vtVoid, vtArray, vtObject };
 
-  struct DTable {
+  class DTable {
+  public:
     struct ValueDTable {
-      Type (*type)(const p_value *that);
-      bool (*eq)(const p_value *that, p_value other);
-      void *(*impl_id)(const p_value *that);
+      Type (*type)(Value that);
+      bool (*eq)(Value that, Value other);
+      void *(*impl_id)(Value that);
     };
     struct IntegerDTable {
-      int32_t (*value)(const p_integer *that);
+      int32_t (*value)(Integer that);
     };
     struct StringDTable {
-      word (*length)(const p_string *that);
-      uint32_t (*get)(const p_string *that, word offset);
-      word (*compare)(const p_string *that, const string &other);
+      word (*length)(String that);
+      uint32_t (*get)(String that, word offset);
+      word (*compare)(String that, String other);
     };
     struct ArrayDTable {
-      word (*length)(const p_array *that);
-      p_value (*get)(const p_array *that, word index);
-      bool (*set)(p_array *that, word index, p_value value);
+      word (*length)(Array that);
+      Value (*get)(Array that, word index);
+      bool (*set)(Array that, word index, Value value);
     };
     struct ObjectDTable {
-      p_value (*send)(const p_object *that, p_string name, p_array args,
+      Value (*send)(Object tthat, String name, Array args,
           bool is_synchronous);
     };
     ValueDTable value;
@@ -40,121 +42,120 @@ public:
     ObjectDTable object;
   };
 
-  inline Type type() const { return dtable()->value.type(this); }
-  inline void *impl_id() const { return dtable()->value.impl_id(this); }
-  inline bool operator==(p_value that) const { return dtable()->value.eq(this, that); }
+  inline Type type() const { return dtable()->value.type(*this); }
+  inline void *impl_id() const { return dtable()->value.impl_id(*this); }
+  inline bool operator==(Value that) const { return dtable()->value.eq(*this, that); }
   word data() const { return data_; }
   DTable *dtable() const { return dtable_; }
   bool is_empty() { return dtable_ == NULL; }
 
-  inline p_value(word data, DTable *dtable) : data_(data), dtable_(dtable) { }
-  inline p_value() : data_(0), dtable_(NULL) { }
+  inline Value(word data, DTable *dtable) : data_(data), dtable_(dtable) { }
+  inline Value() : data_(0), dtable_(NULL) { }
 
 private:
   word data_;
   DTable *dtable_;
 };
 
-
-template <> struct coerce<p_value::Type> { typedef word type; };
-
-
-class p_integer : public p_value {
+class Integer : public Value {
 public:
-  inline int32_t value() const { return dtable()->integer.value(this); }
-  inline p_integer(word data, DTable *dtable) : p_value(data, dtable) { }
-  static const p_value::Type kTypeTag = p_value::vtInteger;
+  inline int32_t value() const { return dtable()->integer.value(*this); }
+  inline Integer(word data, DTable *dtable) : Value(data, dtable) { }
+  static const Value::Type kTypeTag = Value::vtInteger;
 };
 
 
-class p_null : public p_value {
+class Null : public Value {
 public:
-  inline p_null(word data, DTable *dtable) : p_value(data, dtable) { }
-  static const p_value::Type kTypeTag = p_value::vtNull;
+  inline Null(word data, DTable *dtable) : Value(data, dtable) { }
+  static const Value::Type kTypeTag = Value::vtNull;
 };
 
 
-class p_void : public p_value {
+class Void : public Value {
 public:
-  inline p_void(word data, DTable *dtable) : p_value(data, dtable) { }
-  static const p_value::Type kTypeTag = p_value::vtVoid;
+  inline Void(word data, DTable *dtable) : Value(data, dtable) { }
+  static const Value::Type kTypeTag = Value::vtVoid;
 };
 
 
-class p_string : public p_value {
+class String : public Value {
 public:
-  inline word length() const { return dtable()->string.length(this); }
-  inline uint32_t operator[](word index) const { return dtable()->string.get(this, index); }
-  inline bool operator==(const string &other) const { return dtable()->string.compare(this, other) == 0; }
-  inline bool operator!=(const string &other) const { return dtable()->string.compare(this, other) != 0; }
-  inline bool operator<(const string &other) const { return dtable()->string.compare(this, other) < 0; }
-  inline bool operator<=(const string &other) const { return dtable()->string.compare(this, other) <= 0; }
-  inline bool operator>(const string &other) const { return dtable()->string.compare(this, other) > 0; }
-  inline bool operator>=(const string &other) const { return dtable()->string.compare(this, other) >= 0; }
-  inline p_string(word data, DTable *dtable) : p_value(data, dtable) { }
-  inline p_string() : p_value() { }
-  static const p_value::Type kTypeTag = p_value::vtString;
+  inline word length() const { return dtable()->string.length(*this); }
+
+  // Returns the i'th character of this string.  A '\0' will be returned
+  // as the first character after the end of the string and access
+  // beyond that may give any result, including program termination.
+  inline uint32_t operator[](word index) const { return dtable()->string.get(*this, index); }
+
+  inline bool operator==(String other) const { return dtable()->string.compare(*this, other) == 0; }
+  inline bool operator!=(String other) const { return dtable()->string.compare(*this, other) != 0; }
+  inline bool operator<(String other) const { return dtable()->string.compare(*this, other) < 0; }
+  inline bool operator<=(String other) const { return dtable()->string.compare(*this, other) <= 0; }
+  inline bool operator>(String other) const { return dtable()->string.compare(*this, other) > 0; }
+  inline bool operator>=(String other) const { return dtable()->string.compare(*this, other) >= 0; }
+  inline String(const char *str) : Value(reinterpret_cast<word>(str), c_string_dtable()) { }
+  inline String(word data, DTable *dtable) : Value(data, dtable) { }
+  inline String() : Value() { }
+  static const Value::Type kTypeTag = Value::vtString;
+private:
+  static Value::DTable *c_string_dtable();
+  static Value::DTable *c_string_dtable_;
 };
 
 
-class p_array : public p_value {
+class Array : public Value {
 public:
-  inline word length() const { return dtable()->array.length(this); }
-  inline p_value operator[](word index) const { return dtable()->array.get(this, index); }
-  inline bool set(word index, p_value value) { return dtable()->array.set(this, index, value); }
-  inline p_array(word data, DTable *dtable) : p_value(data, dtable) { }
-  inline p_array() : p_value() { }
-  static const p_value::Type kTypeTag = p_value::vtArray;
+  inline word length() const { return dtable()->array.length(*this); }
+  inline Value operator[](word index) const { return dtable()->array.get(*this, index); }
+  inline bool set(word index, Value value) { return dtable()->array.set(*this, index, value); }
+  inline Array(word data, DTable *dtable) : Value(data, dtable) { }
+  inline Array() : Value() { }
+  static const Value::Type kTypeTag = Value::vtArray;
 };
 
 
-class p_object : public p_value {
+class Object : public Value {
 public:
-  inline p_value send_sync(p_string name, p_array args = p_array()) { return dtable()->object.send(this, name, args, true); }
-  inline void send_async(p_string name, p_array args = p_array()) { dtable()->object.send(this, name, args, false); }
-  inline p_object(word data, DTable *table) : p_value(data, table) { }
-  inline p_object() : p_value() { }
-  static const p_value::Type kTypeTag = p_value::vtObject;
+  inline Value send_sync(String name, Array args = Array()) { return dtable()->object.send(*this, name, args, true); }
+  inline void send_async(String name, Array args = Array()) { dtable()->object.send(*this, name, args, false); }
+  inline Object(word data, DTable *table) : Value(data, table) { }
+  inline Object() : Value() { }
+  static const Value::Type kTypeTag = Value::vtObject;
 };
 
 
 class ServiceRegistry {
 public:
-  static p_object lookup(string name);
+  static Object lookup(String name);
 };
 
 
 class ServiceRegistryEntry {
 public:
-  typedef p_object (*instance_allocator)();
-  inline ServiceRegistryEntry(string name, instance_allocator alloc);
-  p_object get_instance();
+  typedef Object (*instance_allocator)();
+  inline ServiceRegistryEntry(const char *name, instance_allocator alloc);
+  Object get_instance();
 private:
   friend class ServiceRegistry;
   static ServiceRegistryEntry *first() { return first_; }
-  string name() { return name_; }
+  const char *name() { return name_; }
   ServiceRegistryEntry *prev() { return prev_; }
-  string name_;
+  const char *name_;
   instance_allocator alloc_;
   ServiceRegistryEntry *prev_;
   static ServiceRegistryEntry *first_;
   bool has_instance_;
-  p_object instance_;
+  Object instance_;
 };
 
 
 #define REGISTER_SERVICE(name, allocator)                            \
-  static ServiceRegistryEntry SEMI_STATIC_JOIN(__entry__, __LINE__)(#name, allocator)
+  static p::ServiceRegistryEntry SEMI_STATIC_JOIN(__entry__, __LINE__)(#name, allocator)
 
 
-template <class T>
-static inline bool is(p_value obj);
-
-
-template <class T>
-static inline T cast(p_value obj);
-
-
+} // namespace plankton
 } // namespace neutrino
+
 
 #endif // _PLANKTON_PLANKTON

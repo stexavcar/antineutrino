@@ -18,18 +18,21 @@ typedef unsigned __int64 uint64_t;
 
 namespace neutrino {
 
-
 class Arena;
-class MessageHeap;
+class MiniHeap;
 class MessageIn;
 class MessageOut;
-class p_array;
-class p_integer;
-class p_null;
-class p_object;
-class p_string;
 class pattern;
 
+namespace plankton {
+
+class Array;
+class Integer;
+class Null;
+class Object;
+class String;
+
+} // namespace plankton
 
 } // namespace neutrino
 

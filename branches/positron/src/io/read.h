@@ -38,7 +38,7 @@ public:
   virtual Type type() = 0;
   virtual bool match(const pattern &m) = 0;
   static s_exp *read(string str, Arena &arena);
-  static p_object create_service();
+  static p::Object create_service();
 };
 
 class s_string : public s_exp {

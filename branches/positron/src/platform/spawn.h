@@ -1,7 +1,7 @@
 #ifndef _PLATFORM_SOCKET
 #define _PLATFORM_SOCKET
 
-#include "plankton/builder.h"
+#include "io/miniheap.h"
 #include "platform/abort.h"
 #include "utils/global.h"
 #include "utils/string.h"
@@ -15,7 +15,7 @@ public:
   class Data;
   ParentProcess() : data_(NULL) { }
   ~ParentProcess();
-  p_object proxy();
+  p::Object proxy();
   boole open();
   boole receive(MessageIn &message);
 private:
@@ -28,7 +28,7 @@ public:
   class Data;
   ChildProcess() : data_(NULL) { }
   ~ChildProcess();
-  p_object proxy();
+  p::Object proxy();
   boole open(string &command, vector<string> &args, vector< pair<string> > &env);
   word wait();
   boole receive(MessageIn &message);

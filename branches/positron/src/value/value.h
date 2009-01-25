@@ -15,6 +15,22 @@ static inline bool is(Data *data);
 template <class C>
 static inline C *cast(Data *data);
 
+class Value : public Data {
+
+};
+
+class Object : public Value {
+
+};
+
+class String : public Object {
+
+};
+
+class Array : public Object {
+
+};
+
 class Signal : public Data {
 public:
   enum Type { sSuccess, sInternalError };

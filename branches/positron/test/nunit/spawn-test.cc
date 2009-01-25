@@ -1,7 +1,7 @@
+#include "io/miniheap-inl.h"
 #include "platform/spawn.h"
-#include "test-inl.h"
-#include "plankton/builder-inl.h"
 #include "plankton/plankton-inl.h"
+#include "test-inl.h"
 
 
 #include <stdlib.h>
@@ -39,17 +39,17 @@ boole TestChildProcess::open(const string &test_name) {
 TEST(hul_igennem) {
   TestChildProcess child;
   try child.open("hul_igennem_child");
-  p_object proxy = child.proxy();
+  p::Object proxy = child.proxy();
   for (word i = 0; i < 100; i++) {
     MessageOut buffer;
-    p_value obj = proxy.send_sync(buffer.new_string("next_int"));
-    assert is<p_integer>(obj);
-    assert (cast<p_integer>(obj)).value() == i;
+    p::Value obj = proxy.send_sync(buffer.new_string("next_int"));
+    assert is<p::Integer>(obj);
+    assert (cast<p::Integer>(obj)).value() == i;
   }
   MessageOut buffer;
-  p_value obj = proxy.send_sync(buffer.new_string("exit"));
-  assert is<p_string>(obj);
-  assert (cast<p_string>(obj)) == string("bye");
+  p::Value obj = proxy.send_sync(buffer.new_string("exit"));
+  assert is<p::String>(obj);
+  assert (cast<p::String>(obj)) == "bye";
 }
 
 
@@ -63,7 +63,7 @@ TEST(hul_igennem_child) {
     MessageIn message;
     try parent.receive(message);
     if (message.selector() == "next_int") {
-      message.reply(MessageOut::new_integer(count++));
+      message.reply(Factory::new_integer(count++));
     } else if (message.selector() == "exit") {
       MessageOut buf;
       message.reply(buf.new_string("bye"));
@@ -78,14 +78,14 @@ TEST(sequence) {
   try child.open("sequence_child");
   for (word i = 0; i < 1000; i++) {
     MessageOut message;
-    p_value v = child.proxy().send_sync(message.new_string("ping"));
-    assert (cast<p_integer>(v).value()) == i * 3;
+    p::Value v = child.proxy().send_sync(message.new_string("ping"));
+    assert (cast<p::Integer>(v).value()) == i * 3;
   }
   for (word i = 0; i < 1000; i++) {
     MessageIn message;
     child.receive(message);
-    assert message.selector() == string("pong");
-    message.reply(MessageOut::new_integer(i + 8));
+    assert message.selector() == "pong";
+    message.reply(Factory::new_integer(i + 8));
   }
 }
 
@@ -97,13 +97,13 @@ TEST(sequence_child) {
   for (word i = 0; i < 1000; i++) {
     MessageIn message;
     try parent.receive(message);
-    assert message.selector() == string("ping");
-    message.reply(MessageOut::new_integer(i * 3));
+    assert message.selector() == "ping";
+    message.reply(Factory::new_integer(i * 3));
   }
   for (word i = 0; i < 1000; i++) {
     MessageOut message;
-    p_value v = parent.proxy().send_sync(message.new_string("pong"));
-    assert (cast<p_integer>(v).value()) == i + 8;
+    p::Value v = parent.proxy().send_sync(message.new_string("pong"));
+    assert (cast<p::Integer>(v).value()) == i + 8;
   }
 }
 
@@ -113,8 +113,8 @@ TEST(sync_auto_reply) {
   try child.open("sync_auto_reply_child");
   for (word i = 0; i < 100; i++) {
     MessageOut message;
-    p_value v = child.proxy().send_sync(message.new_string("pang"));
-    assert is<p_void>(v);
+    p::Value v = child.proxy().send_sync(message.new_string("pang"));
+    assert is<p::Void>(v);
   }
 }
 
@@ -126,6 +126,6 @@ TEST(sync_auto_reply_child) {
   for (word i = 0; i < 100; i++) {
     MessageIn message;
     try parent.receive(message);
-    assert message.selector() == string("pang");
+    assert message.selector() == "pang";
   }
 }
