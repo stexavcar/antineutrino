@@ -2,12 +2,19 @@
 #include "utils/arena-inl.h"
 #include "utils/buffer-inl.h"
 #include "utils/vector-inl.h"
+#include "plankton/plankton-inl.h"
 
 namespace neutrino {
 
 // ---
 // S c a n n e r
 // ---
+
+REGISTER_SERVICE(neutrino.io.read, s_exp::create_service);
+
+p_object s_exp::create_service() {
+  return p_object(0, NULL);
+}
 
 SexpScanner::SexpScanner(string str, Arena &arena)
   : arena_(arena)
@@ -184,6 +191,38 @@ s_exp *s_exp::read(string input, Arena &arena) {
   SexpParser parser(input, arena);
   try parse s_exp *result = parser.parse_exp();
   return result;
+}
+
+// ---
+// M a t c h i n g
+// ---
+
+bool s_string::match(const pattern &p) {
+  return p.match_string(this);
+}
+
+bool s_list::match(const pattern &p) {
+  return p.match_list(this);
+}
+
+bool m_string::match_string(s_string *that) const {
+  if (!str().is_empty()) {
+    return str() == that->chars();
+  } else {
+    *str_ptr() = that->chars();
+    return true;
+  }
+}
+
+bool m_list::match_list(s_list *that) const {
+  word length = that->length();
+  if (length > 0 && !that->get(0)->match(e0_)) return false;
+  if (length > 1 && !that->get(1)->match(e1_)) return false;
+  if (length > 2 && !that->get(2)->match(e2_)) return false;
+  if (length > 3 && !that->get(3)->match(e3_)) return false;
+  if (length > 4 && !that->get(4)->match(e4_)) return false;
+  if (length > 5 && !that->get(5)->match(e5_)) return false;
+  return true;
 }
 
 } // namespace neutrino

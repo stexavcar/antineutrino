@@ -15,6 +15,7 @@ library (
     'plankton/codec-inl.h',
     'plankton/plankton.h',
     'plankton/plankton-inl.h',
+    'plankton/plankton.cc',
     'platform/abort.h',
     'platform/abort.cc',
     'platform/spawn.h',

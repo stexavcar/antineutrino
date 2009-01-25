@@ -70,3 +70,36 @@ TEST(parser) {
     assert cast<s_string>(list->get(2))->chars() == "quux";
   }
 }
+
+TEST(match) {
+  {
+    Arena arena;
+    s_exp *expr = s_exp::read("(foo bar baz)", arena);
+    assert (expr->match(m_list(m_string("foo"), m_string("bar"), m_string("baz"))));
+  }
+  {
+    Arena arena;
+    s_exp *expr = s_exp::read("(dim dam dum)", arena);
+    vector<uint8_t> middle;
+    assert (expr->match(m_list(m_string("dim"), m_string(&middle), m_string("dum"))));
+    assert middle == "dam";
+  }
+  {
+    Arena arena;
+    s_exp *expr = s_exp::read("((a b) c (d (e f)))", arena);
+    vector<uint8_t> selected;
+    bool match = expr->match(
+        m_list(
+            m_list(
+                m_string("a"),
+                m_string("b")),
+            m_string("c"),
+            m_list(
+                m_string("d"),
+                m_list(
+                    m_string(&selected),
+                    m_string("f")))));
+    assert match;
+    assert selected == "e";
+  }
+}

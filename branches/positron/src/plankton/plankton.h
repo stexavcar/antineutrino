@@ -113,8 +113,38 @@ public:
   inline p_value send_sync(p_string name, p_array args = p_array()) { return dtable()->object.send(this, name, args, true); }
   inline void send_async(p_string name, p_array args = p_array()) { dtable()->object.send(this, name, args, false); }
   inline p_object(word data, DTable *table) : p_value(data, table) { }
+  inline p_object() : p_value() { }
   static const p_value::Type kTypeTag = p_value::vtObject;
 };
+
+
+class ServiceRegistry {
+public:
+  static p_object lookup(string name);
+};
+
+
+class ServiceRegistryEntry {
+public:
+  typedef p_object (*instance_allocator)();
+  inline ServiceRegistryEntry(string name, instance_allocator alloc);
+  p_object get_instance();
+private:
+  friend class ServiceRegistry;
+  static ServiceRegistryEntry *first() { return first_; }
+  string name() { return name_; }
+  ServiceRegistryEntry *prev() { return prev_; }
+  string name_;
+  instance_allocator alloc_;
+  ServiceRegistryEntry *prev_;
+  static ServiceRegistryEntry *first_;
+  bool has_instance_;
+  p_object instance_;
+};
+
+
+#define REGISTER_SERVICE(name, allocator)                            \
+  static ServiceRegistryEntry SEMI_STATIC_JOIN(__entry__, __LINE__)(#name, allocator)
 
 
 template <class T>

@@ -3,6 +3,7 @@
 
 #include "plankton/plankton.h"
 #include "utils/check-inl.h"
+#include "utils/log.h"
 
 namespace neutrino {
 
@@ -18,6 +19,12 @@ static inline T cast(p_value obj) {
   assert is<T>(obj);
   return T(obj.data(), obj.dtable());
 }
+
+ServiceRegistryEntry::ServiceRegistryEntry(string name, instance_allocator alloc)
+  : name_(name), alloc_(alloc), prev_(first_), has_instance_(false) {
+  first_ = this;
+}
+
 
 } // namespace neutrino
 

@@ -28,6 +28,7 @@ class p_integer;
 class p_null;
 class p_object;
 class p_string;
+class pattern;
 
 
 } // namespace neutrino

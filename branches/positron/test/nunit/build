@@ -5,11 +5,12 @@ program (
   srcs = [
     'arena-test.cc',
     'builder-test.cc',
+    'pointer-test.cc',
     'read-test.cc',
+    'service-test.cc',
     'string-test.cc',
     'spawn-test.cc',
     'type-test.cc',
-    'pointer-test.cc',
     'test.cc',
     'test.h',
     'test-inl.h',

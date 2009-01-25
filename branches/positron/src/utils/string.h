@@ -24,6 +24,7 @@ public:
     : chars_(chars)
     , length_(length) { }
   bool operator==(const string &that) const;
+  bool operator==(const vector<uint8_t> &that) const;
   bool contains(char c);
   word length() const { return length_; }
   const char *start() const { return chars_; }
@@ -31,7 +32,7 @@ public:
   const char &operator[](word i) const { return chars_[i]; }
   static string dup(string arg);
   vector<const char> chars() { return vector<const char>(chars_, length_); }
-  bool is_empty() { return chars_ == NULL; }
+  bool is_empty() const { return chars_ == NULL; }
   void println(FILE *out = stdout);
 private:
   const char *chars_;

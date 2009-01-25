@@ -162,6 +162,15 @@ bool string::operator==(const string &that) const {
   return true;
 }
 
+bool string::operator==(const vector<uint8_t> &that) const {
+  if (length() != that.length()) return false;
+  for (word i = 0; i < length(); i++) {
+    if (this->operator[](i) != that[i])
+      return false;
+  }
+  return true;
+}
+
 bool string::contains(char c) {
   for (word i = 0; i < length(); i++) {
     if (operator[](i) == c)
