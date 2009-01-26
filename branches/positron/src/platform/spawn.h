@@ -1,5 +1,5 @@
-#ifndef _PLATFORM_SOCKET
-#define _PLATFORM_SOCKET
+#ifndef _PLATFORM_SPAWN
+#define _PLATFORM_SPAWN
 
 #include "io/miniheap.h"
 #include "platform/abort.h"
@@ -40,4 +40,4 @@ private:
 
 } // namespace neutrino
 
-#endif // _PLATFORM_SOCKET
+#endif // _PLATFORM_SPAWN

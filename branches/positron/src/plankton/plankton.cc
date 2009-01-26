@@ -1,4 +1,5 @@
 #include "plankton/plankton-inl.h"
+#include "plankton/match.h"
 #include "utils/string-inl.h"
 
 namespace neutrino {
@@ -17,6 +18,24 @@ Value::DTable::DTable() {
   array.get = NULL;
   array.set = NULL;
   object.send = NULL;
+}
+
+bool Value::match(Pattern &pattern) {
+  switch (type()) {
+    case vtArray:
+      return pattern.match_array(cast<Array>(*this));
+    case vtInteger:
+      return pattern.match_integer(cast<Integer>(*this));
+    case vtString:
+      return pattern.match_string(cast<String>(*this));
+    case vtNull:
+      return pattern.match_null(cast<Null>(*this));
+    case vtVoid:
+      return pattern.match_void(cast<Void>(*this));
+    case vtObject:
+      return pattern.match_object(cast<Object>(*this));
+  };
+  return false;
 }
 
 // --- I n t e g e r   L i t e r a l s ---

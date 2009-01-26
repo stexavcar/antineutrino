@@ -1,3 +1,4 @@
+#include "io/miniheap-inl.h"
 #include "plankton/plankton-inl.h"
 #include "platform/spawn.h"
 #include "utils/check-inl.h"
@@ -13,6 +14,32 @@
 namespace neutrino {
 
 static const string kMasterEnvVariable = "POSITRON_MASTER";
+
+class SpawnService {
+public:
+  SpawnService();
+  p::Value spawn(Message &message);
+  static p::Object create();
+private:
+  ObjectProxyDTable<SpawnService> &dtable() { return dtable_; }
+  ObjectProxyDTable<SpawnService> dtable_;
+};
+
+SpawnService::SpawnService() {
+  dtable().add_method("spawn", &SpawnService::spawn);
+}
+
+p::Value SpawnService::spawn(Message &message) {
+  assert message.args().length() == 3;
+  return Factory::get_null();
+}
+
+p::Object SpawnService::create() {
+  static SpawnService instance;
+  return instance.dtable().proxy_for(instance);
+}
+
+REGISTER_SERVICE(neutrino.platform.spawn, SpawnService::create);
 
 class close_file_descriptor {
 public:

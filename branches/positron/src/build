@@ -14,6 +14,7 @@ library (
     'main/main.h',
     'plankton/codec.h',
     'plankton/codec-inl.h',
+    'plankton/match.h',
     'plankton/plankton.h',
     'plankton/plankton-inl.h',
     'plankton/plankton.cc',

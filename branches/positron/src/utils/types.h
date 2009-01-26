@@ -31,6 +31,7 @@ class Integer;
 class MessageData;
 class Null;
 class Object;
+class Pattern;
 class String;
 
 } // namespace plankton

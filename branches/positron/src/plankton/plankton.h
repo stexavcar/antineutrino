@@ -43,6 +43,7 @@ public:
     ObjectDTable object;
   };
 
+  bool match(Pattern &pattern);
   inline Type type() const { return dtable()->value.type(*this); }
   inline void *impl_id() const { return dtable()->value.impl_id(*this); }
   inline bool operator==(Value that) const { return dtable()->value.eq(*this, that); }
