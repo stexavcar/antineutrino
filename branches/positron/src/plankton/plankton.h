@@ -9,7 +9,7 @@ namespace plankton {
 
 class Value {
 public:
-  enum Type { vtInteger, vtString, vtNull, vtVoid, vtArray, vtObject };
+  enum Type { vtInteger, vtString, vtNull, vtArray, vtObject, vtSeed };
 
   class DTable {
   public:
@@ -36,11 +36,18 @@ public:
       Value (*send)(Object that, String name, Array args,
           MessageData *data, bool is_synchronous);
     };
+    struct SeedDTable {
+      String (*oid)(Seed that);
+      Value (*get)(Seed that, String key);
+      bool (*set)(Seed that, String key, Value value);
+      void *(*grow)(Seed that, String oid);
+    };
     ValueDTable value;
     IntegerDTable integer;
     StringDTable string;
     ArrayDTable array;
     ObjectDTable object;
+    SeedDTable seed;
   };
 
   bool match(Pattern &pattern);
@@ -76,13 +83,6 @@ class Null : public Value {
 public:
   inline Null(word data, DTable *dtable) : Value(data, dtable) { }
   static const Value::Type kTypeTag = Value::vtNull;
-};
-
-
-class Void : public Value {
-public:
-  inline Void(word data, DTable *dtable) : Value(data, dtable) { }
-  static const Value::Type kTypeTag = Value::vtVoid;
 };
 
 
@@ -162,6 +162,20 @@ public:
 };
 
 
+class Seed : public Value {
+public:
+  inline String oid() const { return dtable()->seed.oid(*this); }
+  inline Value operator[](String key) const { return dtable()->seed.get(*this, key); }
+  inline bool set(String key, Value value) { return dtable()->seed.set(*this, key, value); }
+  template <typename T>
+  inline T *grow() const { return static_cast<T*>(dtable()->seed.grow(*this, T::oid())); }
+  inline Seed(word data, DTable *table) : Value(data, table) { }
+  inline Seed() : Value() { }
+  static const Value::Type kTypeTag = Value::vtSeed;
+  static bool belongs_to(Seed seed, p::String oid);
+};
+
+
 class ServiceRegistry {
 public:
   static Object lookup(String name);
@@ -187,9 +201,43 @@ private:
 };
 
 
+class IClass {
+public:
+  static p::String super_class() { return p::String(); }
+};
+
+
+class IClassRegistryEntry {
+public:
+  static IClassRegistryEntry *lookup(p::String oid);
+  virtual void *new_instance(Seed seed) = 0;
+  virtual p::String name() = 0;
+  virtual p::String super_class() = 0;
+protected:
+  static void register_class(IClassRegistryEntry *entry);
+private:
+  friend class ClassRegistry;
+};
+
+
+template <typename T>
+class ClassRegistryEntry : public IClassRegistryEntry {
+public:
+  inline ClassRegistryEntry() { register_class(this); }
+  typedef T *(*constructor_t)(p::Seed seed);
+  virtual p::String name() { return T::oid(); }
+  virtual p::String super_class() { return T::super_class(); }
+  virtual void *new_instance(Seed seed) { return T::construct(seed); }
+private:
+};
+
+
 #define REGISTER_SERVICE(name, allocator)                            \
   p::ServiceRegistryEntry SEMI_STATIC_JOIN(__entry__, __LINE__)(#name, allocator)
 
+
+#define REGISTER_CLASS(Type)                                         \
+  p::ClassRegistryEntry<Type> SEMI_STATIC_JOIN(Type##__entry__, __LINE__)
 
 } // namespace plankton
 } // namespace neutrino

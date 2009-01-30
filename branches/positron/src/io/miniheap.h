@@ -64,7 +64,6 @@ public:
 
   static p::Integer new_integer(int32_t value);
   static p::Null get_null();
-  static p::Void get_void();
 
   buffer<uint8_t> &data() { return data_; }
   virtual vector<uint8_t> memory();

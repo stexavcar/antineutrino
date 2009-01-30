@@ -10,7 +10,6 @@ public:
   virtual bool match_string(p::String that) { return false; }
   virtual bool match_integer(p::Integer that) { return false; }
   virtual bool match_null(p::Null that) { return false; }
-  virtual bool match_void(p::Void that) { return false; }
   virtual bool match_object(p::Object that) { return false; }
 };
 

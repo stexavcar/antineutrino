@@ -40,7 +40,7 @@ TEST(service_lookup) {
     assert (is<p::Integer>(response));
     assert (cast<p::Integer>(response)).value() == n;
   }
-  assert (is<p::Void>(obj.send("some_undefined_message")));
+  assert (is<p::Null>(obj.send("some_undefined_message")));
 }
 
 TEST(read_service) {

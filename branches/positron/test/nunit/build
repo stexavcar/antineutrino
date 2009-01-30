@@ -8,6 +8,7 @@ program (
     'hash-map-test.cc',
     'pointer-test.cc',
     'read-test.cc',
+    'seed-test.cc',
     'service-test.cc',
     'string-test.cc',
     'spawn-test.cc',

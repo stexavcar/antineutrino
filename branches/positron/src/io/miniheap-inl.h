@@ -63,7 +63,7 @@ T &MiniHeapObject::at(word offset) {
 
 MessageIn::~MessageIn() {
   if (is_synchronous_ && !has_replied_)
-    reply(MessageOut::get_void());
+    reply(MessageOut::get_null());
 }
 
 template <>
@@ -91,7 +91,7 @@ p::Value ObjectProxyDTable<T>::object_send(p::Object self, p::String name,
   ObjectProxyDTable<T> *dtable = static_cast<ObjectProxyDTable<T>*>(self.dtable());
   method_t method = dtable->methods().get(name, static_cast<method_t>(NULL));
   if (method == NULL)
-    return Factory::get_void();
+    return Factory::get_null();
   T *proxy = static_cast<T*>(reinterpret_cast<void*>(self.data()));
   Message message(self, name, args, data, is_synchronous);
   return (proxy->*method)(message);

@@ -189,27 +189,27 @@ TestObjectProxy::TestObjectProxy() : value_(0) {
 p::Value TestObjectProxy::inc(Message &message) {
   assert message.args().length() == 0;
   value_++;
-  return Factory::get_void();
+  return Factory::get_null();
 }
 
 p::Value TestObjectProxy::dec(Message &message) {
   assert message.args().length() == 0;
   value_--;
-  return Factory::get_void();
+  return Factory::get_null();
 }
 
 p::Value TestObjectProxy::set(Message &message) {
   assert message.args().length() == 1;
   assert (is<p::Integer>(message.args()[0]));
   assert cast<p::Integer>(message.args()[0]).value() == 27;
-  return Factory::get_void();
+  return Factory::get_null();
 }
 
 TEST(proxy) {
   TestObjectProxy proxy;
   p::Object obj = proxy.as_object();
   assert proxy.value() == 0;
-  assert (is<p::Void>(obj.send("inc")));
+  assert (is<p::Null>(obj.send("inc")));
   assert proxy.value() == 1;
   for (word i = 0; i < 10; i++)
     obj.send("inc");

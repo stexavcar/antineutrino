@@ -146,11 +146,6 @@ p::Null Factory::get_null() {
       &MiniHeapDTable::static_instance());
 }
 
-p::Void Factory::get_void() {
-  return p::Void(MiniHeapPointer::tag_singleton(p::Value::vtVoid),
-      &MiniHeapDTable::static_instance());
-}
-
 template <>
 uword hash<p::String>(const p::String &str) {
   uword hash = 0;

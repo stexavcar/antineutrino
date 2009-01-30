@@ -32,6 +32,7 @@ class MessageData;
 class Null;
 class Object;
 class Pattern;
+class Seed;
 class String;
 
 } // namespace plankton

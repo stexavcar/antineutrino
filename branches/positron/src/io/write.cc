@@ -42,9 +42,6 @@ void WriteService::unparse_on(p::Value value, string_stream &stream) {
     case p::Value::vtNull:
       stream.add("null");
       break;
-    case p::Value::vtVoid:
-      stream.add("void");
-      break;
     case p::Value::vtArray: {
       p::Array array = cast<p::Array>(value);
       word length = array.length();
@@ -65,6 +62,10 @@ void WriteService::unparse_on(p::Value value, string_stream &stream) {
       p::String str = cast<p::String>(value);
       for (word i = 0; str[i]; i++)
         stream.add(str[i]);
+      break;
+    }
+    case p::Value::vtSeed: {
+      assert false;
       break;
     }
     case p::Value::vtObject:

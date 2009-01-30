@@ -114,7 +114,7 @@ TEST(sync_auto_reply) {
   for (word i = 0; i < 100; i++) {
     MessageOut message;
     p::Value v = child.proxy().send(message.new_string("pang"));
-    assert is<p::Void>(v);
+    assert is<p::Null>(v);
   }
 }
 

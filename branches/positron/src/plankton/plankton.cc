@@ -1,6 +1,7 @@
 #include "plankton/plankton-inl.h"
 #include "plankton/match.h"
 #include "utils/string-inl.h"
+#include "utils/hash-map-inl.h"
 
 namespace neutrino {
 namespace plankton {
@@ -30,10 +31,11 @@ bool Value::match(Pattern &pattern) {
       return pattern.match_string(cast<String>(*this));
     case vtNull:
       return pattern.match_null(cast<Null>(*this));
-    case vtVoid:
-      return pattern.match_void(cast<Void>(*this));
     case vtObject:
       return pattern.match_object(cast<Object>(*this));
+    case vtSeed:
+      assert false;
+      return false;
   };
   return false;
 }
@@ -199,6 +201,19 @@ word String::generic_string_compare(String that, String other) {
   }
 }
 
+bool Seed::belongs_to(Seed that, String oid) {
+  String current = that.oid();
+  while (!current.is_empty()) {
+    if (current == oid)
+      return true;
+    IClassRegistryEntry *entry = IClassRegistryEntry::lookup(current);
+    if (entry == NULL)
+      return false;
+    current = entry->super_class();
+  }
+  return false;
+}
+
 Object ServiceRegistry::lookup(String name) {
   ServiceRegistryEntry *current = ServiceRegistryEntry::first();
   while (current != NULL) {
@@ -215,6 +230,15 @@ Object ServiceRegistryEntry::get_instance() {
     has_instance_ = true;
   }
   return instance_;
+}
+
+static hash_map<p::String, IClassRegistryEntry*> classes;
+void IClassRegistryEntry::register_class(IClassRegistryEntry *entry) {
+  classes.put(entry->name(), entry);
+}
+
+IClassRegistryEntry *IClassRegistryEntry::lookup(String oid) {
+  return classes.get(oid, static_cast<IClassRegistryEntry*>(NULL));
 }
 
 MessageData::MessageData() { }

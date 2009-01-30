@@ -64,6 +64,19 @@ static inline T cast(p::Value obj) {
   return T(obj.data(), obj.dtable());
 }
 
+
+template <class T>
+static inline bool is_seed(p::Seed obj) {
+  return p::Seed::belongs_to(obj, T::oid());
+}
+
+
+template <class T>
+static inline bool is_seed(p::Value obj) {
+  return is<p::Seed>(obj) && is_seed<T>(cast<p::Seed>(obj));
+}
+
+
 } // namespace plankton
 
 #endif // _PLANKTON_PLANKTON_INL
