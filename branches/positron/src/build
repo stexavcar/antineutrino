@@ -8,8 +8,6 @@ library (
     'io/miniheap.cc',
     'io/read.h',
     'io/read.cc',
-    'io/write.cc',
-    'io/write.h',
     'main/main.cc',
     'main/main.h',
     'plankton/codec.h',

@@ -1,4 +1,5 @@
 #include "plankton/codec-inl.h"
+#include "plankton/plankton-inl.h"
 #include "test-inl.h"
 
 using namespace neutrino;
@@ -61,4 +62,32 @@ TEST(base64) {
   test_base64("e.", "ZS4=");
   test_base64(".", "Lg==");
   test_base64("", "");
+}
+
+class StringReader {
+public:
+  StringReader(string str) : str_(str), cursor_(0) { }
+  uint8_t get() { return str_[cursor_++]; }
+private:
+  string str_;
+  word cursor_;
+};
+
+static void test_serialization(p::Value value, string expected) {
+  string_stream stream;
+  {
+    Serializer<string_stream> serializer(stream);
+    serializer.serialize(value);
+  }
+  StringReader reader(stream.raw_c_str());
+  Deserializer<StringReader> deserializer(reader);
+  p::Value result = deserializer.deserialize();
+  string_stream str;
+  str.add("%", args(value));
+  assert str.raw_c_str() == expected;
+}
+
+TEST(serialize) {
+  test_serialization("foobar", "\"foobar\"");
+  test_serialization(p::Value(934), "934");
 }

@@ -43,47 +43,40 @@ private:
 
 template <> uword hash<string>(const string &str);
 
-
-class string_stream;
-
-
-class variant_type {
-public:
-  virtual void print_on(const void *data, string modifiers,
-      string_stream &stream);
-  static variant_type kInstance;
-};
-
-
-template <typename T>
-class variant_type_impl : public variant_type {
-public:
-  static inline const void *encode(const T &t) { return NULL; }
-};
-
-
-// This little trick defines some implicit conversions that must be
-// performed before wrapping a value in a variant.  The default "type
-// conversion" is to leave the type as it is, but additional conversions
-// can be added by specializing the Coerce struct.
-template <typename T> struct coerce { typedef T type; };
-template <> struct coerce<uint32_t> { typedef word type; };
+template <typename T> struct coerce { typedef const T &type; };
 template <> struct coerce<int32_t> { typedef word type; };
-
+template <> struct coerce<uint32_t> { typedef word type; };
+template <> struct coerce<int64_t> { typedef word type; };
+template <> struct coerce<uint64_t> { typedef word type; };
 
 class variant {
 public:
   template <typename T>
-  inline variant(const T &t)
-    : type_(variant_type_impl<typename coerce<T>::type>::kInstance)
-    , data_(variant_type_impl<typename coerce<T>::type>::encode(t)) { }
+  inline variant(const T &t) {
+    encode_variant(*this, static_cast<typename coerce<T>::type>(t));
+  }
   void print_on(string_stream &stream, string modifiers) const;
-private:
-  variant_type &type() const { return type_; }
-  const void *data() const { return data_; }
-  variant_type &type_;
-  const void *data_;
-  int index_;
+  variant_type &type() const { return *type_; }
+  variant_type *type_;
+  union {
+    const void *u_ptr;
+    word u_int;
+    struct {
+      word length;
+      const char *chars;
+    } u_c_str;
+    struct {
+      void *first;
+      void *second;
+    } u_pair;
+  } data_;
+};
+
+
+class variant_type {
+public:
+  virtual void print_on(const variant &that, string modifiers,
+      string_stream &stream);
 };
 
 
@@ -142,61 +135,77 @@ private:
 template <>
 class variant_type_impl<word> : public variant_type {
 public:
-  static inline const void *encode(const word &t) {
-    return reinterpret_cast<const void*>(t);
-  }
-  virtual void print_on(const void *data, string modifiers,
+  virtual void print_on(const variant &that, string modifiers,
       string_stream &stream);
   static variant_type_impl<word> kInstance;
 };
 
 
+static inline void encode_variant(variant &that, word value) {
+  that.type_ = &variant_type_impl<word>::kInstance;
+  that.data_.u_int = value;
+}
+
+
 template <>
 class variant_type_impl<string> : public variant_type {
 public:
-  static inline const void *encode(const string &t) {
-    return static_cast<const void*>(&t);
-  }
-  virtual void print_on(const void *data, string modifiers,
+  virtual void print_on(const variant &that, string modifiers,
       string_stream &stream);
   static variant_type_impl<string> kInstance;
 };
 
 
+static inline void encode_variant(variant &that, string str) {
+  that.type_ = &variant_type_impl<string>::kInstance;
+  that.data_.u_c_str.length = str.length();
+  that.data_.u_c_str.chars = str.start();
+}
+
+
 template <>
 class variant_type_impl<format_bundle> : public variant_type {
 public:
-  static inline const void *encode(const format_bundle &t) {
-    return static_cast<const void*>(&t);
-  }
-  virtual void print_on(const void *data, string modifiers,
+  virtual void print_on(const variant &that, string modifiers,
       string_stream &stream);
   static variant_type_impl<format_bundle> kInstance;
 };
 
 
+static inline void encode_variant(variant &that, const format_bundle &bundle) {
+  that.type_ = &variant_type_impl<format_bundle>::kInstance;
+  that.data_.u_ptr = static_cast<const void*>(&bundle);
+}
+
+
 template <>
 class variant_type_impl<char> : public variant_type {
 public:
-  static inline const void *encode(const char &t) {
-    return reinterpret_cast<const void*>(static_cast<word>(t));
-  }
-  virtual void print_on(const void *data, string modifiers,
+  virtual void print_on(const variant &that, string modifiers,
       string_stream &stream);
   static variant_type_impl<char> kInstance;
 };
 
 
+static inline void encode_variant(variant &that, char value) {
+  that.type_ = &variant_type_impl<char>::kInstance;
+  that.data_.u_int = value;
+}
+
+
 template <>
 class variant_type_impl<bool> : public variant_type {
 public:
-  static inline const void *encode(const bool &t) {
-    return reinterpret_cast<const void*>(static_cast<word>(t));
-  }
-  virtual void print_on(const void *data, string modifiers,
+  virtual void print_on(const variant &that, string modifiers,
       string_stream &stream);
   static variant_type_impl<bool> kInstance;
 };
+
+
+static inline void encode_variant(variant &that, bool value) {
+  that.type_ = &variant_type_impl<bool>::kInstance;
+  that.data_.u_int = value;
+}
 
 
 } // namespace neutrino

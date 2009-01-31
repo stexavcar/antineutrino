@@ -23,6 +23,9 @@ class MiniHeap;
 class MessageIn;
 class MessageOut;
 class pattern;
+class string_stream;
+class variant_type;
+template <typename T> class variant_type_impl;
 
 namespace plankton {
 

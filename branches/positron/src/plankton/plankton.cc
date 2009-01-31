@@ -64,10 +64,8 @@ Value::Type IntegerLiteralAdapter::value_type(Value that) {
 }
 
 Value::DTable *Integer::literal_adapter() {
-  static Value::DTable *value = NULL;
-  if (value == NULL)
-    value = new IntegerLiteralAdapter();
-  return value;
+  static IntegerLiteralAdapter instance;
+  return &instance;
 }
 
 // --- S t r i n g   L i t e r a l s ---
@@ -249,4 +247,52 @@ void MessageData::acquire_resource(IMessageResource &resource) {
 }
 
 } // namespace plankton
+} // namespace neutrino
+
+
+namespace neutrino {
+
+variant_type_impl<p::Value> variant_type_impl<p::Value>::kInstance;
+
+void variant_type_impl<p::Value>::print_on(const void *data, string modifiers,
+    string_stream &stream) {
+  p::Value value = *static_cast<const p::Value*>(data);
+  switch (value.type()) {
+    case p::Value::vtNull:
+      stream.add("null");
+      break;
+    case p::Value::vtArray: {
+      p::Array array = cast<p::Array>(value);
+      word length = array.length();
+      stream.add("(");
+      for (word i = 0; i < length; i++) {
+        if (i > 0) stream.add(" ");
+        stream.add("%", args(array[i]));
+      }
+      stream.add(")");
+      break;
+    }
+    case p::Value::vtInteger: {
+      word value = cast<p::Integer>(value).value();
+      stream.add("%", args(value));
+      break;
+    }
+    case p::Value::vtString: {
+      stream.add('"');
+      p::String str = cast<p::String>(value);
+      for (word i = 0; str[i]; i++)
+        stream.add(str[i]);
+      stream.add('"');
+      break;
+    }
+    case p::Value::vtSeed: {
+      assert false;
+      break;
+    }
+    case p::Value::vtObject:
+      stream.add("#<an Object>");
+      break;
+  }
+}
+
 } // namespace neutrino

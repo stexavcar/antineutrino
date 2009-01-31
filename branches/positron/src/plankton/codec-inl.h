@@ -2,8 +2,13 @@
 #define _PLANKTON_CODEC_INL
 
 #include "plankton/codec.h"
+#include "plankton/plankton-inl.h"
 
 namespace neutrino {
+
+// ---
+// C o d e c s
+// ---
 
 template <typename O>
 void Base64Encoder<O>::add(uint8_t value) {
@@ -98,6 +103,71 @@ bool Base64Decoder<O>::flush() {
   }
   cursor_ = 0;
   return true;
+}
+
+// ---
+// S e r i a l i z a t i o n
+// ---
+
+template <typename O>
+void Serializer<O>::serialize(p::Value value) {
+  p::Value::Type type = value.type();
+  out().add(type);
+  switch (value.type()) {
+    case p::Value::vtString: {
+      p::String str = cast<p::String>(value);
+      word length = str.length();
+      add_int32(length);
+      for (word i = 0; i < length; i++)
+        out().add(str[i]);
+      break;
+    }
+    case p::Value::vtInteger: {
+      int32_t value = cast<p::Integer>(value).value();
+      add_int32(value);
+      break;
+    }
+    default:
+      assert false;
+  }
+}
+
+template <typename O>
+void Serializer<O>::add_int32(int32_t value) {
+  out().add((value >> 0)  & 0xFF);
+  out().add((value >> 8)  & 0xFF);
+  out().add((value >> 16) & 0xFF);
+  out().add((value >> 24) & 0xFF);
+}
+
+template <typename O>
+p::Value Deserializer<O>::deserialize() {
+  p::Value::Type type = static_cast<p::Value::Type>(in().get());
+  switch (type) {
+  case p::Value::vtString: {
+    word length = get_int32();
+    char *data = new char[length + 1];
+    for (word i = 0; i < length; i++)
+      data[i] = in().get();
+    data[length] = '\0';
+    return data;
+  }
+  case p::Value::vtInteger: {
+    int32_t value = get_int32();
+    return value;
+  }
+  default:
+    assert false;
+  }
+  return p::Value();
+}
+
+template <typename I>
+int32_t Deserializer<I>::get_int32() {
+  return (in().get() << 0)
+       | (in().get() << 8)
+       | (in().get() << 16)
+       | (in().get() << 24);
 }
 
 } // namespace neutrino

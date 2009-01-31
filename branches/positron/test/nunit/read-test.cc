@@ -1,5 +1,4 @@
 #include "io/read.h"
-#include "io/write.h"
 #include "plankton/plankton-inl.h"
 #include "utils/arena-inl.h"
 #include "test-inl.h"
@@ -64,20 +63,6 @@ TEST(parser) {
     assert cast<p::String>(inner[1]) == "baz";
     assert cast<p::String>(list[2]) == "quux";
   }
-}
-
-TEST(write) {
-  Write::load();
-  p::Object reader = p::ServiceRegistry::lookup("neutrino.io.read");
-  assert !reader.is_empty();
-  p::Object writer = p::ServiceRegistry::lookup("neutrino.io.write");
-  assert !writer.is_empty();
-  p::MessageData data;
-  p::Value expr = reader.send("parse", p::Array::of(" ( a ( b c ) d ( e ( f ) ) ) "),
-      &data);
-  assert !expr.is_empty();
-  p::Value written = writer.send("unparse", p::Array::of(expr), &data);
-  assert cast<p::String>(written) == "(a (b c) d (e (f)))";
 }
 
 /*

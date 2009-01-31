@@ -76,6 +76,18 @@ static inline bool is_seed(p::Value obj) {
   return is<p::Seed>(obj) && is_seed<T>(cast<p::Seed>(obj));
 }
 
+template <>
+class variant_type_impl<p::Value> : public variant_type {
+public:
+  static inline void initialize(variant &that, p::Value value) {
+    that.type_ = &kInstance;
+    that.data_.u_pair.first = reinterpret_cast<void*>(value.data());
+    that.data_.u_pair.second = value.dtable();
+  }
+  virtual void print_on(const void *data, string modifiers,
+      string_stream &stream);
+  static variant_type_impl<p::Value> kInstance;
+};
 
 } // namespace plankton
 

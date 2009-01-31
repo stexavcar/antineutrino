@@ -62,12 +62,12 @@ string string_stream::raw_c_str() {
 }
 
 void variant::print_on(string_stream &stream, string modifiers) const {
-  type().print_on(data(), modifiers, stream);
+  type().print_on(*this, modifiers, stream);
 }
 
 variant_type variant_type::kInstance;
 
-void variant_type::print_on(const void *data, string modifiers,
+void variant_type::print_on(const variant& that, string modifiers,
     string_stream &stream) {
   stream.add("#<cannot display>");
 }
@@ -79,7 +79,7 @@ static word digit_to_char(word digit) {
   else return 'a' + (digit - 10);
 }
 
-void variant_type_impl<word>::print_on(const void *data, string modifiers,
+void variant_type_impl<word>::print_on(const variant &that, string modifiers,
     string_stream &buf) {
   // Configuration parameters
   bool flush_right = true;
@@ -90,7 +90,7 @@ void variant_type_impl<word>::print_on(const void *data, string modifiers,
   // Convert the number to a string in a temporary buffer
   const char kTempSize = 24;
   embed_vector<char, kTempSize> temp;
-  word value = reinterpret_cast<word>(data);
+  word value = that.data_.u_int;
   bool is_negative = (value < 0);
   if (is_negative) value = -value;
   word offset = 0;
@@ -120,9 +120,9 @@ void variant_type_impl<word>::print_on(const void *data, string modifiers,
 
 variant_type_impl<string> variant_type_impl<string>::kInstance;
 
-void variant_type_impl<string>::print_on(const void *data,
+void variant_type_impl<string>::print_on(const variant &that,
     string modifiers, string_stream &buf) {
-  const string &value = *static_cast<const string*>(data);
+  string value(that.data_.u_c_str.chars, that.data_.u_c_str.length);
   bool quote = modifiers.contains('q');
   if (quote) buf.add('"');
   buf.add(value);
@@ -131,25 +131,25 @@ void variant_type_impl<string>::print_on(const void *data,
 
 variant_type_impl<char> variant_type_impl<char>::kInstance;
 
-void variant_type_impl<char>::print_on(const void *data,
+void variant_type_impl<char>::print_on(const variant &that,
     string modifiers, string_stream &buf) {
-  word value = reinterpret_cast<word>(data);
+  word value = that.data_.u_int;
   buf.add(value);
 }
 
 variant_type_impl<bool> variant_type_impl<bool>::kInstance;
 
-void variant_type_impl<bool>::print_on(const void *data,
+void variant_type_impl<bool>::print_on(const variant &that,
     string modifiers, string_stream &buf) {
-  word value = reinterpret_cast<word>(data);
+  word value = that.data_.u_int;
   buf.add(value ? "true" : "false");
 }
 
 variant_type_impl<format_bundle> variant_type_impl<format_bundle>::kInstance;
 
-void variant_type_impl<format_bundle>::print_on(const void *data,
+void variant_type_impl<format_bundle>::print_on(const variant &that,
     string modifiers, string_stream &buf) {
-  const format_bundle &value = *static_cast<const format_bundle*>(data);
+  const format_bundle &value = *static_cast<const format_bundle*>(that.data_.u_ptr);
   buf.add(value.format(), value.args());
 }
 
