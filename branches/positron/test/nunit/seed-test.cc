@@ -2,7 +2,9 @@
 #include "plankton/plankton-inl.h"
 #include "test-inl.h"
 
+
 using namespace neutrino;
+
 
 class TestSeed {
 public:
@@ -15,18 +17,21 @@ private:
   void *instance_;
 };
 
+
 class SeedFactory : public p::Value::DTable {
 public:
   SeedFactory();
   p::Seed new_seed(p::String oid);
+  static void set_attribute(p::Seed seed, p::String key, p::Value value);
 private:
   static p::String seed_oid(p::Seed that);
-  static p::Value seed_get(p::Seed that, p::String key);
-  static bool seed_set(p::Seed that, p::String key, p::Value value);
+  static p::Value seed_get_attribute(p::Seed that, p::String key);
+  static bool seed_for_each_attribute(p::Seed that, p::Seed::iterator_t iter, void *data);
   static void *seed_grow(p::Seed that, p::String oid);
   buffer<TestSeed*> &seeds() { return seeds_; }
   own_buffer<TestSeed> seeds_;
 };
+
 
 class Singleton : public p::IClass {
 public:
@@ -34,6 +39,7 @@ public:
   static Singleton *construct(p::Seed seed) { return new Singleton(); }
 };
 REGISTER_CLASS(Singleton);
+
 
 class Point : public p::IClass {
 public:
@@ -49,6 +55,7 @@ private:
 };
 REGISTER_CLASS(Point);
 
+
 class Point3D : public Point {
 public:
   Point3D(p::Seed seed) : Point(seed) { }
@@ -59,12 +66,14 @@ public:
 };
 REGISTER_CLASS(Point3D);
 
+
 SeedFactory::SeedFactory() {
   seed.oid = seed_oid;
-  seed.get = seed_get;
-  seed.set = seed_set;
+  seed.get_attribute = seed_get_attribute;
   seed.grow = seed_grow;
+  seed.for_each_attribute = seed_for_each_attribute;
 }
+
 
 p::Seed SeedFactory::new_seed(p::String oid) {
   TestSeed *seed = new TestSeed(oid);
@@ -72,20 +81,42 @@ p::Seed SeedFactory::new_seed(p::String oid) {
   return p::Seed(reinterpret_cast<word>(seed), this);
 }
 
+
 p::String SeedFactory::seed_oid(p::Seed that) {
   return reinterpret_cast<TestSeed*>(that.data())->oid();
 }
 
-p::Value SeedFactory::seed_get(p::Seed that, p::String key) {
+
+p::Value SeedFactory::seed_get_attribute(p::Seed that, p::String key) {
   TestSeed *seed = reinterpret_cast<TestSeed*>(that.data());
   return seed->attributes().get(key, Factory::get_null());
 }
 
-bool SeedFactory::seed_set(p::Seed that, p::String key, p::Value value) {
+
+void SeedFactory::set_attribute(p::Seed that, p::String key, p::Value value) {
   TestSeed *seed = reinterpret_cast<TestSeed*>(that.data());
   seed->attributes().put(key, value);
-  return true;
 }
+
+class SeedAttributeIterator {
+public:
+  SeedAttributeIterator(p::Seed::iterator_t iter, void *data)
+    : iter_(iter), data_(data) { }
+  bool operator()(p::String key, p::Value value) const {
+    return (iter())(key, value, data());
+  }
+private:
+  p::Seed::iterator_t iter() const { return iter_; }
+  void *data() const { return data_; }
+  p::Seed::iterator_t iter_;
+  void *data_;
+};
+
+bool SeedFactory::seed_for_each_attribute(p::Seed that, p::Seed::iterator_t iter, void *data) {
+  TestSeed *seed = reinterpret_cast<TestSeed*>(that.data());
+  return seed->attributes().for_each(SeedAttributeIterator(iter, data));
+}
+
 
 void *SeedFactory::seed_grow(p::Seed that, p::String oid) {
   if (!p::Seed::belongs_to(that, oid)) return NULL;
@@ -93,6 +124,7 @@ void *SeedFactory::seed_grow(p::Seed that, p::String oid) {
   if (klass == NULL) return NULL;
   return klass->new_instance(that);
 }
+
 
 TEST(simple_seed) {
   SeedFactory factory;
@@ -106,23 +138,58 @@ TEST(simple_seed) {
   assert point == static_cast<void*>(NULL);
 }
 
+
 TEST(seed_field_access) {
   SeedFactory factory;
   p::Seed seed = factory.new_seed("nunit.Point");
-  seed.set("x", 19);
-  seed.set("y", 20);
+  SeedFactory::set_attribute(seed, "x", 19);
+  SeedFactory::set_attribute(seed, "y", 20);
   assert (is_seed<Point>(seed));
   Point *point = seed.grow<Point>();
   assert point->x() == 19;
   assert point->y() == 20;
 }
 
+
+class VisitInfo {
+public:
+  VisitInfo() : seen_x(false), seen_y(false), seen_z(false), count(0) { }
+  bool seen_x, seen_y, seen_z;
+  word count;
+};
+
+
+static bool visit_attribute(p::String key, p::Value value, void *data) {
+  VisitInfo &info = *static_cast<VisitInfo*>(data);
+  info.count++;
+  if (key == "x") {
+    info.seen_x = true;
+    assert cast<p::Integer>(value).value() == 76;
+  }
+  if (key == "y") {
+    info.seen_y = true;
+    assert cast<p::Integer>(value).value() == 45;
+  }
+  if (key == "z") {
+    info.seen_z = true;
+    assert cast<p::Integer>(value).value() == 99;
+  }
+  return true;
+}
+
+
 TEST(subclassing) {
   SeedFactory factory;
   p::Seed seed = factory.new_seed("nunit.Point3D");
-  seed.set("x", 76);
-  seed.set("y", 45);
-  seed.set("z", 99);
+  SeedFactory::set_attribute(seed, "x", 76);
+  SeedFactory::set_attribute(seed, "y", 45);
+  SeedFactory::set_attribute(seed, "z", 99);
+  VisitInfo info;
+  seed.for_each_attribute(visit_attribute, &info);
+  assert info.count == 3;
+  assert info.seen_x;
+  assert info.seen_y;
+  assert info.seen_z;
   assert (is_seed<Point>(seed));
   Point *point = seed.grow<Point>();
   assert point->x() == 76;

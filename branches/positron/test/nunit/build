@@ -4,6 +4,7 @@ program (
   flags = mode,
   srcs = [
     'arena-test.cc',
+    'codec-test.cc',
     'factory-test.cc',
     'hash-map-test.cc',
     'pointer-test.cc',

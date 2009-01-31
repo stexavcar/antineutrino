@@ -2,24 +2,43 @@
 #define _PLANKTON_CODEC
 
 #include "utils/global.h"
+#include "utils/array.h"
+#include "utils/check.h"
 
 namespace neutrino {
 
 template <typename Out>
-class Encoder {
+class Base64Encoder {
 public:
-  static void encode_uint32(uint32_t value, Out &out);
+  Base64Encoder(Out &out)
+    : out_(out)
+    , cursor_(0) { }
+  void flush();
+  void add(uint8_t v);
+private:
+  array<uint8_t> buffer() { return buffer_; }
+  Out &out() { return out_; }
+  static const word kBufferSize = 3;
+  Out &out_;
+  word cursor_;
+  embed_array<uint8_t, kBufferSize> buffer_;
 };
 
-template <typename In>
-class Decoder {
+template <typename Out>
+class Base64Decoder {
 public:
-  static uint32_t decode_uint32(In &in);
-};
-
-class Codec {
-public:
-  static const word kMaxEncodedInt32Size = 4;
+  Base64Decoder(Out &out)
+    : out_(out)
+    , cursor_(0) { }
+  bool flush();
+  void add(uint8_t v);
+private:
+  array<uint8_t> buffer() { return buffer_; }
+  Out &out() { return out_; }
+  static const word kBufferSize = 4;
+  Out &out_;
+  word cursor_;
+  embed_array<uint8_t, kBufferSize> buffer_;
 };
 
 } // namespace neutrino

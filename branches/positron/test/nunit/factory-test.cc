@@ -32,6 +32,7 @@ uint8_t StaticInStream::read() {
   return data_[pos_++];
 }
 
+/*
 static void test_codec(uint32_t value) {
   embed_vector<uint8_t, Codec::kMaxEncodedInt32Size> data;
   StaticOutStream out(data);
@@ -59,6 +60,8 @@ TEST(integer) {
     assert val.value() == i;
   }
 }
+
+*/
 
 TEST(string) {
   static const word kTestStringCount = 3;

@@ -79,6 +79,20 @@ hash_map_entry<K, V> &hash_map<K, V, A>::lookup(const K &key, uword hash) {
 }
 
 template <typename K, typename V, class A>
+template <typename I>
+bool hash_map<K, V, A>::for_each(const I &iterator) {
+  vector< hash_map_entry<K, V> > entries = this->entries();
+  for (word i = 0; i < entries.length(); i++) {
+    hash_map_entry<K, V> &entry = entries[i];
+    if (entry.is_occupied()) {
+      if (!iterator(entry.key(), entry.value()))
+        return false;
+    }
+  }
+  return true;
+}
+
+template <typename K, typename V, class A>
 void hash_map<K, V, A>::extend_capacity(word new_capacity) {
   assert new_capacity > entries().length();
   own_vector< hash_map_entry<K, V> > old_entries(entries_.release());

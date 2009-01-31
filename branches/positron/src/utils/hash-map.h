@@ -32,6 +32,7 @@ public:
   bool get(const K &key, V **value_out);
   const V &get(const K &key, const V &if_missing);
   hash_map_entry<K, V> &lookup(const K &key, uword hash);
+  template <typename T> bool for_each(const T &iterator);
   word size() { return entry_count_; }
 private:
   A &allocator() { return allocator_; }

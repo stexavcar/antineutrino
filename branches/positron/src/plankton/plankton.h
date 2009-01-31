@@ -37,10 +37,11 @@ public:
           MessageData *data, bool is_synchronous);
     };
     struct SeedDTable {
+      typedef bool (*seed_iterator_t)(String key, Value value, void *data);
       String (*oid)(Seed that);
-      Value (*get)(Seed that, String key);
-      bool (*set)(Seed that, String key, Value value);
+      Value (*get_attribute)(Seed that, String key);
       void *(*grow)(Seed that, String oid);
+      bool (*for_each_attribute)(Seed that, seed_iterator_t iter, void *data);
     };
     ValueDTable value;
     IntegerDTable integer;
@@ -165,8 +166,9 @@ public:
 class Seed : public Value {
 public:
   inline String oid() const { return dtable()->seed.oid(*this); }
-  inline Value operator[](String key) const { return dtable()->seed.get(*this, key); }
-  inline bool set(String key, Value value) { return dtable()->seed.set(*this, key, value); }
+  inline Value operator[](String key) const { return dtable()->seed.get_attribute(*this, key); }
+  typedef Value::DTable::SeedDTable::seed_iterator_t iterator_t;
+  inline bool for_each_attribute(iterator_t iter, void *data) const { return dtable()->seed.for_each_attribute(*this, iter, data); }
   template <typename T>
   inline T *grow() const { return static_cast<T*>(dtable()->seed.grow(*this, T::oid())); }
   inline Seed(word data, DTable *table) : Value(data, table) { }
