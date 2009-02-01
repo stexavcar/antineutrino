@@ -6,6 +6,16 @@
 namespace neutrino {
 namespace plankton {
 
+class DummyValueHandler : public Value::Handler {
+public:
+  DummyValueHandler(Value::Type type) : type_(type) { }
+  virtual Value::Type value_type(Value that) { return type_; }
+  virtual bool value_eq(Value that, Value other) { return false; }
+  virtual void *value_impl_id(Value that) { return NULL; }
+private:
+  Value::Type type_;
+};
+
 // --- D u m m y   D T a b l e ---
 
 DTable::DTable()
@@ -38,27 +48,19 @@ bool Value::match(Pattern &pattern) {
 
 // --- I n t e g e r   L i t e r a l s ---
 
-class IntegerLiteralAdapter : public DTable, public Integer::Handler {
+class IntegerLiteralAdapter : public DTable, public Integer::Handler, public DummyValueHandler {
 public:
   IntegerLiteralAdapter();
   virtual int32_t integer_value(Integer that);
-private:
-  Value::Methods value_dtable_;
-  static Value::Type value_type(Value that);
 };
 
-IntegerLiteralAdapter::IntegerLiteralAdapter()
-  : value_dtable_(value_type, NULL, NULL) {
+IntegerLiteralAdapter::IntegerLiteralAdapter() : DummyValueHandler(Value::vtInteger) {
+  value = this;
   integer = this;
-  value = &value_dtable_;
 }
 
 int32_t IntegerLiteralAdapter::integer_value(Integer that) {
   return that.data();
-}
-
-Value::Type IntegerLiteralAdapter::value_type(Value that) {
-  return Value::vtInteger;
 }
 
 DTable *Integer::literal_adapter() {
@@ -68,31 +70,24 @@ DTable *Integer::literal_adapter() {
 
 // --- S t r i n g   L i t e r a l s ---
 
-class CharPtrDTable : public DTable, public String::Handler {
+class CharPtrDTable : public DTable, public String::Handler, DummyValueHandler {
 public:
   CharPtrDTable();
   virtual word string_length(String str);
   virtual uint32_t string_get(String str, word index);
   virtual word string_compare(String that, String other);
 private:
-  static Value::Type value_type(Value that);
   static const char *open(String str);
-  Value::Methods value_dtable_;
 };
 
-CharPtrDTable::CharPtrDTable()
-  : value_dtable_(value_type, NULL, NULL) {
+CharPtrDTable::CharPtrDTable() : DummyValueHandler(Value::vtString) {
+  value = this;
   string = this;
-  value = &value_dtable_;
 }
 
 DTable *String::char_ptr_dtable() {
   static CharPtrDTable instance;
   return &instance;
-}
-
-Value::Type CharPtrDTable::value_type(Value that) {
-  return Value::vtString;
 }
 
 const char *CharPtrDTable::open(String str) {
@@ -113,20 +108,16 @@ word CharPtrDTable::string_compare(String that, String other) {
 
 // --- E m p t y   A r r a y s ---
 
-class EmptyArrayAdapter : public DTable, public Array::Handler {
+class EmptyArrayAdapter : public DTable, public Array::Handler, public DummyValueHandler {
 public:
   EmptyArrayAdapter();
   virtual word array_length(Array that);
   virtual Value array_get(Array that, word index);
-  static Value::Type value_type(Value that);
-private:
-  Value::Methods value_dtable_;
 };
 
-EmptyArrayAdapter::EmptyArrayAdapter()
-  : value_dtable_(value_type, NULL, NULL) {
+EmptyArrayAdapter::EmptyArrayAdapter() : DummyValueHandler(Value::vtArray) {
   array = this;
-  value = &value_dtable_;
+  value = this;
 }
 
 word EmptyArrayAdapter::array_length(Array that) {
@@ -137,10 +128,6 @@ Value EmptyArrayAdapter::array_get(Array that, word index) {
   return Value();
 }
 
-Value::Type EmptyArrayAdapter::value_type(Value that) {
-  return Value::vtArray;
-}
-
 DTable *Array::empty_array_adapter() {
   static EmptyArrayAdapter instance;
   return &instance;
@@ -148,19 +135,16 @@ DTable *Array::empty_array_adapter() {
 
 // --- L i t e r a l   A r r a y s ---
 
-class LiteralArrayAdapter : public DTable, public Array::Handler {
+class LiteralArrayAdapter : public DTable, public Array::Handler, public DummyValueHandler {
 public:
   LiteralArrayAdapter();
   virtual word array_length(Array that);
   virtual Value array_get(Array that, word index);
-private:
-  Value::Methods value_dtable_;
 };
 
-LiteralArrayAdapter::LiteralArrayAdapter()
-  : value_dtable_(EmptyArrayAdapter::value_type, NULL, NULL) {
+LiteralArrayAdapter::LiteralArrayAdapter() : DummyValueHandler(Value::vtArray) {
   array = this;
-  value = &value_dtable_;
+  value = this;
 }
 
 word LiteralArrayAdapter::array_length(Array that) {

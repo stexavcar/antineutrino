@@ -202,25 +202,23 @@ word FileSocket::read(vector<uint8_t> data) {
   return bytes;
 }
 
-class ChildProcess::Data : public p::DTable {
+class ChildProcess::Data : public p::DTable, public p::Object::Handler {
 public:
   Data(pid_t child, const HalfChannel &channel)
     : child_(child)
-    , socket_(channel)
-    , object_dtable_(send_bridge) {
-    object = &object_dtable_;
+    , socket_(channel) {
+    object = this;
   }
   pid_t child() { return child_; }
   FileSocket &socket() { return socket_; }
-  static p::Value send_bridge(p::Object obj, p::String name,
-      p::Array args, p::MessageData *data, bool is_synchronous);
+  virtual p::Value object_send(p::Object obj, p::String name, p::Array args,
+      p::MessageData *data, bool is_synchronous);
 private:
   pid_t child_;
   FileSocket socket_;
-  p::Object::Methods object_dtable_;
 };
 
-p::Value ChildProcess::Data::send_bridge(p::Object obj, p::String name,
+p::Value ChildProcess::Data::object_send(p::Object obj, p::String name,
     p::Array args, p::MessageData *mdata, bool is_synchronous) {
   ChildProcess::Data *data = static_cast<ChildProcess::Data*>(obj.dtable());
   assert name.impl_id() == MiniHeap::id();
@@ -234,20 +232,19 @@ p::Value ChildProcess::Data::send_bridge(p::Object obj, p::String name,
   }
 }
 
-class ParentProcess::Data : public p::DTable {
+class ParentProcess::Data : public p::DTable, public p::Object::Handler {
 public:
-  Data(const HalfChannel &channel) : socket_(channel), object_dtable_(send_bridge) {
-    object = &object_dtable_;
+  Data(const HalfChannel &channel) : socket_(channel) {
+    object = this;
   }
   FileSocket &socket() { return socket_; }
-  static p::Value send_bridge(p::Object obj, p::String name,
+  virtual p::Value object_send(p::Object obj, p::String name,
       p::Array args, p::MessageData *data, bool is_synchronous);
 private:
   FileSocket socket_;
-  p::Object::Methods object_dtable_;
 };
 
-p::Value ParentProcess::Data::send_bridge(p::Object obj, p::String name,
+p::Value ParentProcess::Data::object_send(p::Object obj, p::String name,
     p::Array args, p::MessageData *mdata, bool is_synchronous) {
   ParentProcess::Data *data = static_cast<ParentProcess::Data*>(obj.dtable());
   assert name.impl_id() == MiniHeap::id();

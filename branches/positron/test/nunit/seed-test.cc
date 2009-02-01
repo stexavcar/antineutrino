@@ -18,19 +18,18 @@ private:
 };
 
 
-class SeedFactory : public p::DTable {
+class SeedFactory : public p::DTable, p::Seed::Handler {
 public:
   SeedFactory();
   p::Seed new_seed(p::String species);
   static void set_attribute(p::Seed seed, p::String key, p::Value value);
+  virtual p::String seed_species(p::Seed that);
+  virtual p::Value seed_get_attribute(p::Seed that, p::String key);
+  virtual bool seed_for_each_attribute(p::Seed that, p::Seed::attribute_callback_t iter, void *data);
+  virtual void *seed_grow(p::Seed that, p::String species);
 private:
-  static p::String seed_species(p::Seed that);
-  static p::Value seed_get_attribute(p::Seed that, p::String key);
-  static bool seed_for_each_attribute(p::Seed that, p::Seed::attribute_callback_t iter, void *data);
-  static void *seed_grow(p::Seed that, p::String species);
   buffer<TestSeed*> &seeds() { return seeds_; }
   own_buffer<TestSeed> seeds_;
-  p::Seed::Methods seed_dtable_;
 };
 
 
@@ -68,9 +67,8 @@ public:
 REGISTER_CLASS(Point3D);
 
 
-SeedFactory::SeedFactory()
-  : seed_dtable_(seed_species, seed_get_attribute, seed_grow, seed_for_each_attribute) {
-  seed = &seed_dtable_;
+SeedFactory::SeedFactory() {
+  seed = this;
 }
 
 

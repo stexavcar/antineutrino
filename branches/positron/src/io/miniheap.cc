@@ -7,16 +7,7 @@ namespace neutrino {
 
 // --- V a l u e   I m p l e m e n t a t i o n ---
 
-class ValueImpl {
-public:
-  static p::Value::Type value_type(p::Value that);
-  static bool value_eq(p::Value that, p::Value other);
-  static void *value_impl_id(p::Value that);
-
-  static MiniHeapObject open(p::Value obj);
-};
-
-p::Value::Type ValueImpl::value_type(p::Value that) {
+p::Value::Type MiniHeapDTable::value_type(p::Value that) {
   uint32_t data = that.data();
   if (MiniHeapPointer::has_integer_tag(data)) {
     return p::Value::vtInteger;
@@ -29,11 +20,11 @@ p::Value::Type ValueImpl::value_type(p::Value that) {
   }
 }
 
-bool ValueImpl::value_eq(p::Value that, p::Value other) {
+bool MiniHeapDTable::value_eq(p::Value that, p::Value other) {
   return that.data() == other.data();
 }
 
-void *ValueImpl::value_impl_id(p::Value that) {
+void *MiniHeapDTable::value_impl_id(p::Value that) {
   return &MiniHeapDTable::static_instance();
 }
 
@@ -42,13 +33,13 @@ int32_t MiniHeapDTable::integer_value(p::Integer that) {
 }
 
 word MiniHeapDTable::string_length(p::String that) {
-  return ValueImpl::open(that).at<uint32_t>(1);
+  return open(that).at<uint32_t>(1);
 }
 
 uint32_t MiniHeapDTable::string_get(p::String that, word index) {
   assert index >= 0;
   if (index < that.length()) {
-    return ValueImpl::open(that).at<uint32_t>(2 + index);
+    return open(that).at<uint32_t>(2 + index);
   } else {
     assert index == that.length();
     return '\0';
@@ -62,23 +53,25 @@ word MiniHeapDTable::string_compare(p::String that, p::String other) {
 void MutableString::set(word index, code_point chr) {
   assert index >= 0;
   assert index < length();
-  ValueImpl::open(*this).at<uint32_t>(2 + index) = chr;
+  MiniHeapObject obj = static_cast<MiniHeapDTable*>(dtable())->open(*this);
+  obj.at<uint32_t>(2 + index) = chr;
 }
 
 void MutableArray::set(word index, p::Value value) {
   assert index >= 0;
   assert index < length();
-  ValueImpl::open(*this).at<uint32_t>(2 + index) = value.data();
+  MiniHeapObject obj = static_cast<MiniHeapDTable*>(dtable())->open(*this);
+  obj.at<uint32_t>(2 + index) = value.data();
 }
 
 word MiniHeapDTable::array_length(p::Array that) {
-  return ValueImpl::open(that).at<uint32_t>(1);
+  return open(that).at<uint32_t>(1);
 }
 
 p::Value MiniHeapDTable::array_get(p::Array that, word index) {
   assert index >= 0;
   assert index < that.length();
-  uint32_t data = ValueImpl::open(that).at<uint32_t>(2 + index);
+  uint32_t data = open(that).at<uint32_t>(2 + index);
   return p::Value(data, that.dtable());
 }
 
@@ -95,20 +88,18 @@ MiniHeap::MiniHeap()
   : dtable_(this) {
 }
 
-MiniHeapObject ValueImpl::open(p::Value obj) {
+MiniHeapObject MiniHeapDTable::open(p::Value obj) {
   word offset = MiniHeapPointer::untag_object(obj.data());
-  return static_cast<MiniHeapDTable*>(obj.dtable())->heap().resolve(offset);
+  return heap().resolve(offset);
 }
 
 MiniHeapDTable MiniHeapDTable::kStaticInstance(NULL);
 
-MiniHeapDTable::MiniHeapDTable(MiniHeap *heap)
-  : heap_(heap)
-  , value_dtable_(ValueImpl::value_type, ValueImpl::value_eq, ValueImpl::value_impl_id) {
+MiniHeapDTable::MiniHeapDTable(MiniHeap *heap) : heap_(heap) {
   integer = this;
   string = this;
   array = this;
-  value = &value_dtable_;
+  value = this;
 }
 
 // --- F a c t o r y   m e t h o d s ---

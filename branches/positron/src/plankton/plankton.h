@@ -10,18 +10,11 @@ namespace plankton {
 class Value {
 public:
   enum Type { vtInteger, vtString, vtNull, vtArray, vtObject, vtSeed };
-
-  struct Methods {
-    typedef Value::Type (*type_t)(Value that);
-    typedef bool (*eq_t)(Value that, Value other);
-    typedef void *(*impl_id_t)(Value that);
-    Methods(type_t _type, eq_t _eq, impl_id_t _impl_id)
-      : type(_type), eq(_eq), impl_id(_impl_id) { }
-    type_t type;
-    eq_t eq;
-    impl_id_t impl_id;
+  struct Handler {
+    virtual Value::Type value_type(Value that) = 0;
+    virtual bool value_eq(Value that, Value other) = 0;
+    virtual void *value_impl_id(Value that) = 0;
   };
-
   bool match(Pattern &pattern);
   inline Type type() const;
   inline void *impl_id() const;
@@ -145,11 +138,9 @@ public:
 class Object : public Value {
 public:
 
-  struct Methods {
-    typedef Value (*send_t)(Object that, String species, Array args,
-        MessageData *data, bool is_synchronous);
-    Methods(send_t _send) : send(_send) { }
-    send_t send;
+  struct Handler {
+    virtual Value object_send(Object that, String species, Array args,
+        MessageData *data, bool is_synchronous) = 0;
   };
 
   inline Value send(String name, Array args = Array::empty(), MessageData *data = NULL);
@@ -163,23 +154,13 @@ public:
 class Seed : public Value {
 public:
   typedef bool (*attribute_callback_t)(String key, Value value, void *data);
-
-  struct Methods {
-    typedef String (*species_t)(Seed that);
-    typedef Value (*get_attribute_t)(Seed that, String key);
-    typedef void *(*grow_t)(Seed that, String species);
-    typedef bool (*for_each_attribute_t)(Seed that, attribute_callback_t iter,
-        void *data);
-    Methods(species_t _species, get_attribute_t _get_attribute,
-        grow_t _grow, for_each_attribute_t _for_each_attribute)
-      : species(_species), get_attribute(_get_attribute), grow(_grow)
-      , for_each_attribute(_for_each_attribute) { }
-    species_t species;
-    get_attribute_t get_attribute;
-    grow_t grow;
-    for_each_attribute_t for_each_attribute;
+  struct Handler {
+    virtual String seed_species(Seed that) = 0;
+    virtual Value seed_get_attribute(Seed that, String key) = 0;
+    virtual void *seed_grow(Seed that, String species) = 0;
+    virtual bool seed_for_each_attribute(Seed that, attribute_callback_t iter,
+        void *data) = 0;
   };
-
   inline String species() const;
   inline Value operator[](String key) const;
   inline bool for_each_attribute(attribute_callback_t iter, void *data) const;
@@ -193,24 +174,24 @@ public:
 class DTable {
 public:
   DTable();
-  Value::Methods *value;
+  Value::Handler *value;
   Integer::Handler *integer;
   String::Handler *string;
   Array::Handler *array;
-  Object::Methods *object;
-  Seed::Methods *seed;
+  Object::Handler *object;
+  Seed::Handler *seed;
 };
 
 Value::Type Value::type() const {
-  return dtable()->value->type(*this);
+  return dtable()->value->value_type(*this);
 }
 
 void *Value::impl_id() const {
-  return dtable()->value->impl_id(*this);
+  return dtable()->value->value_impl_id(*this);
 }
 
 bool Value::operator==(Value that) const {
-  return dtable()->value->eq(*this, that);
+  return dtable()->value->value_eq(*this, that);
 }
 
 int32_t Integer::value() const {
@@ -258,28 +239,28 @@ Value Array::operator[](word index) const {
 }
 
 Value Object::send(String name, Array args, MessageData *data) {
-  return dtable()->object->send(*this, name, args, data, true);
+  return dtable()->object->object_send(*this, name, args, data, true);
 }
 
 void Object::send_async(String name, Array args, MessageData *data) {
-  dtable()->object->send(*this, name, args, data, false);
+  dtable()->object->object_send(*this, name, args, data, false);
 }
 
 String Seed::species() const {
-  return dtable()->seed->species(*this);
+  return dtable()->seed->seed_species(*this);
 }
 
 Value Seed::operator[](String key) const {
-  return dtable()->seed->get_attribute(*this, key);
+  return dtable()->seed->seed_get_attribute(*this, key);
 }
 
 bool Seed::for_each_attribute(attribute_callback_t iter, void *data) const {
-  return dtable()->seed->for_each_attribute(*this, iter, data);
+  return dtable()->seed->seed_for_each_attribute(*this, iter, data);
 }
 
 template <typename T>
 T *Seed::grow() const {
-  return static_cast<T*>(dtable()->seed->grow(*this, T::species()));
+  return static_cast<T*>(dtable()->seed->seed_grow(*this, T::species()));
 }
 
 class ServiceRegistry {

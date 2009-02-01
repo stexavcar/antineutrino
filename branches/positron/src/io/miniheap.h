@@ -10,10 +10,13 @@
 
 namespace neutrino {
 
+class MiniHeapObject;
+
 class MiniHeapDTable : public p::DTable
                      , public p::Integer::Handler
                      , public p::String::Handler
-                     , public p::Array::Handler {
+                     , public p::Array::Handler
+                     , public p::Value::Handler {
 public:
   MiniHeapDTable(MiniHeap *heap);
   virtual int32_t integer_value(p::Integer that);
@@ -22,12 +25,16 @@ public:
   virtual word string_compare(p::String that, p::String other);
   virtual word array_length(p::Array that);
   virtual p::Value array_get(p::Array that, word index);
+  virtual p::Value::Type value_type(p::Value that);
+  virtual bool value_eq(p::Value that, p::Value other);
+  virtual void *value_impl_id(p::Value that);
+
 
   static MiniHeapDTable &static_instance() { return kStaticInstance; }
   MiniHeap &heap() { return *heap_; }
+  MiniHeapObject open(p::Value obj);
 private:
   MiniHeap *heap_;
-  p::Value::Methods value_dtable_;
   static MiniHeapDTable kStaticInstance;
 };
 
@@ -180,18 +187,17 @@ private:
 };
 
 template <typename T>
-class ObjectProxyDTable : public p::DTable {
+class ObjectProxyDTable : public p::DTable, public p::Object::Handler {
 public:
   typedef p::Value (T::*method_t)(Message &message);
   ObjectProxyDTable();
   void add_method(p::String name, method_t method);
   p::Object proxy_for(T &object);
-private:
-  static p::Value object_send(p::Object self, p::String name, p::Array args,
+  virtual p::Value object_send(p::Object self, p::String name, p::Array args,
       p::MessageData *data, bool is_synchronous);
+private:
   hash_map<p::String, method_t> &methods() { return methods_; }
   hash_map<p::String, method_t> methods_;
-  p::Object::Methods object_dtable_;
 };
 
 } // namespace neutrino
