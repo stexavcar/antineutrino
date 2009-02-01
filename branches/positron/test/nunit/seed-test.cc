@@ -18,7 +18,7 @@ private:
 };
 
 
-class SeedFactory : public p::Value::DTable {
+class SeedFactory : public p::DTable {
 public:
   SeedFactory();
   p::Seed new_seed(p::String species);
@@ -26,11 +26,11 @@ public:
 private:
   static p::String seed_species(p::Seed that);
   static p::Value seed_get_attribute(p::Seed that, p::String key);
-  static bool seed_for_each_attribute(p::Seed that, p::Seed::iterator_t iter, void *data);
+  static bool seed_for_each_attribute(p::Seed that, p::Seed::attribute_callback_t iter, void *data);
   static void *seed_grow(p::Seed that, p::String species);
   buffer<TestSeed*> &seeds() { return seeds_; }
   own_buffer<TestSeed> seeds_;
-  p::Value::DTable::SeedDTable seed_dtable_;
+  p::Seed::Methods seed_dtable_;
 };
 
 
@@ -99,19 +99,20 @@ void SeedFactory::set_attribute(p::Seed that, p::String key, p::Value value) {
 
 class SeedAttributeIterator {
 public:
-  SeedAttributeIterator(p::Seed::iterator_t iter, void *data)
+  SeedAttributeIterator(p::Seed::attribute_callback_t iter, void *data)
     : iter_(iter), data_(data) { }
   bool operator()(p::String key, p::Value value) const {
     return (iter())(key, value, data());
   }
 private:
-  p::Seed::iterator_t iter() const { return iter_; }
+  p::Seed::attribute_callback_t iter() const { return iter_; }
   void *data() const { return data_; }
-  p::Seed::iterator_t iter_;
+  p::Seed::attribute_callback_t iter_;
   void *data_;
 };
 
-bool SeedFactory::seed_for_each_attribute(p::Seed that, p::Seed::iterator_t iter, void *data) {
+bool SeedFactory::seed_for_each_attribute(p::Seed that,
+    p::Seed::attribute_callback_t iter, void *data) {
   TestSeed *seed = reinterpret_cast<TestSeed*>(that.data());
   return seed->attributes().for_each(SeedAttributeIterator(iter, data));
 }

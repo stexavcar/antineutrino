@@ -12,12 +12,6 @@ public:
   static p::Value::Type value_type(p::Value that);
   static bool value_eq(p::Value that, p::Value other);
   static void *value_impl_id(p::Value that);
-  static int32_t integer_value(p::Integer that);
-  static word string_length(p::String that);
-  static uint32_t string_get(p::String that, word index);
-  static word string_compare(p::String that, p::String other);
-  static word array_length(p::Array that);
-  static p::Value array_get(p::Array that, word index);
 
   static MiniHeapObject open(p::Value obj);
 };
@@ -43,15 +37,15 @@ void *ValueImpl::value_impl_id(p::Value that) {
   return &MiniHeapDTable::static_instance();
 }
 
-int32_t ValueImpl::integer_value(p::Integer that) {
+int32_t MiniHeapDTable::integer_value(p::Integer that) {
   return MiniHeapPointer::untag_integer(that.data());
 }
 
-word ValueImpl::string_length(p::String that) {
+word MiniHeapDTable::string_length(p::String that) {
   return ValueImpl::open(that).at<uint32_t>(1);
 }
 
-uint32_t ValueImpl::string_get(p::String that, word index) {
+uint32_t MiniHeapDTable::string_get(p::String that, word index) {
   assert index >= 0;
   if (index < that.length()) {
     return ValueImpl::open(that).at<uint32_t>(2 + index);
@@ -61,7 +55,7 @@ uint32_t ValueImpl::string_get(p::String that, word index) {
   }
 }
 
-word ValueImpl::string_compare(p::String that, p::String other) {
+word MiniHeapDTable::string_compare(p::String that, p::String other) {
   return p::String::generic_string_compare(that, other);
 }
 
@@ -77,11 +71,11 @@ void MutableArray::set(word index, p::Value value) {
   ValueImpl::open(*this).at<uint32_t>(2 + index) = value.data();
 }
 
-word ValueImpl::array_length(p::Array that) {
+word MiniHeapDTable::array_length(p::Array that) {
   return ValueImpl::open(that).at<uint32_t>(1);
 }
 
-p::Value ValueImpl::array_get(p::Array that, word index) {
+p::Value MiniHeapDTable::array_get(p::Array that, word index) {
   assert index >= 0;
   assert index < that.length();
   uint32_t data = ValueImpl::open(that).at<uint32_t>(2 + index);
@@ -110,15 +104,11 @@ MiniHeapDTable MiniHeapDTable::kStaticInstance(NULL);
 
 MiniHeapDTable::MiniHeapDTable(MiniHeap *heap)
   : heap_(heap)
-  , integer_dtable_(ValueImpl::integer_value)
-  , string_dtable_(ValueImpl::string_length, ValueImpl::string_get, ValueImpl::string_compare)
-  , array_dtable_(ValueImpl::array_length, ValueImpl::array_get) {
-  integer = &integer_dtable_;
-  string = &string_dtable_;
-  array = &array_dtable_;
-  value.type = &ValueImpl::value_type;
-  value.eq = &ValueImpl::value_eq;
-  value.impl_id = &ValueImpl::value_impl_id;
+  , value_dtable_(ValueImpl::value_type, ValueImpl::value_eq, ValueImpl::value_impl_id) {
+  integer = this;
+  string = this;
+  array = this;
+  value = &value_dtable_;
 }
 
 // --- F a c t o r y   m e t h o d s ---
@@ -169,7 +159,7 @@ uword hash<p::String>(const p::String &str) {
 
 // --- B u i l d e r ---
 
-MiniHeap *MiniHeap::get(p::Value::DTable *dtable) {
+MiniHeap *MiniHeap::get(p::DTable *dtable) {
   return dtable ? &static_cast<MiniHeapDTable*>(dtable)->heap() : NULL;
 }
 

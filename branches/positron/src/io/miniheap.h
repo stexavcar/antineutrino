@@ -10,16 +10,24 @@
 
 namespace neutrino {
 
-class MiniHeapDTable : public p::Value::DTable {
+class MiniHeapDTable : public p::DTable
+                     , public p::Integer::Handler
+                     , public p::String::Handler
+                     , public p::Array::Handler {
 public:
   MiniHeapDTable(MiniHeap *heap);
+  virtual int32_t integer_value(p::Integer that);
+  virtual word string_length(p::String that);
+  virtual uint32_t string_get(p::String that, word index);
+  virtual word string_compare(p::String that, p::String other);
+  virtual word array_length(p::Array that);
+  virtual p::Value array_get(p::Array that, word index);
+
   static MiniHeapDTable &static_instance() { return kStaticInstance; }
   MiniHeap &heap() { return *heap_; }
 private:
   MiniHeap *heap_;
-  p::Value::DTable::IntegerDTable integer_dtable_;
-  p::Value::DTable::StringDTable string_dtable_;
-  p::Value::DTable::ArrayDTable array_dtable_;
+  p::Value::Methods value_dtable_;
   static MiniHeapDTable kStaticInstance;
 };
 
@@ -44,7 +52,7 @@ public:
   template <typename T> T to_plankton(MiniHeapObject &obj);
 
   static void *id() { return &MiniHeapDTable::static_instance(); }
-  static MiniHeap *get(p::Value::DTable *dtable);
+  static MiniHeap *get(p::DTable *dtable);
   MiniHeapDTable &dtable() { return dtable_; }
 private:
   own_ptr<MiniHeap> owned_;
@@ -172,7 +180,7 @@ private:
 };
 
 template <typename T>
-class ObjectProxyDTable : public p::Value::DTable {
+class ObjectProxyDTable : public p::DTable {
 public:
   typedef p::Value (T::*method_t)(Message &message);
   ObjectProxyDTable();
@@ -183,7 +191,7 @@ private:
       p::MessageData *data, bool is_synchronous);
   hash_map<p::String, method_t> &methods() { return methods_; }
   hash_map<p::String, method_t> methods_;
-  p::Value::DTable::ObjectDTable object_dtable_;
+  p::Object::Methods object_dtable_;
 };
 
 } // namespace neutrino

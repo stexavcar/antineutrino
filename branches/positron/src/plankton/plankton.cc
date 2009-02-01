@@ -8,15 +8,13 @@ namespace plankton {
 
 // --- D u m m y   D T a b l e ---
 
-Value::DTable::DTable()
-  : integer(NULL)
+DTable::DTable()
+  : value(NULL)
+  , integer(NULL)
   , string(NULL)
   , array(NULL)
   , object(NULL)
-  , seed(NULL) {
-  value.type = NULL;
-  value.eq = NULL;
-  value.impl_id = NULL;
+  , seed(NULL){
 }
 
 bool Value::match(Pattern &pattern) {
@@ -40,19 +38,19 @@ bool Value::match(Pattern &pattern) {
 
 // --- I n t e g e r   L i t e r a l s ---
 
-class IntegerLiteralAdapter : public Value::DTable {
+class IntegerLiteralAdapter : public DTable, public Integer::Handler {
 public:
   IntegerLiteralAdapter();
+  virtual int32_t integer_value(Integer that);
 private:
-  Value::DTable::IntegerDTable integer_dtable_;
-  static int32_t integer_value(Integer that);
+  Value::Methods value_dtable_;
   static Value::Type value_type(Value that);
 };
 
 IntegerLiteralAdapter::IntegerLiteralAdapter()
-  : integer_dtable_(integer_value) {
-  integer = &integer_dtable_;
-  value.type = value_type;
+  : value_dtable_(value_type, NULL, NULL) {
+  integer = this;
+  value = &value_dtable_;
 }
 
 int32_t IntegerLiteralAdapter::integer_value(Integer that) {
@@ -63,32 +61,32 @@ Value::Type IntegerLiteralAdapter::value_type(Value that) {
   return Value::vtInteger;
 }
 
-Value::DTable *Integer::literal_adapter() {
+DTable *Integer::literal_adapter() {
   static IntegerLiteralAdapter instance;
   return &instance;
 }
 
 // --- S t r i n g   L i t e r a l s ---
 
-class CharPtrDTable : public Value::DTable {
+class CharPtrDTable : public DTable, public String::Handler {
 public:
   CharPtrDTable();
+  virtual word string_length(String str);
+  virtual uint32_t string_get(String str, word index);
+  virtual word string_compare(String that, String other);
 private:
   static Value::Type value_type(Value that);
-  static word string_length(String str);
-  static uint32_t string_get(String str, word index);
-  static word string_compare(String that, String other);
   static const char *open(String str);
-  Value::DTable::StringDTable string_dtable_;
+  Value::Methods value_dtable_;
 };
 
 CharPtrDTable::CharPtrDTable()
-  : string_dtable_(string_length, string_get, string_compare) {
-  string = &string_dtable_;
-  value.type = value_type;
+  : value_dtable_(value_type, NULL, NULL) {
+  string = this;
+  value = &value_dtable_;
 }
 
-Value::DTable *String::char_ptr_dtable() {
+DTable *String::char_ptr_dtable() {
   static CharPtrDTable instance;
   return &instance;
 }
@@ -115,51 +113,54 @@ word CharPtrDTable::string_compare(String that, String other) {
 
 // --- E m p t y   A r r a y s ---
 
-class EmptyArrayAdapter : public Value::DTable {
+class EmptyArrayAdapter : public DTable, public Array::Handler {
 public:
   EmptyArrayAdapter();
+  virtual word array_length(Array that);
+  virtual Value array_get(Array that, word index);
   static Value::Type value_type(Value that);
 private:
-  static word array_length(Array that);
-  Value::DTable::ArrayDTable array_dtable_;
+  Value::Methods value_dtable_;
 };
 
 EmptyArrayAdapter::EmptyArrayAdapter()
-  : array_dtable_(array_length, NULL) {
-  array = &array_dtable_;
-  value.type = value_type;
+  : value_dtable_(value_type, NULL, NULL) {
+  array = this;
+  value = &value_dtable_;
 }
 
 word EmptyArrayAdapter::array_length(Array that) {
   return 0;
 }
 
+Value EmptyArrayAdapter::array_get(Array that, word index) {
+  return Value();
+}
+
 Value::Type EmptyArrayAdapter::value_type(Value that) {
   return Value::vtArray;
 }
 
-Value::DTable *Array::empty_array_adapter() {
-  static Value::DTable *value = NULL;
-  if (value == NULL)
-    value = new EmptyArrayAdapter();
-  return value;
+DTable *Array::empty_array_adapter() {
+  static EmptyArrayAdapter instance;
+  return &instance;
 }
 
 // --- L i t e r a l   A r r a y s ---
 
-class LiteralArrayAdapter : public Value::DTable {
+class LiteralArrayAdapter : public DTable, public Array::Handler {
 public:
   LiteralArrayAdapter();
+  virtual word array_length(Array that);
+  virtual Value array_get(Array that, word index);
 private:
-  static word array_length(Array that);
-  static Value array_get(Array that, word index);
-  Value::DTable::ArrayDTable array_dtable_;
+  Value::Methods value_dtable_;
 };
 
 LiteralArrayAdapter::LiteralArrayAdapter()
-  : array_dtable_(array_length, array_get) {
-  value.type = EmptyArrayAdapter::value_type;
-  array = &array_dtable_;
+  : value_dtable_(EmptyArrayAdapter::value_type, NULL, NULL) {
+  array = this;
+  value = &value_dtable_;
 }
 
 word LiteralArrayAdapter::array_length(Array that) {
@@ -174,7 +175,7 @@ Value LiteralArrayAdapter::array_get(Array that, word index) {
   return elms[index];
 }
 
-Value::DTable *LiteralArray::literal_array_adapter() {
+DTable *LiteralArray::literal_array_adapter() {
   static LiteralArrayAdapter instance;
   return &instance;
 }
@@ -261,7 +262,7 @@ variant_type_impl<p::Value> variant_type_impl<p::Value>::kInstance;
 void variant_type_impl<p::Value>::print_on(const variant &that, string modifiers,
     string_stream &stream) {
   p::Value value(reinterpret_cast<word>(that.data_.u_pair.first),
-      static_cast<p::Value::DTable*>(that.data_.u_pair.second));
+      static_cast<p::DTable*>(that.data_.u_pair.second));
   switch (value.type()) {
     case p::Value::vtNull:
       stream.add("null");

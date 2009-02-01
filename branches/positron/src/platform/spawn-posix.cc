@@ -202,7 +202,7 @@ word FileSocket::read(vector<uint8_t> data) {
   return bytes;
 }
 
-class ChildProcess::Data : public p::Value::DTable {
+class ChildProcess::Data : public p::DTable {
 public:
   Data(pid_t child, const HalfChannel &channel)
     : child_(child)
@@ -217,7 +217,7 @@ public:
 private:
   pid_t child_;
   FileSocket socket_;
-  p::Value::DTable::ObjectDTable object_dtable_;
+  p::Object::Methods object_dtable_;
 };
 
 p::Value ChildProcess::Data::send_bridge(p::Object obj, p::String name,
@@ -234,7 +234,7 @@ p::Value ChildProcess::Data::send_bridge(p::Object obj, p::String name,
   }
 }
 
-class ParentProcess::Data : public p::Value::DTable {
+class ParentProcess::Data : public p::DTable {
 public:
   Data(const HalfChannel &channel) : socket_(channel), object_dtable_(send_bridge) {
     object = &object_dtable_;
@@ -244,7 +244,7 @@ public:
       p::Array args, p::MessageData *data, bool is_synchronous);
 private:
   FileSocket socket_;
-  p::Value::DTable::ObjectDTable object_dtable_;
+  p::Object::Methods object_dtable_;
 };
 
 p::Value ParentProcess::Data::send_bridge(p::Object obj, p::String name,

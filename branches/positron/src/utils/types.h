@@ -31,6 +31,7 @@ template <typename T> class variant_type_impl;
 namespace plankton {
 
 class Array;
+class DTable;
 class Integer;
 class MessageData;
 class Null;
