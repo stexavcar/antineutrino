@@ -8,12 +8,12 @@ using namespace neutrino;
 
 class TestSeed {
 public:
-  TestSeed(p::String oid) : oid_(oid) { }
-  p::String oid() { return oid_; }
+  TestSeed(p::String species) : species_(species) { }
+  p::String species() { return species_; }
   hash_map<p::String, p::Value> &attributes() { return attributes_; }
 private:
   hash_map<p::String, p::Value> attributes_;
-  p::String oid_;
+  p::String species_;
   void *instance_;
 };
 
@@ -21,21 +21,22 @@ private:
 class SeedFactory : public p::Value::DTable {
 public:
   SeedFactory();
-  p::Seed new_seed(p::String oid);
+  p::Seed new_seed(p::String species);
   static void set_attribute(p::Seed seed, p::String key, p::Value value);
 private:
-  static p::String seed_oid(p::Seed that);
+  static p::String seed_species(p::Seed that);
   static p::Value seed_get_attribute(p::Seed that, p::String key);
   static bool seed_for_each_attribute(p::Seed that, p::Seed::iterator_t iter, void *data);
-  static void *seed_grow(p::Seed that, p::String oid);
+  static void *seed_grow(p::Seed that, p::String species);
   buffer<TestSeed*> &seeds() { return seeds_; }
   own_buffer<TestSeed> seeds_;
+  p::Value::DTable::SeedDTable seed_dtable_;
 };
 
 
 class Singleton : public p::IClass {
 public:
-  static p::String oid() { return "nunit.Singleton"; }
+  static p::String species() { return "nunit.Singleton"; }
   static Singleton *construct(p::Seed seed) { return new Singleton(); }
 };
 REGISTER_CLASS(Singleton);
@@ -46,7 +47,7 @@ public:
   Point(p::Seed seed) : seed_(seed) { }
   word x() { return cast<p::Integer>(seed()["x"]).value(); }
   word y() { return cast<p::Integer>(seed()["y"]).value(); }
-  static p::String oid() { return "nunit.Point"; }
+  static p::String species() { return "nunit.Point"; }
   static Point *construct(p::Seed seed) { return new Point(seed); }
 protected:
   p::Seed seed() { return seed_; }
@@ -60,30 +61,28 @@ class Point3D : public Point {
 public:
   Point3D(p::Seed seed) : Point(seed) { }
   word z() { return cast<p::Integer>(seed()["z"]).value(); }
-  static p::String oid() { return "nunit.Point3D"; }
+  static p::String species() { return "nunit.Point3D"; }
   static Point3D *construct(p::Seed seed) { return new Point3D(seed); }
-  static p::String super_class() { return Point::oid(); }
+  static p::String super_class() { return Point::species(); }
 };
 REGISTER_CLASS(Point3D);
 
 
-SeedFactory::SeedFactory() {
-  seed.oid = seed_oid;
-  seed.get_attribute = seed_get_attribute;
-  seed.grow = seed_grow;
-  seed.for_each_attribute = seed_for_each_attribute;
+SeedFactory::SeedFactory()
+  : seed_dtable_(seed_species, seed_get_attribute, seed_grow, seed_for_each_attribute) {
+  seed = &seed_dtable_;
 }
 
 
-p::Seed SeedFactory::new_seed(p::String oid) {
-  TestSeed *seed = new TestSeed(oid);
+p::Seed SeedFactory::new_seed(p::String species) {
+  TestSeed *seed = new TestSeed(species);
   seeds().append(seed);
   return p::Seed(reinterpret_cast<word>(seed), this);
 }
 
 
-p::String SeedFactory::seed_oid(p::Seed that) {
-  return reinterpret_cast<TestSeed*>(that.data())->oid();
+p::String SeedFactory::seed_species(p::Seed that) {
+  return reinterpret_cast<TestSeed*>(that.data())->species();
 }
 
 
@@ -118,9 +117,9 @@ bool SeedFactory::seed_for_each_attribute(p::Seed that, p::Seed::iterator_t iter
 }
 
 
-void *SeedFactory::seed_grow(p::Seed that, p::String oid) {
-  if (!p::Seed::belongs_to(that, oid)) return NULL;
-  p::IClassRegistryEntry *klass = p::IClassRegistryEntry::lookup(oid);
+void *SeedFactory::seed_grow(p::Seed that, p::String species) {
+  if (!p::Seed::belongs_to(that, species)) return NULL;
+  p::IClassRegistryEntry *klass = p::IClassRegistryEntry::lookup(species);
   if (klass == NULL) return NULL;
   return klass->new_instance(that);
 }
@@ -129,7 +128,7 @@ void *SeedFactory::seed_grow(p::Seed that, p::String oid) {
 TEST(simple_seed) {
   SeedFactory factory;
   p::Seed seed = factory.new_seed("nunit.Singleton");
-  assert seed.oid() == "nunit.Singleton";
+  assert seed.species() == "nunit.Singleton";
   assert is<p::Null>(seed["knort"]);
   assert (is_seed<Singleton>(seed));
   Singleton *singleton = seed.grow<Singleton>();

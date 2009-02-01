@@ -17,6 +17,9 @@ public:
   MiniHeap &heap() { return *heap_; }
 private:
   MiniHeap *heap_;
+  p::Value::DTable::IntegerDTable integer_dtable_;
+  p::Value::DTable::StringDTable string_dtable_;
+  p::Value::DTable::ArrayDTable array_dtable_;
   static MiniHeapDTable kStaticInstance;
 };
 
@@ -57,10 +60,23 @@ private:
   own_vector<uint8_t> data_;
 };
 
+class MutableString : public p::String {
+public:
+  MutableString(word data, MiniHeapDTable *dtable) : p::String(data, dtable) { }
+  void set(word index, code_point chr);
+};
+
+class MutableArray : public p::Array {
+public:
+  MutableArray(word data, MiniHeapDTable *dtable) : p::Array(data, dtable) { }
+  void set(word index, p::Value value);
+};
+
 class Factory : public MiniHeap, public p::IMessageResource {
 public:
   p::String new_string(string value);
-  p::Array new_array(word length);
+  MutableString new_string(word length);
+  MutableArray new_array(word length);
 
   static p::Integer new_integer(int32_t value);
   static p::Null get_null();
@@ -167,6 +183,7 @@ private:
       p::MessageData *data, bool is_synchronous);
   hash_map<p::String, method_t> &methods() { return methods_; }
   hash_map<p::String, method_t> methods_;
+  p::Value::DTable::ObjectDTable object_dtable_;
 };
 
 } // namespace neutrino

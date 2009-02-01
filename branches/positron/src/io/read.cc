@@ -193,7 +193,7 @@ parse_result SexpParser::parse_exp() {
       if (current() == SexpScanner::tEnd)
         return p::Value();
       advance();
-      p::Array elements = factory().new_array(buffer.length());
+      MutableArray elements = factory().new_array(buffer.length());
       for (word i = 0; i < buffer.length(); i++)
         elements.set(i, buffer[i]);
       return elements;

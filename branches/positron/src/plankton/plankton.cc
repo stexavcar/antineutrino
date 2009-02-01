@@ -8,17 +8,15 @@ namespace plankton {
 
 // --- D u m m y   D T a b l e ---
 
-Value::DTable::DTable() {
+Value::DTable::DTable()
+  : integer(NULL)
+  , string(NULL)
+  , array(NULL)
+  , object(NULL)
+  , seed(NULL) {
   value.type = NULL;
   value.eq = NULL;
   value.impl_id = NULL;
-  integer.value = NULL;
-  string.length = NULL;
-  string.get = NULL;
-  array.length = NULL;
-  array.get = NULL;
-  array.set = NULL;
-  object.send = NULL;
 }
 
 bool Value::match(Pattern &pattern) {
@@ -46,13 +44,15 @@ class IntegerLiteralAdapter : public Value::DTable {
 public:
   IntegerLiteralAdapter();
 private:
+  Value::DTable::IntegerDTable integer_dtable_;
   static int32_t integer_value(Integer that);
   static Value::Type value_type(Value that);
 };
 
-IntegerLiteralAdapter::IntegerLiteralAdapter() {
+IntegerLiteralAdapter::IntegerLiteralAdapter()
+  : integer_dtable_(integer_value) {
+  integer = &integer_dtable_;
   value.type = value_type;
-  integer.value = integer_value;
 }
 
 int32_t IntegerLiteralAdapter::integer_value(Integer that) {
@@ -70,48 +70,46 @@ Value::DTable *Integer::literal_adapter() {
 
 // --- S t r i n g   L i t e r a l s ---
 
-class CharPtrAdapter : public Value::DTable {
+class CharPtrDTable : public Value::DTable {
 public:
-  CharPtrAdapter();
+  CharPtrDTable();
 private:
   static Value::Type value_type(Value that);
   static word string_length(String str);
   static uint32_t string_get(String str, word index);
   static word string_compare(String that, String other);
   static const char *open(String str);
+  Value::DTable::StringDTable string_dtable_;
 };
 
-CharPtrAdapter::CharPtrAdapter() {
+CharPtrDTable::CharPtrDTable()
+  : string_dtable_(string_length, string_get, string_compare) {
+  string = &string_dtable_;
   value.type = value_type;
-  string.length = string_length;
-  string.compare = string_compare;
-  string.get = string_get;
 }
 
-Value::DTable *String::char_ptr_adapter() {
-  static Value::DTable *value = NULL;
-  if (value == NULL)
-    value = new CharPtrAdapter();
-  return value;
+Value::DTable *String::char_ptr_dtable() {
+  static CharPtrDTable instance;
+  return &instance;
 }
 
-Value::Type CharPtrAdapter::value_type(Value that) {
+Value::Type CharPtrDTable::value_type(Value that) {
   return Value::vtString;
 }
 
-const char *CharPtrAdapter::open(String str) {
+const char *CharPtrDTable::open(String str) {
   return reinterpret_cast<const char*>(str.data());
 }
 
-word CharPtrAdapter::string_length(String str) {
+word CharPtrDTable::string_length(String str) {
   return strlen(open(str));
 }
 
-uint32_t CharPtrAdapter::string_get(String str, word index) {
+uint32_t CharPtrDTable::string_get(String str, word index) {
   return open(str)[index];
 }
 
-word CharPtrAdapter::string_compare(String that, String other) {
+word CharPtrDTable::string_compare(String that, String other) {
   return String::generic_string_compare(that, other);
 }
 
@@ -123,10 +121,12 @@ public:
   static Value::Type value_type(Value that);
 private:
   static word array_length(Array that);
+  Value::DTable::ArrayDTable array_dtable_;
 };
 
-EmptyArrayAdapter::EmptyArrayAdapter() {
-  array.length = array_length;
+EmptyArrayAdapter::EmptyArrayAdapter()
+  : array_dtable_(array_length, NULL) {
+  array = &array_dtable_;
   value.type = value_type;
 }
 
@@ -153,12 +153,13 @@ public:
 private:
   static word array_length(Array that);
   static Value array_get(Array that, word index);
+  Value::DTable::ArrayDTable array_dtable_;
 };
 
-LiteralArrayAdapter::LiteralArrayAdapter() {
+LiteralArrayAdapter::LiteralArrayAdapter()
+  : array_dtable_(array_length, array_get) {
   value.type = EmptyArrayAdapter::value_type;
-  array.length = array_length;
-  array.get = array_get;
+  array = &array_dtable_;
 }
 
 word LiteralArrayAdapter::array_length(Array that) {
@@ -174,10 +175,8 @@ Value LiteralArrayAdapter::array_get(Array that, word index) {
 }
 
 Value::DTable *LiteralArray::literal_array_adapter() {
-  static Value::DTable *value = NULL;
-  if (value == NULL)
-    value = new LiteralArrayAdapter();
-  return value;
+  static LiteralArrayAdapter instance;
+  return &instance;
 }
 
 ServiceRegistryEntry *ServiceRegistryEntry::first_ = NULL;
@@ -199,10 +198,10 @@ word String::generic_string_compare(String that, String other) {
   }
 }
 
-bool Seed::belongs_to(Seed that, String oid) {
-  String current = that.oid();
+bool Seed::belongs_to(Seed that, String species) {
+  String current = that.species();
   while (!current.is_empty()) {
-    if (current == oid)
+    if (current == species)
       return true;
     IClassRegistryEntry *entry = IClassRegistryEntry::lookup(current);
     if (entry == NULL)
@@ -230,13 +229,18 @@ Object ServiceRegistryEntry::get_instance() {
   return instance_;
 }
 
-static hash_map<p::String, IClassRegistryEntry*> classes;
-void IClassRegistryEntry::register_class(IClassRegistryEntry *entry) {
-  classes.put(entry->name(), entry);
+hash_map<p::String, IClassRegistryEntry*> &IClassRegistryEntry::registry() {
+  static hash_map<p::String, IClassRegistryEntry*> instance;
+  return instance;
 }
 
-IClassRegistryEntry *IClassRegistryEntry::lookup(String oid) {
-  return classes.get(oid, static_cast<IClassRegistryEntry*>(NULL));
+
+void IClassRegistryEntry::register_class(IClassRegistryEntry *entry) {
+  registry().put(entry->species(), entry);
+}
+
+IClassRegistryEntry *IClassRegistryEntry::lookup(String species) {
+  return registry().get(species, static_cast<IClassRegistryEntry*>(NULL));
 }
 
 MessageData::MessageData() { }
@@ -254,9 +258,10 @@ namespace neutrino {
 
 variant_type_impl<p::Value> variant_type_impl<p::Value>::kInstance;
 
-void variant_type_impl<p::Value>::print_on(const void *data, string modifiers,
+void variant_type_impl<p::Value>::print_on(const variant &that, string modifiers,
     string_stream &stream) {
-  p::Value value = *static_cast<const p::Value*>(data);
+  p::Value value(reinterpret_cast<word>(that.data_.u_pair.first),
+      static_cast<p::Value::DTable*>(that.data_.u_pair.second));
   switch (value.type()) {
     case p::Value::vtNull:
       stream.add("null");
@@ -273,8 +278,8 @@ void variant_type_impl<p::Value>::print_on(const void *data, string modifiers,
       break;
     }
     case p::Value::vtInteger: {
-      word value = cast<p::Integer>(value).value();
-      stream.add("%", args(value));
+      word v = cast<p::Integer>(value).value();
+      stream.add("%", args(v));
       break;
     }
     case p::Value::vtString: {

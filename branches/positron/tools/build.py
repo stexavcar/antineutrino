@@ -171,6 +171,7 @@ class GccFlags(Flags):
     'extra': '-Wextra',
     'no-unused-parameter': '-Wno-unused-parameter',
     'no-non-virtual-dtor': '-Wno-non-virtual-dtor',
+    'shadow': '-Wshadow'
   }
   
   kOptimize = {

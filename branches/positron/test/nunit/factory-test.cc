@@ -56,7 +56,7 @@ TEST(array) {
   static const char *kElements[kSize] = {
     "foo", "bar", "baz", "quux", "bleh"
   };
-  p::Array array = factory.new_array(kSize);
+  MutableArray array = factory.new_array(kSize);
   assert array.type() == p::Value::vtArray;
   assert array.length() == kSize;
   for (word i = 0; i < kSize; i++)

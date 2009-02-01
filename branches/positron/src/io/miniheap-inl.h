@@ -70,8 +70,9 @@ template <>
 uword hash<p::String>(const p::String &obj);
 
 template <typename T>
-ObjectProxyDTable<T>::ObjectProxyDTable() {
-  object.send = object_send;
+ObjectProxyDTable<T>::ObjectProxyDTable()
+  : object_dtable_(object_send) {
+  object = &object_dtable_;
 }
 
 template <typename T>

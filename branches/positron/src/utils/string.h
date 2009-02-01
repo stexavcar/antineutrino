@@ -43,16 +43,11 @@ private:
 
 template <> uword hash<string>(const string &str);
 
-template <typename T> struct coerce { typedef const T &type; };
-template <> struct coerce<int32_t> { typedef word type; };
-template <> struct coerce<uint32_t> { typedef word type; };
-template <> struct coerce<int64_t> { typedef word type; };
-template <> struct coerce<uint64_t> { typedef word type; };
 
 class variant {
 public:
   template <typename T>
-  inline variant(const T &t) {
+  inline variant(const T &t) : type_(NULL) {
     encode_variant(*this, static_cast<typename coerce<T>::type>(t));
   }
   void print_on(string_stream &stream, string modifiers) const;
@@ -76,7 +71,7 @@ public:
 class variant_type {
 public:
   virtual void print_on(const variant &that, string modifiers,
-      string_stream &stream);
+      string_stream &stream) = 0;
 };
 
 

@@ -14,7 +14,7 @@ Value::Value(word value)
 
 Value::Value(const char *str)
   : data_(reinterpret_cast<word>(str))
-  , dtable_(String::char_ptr_adapter()) { }
+  , dtable_(String::char_ptr_dtable()) { }
 
 LiteralArray Array::of(Value v0, Value v1, Value v2, Value v3,
     Value v4, Value v5) {
@@ -67,7 +67,7 @@ static inline T cast(p::Value obj) {
 
 template <class T>
 static inline bool is_seed(p::Seed obj) {
-  return p::Seed::belongs_to(obj, T::oid());
+  return p::Seed::belongs_to(obj, T::species());
 }
 
 
@@ -79,15 +79,16 @@ static inline bool is_seed(p::Value obj) {
 template <>
 class variant_type_impl<p::Value> : public variant_type {
 public:
-  static inline void initialize(variant &that, p::Value value) {
-    that.type_ = &kInstance;
-    that.data_.u_pair.first = reinterpret_cast<void*>(value.data());
-    that.data_.u_pair.second = value.dtable();
-  }
-  virtual void print_on(const void *data, string modifiers,
+  virtual void print_on(const variant &that, string modifiers,
       string_stream &stream);
   static variant_type_impl<p::Value> kInstance;
 };
+
+static inline void encode_variant(variant &that, p::Value value) {
+  that.type_ = &variant_type_impl<p::Value>::kInstance;
+  that.data_.u_pair.first = reinterpret_cast<void*>(value.data());
+  that.data_.u_pair.second = value.dtable();
+}
 
 } // namespace plankton
 

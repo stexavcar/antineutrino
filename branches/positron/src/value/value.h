@@ -38,6 +38,8 @@ public:
   inline word payload();
 };
 
+template <> struct coerce<Signal::Type> { typedef word type; };
+
 class Success : public Signal {
 public:
   static inline Success *make();
@@ -51,6 +53,8 @@ public:
   enum Type { ieUnknown, ieSystem, ieEnvironment };
   static inline InternalError *make(Type type);
 };
+
+template <> struct coerce<InternalError::Type> { typedef word type; };
 
 } // namespace neutrino
 

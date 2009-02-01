@@ -83,11 +83,15 @@ static void test_serialization(p::Value value, string expected) {
   Deserializer<StringReader> deserializer(reader);
   p::Value result = deserializer.deserialize();
   string_stream str;
-  str.add("%", args(value));
+  variant var = value;
+  str.add("%", args(result));
   assert str.raw_c_str() == expected;
 }
 
 TEST(serialize) {
   test_serialization("foobar", "\"foobar\"");
-  test_serialization(p::Value(934), "934");
+  test_serialization(934, "934");
+  test_serialization(p::Array::of(1, 2, 3), "(1 2 3)");
+  test_serialization(p::Array::of("a", 0xb, "c"), "(\"a\" 11 \"c\")");
+//  test_serialization(p::Null::get(), "(null)");
 }

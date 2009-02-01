@@ -123,8 +123,16 @@ void Serializer<O>::serialize(p::Value value) {
       break;
     }
     case p::Value::vtInteger: {
-      int32_t value = cast<p::Integer>(value).value();
-      add_int32(value);
+      int32_t v = cast<p::Integer>(value).value();
+      add_int32(v);
+      break;
+    }
+    case p::Value::vtArray: {
+      p::Array arr = cast<p::Array>(value);
+      word length = arr.length();
+      add_int32(length);
+      for (word i = 0; i < length; i++)
+        serialize(arr[i]);
       break;
     }
     default:
@@ -146,15 +154,21 @@ p::Value Deserializer<O>::deserialize() {
   switch (type) {
   case p::Value::vtString: {
     word length = get_int32();
-    char *data = new char[length + 1];
+    MutableString result = factory().new_string(length);
     for (word i = 0; i < length; i++)
-      data[i] = in().get();
-    data[length] = '\0';
-    return data;
+      result.set(i, in().get());
+    return result;
   }
   case p::Value::vtInteger: {
     int32_t value = get_int32();
-    return value;
+    return factory().new_integer(value);
+  }
+  case p::Value::vtArray: {
+    word length = get_int32();
+    MutableArray result = factory().new_array(length);
+    for (word i = 0; i < length; i++)
+      result.set(i, deserialize());
+    return result;
   }
   default:
     assert false;

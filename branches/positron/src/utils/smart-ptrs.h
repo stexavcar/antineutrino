@@ -57,21 +57,26 @@ private:
   abstract_resource *next_;
 };
 
+enum ResourceState { rsEmpty, rsActive, rsReleased };
+
 template <typename T, class D>
 class own_resource : public abstract_resource, public nocopy {
 public:
-  enum State { rsEmpty, rsActive, rsReleased };
   inline ~own_resource();
   inline own_resource(const T &t);
   inline own_resource();
   void acquire(const T &t);
   const T &operator*() { return value_; }
   virtual void release();
-  State state() { return state_; }
+  ResourceState state() { return state_; }
 private:
   T value_;
-  State state_;
+  ResourceState state_;
 };
+
+
+template <>
+struct coerce<ResourceState> { typedef word type; };
 
 
 template <typename T>

@@ -1,8 +1,8 @@
 #ifndef _PLANKTON_CODEC
 #define _PLANKTON_CODEC
 
+#include "io/miniheap.h"
 #include "plankton/plankton.h"
-#include "utils/global.h"
 #include "utils/array.h"
 #include "utils/check.h"
 
@@ -63,6 +63,8 @@ public:
   Deserializer(In &in) : in_(in) { }
   p::Value deserialize();
 private:
+  Factory &factory() { return factory_; }
+  Factory factory_;
   int32_t get_int32();
   In &in() { return in_; }
   In &in_;

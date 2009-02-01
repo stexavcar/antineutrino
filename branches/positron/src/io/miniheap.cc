@@ -18,8 +18,7 @@ public:
   static word string_compare(p::String that, p::String other);
   static word array_length(p::Array that);
   static p::Value array_get(p::Array that, word index);
-  static bool array_set(p::Array that, word index, p::Value value);
-private:
+
   static MiniHeapObject open(p::Value obj);
 };
 
@@ -66,11 +65,16 @@ word ValueImpl::string_compare(p::String that, p::String other) {
   return p::String::generic_string_compare(that, other);
 }
 
-bool ValueImpl::array_set(p::Array that, word index, p::Value value) {
+void MutableString::set(word index, code_point chr) {
   assert index >= 0;
-  assert index < that.length();
-  ValueImpl::open(that).at<uint32_t>(2 + index) = value.data();
-  return true;
+  assert index < length();
+  ValueImpl::open(*this).at<uint32_t>(2 + index) = chr;
+}
+
+void MutableArray::set(word index, p::Value value) {
+  assert index >= 0;
+  assert index < length();
+  ValueImpl::open(*this).at<uint32_t>(2 + index) = value.data();
 }
 
 word ValueImpl::array_length(p::Array that) {
@@ -104,17 +108,17 @@ MiniHeapObject ValueImpl::open(p::Value obj) {
 
 MiniHeapDTable MiniHeapDTable::kStaticInstance(NULL);
 
-MiniHeapDTable::MiniHeapDTable(MiniHeap *heap) : heap_(heap) {
+MiniHeapDTable::MiniHeapDTable(MiniHeap *heap)
+  : heap_(heap)
+  , integer_dtable_(ValueImpl::integer_value)
+  , string_dtable_(ValueImpl::string_length, ValueImpl::string_get, ValueImpl::string_compare)
+  , array_dtable_(ValueImpl::array_length, ValueImpl::array_get) {
+  integer = &integer_dtable_;
+  string = &string_dtable_;
+  array = &array_dtable_;
   value.type = &ValueImpl::value_type;
   value.eq = &ValueImpl::value_eq;
   value.impl_id = &ValueImpl::value_impl_id;
-  integer.value = &ValueImpl::integer_value;
-  string.length = &ValueImpl::string_length;
-  string.get = &ValueImpl::string_get;
-  string.compare = &ValueImpl::string_compare;
-  array.length = &ValueImpl::array_length;
-  array.get = &ValueImpl::array_get;
-  array.set = &ValueImpl::array_set;
 }
 
 // --- F a c t o r y   m e t h o d s ---
@@ -124,21 +128,26 @@ p::Integer Factory::new_integer(int32_t value) {
 }
 
 p::String Factory::new_string(string value) {
-  MiniHeapObject obj = allocate(p::Value::vtString, 2 + value.length());
-  obj.at<uint32_t>(1) = value.length();
+  MutableString result = new_string(value.length());
   for (word i = 0; i < value.length(); i++)
-    obj.at<uint32_t>(2 + i) = value[i];
-  return to_plankton<p::String>(obj);
+    result.set(i, value[i]);
+  return result;
 }
 
-p::Array Factory::new_array(word length) {
+MutableString Factory::new_string(word length) {
+  MiniHeapObject obj = allocate(p::Value::vtString, 2 + length);
+  obj.at<uint32_t>(1) = length;
+  return to_plankton<MutableString>(obj);
+}
+
+MutableArray Factory::new_array(word length) {
   assert length >= 0;
   MiniHeapObject obj = allocate(p::Value::vtArray, 2 + length);
   obj.at<uint32_t>(1) = length;
   uint32_t null = get_null().data();
   for (word i = 0; i < length; i++)
     obj.at<uint32_t>(2 + i) = null;
-  return to_plankton<p::Array>(obj);
+  return to_plankton<MutableArray>(obj);
 }
 
 p::Null Factory::get_null() {

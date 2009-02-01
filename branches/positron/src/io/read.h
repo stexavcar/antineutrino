@@ -34,6 +34,8 @@ private:
   string last_string_;
 };
 
+template <> struct coerce<SexpScanner::Token> { typedef word type; };
+
 } // namespace neutrino
 
 #endif // _IO_READ

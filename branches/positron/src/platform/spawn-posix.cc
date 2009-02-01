@@ -206,8 +206,9 @@ class ChildProcess::Data : public p::Value::DTable {
 public:
   Data(pid_t child, const HalfChannel &channel)
     : child_(child)
-    , socket_(channel) {
-    object.send = send_bridge;
+    , socket_(channel)
+    , object_dtable_(send_bridge) {
+    object = &object_dtable_;
   }
   pid_t child() { return child_; }
   FileSocket &socket() { return socket_; }
@@ -216,6 +217,7 @@ public:
 private:
   pid_t child_;
   FileSocket socket_;
+  p::Value::DTable::ObjectDTable object_dtable_;
 };
 
 p::Value ChildProcess::Data::send_bridge(p::Object obj, p::String name,
@@ -234,14 +236,15 @@ p::Value ChildProcess::Data::send_bridge(p::Object obj, p::String name,
 
 class ParentProcess::Data : public p::Value::DTable {
 public:
-  Data(const HalfChannel &channel) : socket_(channel) {
-    object.send = send_bridge;
+  Data(const HalfChannel &channel) : socket_(channel), object_dtable_(send_bridge) {
+    object = &object_dtable_;
   }
   FileSocket &socket() { return socket_; }
   static p::Value send_bridge(p::Object obj, p::String name,
       p::Array args, p::MessageData *data, bool is_synchronous);
 private:
   FileSocket socket_;
+  p::Value::DTable::ObjectDTable object_dtable_;
 };
 
 p::Value ParentProcess::Data::send_bridge(p::Object obj, p::String name,
