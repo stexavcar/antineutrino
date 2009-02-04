@@ -30,7 +30,7 @@ void Abort::release_resources() {
   LOG().info("Releasing resources on abort", args(0));
   has_cleaned_up_ = true;
   while (first_ != NULL)
-    first_->release();
+    first_->dispose();
 }
 
 word Abort::resource_count() {

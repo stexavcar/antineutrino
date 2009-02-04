@@ -37,6 +37,10 @@ class BuildObject(object):
     srcs = self.get_dependencies()
     return [p[1:] for p in srcs if p.startswith(':')]
   
+  def get_system_libraries(self):
+    srcs = self.get_dependencies()
+    return [p[1:] for p in srcs if p.startswith('@')]
+  
   def get_sources(self):
     srcs = self.get_dependencies()
     return [join(self.root, p) for p in srcs if p.endswith('.cc')]
@@ -89,12 +93,14 @@ class Flags(object):
         'CXXFLAGS': [ '$WARNINGFLAGS' ],
         'WARNINGFLAGS': [ ],
         'CPPDEFINES': [ ],
-        'LINKFLAGS': [ ]
+        'LINKFLAGS': [ ],
+        'CPPPATH': [ ]
       }
     self.process_warnings(self.args.get('warnings', []))
     self.process_dialects(self.args.get('dialect', []))
     self.process_codegen(self.args.get('codegen', []))
     self.process_defines(self.args.get('defines', []))
+    self.process_includepath(self.args.get('includepath', []))
     self.process_optimize(self.args.get('optimize', None))
     self.process_debug(self.args.get('debug', 'off'))
     self.process_wordsize(self.args.get('wordsize', None))
@@ -205,6 +211,9 @@ class GccFlags(Flags):
   def process_wordsize(self, size):
     self.apply_flag_map(size, GccFlags.kWordsize, self.flags['CXXFLAGS'])
     self.apply_flag_map(size, GccFlags.kWordsize, self.flags['LINKFLAGS'])
+  
+  def process_includepath(self, includepath):
+    self.flags['CPPPATH'] += includepath
   
   def process_debug(self, mode):
     if mode == 'on':

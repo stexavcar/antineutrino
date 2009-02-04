@@ -8,8 +8,6 @@ library (
     'io/miniheap.cc',
     'io/read.h',
     'io/read.cc',
-    'main/main.cc',
-    'main/main.h',
     'plankton/codec.h',
     'plankton/codec-inl.h',
     'plankton/match.h',
@@ -50,5 +48,28 @@ library (
     'value/pointer.h',
     'value/pointer-inl.h',
     '$platform-files'
+  ]
+)
+
+flags (
+  name = 'xflags',
+  extend = mode,
+  includepath = ['/usr/include/cairo']
+)
+
+program (
+  name = 'x',
+  domain = 'Neutrino',
+  flags = 'xflags',
+  srcs = [
+    'main/main.cc',
+    'main/main.h',
+    'platform/cairo.h',
+    'platform/cairo.cc',
+    'platform/frame.h',
+    '$frame-files',
+    ':neutrino',
+    '@X11',
+    '@cairo'
   ]
 )

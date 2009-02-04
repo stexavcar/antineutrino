@@ -15,7 +15,6 @@ typedef uint32_t code_point;
 
 
 template <typename T> struct coerce { typedef const T &type; };
-template <> struct coerce<uword> { typedef word type; };
 template <> struct coerce<int32_t> { typedef word type; };
 template <> struct coerce<uint32_t> { typedef word type; };
 template <> struct coerce<int64_t> { typedef word type; };

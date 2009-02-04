@@ -50,7 +50,7 @@ private:
 class abstract_resource {
 public:
   abstract_resource() : prev_(NULL), next_(NULL) { }
-  virtual void release() = 0;
+  virtual void dispose() = 0;
 private:
   friend class Abort;
   abstract_resource *prev_;
@@ -59,7 +59,10 @@ private:
 
 enum ResourceState { rsEmpty, rsActive, rsReleased };
 
-template <typename T, class D>
+template <typename T>
+class resource_cleaner { };
+
+template <typename T, class D = resource_cleaner<T> >
 class own_resource : public abstract_resource, public nocopy {
 public:
   inline ~own_resource();
@@ -67,7 +70,8 @@ public:
   inline own_resource();
   void acquire(const T &t);
   const T &operator*() { return value_; }
-  virtual void release();
+  virtual void dispose();
+  const T &release();
   ResourceState state() { return state_; }
 private:
   T value_;

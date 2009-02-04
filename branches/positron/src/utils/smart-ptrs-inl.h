@@ -43,16 +43,23 @@ own_resource<T, D>::own_resource()
 
 template <typename T, typename D>
 own_resource<T, D>::~own_resource() {
-  release();
+  dispose();
 }
 
 template <typename T, typename D>
-void own_resource<T, D>::release() {
+void own_resource<T, D>::dispose() {
   if (state() == rsActive) {
     D::release(this->operator*());
     Abort::unregister_resource(*this);
     state_ = rsReleased;
   }
+}
+
+template <typename T, typename D>
+const T &own_resource<T, D>::release() {
+  assert state() == rsActive;
+  state_ = rsEmpty;
+  return value_;
 }
 
 template <typename T, typename D>

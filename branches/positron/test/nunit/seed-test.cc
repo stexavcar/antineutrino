@@ -27,6 +27,7 @@ public:
   virtual p::Value seed_get_attribute(p::Seed that, p::String key);
   virtual bool seed_for_each_attribute(p::Seed that, p::Seed::attribute_callback_t iter, void *data);
   virtual void *seed_grow(p::Seed that, p::String species);
+  virtual p::Value seed_send(p::Seed that, p::String name, p::Value arg);
 private:
   buffer<TestSeed*> &seeds() { return seeds_; }
   own_buffer<TestSeed> seeds_;
@@ -88,6 +89,11 @@ p::Value SeedFactory::seed_get_attribute(p::Seed that, p::String key) {
   TestSeed *seed = reinterpret_cast<TestSeed*>(that.data());
   return seed->attributes().get(key, Factory::get_null());
 }
+
+p::Value SeedFactory::seed_send(p::Seed that, p::String name, p::Value arg) {
+  return Factory::get_null();
+}
+
 
 
 void SeedFactory::set_attribute(p::Seed that, p::String key, p::Value value) {

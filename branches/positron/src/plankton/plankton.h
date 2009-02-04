@@ -160,11 +160,13 @@ public:
     virtual void *seed_grow(Seed that, String species) = 0;
     virtual bool seed_for_each_attribute(Seed that, attribute_callback_t iter,
         void *data) = 0;
+    virtual Value seed_send(Seed that, String name, Value arg) = 0;
   };
   inline String species() const;
   inline Value operator[](String key) const;
   inline bool for_each_attribute(attribute_callback_t iter, void *data) const;
   template <typename T> inline T *grow() const;
+  inline Value send(String name, Value arg) const;
   inline Seed(word data, DTable *table) : Value(data, table) { }
   inline Seed() : Value() { }
   static const Value::Type kTypeTag = Value::vtSeed;
@@ -261,6 +263,10 @@ bool Seed::for_each_attribute(attribute_callback_t iter, void *data) const {
 template <typename T>
 T *Seed::grow() const {
   return static_cast<T*>(dtable()->seed->seed_grow(*this, T::species()));
+}
+
+Value Seed::send(String name, Value arg) const {
+  return dtable()->seed->seed_send(*this, name, arg);
 }
 
 class ServiceRegistry {

@@ -41,11 +41,13 @@ def library_dependencies(env, libmap, sect):
   result = [ ]
   for name in sect.get_libraries():
     result.append(ensure_library(env, libmap, name))
+  for name in sect.get_system_libraries():
+    result.append(name)
   return result
 
 
 def configure():
-  env = Environment(CPPPATH=join('pollock', 'src'))
+  env = Environment()
   configure_pollock(env)
   # Configure libraries
   libs = config.get_libraries()
