@@ -27,23 +27,8 @@ DTable::DTable()
   , seed(NULL){
 }
 
-bool Value::match(Pattern &pattern) {
-  switch (type()) {
-    case vtArray:
-      return pattern.match_array(cast<Array>(*this));
-    case vtInteger:
-      return pattern.match_integer(cast<Integer>(*this));
-    case vtString:
-      return pattern.match_string(cast<String>(*this));
-    case vtNull:
-      return pattern.match_null(cast<Null>(*this));
-    case vtObject:
-      return pattern.match_object(cast<Object>(*this));
-    case vtSeed:
-      assert false;
-      return false;
-  };
-  return false;
+bool Value::match(const Pattern &pattern) const {
+  return pattern.match(*this);
 }
 
 // --- I n t e g e r   L i t e r a l s ---

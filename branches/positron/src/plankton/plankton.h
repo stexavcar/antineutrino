@@ -15,7 +15,7 @@ public:
     virtual bool value_eq(Value that, Value other) = 0;
     virtual void *value_impl_id(Value that) = 0;
   };
-  bool match(Pattern &pattern);
+  bool match(const Pattern &pattern) const;
   inline Type type() const;
   inline void *impl_id() const;
   inline bool operator==(Value that) const;
