@@ -1,5 +1,5 @@
 library (
-  name = 'neutrino',
+  name = 'neutrino-lib',
   domain = 'Neutrino',
   flags = mode,
   srcs = [
@@ -28,6 +28,8 @@ library (
     'utils/check.h',
     'utils/check-inl.h',
     'utils/check.cc',
+    'utils/flags.h',
+    'utils/flags.cc',
     'utils/global.h',
     'utils/hash-map.h',
     'utils/hash-map-inl.h',
@@ -69,8 +71,18 @@ program (
     'platform/cairo.cc',
     'platform/frame.h',
     '$frame-files',
-    ':neutrino',
+    ':neutrino-lib',
     '@X11',
     '@cairo'
+  ]
+)
+
+program (
+  name = 'neutrino',
+  domain = 'Neutrino',
+  flags = mode,
+  srcs = [
+    'main/neutrino.cc',
+    ':neutrino-lib',
   ]
 )

@@ -9,15 +9,15 @@ void Check::predicate_failed(SourceLocation here, string format,
     "#\n"
     "# %:%: % failed";
   string_stream buf;
-  buf.add(kHeader, args(string(here.file()), here.line(),
+  buf.add(kHeader, vargs(string(here.file()), here.line(),
       format_bundle(format, vars)));
   if (!details.is_empty()) {
     buf.set_indent("#   ");
-    buf.add("\n%", args(format_bundle(details, vars)));
+    buf.add("\n%", vargs(format_bundle(details, vars)));
     buf.set_indent(string());
   }
   buf.add("\n#\n");
-  Abort::abort("%", args(buf.raw_c_str()));
+  Abort::abort("%", vargs(buf.raw_c_str()));
 }
 
 void Check::check_failed(SourceLocation here, string source) {
@@ -26,8 +26,8 @@ void Check::check_failed(SourceLocation here, string source) {
     "# %:%: % failed\n"
     "#\n";
   string_stream buf;
-  buf.add(kMessage, args(string(here.file()), here.line(), source));
-  Abort::abort("%", args(buf.raw_c_str()));
+  buf.add(kMessage, vargs(string(here.file()), here.line(), source));
+  Abort::abort("%", vargs(buf.raw_c_str()));
 }
 
 } // namespace neutrino

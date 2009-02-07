@@ -44,7 +44,7 @@ REGISTER_SERVICE(neutrino.platform.spawn, SpawnService::create);
 class close_file_descriptor {
 public:
   static void release(int fd) {
-    LOG().info("Closed file descriptor %", args(fd));
+    LOG().info("Closed file descriptor %", vargs(fd));
     close(fd);
   }
 };
@@ -170,7 +170,7 @@ boole FileSocket::receive_message(MessageIn &message) {
 
 boole FileSocket::send_reply(MessageIn &message, p::Value value) {
   if (!message.is_synchronous()) {
-    LOG().warn("Reply to asynchronous message ignored.", args());
+    LOG().warn("Reply to asynchronous message ignored.", vargs());
     return Success::make();
   }
   assert value.impl_id() == MiniHeap::id();
@@ -261,12 +261,12 @@ p::Value ParentProcess::Data::object_send(p::Object obj, p::String name,
 boole Pipe::open() {
   embed_array<int, 2> pipes;
   if (::pipe(pipes.start()) == -1) {
-    LOG().error("Error creating pipe (%)", args(string(::strerror(errno))));
+    LOG().error("Error creating pipe (%)", vargs(string(::strerror(errno))));
     return InternalError::make(InternalError::ieSystem);
   }
   read_fd_ = pipes[0];
   write_fd_ = pipes[1];
-  LOG().info("Opened pipe, read: %, write: %", args(read_fd_, write_fd_));
+  LOG().info("Opened pipe, read: %, write: %", vargs(read_fd_, write_fd_));
   return Success::make();
 }
 
@@ -277,7 +277,7 @@ boole HalfChannel::set_remain_open_on_exec() {
 
 boole HalfChannel::set_remain_open_on_exec(int fd) {
   if (::fcntl(fd, F_SETFD, 0) == -1) {
-    LOG().error("Error fcntl-ing pipe (%)", args(string(::strerror(errno))));
+    LOG().error("Error fcntl-ing pipe (%)", vargs(string(::strerror(errno))));
     return InternalError::make(InternalError::ieSystem);
   }
   return Success::make();
@@ -307,7 +307,7 @@ boole ChildProcess::open(string &command, vector<string> &args,
   try there.set_remain_open_on_exec();
   pid_t pid = ::fork();
   if (pid == -1) {
-    LOG().error("Error forking (%)", neutrino::args(string(::strerror(errno))));
+    LOG().error("Error forking (%)", vargs(string(::strerror(errno))));
     return InternalError::make(InternalError::ieSystem);
   } else if (pid == 0) {
     // We've successfully created the child process.  Now run the executable.
@@ -324,11 +324,11 @@ boole ChildProcess::open(string &command, vector<string> &args,
         new char*[env.length() + 2], env.length() + 2);
     for (word i = 0; i < env.length(); i++) {
       string_stream stream;
-      stream.add("%=%", neutrino::args(env[i].first(), env[i].second()));
+      stream.add("%=%", vargs(env[i].first(), env[i].second()));
       env_arr[i] = strdup(stream.raw_c_str().start());
     }
     string_stream stream;
-    stream.add("%=%:%", neutrino::args(kMasterEnvVariable, there.in_fd(),
+    stream.add("%=%:%", vargs(kMasterEnvVariable, there.in_fd(),
         there.out_fd()));
     env_arr[env.length()] = strdup(stream.raw_c_str().start());
     env_arr[env.length() + 1] = NULL;
@@ -358,7 +358,7 @@ word ChildProcess::wait() {
       // that this requires errno to be thread local.
       continue;
     } else {
-      LOG().error("Error waiting for child (%)", args(string(::strerror(errno))));
+      LOG().error("Error waiting for child (%)", vargs(string(::strerror(errno))));
       return -1;
     }
   }
@@ -379,24 +379,24 @@ ParentProcess::~ParentProcess() { }
 boole ParentProcess::open() {
   const char *raw_master = getenv(kMasterEnvVariable.start());
   if (raw_master == NULL) {
-    LOG().error("Could not read master variable", args(0));
+    LOG().error("Could not read master variable", vargs(0));
     return InternalError::make(InternalError::ieEnvironment);
   }
   string master = raw_master;
   char *end = NULL;
   int in_fd = strtol(master.start(), &end, 10);
   if (*end != ':') {
-    LOG().error("Error parsing master fd %", args(master));
+    LOG().error("Error parsing master fd %", vargs(master));
     return InternalError::make(InternalError::ieEnvironment);
   }
   end++;
   int out_fd = strtol(end, &end, 10);
   if (end != master.end()) {
-    LOG().error("Error parsing master fd %", args(master));
+    LOG().error("Error parsing master fd %", vargs(master));
     return InternalError::make(InternalError::ieEnvironment);
   }
   data_.set(new ParentProcess::Data(HalfChannel(in_fd, out_fd)));
-  LOG().info("Opened connection to master through %", args(master));
+  LOG().info("Opened connection to master through %", vargs(master));
   return Success::make();
 }
 

@@ -38,14 +38,14 @@ TEST(different_types) {
   PseudoRandom random(97);
   for (word i = 0; i < 100; i++) {
     string_stream stream;
-    stream.add("key-%", args(i));
+    stream.add("key-%", vargs(i));
     string str = string::dup(stream.raw_c_str());
     map.put(str, p::String(str.start()));
   }
   p::String empty = p::String("");
   for (word i = 0; i < 100; i++) {
     string_stream stream;
-    stream.add("key-%", args(i));
+    stream.add("key-%", vargs(i));
     p::String str = map.get(stream.raw_c_str(), empty);
     assert str == p::String(stream.raw_c_str().start());
   }

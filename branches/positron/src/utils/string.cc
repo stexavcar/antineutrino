@@ -50,6 +50,17 @@ void string_stream::add(string format, const var_args &args) {
   }
 }
 
+string string::substring(word start, word end) {
+  if (end < 0) end += length() + 1;
+  assert 0 <= start;
+  assert start <= length();
+  assert 0 <= end;
+  assert end <= length();
+  assert start <= end;
+  return string(this->start() + start, end - start);
+}
+
+
 void string_stream::add(string str) {
   for (word i = 0; i < str.length(); i++)
     add(str[i]);

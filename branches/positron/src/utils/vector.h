@@ -20,6 +20,8 @@ public:
   T &last();
   bool is_empty() { return length_ == 0; }
   const T *start() const { return data_; }
+  vector<T> subvector(word start = 0, word end = -1);
+  vector<T> const dup() { return subvector(); }
   word length() const { return length_; }
   static vector<T> allocate(word length);
   template <class A> static vector<T> allocate(A allocator, word length);

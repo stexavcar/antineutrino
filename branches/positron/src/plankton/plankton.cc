@@ -242,14 +242,14 @@ void variant_type_impl<p::Value>::print_on(const variant &that, string modifiers
       stream.add("(");
       for (word i = 0; i < length; i++) {
         if (i > 0) stream.add(" ");
-        stream.add("%", args(array[i]));
+        stream.add("%", vargs(array[i]));
       }
       stream.add(")");
       break;
     }
     case p::Value::vtInteger: {
       word v = cast<p::Integer>(value).value();
-      stream.add("%", args(v));
+      stream.add("%", vargs(v));
       break;
     }
     case p::Value::vtString: {

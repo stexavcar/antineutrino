@@ -25,7 +25,9 @@ public:
     : chars_(chars)
     , length_(length) { }
   bool operator==(const string &that) const;
+  bool operator!=(const string &that) const { return !this->operator==(that); }
   bool operator==(const vector<uint8_t> &that) const;
+  string substring(word start = 0, word end = -1);
   bool contains(char c);
   word length() const { return length_; }
   const char *start() const { return chars_; }

@@ -19,6 +19,17 @@ const T &vector<T>::operator[](word offset) const {
 }
 
 template <typename T>
+vector<T> vector<T>::subvector(word start, word end) {
+  if (end < 0) end += (length() + 1);
+  assert 0 <= start;
+  assert start <= length();
+  assert 0 <= end;
+  assert end <= length();
+  assert start <= end;
+  return vector<T>(this->start() + start, end - start);
+}
+
+template <typename T>
 array<T> vector<T>::as_array() {
   return TO_ARRAY(T, data_, length_);
 }

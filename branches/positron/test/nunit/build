@@ -19,6 +19,6 @@ program (
     'test.h',
     'test-inl.h',
     'check.h',
-    ':neutrino'
+    ':neutrino-lib'
   ]
 )

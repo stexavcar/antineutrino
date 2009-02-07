@@ -12,13 +12,15 @@ namespace neutrino {
 
 class SexpScanner {
 public:
-  enum Token { tLeft, tRight, tString, tEnd, tError };
+  enum Token { tLeft, tRight, tString, tNumber, tEnd, tError };
   SexpScanner(p::String str, Arena &arena);
   Token next();
   string last_string() { return last_string_; }
+  word last_number() { return last_number_; }
 
 private:
   string scan_token();
+  word scan_number();
   void advance();
   void skip_whitespace();
 
@@ -32,6 +34,12 @@ private:
   bool at_end_;
   code_point current_;
   string last_string_;
+  word last_number_;
+};
+
+class Reader {
+public:
+  static p::Value read(Factory &factory, p::String input);
 };
 
 template <> struct coerce<SexpScanner::Token> { typedef word type; };

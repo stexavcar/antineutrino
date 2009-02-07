@@ -84,7 +84,7 @@ static void test_serialization(p::Value value, string expected) {
   p::Value result = deserializer.deserialize();
   string_stream str;
   variant var = value;
-  str.add("%", args(result));
+  str.add("%", vargs(result));
   assert str.raw_c_str() == expected;
 }
 

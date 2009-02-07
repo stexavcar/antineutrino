@@ -1,6 +1,7 @@
 #ifndef _UTILS_LOG
 #define _UTILS_LOG
 
+#include "utils/flags.h"
 #include "utils/global.h"
 #include "utils/string.h"
 #include "utils/types.h"
@@ -20,10 +21,8 @@ public:
   void info(string format, const var_args &args);
   void warn(string format, const var_args &args);
   void error(string format, const var_args &args);
-  static void set_verbosity(Verbosity v) { verbosity_ = v; }
-  static Verbosity verbosity() { return verbosity_; }
+  static OptionCollection &options();
 private:
-  static Verbosity verbosity_;
   SourceLocation &location() { return location_; }
   SourceLocation location_;
 };

@@ -92,6 +92,15 @@ string SexpScanner::scan_token() {
   return string(chars.start(), chars.length());
 }
 
+word SexpScanner::scan_number() {
+  word value = 0;
+  while (is_numeric(current())) {
+    value = (10 * value) + (current() - '0');
+    advance();
+  }
+  return value;
+}
+
 SexpScanner::Token SexpScanner::next() {
   SexpScanner::Token result;
   code_point cp = current();
@@ -112,6 +121,9 @@ SexpScanner::Token SexpScanner::next() {
       if (is_alphabetic(cp)) {
         last_string_ = scan_token();
         result = tString;
+      } else if (is_numeric(cp)) {
+        last_number_ = scan_number();
+        result = tNumber;
       } else {
         advance();
         result = tError;
@@ -183,6 +195,11 @@ parse_result SexpParser::parse_exp() {
       advance();
       return factory().new_string(str);
     }
+    case SexpScanner::tNumber: {
+      word value = scan().last_number();
+      advance();
+      return factory().new_integer(value);
+    }
     case SexpScanner::tLeft: {
       arena_buffer<p::Value> buffer(arena());
       advance();
@@ -201,6 +218,13 @@ parse_result SexpParser::parse_exp() {
     default:
       return p::Value();
   }
+}
+
+p::Value Reader::read(Factory &factory, p::String str) {
+  Arena arena;
+  SexpParser parser(str, factory, arena);
+  try parse p::Value ~ result = parser.parse_exp();
+  return result;
 }
 
 p::Value ReadService::parse(Message &message) {
