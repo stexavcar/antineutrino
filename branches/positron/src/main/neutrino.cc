@@ -59,6 +59,33 @@ static string read_file(string name) {
 }
 
 
+void report_error(string name, string contents, Location loc) {
+  // Scan ahead to the line that contains the error
+  const char *current = contents.start();
+  const char *raw_line = current;
+  word line_no = 0;
+  while (current != NULL) {
+    if (current - contents.start() > loc.start)
+      break;
+    raw_line = current;
+    line_no++;
+    current = strchr(current, '\n');
+    if (current != NULL) current++;
+  }
+  // Cut the line out if there is more source after it
+  string line;
+  if (current == NULL) line = string(raw_line);
+  else line = string(raw_line, current - raw_line - 1);
+  string_stream stream;
+  stream.add("%:%: Parse error\n", vargs(name, line_no));
+  stream.add("%\n", vargs(line));
+  // Add underline
+  for (word i = raw_line - contents.start(); i < loc.start; i++)
+    stream.add(' ');
+  for (word i = loc.start; i <= loc.end; i++)
+    stream.add('^');
+  stream.raw_c_str().println();
+}
 
 
 void main(vector<const char*> args) {
@@ -68,12 +95,14 @@ void main(vector<const char*> args) {
   for (word i = 0; i < options.files().length(); i++) {
     string file = read_file(options.files()[i]);
     assert !file.is_empty();
-    Factory factory;
-    p::Value value = Reader::read(factory, file.start());
-    assert !value.is_empty();
-    string_stream stream;
-    stream.add("%", vargs(value));
-    stream.raw_c_str().println();
+    Arena arena;
+    SexpParser parser(file, arena);
+    s_exp *expr = parser.read();
+    if (expr == NULL) {
+      Location loc = parser.error_location();
+      report_error(options.files()[i], file, loc);
+      return;
+    }
   }
 }
 

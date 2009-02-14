@@ -25,6 +25,7 @@ class MessageIn;
 class MessageOut;
 class pattern;
 class string_stream;
+class s_exp;
 class variant_type;
 template <typename T> class variant_type_impl;
 

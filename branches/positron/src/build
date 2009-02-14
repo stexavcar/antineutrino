@@ -8,6 +8,7 @@ library (
     'io/miniheap.cc',
     'io/read.h',
     'io/read.cc',
+    'io/read-inl.h',
     'plankton/codec.h',
     'plankton/codec-inl.h',
     'plankton/match.h',

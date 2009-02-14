@@ -23,10 +23,8 @@ p::Value TestService::echo(Message &message) {
 }
 
 static p::Object make_test_service() {
-  static TestService *proxy = NULL;
-  if (proxy == NULL)
-    proxy = new TestService();
-  return proxy->dtable().proxy_for(*proxy);
+  static TestService instance;
+  return instance.dtable().proxy_for(instance);
 }
 
 REGISTER_SERVICE(nunit.test.echo, make_test_service);
@@ -41,13 +39,4 @@ TEST(service_lookup) {
     assert (cast<p::Integer>(response)).value() == n;
   }
   assert (is<p::Null>(obj.send("some_undefined_message")));
-}
-
-TEST(read_service) {
-  p::Object read_service = p::ServiceRegistry::lookup("neutrino.io.read");
-  assert !read_service.is_empty();
-  p::MessageData data;
-  p::Value expr = read_service.send("parse", p::Array::of(" ( foo ) "), &data);
-  assert (is<p::Array>(expr));
-  assert (cast<p::Array>(expr)).length() == 1;
 }
