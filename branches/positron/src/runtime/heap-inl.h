@@ -6,10 +6,10 @@
 
 namespace neutrino {
 
-#define pTryAlloc(heap, Type, name, ARGS)                            \
+#define pTryAllocInSpace(space, Type, name, ARGS)                    \
   Type *name;                                                        \
   do {                                                               \
-    array<uint8_t> __memory__ = heap.allocate(sizeof(Type));         \
+    array<uint8_t> __memory__ = (space).allocate(sizeof(Type));      \
     if (__memory__.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion); \
     name = new (__memory__) Type ARGS;                               \
     assert reinterpret_cast<uint8_t*>(name) == __memory__.start();   \

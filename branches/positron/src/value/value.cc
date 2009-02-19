@@ -5,12 +5,11 @@
 namespace neutrino {
 
 allocation<Object> DescriptorDescriptor::clone_object(Object *obj, Space &space) {
-  try Descriptor *result = static_cast<Descriptor*>(obj)->clone(space);
-  return result;
+  return static_cast<Descriptor*>(obj)->clone(space);
 }
 
 allocation<Descriptor> DescriptorDescriptor::clone(Space &space) {
-  try alloc {space} DescriptorDescriptor *result(*this);
+  try alloc DescriptorDescriptor *result(*this) in space;
   return result;
 }
 
@@ -23,7 +22,7 @@ allocation<Object> InstanceDescriptor::clone_object(Object *obj, Space &space) {
 }
 
 allocation<Descriptor> InstanceDescriptor::clone(Space &space) {
-  try alloc {space} InstanceDescriptor *result(*this);
+  try alloc InstanceDescriptor *result(*this) in space;
   return result;
 }
 

@@ -14,6 +14,7 @@ public:
   inline F *failure() { return cast<F>(data_); }
   inline bool has_succeeded();
   inline bool has_failed();
+  Data *data() { return data_; }
 protected:
   maybe(Data *data) : data_(data) { }
 private:
@@ -36,6 +37,10 @@ template <typename T>
 class allocation : public maybe<T, InternalError> {
 public:
   allocation(T *value) : maybe<T, InternalError>(value) { }
+  template <typename S>
+  allocation(allocation<S> other) : maybe<T, InternalError>(other.data()) {
+    TYPE_CHECK(S, T);
+  }
   allocation(InternalError *error) : maybe<T, InternalError>(error) { }
 };
 

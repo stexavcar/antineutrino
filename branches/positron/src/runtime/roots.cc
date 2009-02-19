@@ -11,7 +11,9 @@ Roots::Roots() {
 }
 
 boole Roots::initialize(Heap &heap) {
-  try alloc {heap} DescriptorDescriptor *descriptor_descriptor();
+  array<uint8_t> memory = heap.allocate(sizeof(DescriptorDescriptor));
+  if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
+  DescriptorDescriptor *descriptor_descriptor = new (memory) DescriptorDescriptor();
   descriptor_descriptor->set_descriptor(descriptor_descriptor);
   set_descriptor_descriptor(descriptor_descriptor);
   return Success::make();

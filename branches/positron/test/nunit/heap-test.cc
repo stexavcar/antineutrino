@@ -8,7 +8,7 @@ using namespace neutrino;
 boole test_allocation() {
   Runtime runtime;
   try runtime.initialize();
-  try alloc {runtime.heap()} InstanceDescriptor *raw_desc(runtime.roots().descriptor_descriptor(), 19);
+  InstanceDescriptor *raw_desc = NULL;
   assert raw_desc->instance_type() == Value::tInstance;
   assert raw_desc->field_count() == 19;
   ref_block<1> protect(runtime.refs());

@@ -25,7 +25,7 @@ class BuildObject(object):
     result = [ ]
     for entry in self.args['srcs']:
       if entry.startswith('$'):
-        result += self.config.vars[entry[1:]]
+        result += self.config.vars.get(entry[1:], [])
       else:
         result.append(entry)
     return result

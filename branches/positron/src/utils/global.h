@@ -16,10 +16,18 @@ typedef uint32_t code_point;
 
 
 template <typename T> struct coerce { typedef const T &type; };
+template <> struct coerce<size_t> { typedef word type; };
 template <> struct coerce<int32_t> { typedef word type; };
 template <> struct coerce<uint32_t> { typedef word type; };
 template <> struct coerce<int64_t> { typedef word type; };
 template <> struct coerce<uint64_t> { typedef word type; };
+
+
+#define TYPE_CHECK(S, T)                                             \
+  do {                                                               \
+    if (false)                                                       \
+      *static_cast<T**>(NULL) = static_cast<S*>(NULL);               \
+  } while (false)
 
 
 namespace p = plankton;

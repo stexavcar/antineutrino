@@ -68,8 +68,10 @@ class PollockProcessor(object):
           placeholders.append((name, len(punctuation)))
         else:
           raise "Unknown matcher '%s'" % kind
+      elif part.isalpha():
+        punctuation.append(Punctuator(re.compile(r'\b%s\b' % part), len(part)))
       else:
-        punctuation.append(part)
+        punctuation.append(Punctuator(re.compile(re.escape(part)), len(part)))
     return (keyword, punctuation, placeholders)
 
   def add_rule(self, keyword, rule):
@@ -184,6 +186,13 @@ def count_regexp(str, regex):
   return count
 
 
+class Punctuator(object):
+
+  def __init__(self, pattern, size):
+    self.pattern = pattern
+    self.size = size
+
+
 kStartPattern = re.compile(r'[\(\[\{]')
 kEndPattern = re.compile(r'[\)\]\}]')
 def chunk_height(chunk):
@@ -197,13 +206,14 @@ def split_by_punctuation(input, punctuation):
     height = 0
     chunks = [ ]
     while True:
-      next_offset = input.find(elm, current_offset)
-      if next_offset == -1:
+      match = elm.pattern.search(input, current_offset)
+      if not match:
         return None
+      next_offset = match.start()
       chunk = input[current_offset:next_offset]
       height += chunk_height(chunk)
       chunks.append(chunk)
-      current_offset = next_offset + len(elm)
+      current_offset = next_offset + elm.size
       if height == 0:
         break
       else:
