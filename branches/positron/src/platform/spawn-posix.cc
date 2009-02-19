@@ -1,5 +1,4 @@
 #include "io/miniheap-inl.h"
-#include "plankton/plankton-inl.h"
 #include "platform/spawn.h"
 #include "utils/check-inl.h"
 #include "utils/smart-ptrs-inl.h"
@@ -325,12 +324,12 @@ boole ChildProcess::open(string &command, vector<string> &args,
     for (word i = 0; i < env.length(); i++) {
       string_stream stream;
       stream.add("%=%", vargs(env[i].first(), env[i].second()));
-      env_arr[i] = strdup(stream.raw_c_str().start());
+      env_arr[i] = strdup(stream.raw_string().start());
     }
     string_stream stream;
     stream.add("%=%:%", vargs(kMasterEnvVariable, there.in_fd(),
         there.out_fd()));
-    env_arr[env.length()] = strdup(stream.raw_c_str().start());
+    env_arr[env.length()] = strdup(stream.raw_string().start());
     env_arr[env.length() + 1] = NULL;
     ::execve(file, arg_arr.start(), env_arr.start());
     assert false;

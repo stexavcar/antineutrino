@@ -18,14 +18,23 @@ typedef unsigned __int64 uint64_t;
 
 namespace neutrino {
 
+template <typename T> class allocation;
 class Arena;
+class Descriptor;
 class Factory;
 class MiniHeap;
 class MessageIn;
 class MessageOut;
 class pattern;
+template <typename T> class persistent;
+class persistent_cell;
+template <typename T> class ref;
+class RefManager;
+class Runtime;
+class Space;
 class string_stream;
 class s_exp;
+class Value;
 class variant_type;
 template <typename T> class variant_type_impl;
 

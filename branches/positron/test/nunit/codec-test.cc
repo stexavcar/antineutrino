@@ -30,7 +30,7 @@ static void test_base64(string plain, string encoded) {
     for (word i = 0; i < plain.length(); i++)
       encoder.add(plain[i]);
     encoder.flush();
-    assert stream.raw_c_str() == string(encoded);
+    assert stream.raw_string() == string(encoded);
   }
   {
     string_stream stream;
@@ -38,7 +38,7 @@ static void test_base64(string plain, string encoded) {
     for (word i = 0; i < encoded.length(); i++)
       decoder.add(encoded[i]);
     assert decoder.flush();
-    assert stream.raw_c_str() == string(plain);
+    assert stream.raw_string() == string(plain);
   }
   {
     string_stream stream;
@@ -47,7 +47,7 @@ static void test_base64(string plain, string encoded) {
     for (word i = 0; i < plain.length(); i++)
       encoder.add(plain[i]);
     encoder.flush();
-    assert stream.raw_c_str() == string(plain);
+    assert stream.raw_string() == string(plain);
   }
 }
 
@@ -79,13 +79,13 @@ static void test_serialization(p::Value value, string expected) {
     Serializer<string_stream> serializer(stream);
     serializer.serialize(value);
   }
-  StringReader reader(stream.raw_c_str());
+  StringReader reader(stream.raw_string());
   Deserializer<StringReader> deserializer(reader);
   p::Value result = deserializer.deserialize();
   string_stream str;
   variant var = value;
   str.add("%", vargs(result));
-  assert str.raw_c_str() == expected;
+  assert str.raw_string() == expected;
 }
 
 TEST(serialize) {

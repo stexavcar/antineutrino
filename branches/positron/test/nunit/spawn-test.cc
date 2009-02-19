@@ -29,7 +29,7 @@ boole TestChildProcess::open(const string &test_name) {
   args[1] = "--spawned";
   string_stream full_test_name;
   full_test_name.add("spawn-test/%", vargs(test_name));
-  args[2] = full_test_name.raw_c_str();
+  args[2] = full_test_name.raw_string();
   embed_vector<pair<string, string>, 2> env;
   env[0] = pair<string, string>("foo", "bar");
   return ChildProcess::open(self, args, env);

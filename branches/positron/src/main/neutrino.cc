@@ -5,10 +5,13 @@
 
 #include "io/read.h"
 #include "plankton/plankton-inl.h"
+#include "runtime/heap-inl.h"
 #include "utils/log.h"
 #include "utils/vector-inl.h"
 #include "utils/flags.h"
 #include "utils/smart-ptrs-inl.h"
+#include "value/condition-inl.h"
+#include "value/value.h"
 
 namespace neutrino {
 
@@ -84,11 +87,10 @@ void report_error(string name, string contents, Location loc) {
     stream.add(' ');
   for (word i = loc.start; i <= loc.end; i++)
     stream.add('^');
-  stream.raw_c_str().println();
+  stream.raw_string().println();
 }
 
-
-void main(vector<const char*> args) {
+boole start(vector<const char*> args) {
   Abort::install_signal_handlers();
   MainOptions options;
   vector<string> values = options.parse(args);
@@ -101,8 +103,16 @@ void main(vector<const char*> args) {
     if (expr == NULL) {
       Location loc = parser.error_location();
       report_error(options.files()[i], file, loc);
-      return;
+      return FatalError::make(FatalError::feAbort);
     }
+  }
+  return Success::make();
+}
+
+void main(vector<const char*> args) {
+  boole result = start(args);
+  if (!result.has_succeeded()) {
+    LOG().error("Execution error: %", vargs(result.failure()));
   }
 }
 

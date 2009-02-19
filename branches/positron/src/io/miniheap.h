@@ -29,7 +29,6 @@ public:
   virtual bool value_eq(p::Value that, p::Value other);
   virtual void *value_impl_id(p::Value that);
 
-
   static MiniHeapDTable &static_instance() { return kStaticInstance; }
   MiniHeap &heap() { return *heap_; }
   MiniHeapObject open(p::Value obj);

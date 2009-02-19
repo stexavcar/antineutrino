@@ -16,6 +16,9 @@ Value::Value(const char *str)
   : data_(reinterpret_cast<word>(str))
   , dtable_(String::char_ptr_dtable()) { }
 
+String::String(const char *str)
+  : Value(str) { }
+
 LiteralArray Array::of(Value v0, Value v1, Value v2, Value v3,
     Value v4, Value v5) {
   return LiteralArray(v0, v1, v2, v3, v4, v5);

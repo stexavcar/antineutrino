@@ -11,10 +11,12 @@ public:
 #ifdef ARRAY_BOUNDS_CHECKS
   array(T *data, word length) : data_(data), length_(length) { }
   array() : data_(NULL), length_(0) { }
+  word length() { return length_; }
 #else
   array(T *data) : data_(data) { }
   array() : data_(NULL) { }
 #endif // ARRAY_BOUNDS_CHECKS
+  bool is_empty() { return data_ == NULL; }
   T &operator[](word offset);
   const T &operator[](word offset) const;
   array<T> from(word start);

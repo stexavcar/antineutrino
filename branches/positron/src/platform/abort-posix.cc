@@ -15,7 +15,7 @@ namespace neutrino {
 void Abort::abort(string format, const var_args &vars) {
   string_stream buf;
   buf.add(format, vars);
-  ::fprintf(stderr, "%s", buf.raw_c_str().start());
+  ::fprintf(stderr, "%s", buf.raw_string().start());
   ::abort();
 }
 

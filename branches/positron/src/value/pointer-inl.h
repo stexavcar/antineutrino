@@ -29,6 +29,11 @@ word Pointer::signal_payload(Signal *that) {
   return (value >> kTagSize) & ((1 << kSignalPayloadSize) - 1);
 }
 
+bool Pointer::is_object(Data *that) {
+  uword value = reinterpret_cast<uword>(that);
+  return (value & kTagMask) == kObjectTag;
+}
+
 } // namespace neutrino
 
 #endif // _VALUE_POINTER_INL

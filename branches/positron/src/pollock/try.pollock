@@ -1,5 +1,11 @@
 case: try parse ${type:expr} * ${name:expr} = ${value:expr} ;
 emit: pTryParse(${type}, ${name}, ${value});
 
+case: try alloc { ${heap:expr} } ${type:expr} * ${name:expr} ( ${args:expr} );
+emit: pTryAlloc(${heap}, ${type}, ${name}, (${args}));
+
+case: try ${type:expr} * ${name:expr} = ${value:expr} ;
+emit: pTryDeclare(${type}, ${name}, ${value});
+
 case: try ${x:expr} ;
 emit: p${domain}Try(${x});

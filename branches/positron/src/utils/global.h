@@ -2,6 +2,7 @@
 #define _UTILS_GLOBAL
 
 #include <cstdlib>
+#include <new>
 
 #include "utils/pollock.h"
 #include "utils/types.h"
@@ -38,6 +39,7 @@ private:
 };
 
 static const word kWordSize = sizeof(word);
+static const word kPointerSize = sizeof(void*);
 
 /**
  * Returns the new extended capacity given that the current capacity
@@ -49,7 +51,12 @@ static inline word grow_value(word n) {
   return ((n << 3) + (n << 2) + n) >> 3;
 }
 
+static inline word round_to_power_of_two(word value, word boundary) {
+  return value + (-value & (boundary - 1));
+}
+
 #define KB * 1024
+#define MB * 1024 KB
 
 class SourceLocation {
 public:

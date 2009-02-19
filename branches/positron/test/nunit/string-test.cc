@@ -9,7 +9,7 @@ static void try_format(string format, const var_args &args,
     string expected) {
   string_stream stream;
   stream.add(format, args);
-  string result = stream.raw_c_str();
+  string result = stream.raw_string();
   assert result == expected;
 }
 

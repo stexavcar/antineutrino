@@ -52,7 +52,7 @@ void Log::info(string format, const var_args &elms) {
   buf.add("[%] I %:%: %",
       vargs(format_current_time(time_buf), string(location().short_name()),
           location().line(), format_bundle(format, elms)));
-  buf.raw_c_str().println();
+  buf.raw_string().println();
 }
 
 
@@ -63,7 +63,7 @@ void Log::warn(string format, const var_args &elms) {
   buf.add("[%] W %:%: %",
       vargs(format_current_time(time_buf), string(location().short_name()),
           location().line(), format_bundle(format, elms)));
-  buf.raw_c_str().println();
+  buf.raw_string().println();
 }
 
 
@@ -74,7 +74,7 @@ void Log::error(string format, const var_args &elms) {
   buf.add("[%] E %:%: %",
       vargs(format_current_time(time_buf), string(location().short_name()),
           location().line(), format_bundle(format, elms)));
-  buf.raw_c_str().println();
+  buf.raw_string().println();
 }
 
 

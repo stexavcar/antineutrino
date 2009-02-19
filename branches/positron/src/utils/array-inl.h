@@ -29,4 +29,11 @@ const T &array<T>::operator[](word offset) const {
 
 } // namespace neutrino
 
+inline void *operator new(size_t size, neutrino::array<uint8_t> data) {
+#ifdef ARRAY_BOUNDS_CHECKS
+  assert size <= static_cast<size_t>(data.length());
+#endif
+  return data.start();
+}
+
 #endif // _UTILS_ARRAY_INL

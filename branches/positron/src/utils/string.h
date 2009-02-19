@@ -103,7 +103,7 @@ public:
   // string stream's internal character buffer.  The returned string
   // is only valid as long as this string stream exists and until the
   // next call to 'add'.
-  string raw_c_str();
+  string raw_string();
 
   // Sets a string that will be inserted after every newline.
   void set_indent(string str) { indent_ = str; }

@@ -30,6 +30,15 @@
 
 #endif
 
+#define pTryDeclare(__Type__, __name__, __value__)                   \
+  __Type__ *__name__ = NULL;                                         \
+  do {                                                               \
+    allocation<__Type__> __result__ = __value__;                     \
+    if (__result__.has_failed())                                     \
+      return __result__.failure();                                   \
+    __name__ = __result__.value();                                   \
+  } while (false)
+
 #define pNeutrinoTry(__expr__)                                       \
   do {                                                               \
     boole __value__ = (__expr__);                                    \

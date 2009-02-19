@@ -66,7 +66,7 @@ void string_stream::add(string str) {
     add(str[i]);
 }
 
-string string_stream::raw_c_str() {
+string string_stream::raw_string() {
   buf().ensure_capacity(buf().length() + 1);
   buf()[buf().length()] = '\0';
   return string(buf().start(), buf().length());

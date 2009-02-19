@@ -79,7 +79,7 @@ public:
   inline bool operator<=(String other) const;
   inline bool operator>(String other) const;
   inline bool operator>=(String other) const;
-  inline String(const char *str) : Value(str) { }
+  inline String(const char *str);
   inline String(word data, DTable *dtable) : Value(data, dtable) { }
   inline String() : Value() { }
   static const Value::Type kTypeTag = Value::vtString;

@@ -11,9 +11,12 @@ public:
   static inline bool is_signal(Data *data);
   static inline Signal::Type signal_type(Signal *that);
   static inline word signal_payload(Signal *that);
+
+  static inline bool is_object(Data *data);
 private:
   static const uword kTagSize = 2;
   static const uword kTagMask = (1 << kTagSize) - 1;
+  static const uword kObjectTag = 0;
 
   static const uword kSignalTag = 3;
   static const uword kSignalPayloadSize = 10;
