@@ -21,16 +21,18 @@ private:
   Data *data_;
 };
 
-class boole : public maybe<Success, Signal> {
+template <typename T = Success>
+class likely : public maybe<T, FatalError> {
 public:
-  boole(Success *success) : maybe<Success, Signal>(success) { }
-  boole(Signal *signal) : maybe<Success, Signal>(signal) { }
+  likely(T *success) : maybe<T, FatalError>(success) { }
+  likely(FatalError *error) : maybe<T, FatalError>(error) { }
 };
 
-class likely : public maybe<Success, FatalError> {
+class boole : public maybe<Success, Signal> {
 public:
-  likely(Success *success) : maybe<Success, FatalError>(success) { }
-  likely(FatalError *error) : maybe<Success, FatalError>(error) { }
+  boole(likely<> other) : maybe<Success, Signal>(other.data()) { }
+  boole(Success *success) : maybe<Success, Signal>(success) { }
+  boole(Signal *signal) : maybe<Success, Signal>(signal) { }
 };
 
 template <typename T>

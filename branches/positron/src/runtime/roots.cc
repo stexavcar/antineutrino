@@ -1,5 +1,5 @@
 #include "runtime/heap-inl.h"
-#include "runtime/roots.h"
+#include "runtime/roots-inl.h"
 #include "value/value-inl.h"
 
 namespace neutrino {
@@ -11,23 +11,15 @@ Roots::Roots() {
 }
 
 boole Roots::initialize(Heap &heap) {
-  array<uint8_t> memory = heap.allocate(sizeof(DescriptorDescriptor));
-  if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
-  DescriptorDescriptor *descriptor_descriptor = new (memory) DescriptorDescriptor();
+  try alloc DescriptorDescriptor *descriptor_descriptor() in heap;
   descriptor_descriptor->set_descriptor(descriptor_descriptor);
   set_descriptor_descriptor(descriptor_descriptor);
+#define ALLOCATE_ROOT(n, Type, name, args)                           \
+  try alloc Type *name##_value(args) in heap;                        \
+  set_##name(name##_value);
+eSimpleRoots(ALLOCATE_ROOT)
+#undef ALLOCATE_ROOT
   return Success::make();
-}
-
-RootIterator::RootIterator(Roots &roots)
-    : roots_(roots), index_(0) { }
-
-bool RootIterator::has_next() {
-  return index_ < Roots::kCount;
-}
-
-Value **RootIterator::next() {
-  return roots_.get(index_++);
 }
 
 Value **Roots::get(word n) {

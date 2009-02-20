@@ -6,6 +6,9 @@
 #define assert
 #define try
 #define parse
+#define safealloc
+#define alloc
+#define in ;
 #endif
 
 #ifdef DEBUG

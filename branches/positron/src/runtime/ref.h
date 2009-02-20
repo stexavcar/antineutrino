@@ -6,32 +6,32 @@
 
 namespace neutrino {
 
-class abstract_ref_block : public nocopy {
+class abstract_protector : public nocopy {
 public:
-  inline abstract_ref_block(RefManager &refs);
-  inline ~abstract_ref_block();
+  inline abstract_protector(RefManager &refs);
+  inline ~abstract_protector();
   word count() { return count_; }
-  abstract_ref_block *prev() { return prev_; }
+  abstract_protector *prev() { return prev_; }
   inline array<Value*> entries();
 protected:
   word count_;
 private:
   RefManager &refs_;
-  abstract_ref_block *prev_;
+  abstract_protector *prev_;
 };
 
 template <word size = 16>
-class ref_block : public abstract_ref_block {
+class protector : public abstract_protector {
 public:
-  inline ref_block(RefManager &refs)
-    : abstract_ref_block(refs)
+  inline protector(RefManager &refs)
+    : abstract_protector(refs)
 #ifdef DEBUG
     , size_(size)
 #endif // DEBUG
     { }
   template <typename T> inline ref<T> operator()(T *val);
 private:
-  friend class abstract_ref_block;
+  friend class abstract_protector;
   IF(ccDebug, word size_);
   Value *entries_[size];
 };
@@ -46,8 +46,8 @@ public:
 
   template <class C> inline persistent<C> new_persistent(C *obj);
 
-  abstract_ref_block *top() { return top_; }
-  void set_top(abstract_ref_block *value) { top_ = value; }
+  abstract_protector *top() { return top_; }
+  void set_top(abstract_protector *value) { top_ = value; }
 
 private:
   friend class ref_iterator;
@@ -56,7 +56,7 @@ private:
 
   void dispose(persistent_cell &cell);
 
-  abstract_ref_block *top_;
+  abstract_protector *top_;
 
   buffer<persistent_cell*> &persistent_list() { return persistent_list_; }
   buffer<persistent_cell*> persistent_list_;
@@ -70,7 +70,7 @@ public:
   inline Value *&next();
 private:
   inline void advance();
-  abstract_ref_block *current_;
+  abstract_protector *current_;
   word next_index_;
 };
 

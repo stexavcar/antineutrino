@@ -12,6 +12,12 @@ public:
   static inline Signal::Type signal_type(Signal *that);
   static inline word signal_payload(Signal *that);
 
+  static inline ForwardPointer *tag_forward_pointer(Object *value);
+  static inline bool is_forward_pointer(Data *data);
+  static inline Object *forward_pointer_target(ForwardPointer *that);
+
+  static inline Object *as_object(uint8_t *addr);
+
   static inline bool is_object(Data *data);
 private:
   static const uword kTagSize = 2;
@@ -19,6 +25,7 @@ private:
   static const uword kObjectTag = 0;
 
   static const uword kSignalTag = 3;
+  static const uword kForwardPointerTag = kSignalTag;
   static const uword kSignalPayloadSize = 10;
 };
 

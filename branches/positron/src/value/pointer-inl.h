@@ -34,6 +34,25 @@ bool Pointer::is_object(Data *that) {
   return (value & kTagMask) == kObjectTag;
 }
 
+bool Pointer::is_forward_pointer(Data *that) {
+  word value = reinterpret_cast<word>(that);
+  return (value & kTagMask) == kForwardPointerTag;
+}
+
+Object *Pointer::forward_pointer_target(ForwardPointer *that) {
+  word value = reinterpret_cast<word>(that);
+  return reinterpret_cast<Object*>(value & ~kTagMask);
+}
+
+ForwardPointer *Pointer::tag_forward_pointer(Object *that) {
+  word value = reinterpret_cast<word>(that);
+  return reinterpret_cast<ForwardPointer*>(value | kTagMask);
+}
+
+Object *Pointer::as_object(uint8_t *addr) {
+  return reinterpret_cast<Object*>(addr);
+}
+
 } // namespace neutrino
 
 #endif // _VALUE_POINTER_INL

@@ -5,7 +5,11 @@
 #include "value/condition.h"
 
 #define eRoots(VISIT)                                                \
-  VISIT(0, Descriptor, descriptor_descriptor, descriptor_descriptor)
+  VISIT(0, DescriptorDescriptor, descriptor_descriptor, 0)           \
+  eSimpleRoots(VISIT)
+
+#define eSimpleRoots(VISIT)                                              \
+  VISIT(1, StringDescriptor, string_descriptor, (descriptor_descriptor))
 
 namespace neutrino {
 
@@ -19,7 +23,7 @@ public:
   Type *name() { return static_cast<Type*>(entries_[n]); }
 eRoots(DECLARE_ACCESSOR)
 #undef DECLARE_ACCESSOR
-  static const word kCount = 1;
+  static const word kCount = 2;
 private:
   embed_array<Value*, kCount> entries_;
 };

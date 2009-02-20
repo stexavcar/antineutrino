@@ -7,6 +7,9 @@ emit: pTryAllocInSpace(${space}, ${type}, ${name}, (${args}));
 case: try alloc ${type:expr} * ${name:expr} = ${value:expr} ;
 emit: pTryAlloc(${type}, ${name}, ${value});
 
+case: try alloc ref < ${type:expr} > ${name:expr} = ${value:expr} ;
+emit: pTrySafeAlloc(${type}, ${name}, ${value});
+
 case: try ${type:expr} * ${name:expr} = ${value:expr} ;
 emit: pTryDeclare(${type}, ${name}, ${value});
 

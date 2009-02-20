@@ -1,6 +1,9 @@
 #include "runtime/heap.h"
 #include "runtime/ref-inl.h"
+#include "runtime/roots-inl.h"
 #include "runtime/runtime.h"
+#include "utils/log.h"
+#include "value/condition-inl.h"
 #include "value/value-inl.h"
 
 namespace neutrino {
@@ -21,40 +24,49 @@ array<uint8_t> Heap::allocate(size_t size) {
   return space().allocate(size);
 }
 
-class FieldMigrator {
-public:
-  FieldMigrator(Space &from_space, Space &to_space)
-    : from_space_(from_space)
-    , to_space_(to_space) { }
-  void migrate_field(Value **field);
-private:
-  Space &from_space() { return from_space_; }
-  Space &to_space() { return to_space_; }
-  Space &from_space_;
-  Space &to_space_;
-};
-
-void FieldMigrator::migrate_field(Value **field) {
-  Value *val = *field;
-  if (!is<Object>(val)) return;
-  Object *obj = cast<Object>(val);
-  /*
-  void *header = obj->descriptor();
-  if (is<ForwardPointer>(header))
-    *field = cast<ForwardPointer>(header)->target()
-  */
-  Descriptor *desc = obj->descriptor();
-  allocation<Object> new_obj = desc->clone_object(obj, to_space());
-  *field = new_obj.value();
+allocation<String> Heap::new_string(word length) {
+  word size = String::size_in_memory(length);
+  array<uint8_t> memory = allocate(size);
+  if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
+  return new (memory) String(runtime().roots().string_descriptor(), length);
 }
 
-void Heap::collect_garbage() {
+allocation<String> Heap::new_string(string str) {
+  try alloc String *result = new_string(str.length());
+  array<code_point> chars = result->chars();
+  for (word i = 0; i < str.length(); i++)
+    chars[i] = str[i];
+  return result;
+}
+
+likely<> Heap::initialize() {
+  space_ = new Space();
+  return Success::make();
+}
+
+likely<> Heap::collect_garbage() {
+  LOG().info("Starting garbage collection", vargs());
   Space &from_space = space();
-  Space &to_space = other();
-  FieldMigrator migrator(from_space, to_space);
-  ref_iterator iter(runtime().refs());
-  while (iter.has_next())
-    migrator.migrate_field(&iter.next());
+  Space *to_space = new Space();
+  FieldMigrator migrator(from_space, *to_space);
+  // Shallow migration of roots and refs
+  RootIterator root_iter(runtime().roots());
+  while (root_iter.has_next())
+    migrator.migrate_field(root_iter.next());
+  ref_iterator ref_iter(runtime().refs());
+  while (ref_iter.has_next())
+    migrator.migrate_field(&ref_iter.next());
+  // Deep migration
+  SpaceIterator space_iter(*to_space);
+  while (space_iter.has_next()) {
+    Object *obj = space_iter.next();
+    Descriptor *desc = obj->descriptor();
+    desc->migrate_fields(obj, migrator);
+  }
+  delete &from_space;
+  space_ = to_space;
+  LOG().info("Done collecting garbage", vargs());
+  return Success::make();
 }
 
 } // namespace neutrino

@@ -18,7 +18,7 @@ inline persistent<C> RefManager::new_persistent(C *obj) {
 
 template <word n>
 template<typename T>
-inline ref<T> ref_block<n>::operator()(T *val) {
+inline ref<T> protector<n>::operator()(T *val) {
   word index = count_++;
   assert index < n;
   entries_[index] = val;
@@ -26,8 +26,8 @@ inline ref<T> ref_block<n>::operator()(T *val) {
 }
 
 
-array<Value*> abstract_ref_block::entries() {
-  ref_block<>* self = static_cast<ref_block<>*>(this);
+array<Value*> abstract_protector::entries() {
+  protector<>* self = static_cast<protector<>*>(this);
   return TO_ARRAY(Value*, self->entries_, self->size_);
 }
 
@@ -51,7 +51,7 @@ ref<C> ref<C>::empty() {
 }
 
 
-abstract_ref_block::abstract_ref_block(RefManager &refs)
+abstract_protector::abstract_protector(RefManager &refs)
     : count_(0)
     , refs_(refs)
     , prev_(refs.top()) {
@@ -59,7 +59,7 @@ abstract_ref_block::abstract_ref_block(RefManager &refs)
 }
 
 
-abstract_ref_block::~abstract_ref_block() {
+abstract_protector::~abstract_protector() {
   refs_.set_top(prev_);
 }
 
