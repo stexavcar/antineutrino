@@ -18,15 +18,27 @@ public:
 
   static inline Object *as_object(uint8_t *addr);
 
+  static inline bool fits_tagged_double(double value);
+  static inline bool fits_tagged_integer(word value);
+
   static inline bool is_object(Data *data);
-private:
-  static const uword kTagSize = 2;
+
+// private:
+  static const uword kTagSize = IF_ELSE(cc32, 2, 2);
   static const uword kTagMask = (1 << kTagSize) - 1;
   static const uword kObjectTag = 0;
 
   static const uword kSignalTag = 3;
   static const uword kForwardPointerTag = kSignalTag;
   static const uword kSignalPayloadSize = 10;
+
+#ifdef M64
+  static const uword kStolenDoubleBitsStart = 56;
+  static const uword kStolenDoubleBitsCount = 3;
+  static const uword kStolenDoubleBitsMask =
+    static_cast<uword>((1 << kStolenDoubleBitsCount) - 1) << kStolenDoubleBitsStart;
+#endif
+
 };
 
 } // namespace neutrino
