@@ -26,6 +26,13 @@ public:
   enum Type { tSpecies = Data::__last_data_type, tString, tArray, tInstance };
 };
 
+/* --- S m a l l   D o u b l e --- */
+
+class SmallDouble : public Value {
+public:
+  inline double value();
+};
+
 /* --- O b j e c t --- */
 
 class Object : public Value {

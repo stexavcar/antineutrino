@@ -19,25 +19,18 @@ typedef uint32_t code_point;
 template <typename T> struct coerce { typedef const T &type; };
 template <> struct coerce<const char*> { typedef string type; };
 
-class bool_wrapper_t {
+template <typename T>
+class wrapper_t {
 public:
-  explicit bool_wrapper_t(bool value) : value_(value) { }
-  bool operator*() { return value_; }
+  explicit wrapper_t(const T &value) : value_(value) { }
+  const T &operator*() { return value_; }
 private:
-  bool value_;
+  T value_;
 };
 
-template <> struct coerce<bool> { typedef bool_wrapper_t type; };
-
-class char_wrapper_t {
-public:
-  explicit char_wrapper_t(char value) : value_(value) { }
-  char operator*() { return value_; }
-private:
-  char value_;
-};
-
-template <> struct coerce<char> { typedef char_wrapper_t type; };
+template <> struct coerce<bool> { typedef wrapper_t<bool> type; };
+template <> struct coerce<char> { typedef wrapper_t<char> type; };
+template <> struct coerce<double> { typedef wrapper_t<double> type; };
 
 #define TYPE_CHECK(S, T)                                             \
   do {                                                               \
@@ -77,6 +70,14 @@ static inline word grow_value(word n) {
 
 static inline word round_to_power_of_two(word value, word boundary) {
   return value + (-value & (boundary - 1));
+}
+
+static inline uint64_t double_bits(double value) {
+  return *reinterpret_cast<uint64_t*>(&value);
+}
+
+static inline double make_double(uint64_t value) {
+  return *reinterpret_cast<double*>(&value);
 }
 
 #define KB * 1024

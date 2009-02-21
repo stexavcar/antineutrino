@@ -23,6 +23,11 @@ static inline bool is<Object>(Data *data) {
 }
 
 template <>
+static inline bool is<SmallDouble>(Data *data) {
+  return IF_ELSE(cc32, false, Pointer::is_small_double(data));
+}
+
+template <>
 static inline bool is<Signal>(Data *data) {
   return Pointer::is_signal(data);
 }
@@ -69,6 +74,10 @@ private:
 inline void encode_variant(variant &that, Data *value) {
   that.type_ = &DataFormatter::instance();
   that.data_.u_ptr = value;
+}
+
+double SmallDouble::value() {
+  return Pointer::untag_small_double(this);
 }
 
 Species *Object::species() {

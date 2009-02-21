@@ -4,6 +4,9 @@
 #include "value/pointer.h"
 #include "utils/check.h"
 
+#include "utils/log.h"
+#include "utils/string-inl.h"
+
 namespace neutrino {
 
 /* --- S i g n a l --- */
@@ -61,18 +64,36 @@ Object *Pointer::as_object(uint8_t *addr) {
 
 /* --- T a g g e d   D o u b l e --- */
 
-bool Pointer::fits_tagged_double(double value) {
+bool Pointer::fits_small_double(double value) {
 #ifdef M64
-  union {
-    double value;
-    uint64_t bits;
-  } u;
-  u.value = value;
-  return (u.bits & kStolenDoubleBitsMask) == 0;
+  return ((double_bits(value) - kDoubleBias) & kStolenDoubleBitsMask) == 0;
 #else
   return false;
 #endif // M64
 }
+
+#ifdef M64
+bool Pointer::is_small_double(Data *value) {
+  return (reinterpret_cast<uword>(value) & kTagMask) == kSmadTag;
+}
+
+SmallDouble *Pointer::tag_small_double(double value) {
+  assert fits_small_double(value);
+  static const uword kLowerMask = (static_cast<uword>(1) << kStolenDoubleBitsStart) - 1;
+  static const uword kUpperMask = (static_cast<uword>(1) << 63);
+  uword bits = double_bits(value) - kDoubleBias;
+  uword result = (bits & kUpperMask) | ((bits & kLowerMask) << kStolenDoubleBitsCount) | kSmadTag;
+  return reinterpret_cast<SmallDouble*>(result);
+}
+
+double Pointer::untag_small_double(SmallDouble *value) {
+  static const uword kLowerMask = (static_cast<uword>(1) << kStolenDoubleBitsStart) - 1;
+  static const uword kUpperMask = (static_cast<uword>(1) << 63);
+  uword bits = reinterpret_cast<uword>(value);
+  uword result = (bits & kUpperMask) | ((bits >> kStolenDoubleBitsCount) & kLowerMask);
+  return make_double(result + kDoubleBias);
+}
+#endif
 
 } // namespace neutrino
 

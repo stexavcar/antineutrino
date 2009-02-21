@@ -58,6 +58,7 @@ public:
   union {
     const void *u_ptr;
     word u_int;
+    double u_double;
     struct {
       word length;
       const char *chars;
@@ -184,7 +185,7 @@ public:
 };
 
 
-static inline void encode_variant(variant &that, char_wrapper_t value) {
+static inline void encode_variant(variant &that, wrapper_t<char> value) {
   that.type_ = &variant_type_impl<char>::kInstance;
   that.data_.u_int = *value;
 }
@@ -198,16 +199,27 @@ public:
   static variant_type_impl<bool> kInstance;
 };
 
-
-static inline void encode_variant(variant &that, bool_wrapper_t value) {
+static inline void encode_variant(variant &that, wrapper_t<bool> value) {
   that.type_ = &variant_type_impl<bool>::kInstance;
   that.data_.u_int = *value;
 }
 
-
 static inline void encode_variant(variant &that, void *value) {
   that.type_ = &variant_type_impl<word>::kInstance;
   that.data_.u_ptr = value;
+}
+
+template <>
+class variant_type_impl<double> : public variant_type {
+public:
+  virtual void print_on(const variant &that, string modifiers,
+      string_stream &stream);
+  static variant_type_impl<double> kInstance;
+};
+
+static inline void encode_variant(variant &that, wrapper_t<double> value) {
+  that.type_ = &variant_type_impl<double>::kInstance;
+  that.data_.u_double = *value;
 }
 
 

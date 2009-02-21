@@ -149,6 +149,26 @@ void variant_type_impl<bool>::print_on(const variant &that,
   buf.add(value ? "true" : "false");
 }
 
+variant_type_impl<double> variant_type_impl<double>::kInstance;
+
+void variant_type_impl<double>::print_on(const variant &that,
+    string modifiers, string_stream &buf) {
+  double value = that.data_.u_double;
+  if (modifiers.contains('b')) {
+    uint64_t bits = double_bits(value);
+    buf.add("[");
+    for (word i = 63; i >= 0; i--) {
+      if (i == 62 || i == 51) buf.add("|");
+      buf.add((bits >> i) & 1 ? "1" : "0");
+    }
+    buf.add("]");
+  } else {
+    embed_vector<char, 24> scratch;
+    sprintf(scratch.start(), "%f", value);
+    buf.add(scratch.start());
+  }
+}
+
 variant_type_impl<format_bundle> variant_type_impl<format_bundle>::kInstance;
 
 void variant_type_impl<format_bundle>::print_on(const variant &that,
