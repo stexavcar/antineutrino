@@ -49,8 +49,8 @@ static inline bool is<FatalError>(Data *data) {
 }
 
 template <>
-static inline bool is<Descriptor>(Data *data) {
-  return is<Object>(data) && cast<Object>(data)->type() == Value::tDescriptor;
+static inline bool is<Species>(Data *data) {
+  return is<Object>(data) && cast<Object>(data)->type() == Value::tSpecies;
 }
 
 template <>
@@ -58,30 +58,17 @@ static inline bool is<String>(Data *data) {
   return is<Object>(data) && cast<Object>(data)->type() == Value::tString;
 }
 
-Descriptor *Object::descriptor() {
-  Descriptor *result = static_cast<Descriptor*>(cast<Object>(header_));
-  printf("Getting descriptor of %x: %x, header: %x\n", this, result, header_);
+Species *Object::species() {
+  Species *result = static_cast<Species*>(cast<Object>(header_));
   return result;
 }
 
-void Object::set_descriptor(Descriptor *v) {
+void Object::set_species(Species *v) {
   header_ = v;
-  printf("Setting descriptor of %x: %x, header: %x\n", this, v, header_);
 }
 
 void Object::set_forwarding_header(ForwardPointer *v) {
   header_ = v;
-}
-
-template <typename O, typename S>
-allocation<Descriptor> DescriptorImpl<O, S>::clone(Space &space) {
-  pTryAllocInSpace(space, S, result, (*static_cast<S*>(this)));
-  return result;
-}
-
-template <typename O, typename S>
-word DescriptorImpl<O, S>::size_in_memory(Object *obj) {
-  return sizeof(O);
 }
 
 word Instance::size_in_memory(word fields) {
@@ -98,7 +85,7 @@ array<code_point> String::chars() {
 }
 
 Value::Type Object::type() {
-  return descriptor()->instance_type();
+  return species()->instance_type();
 }
 
 Signal::Type Signal::type() {

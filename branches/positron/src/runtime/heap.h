@@ -35,7 +35,7 @@ public:
   uint8_t *start() { return page().memory().start(); }
   uint8_t *limit() { return page().cursor(); }
 private:
-  static const word kPageSize = 1 KB;
+  static const word kPageSize = 8 KB;
   Page<kPageSize> &page() { return page_; }
   Page<kPageSize> page_;
 };
@@ -74,7 +74,7 @@ public:
   FieldMigrator(Space &from_space, Space &to_space)
     : from_space_(from_space)
     , to_space_(to_space) { }
-  template <typename T> void migrate_field(T **field);
+  void migrate_field(Value **field);
 private:
   Space &from_space() { return from_space_; }
   Space &to_space() { return to_space_; }

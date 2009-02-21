@@ -18,7 +18,7 @@ static inline C *cast(Data *data);
 
 class Value : public Data {
 public:
-  enum Type { tDescriptor, tString, tArray, tInstance };
+  enum Type { tSpecies, tString, tArray, tInstance };
 };
 
 template <> struct coerce<Value::Type> { typedef word type; };
@@ -27,50 +27,86 @@ template <> struct coerce<Value::Type> { typedef word type; };
 
 class Object : public Value {
 public:
-  inline explicit Object(Descriptor *descriptor);
+  inline explicit Object(Species *species);
   inline Type type();
-  inline Descriptor *descriptor();
-  inline void set_descriptor(Descriptor *v);
+  inline Species *species();
+  inline void set_species(Species *v);
   inline void set_forwarding_header(ForwardPointer *v);
+
+  inline void migrate_fields(FieldMigrator &migrator) { }
+
+  template <typename T>
+  static Object *clone_object(Species *desc, Object *obj);
+
+  template <typename T>
+  static word object_size_in_memory(Species *desc, Object *obj);
+
+  template <typename T>
+  static void migrate_object_fields(Species *desc, Object *obj,
+      FieldMigrator &migrator);
+
   Data *&header() { return header_; }
 private:
   Data *header_;
 };
 
-class Descriptor : public Object {
+struct Virtuals {
+  struct ObjectVirtuals {
+    // Clone the given object the given space.
+    allocation<Object> (*clone)(Species*, Object*, Space&);
+    // Return the size of a given object.
+    word (*size_in_memory)(Species*, Object*);
+    // Migrate the fields of an object.
+    void (*migrate_fields)(Species*, Object*, FieldMigrator&);
+  };
+  struct SpeciesVirtuals {
+    // Clone yourself in the given space.
+    allocation<Species> (*clone)(Species*, Space&);
+    // Return the size of yourself.
+    word (*size_in_memory)(Species*);
+    // Migrate your own fields.
+    void (*migrate_fields)(Species*, FieldMigrator&);
+  };
+  ObjectVirtuals object;
+  SpeciesVirtuals species;
+};
+
+class Species : public Object {
 public:
-  Descriptor(Descriptor *meta, Type instance_type)
+  Species(Species *meta, Type instance_type, Virtuals &virtuals)
     : Object(meta)
-    , instance_type_(instance_type) { }
+    , instance_type_(instance_type)
+    , virtuals_(virtuals) { }
   Type instance_type() { return instance_type_; }
-  virtual allocation<Object> clone_object(Object *obj, Space &space) = 0;
-  virtual allocation<Descriptor> clone(Space &space) = 0;
-  virtual word size_in_memory(Object *obj) = 0;
-  virtual void migrate_fields(Object *obj, FieldMigrator &migrator);
+  Virtuals &virtuals() { return virtuals_; }
+  static Virtuals &species_virtuals() { return kSpeciesVirtuals; }
+
+  template <typename T>
+  static allocation<Species> clone_species(Species *desc, Space &space);
+
+  template <typename T>
+  static word species_size_in_memory(Species *desc);
+
+  template <typename T>
+  static void migrate_species_fields(Species *desc, FieldMigrator &migrator);
+
+  template <typename T>
+  static allocation<Object> clone_object(Species *desc, Object *obj, Space &space);
+
+  template <typename T>
+  static word object_size_in_memory(Species *desc, Object *obj);
+
+  template <typename T>
+  static void migrate_object_fields(Species *desc, Object *obj,
+      FieldMigrator &migrator);
+
 private:
+  static Virtuals kSpeciesVirtuals;
   Type instance_type_;
+  Virtuals &virtuals_;
 };
 
-Object::Object(Descriptor *descriptor)
-  : header_(descriptor) {
-  printf("Initializing descriptor of %x: %x, header: %x\n", this, descriptor, header_);
-}
-
-template <typename O, typename S>
-class DescriptorImpl : public Descriptor {
-public:
-  DescriptorImpl(Descriptor *meta, Type instance_type)
-    : Descriptor(meta, instance_type) { }
-  virtual allocation<Descriptor> clone(Space &space);
-  virtual word size_in_memory(Object *obj);
-};
-
-class DescriptorDescriptor : public DescriptorImpl<Descriptor, DescriptorDescriptor> {
-public:
-  DescriptorDescriptor()
-    : DescriptorImpl<Descriptor, DescriptorDescriptor>(NULL, tDescriptor) { }
-  virtual allocation<Object> clone_object(Object *obj, Space &space);
-};
+Object::Object(Species *species) : header_(species) { }
 
 /* --- I n s t a n c e --- */
 
@@ -79,15 +115,18 @@ public:
   static inline word size_in_memory(word fields);
 };
 
-class InstanceDescriptor : public DescriptorImpl<Instance, InstanceDescriptor> {
+class InstanceSpecies : public Species {
 public:
-  InstanceDescriptor(Descriptor *meta, word field_count)
-    : DescriptorImpl<Instance, InstanceDescriptor>(meta, tInstance)
+  InstanceSpecies(Species *meta, word field_count)
+    : Species(meta, tInstance, kVirtuals)
     , field_count_(field_count) { }
   word field_count() { return field_count_; }
-  virtual allocation<Object> clone_object(Object *obj, Space &space);
-  virtual word size_in_memory(Object *obj);
+
+  template <typename T>
+  static word object_size_in_memory(Species *desc, Object *obj);
+
 private:
+  static Virtuals kVirtuals;
   word field_count_;
 };
 
@@ -95,22 +134,32 @@ private:
 
 class String : public Object {
 public:
-  String(Descriptor *descriptor, word length)
-    : Object(descriptor)
+  String(Species *species, word length)
+    : Object(species)
     , length_(length) { }
-  static inline word size_in_memory(word chars);
+
   inline array<code_point> chars();
   word length() { return length_; }
+  bool equals(const string &str);
+
+  template <typename T>
+  static allocation<Object> clone_object(Species *desc, Object *obj,
+      Space &space);
+
+  template <typename T>
+  static word object_size_in_memory(Species *desc, Object *obj);
+
+  static inline word size_in_memory(word chars);
+
 private:
   word length_;
 };
 
-class StringDescriptor : public DescriptorImpl<String, StringDescriptor> {
+class StringSpecies : public Species {
 public:
-  StringDescriptor(Descriptor *meta)
-    : DescriptorImpl<String, StringDescriptor>(meta, tString) { }
-  virtual allocation<Object> clone_object(Object *obj, Space &space);
-  virtual word size_in_memory(Object *obj);
+  StringSpecies(Species *meta) : Species(meta, tString, kVirtuals) { }
+private:
+  static Virtuals kVirtuals;
 };
 
 /* --- A r r a y --- */

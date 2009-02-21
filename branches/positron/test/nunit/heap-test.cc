@@ -27,7 +27,7 @@ TRY_TEST(simple_allocation) {
 }
 
 TRY_TEST(trigger_collection) {
-  static const word kSaved = 100;
+  static const word kSaved = 10;
   static const word kSteps = 1000;
   Runtime runtime;
   try runtime.initialize();
@@ -41,6 +41,11 @@ TRY_TEST(trigger_collection) {
       try alloc ref<String> str = runtime.gc_safe().new_string(stream.raw_string());
       if (j == 0) {
         saved[i] = outer_protect(*str);
+      }
+      for (word k = 0; k <= i; k++) {
+        string_stream stream;
+        stream.add("str-%-0", vargs(k));
+        assert (saved[k]->equals(stream.raw_string()));
       }
     }
   }

@@ -16,27 +16,9 @@ bool SpaceIterator::has_next() {
 
 Object *SpaceIterator::next() {
   Object* result = Pointer::as_object(cursor_);
-  Descriptor *desc = result->descriptor();
-  cursor_ += desc->size_in_memory(result);
+  Species *desc = result->species();
+  cursor_ += desc->virtuals().object.size_in_memory(desc, result);
   return result;
-}
-
-template <typename T>
-void FieldMigrator::migrate_field(T **field) {
-  T *val = *field;
-  if (!is<Object>(val)) return;
-  Object *old_obj = cast<Object>(val);
-  Data *header = old_obj->header();
-  if (is<ForwardPointer>(header)) {
-    *field = cast<ForwardPointer>(header)->target();
-    return;
-  }
-  Descriptor *desc = old_obj->descriptor();
-  allocation<Object> alloced = desc->clone_object(old_obj, to_space());
-  assert alloced.has_succeeded();
-  Object *new_obj = alloced.value();
-  old_obj->set_forwarding_header(ForwardPointer::make(new_obj));
-  *field = new_obj;
 }
 
 #define pTryAllocInSpace(space, Type, name, ARGS)                    \

@@ -20,7 +20,7 @@ namespace neutrino {
 
 template <typename T> class allocation;
 class Arena;
-class Descriptor;
+class Species;
 class Factory;
 class FieldMigrator;
 class ForwardPointer;
@@ -35,6 +35,7 @@ template <typename T> class ref;
 class RefManager;
 class Runtime;
 class Space;
+class string;
 class string_stream;
 class s_exp;
 class Value;

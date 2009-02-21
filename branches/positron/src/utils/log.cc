@@ -10,7 +10,7 @@ namespace neutrino {
 class LogOptions : public OptionCollection {
 public:
   LogOptions() {
-    REGISTER_FLAG(log_level, Log::INFO);
+    REGISTER_FLAG(log_level, Log::WARN);
   }
   Log::Verbosity log_level() { return static_cast<Log::Verbosity>(log_level_); }
 private:

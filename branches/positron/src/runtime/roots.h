@@ -5,11 +5,11 @@
 #include "value/condition.h"
 
 #define eRoots(VISIT)                                                \
-  VISIT(0, DescriptorDescriptor, descriptor_descriptor, 0)           \
+  VISIT(0, Species, species_species, 0)                        \
   eSimpleRoots(VISIT)
 
-#define eSimpleRoots(VISIT)                                              \
-  VISIT(1, StringDescriptor, string_descriptor, (descriptor_descriptor))
+#define eSimpleRoots(VISIT)                                          \
+  VISIT(1, StringSpecies, string_species, (species_species))
 
 namespace neutrino {
 

@@ -11,9 +11,10 @@ Roots::Roots() {
 }
 
 boole Roots::initialize(Heap &heap) {
-  try alloc DescriptorDescriptor *descriptor_descriptor() in heap;
-  descriptor_descriptor->set_descriptor(descriptor_descriptor);
-  set_descriptor_descriptor(descriptor_descriptor);
+  Virtuals &helper = Species::species_virtuals();
+  try alloc Species *species_species(NULL, Value::tSpecies, helper) in heap;
+  species_species->set_species(species_species);
+  set_species_species(species_species);
 #define ALLOCATE_ROOT(n, Type, name, args)                           \
   try alloc Type *name##_value(args) in heap;                        \
   set_##name(name##_value);

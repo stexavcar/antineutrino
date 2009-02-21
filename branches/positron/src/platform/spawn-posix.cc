@@ -40,10 +40,10 @@ p::Object SpawnService::create() {
 
 REGISTER_SERVICE(neutrino.platform.spawn, SpawnService::create);
 
-class close_file_descriptor {
+class close_file_species {
 public:
   static void release(int fd) {
-    LOG().info("Closed file descriptor %", vargs(fd));
+    LOG().info("Closed file species %", vargs(fd));
     close(fd);
   }
 };
@@ -107,8 +107,8 @@ private:
   int in() { return *in_; }
   int out() { return *out_; }
   HalfChannel channel_;
-  own_resource<int, close_file_descriptor> in_;
-  own_resource<int, close_file_descriptor> out_;
+  own_resource<int, close_file_species> in_;
+  own_resource<int, close_file_species> out_;
 };
 
 word FileSocket::write(const vector<uint8_t> &data) {

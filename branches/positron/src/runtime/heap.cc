@@ -28,7 +28,7 @@ allocation<String> Heap::new_string(word length) {
   word size = String::size_in_memory(length);
   array<uint8_t> memory = allocate(size);
   if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
-  return new (memory) String(runtime().roots().string_descriptor(), length);
+  return new (memory) String(runtime().roots().string_species(), length);
 }
 
 allocation<String> Heap::new_string(string str) {
@@ -42,6 +42,23 @@ allocation<String> Heap::new_string(string str) {
 likely<> Heap::initialize() {
   space_ = new Space();
   return Success::make();
+}
+
+void FieldMigrator::migrate_field(Value **field) {
+  Value *val = *field;
+  if (!is<Object>(val)) return;
+  Object *old_obj = cast<Object>(val);
+  Data *header = old_obj->header();
+  if (is<ForwardPointer>(header)) {
+    *field = cast<ForwardPointer>(header)->target();
+    return;
+  }
+  Species *desc = old_obj->species();
+  allocation<Object> alloced = desc->virtuals().object.clone(desc, old_obj, to_space());
+  assert alloced.has_succeeded();
+  Object *new_obj = alloced.value();
+  old_obj->set_forwarding_header(ForwardPointer::make(new_obj));
+  *field = new_obj;
 }
 
 likely<> Heap::collect_garbage() {
@@ -60,8 +77,8 @@ likely<> Heap::collect_garbage() {
   SpaceIterator space_iter(*to_space);
   while (space_iter.has_next()) {
     Object *obj = space_iter.next();
-    Descriptor *desc = obj->descriptor();
-    desc->migrate_fields(obj, migrator);
+    Species *desc = obj->species();
+    desc->virtuals().object.migrate_fields(desc, obj, migrator);
   }
   delete &from_space;
   space_ = to_space;
