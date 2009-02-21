@@ -79,10 +79,6 @@ private:
 };
 
 
-template <>
-struct coerce<ResourceState> { typedef word type; };
-
-
 template <typename T>
 class own_vector : public nocopy {
 public:

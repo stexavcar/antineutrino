@@ -26,8 +26,6 @@ public:
   enum Type { tSpecies = Data::__last_data_type, tString, tArray, tInstance };
 };
 
-template <> struct coerce<Value::Type> { typedef word type; };
-
 /* --- O b j e c t --- */
 
 class Object : public Value {
@@ -188,8 +186,6 @@ public:
   inline word payload();
 };
 
-template <> struct coerce<Signal::Type> { typedef word type; };
-
 class Success : public Signal {
 public:
   static inline Success *make();
@@ -204,15 +200,11 @@ public:
   static inline InternalError *make(Type type);
 };
 
-template <> struct coerce<InternalError::Type> { typedef word type; };
-
 class FatalError : public Failure {
 public:
   enum Type { feOutOfMemory, feAbort };
   static inline FatalError *make(Type type);
 };
-
-template <> struct coerce<FatalError::Type> { typedef word type; };
 
 } // namespace neutrino
 

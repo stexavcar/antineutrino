@@ -116,8 +116,6 @@ private:
   vector<s_exp*> elements_;
 };
 
-template <> struct coerce<SexpScanner::Token> { typedef word type; };
-
 template <typename T>
 static inline bool is(s_exp *exp);
 

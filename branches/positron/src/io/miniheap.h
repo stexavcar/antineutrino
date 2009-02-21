@@ -135,8 +135,6 @@ private:
   own_ptr<MiniHeap> owned_;
 };
 
-template <> struct coerce<p::Value::Type> { typedef word type; };
-
 template <class T>
 static inline bool is(p::Value obj);
 
