@@ -184,9 +184,9 @@ public:
 };
 
 
-static inline void encode_variant(variant &that, char value) {
+static inline void encode_variant(variant &that, char_wrapper_t value) {
   that.type_ = &variant_type_impl<char>::kInstance;
-  that.data_.u_int = value;
+  that.data_.u_int = *value;
 }
 
 
@@ -199,9 +199,15 @@ public:
 };
 
 
-static inline void encode_variant(variant &that, bool value) {
+static inline void encode_variant(variant &that, bool_wrapper_t value) {
   that.type_ = &variant_type_impl<bool>::kInstance;
-  that.data_.u_int = value;
+  that.data_.u_int = *value;
+}
+
+
+static inline void encode_variant(variant &that, void *value) {
+  that.type_ = &variant_type_impl<word>::kInstance;
+  that.data_.u_ptr = value;
 }
 
 

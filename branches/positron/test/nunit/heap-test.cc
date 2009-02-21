@@ -51,3 +51,48 @@ TRY_TEST(trigger_collection) {
   }
   return Success::make();
 }
+
+class Allocator {
+public:
+  boole initialize() { return runtime().initialize(); }
+  Object *allocate(word type);
+  static const word kTypeCount = 1;
+  Runtime &runtime() { return runtime_; }
+private:
+  Runtime runtime_;
+};
+
+Object *Allocator::allocate(word type) {
+  assert 0 <= type;
+  assert type < kTypeCount;
+  GcSafe &gc_safe = runtime().gc_safe();
+  switch (type) {
+  case 0:
+    return gc_safe.new_string("squid can't win").value();
+  default:
+    assert false;
+    return NULL;
+  }
+}
+
+TRY_TEST(iteration) {
+  static const word kIterations = 3 * Allocator::kTypeCount;
+  Allocator allocator;
+  try allocator.initialize();
+  protector<kIterations> protect(allocator.runtime().refs());
+  embed_array<Object*, kIterations> objs;
+  for (word i = 0; i < kIterations; i++) {
+    ref<Object> obj = protect(allocator.allocate(i % Allocator::kTypeCount));
+    objs[i] = *obj;
+    SpaceIterator iter(allocator.runtime().heap().space());
+    for (word j = 0; j <= i; j++) {
+      assert iter.has_next();
+      Object *current = iter.next();
+      while (current < objs[j] && iter.has_next())
+        current = iter.next();
+      assert current == objs[j];
+    }
+    assert !iter.has_next();
+  }
+  return Success::make();
+}

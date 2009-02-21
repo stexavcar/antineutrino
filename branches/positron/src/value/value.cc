@@ -17,12 +17,35 @@ namespace neutrino {
     }                                                                \
   }
 
+/* --- D a t a --- */
+
+Data::DataType Data::type() {
+  if (is<Signal>(this)) {
+    return dtSignal;
+  } else if (is<Object>(this)) {
+    return static_cast<DataType>(cast<Object>(this)->type());
+  } else {
+    return dtUnknown;
+  }
+}
+
+DataFormatter DataFormatter::kInstance;
+
+void DataFormatter::print_on(const variant &that, string modifiers,
+      string_stream &stream) {
+  stream.add("%{x}", vargs(reinterpret_cast<word>(that.data_.u_ptr)));
+}
+
 /* --- O b j e c t --- */
 
 template <typename T>
 void Object::migrate_object_fields(Species *desc, Object *obj,
     FieldMigrator &migrator) {
   return static_cast<T*>(obj)->migrate_fields(migrator);
+}
+
+void Object::migrate_fields(FieldMigrator &migrator) {
+  migrator.migrate_field(reinterpret_cast<Value**>(&header()));
 }
 
 /* --- S p e c i e s --- */

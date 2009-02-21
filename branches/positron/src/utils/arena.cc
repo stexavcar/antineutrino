@@ -1,5 +1,6 @@
 #include "utils/arena-inl.h"
 #include "utils/check-inl.h"
+#include "utils/smart-ptrs-inl.h"
 
 namespace neutrino {
 

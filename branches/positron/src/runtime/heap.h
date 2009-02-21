@@ -16,13 +16,14 @@ namespace neutrino {
 template <word L>
 class Page : public nocopy {
 public:
-  Page()
-    : cursor_(memory().start())
-    , limit_(memory().start() + L) { }
+  Page();
   uint8_t *cursor() { return cursor_; }
   void set_cursor(uint8_t *v) { cursor_ = v; }
   uint8_t *limit() { return limit_; }
   array<uint8_t> &memory() { return memory_; }
+  void zap(word filler);
+  static const word kBeforeZapValue = IF_ELSE(cc64, 0xDeeeeeadBeeeeeef, 0xDeadBeef);
+  static const word kAfterZapValue = IF_ELSE(cc64, 0xFeeeeeadBeeeeeee, 0xFeedBeee);
 private:
   embed_array<uint8_t, L> memory_;
   uint8_t *cursor_;
@@ -34,7 +35,11 @@ public:
   array<uint8_t> allocate(size_t size);
   uint8_t *start() { return page().memory().start(); }
   uint8_t *limit() { return page().cursor(); }
+  void zap() { page().zap(Page<kPageSize>::kAfterZapValue); }
+  static inline uint8_t *align(uint8_t *ptr);
+  static inline word align(word size);
 private:
+  static const word kAlignment = kPointerSize;
   static const word kPageSize = 8 KB;
   Page<kPageSize> &page() { return page_; }
   Page<kPageSize> page_;
@@ -62,9 +67,9 @@ public:
 eAllocators(MAKE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
   likely<> collect_garbage();
+  Space &space() { return *space_; }
 private:
   Runtime &runtime() { return runtime_; }
-  Space &space() { return *space_; }
   Runtime &runtime_;
   Space *space_;
 };

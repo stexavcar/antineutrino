@@ -3,12 +3,17 @@
 
 #include "utils/array.h"
 #include "utils/global.h"
+#include "utils/string.h"
 
 namespace neutrino {
 
 class Data {
-
+public:
+  enum DataType { dtSignal, dtUnknown, __last_data_type };
+  DataType type();
 };
+
+inline void encode_variant(variant &that, Data *value);
 
 template <class C>
 static inline bool is(Data *data);
@@ -18,7 +23,7 @@ static inline C *cast(Data *data);
 
 class Value : public Data {
 public:
-  enum Type { tSpecies, tString, tArray, tInstance };
+  enum Type { tSpecies = Data::__last_data_type, tString, tArray, tInstance };
 };
 
 template <> struct coerce<Value::Type> { typedef word type; };
@@ -33,7 +38,7 @@ public:
   inline void set_species(Species *v);
   inline void set_forwarding_header(ForwardPointer *v);
 
-  inline void migrate_fields(FieldMigrator &migrator) { }
+  void migrate_fields(FieldMigrator &migrator);
 
   template <typename T>
   static Object *clone_object(Species *desc, Object *obj);

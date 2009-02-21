@@ -89,7 +89,7 @@ void variant_type_impl<word>::print_on(const variant &that, string modifiers,
   bool flush_right = true;
   word min_length = 0;
   word pad_char = ' ';
-  word radix = 10;
+  word radix = modifiers.contains('x') ? 16 : 10;
 
   // Convert the number to a string in a temporary buffer
   const char kTempSize = 24;

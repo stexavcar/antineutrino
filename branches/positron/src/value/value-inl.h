@@ -1,7 +1,6 @@
 #ifndef _VALUE_VALUE_INL
 #define _VALUE_VALUE_INL
 
-#include "runtime/heap-inl.h"
 #include "value/condition.h"
 #include "value/pointer-inl.h"
 #include "utils/check-inl.h"
@@ -56,6 +55,20 @@ static inline bool is<Species>(Data *data) {
 template <>
 static inline bool is<String>(Data *data) {
   return is<Object>(data) && cast<Object>(data)->type() == Value::tString;
+}
+
+class DataFormatter : public variant_type {
+public:
+  static DataFormatter &instance() { return kInstance; }
+  virtual void print_on(const variant &that, string modifiers,
+      string_stream &stream);
+private:
+  static DataFormatter kInstance;
+};
+
+inline void encode_variant(variant &that, Data *value) {
+  that.type_ = &DataFormatter::instance();
+  that.data_.u_ptr = value;
 }
 
 Species *Object::species() {

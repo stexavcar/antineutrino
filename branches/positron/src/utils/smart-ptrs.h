@@ -31,7 +31,7 @@ class own_ptr : public nocopy {
 public:
   own_ptr() : value_(NULL) { }
   own_ptr(T *value) : value_(value) { }
-  ~own_ptr();
+  inline ~own_ptr();
 
   /**
    * Returns the pointer owned by this class, while letting the class
@@ -88,7 +88,7 @@ class own_vector : public nocopy {
 public:
   own_vector() { }
   own_vector(vector<T> value) : value_(value) { }
-  ~own_vector();
+  inline ~own_vector();
 
   inline T *start() { return value_.start(); }
   inline T &operator[](word index) { return value_[index]; }

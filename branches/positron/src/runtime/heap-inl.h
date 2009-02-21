@@ -3,8 +3,33 @@
 
 #include "runtime/heap.h"
 #include "value/pointer-inl.h"
+#include "value/value-inl.h"
 
 namespace neutrino {
+
+template <word L>
+Page<L>::Page()
+    : cursor_(Space::align(memory().start()))
+    , limit_(memory().start() + L) {
+  IF(ccDebug, zap(kBeforeZapValue));
+}
+
+template <word L>
+void Page<L>::zap(word filler) {
+  word length = L / sizeof(word);
+  array<word> data = TO_ARRAY(word,
+      reinterpret_cast<word*>(memory().start()), length);
+  for (word i = 0; i < length; i++)
+    data[i] = filler;
+}
+
+uint8_t *Space::align(uint8_t *ptr) {
+  return reinterpret_cast<uint8_t*>(align(reinterpret_cast<word>(ptr)));
+}
+
+word Space::align(word size) {
+  return round_to_power_of_two(size, kAlignment);
+}
 
 SpaceIterator::SpaceIterator(Space &space)
     : space_(space), cursor_(space.start()) {
@@ -16,8 +41,16 @@ bool SpaceIterator::has_next() {
 
 Object *SpaceIterator::next() {
   Object* result = Pointer::as_object(cursor_);
-  Species *desc = result->species();
-  cursor_ += desc->virtuals().object.size_in_memory(desc, result);
+  Species *desc;
+  Data *header = result->header();
+  if (is<ForwardPointer>(header)) {
+    Object *target = cast<ForwardPointer>(header)->target();
+    desc = static_cast<Species*>(target);
+  } else {
+    desc = static_cast<Species*>(cast<Object>(header));
+  }
+  word size = desc->virtuals().object.size_in_memory(desc, result);
+  cursor_ += Space::align(size);
   return result;
 }
 

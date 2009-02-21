@@ -1,4 +1,4 @@
-#include "runtime/heap.h"
+#include "runtime/heap-inl.h"
 #include "runtime/ref-inl.h"
 #include "runtime/roots-inl.h"
 #include "runtime/runtime.h"
@@ -9,7 +9,7 @@
 namespace neutrino {
 
 array<uint8_t> Space::allocate(size_t size) {
-  size = round_to_power_of_two(size, kWordSize);
+  size = align(size);
   uint8_t *start = page().cursor();
   uint8_t *next = start + size;
   if (next >= page().limit()) {
@@ -53,8 +53,8 @@ void FieldMigrator::migrate_field(Value **field) {
     *field = cast<ForwardPointer>(header)->target();
     return;
   }
-  Species *desc = old_obj->species();
-  allocation<Object> alloced = desc->virtuals().object.clone(desc, old_obj, to_space());
+  Species *species = old_obj->species();
+  allocation<Object> alloced = species->virtuals().object.clone(species, old_obj, to_space());
   assert alloced.has_succeeded();
   Object *new_obj = alloced.value();
   old_obj->set_forwarding_header(ForwardPointer::make(new_obj));
@@ -80,6 +80,7 @@ likely<> Heap::collect_garbage() {
     Species *desc = obj->species();
     desc->virtuals().object.migrate_fields(desc, obj, migrator);
   }
+  IF(ccDebug, from_space.zap());
   delete &from_space;
   space_ = to_space;
   LOG().info("Done collecting garbage", vargs());

@@ -31,6 +31,7 @@ public:
     { }
   template <typename T> inline ref<T> operator()(T *val);
 private:
+  static const word kZapValue = IF_ELSE(cc64, 0xBaaaaaadDaaaaaad, 0xBaadDaad);
   friend class abstract_protector;
   IF(ccDebug, word size_);
   Value *entries_[size];

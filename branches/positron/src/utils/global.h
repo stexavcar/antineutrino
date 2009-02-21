@@ -17,12 +17,27 @@ typedef uint32_t code_point;
 
 
 template <typename T> struct coerce { typedef const T &type; };
-template <> struct coerce<size_t> { typedef word type; };
-template <> struct coerce<int32_t> { typedef word type; };
-template <> struct coerce<uint32_t> { typedef word type; };
-template <> struct coerce<int64_t> { typedef word type; };
-template <> struct coerce<uint64_t> { typedef word type; };
+template <> struct coerce<const char*> { typedef string type; };
 
+class bool_wrapper_t {
+public:
+  explicit bool_wrapper_t(bool value) : value_(value) { }
+  bool operator*() { return value_; }
+private:
+  bool value_;
+};
+
+template <> struct coerce<bool> { typedef bool_wrapper_t type; };
+
+class char_wrapper_t {
+public:
+  explicit char_wrapper_t(char value) : value_(value) { }
+  char operator*() { return value_; }
+private:
+  char value_;
+};
+
+template <> struct coerce<char> { typedef char_wrapper_t type; };
 
 #define TYPE_CHECK(S, T)                                             \
   do {                                                               \
@@ -90,6 +105,14 @@ private:
 #else
 #define ccDebug(then_part, else_part) else_part
 #define ccArrayBoundsChecks(then_part, else_part) else_part
+#endif
+
+#ifdef M32
+#define cc32(then_part, else_part) then_part
+#define cc64(then_part, else_part) else_part
+#else
+#define cc32(then_part, else_part) else_part
+#define cc64(then_part, else_part) then_part
 #endif
 
 #define SEMI_STATIC_JOIN(a, b) SEMI_STATIC_JOIN_HELPER(a, b)

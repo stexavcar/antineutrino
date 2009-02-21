@@ -3,6 +3,7 @@
 
 #include "plankton/codec.h"
 #include "plankton/plankton-inl.h"
+#include "utils/smart-ptrs-inl.h"
 
 namespace neutrino {
 
