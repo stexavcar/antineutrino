@@ -4,6 +4,8 @@
 
 using namespace neutrino;
 
+#ifdef M64
+
 class Double {
 public:
   Double(double value) : value_(value) { }
@@ -50,7 +52,7 @@ static double pow(double x, word n) {
 }
 
 TEST(range_fits) {
-  static const word kRemainingBits = Pointer::kDoubleExponentSize - Pointer::kStolenDoubleBitsCount;
+  static const word kRemainingBits = 8;
   static const word kOffset = (1 << (kRemainingBits - 1));
   static const word kStolenLimit = (1 << kRemainingBits) - 1;
   static const double kLimit = pow(2.0, kStolenLimit / 2);
@@ -68,3 +70,5 @@ TEST(range_fits) {
     }
   }
 }
+
+#endif

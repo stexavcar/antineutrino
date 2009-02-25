@@ -9,7 +9,8 @@
 
 #define eAllocators(VISIT)                                           \
   VISIT(String, new_string, (word length), (length))                 \
-  VISIT(String, new_string, (string str), (str))
+  VISIT(String, new_string, (string str), (str))                     \
+  VISIT(Array,  new_array,  (word length), (length))
 
 namespace neutrino {
 

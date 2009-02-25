@@ -9,7 +9,8 @@
   eSimpleRoots(VISIT)
 
 #define eSimpleRoots(VISIT)                                          \
-  VISIT(1, StringSpecies, string_species, (species_species))
+  VISIT(1, Species, string_species, (species_species, Value::tString, String::virtuals())) \
+  VISIT(2, Species, array_species, (species_species, Value::tArray, Array::virtuals()))
 
 namespace neutrino {
 
@@ -23,7 +24,7 @@ public:
   Type *name() { return static_cast<Type*>(entries_[n]); }
 eRoots(DECLARE_ACCESSOR)
 #undef DECLARE_ACCESSOR
-  static const word kCount = 2;
+  static const word kCount = 3;
 private:
   embed_array<Value*, kCount> entries_;
 };

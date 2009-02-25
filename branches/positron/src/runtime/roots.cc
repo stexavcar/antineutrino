@@ -16,7 +16,7 @@ boole Roots::initialize(Heap &heap) {
   species_species->set_species(species_species);
   set_species_species(species_species);
 #define ALLOCATE_ROOT(n, Type, name, args)                           \
-  try alloc Type *name##_value(args) in heap;                        \
+  pTryAllocInSpace(heap, Type, name##_value, args);                  \
   set_##name(name##_value);
 eSimpleRoots(ALLOCATE_ROOT)
 #undef ALLOCATE_ROOT

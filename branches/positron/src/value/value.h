@@ -46,7 +46,8 @@ public:
   void migrate_fields(FieldMigrator &migrator);
 
   template <typename T>
-  static Object *clone_object(Species *desc, Object *obj);
+  static allocation<Object> clone_object(Species *desc, Object *obj,
+      Space &space);
 
   template <typename T>
   static word object_size_in_memory(Species *desc, Object *obj);
@@ -101,7 +102,8 @@ public:
   static void migrate_species_fields(Species *desc, FieldMigrator &migrator);
 
   template <typename T>
-  static allocation<Object> clone_object(Species *desc, Object *obj, Space &space);
+  static allocation<Object> clone_object(Species *desc, Object *obj,
+      Space &space);
 
   template <typename T>
   static word object_size_in_memory(Species *desc, Object *obj);
@@ -118,6 +120,36 @@ private:
 
 Object::Object(Species *species) : header_(species) { }
 
+/* --- A r r a y --- */
+
+class Array : public Object {
+public:
+  Array(Species *species, word length)
+    : Object(species)
+    , length_(length) { }
+
+  inline array<Value*> elements();
+  inline void set(word index, Value *value);
+  inline Value *get(word index);
+  inline word length() { return length_; }
+
+  void migrate_fields(FieldMigrator &migrator);
+  static inline word size_in_memory(word elements);
+
+  template <typename T>
+  static allocation<Object> clone_object(Species *desc, Object *obj,
+      Space &space);
+
+  template <typename T>
+  static word object_size_in_memory(Species *desc, Object *obj);
+
+  static Virtuals &virtuals() { return kVirtuals; }
+
+private:
+  word length_;
+  static Virtuals kVirtuals;
+};
+
 /* --- I n s t a n c e --- */
 
 class Instance : public Object {
@@ -131,9 +163,6 @@ public:
     : Species(meta, tInstance, kVirtuals)
     , field_count_(field_count) { }
   word field_count() { return field_count_; }
-
-  template <typename T>
-  static word object_size_in_memory(Species *desc, Object *obj);
 
 private:
   static Virtuals kVirtuals;
@@ -161,21 +190,11 @@ public:
 
   static inline word size_in_memory(word chars);
 
+  static Virtuals &virtuals() { return kVirtuals; }
+
 private:
   word length_;
-};
-
-class StringSpecies : public Species {
-public:
-  StringSpecies(Species *meta) : Species(meta, tString, kVirtuals) { }
-private:
   static Virtuals kVirtuals;
-};
-
-/* --- A r r a y --- */
-
-class Array : public Object {
-
 };
 
 /* --- S i g n a l --- */

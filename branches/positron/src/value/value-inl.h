@@ -52,15 +52,18 @@ static inline bool is<FatalError>(Data *data) {
   return is<Signal>(data) && cast<Signal>(data)->type() == Signal::sFatalError;
 }
 
-template <>
-static inline bool is<Species>(Data *data) {
-  return is<Object>(data) && cast<Object>(data)->type() == Value::tSpecies;
-}
+#define MAKE_OBJECT_PREDICATE(__Type__)                              \
+  template <>                                                        \
+  static inline bool is<__Type__>(Data *data) {                      \
+    return is<Object>(data)                                          \
+        && cast<Object>(data)->type() == Value::t##__Type__;         \
+  }
 
-template <>
-static inline bool is<String>(Data *data) {
-  return is<Object>(data) && cast<Object>(data)->type() == Value::tString;
-}
+MAKE_OBJECT_PREDICATE(Array)
+MAKE_OBJECT_PREDICATE(String)
+MAKE_OBJECT_PREDICATE(Species)
+
+#undef MAKE_OBJECT_PREDICATE
 
 class DataFormatter : public variant_type {
 public:
@@ -76,9 +79,13 @@ inline void encode_variant(variant &that, Data *value) {
   that.data_.u_ptr = value;
 }
 
+#ifdef M64
 double SmallDouble::value() {
   return Pointer::untag_small_double(this);
 }
+#endif
+
+/* --- O b j e c t --- */
 
 Species *Object::species() {
   Species *result = static_cast<Species*>(cast<Object>(header_));
@@ -93,9 +100,30 @@ void Object::set_forwarding_header(ForwardPointer *v) {
   header_ = v;
 }
 
+/* --- A r r a y --- */
+
+word Array::size_in_memory(word elements) {
+  return sizeof(Array) + sizeof(Value*) * elements;
+}
+
 word Instance::size_in_memory(word fields) {
   return sizeof(Instance) + (sizeof(Value*) * fields);
 }
+
+array<Value*> Array::elements() {
+  uint8_t *start = reinterpret_cast<uint8_t*>(this) + sizeof(Array);
+  return TO_ARRAY(Value*, reinterpret_cast<Value**>(start), length_);
+}
+
+void Array::set(word index, Value *value) {
+  elements()[index] = value;
+}
+
+Value *Array::get(word index) {
+  return elements()[index];
+}
+
+/* --- S t r i n g --- */
 
 word String::size_in_memory(word chars) {
   return sizeof(String) + sizeof(code_point) * chars ;

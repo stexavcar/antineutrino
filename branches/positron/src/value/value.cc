@@ -48,6 +48,29 @@ void Object::migrate_fields(FieldMigrator &migrator) {
   migrator.migrate_field(reinterpret_cast<Value**>(&header()));
 }
 
+template <typename T>
+allocation<Object> Object::clone_object(Species *desc, Object *obj,
+    Space &space) {
+  T *old = cast<T>(obj);
+  word size = desc->virtuals().object.size_in_memory(desc, obj);
+  array<uint8_t> memory = space.allocate(size);
+  if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
+  return new (memory) T(*old);
+}
+
+template <typename T>
+word Object::object_size_in_memory(Species *species, Object *obj) {
+  return sizeof(T);
+}
+
+template <typename T>
+static word object_size_in_memory(Species *desc, Object *obj);
+
+template <typename T>
+static void migrate_object_fields(Species *desc, Object *obj,
+    FieldMigrator &migrator);
+
+
 /* --- S p e c i e s --- */
 
 template <typename T>
@@ -90,6 +113,38 @@ void Species::migrate_species_fields(Species *desc,
 
 DECLARE_VIRTUALS(Species::kSpeciesVirtuals, Species, Species);
 
+/* --- A r r a y --- */
+
+template <typename T>
+word Array::object_size_in_memory(Species *desc, Object *obj) {
+  return Array::size_in_memory(cast<Array>(obj)->length());
+}
+
+template <typename T>
+allocation<Object> Array::clone_object(Species *species, Object *obj,
+    Space &space) {
+  Array *old = cast<Array>(obj);
+  word length = old->length();
+  word size = Array::size_in_memory(length);
+  array<uint8_t> memory = space.allocate(size);
+  if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
+  Array *result = new (memory) Array(*old);
+  array<Value*> from = old->elements();
+  array<Value*> to = result->elements();
+  from.copy_to(to, length);
+  return result;
+}
+
+void Array::migrate_fields(FieldMigrator &migrator) {
+  Object::migrate_fields(migrator);
+  word n = length();
+  array<Value*> elms = elements();
+  for (word i = 0; i < n; i++)
+    migrator.migrate_field(&elms[i]);
+}
+
+DECLARE_VIRTUALS(Array::kVirtuals, Array, Species);
+
 /* --- S t r i n g --- */
 
 template <typename T>
@@ -108,8 +163,7 @@ allocation<Object> String::clone_object(Species *desc, Object *obj,
   String *result = new (memory) String(*old);
   array<code_point> from = old->chars();
   array<code_point> to = result->chars();
-  for (word i = 0; i < length; i++)
-    to[i] = from[i];
+  from.copy_to(to, length);
   return result;
 }
 
@@ -122,6 +176,6 @@ bool String::equals(const string &str) {
   return true;
 }
 
-DECLARE_VIRTUALS(StringSpecies::kVirtuals, String, StringSpecies);
+DECLARE_VIRTUALS(String::kVirtuals, String, Species);
 
 } // namespace neutrino

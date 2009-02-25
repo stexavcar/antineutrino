@@ -21,6 +21,7 @@ public:
   const T &operator[](word offset) const;
   array<T> from(word start);
   T *start() { return data_; }
+  inline void copy_to(array<T> that, word length);
 private:
   T *data_;
   IF(ccArrayBoundsChecks, word length_);

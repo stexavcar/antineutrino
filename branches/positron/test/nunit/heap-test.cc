@@ -26,6 +26,31 @@ TRY_TEST(simple_allocation) {
   return Success::make();
 }
 
+TRY_TEST(array_allocation) {
+  Runtime runtime;
+  try runtime.initialize();
+  protector<2> protect(runtime.refs());
+  static const word size = 5;
+  try alloc ref<Array> array = runtime.gc_safe().new_array(size);
+  try alloc ref<String> str = runtime.gc_safe().new_string("blaf");
+  for (word i = 0; i < size; i++) {
+    ref<Value> value;
+    if (i % 2 == 0) value = array;
+    else value = str;
+    array->set(i, *value);
+  }
+  Array *old_array = *array;
+  runtime.heap().collect_garbage();
+  assert *array != old_array;
+  for (word i = 0; i < size; i++) {
+    ref<Value> expected;
+    if (i % 2 == 0) expected = array;
+    else expected = str;
+    assert array->get(i) == *expected;
+  }
+  return Success::make();
+}
+
 TRY_TEST(trigger_collection) {
   static const word kSaved = 10;
   static const word kSteps = 1000;

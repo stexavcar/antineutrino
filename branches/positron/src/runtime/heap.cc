@@ -39,6 +39,14 @@ allocation<String> Heap::new_string(string str) {
   return result;
 }
 
+allocation<Array> Heap::new_array(word length) {
+  word size = Array::size_in_memory(length);
+  array<uint8_t> memory = allocate(size);
+  if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
+  Array *result = new (memory) Array(runtime().roots().array_species(), length);
+  return result;
+}
+
 likely<> Heap::initialize() {
   space_ = new Space();
   return Success::make();
