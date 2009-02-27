@@ -11,7 +11,7 @@ namespace neutrino {
 class Runtime : public nocopy {
 public:
   Runtime() : heap_(*this), gc_safe_(heap()) { }
-  boole initialize();
+  possibly initialize();
   Heap &heap() { return heap_; }
   GcSafe &gc_safe() { return gc_safe_; }
   RefManager &refs() { return refs_; }

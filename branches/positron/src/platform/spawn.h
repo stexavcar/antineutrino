@@ -16,8 +16,8 @@ public:
   ParentProcess();
   ~ParentProcess();
   p::Object proxy();
-  boole open();
-  boole receive(MessageIn &message);
+  possibly open();
+  possibly receive(MessageIn &message);
 private:
   Data *data() { return *data_; }
   own_ptr<Data> data_;
@@ -29,10 +29,10 @@ public:
   ChildProcess();
   ~ChildProcess();
   p::Object proxy();
-  boole open(string &command, vector<string> &args,
+  possibly open(string &command, vector<string> &args,
       vector< pair<string, string> > &env);
   word wait();
-  boole receive(MessageIn &message);
+  possibly receive(MessageIn &message);
 private:
   Data *data() { return *data_; }
   own_ptr<Data> data_;

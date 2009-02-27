@@ -6,44 +6,50 @@
 namespace neutrino {
 
 template <typename S, typename F>
-class maybe {
+class option {
 public:
-  maybe(S *s) : data_(s) { }
-  maybe(F *f) : data_(f) { }
+  option(S *s) : data_(s) { }
+  option(F *f) : data_(f) { }
   inline S *value() { return cast<S>(data_); }
   inline F *failure() { return cast<F>(data_); }
   inline bool has_succeeded();
   inline bool has_failed();
   Data *data() { return data_; }
 protected:
-  maybe(Data *data) : data_(data) { }
+  option(Data *data) : data_(data) { }
 private:
   Data *data_;
 };
 
-template <typename T = Success>
-class likely : public maybe<T, FatalError> {
+template <class T>
+class likely : public option<T, FatalError> {
 public:
-  likely(T *success) : maybe<T, FatalError>(success) { }
-  likely(FatalError *error) : maybe<T, FatalError>(error) { }
+  likely(T *success) : option<T, FatalError>(success) { }
+  likely(FatalError *error) : option<T, FatalError>(error) { }
 };
 
-class boole : public maybe<Success, Signal> {
+class probably : public option<Success, FatalError> {
 public:
-  boole(likely<> other) : maybe<Success, Signal>(other.data()) { }
-  boole(Success *success) : maybe<Success, Signal>(success) { }
-  boole(Signal *signal) : maybe<Success, Signal>(signal) { }
+  probably(Success *success) : option<Success, FatalError>(success) { }
+  probably(FatalError *signal) : option<Success, FatalError>(signal) { }
+};
+
+class possibly : public option<Success, Signal> {
+public:
+  possibly(probably other) : option<Success, Signal>(other.data()) { }
+  possibly(Success *success) : option<Success, Signal>(success) { }
+  possibly(Signal *signal) : option<Success, Signal>(signal) { }
 };
 
 template <typename T>
-class allocation : public maybe<T, InternalError> {
+class allocation : public option<T, InternalError> {
 public:
-  allocation(T *value) : maybe<T, InternalError>(value) { }
+  allocation(T *value) : option<T, InternalError>(value) { }
   template <typename S>
-  allocation(allocation<S> other) : maybe<T, InternalError>(other.data()) {
+  allocation(allocation<S> other) : option<T, InternalError>(other.data()) {
     TYPE_CHECK(S, T);
   }
-  allocation(InternalError *error) : maybe<T, InternalError>(error) { }
+  allocation(InternalError *error) : option<T, InternalError>(error) { }
 };
 
 } // namespace neutrino

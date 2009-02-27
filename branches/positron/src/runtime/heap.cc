@@ -47,7 +47,7 @@ allocation<Array> Heap::new_array(word length) {
   return result;
 }
 
-likely<> Heap::initialize() {
+probably Heap::initialize() {
   space_ = new Space();
   return Success::make();
 }
@@ -69,7 +69,7 @@ void FieldMigrator::migrate_field(Value **field) {
   *field = new_obj;
 }
 
-likely<> Heap::collect_garbage() {
+probably Heap::collect_garbage() {
   LOG().info("Starting garbage collection", vargs());
   Space &from_space = space();
   Space *to_space = new Space();

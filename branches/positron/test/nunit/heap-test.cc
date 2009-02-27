@@ -79,7 +79,7 @@ TRY_TEST(trigger_collection) {
 
 class Allocator {
 public:
-  boole initialize() { return runtime().initialize(); }
+  possibly initialize() { return runtime().initialize(); }
   Object *allocate(word type);
   static const word kTypeCount = 1;
   Runtime &runtime() { return runtime_; }

@@ -15,12 +15,14 @@ typedef unsigned __int64 uint64_t;
 #include <stdint.h>
 #endif
 
+typedef uint16_t code_t;
 
 namespace neutrino {
 
 template <typename T> class allocation;
 class Arena;
-class Species;
+class CodeStream;
+class DisassembleContext;
 class Factory;
 class FieldMigrator;
 class ForwardPointer;
@@ -35,6 +37,7 @@ template <typename T> class ref;
 class RefManager;
 class Runtime;
 class Space;
+class Species;
 class string;
 class string_stream;
 class s_exp;

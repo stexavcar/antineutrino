@@ -34,7 +34,7 @@ static bool is_alphabetic(code_point cp) {
 static bool is_pseudo_alphabetic(code_point cp) {
   switch (cp) {
     case '-': case '.': case '_': case ':': case '*': case '+':
-    case '=':
+    case '=': case '!':
       return true;
     default:
       return false;
@@ -45,8 +45,12 @@ static bool is_numeric(code_point cp) {
   return ('0' <= cp && cp <= '9');
 }
 
+static bool is_token_start_character(code_point cp) {
+  return is_alphabetic(cp) || is_pseudo_alphabetic(cp);
+}
+
 static bool is_token_character(code_point cp) {
-  return is_alphabetic(cp) || is_numeric(cp) || is_pseudo_alphabetic(cp);
+  return is_token_start_character(cp) || is_numeric(cp);
 }
 
 void SexpScanner::advance() {
@@ -98,7 +102,7 @@ SexpScanner::Token SexpScanner::next() {
       result = tRight;
       break;
     default:
-      if (is_alphabetic(cp)) {
+      if (is_token_start_character(cp)) {
         last_string_ = scan_token();
         result = tString;
       } else if (is_numeric(cp)) {

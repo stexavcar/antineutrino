@@ -24,6 +24,10 @@ void string_stream::add(string format, const var_args &args) {
           index = arg_cursor++;
         } else if (i + 1 < format.length()) {
           c = format[++i];
+          if (c == '%' || c == '@') {
+            add(c);
+            break;
+          }
           assert '0' <= c;
           assert c <= '9';
           index = (c - '0');

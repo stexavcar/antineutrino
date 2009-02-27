@@ -134,8 +134,9 @@ template <class C>
 class persistent : public ref<C> {
 public:
   inline persistent(persistent_cell *storage)
-    : ref<C>(reinterpret_cast<C**>(storage->cell()))
+    : ref<C>(storage->cell())
     , storage_(storage) { }
+  void set(Value *value) { *storage_->cell() = value; }
   inline persistent() : ref<C>(), storage_(0) { }
   inline void dispose() { if (storage_) storage_->refs_.dispose(*storage_); }
 private:

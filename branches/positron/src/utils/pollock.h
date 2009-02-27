@@ -42,9 +42,9 @@
     __name__ = __result__.value();                                   \
   } while (false)
 
-#define pNeutrinoTry(__expr__)                                       \
+#define pNeutrinoTry(__type__, __expr__)                             \
   do {                                                               \
-    boole __value__ = (__expr__);                                    \
+    __type__ __value__ = (__expr__);                                 \
     if (!__value__.has_succeeded())                                  \
       return __value__.failure();                                    \
   } while (false)

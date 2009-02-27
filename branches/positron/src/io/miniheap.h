@@ -110,14 +110,14 @@ private:
 
 class IStream {
 public:
-  virtual boole send_reply(MessageIn &message, p::Value value) = 0;
+  virtual possibly send_reply(MessageIn &message, p::Value value) = 0;
 };
 
 class MessageIn {
 public:
   MessageIn() : stream_(NULL), is_synchronous_(false), has_replied_(false) { }
   inline ~MessageIn();
-  boole reply(p::Value value);
+  possibly reply(p::Value value);
   void set_selector(p::String v) { selector_ = v; }
   p::String selector() { return selector_; }
   void set_args(p::Array v) { args_ = v; }

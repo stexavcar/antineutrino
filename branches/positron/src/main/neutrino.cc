@@ -3,9 +3,12 @@
 
 #include <stdio.h>
 
+#include "code/ast.h"
 #include "io/read.h"
 #include "plankton/plankton-inl.h"
+#include "runtime/gc-safe-inl.h"
 #include "runtime/heap-inl.h"
+#include "runtime/runtime-inl.h"
 #include "utils/log.h"
 #include "utils/vector-inl.h"
 #include "utils/flags.h"
@@ -48,7 +51,7 @@ static string read_file(string name) {
   rewind(file);
   own_vector<uint8_t> buffer(vector<uint8_t>::allocate(size));
   uint8_t *cursor = buffer.start();
-  for (word i = 0; i < size / kWordSize;) {
+  for (word i = 0; i < size;) {
     word count = fread(cursor, 1, size, file);
     if (count <= 0) {
       fclose(file);
@@ -90,7 +93,7 @@ void report_error(string name, string contents, Location loc) {
   stream.raw_string().println();
 }
 
-boole start(vector<const char*> args) {
+possibly start(vector<const char*> args) {
   Abort::install_signal_handlers();
   MainOptions options;
   vector<string> values = options.parse(args);
@@ -105,12 +108,22 @@ boole start(vector<const char*> args) {
       report_error(options.files()[i], file, loc);
       return FatalError::make(FatalError::feAbort);
     }
+    Runtime runtime;
+    try runtime.initialize();
+    CodeStream code(runtime);
+    code.add(expr);
+    string_stream str;
+    protector<1> protect(runtime.refs());
+    try alloc ref<Array> literals = code.literals();
+    vector<code_t> instrs = code.data();
+    CodeStream::disassemble(instrs, literals, str);
+    str.raw_string().println();
   }
   return Success::make();
 }
 
 void main(vector<const char*> args) {
-  boole result = start(args);
+  possibly result = start(args);
   if (!result.has_succeeded()) {
     LOG().error("Execution error: %", vargs(result.failure()));
   }

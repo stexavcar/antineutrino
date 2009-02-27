@@ -11,12 +11,12 @@ namespace neutrino {
   static void punit_test_##name()
 
 #define TRY_TEST(name)                                               \
-  static boole punit_test_##name();                                  \
+  static possibly punit_test_##name();                               \
   static void punit_bridge_##name() {                                \
     assert punit_test_##name().has_succeeded();                      \
   }                                                                  \
   static UnitTest punit_##name(__FILE__, #name, punit_bridge_##name);\
-  static boole punit_test_##name()
+  static possibly punit_test_##name()
 
 } // namespace neutrino
 

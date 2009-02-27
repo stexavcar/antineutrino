@@ -4,7 +4,7 @@
 
 namespace neutrino {
 
-boole Runtime::initialize() {
+possibly Runtime::initialize() {
   try heap().initialize();
   try roots().initialize(heap());
   return Success::make();

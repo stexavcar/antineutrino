@@ -12,7 +12,7 @@ using namespace neutrino;
 
 class TestChildProcess : public ChildProcess {
 public:
-  boole open(const string &test_name);
+  possibly open(const string &test_name);
   ~TestChildProcess();
 };
 
@@ -22,7 +22,7 @@ TestChildProcess::~TestChildProcess() {
 }
 
 
-boole TestChildProcess::open(const string &test_name) {
+possibly TestChildProcess::open(const string &test_name) {
   string self = UnitTest::args()[0];
   embed_vector<string, 3> args;
   args[0] = self;

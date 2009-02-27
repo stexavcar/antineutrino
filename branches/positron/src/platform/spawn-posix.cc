@@ -53,7 +53,7 @@ public:
 class Pipe {
 public:
   Pipe() : read_fd_(0), write_fd_(0) { }
-  boole open();
+  possibly open();
   int read_fd() { return read_fd_; }
   int write_fd() { return write_fd_; }
 private:
@@ -67,11 +67,11 @@ class HalfChannel {
 public:
   HalfChannel(int in_fd, int out_fd)
     : in_fd_(in_fd), out_fd_(out_fd) { }
-  boole set_remain_open_on_exec();
+  possibly set_remain_open_on_exec();
   int in_fd() const { return in_fd_; }
   int out_fd() const { return out_fd_; }
 private:
-  static boole set_remain_open_on_exec(int fd);
+  static possibly set_remain_open_on_exec(int fd);
   int in_fd_;
   int out_fd_;
 };
@@ -79,7 +79,7 @@ private:
 // A duplex communication channel made up of two pipes.
 class Channel {
 public:
-  boole open();
+  possibly open();
   HalfChannel there() { return HalfChannel(to().read_fd(), from().write_fd()); }
   HalfChannel here() { return HalfChannel(from().read_fd(), to().write_fd()); }
 private:
@@ -99,8 +99,8 @@ public:
   word read(vector<uint8_t> data);
   void send_message(MiniHeap &heap, p::String name, p::Array args,
       bool is_synchronous);
-  boole receive_message(MessageIn &message);
-  boole send_reply(MessageIn &message, p::Value value);
+  possibly receive_message(MessageIn &message);
+  possibly send_reply(MessageIn &message, p::Value value);
   p::Value receive_reply(MiniHeap &heap);
 private:
   HalfChannel &channel() { return channel_; }
@@ -153,7 +153,7 @@ void FileSocket::send_message(MiniHeap &heap, p::String name,
   write(memory);
 }
 
-boole FileSocket::receive_message(MessageIn &message) {
+possibly FileSocket::receive_message(MessageIn &message) {
   MessageHeader header;
   read(vector<uint8_t>(header.bytes, sizeof(header.bytes)));
   own_vector<uint8_t> memory(vector<uint8_t>::allocate(header.data.heap_size));
@@ -167,7 +167,7 @@ boole FileSocket::receive_message(MessageIn &message) {
   return Success::make();
 }
 
-boole FileSocket::send_reply(MessageIn &message, p::Value value) {
+possibly FileSocket::send_reply(MessageIn &message, p::Value value) {
   if (!message.is_synchronous()) {
     LOG().warn("Reply to asynchronous message ignored.", vargs());
     return Success::make();
@@ -257,7 +257,7 @@ p::Value ParentProcess::Data::object_send(p::Object obj, p::String name,
   }
 }
 
-boole Pipe::open() {
+possibly Pipe::open() {
   embed_array<int, 2> pipes;
   if (::pipe(pipes.start()) == -1) {
     LOG().error("Error creating pipe (%)", vargs(string(::strerror(errno))));
@@ -269,12 +269,12 @@ boole Pipe::open() {
   return Success::make();
 }
 
-boole HalfChannel::set_remain_open_on_exec() {
+possibly HalfChannel::set_remain_open_on_exec() {
   try set_remain_open_on_exec(in_fd_);
   return set_remain_open_on_exec(out_fd_);
 }
 
-boole HalfChannel::set_remain_open_on_exec(int fd) {
+possibly HalfChannel::set_remain_open_on_exec(int fd) {
   if (::fcntl(fd, F_SETFD, 0) == -1) {
     LOG().error("Error fcntl-ing pipe (%)", vargs(string(::strerror(errno))));
     return InternalError::make(InternalError::ieSystem);
@@ -290,12 +290,12 @@ ChildProcess::ChildProcess() : data_(NULL) { }
 
 ChildProcess::~ChildProcess() { }
 
-boole Channel::open() {
+possibly Channel::open() {
   try to().open();
   return from().open();
 }
 
-boole ChildProcess::open(string &command, vector<string> &args,
+possibly ChildProcess::open(string &command, vector<string> &args,
     vector< pair<string, string> > &env) {
   // Create a full communication channel.
   Channel channel;
@@ -363,7 +363,7 @@ word ChildProcess::wait() {
   }
 }
 
-boole ChildProcess::receive(MessageIn &message) {
+possibly ChildProcess::receive(MessageIn &message) {
   return data()->socket().receive_message(message);
 }
 
@@ -375,7 +375,7 @@ ParentProcess::ParentProcess() : data_(NULL) { }
 
 ParentProcess::~ParentProcess() { }
 
-boole ParentProcess::open() {
+possibly ParentProcess::open() {
   const char *raw_master = getenv(kMasterEnvVariable.start());
   if (raw_master == NULL) {
     LOG().error("Could not read master variable", vargs(0));
@@ -399,7 +399,7 @@ boole ParentProcess::open() {
   return Success::make();
 }
 
-boole ParentProcess::receive(MessageIn &message) {
+possibly ParentProcess::receive(MessageIn &message) {
   return data()->socket().receive_message(message);
 }
 

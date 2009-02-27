@@ -7,12 +7,12 @@
 namespace neutrino {
 
 template <typename S, typename F>
-bool maybe<S, F>::has_succeeded() {
+bool option<S, F>::has_succeeded() {
   return is<S>(data_);
 }
 
 template <typename S, typename F>
-bool maybe<S, F>::has_failed() {
+bool option<S, F>::has_failed() {
   return is<F>(data_);
 }
 

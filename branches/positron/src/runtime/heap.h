@@ -61,13 +61,13 @@ public:
   Heap(Runtime &runtime)
     : runtime_(runtime)
     , space_(NULL) { }
-  likely<> initialize();
+  probably initialize();
   array<uint8_t> allocate(size_t size);
 #define MAKE_ALLOCATOR(Type, name, params, args)                     \
   allocation<Type> name params;
 eAllocators(MAKE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
-  likely<> collect_garbage();
+  probably collect_garbage();
   Space &space() { return *space_; }
 private:
   Runtime &runtime() { return runtime_; }

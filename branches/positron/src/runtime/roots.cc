@@ -10,7 +10,7 @@ Roots::Roots() {
     *iter.next() = 0;
 }
 
-boole Roots::initialize(Heap &heap) {
+possibly Roots::initialize(Heap &heap) {
   Virtuals &helper = Species::species_virtuals();
   try alloc Species *species_species(NULL, Value::tSpecies, helper) in heap;
   species_species->set_species(species_species);

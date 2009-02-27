@@ -17,7 +17,7 @@ namespace neutrino {
 class Roots : public nocopy {
 public:
   Roots();
-  boole initialize(Heap &heap);
+  possibly initialize(Heap &heap);
   Value **get(word index);
 #define DECLARE_ACCESSOR(n, Type, name, allocator)                   \
   void set_##name(Type *value) { entries_[n] = value; }              \

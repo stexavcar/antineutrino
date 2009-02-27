@@ -10,6 +10,6 @@
 #define pNunitAssertGt(a, b) cCheckGt(a, b)
 #define pNunitAssertGeq(a, b) cCheckGeq(a, b)
 #define pNunitAssert(a) cCheck(a)
-#define pNunitTry(a) cCheck(a.has_succeeded())
+#define pNunitTry(type, a) cCheck(a.has_succeeded())
 
 #endif // _PUNIT_UTILS_CHECK

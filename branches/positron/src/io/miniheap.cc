@@ -165,7 +165,7 @@ MiniHeapObject Factory::allocate(p::Value::Type type, word size) {
   return result;
 }
 
-boole MessageIn::reply(p::Value value) {
+possibly MessageIn::reply(p::Value value) {
   assert stream_ != static_cast<void*>(NULL);
   has_replied_ = true;
   return stream_->send_reply(*this, value);

@@ -33,7 +33,18 @@ DataFormatter DataFormatter::kInstance;
 
 void DataFormatter::print_on(const variant &that, string modifiers,
       string_stream &stream) {
-  stream.add("%{x}", vargs(reinterpret_cast<word>(that.data_.u_ptr)));
+  Data *obj = static_cast<Data*>(const_cast<void*>(that.data_.u_ptr));
+  if (is<String>(obj)) {
+    String *str = cast<String>(obj);
+    array<code_point> chars = str->chars();
+    bool quote = modifiers.contains('q');
+    if (quote) stream.add('"');
+    for (word i = 0; i < str->length(); i++)
+      stream.add(chars[i]);
+    if (quote) stream.add('"');
+  } else {
+    stream.add("[todo]");
+  }
 }
 
 /* --- O b j e c t --- */
