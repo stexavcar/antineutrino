@@ -70,12 +70,14 @@ protected:
   ~OptionCollection();
   template <typename T>
   void register_flag(string name, T *target) {
-    flags_.append(new Flag<T>(name, target));
+    own_flags_.append(new Flag<T>(name, target));
   }
   void inherit(OptionCollection &other);
 private:
-  vector<AbstractFlag*> flags() { return flags_.as_vector(); }
-  own_buffer<AbstractFlag> flags_;
+  vector<AbstractFlag*> own_flags() { return own_flags_.as_vector(); }
+  vector<AbstractFlag*> inherited_flags() { return inherited_flags_.as_vector(); }
+  own_buffer<AbstractFlag> own_flags_;
+  buffer<AbstractFlag*> inherited_flags_;
 };
 
 }

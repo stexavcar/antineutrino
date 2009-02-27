@@ -1,9 +1,7 @@
 #include <ctime>
 
-
 #include "utils/log.h"
 #include "utils/string-inl.h"
-
 
 namespace neutrino {
 

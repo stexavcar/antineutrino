@@ -5,6 +5,8 @@ library (
   srcs = [
     'code/ast.h',
     'code/ast.cc',
+    'code/instr.h',
+    'code/instr.cc',
     'io/miniheap.h',
     'io/miniheap-inl.h',
     'io/miniheap.cc',

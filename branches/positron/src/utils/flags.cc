@@ -41,11 +41,13 @@ vector<string> OptionCollection::parse(vector<const char*> args) {
       bool is_list = (str[str.length() - 1] == '[');
       string name = is_list ? str.substring(2, -2) : str.substring(2);
       AbstractFlag *flag = NULL;
-      vector<AbstractFlag*> flags = this->flags();
-      for (word i = 0; i < flags.length(); i++) {
-        if (compare_flag_names(flags[i]->name(), name)) {
-          flag = flags[i];
-          break;
+      for (word own = 0; flag == NULL && own < 2; own++) {
+        vector<AbstractFlag*> flags = own ? own_flags() : inherited_flags();
+        for (word i = 0; i < flags.length(); i++) {
+          if (compare_flag_names(flags[i]->name(), name)) {
+            flag = flags[i];
+            break;
+          }
         }
       }
       if (flag == NULL) {
@@ -88,9 +90,13 @@ vector<string> OptionCollection::parse(vector<const char*> args) {
 }
 
 void OptionCollection::inherit(OptionCollection &other) {
-  vector<AbstractFlag*> vect = other.flags();
-  for (word i = 0; i < vect.length(); i++)
-    flags_.append(vect[i]);
+  for (word own = 0; own < 2; own++) {
+    vector<AbstractFlag*> vect = own
+        ? other.own_flags()
+        : other.inherited_flags();
+    for (word i = 0; i < vect.length(); i++)
+      inherited_flags_.append(vect[i]);
+  }
 }
 
 void Flag<bool>::process(vector<const char*> args) {

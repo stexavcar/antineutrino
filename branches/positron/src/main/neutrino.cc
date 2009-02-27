@@ -116,7 +116,7 @@ possibly start(vector<const char*> args) {
     protector<1> protect(runtime.refs());
     try alloc ref<Array> literals = code.literals();
     vector<code_t> instrs = code.data();
-    CodeStream::disassemble(instrs, literals, str);
+    Instructions::disassemble(instrs, literals, str);
     str.raw_string().println();
   }
   return Success::make();
