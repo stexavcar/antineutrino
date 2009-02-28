@@ -35,6 +35,18 @@ array<T> vector<T>::as_array() {
 }
 
 template <typename T>
+void vector<T>::copy_to(vector<T> that) {
+  assert length() == that.length();
+  as_array().copy_to(that.as_array(), length());
+}
+
+template <typename T>
+void vector<T>::fill(const T &elm) {
+  for (word i = 0; i < length(); i++)
+    operator[](i) = elm;
+}
+
+template <typename T>
 vector<T> vector<T>::allocate(word length) {
   return allocate(new_delete_array_allocator<T>(), length);
 }

@@ -5,7 +5,7 @@
 using namespace neutrino;
 
 TEST(signal) {
-  InternalError *ie = InternalError::make(InternalError::ieUnknown);
+  InternalError *ie = InternalError::unknown();
   assert is<Signal>(ie);
   assert is<InternalError>(ie);
   assert (!is<Success>(ie));

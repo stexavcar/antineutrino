@@ -35,19 +35,27 @@ private:
 class CodeStream {
 public:
   explicit CodeStream(Runtime &runtime) : runtime_(runtime) { }
-  template <typename T> CodePointer<T> add_instr(const T &obj);
-  probably add(s_exp *expr);
+  template <typename T> CodePointer<T> add(const T &obj);
   probably register_literal(ref<Value> value, word *index);
-  buffer<code_t> &buf() { return buf_; }
-  vector<code_t> data() { return buf().as_vector(); }
-  word cursor() { return buf().length(); }
-  likely<Array> literals();
-private:
+  word cursor() { return code().length(); }
+  likely<SyntaxTree> result();
   Runtime &runtime() { return runtime_; }
-  ArrayBuffer &literal_buffer() { return literal_buffer_; }
+  buffer<code_t> &code() { return code_; }
+private:
+  ArrayBuffer &literals() { return literals_; }
   Runtime &runtime_;
-  buffer<code_t> buf_;
-  ArrayBuffer literal_buffer_;
+  buffer<code_t> code_;
+  ArrayBuffer literals_;
+};
+
+class CodeGenerator {
+public:
+  CodeGenerator(Runtime &runtime) : code_(runtime) { }
+  probably emit_expression(s_exp *expr);
+  Runtime &runtime() { return code().runtime(); }
+  CodeStream &code() { return code_; }
+private:
+  CodeStream code_;
 };
 
 } // namespace neutrino

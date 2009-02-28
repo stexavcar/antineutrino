@@ -95,12 +95,12 @@ public:
 
 class DisassembleContext {
 public:
-  DisassembleContext(ref<Array> literals, string_stream &out)
-    : literals_(literals), out_(out) { }
-  Value *get_literal(word index) { return literals_->get(index); }
+  DisassembleContext(SyntaxTree *tree, string_stream &out)
+    : tree_(tree), out_(out) { }
+  Value *get_literal(word index);
   string_stream &out() { return out_; }
 private:
-  ref<Array> literals_;
+  SyntaxTree *tree_;
   string_stream &out_;
 };
 

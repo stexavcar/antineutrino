@@ -1,5 +1,6 @@
 #include "runtime/heap-inl.h"
 #include "runtime/roots-inl.h"
+#include "value/condition-inl.h"
 #include "value/value-inl.h"
 
 namespace neutrino {
@@ -15,10 +16,15 @@ possibly Roots::initialize(Heap &heap) {
   try alloc Species *species_species(NULL, Value::tSpecies, helper) in heap;
   species_species->set_species(species_species);
   set_species_species(species_species);
-#define ALLOCATE_ROOT(n, Type, name, args)                           \
+#define ALLOCATE_ROOT_SPECIES(n, Type, name, args)                   \
   pTryAllocInSpace(heap, Type, name##_value, args);                  \
   set_##name(name##_value);
-eSimpleRoots(ALLOCATE_ROOT)
+eRootSpecies(ALLOCATE_ROOT_SPECIES)
+#undef ALLOCATE_ROOT_SPECIES
+#define ALLOCATE_ROOT(n, Type, name, value)                          \
+  try Type *name##_value = value;                                    \
+  set_##name(name##_value);
+  eObjectRoots(ALLOCATE_ROOT)
 #undef ALLOCATE_ROOT
   return Success::make();
 }

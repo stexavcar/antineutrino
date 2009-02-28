@@ -5,9 +5,13 @@
 
 namespace neutrino {
 
-bool Instructions::disassemble(vector<code_t> code, ref<Array> literals,
-    string_stream &out) {
-  DisassembleContext context(literals, out);
+Value *DisassembleContext::get_literal(word index) {
+  return tree_->literals()->get(index);
+}
+
+bool SyntaxTree::disassemble(string_stream &out) {
+  DisassembleContext context(this, out);
+  vector<code_t> code = this->code()->as_vector<code_t>();
   code_t *pc = code.start();
   while (pc < code.end()) {
     if (pc > code.start()) out.add('\n');

@@ -106,17 +106,16 @@ possibly start(vector<const char*> args) {
     if (expr == NULL) {
       Location loc = parser.error_location();
       report_error(options.files()[i], file, loc);
-      return FatalError::make(FatalError::feAbort);
+      return FatalError::abort();
     }
     Runtime runtime;
     try runtime.initialize();
-    CodeStream code(runtime);
-    code.add(expr);
+    CodeGenerator codegen(runtime);
+    try codegen.emit_expression(expr);
     string_stream str;
     protector<1> protect(runtime.refs());
-    try alloc ref<Array> literals = code.literals();
-    vector<code_t> instrs = code.data();
-    Instructions::disassemble(instrs, literals, str);
+    try alloc ref<SyntaxTree> code = codegen.code().result();
+    code->disassemble(str);
     str.raw_string().println();
   }
   return Success::make();

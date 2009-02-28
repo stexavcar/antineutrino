@@ -10,36 +10,39 @@ namespace neutrino {
 
 template <typename T>
 T *CodePointer<T>::operator->() {
-  return reinterpret_cast<T*>(stream().buf().start() + offset());
+  return reinterpret_cast<T*>(stream().code().start() + offset());
 }
 
 template <typename T>
-CodePointer<T> CodeStream::add_instr(const T &obj) {
+CodePointer<T> CodeStream::add(const T &obj) {
   word start = cursor();
   for (word i = 0; i < T::kHeaderSize; i++)
-    buf().append(obj.code()[i]);
+    code().append(obj.code()[i]);
   for (word i = T::kHeaderSize; i < obj.size(); i++)
-    buf().append(0);
+    code().append(0);
   return CodePointer<T>(start, *this);
 }
 
-likely<Array> CodeStream::literals() {
-  return *literal_buffer().store();
+likely<SyntaxTree> CodeStream::result() {
+  protector<1> protect(runtime().refs());
+  try alloc ref<Blob> blob = runtime().gc_safe().new_blob(code().length() * sizeof(code_t));
+  code().as_vector().copy_to(blob->as_vector<code_t>());
+  return runtime().gc_safe().new_syntax_tree(blob, literals().store());
 }
 
-probably CodeStream::add(s_exp *expr) {
+probably CodeGenerator::emit_expression(s_exp *expr) {
   if (is<s_number>(expr)) {
     // Numbers
     word value = cast<s_number>(expr)->value();
-    add_instr(literal(value));
+    code().add(literal(value));
   } else if (is<s_string>(expr)) {
     // Identifiers
     string str = cast<s_string>(expr)->chars();
     protector<1> protect(runtime().refs());
     try alloc ref<String> name = runtime().gc_safe().new_string(str);
     word index = 0;
-    try probably register_literal(name, &index);
-    add_instr(global(index));
+    try probably code().register_literal(name, &index);
+    code().add(global(index));
   } else {
     assert is<s_list>(expr);
     s_list *list = cast<s_list>(expr);
@@ -50,44 +53,49 @@ probably CodeStream::add(s_exp *expr) {
       // Sends
       assert (list->length() > 2);
       string name = cast<s_string>(list->get(2))->chars();
-      word receiver = cursor();
-      add(list->get(1));
+      word receiver = code().cursor();
+      emit_expression(list->get(1));
       word argc = list->length() - 3;
       buffer<code_t> args;
       for (word i = 3; i < list->length(); i++) {
-        args.append(cursor());
-        add(list->get(i));
+        args.append(code().cursor());
+        emit_expression(list->get(i));
       }
       protector<1> protect(runtime().refs());
       try alloc ref<String> name_str = runtime().gc_safe().new_string(name);
       word index = 0;
-      try probably register_literal(name_str, &index);
-      CodePointer<send> s = add_instr(send(index, receiver, argc));
+      try probably code().register_literal(name_str, &index);
+      CodePointer<send> s = code().add(send(index, receiver, argc));
       for (word i = 0; i < argc; i++)
         s->args()[i] = args[i];
     } else if (str == "if") {
       assert list->length() == 4;
-      word cond = cursor();
-      add(list->get(1));
-      CodePointer<if_false> goto_else = add_instr(if_false(0));
-      word then_part = cursor();
-      add(list->get(2));
-      CodePointer<ghoto> goto_end = add_instr(ghoto(0));
-      word else_part = cursor();
+      word cond = code().cursor();
+      emit_expression(list->get(1));
+      CodePointer<if_false> goto_else = code().add(if_false(0));
+      word then_part = code().cursor();
+      emit_expression(list->get(2));
+      CodePointer<ghoto> goto_end = code().add(ghoto(0));
+      word else_part = code().cursor();
       goto_else->set_target(else_part);
-      add(list->get(3));
-      add_instr(if_true_false(cond, then_part, else_part));
-      goto_end->set_target(cursor());
+      emit_expression(list->get(3));
+      code().add(if_true_false(cond, then_part, else_part));
+      goto_end->set_target(code().cursor());
+    } else if (str == "fn") {
+      assert list->length() == 3;
+      CodeGenerator codegen(runtime());
+      codegen.emit_expression(list->get(2));
+
     } else {
-      assert false;
+      return FatalError::abort();
     }
   }
   return Success::make();
 }
 
 probably CodeStream::register_literal(ref<Value> value, word *index) {
-  *index = literal_buffer().length();
-  return literal_buffer().add(runtime(), value);
+  *index = literals().length();
+  return literals().add(runtime(), value);
 }
 
 probably ArrayBuffer::add(Runtime &runtime, ref<Value> value) {

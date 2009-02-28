@@ -33,6 +33,7 @@ class MessageOut;
 class pattern;
 template <typename T> class persistent;
 class persistent_cell;
+class possibly;
 template <typename T> class ref;
 class RefManager;
 class Runtime;

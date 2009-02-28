@@ -58,7 +58,7 @@ Object *SpaceIterator::next() {
   Type *name;                                                        \
   do {                                                               \
     array<uint8_t> __memory__ = (space).allocate(sizeof(Type));      \
-    if (__memory__.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion); \
+    if (__memory__.is_empty()) return InternalError::heap_exhaustion(); \
     name = new (__memory__) Type ARGS;                               \
     assert reinterpret_cast<uint8_t*>(name) == __memory__.start();   \
   } while (false)

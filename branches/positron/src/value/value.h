@@ -7,10 +7,22 @@
 
 namespace neutrino {
 
+#define eConcreteValueTypes(VISIT)                                   \
+  VISIT(Species)                                                     \
+  eSimpleConcreteValueTypes(VISIT)
+
+#define eSimpleConcreteValueTypes(VISIT)                                \
+  VISIT(Blob)       VISIT(String)     VISIT(Array)      VISIT(Instance) \
+  VISIT(SyntaxTree) VISIT(Nil)        VISIT(HashMap)
+
+#define eSignalTypes(VISIT)                                             \
+  VISIT(FatalError) VISIT(InternalError) VISIT(Success)
+
 class Data {
 public:
   enum DataType { dtSignal, dtUnknown, __last_data_type };
   DataType type();
+  void println();
 };
 
 inline void encode_variant(variant &that, Data *value);
@@ -23,7 +35,18 @@ static inline C *cast(Data *data);
 
 class Value : public Data {
 public:
-  enum Type { tSpecies = Data::__last_data_type, tString, tArray, tInstance };
+  enum Type {
+    __first = Data::__last_data_type
+#define MAKE_ENUM(Name) , t##Name
+    eConcreteValueTypes(MAKE_ENUM)
+#undef MAKE_ENUM
+  };
+
+  uword hash();
+
+  static Value *nothing() { return NULL; }
+  bool is_nothing() { return this == nothing(); }
+
 };
 
 /* --- S m a l l   D o u b l e --- */
@@ -44,6 +67,7 @@ public:
   inline void set_forwarding_header(ForwardPointer *v);
 
   void migrate_fields(FieldMigrator &migrator);
+  uword calculate_hash();
 
   template <typename T>
   static allocation<Object> clone_object(Species *desc, Object *obj,
@@ -55,6 +79,9 @@ public:
   template <typename T>
   static void migrate_object_fields(Species *desc, Object *obj,
       FieldMigrator &migrator);
+
+  template <typename T>
+  static uword object_hash(Object *obj);
 
   Data *&header() { return header_; }
 private:
@@ -69,6 +96,8 @@ struct Virtuals {
     word (*size_in_memory)(Species*, Object*);
     // Migrate the fields of an object.
     void (*migrate_fields)(Species*, Object*, FieldMigrator&);
+    // Calculate the hash code of an object
+    uword (*hash)(Object*);
   };
   struct SpeciesVirtuals {
     // Clone yourself in the given space.
@@ -129,6 +158,7 @@ public:
     , length_(length) { }
 
   inline array<Value*> elements();
+  inline vector<Value*> as_vector();
   inline void set(word index, Value *value);
   inline Value *get(word index);
   inline word length() { return length_; }
@@ -150,23 +180,116 @@ private:
   static Virtuals kVirtuals;
 };
 
+/* --- H a s h   M a p --- */
+
+class HashMap : public Object {
+public:
+  HashMap(Species *species, Array *table)
+    : Object(species)
+    , table_(table) { }
+
+  class Entry {
+  public:
+    Entry(HashMap *map, word index) : map_(map), index_(index) { }
+    static const word kSize = 3;
+  private:
+    HashMap *map_;
+    word index_;
+  };
+
+  possibly set(Value *key, Value *value);
+  Data *get(Value *key);
+
+  void migrate_fields(FieldMigrator &migrator);
+
+  static Virtuals &virtuals() { return kVirtuals; }
+  static const word kInitialCapacity = 8;
+
+private:
+  Entry lookup(uword hash, Value *key);
+  Array *table() { return table_; }
+
+  word size_;
+  Array *table_;
+  static Virtuals kVirtuals;
+};
+
+/* --- N u l l --- */
+
+class Nil : public Object {
+public:
+  Nil(Species *species) : Object(species) { }
+  static Virtuals &virtuals() { return kVirtuals; }
+private:
+  static Virtuals kVirtuals;
+};
+
 /* --- I n s t a n c e --- */
 
 class Instance : public Object {
 public:
   static inline word size_in_memory(word fields);
+  static Virtuals &virtuals() { return kVirtuals; }
+private:
+  static Virtuals kVirtuals;
 };
 
 class InstanceSpecies : public Species {
 public:
   InstanceSpecies(Species *meta, word field_count)
-    : Species(meta, tInstance, kVirtuals)
+    : Species(meta, tInstance, Instance::virtuals())
     , field_count_(field_count) { }
   word field_count() { return field_count_; }
 
 private:
-  static Virtuals kVirtuals;
   word field_count_;
+};
+
+/* --- B l o b --- */
+
+class Blob : public Object {
+public:
+  Blob(Species *species, word length)
+    : Object(species)
+    , length_(length) { }
+
+  template <typename T> word length() { return length_ / sizeof(T); }
+
+  template <typename T> array<T> data();
+  template <typename T> vector<T> as_vector();
+
+  template <typename T>
+  static allocation<Object> clone_object(Species *desc, Object *obj,
+      Space &space);
+
+  template <typename T>
+  static word object_size_in_memory(Species *desc, Object *obj);
+
+  static inline word size_in_memory(word length);
+
+  static Virtuals &virtuals() { return kVirtuals; }
+private:
+  word length_;
+  static Virtuals kVirtuals;
+};
+
+/* --- A s t --- */
+
+class SyntaxTree : public Object {
+public:
+  SyntaxTree(Species *species, Blob *code, Array *literals)
+    : Object(species)
+    , code_(code)
+    , literals_(literals) { }
+  void migrate_fields(FieldMigrator &migrator);
+  bool disassemble(string_stream &out);
+  static Virtuals &virtuals() { return kVirtuals; }
+  Blob *code() { return code_; }
+  Array *literals() { return literals_; }
+private:
+  Blob *code_;
+  Array *literals_;
+  static Virtuals kVirtuals;
 };
 
 /* --- S t r i n g --- */
@@ -178,8 +301,11 @@ public:
     , length_(length) { }
 
   inline array<code_point> chars();
+  inline vector<code_point> as_vector();
   word length() { return length_; }
   bool equals(const string &str);
+
+  uword calculate_hash();
 
   template <typename T>
   static allocation<Object> clone_object(Species *desc, Object *obj,
@@ -207,29 +333,63 @@ public:
 
 class Signal : public Data {
 public:
-  enum Type { sSuccess, sInternalError, sFatalError };
+  enum Type {
+    __first
+#define MAKE_ENUM(Name) , s##Name
+    eSignalTypes(MAKE_ENUM)
+#undef MAKE_ENUM
+  };
   inline Type type();
   inline word payload();
 };
 
 class Success : public Signal {
 public:
+  void print_on(string modifiers, string_stream &out);
   static inline Success *make();
 };
 
 class Failure : public Signal {
 };
 
+#define eInternalErrorTypes(VISIT)                                   \
+  VISIT(Unknown, unknown) VISIT(HeapExhaustion, heap_exhaustion)     \
+  VISIT(System, system)   VISIT(Environment, environment)
+
 class InternalError : public Failure {
 public:
-  enum Type { ieUnknown, ieSystem, ieEnvironment, ieHeapExhaustion };
+  enum Type {
+    __first
+#define MAKE_ENUM(Name, name) , ie##Name
+    eInternalErrorTypes(MAKE_ENUM)
+#undef MAKE_ENUM
+  };
+  void print_on(string modifiers, string_stream &out);
+#define MAKE_CONSTRUCTOR(Name, name) static inline InternalError *name();
+  eInternalErrorTypes(MAKE_CONSTRUCTOR)
+#undef MAKE_CONSTRUCTOR
+private:
   static inline InternalError *make(Type type);
 };
 
+#define eFatalErrorTypes(VISIT)                                      \
+  VISIT(OutOfMemory, out_of_memory)                                  \
+  VISIT(Abort, abort)
+
 class FatalError : public Failure {
 public:
-  enum Type { feOutOfMemory, feAbort };
-  static inline FatalError *make(Type type);
+  enum Error {
+    __first
+#define MAKE_ENUM(Name, name) , fe##Name
+    eFatalErrorTypes(MAKE_ENUM)
+#undef MAKE_ENUM
+  };
+  void print_on(string modifiers, string_stream &out);
+  inline Error error();
+  static inline FatalError *out_of_memory();
+  static inline FatalError *abort();
+private:
+  static inline FatalError *make(Error type);
 };
 
 } // namespace neutrino

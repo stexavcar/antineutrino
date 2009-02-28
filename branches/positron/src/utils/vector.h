@@ -26,6 +26,8 @@ public:
   static vector<T> allocate(word length);
   template <class A> static vector<T> allocate(A allocator, word length);
   array<T> as_array();
+  void copy_to(vector<T> that);
+  void fill(const T &val);
 private:
   T *data_;
   word length_;

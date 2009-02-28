@@ -77,11 +77,45 @@ TRY_TEST(trigger_collection) {
   return Success::make();
 }
 
+TRY_TEST(move_blob) {
+  Runtime runtime;
+  try runtime.initialize();
+  protector<1> protect(runtime.refs());
+  try alloc ref<Blob> blob = runtime.gc_safe().new_blob(10);
+  assert 10 == blob->length<uint8_t>();
+  assert 2 == blob->length<int32_t>();
+  array<uint8_t> bytes = blob->data<uint8_t>();
+  for (word i = 0; i < 10; i++)
+    assert bytes[i] == 0;
+  array<int32_t> ints = blob->data<int32_t>();
+  ints[0] = 43;
+  ints[1] = 21;
+  runtime.heap().collect_garbage();
+  ints = blob->data<int32_t>();
+  assert 10 == blob->length<int8_t>();
+  assert ints[0] == 43;
+  assert ints[1] == 21;
+  return Success::make();
+}
+
+TRY_TEST(nil) {
+  Runtime runtime;
+  try runtime.initialize();
+  try alloc Nil *nil = runtime.heap().new_nil();
+  assert is<Nil>(nil);
+  assert (is<Nil>(runtime.roots().nil()));
+  static const word kSize = 10;
+  try alloc Array *array = runtime.heap().new_array(kSize);
+  for (word i = 0; i < kSize; i++)
+    assert (is<Nil>(array->get(i)));
+  return Success::make();
+}
+
 class Allocator {
 public:
   possibly initialize() { return runtime().initialize(); }
   Object *allocate(word type);
-  static const word kTypeCount = 1;
+  static const word kTypeCount = 4;
   Runtime &runtime() { return runtime_; }
 private:
   Runtime runtime_;
@@ -94,6 +128,12 @@ Object *Allocator::allocate(word type) {
   switch (type) {
   case 0:
     return gc_safe.new_string("squid can't win").value();
+  case 1:
+    return gc_safe.new_blob(10).value();
+  case 2:
+    return gc_safe.new_nil().value();
+  case 3:
+    return gc_safe.new_array(10).value();
   default:
     assert false;
     return NULL;
@@ -101,7 +141,7 @@ Object *Allocator::allocate(word type) {
 }
 
 TRY_TEST(iteration) {
-  static const word kIterations = 3 * Allocator::kTypeCount;
+  static const word kIterations = 10 * Allocator::kTypeCount;
   Allocator allocator;
   try allocator.initialize();
   protector<kIterations> protect(allocator.runtime().refs());

@@ -5,12 +5,20 @@
 #include "value/condition.h"
 
 #define eRoots(VISIT)                                                \
-  VISIT(0, Species, species_species, 0)                        \
-  eSimpleRoots(VISIT)
+  VISIT(0, Species, species_species, 0)                              \
+  eRootSpecies(VISIT)                                                \
+  eObjectRoots(VISIT)
 
-#define eSimpleRoots(VISIT)                                          \
-  VISIT(1, Species, string_species, (species_species, Value::tString, String::virtuals())) \
-  VISIT(2, Species, array_species, (species_species, Value::tArray, Array::virtuals()))
+#define eRootSpecies(VISIT)                                          \
+  VISIT(1, Species, string_species,      (species_species, Value::tString, String::virtuals()))         \
+  VISIT(2, Species, array_species,       (species_species, Value::tArray, Array::virtuals()))           \
+  VISIT(3, Species, blob_species,        (species_species, Value::tBlob, Blob::virtuals()))             \
+  VISIT(4, Species, syntax_tree_species, (species_species, Value::tSyntaxTree, SyntaxTree::virtuals())) \
+  VISIT(5, Species, nil_species,         (species_species, Value::tNil, Nil::virtuals()))               \
+  VISIT(6, Species, hash_map_species,    (species_species, Value::tHashMap, HashMap::virtuals()))
+
+#define eObjectRoots(VISIT)                                          \
+  VISIT(7, Nil, nil, heap.new_nil())
 
 namespace neutrino {
 
@@ -24,7 +32,7 @@ public:
   Type *name() { return static_cast<Type*>(entries_[n]); }
 eRoots(DECLARE_ACCESSOR)
 #undef DECLARE_ACCESSOR
-  static const word kCount = 3;
+  static const word kCount = 8;
 private:
   embed_array<Value*, kCount> entries_;
 };

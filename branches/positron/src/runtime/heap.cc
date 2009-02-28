@@ -27,7 +27,7 @@ array<uint8_t> Heap::allocate(size_t size) {
 allocation<String> Heap::new_string(word length) {
   word size = String::size_in_memory(length);
   array<uint8_t> memory = allocate(size);
-  if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
+  if (memory.is_empty()) return InternalError::heap_exhaustion();
   return new (memory) String(runtime().roots().string_species(), length);
 }
 
@@ -42,9 +42,45 @@ allocation<String> Heap::new_string(string str) {
 allocation<Array> Heap::new_array(word length) {
   word size = Array::size_in_memory(length);
   array<uint8_t> memory = allocate(size);
-  if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
-  Array *result = new (memory) Array(runtime().roots().array_species(), length);
+  if (memory.is_empty()) return InternalError::heap_exhaustion();
+  Array *result = new (memory) Array(runtime().roots().array_species(),
+      length);
+  result->as_vector().fill(runtime().roots().nil());
   return result;
+}
+
+allocation<Blob> Heap::new_blob(word length) {
+  word size = Blob::size_in_memory(length);
+  array<uint8_t> memory = allocate(size);
+  if (memory.is_empty()) return InternalError::heap_exhaustion();
+  Blob *result = new (memory) Blob(runtime().roots().blob_species(),
+      length);
+  result->as_vector<uint8_t>().fill(0);
+  return result;
+}
+
+allocation<SyntaxTree> Heap::new_syntax_tree(Blob *code, Array *literals) {
+  word size = sizeof(SyntaxTree);
+  array<uint8_t> memory = allocate(size);
+  if (memory.is_empty()) return InternalError::heap_exhaustion();
+  return new (memory) SyntaxTree(runtime().roots().syntax_tree_species(),
+      code, literals);
+}
+
+allocation<Nil> Heap::new_nil() {
+  word size = sizeof(Nil);
+  array<uint8_t> memory = allocate(size);
+  if (memory.is_empty()) return InternalError::heap_exhaustion();
+  return new (memory) Nil(runtime().roots().nil_species());
+}
+
+allocation<HashMap> Heap::new_hash_map() {
+  try alloc Array *table = new_array(HashMap::kInitialCapacity * HashMap::Entry::kSize);
+  word size = sizeof(HashMap);
+  array<uint8_t> memory = allocate(size);
+  if (memory.is_empty()) return InternalError::heap_exhaustion();
+  return new (memory) HashMap(runtime().roots().hash_map_species(),
+      table);
 }
 
 probably Heap::initialize() {
@@ -62,7 +98,8 @@ void FieldMigrator::migrate_field(Value **field) {
     return;
   }
   Species *species = old_obj->species();
-  allocation<Object> alloced = species->virtuals().object.clone(species, old_obj, to_space());
+  allocation<Object> alloced = species->virtuals().object.clone(species,
+      old_obj, to_space());
   assert alloced.has_succeeded();
   Object *new_obj = alloced.value();
   old_obj->set_forwarding_header(ForwardPointer::make(new_obj));

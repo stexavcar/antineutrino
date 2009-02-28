@@ -9,7 +9,8 @@ namespace neutrino {
     {                                                                \
       __Class__::clone_object<__Class__>,                            \
       __Class__::object_size_in_memory<__Class__>,                   \
-      __Class__::migrate_object_fields<__Class__>                    \
+      __Class__::migrate_object_fields<__Class__>,                   \
+      __Class__::object_hash<__Class__>                              \
     }, {                                                             \
       __Species__::clone_species<__Species__>,                       \
       __Species__::species_size_in_memory<__Species__>,              \
@@ -29,21 +30,23 @@ Data::DataType Data::type() {
   }
 }
 
+void Data::println() {
+  string_stream stream;
+  stream.add("%", vargs(this));
+  stream.raw_string().println();
+}
+
 DataFormatter DataFormatter::kInstance;
 
-void DataFormatter::print_on(const variant &that, string modifiers,
-      string_stream &stream) {
-  Data *obj = static_cast<Data*>(const_cast<void*>(that.data_.u_ptr));
-  if (is<String>(obj)) {
-    String *str = cast<String>(obj);
-    array<code_point> chars = str->chars();
-    bool quote = modifiers.contains('q');
-    if (quote) stream.add('"');
-    for (word i = 0; i < str->length(); i++)
-      stream.add(chars[i]);
-    if (quote) stream.add('"');
+/* --- V a l u e --- */
+
+uword Value::hash() {
+  if (is<Object>(this)) {
+    Object *obj = cast<Object>(this);
+    return obj->species()->virtuals().object.hash(obj);
   } else {
-    stream.add("[todo]");
+    assert false;
+    return 0;
   }
 }
 
@@ -65,7 +68,7 @@ allocation<Object> Object::clone_object(Species *desc, Object *obj,
   T *old = cast<T>(obj);
   word size = desc->virtuals().object.size_in_memory(desc, obj);
   array<uint8_t> memory = space.allocate(size);
-  if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
+  if (memory.is_empty()) return InternalError::heap_exhaustion();
   return new (memory) T(*old);
 }
 
@@ -75,12 +78,14 @@ word Object::object_size_in_memory(Species *species, Object *obj) {
 }
 
 template <typename T>
-static word object_size_in_memory(Species *desc, Object *obj);
+uword Object::object_hash(Object *obj) {
+  return cast<T>(obj)->calculate_hash();
+}
 
-template <typename T>
-static void migrate_object_fields(Species *desc, Object *obj,
-    FieldMigrator &migrator);
-
+uword Object::calculate_hash() {
+  assert false;
+  return 0;
+}
 
 /* --- S p e c i e s --- */
 
@@ -138,7 +143,7 @@ allocation<Object> Array::clone_object(Species *species, Object *obj,
   word length = old->length();
   word size = Array::size_in_memory(length);
   array<uint8_t> memory = space.allocate(size);
-  if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
+  if (memory.is_empty()) return InternalError::heap_exhaustion();
   Array *result = new (memory) Array(*old);
   array<Value*> from = old->elements();
   array<Value*> to = result->elements();
@@ -154,7 +159,15 @@ void Array::migrate_fields(FieldMigrator &migrator) {
     migrator.migrate_field(&elms[i]);
 }
 
-DECLARE_VIRTUALS(Array::kVirtuals, Array, Species);
+#define DECLARE_SIMPLE_VIRTUALS(Name) DECLARE_VIRTUALS(Name::kVirtuals, Name, Species);
+eSimpleConcreteValueTypes(DECLARE_SIMPLE_VIRTUALS)
+#undef DECLARE_SIMPLE_VIRTUALS
+
+void SyntaxTree::migrate_fields(FieldMigrator &migrator) {
+  Object::migrate_fields(migrator);
+  migrator.migrate_field(reinterpret_cast<Value**>(&code_));
+  migrator.migrate_field(reinterpret_cast<Value**>(&literals_));
+}
 
 /* --- S t r i n g --- */
 
@@ -170,12 +183,24 @@ allocation<Object> String::clone_object(Species *desc, Object *obj,
   word length = old->length();
   word size = String::size_in_memory(length);
   array<uint8_t> memory = space.allocate(size);
-  if (memory.is_empty()) return InternalError::make(InternalError::ieHeapExhaustion);
+  if (memory.is_empty()) return InternalError::heap_exhaustion();
   String *result = new (memory) String(*old);
   array<code_point> from = old->chars();
   array<code_point> to = result->chars();
   from.copy_to(to, length);
   return result;
+}
+
+uword String::calculate_hash() {
+  vector<code_point> str = as_vector();
+  uword hash = 0;
+  uword rotand = 0;
+  for (word i = 0; i < str.length(); i++) {
+    uword c = str[i];
+    rotand ^= c & ((8 * sizeof(uword)) - 1);
+    hash = ((hash << rotand) | (hash >> rotand)) ^ c;
+  }
+  return hash;
 }
 
 bool String::equals(const string &str) {
@@ -187,6 +212,106 @@ bool String::equals(const string &str) {
   return true;
 }
 
-DECLARE_VIRTUALS(String::kVirtuals, String, Species);
+/* --- B l o b --- */
+
+template <typename T>
+word Blob::object_size_in_memory(Species *desc, Object *obj) {
+  return Blob::size_in_memory(cast<Blob>(obj)->length<uint8_t>());
+}
+
+template <typename T>
+allocation<Object> Blob::clone_object(Species *desc, Object *obj,
+    Space &space) {
+  Blob *old = cast<Blob>(obj);
+  word length = old->length<uint8_t>();
+  word size = Blob::size_in_memory(length);
+  array<uint8_t> memory = space.allocate(size);
+  if (memory.is_empty()) return InternalError::heap_exhaustion();
+  Blob *result = new (memory) Blob(*old);
+  array<uint8_t> from = old->data<uint8_t>();
+  array<uint8_t> to = result->data<uint8_t>();
+  from.copy_to(to, length);
+  return result;
+}
+
+/* --- H a s h   M a p --- */
+
+void HashMap::migrate_fields(FieldMigrator &migrator) {
+  Object::migrate_fields(migrator);
+  migrator.migrate_field(reinterpret_cast<Value**>(&table_));
+}
+
+possibly HashMap::set(Value *key, Value *value) {
+  uword hash = key->hash();
+  Entry entry = lookup(hash, key);
+  return Success::make();
+}
+
+HashMap::Entry HashMap::lookup(uword hash, Value *key) {
+  vector<Value*> table = this->table()->as_vector();
+  word end = table.length() / Entry::kSize;
+  word pos = hash % end;
+  Entry current(this, pos);
+  while (current.is_occupied()) {
+    if (current.hash() == hash && current.key() == key)
+      break;
+    pos = (pos + 1) % end;
+    current = Entry(this, pos);
+  }
+  return current;
+}
+
+/* --- P r i n t i n g --- */
+
+void DataFormatter::print_on(const variant &that, string modifiers,
+      string_stream &stream) {
+  Data *obj = static_cast<Data*>(const_cast<void*>(that.data_.u_ptr));
+  if (is<Signal>(obj)) {
+    switch (cast<Signal>(obj)->type()) {
+#define MAKE_CASE(Name)                                              \
+      case Signal::s##Name: cast<Name>(obj)->print_on(modifiers, stream); \
+      return;
+    eSignalTypes(MAKE_CASE)
+#undef MAKE_CASE
+    default:
+      break;
+    }
+  }
+  if (is<String>(obj)) {
+    String *str = cast<String>(obj);
+    array<code_point> chars = str->chars();
+    bool quote = modifiers.contains('q');
+    if (quote) stream.add('"');
+    for (word i = 0; i < str->length(); i++)
+      stream.add(chars[i]);
+    if (quote) stream.add('"');
+  } else {
+    stream.add("[todo]");
+  }
+}
+
+void FatalError::print_on(string modifiers, string_stream &out) {
+  string type;
+  switch (this->error()) {
+#define MAKE_CASE(Name, name)                                        \
+    case FatalError::fe##Name:                                       \
+      type = #name;                                                  \
+      break;
+    eFatalErrorTypes(MAKE_CASE)
+#undef MAKE_CASE
+    default:
+      type = "[unknown]";
+      break;
+  }
+  out.add("@@<fatal error: %>", vargs(type));
+}
+
+void InternalError::print_on(string modifiers, string_stream &out) {
+  out.add("@@<internal error>");
+}
+
+void Success::print_on(string modifiers, string_stream &out) {
+  out.add("@@<success>");
+}
 
 } // namespace neutrino

@@ -261,7 +261,7 @@ possibly Pipe::open() {
   embed_array<int, 2> pipes;
   if (::pipe(pipes.start()) == -1) {
     LOG().error("Error creating pipe (%)", vargs(string(::strerror(errno))));
-    return InternalError::make(InternalError::ieSystem);
+    return InternalError::system();
   }
   read_fd_ = pipes[0];
   write_fd_ = pipes[1];
@@ -277,7 +277,7 @@ possibly HalfChannel::set_remain_open_on_exec() {
 possibly HalfChannel::set_remain_open_on_exec(int fd) {
   if (::fcntl(fd, F_SETFD, 0) == -1) {
     LOG().error("Error fcntl-ing pipe (%)", vargs(string(::strerror(errno))));
-    return InternalError::make(InternalError::ieSystem);
+    return InternalError::system();
   }
   return Success::make();
 }
@@ -307,7 +307,7 @@ possibly ChildProcess::open(string &command, vector<string> &args,
   pid_t pid = ::fork();
   if (pid == -1) {
     LOG().error("Error forking (%)", vargs(string(::strerror(errno))));
-    return InternalError::make(InternalError::ieSystem);
+    return InternalError::system();
   } else if (pid == 0) {
     // We've successfully created the child process.  Now run the executable.
     const char *file = command.start();
@@ -379,20 +379,20 @@ possibly ParentProcess::open() {
   const char *raw_master = getenv(kMasterEnvVariable.start());
   if (raw_master == NULL) {
     LOG().error("Could not read master variable", vargs(0));
-    return InternalError::make(InternalError::ieEnvironment);
+    return InternalError::environment();
   }
   string master = raw_master;
   char *end = NULL;
   int in_fd = strtol(master.start(), &end, 10);
   if (*end != ':') {
     LOG().error("Error parsing master fd %", vargs(master));
-    return InternalError::make(InternalError::ieEnvironment);
+    return InternalError::environment();
   }
   end++;
   int out_fd = strtol(end, &end, 10);
   if (end != master.end()) {
     LOG().error("Error parsing master fd %", vargs(master));
-    return InternalError::make(InternalError::ieEnvironment);
+    return InternalError::environment();
   }
   data_.set(new ParentProcess::Data(HalfChannel(in_fd, out_fd)));
   LOG().info("Opened connection to master through %", vargs(master));

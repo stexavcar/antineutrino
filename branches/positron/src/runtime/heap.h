@@ -7,10 +7,14 @@
 #include "value/condition.h"
 #include "value/value.h"
 
-#define eAllocators(VISIT)                                           \
-  VISIT(String, new_string, (word length), (length))                 \
-  VISIT(String, new_string, (string str), (str))                     \
-  VISIT(Array,  new_array,  (word length), (length))
+#define eAllocators(VISIT)                                                                                                     \
+  VISIT(String,     new_string,      (word length),                         (word length),                 (length))           \
+  VISIT(String,     new_string,      (string str),                          (string str),                  (str))              \
+  VISIT(Array,      new_array,       (word length),                         (word length),                 (length))           \
+  VISIT(Blob,       new_blob,        (word length),                         (word length),                 (length))           \
+  VISIT(SyntaxTree, new_syntax_tree, (ref<Blob> code, ref<Array> literals), (Blob *code, Array *literals), (*code, *literals)) \
+  VISIT(Nil,        new_nil,         (),                                    (),                            ())                 \
+  VISIT(HashMap,    new_hash_map,    (),                                    (),                            ())
 
 namespace neutrino {
 
@@ -63,8 +67,8 @@ public:
     , space_(NULL) { }
   probably initialize();
   array<uint8_t> allocate(size_t size);
-#define MAKE_ALLOCATOR(Type, name, params, args)                     \
-  allocation<Type> name params;
+#define MAKE_ALLOCATOR(Type, name, safe_params, raw_params, args)    \
+  allocation<Type> name raw_params;
 eAllocators(MAKE_ALLOCATOR)
 #undef MAKE_ALLOCATOR
   probably collect_garbage();

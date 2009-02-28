@@ -1,5 +1,9 @@
 #include "plankton/plankton-inl.h"
+#include "runtime/gc-safe-inl.h"
+#include "runtime/runtime-inl.h"
 #include "utils/hash-map-inl.h"
+#include "value/condition-inl.h"
+#include "value/value-inl.h"
 #include "test-inl.h"
 
 using namespace neutrino;
@@ -35,7 +39,6 @@ TEST(hash_map) {
 
 TEST(different_types) {
   hash_map<string, p::String> map;
-  PseudoRandom random(97);
   for (word i = 0; i < 100; i++) {
     string_stream stream;
     stream.add("key-%", vargs(i));
@@ -49,4 +52,21 @@ TEST(different_types) {
     p::String str = map.get(stream.raw_string(), empty);
     assert str == p::String(stream.raw_string().start());
   }
+}
+
+TRY_TEST(hash_map_object) {
+  Runtime runtime;
+  try runtime.initialize();
+  protector<1> protect(runtime.refs());
+  try alloc ref<HashMap> map = runtime.gc_safe().new_hash_map();
+  PseudoRandom random(35);
+  for (word i = 0; i < 100; i++) {
+    protector<1> protect(runtime.refs());
+    string_stream stream;
+    stream.add("key-%", vargs(i));
+    try alloc ref<String> key = runtime.gc_safe().new_string(stream.raw_string());
+    try runtime.gc_safe().set(map, key, key);
+  }
+  map->println();
+  return Success::make();
 }

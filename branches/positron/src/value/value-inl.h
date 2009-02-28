@@ -58,11 +58,7 @@ static inline bool is<FatalError>(Data *data) {
     return is<Object>(data)                                          \
         && cast<Object>(data)->type() == Value::t##__Type__;         \
   }
-
-MAKE_OBJECT_PREDICATE(Array)
-MAKE_OBJECT_PREDICATE(String)
-MAKE_OBJECT_PREDICATE(Species)
-
+eConcreteValueTypes(MAKE_OBJECT_PREDICATE)
 #undef MAKE_OBJECT_PREDICATE
 
 class DataFormatter : public variant_type {
@@ -115,6 +111,10 @@ array<Value*> Array::elements() {
   return TO_ARRAY(Value*, reinterpret_cast<Value**>(start), length_);
 }
 
+vector<Value*> Array::as_vector() {
+  return vector<Value*>(elements(), length());
+}
+
 void Array::set(word index, Value *value) {
   elements()[index] = value;
 }
@@ -134,9 +134,32 @@ array<code_point> String::chars() {
   return TO_ARRAY(code_point, reinterpret_cast<code_point*>(start), length_);
 }
 
+vector<code_point> String::as_vector() {
+  return vector<code_point>(chars(), length());
+}
+
 Value::Type Object::type() {
   return species()->instance_type();
 }
+
+/* --- B l o b --- */
+
+word Blob::size_in_memory(word length) {
+  return sizeof(Blob) + length;
+}
+
+template <typename T>
+array<T> Blob::data() {
+  uint8_t *start = reinterpret_cast<uint8_t*>(this) + sizeof(Blob);
+  return TO_ARRAY(T, reinterpret_cast<T*>(start), length_ / sizeof(T));
+}
+
+template <typename T>
+vector<T> Blob::as_vector() {
+  return vector<T>(data<T>(), length_ / sizeof(T));
+}
+
+/* --- S i g n a l --- */
 
 Signal::Type Signal::type() {
   return Pointer::signal_type(this);
@@ -158,12 +181,31 @@ Success *Success::make() {
   return cast<Success>(Pointer::tag_signal(sSuccess, 0));
 }
 
+#define MAKE_CONSTRUCTOR(__Name__, __name__)                         \
+InternalError *InternalError::__name__() {                           \
+  return make(ie##__Name__);                                         \
+}
+eInternalErrorTypes(MAKE_CONSTRUCTOR)
+#undef MAKE_CONSTRUCTOR
+
 InternalError *InternalError::make(InternalError::Type type) {
   return cast<InternalError>(Pointer::tag_signal(sInternalError, type));
 }
 
-FatalError *FatalError::make(FatalError::Type type) {
+FatalError *FatalError::out_of_memory() {
+  return make(feOutOfMemory);
+}
+
+FatalError *FatalError::abort() {
+  return make(feAbort);
+}
+
+FatalError *FatalError::make(FatalError::Error type) {
   return cast<FatalError>(Pointer::tag_signal(sFatalError, type));
+}
+
+FatalError::Error FatalError::error() {
+  return static_cast<Error>(payload());
 }
 
 } // namespace neutrino
