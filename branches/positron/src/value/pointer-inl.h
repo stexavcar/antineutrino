@@ -43,12 +43,16 @@ bool Pointer::is_forward_pointer(Data *that) {
 
 Object *Pointer::forward_pointer_target(ForwardPointer *that) {
   word value = reinterpret_cast<word>(that);
-  return reinterpret_cast<Object*>(value & ~kTagMask);
+  Object *result = reinterpret_cast<Object*>(value & ~kTagMask);
+  assert is_object(result);
+  return result;
 }
 
 ForwardPointer *Pointer::tag_forward_pointer(Object *that) {
   word value = reinterpret_cast<word>(that);
-  return reinterpret_cast<ForwardPointer*>(value | kTagMask);
+  ForwardPointer *result = reinterpret_cast<ForwardPointer*>(value | kForwardPointerTag);
+  assert is_forward_pointer(result);
+  return result;
 }
 
 /* --- O b j e c t --- */

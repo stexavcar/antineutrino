@@ -248,6 +248,7 @@ possibly HashMap::set(Value *key, Value *value) {
 }
 
 HashMap::Entry HashMap::lookup(uword hash, Value *key) {
+  /*
   vector<Value*> table = this->table()->as_vector();
   word end = table.length() / Entry::kSize;
   word pos = hash % end;
@@ -259,6 +260,8 @@ HashMap::Entry HashMap::lookup(uword hash, Value *key) {
     current = Entry(this, pos);
   }
   return current;
+  */
+  return Entry(this, 0);
 }
 
 /* --- P r i n t i n g --- */

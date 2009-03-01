@@ -49,6 +49,13 @@ public:
 
 };
 
+class TaggedInteger : public Value {
+public:
+  inline word value();
+  static bool fits(word value);
+  static TaggedInteger *from(word value);
+};
+
 /* --- S m a l l   D o u b l e --- */
 
 class SmallDouble : public Value {

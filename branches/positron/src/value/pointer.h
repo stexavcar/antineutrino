@@ -28,7 +28,7 @@ public:
   static inline bool is_object(Data *data);
 
 private:
-  static const uword kTagSize = IF_ELSE(cc32, 2, 2);
+  static const uword kTagSize = IF_ELSE(cc32, 2, 3);
   static const uword kTagMask = (1 << kTagSize) - 1;
   static const uword kObjectTag = 0;
   static const uword kSmadTag = 2;
