@@ -1,7 +1,7 @@
 #ifndef _VALUE_POINTER_INL
 #define _VALUE_POINTER_INL
 
-#include "value/pointer.h"
+#include "value/value.h"
 #include "utils/check.h"
 
 #include "utils/log.h"
@@ -11,7 +11,7 @@ namespace neutrino {
 
 /* --- S i g n a l --- */
 
-Signal *Pointer::tag_signal(Signal::Type type, word payload) {
+Signal *Pointer::tag_signal(word type, word payload) {
   assert payload < (1 << kSignalPayloadSize);
   uword result = (type << (kSignalPayloadSize + kTagSize))
                | (payload << kTagSize)
@@ -24,14 +24,38 @@ bool Pointer::is_signal(Data *that) {
   return (value & kTagMask) == kSignalTag;
 }
 
-Signal::Type Pointer::signal_type(Signal *that) {
+word Pointer::signal_type(Signal *that) {
   uword value = reinterpret_cast<uword>(that);
-  return static_cast<Signal::Type>(value >> (kSignalPayloadSize + kTagSize));
+  return value >> (kSignalPayloadSize + kTagSize);
 }
 
 word Pointer::signal_payload(Signal *that) {
   uword value = reinterpret_cast<uword>(that);
   return (value >> kTagSize) & ((1 << kSignalPayloadSize) - 1);
+}
+
+/* --- T a g g e d   I n t e g e r --- */
+
+bool Pointer::fits_tagged_integer(word value) {
+  static const uword kAdded = IF_ELSE(cc32, 0x40000000U, 0x2000000000000000U);
+  static const uword kMask = IF_ELSE(cc32, 0x80000000U, 0x8000000000000000U);
+  return ((static_cast<uword>(value) + kAdded) & kMask) == 0;
+}
+
+TaggedInteger *Pointer::tag_integer(word value) {
+  assert fits_tagged_integer(value);
+  TaggedInteger *result = reinterpret_cast<TaggedInteger*>(value << kTagSize | kIntegerTag);
+  assert is_tagged_integer(result);
+  return result;
+}
+
+bool Pointer::is_tagged_integer(Data *data) {
+  word value = reinterpret_cast<word>(data);
+  return (value & kTagMask) == kIntegerTag;
+}
+
+word Pointer::tagged_integer_value(TaggedInteger *that) {
+  return reinterpret_cast<word>(that) >> kTagSize;
 }
 
 /* --- F o r w a r d   P o i n t e r --- */

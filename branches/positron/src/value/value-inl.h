@@ -81,6 +81,25 @@ double SmallDouble::value() {
 }
 #endif
 
+/* --- T a g g e d   I n t e g e r --- */
+
+template <>
+static inline bool is<TaggedInteger>(Data *data) {
+  return Pointer::is_tagged_integer(data);
+}
+
+bool TaggedInteger::fits(word value) {
+  return Pointer::fits_tagged_integer(value);
+}
+
+TaggedInteger *TaggedInteger::make(word value) {
+  return Pointer::tag_integer(value);
+}
+
+word TaggedInteger::value() {
+  return Pointer::tagged_integer_value(this);
+}
+
 /* --- O b j e c t --- */
 
 Species *Object::species() {
@@ -162,7 +181,7 @@ vector<T> Blob::as_vector() {
 /* --- S i g n a l --- */
 
 Signal::Type Signal::type() {
-  return Pointer::signal_type(this);
+  return static_cast<Signal::Type>(Pointer::signal_type(this));
 }
 
 word Signal::payload() {

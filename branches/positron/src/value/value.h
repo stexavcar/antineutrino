@@ -4,6 +4,7 @@
 #include "utils/array.h"
 #include "utils/global.h"
 #include "utils/string.h"
+#include "value/pointer.h"
 
 namespace neutrino {
 
@@ -42,7 +43,7 @@ public:
 #undef MAKE_ENUM
   };
 
-  uword hash();
+  word hash();
 
   static Value *nothing() { return NULL; }
   bool is_nothing() { return this == nothing(); }
@@ -52,8 +53,11 @@ public:
 class TaggedInteger : public Value {
 public:
   inline word value();
-  static bool fits(word value);
-  static TaggedInteger *from(word value);
+  static inline bool fits(word value);
+  static inline TaggedInteger *make(word value);
+
+  static const word kUpperLimit = Pointer::kTaggedIntegerUpperLimit;
+  static const word kLowerLimit = Pointer::kTaggedIntegerLowerLimit;
 };
 
 /* --- S m a l l   D o u b l e --- */
@@ -74,7 +78,7 @@ public:
   inline void set_forwarding_header(ForwardPointer *v);
 
   void migrate_fields(FieldMigrator &migrator);
-  uword calculate_hash();
+  word calculate_hash();
 
   template <typename T>
   static allocation<Object> clone_object(Species *desc, Object *obj,
@@ -88,7 +92,7 @@ public:
       FieldMigrator &migrator);
 
   template <typename T>
-  static uword object_hash(Object *obj);
+  static word object_hash(Object *obj);
 
   Data *&header() { return header_; }
 private:
@@ -104,7 +108,7 @@ struct Virtuals {
     // Migrate the fields of an object.
     void (*migrate_fields)(Species*, Object*, FieldMigrator&);
     // Calculate the hash code of an object
-    uword (*hash)(Object*);
+    word (*hash)(Object*);
   };
   struct SpeciesVirtuals {
     // Clone yourself in the given space.
@@ -198,8 +202,18 @@ public:
   class Entry {
   public:
     Entry(HashMap *map, word index) : map_(map), index_(index) { }
+    bool is_occupied();
+    Value *&key();
+    Value *&value();
+    Value *&hash();
     static const word kSize = 3;
   private:
+    HashMap *map() { return map_; }
+    word index() { return index_; }
+    array<Value*> entries();
+    static const word kKeyOffset = 0;
+    static const word kValueOffset = 1;
+    static const word kHashOffset = 2;
     HashMap *map_;
     word index_;
   };
@@ -213,7 +227,7 @@ public:
   static const word kInitialCapacity = 8;
 
 private:
-  Entry lookup(uword hash, Value *key);
+  Entry lookup(TaggedInteger *hash, Value *key);
   Array *table() { return table_; }
 
   word size_;
@@ -312,7 +326,7 @@ public:
   word length() { return length_; }
   bool equals(const string &str);
 
-  uword calculate_hash();
+  word calculate_hash();
 
   template <typename T>
   static allocation<Object> clone_object(Species *desc, Object *obj,

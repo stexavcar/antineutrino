@@ -4,6 +4,22 @@
 
 using namespace neutrino;
 
+TEST(tagged_integer) {
+  assert !TaggedInteger::fits(TaggedInteger::kUpperLimit);
+  assert TaggedInteger::fits(TaggedInteger::kUpperLimit - 1);
+  assert !TaggedInteger::fits(TaggedInteger::kLowerLimit);
+  assert TaggedInteger::fits(TaggedInteger::kLowerLimit + 1);
+  for (word i = 0; 0 <= i && i < TaggedInteger::kUpperLimit; i = i < 1000 ? i + 1 : grow_value(i)) {
+    for (word s = -1; s < 2; s += 2) {
+      word v = s * i;
+      assert TaggedInteger::fits(v);
+      TaggedInteger *obj = TaggedInteger::make(v);
+      assert is<TaggedInteger>(obj);
+      assert v == obj->value();
+    }
+  }
+}
+
 #ifdef M64
 
 class Double {

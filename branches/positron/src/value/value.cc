@@ -40,7 +40,7 @@ DataFormatter DataFormatter::kInstance;
 
 /* --- V a l u e --- */
 
-uword Value::hash() {
+word Value::hash() {
   if (is<Object>(this)) {
     Object *obj = cast<Object>(this);
     return obj->species()->virtuals().object.hash(obj);
@@ -78,11 +78,11 @@ word Object::object_size_in_memory(Species *species, Object *obj) {
 }
 
 template <typename T>
-uword Object::object_hash(Object *obj) {
+word Object::object_hash(Object *obj) {
   return cast<T>(obj)->calculate_hash();
 }
 
-uword Object::calculate_hash() {
+word Object::calculate_hash() {
   assert false;
   return 0;
 }
@@ -191,13 +191,13 @@ allocation<Object> String::clone_object(Species *desc, Object *obj,
   return result;
 }
 
-uword String::calculate_hash() {
+word String::calculate_hash() {
   vector<code_point> str = as_vector();
-  uword hash = 0;
+  word hash = 0;
   uword rotand = 0;
   for (word i = 0; i < str.length(); i++) {
     uword c = str[i];
-    rotand ^= c & ((8 * sizeof(uword)) - 1);
+    rotand ^= c & ((8 * sizeof(word)) - 1);
     hash = ((hash << rotand) | (hash >> rotand)) ^ c;
   }
   return hash;
@@ -236,22 +236,49 @@ allocation<Object> Blob::clone_object(Species *desc, Object *obj,
 
 /* --- H a s h   M a p --- */
 
+array<Value*> HashMap::Entry::entries() {
+  return map()->table()->elements() + (kSize * index());
+}
+
+bool HashMap::Entry::is_occupied() {
+  return is<TaggedInteger>(hash());
+}
+
+Value *&HashMap::Entry::key() {
+  return entries()[kKeyOffset];
+}
+
+Value *&HashMap::Entry::value() {
+  return entries()[kValueOffset];
+}
+
+Value *&HashMap::Entry::hash() {
+  return entries()[kHashOffset];
+}
+
 void HashMap::migrate_fields(FieldMigrator &migrator) {
   Object::migrate_fields(migrator);
   migrator.migrate_field(reinterpret_cast<Value**>(&table_));
 }
 
 possibly HashMap::set(Value *key, Value *value) {
-  uword hash = key->hash();
+  word hash_value = key->hash() % TaggedInteger::kUpperLimit;
+  TaggedInteger *hash = TaggedInteger::make(hash_value);
   Entry entry = lookup(hash, key);
+  if (entry.is_occupied()) {
+    assert false;
+  } else {
+    entry.key() = key;
+    entry.hash() = hash;
+    entry.value() = value;
+  }
   return Success::make();
 }
 
-HashMap::Entry HashMap::lookup(uword hash, Value *key) {
-  /*
+HashMap::Entry HashMap::lookup(TaggedInteger *hash, Value *key) {
   vector<Value*> table = this->table()->as_vector();
   word end = table.length() / Entry::kSize;
-  word pos = hash % end;
+  word pos = hash->value() % end;
   Entry current(this, pos);
   while (current.is_occupied()) {
     if (current.hash() == hash && current.key() == key)
@@ -260,8 +287,6 @@ HashMap::Entry HashMap::lookup(uword hash, Value *key) {
     current = Entry(this, pos);
   }
   return current;
-  */
-  return Entry(this, 0);
 }
 
 /* --- P r i n t i n g --- */

@@ -32,6 +32,14 @@ void array<T>::copy_to(array<T> that, word length) {
   ::memcpy(that.start(), start(), length * sizeof(T));
 }
 
+template <typename T>
+array<T> array<T>::operator+(word offset) {
+  assert offset < length_;
+  return IF_ELSE(ccArrayBoundsChecks,
+      array<T>(data_ + offset, length_ - offset),
+      array<T>(data_ + offset));
+}
+
 } // namespace neutrino
 
 inline void *operator new(size_t size, neutrino::array<uint8_t> data) {

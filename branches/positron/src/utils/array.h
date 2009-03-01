@@ -17,6 +17,7 @@ public:
   array() : data_(NULL) { }
 #endif // ARRAY_BOUNDS_CHECKS
   bool is_empty() { return data_ == NULL; }
+  array<T> operator+(word offset);
   T &operator[](word offset);
   const T &operator[](word offset) const;
   array<T> from(word start);
