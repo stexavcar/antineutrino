@@ -3,6 +3,7 @@
 #include "test-inl.h"
 #include "utils/vector-inl.h"
 #include "utils/smart-ptrs-inl.h"
+#include "value/value-inl.h"
 
 namespace neutrino {
 
@@ -116,6 +117,10 @@ word PseudoRandom::next() {
   a_ = (1351 * a_) + (2963 * b_) + 9373;
   b_ = (5197 * b_) + (9399 * a_) + 5137;
   return (9113 * a_) + (7437 * b_) + 6927;
+}
+
+TaggedInteger *PseudoRandom::next_tagged_integer() {
+  return TaggedInteger::make(next() % TaggedInteger::kUpperLimit);
 }
 
 } // neutrino

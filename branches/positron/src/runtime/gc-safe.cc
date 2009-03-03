@@ -5,10 +5,10 @@
 namespace neutrino {
 
 probably GcSafe::set(ref<HashMap> map, ref<Value> key, ref<Value> value) {
-  possibly result = map->set(*key, *value);
+  possibly result = map->set(heap(), *key, *value);
   if (result.has_succeeded()) return result.value();
   heap().collect_garbage();
-  result = map->set(*key, *value);
+  result = map->set(heap(), *key, *value);
   if (result.has_succeeded()) return result.value();
   return FatalError::out_of_memory();
 }

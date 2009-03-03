@@ -59,14 +59,24 @@ TRY_TEST(hash_map_object) {
   try runtime.initialize();
   protector<1> protect(runtime.refs());
   try alloc ref<HashMap> map = runtime.gc_safe().new_hash_map();
+  assert 0 == map->size();
   PseudoRandom random(35);
+  for (word i = 0; i < 100; i++) {
+    protector<2> protect(runtime.refs());
+    string_stream stream;
+    stream.add("key-%-value", vargs(i));
+    try alloc ref<String> key = runtime.gc_safe().new_string(stream.raw_string());
+    ref<TaggedInteger> value = protect(random.next_tagged_integer());
+    try runtime.gc_safe().set(map, key, value);
+    assert map->size() == (i + 1);
+  }
+  random.reset(35);
   for (word i = 0; i < 100; i++) {
     protector<1> protect(runtime.refs());
     string_stream stream;
-    stream.add("key-%", vargs(i));
+    stream.add("key-%-value", vargs(i));
     try alloc ref<String> key = runtime.gc_safe().new_string(stream.raw_string());
-    try runtime.gc_safe().set(map, key, key);
+    assert map->get(*key) == random.next_tagged_integer();
   }
-  map->println();
   return Success::make();
 }

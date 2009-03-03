@@ -10,6 +10,8 @@ namespace neutrino {
 
 array<uint8_t> Space::allocate(size_t size) {
   size = align(size);
+  if (size > 10000)
+    ::abort();
   uint8_t *start = page().cursor();
   uint8_t *next = start + size;
   if (next >= page().limit()) {

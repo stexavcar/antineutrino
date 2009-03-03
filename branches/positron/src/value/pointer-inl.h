@@ -37,8 +37,8 @@ word Pointer::signal_payload(Signal *that) {
 /* --- T a g g e d   I n t e g e r --- */
 
 bool Pointer::fits_tagged_integer(word value) {
-  static const uword kAdded = IF_ELSE(cc32, 0x40000000U, 0x2000000000000000U);
-  static const uword kMask = IF_ELSE(cc32, 0x80000000U, 0x8000000000000000U);
+  static const uword kAdded = IF_ELSE(cc32, 0x20000000U, 0x1000000000000000U);
+  static const uword kMask  = IF_ELSE(cc32, 0xC0000000U, 0xE000000000000000U);
   return ((static_cast<uword>(value) + kAdded) & kMask) == 0;
 }
 

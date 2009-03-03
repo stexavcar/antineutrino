@@ -28,7 +28,7 @@ public:
   array<uint8_t> &memory() { return memory_; }
   void zap(word filler);
   static const word kBeforeZapValue = IF_ELSE(cc64, 0xDeeeeeadBeeeeeef, 0xDeadBeef);
-  static const word kAfterZapValue = IF_ELSE(cc64, 0xFeeeeeadBeeeeeee, 0xFeedBeee);
+  static const word kAfterZapValue = IF_ELSE(cc64, 0xFeeeeeedBeeeeeee, 0xFeedBeee);
 private:
   embed_array<uint8_t, L> memory_;
   uint8_t *cursor_;
@@ -45,7 +45,7 @@ public:
   static inline word align(word size);
 private:
   static const word kAlignment = kPointerSize;
-  static const word kPageSize = 8 KB;
+  static const word kPageSize = 1 MB;
   Page<kPageSize> &page() { return page_; }
   Page<kPageSize> page_;
 };

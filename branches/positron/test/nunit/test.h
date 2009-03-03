@@ -36,10 +36,10 @@ private:
 
 class PseudoRandom {
 public:
-  PseudoRandom(word seed, word other = 257)
-    : a_(seed)
-    , b_(other) { }
+  PseudoRandom(word seed, word other = 257) : a_(seed), b_(other) { }
+  void reset(word seed, word other = 257) { a_ = seed; b_ = other; }
   word next();
+  TaggedInteger *next_tagged_integer();
 private:
   word a_;
   word b_;

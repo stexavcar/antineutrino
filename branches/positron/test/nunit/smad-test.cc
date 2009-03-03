@@ -5,6 +5,8 @@
 using namespace neutrino;
 
 TEST(tagged_integer) {
+  assert TaggedInteger::kUpperLimit > 0;
+  assert TaggedInteger::kLowerLimit < 0;
   assert !TaggedInteger::fits(TaggedInteger::kUpperLimit);
   assert TaggedInteger::fits(TaggedInteger::kUpperLimit - 1);
   assert !TaggedInteger::fits(TaggedInteger::kLowerLimit);

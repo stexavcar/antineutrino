@@ -27,6 +27,7 @@ class DisassembleContext;
 class Factory;
 class FieldMigrator;
 class ForwardPointer;
+class Heap;
 template <typename T> class likely;
 class MiniHeap;
 class MessageIn;

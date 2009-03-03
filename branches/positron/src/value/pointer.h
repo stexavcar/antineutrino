@@ -31,7 +31,8 @@ public:
   static inline bool is_object(Data *data);
 
   static const uword kTagSize = IF_ELSE(cc32, 2, 3);
-  static const word kTaggedIntegerUpperLimit = IF_ELSE(cc32, 1 << (32 - kTagSize), 1L << (64 - kTagSize));
+  static const word kBitsPerWord = sizeof(word) * 8;
+  static const word kTaggedIntegerUpperLimit = 1L << (kBitsPerWord - kTagSize - 1);
   static const word kTaggedIntegerLowerLimit = -kTaggedIntegerUpperLimit - 1;
 
 private:

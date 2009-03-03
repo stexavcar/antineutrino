@@ -4,13 +4,24 @@
 
 namespace neutrino {
 
+template <typename T>
+static word object_hash_bridge(Object *obj) {
+  return cast<T>(obj)->hash();
+}
+
+template <typename T>
+static bool object_equals_bridge(Object *obj, Value *that) {
+  return cast<T>(obj)->equals(that);
+}
+
 #define DECLARE_VIRTUALS(__Name__, __Class__, __Species__)           \
   Virtuals __Name__ = {                                              \
     {                                                                \
       __Class__::clone_object<__Class__>,                            \
       __Class__::object_size_in_memory<__Class__>,                   \
       __Class__::migrate_object_fields<__Class__>,                   \
-      __Class__::object_hash<__Class__>                              \
+      object_hash_bridge<__Class__>,                                 \
+      object_equals_bridge<__Class__>                                \
     }, {                                                             \
       __Species__::clone_species<__Species__>,                       \
       __Species__::species_size_in_memory<__Species__>,              \
@@ -50,6 +61,16 @@ word Value::hash() {
   }
 }
 
+bool Value::equals(Value *that) {
+  if (this == that) return true;
+  if (is<Object>(this)) {
+    Object *obj = cast<Object>(this);
+    return obj->species()->virtuals().object.equals(obj, that);
+  } else {
+    return false;
+  }
+}
+
 /* --- O b j e c t --- */
 
 template <typename T>
@@ -77,14 +98,13 @@ word Object::object_size_in_memory(Species *species, Object *obj) {
   return sizeof(T);
 }
 
-template <typename T>
-word Object::object_hash(Object *obj) {
-  return cast<T>(obj)->calculate_hash();
-}
-
-word Object::calculate_hash() {
+word Object::hash() {
   assert false;
   return 0;
+}
+
+bool Object::equals(Value *that) {
+  return this == that;
 }
 
 /* --- S p e c i e s --- */
@@ -191,14 +211,15 @@ allocation<Object> String::clone_object(Species *desc, Object *obj,
   return result;
 }
 
-word String::calculate_hash() {
+word String::hash() {
+  static const word kBitCount = (8 * sizeof(word));
   vector<code_point> str = as_vector();
-  word hash = 0;
+  word hash = str.length();
   uword rotand = 0;
   for (word i = 0; i < str.length(); i++) {
     uword c = str[i];
-    rotand ^= c & ((8 * sizeof(word)) - 1);
-    hash = ((hash << rotand) | (hash >> rotand)) ^ c;
+    rotand = (rotand + c) & (kBitCount - 1);
+    hash = ((hash << rotand) | (static_cast<uword>(hash) >> (kBitCount - rotand))) ^ c;
   }
   return hash;
 }
@@ -207,6 +228,22 @@ bool String::equals(const string &str) {
   if (length() != str.length()) return false;
   for (word i = 0; i < length(); i++) {
     if (chars()[i] != static_cast<code_point>(str[i]))
+      return false;
+  }
+  return true;
+}
+
+bool String::equals(Value *other) {
+  if (this == other)
+    return true;
+  if (!is<String>(other))
+    return false;
+  String *that = cast<String>(other);
+  word length = this->length();
+  if (that->length() != length)
+    return false;
+  for (word i = 0; i < length; i++) {
+    if (chars()[i] != that->chars()[i])
       return false;
   }
   return true;
@@ -237,23 +274,34 @@ allocation<Object> Blob::clone_object(Species *desc, Object *obj,
 /* --- H a s h   M a p --- */
 
 array<Value*> HashMap::Entry::entries() {
-  return map()->table()->elements() + (kSize * index());
+  return table()->elements() + (kSize * index());
+}
+
+HashMap::Entry::Entry(Array *table, word index)
+  : table_(table), index_(index) {
+  assert index >= 0;
 }
 
 bool HashMap::Entry::is_occupied() {
   return is<TaggedInteger>(hash());
 }
 
-Value *&HashMap::Entry::key() {
+Value *HashMap::Entry::key() {
   return entries()[kKeyOffset];
 }
 
-Value *&HashMap::Entry::value() {
+Value *HashMap::Entry::value() {
   return entries()[kValueOffset];
 }
 
-Value *&HashMap::Entry::hash() {
+Value *HashMap::Entry::hash() {
   return entries()[kHashOffset];
+}
+
+void HashMap::Entry::grab(Value *key, Value *value, TaggedInteger *hash) {
+  entries()[kKeyOffset] = key;
+  entries()[kValueOffset] = value;
+  entries()[kHashOffset] = hash;
 }
 
 void HashMap::migrate_fields(FieldMigrator &migrator) {
@@ -261,32 +309,77 @@ void HashMap::migrate_fields(FieldMigrator &migrator) {
   migrator.migrate_field(reinterpret_cast<Value**>(&table_));
 }
 
-possibly HashMap::set(Value *key, Value *value) {
-  word hash_value = key->hash() % TaggedInteger::kUpperLimit;
-  TaggedInteger *hash = TaggedInteger::make(hash_value);
-  Entry entry = lookup(hash, key);
-  if (entry.is_occupied()) {
-    assert false;
-  } else {
-    entry.key() = key;
-    entry.hash() = hash;
-    entry.value() = value;
+word HashMap::capacity() {
+  return table()->length() / Entry::kSize;
+}
+
+possibly HashMap::extend_capacity(Heap &heap, word new_capacity) {
+  word old_capacity = capacity();
+  assert new_capacity > old_capacity;
+  try alloc Array *new_table = heap.new_array(new_capacity * Entry::kSize);
+  Array *old_table = table();
+  table_ = new_table;
+  for (word i = 0; i < old_capacity; i++) {
+    Entry old_entry(old_table, i);
+    if (!old_entry.is_occupied()) continue;
+    Value *key = old_entry.key();
+    TaggedInteger *hash = cast<TaggedInteger>(old_entry.hash());
+    Entry new_entry = lookup(hash, key);
+    assert !new_entry.is_occupied();
+    new_entry.grab(key, old_entry.value(), hash);
   }
   return Success::make();
 }
 
+static TaggedInteger *hash_value(Value *key) {
+  word value = key->hash() % TaggedInteger::kUpperLimit;
+  return TaggedInteger::make(value);
+}
+
+possibly HashMap::set(Heap &heap, Value *key, Value *value) {
+  if (size() * 100 > capacity() * kLoadFactorPercent)
+    try extend_capacity(heap, grow_value(capacity()));
+  TaggedInteger *hash = hash_value(key);
+  Entry entry = lookup(hash, key);
+  if (!entry.is_occupied()) size_++;
+  entry.grab(key, value, hash);
+  return Success::make();
+}
+
+Data *HashMap::get(Value *key) {
+  Entry entry = lookup(hash_value(key), key);
+  if (entry.is_occupied()) {
+    return entry.value();
+  } else {
+    return InternalError::missing();
+  }
+}
+
 HashMap::Entry HashMap::lookup(TaggedInteger *hash, Value *key) {
-  vector<Value*> table = this->table()->as_vector();
-  word end = table.length() / Entry::kSize;
-  word pos = hash->value() % end;
-  Entry current(this, pos);
+  Array *array = table();
+  vector<Value*> table = array->as_vector();
+  word end = capacity();
+  word pos = static_cast<uword>(hash->value()) % end;
+  Entry current(array, pos);
   while (current.is_occupied()) {
-    if (current.hash() == hash && current.key() == key)
+    if (current.hash() == hash && current.key()->equals(key))
       break;
     pos = (pos + 1) % end;
-    current = Entry(this, pos);
+    current = Entry(array, pos);
   }
   return current;
+}
+
+bool HashMap::Iterator::next(Value **key_out, Value **value_out) {
+  while (offset_ < map()->capacity()) {
+    HashMap::Entry entry(map()->table(), offset_++);
+    if (entry.is_occupied()) {
+      *key_out = entry.key();
+      *value_out = entry.value();
+      return true;
+    }
+  }
+  return false;
 }
 
 /* --- P r i n t i n g --- */
@@ -297,25 +390,57 @@ void DataFormatter::print_on(const variant &that, string modifiers,
   if (is<Signal>(obj)) {
     switch (cast<Signal>(obj)->type()) {
 #define MAKE_CASE(Name)                                              \
-      case Signal::s##Name: cast<Name>(obj)->print_on(modifiers, stream); \
-      return;
+      case Signal::s##Name:                                          \
+        cast<Name>(obj)->print_on(modifiers, stream);                \
+        return;
     eSignalTypes(MAKE_CASE)
 #undef MAKE_CASE
     default:
       break;
     }
-  }
-  if (is<String>(obj)) {
-    String *str = cast<String>(obj);
-    array<code_point> chars = str->chars();
-    bool quote = modifiers.contains('q');
-    if (quote) stream.add('"');
-    for (word i = 0; i < str->length(); i++)
-      stream.add(chars[i]);
-    if (quote) stream.add('"');
+  } else if (is<Object>(obj)) {
+    switch (cast<Object>(obj)->type()) {
+#define MAKE_CASE(Name)                                              \
+      case Value::t##Name:                                           \
+        cast<Name>(obj)->print_on(modifiers, stream);                \
+        return;
+      eConcreteValueTypes(MAKE_CASE)
+#undef MAKE_CASE
+      default:
+        break;
+    }
+  } else if (is<TaggedInteger>(obj)) {
+    stream.add("%", vargs(cast<TaggedInteger>(obj)->value()));
   } else {
-    stream.add("[todo]");
+    stream.add("#<unknown>");
   }
+}
+
+void Object::print_on(string modifiers, string_stream &out) {
+  out.add("#<an Object>");
+}
+
+void String::print_on(string modifiers, string_stream &out) {
+  vector<code_point> chars = as_vector();
+  bool quote = modifiers.contains('q');
+  if (quote) out.add('"');
+  for (word i = 0; i < chars.length(); i++)
+    out.add(chars[i]);
+  if (quote) out.add('"');
+}
+
+void HashMap::print_on(string modifiers, string_stream &out) {
+  out.add('{');
+  HashMap::Iterator iter(this);
+  Value *key = NULL;
+  Value *value = NULL;
+  bool first = true;
+  while (iter.next(&key, &value)) {
+    if (first) first = false;
+    else out.add(", ");
+    out.add("%{q}: %{q}", vargs(key, value));
+  }
+  out.add('}');
 }
 
 void FatalError::print_on(string modifiers, string_stream &out) {

@@ -44,6 +44,7 @@ public:
   };
 
   word hash();
+  bool equals(Value *that);
 
   static Value *nothing() { return NULL; }
   bool is_nothing() { return this == nothing(); }
@@ -78,7 +79,9 @@ public:
   inline void set_forwarding_header(ForwardPointer *v);
 
   void migrate_fields(FieldMigrator &migrator);
-  word calculate_hash();
+  word hash();
+  void print_on(string modifiers, string_stream &out);
+  bool equals(Value *that);
 
   template <typename T>
   static allocation<Object> clone_object(Species *desc, Object *obj,
@@ -90,9 +93,6 @@ public:
   template <typename T>
   static void migrate_object_fields(Species *desc, Object *obj,
       FieldMigrator &migrator);
-
-  template <typename T>
-  static word object_hash(Object *obj);
 
   Data *&header() { return header_; }
 private:
@@ -109,6 +109,8 @@ struct Virtuals {
     void (*migrate_fields)(Species*, Object*, FieldMigrator&);
     // Calculate the hash code of an object
     word (*hash)(Object*);
+    // Structural object equality
+    bool (*equals)(Object*, Value*);
   };
   struct SpeciesVirtuals {
     // Clone yourself in the given space.
@@ -197,37 +199,54 @@ class HashMap : public Object {
 public:
   HashMap(Species *species, Array *table)
     : Object(species)
+    , size_(0)
     , table_(table) { }
 
   class Entry {
   public:
-    Entry(HashMap *map, word index) : map_(map), index_(index) { }
+    Entry(Array *table, word index);
     bool is_occupied();
-    Value *&key();
-    Value *&value();
-    Value *&hash();
+    Value *key();
+    Value *value();
+    Value *hash();
+    void grab(Value *key, Value *value, TaggedInteger *hash);
     static const word kSize = 3;
   private:
-    HashMap *map() { return map_; }
+    Array *table() { return table_; }
     word index() { return index_; }
     array<Value*> entries();
     static const word kKeyOffset = 0;
     static const word kValueOffset = 1;
     static const word kHashOffset = 2;
-    HashMap *map_;
+    Array *table_;
     word index_;
   };
 
-  possibly set(Value *key, Value *value);
+  class Iterator {
+  public:
+    explicit Iterator(HashMap *map) : map_(map), offset_(0) { }
+    bool next(Value **key_out, Value **value_out);
+  private:
+    HashMap *map() { return map_; }
+    HashMap *map_;
+    word offset_;
+  };
+
+  possibly set(Heap &heap, Value *key, Value *value);
   Data *get(Value *key);
+  word size() { return size_; }
 
   void migrate_fields(FieldMigrator &migrator);
+  void print_on(string modifiers, string_stream &out);
 
   static Virtuals &virtuals() { return kVirtuals; }
   static const word kInitialCapacity = 8;
+  static const word kLoadFactorPercent = 75;
 
 private:
+  word capacity();
   Entry lookup(TaggedInteger *hash, Value *key);
+  possibly extend_capacity(Heap &heap, word new_capacity);
   Array *table() { return table_; }
 
   word size_;
@@ -325,8 +344,10 @@ public:
   inline vector<code_point> as_vector();
   word length() { return length_; }
   bool equals(const string &str);
+  bool equals(Value *that);
 
-  word calculate_hash();
+  word hash();
+  void print_on(string modifiers, string_stream &out);
 
   template <typename T>
   static allocation<Object> clone_object(Species *desc, Object *obj,
@@ -375,7 +396,8 @@ class Failure : public Signal {
 
 #define eInternalErrorTypes(VISIT)                                   \
   VISIT(Unknown, unknown) VISIT(HeapExhaustion, heap_exhaustion)     \
-  VISIT(System, system)   VISIT(Environment, environment)
+  VISIT(System, system)   VISIT(Environment, environment)            \
+  VISIT(Missing, missing)
 
 class InternalError : public Failure {
 public:
