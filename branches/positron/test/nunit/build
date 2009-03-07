@@ -15,7 +15,6 @@ program (
     'service-test.cc',
     'string-test.cc',
     'smad-test.cc',
-    'spawn-test.cc',
     'type-test.cc',
     'test.cc',
     'test.h',

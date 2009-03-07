@@ -15,6 +15,7 @@ static void try_format(string format, const var_args &args,
 
 
 TEST(simple_formatting) {
+  int x = ((int*) 0)[0];
   try_format("%", vargs(1), "1");
   try_format("% %", vargs(1, 2), "1 2");
   try_format("% % %", vargs(1, 2, 3), "1 2 3");

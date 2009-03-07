@@ -48,6 +48,7 @@ template <> uword hash<string>(const string &str);
 
 class variant {
 public:
+  variant() { }
   template <typename T>
   inline variant(const T &t) : type_(NULL) {
     encode_variant(*this, static_cast<typename coerce<T>::type>(t));
@@ -78,19 +79,26 @@ public:
 };
 
 
-class var_args {
+template <word L>
+class var_args_impl {
 public:
-  virtual word length() const = 0;
-  virtual const variant &operator[](word i) const = 0;
+  const variant *const *elms() const { return elms_; }
+  template <word T>
+  inline var_args_impl<L> &set(const variant &var);
+public:
+  const variant *elms_[L];
 };
 
 
-template <word L>
-class var_args_impl : public var_args {
+class var_args {
 public:
-  virtual word length() const { return L; }
-  virtual const variant &operator[](word i) const;
-  embed_vector<const variant*, L> elms_;
+  template <word L>
+  var_args(const var_args_impl<L> &args) : length_(L), elms_(args.elms()) { }
+  word length() const { return length_; }
+  const variant &operator[](word i) const { return *elms_[i]; }
+private:
+  word length_;
+  const variant *const *elms_;
 };
 
 

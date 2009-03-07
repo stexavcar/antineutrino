@@ -120,7 +120,7 @@ private:
 
 class LiteralArray : public Array {
 public:
-  inline LiteralArray(Value v0, Value v1, Value v2, Value v4, Value v4, Value v5);
+  inline LiteralArray(Value v0, Value v1, Value v2, Value v3, Value v4, Value v5);
   ~LiteralArray() { }
   static const word kMaxSize = 6;
 private:

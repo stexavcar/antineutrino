@@ -7,18 +7,17 @@
 
 namespace neutrino {
 
+
 template <word L>
-const variant &var_args_impl<L>::operator[](word i) const {
-  assert 0 <= i;
-  assert i < L;
-  return *elms_[i];
+template <word T>
+var_args_impl<L> &var_args_impl<L>::set(const variant &var) {
+  elms_[T] = &var;
+  return *this;
 }
 
 
 static inline var_args_impl<1> vargs(const variant &a0) {
-  var_args_impl<1> result;
-  result.elms_[0] = &a0;
-  return result;
+  return var_args_impl<1>().set<0>(a0);
 }
 
 
@@ -28,31 +27,19 @@ static inline var_args_impl<1> vargs() {
 
 
 static inline var_args_impl<2> vargs(const variant &a0, const variant &a1) {
-  var_args_impl<2> result;
-  result.elms_[0] = &a0;
-  result.elms_[1] = &a1;
-  return result;
+  return var_args_impl<2>().set<0>(a0).set<1>(a1);
 }
 
 
 static inline var_args_impl<3> vargs(const variant &a0, const variant &a1,
     const variant &a2) {
-  var_args_impl<3> result;
-  result.elms_[0] = &a0;
-  result.elms_[1] = &a1;
-  result.elms_[2] = &a2;
-  return result;
+  return var_args_impl<3>().set<0>(a0).set<1>(a1).set<2>(a2);
 }
 
 
 static inline var_args_impl<4> vargs(const variant &a0, const variant &a1,
     const variant &a2, const variant &a3) {
-  var_args_impl<4> result;
-  result.elms_[0] = &a0;
-  result.elms_[1] = &a1;
-  result.elms_[2] = &a2;
-  result.elms_[3] = &a3;
-  return result;
+  return var_args_impl<4>().set<0>(a0).set<1>(a1).set<2>(a2).set<3>(a3);
 }
 
 

@@ -31,7 +31,7 @@ def ensure_library(env, libmap, name):
   (srcs, hdrs) = configure_dependencies(env, lib)
   lib_deps = library_dependencies(env, libmap, lib)
   lib_obj = env.Library(name, srcs, LIBS=lib_deps, **lib.get_flags())
-  env.Depends(lib_obj, hdrs)
+  env.Depends(srcs, hdrs)
   env.Alias(name, env.Install(target_dir, lib_obj))
   libmap[name] = lib_obj
   return lib_obj

@@ -64,7 +64,6 @@ string string::substring(word start, word end) {
   return string(this->start() + start, end - start);
 }
 
-
 void string_stream::add(string str) {
   for (word i = 0; i < str.length(); i++)
     add(str[i]);
@@ -218,6 +217,7 @@ void string::println(FILE *out) {
   for (word i = 0; i < length(); i++)
     fputc(this->operator[](i), out);
   fputc('\n', out);
+  fflush(out);
 }
 
 template <>

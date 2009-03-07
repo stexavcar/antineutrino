@@ -1,3 +1,4 @@
+#include "io/miniheap-inl.h"
 #include "plankton/plankton-inl.h"
 #include "plankton/match.h"
 #include "utils/string-inl.h"

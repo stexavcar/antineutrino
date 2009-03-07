@@ -3,9 +3,9 @@
 import logging
 import optparse
 from os.path import abspath, join
-import subprocess
 import sys
 import time
+import build
 
 
 _ROOT = abspath(join(sys.argv[0], '..', '..'))
@@ -29,37 +29,6 @@ OPTIONS = [
 ]
 
 
-class CommandOutput(object):
-
-  def __init__(self, exit_code, stdout, stderr):
-    self.exit_code = exit_code
-    self.stdout = stdout
-    self.stderr = stderr
-  
-  def __str__(self):
-    return 'command output { code: %i, stdout: "%s", stderr: "%s" }' % (self.exit_code, self.stdout, self.stderr)
-
-
-def execute(args):
-  logging.info(' '.join(args))
-  process = subprocess.Popen(
-    args = args,
-    stdout = subprocess.PIPE,
-    stderr = subprocess.PIPE
-  )
-  exit_code = process.wait()
-  output = process.stdout.read()
-  errors = process.stderr.read()
-  return CommandOutput(exit_code, output, errors)
-
-
-def execute_no_capture(args):
-  logging.info(' '.join(args))
-  process = subprocess.Popen(args = args)
-  exit_code = process.wait()
-  return CommandOutput(exit_code, "", "")
-
-
 # --- B u i l d ---
 
 
@@ -69,7 +38,7 @@ def do_build(options, args):
     value = eval('options.%s' % key)
     if value != option['default']:
       command.append('%s=%s' % (key, value))
-  output = execute_no_capture(command)
+  output = build.execute_no_capture(command)
   return output.exit_code
 
 
@@ -269,16 +238,16 @@ class NunitTestCase(object):
   
   def run(self):
     command = [self.executable, self.name]
-    output = execute(command)
+    output = build.execute(command)
     return TestOutput(self, command, output)
 
 
 def do_test(options, args):
-  # build_exit_code = do_build(options, ['nunit'])
-  # if build_exit_code != 0:
-  #   return build_exit_code
+  build_exit_code = do_build(options, ['nunit'])
+  if build_exit_code != 0:
+    return build_exit_code
   nunit = join(_HERE, 'nunit')
-  test_list_output = execute([nunit, '--list'])
+  test_list_output = build.execute([nunit, '--list'])
   if test_list_output.exit_code != 0:
     return test_list_output.exit_code
   tests = test_list_output.stdout.strip().split()

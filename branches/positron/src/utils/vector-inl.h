@@ -29,13 +29,19 @@ vector<T> vector<T>::subvector(word start, word end) {
   return vector<T>(this->start() + start, end - start);
 }
 
+template <typename T, word L>
+embed_vector<T, L>::embed_vector(const embed_vector<T, L> &other)
+  : vector<T>(base_, L) {
+  other.copy_to(*this);
+}
+
 template <typename T>
-array<T> vector<T>::as_array() {
+array<T> vector<T>::as_array() const {
   return TO_ARRAY(T, data_, length_);
 }
 
 template <typename T>
-void vector<T>::copy_to(vector<T> that) {
+void vector<T>::copy_to(vector<T> that) const {
   assert length() == that.length();
   as_array().copy_to(that.as_array(), length());
 }

@@ -22,7 +22,6 @@ library (
     'plankton/plankton.cc',
     'platform/abort.h',
     'platform/abort.cc',
-    'platform/spawn.h',
     'runtime/gc-safe.h',
     'runtime/gc-safe-inl.h',
     'runtime/gc-safe.cc',

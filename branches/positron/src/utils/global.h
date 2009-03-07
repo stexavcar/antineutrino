@@ -116,6 +116,12 @@ private:
 #define cc64(then_part, else_part) then_part
 #endif
 
+#ifdef MSVC
+#define ccWin32(then_part, else_part) then_part
+#else
+#define ccWin32(then_part, else_part) else_part
+#endif
+
 #define SEMI_STATIC_JOIN(a, b) SEMI_STATIC_JOIN_HELPER(a, b)
 #define SEMI_STATIC_JOIN_HELPER(a, b) a##b
 

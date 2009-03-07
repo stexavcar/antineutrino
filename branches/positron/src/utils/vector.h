@@ -25,8 +25,8 @@ public:
   word length() const { return length_; }
   static vector<T> allocate(word length);
   template <class A> static vector<T> allocate(A allocator, word length);
-  array<T> as_array();
-  void copy_to(vector<T> that);
+  array<T> as_array() const;
+  void copy_to(vector<T> that) const;
   void fill(const T &val);
 private:
   T *data_;
@@ -37,6 +37,7 @@ template <typename T, word L>
 class embed_vector : public vector<T> {
 public:
   embed_vector() : vector<T>(base_, L) { }
+  inline embed_vector(const embed_vector<T, L> &other);
 private:
   T base_[L];
 };

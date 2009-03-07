@@ -1,6 +1,43 @@
+import logging
 from os.path import dirname, join
 import platform
 import re
+import subprocess
+
+
+class CommandOutput(object):
+
+  def __init__(self, exit_code, stdout, stderr):
+    self.exit_code = exit_code
+    self.stdout = stdout
+    self.stderr = stderr
+  
+  def __str__(self):
+    return 'command output { code: %i, stdout: "%s", stderr: "%s" }' % (self.exit_code, self.stdout, self.stderr)
+
+
+def execute(args):
+  logging.info(' '.join(args))
+  process = subprocess.Popen(
+    args = args,
+    stdout = subprocess.PIPE,
+    stderr = subprocess.PIPE,
+    shell = is_win32()
+  )
+  exit_code = process.wait()
+  output = process.stdout.read()
+  errors = process.stderr.read()
+  return CommandOutput(exit_code, output, errors)
+
+
+def execute_no_capture(args):
+  logging.info(' '.join(args))
+  process = subprocess.Popen(
+    args = args,
+    shell = is_win32()
+  )
+  exit_code = process.wait()
+  return CommandOutput(exit_code, "", "")
 
 
 class BuildObject(object):
@@ -102,9 +139,16 @@ class Flags(object):
     self.process_defines(self.args.get('defines', []))
     self.process_includepath(self.args.get('includepath', []))
     self.process_optimize(self.args.get('optimize', None))
-    self.process_debug(self.args.get('debug', 'off'))
+    self.process_debug(self.args.get('debug', []))
     self.process_wordsize(self.args.get('wordsize', None))
+    self.process_link(self.args.get('link', []))
     return self.flags
+    
+  def process_includepath(self, includepath):
+    self.flags['CPPPATH'] += includepath
+    
+  def process_defines(self, defines):
+    self.flags['CPPDEFINES'] += defines
 
 
 def get_flag_processor(config, args):
@@ -123,15 +167,28 @@ class MsvcFlags(Flags):
     'nologo': '/nologo'
   }
   
-  kWarning = { }
+  kWarning = {
+    'no-initializer-this': '/wd4355'
+  }
 
   kCodegen = {
     'no-rtti': '/GR-',
-    'no-exceptions': '/EHs-c-'
+    'no-exceptions': '/EHs-c-',
+    'static-multithread-debug': '/MTd'
   }
 
   kOptimize = {
-    'speed': '/O2'
+    'speed': '/O2',
+    'no': '/Od'
+  }
+  
+  kDebug = {
+    'store-info': '/Zi',
+    'runtime-error-checking': '/RTC1'
+  }
+
+  kLink = {
+    'debug-info': '/debug'
   }
 
   kWordsize = { }
@@ -145,9 +202,6 @@ class MsvcFlags(Flags):
   def process_codegen(self, codegen):
     self.apply_flag_map(codegen, MsvcFlags.kCodegen, self.flags['CXXFLAGS'])
     
-  def process_defines(self, defines):
-    self.flags['CPPDEFINES'] += defines
-  
   def process_optimize(self, level):
     self.apply_flag_map(level, MsvcFlags.kOptimize, self.flags['CXXFLAGS'])
 
@@ -156,9 +210,10 @@ class MsvcFlags(Flags):
     self.apply_flag_map(size, MsvcFlags.kWordsize, self.flags['LINKFLAGS'])
   
   def process_debug(self, mode):
-    if mode == 'debug':
-      self.flags['CXXFLAGS'].append('/Zi')
+    self.apply_flag_map(mode, MsvcFlags.kDebug, self.flags['CXXFLAGS'])
 
+  def process_link(self, flags):
+    self.apply_flag_map(flags, MsvcFlags.kLink, self.flags['LINKFLAGS'])
 
 class GccFlags(Flags):
 
@@ -189,6 +244,14 @@ class GccFlags(Flags):
     '32': '-m32',
     '64': '-m64'
   }
+  
+  kDebug = {
+    'store-info': '-g'
+  }
+  
+  kLink = {
+  
+  }
 
   def __init__(self, config, args):
     super(GccFlags, self).__init__(config, args)
@@ -201,9 +264,6 @@ class GccFlags(Flags):
   
   def process_codegen(self, codegen):
     self.apply_flag_map(codegen, GccFlags.kCodegen, self.flags['CXXFLAGS'])
-    
-  def process_defines(self, defines):
-    self.flags['CPPDEFINES'] += defines
   
   def process_optimize(self, level):
     self.apply_flag_map(level, GccFlags.kOptimize, self.flags['CXXFLAGS'])
@@ -212,12 +272,11 @@ class GccFlags(Flags):
     self.apply_flag_map(size, GccFlags.kWordsize, self.flags['CXXFLAGS'])
     self.apply_flag_map(size, GccFlags.kWordsize, self.flags['LINKFLAGS'])
   
-  def process_includepath(self, includepath):
-    self.flags['CPPPATH'] += includepath
-  
   def process_debug(self, mode):
-    if mode == 'on':
-      self.flags['CXXFLAGS'].append('-g')
+    self.apply_flag_map(mode, GccFlags.kDebug, self.flags['CXXFLAGS'])
+
+  def process_link(self, flags):
+    self.apply_flag_map(flags, GccFlags.kLink, self.flags['LINKFLAGS'])
 
 
 class BuildConfiguration(object):
@@ -292,6 +351,10 @@ def guess_os():
     return 'win32'
   else:
     return 'linux'
+
+
+def is_win32():
+  return guess_os() == 'win32'
 
 
 def read_build_file(root, build_config, options):

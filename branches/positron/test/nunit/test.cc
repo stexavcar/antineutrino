@@ -13,7 +13,7 @@ UnitTest::UnitTest(string file, string name, test_callback_t *callback)
   : name_(name)
   , callback_(callback) {
   // Find the base name of this test.
-  const char *found_basename = strrchr(file.start(), '/');
+  const char *found_basename = strrchr(file.start(), kPathSeparator);
   char *basename = strdup(found_basename ? found_basename + 1 : file.start());
   // Drop the extension, if there is one.
   char *extension = strrchr(basename, '.');

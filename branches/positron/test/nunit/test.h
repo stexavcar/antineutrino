@@ -25,6 +25,7 @@ private:
   static word run_matching_tests(string file, string name);
   static word run_all_tests();
 
+  static const char kPathSeparator = IF_ELSE(ccWin32, '\\', '/');
   static vector<const char*> args_;
   static bool spawned_;
   static UnitTest *first_;
