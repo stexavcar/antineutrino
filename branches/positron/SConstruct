@@ -3,7 +3,7 @@ from os.path import dirname, join, basename, exists, abspath
 
 root = dirname(File('SConstruct').rfile().abspath)
 sys.path.append(root)
-from tools import build, pollock
+from tools import build, pollock, do
 
 
 def guess_toolchain():
@@ -16,33 +16,25 @@ def guess_toolchain():
     return None
 
 
-kOptions = [
-  ('mode', {
-    'values': ['debug', 'release'],
-    'default': 'release',
-    'always_in_variant': True
-  }),
-  ('wordsize', {
-    'values': ['32', '64'],
-    'default': '32'
-  }),
-  ('toolchain', {
-    'values': ['msvc', 'gcc'],
-    'default': guess_toolchain()
-  })
-]
+def guess_option(key):
+  if key == 'toolchain':
+    return guess_toolchain()
+  else:
+    return 'guess'
 
 
 def configure(relative_root, build_config, pollock_path):
   opts = Options()
-  for (key, value) in kOptions:
+  for (key, value) in do.OPTIONS:
     opts.Add(EnumOption(key, '', value['default'], allowed_values=value['values']))
   env = Environment(options = opts)
   Help(opts.GenerateHelpText(env))
   options = { }
   variant_parts = [ ]
-  for (key, value) in kOptions:
+  for (key, value) in do.OPTIONS:
     setting = env.Dictionary()[key]
+    if setting == 'guess':
+      setting = guess_option(key)
     options[key] = setting
     is_default = (setting == value['default'])
     if not is_default or value.get('always_in_variant', False):
