@@ -18,6 +18,7 @@ typedef uint32_t code_point;
 
 template <typename T> struct coerce { typedef const T &type; };
 template <> struct coerce<const char*> { typedef string type; };
+template <> struct coerce<char*> { typedef string type; };
 
 template <typename T>
 class wrapper_t {

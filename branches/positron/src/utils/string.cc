@@ -86,13 +86,43 @@ static word digit_to_char(word digit) {
   else return 'a' + (digit - 10);
 }
 
+static bool is_digit(char c) {
+  return '0' <= c && c <= '9';
+}
+
+static word char_to_digit(char chr) {
+  assert is_digit(chr);
+  return chr - '0';
+}
+
 void variant_type_impl<word>::print_on(const variant &that, string modifiers,
     string_stream &buf) {
   // Configuration parameters
   bool flush_right = true;
   word min_length = 0;
   word pad_char = ' ';
-  word radix = modifiers.contains('x') ? 16 : 10;
+  word radix = 10;
+
+  for (word pos = 0; pos < modifiers.length();) {
+    char current = modifiers[pos];
+    if (current == '0') {
+      pad_char = '0';
+      pos++;
+    } else if (is_digit(current)) {
+      while (pos < modifiers.length() && is_digit(modifiers[pos])) {
+        min_length = 10 * min_length + char_to_digit(modifiers[pos]);
+        pos++;
+      }
+    } else if (current == '-') {
+      flush_right = false;
+      pos++;
+    } else if (current == 'x') {
+      radix = 16;
+      pos++;
+    } else {
+      assert false;
+    }
+  }
 
   // Convert the number to a string in a temporary buffer
   const char kTempSize = 24;

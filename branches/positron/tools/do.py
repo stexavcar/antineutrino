@@ -10,6 +10,7 @@ import build
 
 _ROOT = abspath(join(sys.argv[0], '..', '..'))
 _HERE = abspath('.')
+_DEFAULT_THREAD_COUNT = 1
 
 
 OPTIONS = [
@@ -38,6 +39,8 @@ def do_build(options, args):
     value = eval('options.%s' % key)
     if value != option['default']:
       command.append('%s=%s' % (key, value))
+  if options.j != 1:
+    command.append('-j%i' % options.j)
   output = build.execute_no_capture(command)
   return output.exit_code
 
@@ -221,12 +224,6 @@ def run_test_cases(cases):
   progress.run()
 
 
-def build_options():
-  result = optparse.OptionParser()
-  result.add_option("-m", "--mode", help="The test mode in which to run")
-  result.add_option("-v", "--verbose", help="Verbose output", default=False, action="store_true")
-  return result
-
 class NunitTestCase(object):
 
   def __init__(self, name, executable):
@@ -270,9 +267,11 @@ def main():
   for (key, option) in OPTIONS:
     parser.add_option('--%s' % key, default=option['default'], choices=option['values'])
   parser.add_option('--verbose', action='store_true')
+  parser.add_option('-j', type='int', default=_DEFAULT_THREAD_COUNT)
   (options, args) = parser.parse_args()
   if options.verbose:
     logging.basicConfig(level=logging.INFO)
+  logging.info("Options: %s" % options)
   if (len(args) == 0) or (args[0] not in _ACTIONS.keys()):
     parser.print_usage()
     return 1

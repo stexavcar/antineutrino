@@ -33,3 +33,10 @@ TEST(types) {
   try_format("--%--", vargs(true), "--true--");
   try_format("--%--", vargs(false), "--false--");
 }
+
+
+TEST(hex) {
+  try_format("--%{x}--", vargs(10), "--a--");
+  try_format("--%{8x}--", vargs(10), "--       a--");
+  try_format("--%{08x}--", vargs(10), "--0000000a--");
+}
