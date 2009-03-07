@@ -233,8 +233,8 @@ void StackWalker::walk(LPCONTEXT context_in) {
     } else {
       fprintf(stderr, "\n");
     }
-
   }
+  fflush(stderr);
 }
 
 static void report_crash(LPCONTEXT context) {
@@ -251,11 +251,10 @@ static LONG WINAPI filter_unhandled_exception(LPEXCEPTION_POINTERS e) {
   word code = e->ExceptionRecord->ExceptionCode;
   if (code == EXCEPTION_ACCESS_VIOLATION) {
     report_crash(e->ContextRecord);
-    return EXCEPTION_EXECUTE_HANDLER;
   } else {
     LOG().info("Filtered exception %i\n", vargs(code));
-    return EXCEPTION_CONTINUE_SEARCH;
   }
+  return EXCEPTION_CONTINUE_SEARCH;
 }
 
 void Abort::install_signal_handlers() {
