@@ -75,15 +75,17 @@ library (
 )
 
 flags (
-  name = 'xflags',
+  name = 'whiteout-flags',
   extend = mode,
-  includepath = ['/usr/include/cairo']
+  includepath = ['/opt/local/include/cairo'],
+  libpath = ['/opt/local/lib'],
+  linkflags = ['-framework', 'Carbon']
 )
 
 program (
-  name = 'x',
+  name = 'whiteout',
   domain = 'Neutrino',
-  flags = 'xflags',
+  flags = 'whiteout-flags',
   srcs = [
     'main/main.cc',
     'main/main.h',
@@ -92,7 +94,6 @@ program (
     'platform/frame.h',
     '$frame-files',
     ':neutrino-lib',
-    '@X11',
     '@cairo'
   ]
 )

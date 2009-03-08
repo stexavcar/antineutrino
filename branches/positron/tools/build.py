@@ -131,17 +131,20 @@ class Flags(object):
         'WARNINGFLAGS': [ ],
         'CPPDEFINES': [ ],
         'LINKFLAGS': [ ],
-        'CPPPATH': [ ]
+        'CPPPATH': [ ],
+        'LIBPATH': [ ]
       }
     self.process_warnings(self.args.get('warnings', []))
     self.process_dialects(self.args.get('dialect', []))
     self.process_codegen(self.args.get('codegen', []))
     self.process_defines(self.args.get('defines', []))
     self.process_includepath(self.args.get('includepath', []))
+    self.process_libpath(self.args.get('libpath', []))
     self.process_optimize(self.args.get('optimize', None))
     self.process_debug(self.args.get('debug', []))
     self.process_wordsize(self.args.get('wordsize', None))
     self.process_link(self.args.get('link', []))
+    self.process_linkflags(self.args.get('linkflags', []))
     return self.flags
     
   def process_includepath(self, includepath):
@@ -149,6 +152,12 @@ class Flags(object):
     
   def process_defines(self, defines):
     self.flags['CPPDEFINES'] += defines
+
+  def process_libpath(self, libs):
+    self.flags['LIBPATH'] += libs
+  
+  def process_linkflags(self, flags):
+    self.flags['LINKFLAGS'] += flags
 
 
 def get_flag_processor(config, args):
