@@ -1,15 +1,8 @@
 package org.neutrino.pib;
 
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.neutrino.plankton.ISeedable;
-import org.neutrino.plankton.PSeed;
-import org.neutrino.plankton.PString;
-import org.neutrino.plankton.PValue;
-import org.neutrino.plankton.Plankton;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
 
@@ -38,14 +31,8 @@ public class Binding implements ISeedable {
     return this.annots;
   }
 
-  public PSeed toSeed(Plankton plankton) {
-    List<PString> pAnnots = new ArrayList<PString>();
-    for (String annot : annots)
-      pAnnots.add(Plankton.newString(annot));
-    Map<PString, PValue> map = new HashMap<PString, PValue>();
-    map.put(Plankton.newString("code"), Plankton.newBlob(code));
-    map.put(Plankton.newString("annotations"), Plankton.newArray(pAnnots));
-    return plankton.newSeed(TAG, Plankton.newMap(map));
+  public byte[] getCode() {
+    return this.code;
   }
 
   @Override
