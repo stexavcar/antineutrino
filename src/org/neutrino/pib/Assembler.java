@@ -18,6 +18,10 @@ public class Assembler {
     add(value);
   }
 
+  public void lambda() {
+    add(Opcode.LAMBDA);
+  }
+
   private void add(Opcode opcode) {
     bytes.write(opcode.getCode());
   }

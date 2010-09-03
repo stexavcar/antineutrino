@@ -136,6 +136,10 @@ public class Tree {
       this.body = body;
     }
 
+    public Expression getBody() {
+      return this.body;
+    }
+
     @Override
     public String toString() {
       return "(fn " + toString(params) + " " + body + ")";

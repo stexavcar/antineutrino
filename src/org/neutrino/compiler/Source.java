@@ -53,7 +53,11 @@ public class Source {
     int endPos = fileName.length() - EXTENSION.length();
     String name = fileName.substring(0, endPos);
     String contents = readFile(file);
-    return new Source(name, contents);
+    return create(name, contents);
+  }
+
+  public static Source create(String name, String str) {
+    return new Source(name, str);
   }
 
   private static String readFile(File file) throws IOException {

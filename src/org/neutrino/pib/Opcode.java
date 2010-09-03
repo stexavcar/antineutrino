@@ -8,9 +8,11 @@ package org.neutrino.pib;
 public enum Opcode {
 
   NUMBER(0),
-  GLOBAL(1);
+  LAMBDA(1),
+  GLOBAL(2);
 
   public static final int kNumber = 0;
+  public static final int kLambda = 1;
 
   private final int code;
 

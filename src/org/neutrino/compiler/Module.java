@@ -40,15 +40,24 @@ public class Module {
         String fullName;
         if (name == null) fullName = shortName;
         else fullName = name + "." + shortName;
-        Module child = new Module(fullName);
+        Module child = ensureModule(shortName, fullName);
         child.includeFromPath(file);
-        modules.put(shortName, child);
       } else {
         Source source = Source.create(file);
         if (source != null)
           sources.put(source.getName(), source);;
       }
     }
+  }
+
+  public Module ensureModule(String shortName, String fullName) {
+    if (!modules.containsKey(shortName))
+      modules.put(shortName, new Module(fullName));
+    return modules.get(shortName);
+  }
+
+  public void includeSource(String name, String str) {
+    sources.put(name, Source.create(name, str));
   }
 
   /**

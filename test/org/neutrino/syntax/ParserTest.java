@@ -19,7 +19,7 @@ public class ParserTest extends TestCase {
       Unit tree = Parser.parse(tokens);
       assertEquals(expected, tree.toString());
     } catch (SyntaxError se) {
-      fail(se.toString());
+      throw new RuntimeException(se);
     }
   }
 
@@ -54,6 +54,10 @@ public class ParserTest extends TestCase {
         "(unit (def foo (fn () " + expected + ")))");
   }
 
+  private void expressionTest(String source, String expected) {
+    statementTest("(" + source + ");", expected);
+  }
+
   public void testSimpleStatementBlocks() {
     statementTest(" ", "null");
     errorTest("def foo { ; }", ";");
@@ -79,6 +83,10 @@ public class ParserTest extends TestCase {
   public void testAnnotation() {
     parserTest("@annot def x := 4;", "(unit (def (@ annot) x #4))");
     parserTest("@a @b @c def y := 4;", "(unit (def (@ a b c) y #4))");
+  }
+
+  public void testLambda() {
+    expressionTest("fn () -> 5", "(fn () #5)");
   }
 
 }

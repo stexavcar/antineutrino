@@ -22,13 +22,17 @@ public class Compile {
       File path = new File(arg);
       top.includeFromPath(path);
     }
-    top.parseAll();
-    BinaryBuilder builder = Binary.builder();
-    top.writeToBinary(builder);
-    Binary binary = builder.getResult();
+    Binary binary = compile(top);
     FileOutputStream out = new FileOutputStream("a.out");
     binary.write(out);
     out.close();
+  }
+
+  public static Binary compile(Module top) throws SyntaxError {
+    top.parseAll();
+    BinaryBuilder builder = Binary.builder();
+    top.writeToBinary(builder);
+    return builder.getResult();
   }
 
 }
