@@ -14,6 +14,8 @@ public class Interpreter {
     case Opcode.kNumber:
       int value = code[pc + 1];
       return value;
+    case Opcode.kLambda:
+      return new RLambda(pc + 1, code);
     default:
       assert false: "Unexpected opcode " + opcode;
       return null;

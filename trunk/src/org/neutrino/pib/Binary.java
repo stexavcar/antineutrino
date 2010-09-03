@@ -58,6 +58,18 @@ public class Binary implements ISeedable {
     return "a Binary " + modules;
   }
 
+  public Binding getEntryPoint() {
+    Binding entryPoint = null;
+    for (Module module : getModules()) {
+      for (Binding def : module.getDefinitions()) {
+        if (def.getAnnotations().contains("entry_point")) {
+          entryPoint = def;
+        }
+      }
+    }
+    return entryPoint;
+  }
+
   private static final PlanktonRegistry REGISTRY = new PlanktonRegistry() {{
     register(Binding.class);
     register(Binary.class);

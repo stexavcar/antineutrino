@@ -43,6 +43,8 @@ public class Parser {
   }
 
   private String expect(Type type) throws SyntaxError {
+    if (!hasMore())
+      throw new SyntaxError(new Token(Type.ERROR, "<eof>", 0, 0));
     Token current = getCurrent();
     if (!current.getType().equals(type))
       throw new SyntaxError(current);
@@ -110,7 +112,6 @@ public class Parser {
     }
   }
 
-
   /**
    * <block>
    *   -> "{" <statement> ... "}"
@@ -133,11 +134,12 @@ public class Parser {
    *   -> <block>
    * @return
    */
-  private Tree.Expression parseFunctionBody() throws SyntaxError {
+  private Tree.Expression parseFunctionBody(boolean isStatement) throws SyntaxError {
     if (at(Type.ARROW)) {
       expect(Type.ARROW);
       Tree.Expression body = parseExpression();
-      expect(Type.SEMI);
+      if (isStatement)
+        expect(Type.SEMI);
       return body;
     } else if (at(Type.LBRACE)) {
       Tree.Expression body = parseBlock();
@@ -177,7 +179,7 @@ public class Parser {
       return new Tree.Definition(annots, name, value);
     } else if (at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE)) {
       List<String> params = parseParameters();
-      Tree.Expression body = parseFunctionBody();
+      Tree.Expression body = parseFunctionBody(true);
       Tree.Lambda lambda = new Tree.Lambda(params, body);
       return new Tree.Definition(annots, name, lambda);
     } else {
@@ -209,17 +211,34 @@ public class Parser {
   }
 
   /**
+   * <funexpr>
+   *   -> "fn" <args> <funbody>
+   *    | <atomic>
+   */
+  private Tree.Expression parseFunctionExpression() throws SyntaxError {
+    if (at(Type.FN)) {
+      expect(Type.FN);
+      List<String> params = parseParameters();
+      Tree.Expression body = parseFunctionBody(false);
+      return new Tree.Lambda(params, body);
+    } else {
+      return parseAtomicExpression();
+    }
+  }
+
+  /**
    * <expr>
    *   -> <atomic>
    */
   private Tree.Expression parseExpression() throws SyntaxError {
-    return parseAtomicExpression();
+    return parseFunctionExpression();
   }
 
   /**
    * <atomic>
    *   -> <ident>
    *   -> <number>
+   *   -> "(" <expr> ")"
    */
   private Tree.Expression parseAtomicExpression() throws SyntaxError {
     Token current = getCurrent();
@@ -232,6 +251,12 @@ public class Parser {
       String str = expect(Type.NUMBER);
       int value = Integer.parseInt(str);
       return new Tree.Number(value);
+    }
+    case LPAREN: {
+      expect(Type.LPAREN);
+      Tree.Expression result = parseExpression();
+      expect(Type.RPAREN);
+      return result;
     }
     default:
       throw new SyntaxError(current);

@@ -1,1 +1,1 @@
-@entry_point def main := 4;
+@entry_point def main() -> 4;

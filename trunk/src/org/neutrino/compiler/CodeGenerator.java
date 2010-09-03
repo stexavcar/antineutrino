@@ -29,7 +29,8 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
 
   @Override
   public void visitLambda(Tree.Lambda that) {
-    assert false;
+    assm.lambda();
+    that.getBody().accept(this);
   }
 
   @Override
