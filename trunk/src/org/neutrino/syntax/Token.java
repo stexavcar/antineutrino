@@ -23,6 +23,7 @@ public class Token {
     SEMI(";"),
     COMMA(","),
     COLON(":"),
+    COOLON("::"),
     COLON_EQ(":="),
     ARROW("->", false, true),
     AT("@", false, true),

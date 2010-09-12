@@ -35,6 +35,7 @@ public class ScannerTest extends TestCase {
   private static final Token LBRACE = newToken(Type.LBRACE);
   private static final Token RBRACE = newToken(Type.RBRACE);
   private static final Token SEMI = newToken(Type.SEMI);
+  private static final Token COOLON = newToken(Type.COOLON);
   private static final Token DOT = newToken(Type.DOT);
   private static final Token COMMA = newToken(Type.COMMA);
   private static final Token COLON = newToken(Type.COLON);
@@ -66,8 +67,8 @@ public class ScannerTest extends TestCase {
   }
 
   public void testDelimiters() {
-    scannerTest("; : := , . ->", SEMI, COLON,
-        COLON_EQ, COMMA, DOT, ARROW);
+    scannerTest("; : := , . -> ::", SEMI, COLON,
+        COLON_EQ, COMMA, DOT, ARROW, COOLON);
     scannerTest(",;:.", COMMA, SEMI, COLON, DOT);
     scannerTest("{}", LBRACE, RBRACE);
   }

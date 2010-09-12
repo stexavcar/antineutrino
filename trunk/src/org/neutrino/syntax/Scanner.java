@@ -125,6 +125,9 @@ public class Scanner {
         case '=':
           advance();
           return Token.Type.COLON_EQ;
+        case ':':
+          advance();
+          return Token.Type.COOLON;
         }
       }
       return Token.Type.COLON;

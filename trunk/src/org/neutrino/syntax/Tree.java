@@ -2,6 +2,8 @@ package org.neutrino.syntax;
 
 import java.util.List;
 
+import org.neutrino.pib.Parameter;
+
 /**
  * Neutrino syntax trees.
  *
@@ -34,15 +36,15 @@ public class Tree {
 
     void visitProtocol(Protocol that);
 
+    void visitMethodDefinition(Method methodDefinition);
+
   }
 
   public static abstract class Declaration extends Tree {
 
-    public abstract String getName();
+    public abstract void accept(DeclarationVisitor visitor);
 
     public abstract List<String> getAnnotations();
-
-    public abstract void accept(DeclarationVisitor visitor);
 
   }
 
@@ -77,7 +79,7 @@ public class Tree {
 
     @Override
     public String toString() {
-      String an = annots.isEmpty() ? "" : (toString("@", annots) + " ");
+      String an = annotationsToString(getAnnotations());
       return "(def " + an + name + " " + value + ")";
     }
 
@@ -108,8 +110,52 @@ public class Tree {
 
     @Override
     public String toString() {
-      String an = annots.isEmpty() ? "" : (toString("@", annots) + " ");
+      String an = annotationsToString(getAnnotations());
       return "(protocol " + an + name + ")";
+    }
+
+  }
+
+  public static class Method extends Declaration {
+
+    private final List<String> annots;
+    private final String name;
+    private final List<Parameter> params;
+    private final Expression body;
+
+    public Method(List<String> annots, String name, List<Parameter> params,
+        Expression body) {
+      this.annots = annots;
+      this.name = name;
+      this.params = params;
+      this.body = body;
+    }
+
+    public List<Parameter> getParameters() {
+      return this.params;
+    }
+
+    public String getName() {
+      return this.name;
+    }
+
+    @Override
+    public void accept(DeclarationVisitor visitor) {
+      visitor.visitMethodDefinition(this);
+    }
+
+    public List<String> getAnnotations() {
+      return this.annots;
+    }
+
+    public Expression getBody() {
+      return this.body;
+    }
+
+    @Override
+    public String toString() {
+      String an = annotationsToString(getAnnotations());
+      return "(method " + an + toString(this.name, params) + " " + body + ")";
     }
 
   }
@@ -257,6 +303,10 @@ public class Tree {
       this.type = type;
     }
 
+    public Type getType() {
+      return this.type;
+    }
+
     @Override
     public String toString() {
       return type.toString();
@@ -313,13 +363,17 @@ public class Tree {
 
   }
 
-
   private static String toString(String tag, List<?> elms) {
     StringBuilder buf = new StringBuilder();
     buf.append("(").append(tag);
     for (Object obj : elms)
       buf.append(" ").append(obj);
     return buf.append(")").toString();
+  }
+
+  private static String annotationsToString(List<String> annots) {
+    String an = annots.isEmpty() ? "" : (toString("@", annots) + " ");
+    return an;
   }
 
   private static String toString(List<?> elms) {

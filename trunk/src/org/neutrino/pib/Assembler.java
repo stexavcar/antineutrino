@@ -20,6 +20,10 @@ public class Assembler {
     add(height);
   }
 
+  public void nuhll() {
+    add(Opcode.kNull);
+  }
+
   public void lambda(CodeBundle code) {
     int codeIndex = registerLiteral(code);
     add(Opcode.kLambda);

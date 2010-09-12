@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.neutrino.pib.Parameter;
 import org.neutrino.syntax.Token.Type;
 
 /**
@@ -37,7 +38,7 @@ public class Parser {
   private Tree.Unit parseUnit() throws SyntaxError {
     List<Tree.Declaration> defs = new ArrayList<Tree.Declaration>();
     while (hasMore()) {
-      Tree.Declaration def = parseDefinition();
+      Tree.Declaration def = parseDeclaration();
       defs.add(def);
     }
     return new Tree.Unit(defs);
@@ -59,7 +60,15 @@ public class Parser {
   }
 
   private boolean atOperator() {
-    return getCurrent().getType().isOperator();
+    return hasMore() && getCurrent().getType().isOperator();
+  }
+
+  private String expectOperator() throws SyntaxError {
+    if (!atOperator())
+      expect(Type.OPERATOR);
+    String result = getCurrent().getValue();
+    advance();
+    return result;
   }
 
   /**
@@ -149,6 +158,9 @@ public class Parser {
     } else if (at(Type.LBRACE)) {
       Tree.Expression body = parseBlock();
       return body;
+    } else if (isStatement && at(Type.SEMI)) {
+      expect(Type.SEMI);
+      return new Tree.Singleton(Tree.Singleton.Type.NULL);
     } else {
       throw new SyntaxError(getCurrent());
     }
@@ -168,13 +180,22 @@ public class Parser {
     return annots;
   }
 
+  private String expectName() throws SyntaxError {
+    if (atOperator()) {
+      return expectOperator();
+    } else {
+      return expect(Type.IDENT);
+    }
+  }
+
   /**
    * <def>
    *   -> <annots> "def" <ident> ":=" <expr> ";"
+   *   -> <annots> "def" <ident> "::" <methodname> <params> <funbody>
    *   -> <annots> "def" <ident> <params> <funbody>
    *   -> <annots> "protocol" <ident> ";"
    */
-  private Tree.Declaration parseDefinition() throws SyntaxError {
+  private Tree.Declaration parseDeclaration() throws SyntaxError {
     List<String> annots = parseAnnotations();
     if (at(Type.DEF)) {
       expect(Type.DEF);
@@ -184,6 +205,16 @@ public class Parser {
         Tree.Expression value = parseExpression();
         expect(Type.SEMI);
         return new Tree.Definition(annots, name, value);
+      } else if (at(Type.COOLON)) {
+        expect(Type.COOLON);
+        String method = expectName();
+        List<String> paramNames = parseParameters();
+        Tree.Expression body = parseFunctionBody(true);
+        List<Parameter> paramTypes = new ArrayList<Parameter>();
+        paramTypes.add(new Parameter("this", name));
+        for (int i = 0; i < paramNames.size(); i++)
+          paramTypes.add(new Parameter(paramNames.get(i), "Object"));
+        return new Tree.Method(annots, method, paramTypes, body);
       } else if (at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE)) {
         List<String> params = parseParameters();
         Tree.Expression body = parseFunctionBody(true);
@@ -282,8 +313,7 @@ public class Parser {
   private Tree.Expression parseOperatorExpression() throws SyntaxError {
     Tree.Expression current = parseCallExpression();
     while (atOperator()) {
-      String op = getCurrent().getValue();
-      advance();
+      String op = expectOperator();
       Tree.Expression next = parseCallExpression();
       current = new Tree.Call(op, Arrays.asList(current, next));
     }

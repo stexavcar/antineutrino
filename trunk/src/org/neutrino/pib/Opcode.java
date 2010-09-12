@@ -12,5 +12,6 @@ public class Opcode {
   public static final int kSlap = 2;
   public static final int kCall = 3;
   public static final int kReturn = 4;
+  public static final int kNull = 5;
 
 }

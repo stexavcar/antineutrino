@@ -49,7 +49,13 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
 
   @Override
   public void visitSingleton(Tree.Singleton that) {
-    assert false;
+    switch (that.getType()) {
+    case NULL:
+      assm.nuhll();
+      break;
+    default:
+      assert false;
+    }
   }
 
   @Override

@@ -13,6 +13,8 @@ import org.neutrino.plankton.Plankton;
 import org.neutrino.plankton.PlanktonRegistry;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
+import org.neutrino.runtime.RMethod;
+import org.neutrino.runtime.RProtocol;
 
 /**
  * A platform-independent binary.
@@ -74,6 +76,10 @@ public class Binary implements ISeedable {
     register(Binding.class);
     register(Binary.class);
     register(Module.class);
+    register(RProtocol.class);
+    register(CodeBundle.class);
+    register(RMethod.class);
+    register(Parameter.class);
   }};
 
   private static final Plankton PLANKTON = new Plankton(REGISTRY);
