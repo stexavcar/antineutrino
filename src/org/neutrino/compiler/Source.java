@@ -5,7 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.List;
 
-import org.neutrino.pib.DefinitionBuilder;
+import org.neutrino.pib.CodeBuilder;
 import org.neutrino.pib.ModuleBuilder;
 import org.neutrino.syntax.Parser;
 import org.neutrino.syntax.Scanner;
@@ -13,6 +13,7 @@ import org.neutrino.syntax.SyntaxError;
 import org.neutrino.syntax.Token;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Definition;
+import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.Protocol;
 
 /**
@@ -92,16 +93,21 @@ public class Source {
 
     @Override
     public void visitDefinition(Definition that) {
-      String name = that.getName();
-      List<String> annots = that.getAnnotations();
-      DefinitionBuilder builder = module.createDefinition(name, annots);
+      CodeBuilder<?> builder = module.createDefinition(that);
       CodeGenerator codegen = new CodeGenerator(builder.getAssembler());
       codegen.generate(that.getValue());
     }
 
     @Override
     public void visitProtocol(Protocol that) {
-      // ignore
+      module.createProtocol(that.getAnnotations(), that.getName());
+    }
+
+    @Override
+    public void visitMethodDefinition(Method that) {
+      CodeBuilder<?> builder = module.createMethod(that);
+      CodeGenerator codegen = new CodeGenerator(builder.getAssembler());
+      codegen.generate(that.getBody());
     }
 
   }

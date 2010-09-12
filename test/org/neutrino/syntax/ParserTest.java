@@ -33,6 +33,20 @@ public class ParserTest extends TestCase {
     }
   }
 
+  private void statementTest(String source, String expected) {
+    parserTest(
+        "def foo() {" + source + "}",
+        "(unit (def foo (fn () " + expected + ")))");
+  }
+
+  private void toplevelTest(String source, String expected) {
+    parserTest(source, "(unit " + expected + ")");
+  }
+
+  private void expressionTest(String source, String expected) {
+    statementTest("(" + source + ");", expected);
+  }
+
   public void testSimpleDeclarations() {
     parserTest("def x := y;", "(unit (def x $y))");
     parserTest("def z := 4;", "(unit (def z #4))");
@@ -46,16 +60,6 @@ public class ParserTest extends TestCase {
     errorTest("def foo(a, b -> 3;", "->");
     errorTest("def foo(a, b,) -> 3;", ")");
     errorTest("def foo(a, , b) -> 3;", ",");
-  }
-
-  private void statementTest(String source, String expected) {
-    parserTest(
-        "def foo() {" + source + "}",
-        "(unit (def foo (fn () " + expected + ")))");
-  }
-
-  private void expressionTest(String source, String expected) {
-    statementTest("(" + source + ");", expected);
   }
 
   public void testSimpleStatementBlocks() {
@@ -81,13 +85,23 @@ public class ParserTest extends TestCase {
   }
 
   public void testProtocol() {
-    parserTest("protocol Foo;", "(unit (protocol Foo))");
-    parserTest("@native protocol Bar;", "(unit (protocol (@ native) Bar))");
+    toplevelTest("protocol Foo;", "(protocol Foo)");
+    toplevelTest("@native protocol Bar;", "(protocol (@ native) Bar)");
+  }
+
+  public void testMethodDefinition() {
+    toplevelTest("def Foo::bar() -> 4;", "(method (bar (Foo this)) #4)");
+    toplevelTest("@x @y @z def Bar::baz() -> 9;", "(method (@ x y z) (baz (Bar this)) #9)");
+    toplevelTest("def Wim::wam(a) -> 3;", "(method (wam (Wim this) a) #3)");
+    toplevelTest("def Wim::wam(a, b) -> 3;", "(method (wam (Wim this) a b) #3)");
+    toplevelTest("def Wim::wam(a, b, c) -> 3;", "(method (wam (Wim this) a b c) #3)");
+    toplevelTest("def X::y();", "(method (y (X this)) #n)");
+    toplevelTest("def X::+(y) -> 0;", "(method (+ (X this) y) #0)");
   }
 
   public void testAnnotation() {
-    parserTest("@annot def x := 4;", "(unit (def (@ annot) x #4))");
-    parserTest("@a @b @c def y := 4;", "(unit (def (@ a b c) y #4))");
+    toplevelTest("@annot def x := 4;", "(def (@ annot) x #4)");
+    toplevelTest("@a @b @c def y := 4;", "(def (@ a b c) y #4)");
   }
 
   public void testLambda() {
