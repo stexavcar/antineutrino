@@ -14,6 +14,7 @@ public class Token {
 
     IDENT,
     NUMBER,
+    OPERATOR(null, false, true),
     ERROR,
     LPAREN("("),
     RPAREN(")"),
@@ -21,35 +22,43 @@ public class Token {
     RBRACE("}"),
     SEMI(";"),
     COMMA(","),
-    DASH("-"),
-    ARROW("->"),
-    GT(">"),
     COLON(":"),
-    AT("@"),
     COLON_EQ(":="),
-    DEF("def", true),
-    FN("fn", true),
-    NEW("new", true),
-    NULL("null", true);
+    ARROW("->", false, true),
+    AT("@", false, true),
+    DOT(".", false, true),
+    DEF("def", true, false),
+    FN("fn", true, false),
+    NEW("new", true, false),
+    NULL("null", true, false),
+    TRUE("true", true, false),
+    FALSE("false", true, false),
+    PROTOCOL("protocol", true, false);
 
     private final String name;
     private final boolean isKeyword;
+    private final boolean isOperator;
 
-    private Type(String name, boolean isKeyword) {
+    private Type(String name, boolean isKeyword, boolean isOperator) {
       this.name = name;
       this.isKeyword = isKeyword;
+      this.isOperator = isOperator;
     }
 
     private Type(String name) {
-      this(name, false);
+      this(name, false, false);
     }
 
     private Type() {
-      this(null, false);
+      this(null, false, false);
     }
 
     public String getName() {
       return this.name;
+    }
+
+    public boolean isOperator() {
+      return this.isOperator;
     }
 
     @Override
@@ -60,6 +69,13 @@ public class Token {
     public static final Map<String, Type> KEYWORD_MAP = new HashMap<String, Type>() {{
       for (Type type : Type.values()) {
         if (type.isKeyword)
+          put(type.getName(), type);
+      }
+    }};
+
+    public static final Map<String, Type> RESERVED_OPERATOR_MAP = new HashMap<String, Type>() {{
+      for (Type type : Type.values()) {
+        if (type.getName() != null && type.isOperator)
           put(type.getName(), type);
       }
     }};

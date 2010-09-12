@@ -1,13 +1,13 @@
 package org.neutrino.runtime;
 
+import org.neutrino.pib.CodeBundle;
+
 public class RLambda extends RValue {
 
-  private final int pc;
-  private final byte[] code;
+  private final CodeBundle bundle;
 
-  public RLambda(int pc, byte[] code) {
-    this.pc = pc;
-    this.code = code;
+  public RLambda(CodeBundle bundle) {
+    this.bundle = bundle;
   }
 
   @Override

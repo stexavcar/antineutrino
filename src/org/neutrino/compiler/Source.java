@@ -12,6 +12,8 @@ import org.neutrino.syntax.Scanner;
 import org.neutrino.syntax.SyntaxError;
 import org.neutrino.syntax.Token;
 import org.neutrino.syntax.Tree;
+import org.neutrino.syntax.Tree.Definition;
+import org.neutrino.syntax.Tree.Protocol;
 
 /**
  * A single source file in a module.
@@ -80,14 +82,34 @@ public class Source {
     return "source " + name;
   }
 
-  public void writeToBinary(ModuleBuilder module) {
-    for (Tree.Definition definition : code.getDefinitions()) {
-      String name = definition.getName();
-      List<String> annots = definition.getAnnotations();
-      DefinitionBuilder builder = module.createDefinition(annots);
-      CodeGenerator codegen = new CodeGenerator(builder.getAssembler());
-      definition.getValue().accept(codegen);
+  private class BuildingVisitor implements Tree.DeclarationVisitor {
+
+    private final ModuleBuilder module;
+
+    public BuildingVisitor(ModuleBuilder module) {
+      this.module = module;
     }
+
+    @Override
+    public void visitDefinition(Definition that) {
+      String name = that.getName();
+      List<String> annots = that.getAnnotations();
+      DefinitionBuilder builder = module.createDefinition(name, annots);
+      CodeGenerator codegen = new CodeGenerator(builder.getAssembler());
+      codegen.generate(that.getValue());
+    }
+
+    @Override
+    public void visitProtocol(Protocol that) {
+      // ignore
+    }
+
+  }
+
+  public void writeToBinary(ModuleBuilder module) {
+    BuildingVisitor visitor = new BuildingVisitor(module);
+    for (Tree.Declaration decl : code.getDeclarations())
+      decl.accept(visitor);
   }
 
 }

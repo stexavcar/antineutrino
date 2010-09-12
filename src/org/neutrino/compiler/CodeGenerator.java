@@ -1,5 +1,7 @@
 package org.neutrino.compiler;
 
+import java.util.List;
+
 import org.neutrino.pib.Assembler;
 import org.neutrino.syntax.Tree;
 
@@ -29,8 +31,10 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
 
   @Override
   public void visitLambda(Tree.Lambda that) {
-    assm.lambda();
-    that.getBody().accept(this);
+    Assembler subAssm = new Assembler();
+    CodeGenerator codegen = new CodeGenerator(subAssm);
+    codegen.generate(that.getBody());
+    assm.lambda(subAssm.getCode());
   }
 
   @Override
@@ -46,6 +50,24 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
   @Override
   public void visitSingleton(Tree.Singleton that) {
     assert false;
+  }
+
+  @Override
+  public void visitCall(Tree.Call that) {
+    List<Tree.Expression> args = that.getArguments();
+    int argc = args.size();
+    for (int i = 0; i < argc; i++) {
+      Tree.Expression arg = args.get(i);
+      arg.accept(this);
+    }
+    assm.call(that.getName(), argc);
+    if (argc > 1)
+      assm.slap(argc - 1);
+  }
+
+  public void generate(Tree.Expression value) {
+    value.accept(this);
+    assm.rethurn();
   }
 
 }

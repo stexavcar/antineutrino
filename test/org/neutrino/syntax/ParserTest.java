@@ -59,7 +59,7 @@ public class ParserTest extends TestCase {
   }
 
   public void testSimpleStatementBlocks() {
-    statementTest(" ", "null");
+    statementTest(" ", "#n");
     errorTest("def foo { ; }", ";");
     errorTest("def foo { ; ; }", ";");
     statementTest(" 1 ", "#1");
@@ -73,11 +73,16 @@ public class ParserTest extends TestCase {
   }
 
   public void testLocalDefinitions() {
-    statementTest("def x := 4;", "(let (x #4) null)");
+    statementTest("def x := 4;", "(let (x #4) #n)");
     statementTest("def x := 4; 8", "(let (x #4) #8)");
     errorTest("def x := 5;; 6", ";");
     statementTest("def x := 4; 8; 9; 10", "(let (x #4) (: #8 #9 #10))");
     statementTest("1; def a := 9; 3; 4;", "(: #1 (let (a #9) (: #3 #4)))");
+  }
+
+  public void testProtocol() {
+    parserTest("protocol Foo;", "(unit (protocol Foo))");
+    parserTest("@native protocol Bar;", "(unit (protocol (@ native) Bar))");
   }
 
   public void testAnnotation() {
@@ -87,6 +92,35 @@ public class ParserTest extends TestCase {
 
   public void testLambda() {
     expressionTest("fn () -> 5", "(fn () #5)");
+    expressionTest("fn (a) -> fn (b) -> 5", "(fn (a) (fn (b) #5))");
+  }
+
+  public void testSingletons() {
+    expressionTest("true", "#t");
+    expressionTest("false", "#f");
+    expressionTest("null", "#n");
+  }
+
+  public void testMethodCalls() {
+    expressionTest("a.b()", "(.b $a)");
+    expressionTest("a.b().c()", "(.c (.b $a))");
+    expressionTest("a.b(1)", "(.b $a #1)");
+    expressionTest("a.b(1, 2)", "(.b $a #1 #2)");
+    expressionTest("a.b(1, 2, 3)", "(.b $a #1 #2 #3)");
+    expressionTest("a.b.c.d.e", "(.e (.d (.c (.b $a))))");
+    expressionTest("a.b().c.d().e", "(.e (.d (.c (.b $a))))");
+  }
+
+  public void testFunctionInvocation() {
+    expressionTest("a()", "(.() $a)");
+    expressionTest("(a.b)()", "(.() (.b $a))");
+    expressionTest("a.b()", "(.b $a)");
+  }
+
+  public void testInfixOperator() {
+    expressionTest("1 + 1", "(.+ #1 #1)");
+    expressionTest("1 + 2 + 3", "(.+ (.+ #1 #2) #3)");
+    expressionTest("1 ** 2 ++ 3", "(.++ (.** #1 #2) #3)");
   }
 
 }
