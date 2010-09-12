@@ -36,4 +36,8 @@ public class InterpreterTest extends TestCase {
     runTest("#<a Lambda>", "fn () -> 4");
   }
 
+  public void testCalls() {
+    // runTest("2", "1 + 1");
+  }
+
 }

@@ -11,24 +11,42 @@ public class Tree {
 
   public static class Unit extends Tree {
 
-    private final List<Definition> defs;
+    private final List<Declaration> decls;
 
-    public Unit(List<Definition> defs) {
-      this.defs = defs;
+    public Unit(List<Declaration> decls) {
+      this.decls = decls;
     }
 
-    public List<Definition> getDefinitions() {
-      return this.defs;
+    public List<Declaration> getDeclarations() {
+      return this.decls;
     }
 
     @Override
     public String toString() {
-      return toString("unit", defs);
+      return toString("unit", decls);
     }
 
   }
 
-  public static class Definition extends Tree {
+  public interface DeclarationVisitor {
+
+    void visitDefinition(Definition that);
+
+    void visitProtocol(Protocol that);
+
+  }
+
+  public static abstract class Declaration extends Tree {
+
+    public abstract String getName();
+
+    public abstract List<String> getAnnotations();
+
+    public abstract void accept(DeclarationVisitor visitor);
+
+  }
+
+  public static class Definition extends Declaration {
 
     private final List<String> annots;
     private final String name;
@@ -53,9 +71,45 @@ public class Tree {
     }
 
     @Override
+    public void accept(DeclarationVisitor visitor) {
+      visitor.visitDefinition(this);
+    }
+
+    @Override
     public String toString() {
       String an = annots.isEmpty() ? "" : (toString("@", annots) + " ");
       return "(def " + an + name + " " + value + ")";
+    }
+
+  }
+
+  public static class Protocol extends Declaration {
+
+    private final List<String> annots;
+    private final String name;
+
+    public Protocol(List<String> annots, String name) {
+      this.annots = annots;
+      this.name = name;
+    }
+
+    public String getName() {
+      return this.name;
+    }
+
+    public List<String> getAnnotations() {
+      return this.annots;
+    }
+
+    @Override
+    public void accept(DeclarationVisitor visitor) {
+      visitor.visitProtocol(this);
+    }
+
+    @Override
+    public String toString() {
+      String an = annots.isEmpty() ? "" : (toString("@", annots) + " ");
+      return "(protocol " + an + name + ")";
     }
 
   }
@@ -79,6 +133,8 @@ public class Tree {
     public void visitNumber(Number that);
 
     public void visitIdentifier(Identifier that);
+
+    public void visitCall(Call that);
 
   }
 
@@ -152,9 +208,48 @@ public class Tree {
 
   }
 
+  public static class Call extends Expression {
+
+    private final String name;
+    private final List<Expression> args;
+
+    public Call(String name, List<Expression> args) {
+      this.name = name;
+      this.args = args;
+    }
+
+    @Override
+    public void accept(ExpressionVisitor visitor) {
+      visitor.visitCall(this);
+    }
+
+    public List<Expression> getArguments() {
+      return this.args;
+    }
+
+    public String getName() {
+      return this.name;
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder result = new StringBuilder();
+      result.append("(.").append(name);
+      for (Expression arg : args)
+        result.append(" ").append(arg);
+      return result.append(")").toString();
+    }
+
+  }
+
   public static class Singleton extends Expression {
 
-    public enum Type { NULL, TRUE, FALSE };
+    public enum Type {
+      NULL("#n"), TRUE("#t"), FALSE("#f");
+      private final String name;
+      private Type(String name) { this.name = name; }
+      @Override public String toString() { return this.name; }
+    };
 
     private final Type type;
 
@@ -164,7 +259,7 @@ public class Tree {
 
     @Override
     public String toString() {
-      return type.name().toLowerCase();
+      return type.toString();
     }
 
     @Override

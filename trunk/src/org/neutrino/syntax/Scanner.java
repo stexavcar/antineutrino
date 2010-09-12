@@ -35,6 +35,16 @@ public class Scanner {
     return Character.isDigit(c);
   }
 
+  private static boolean isOperator(char c) {
+    switch (c) {
+    case '+': case '-': case '.': case '@': case '%': case '*':
+    case '>': case '<': case '!': case '?': case '=':
+      return true;
+    default:
+      return false;
+    }
+  }
+
   /**
    * Skip over zero or more characters for whom {@link #isWhitespace(char)}
    * returns true.
@@ -108,22 +118,6 @@ public class Scanner {
     case ',':
       advance();
       return Token.Type.COMMA;
-    case '>':
-      advance();
-      return Token.Type.GT;
-    case '@':
-      advance();
-      return Token.Type.AT;
-    case '-':
-      advance();
-      if (hasMore()) {
-        switch (getCurrent()) {
-        case '>':
-          advance();
-          return Token.Type.ARROW;
-        }
-      }
-      return Token.Type.DASH;
     case ':':
       advance();
       if (hasMore()) {
@@ -139,6 +133,8 @@ public class Scanner {
       return scanIdentifier();
     } else if (isDigit(c)) {
       return scanNumber();
+    } else if (isOperator(c)) {
+      return scanOperator();
     } else {
       fail();
       return null;
@@ -157,6 +153,17 @@ public class Scanner {
     String value = getSubstring(start, end);
     Token.Type keyword = Token.Type.KEYWORD_MAP.get(value);
     return keyword == null ? Token.Type.IDENT : keyword;
+  }
+
+  private Token.Type scanOperator() {
+    assert isOperator(getCurrent());
+    int start = getCursor();
+    while (hasMore() && isOperator(getCurrent()))
+      advance();
+    int end = getCursor();
+    String value = getSubstring(start, end);
+    Token.Type reserved = Token.Type.RESERVED_OPERATOR_MAP.get(value);
+    return reserved == null ? Token.Type.OPERATOR : reserved;
   }
 
   private Token.Type scanNumber() {

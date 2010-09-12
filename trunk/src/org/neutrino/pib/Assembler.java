@@ -1,37 +1,57 @@
 package org.neutrino.pib;
 
 import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 
 public class Assembler {
 
-  private final List<String> annots;
   private final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-
-  public Assembler(List<String> annots) {
-    this.annots = annots;
-  }
+  private final List<Object> literals = new ArrayList<Object>();
 
   public void literal(int value) {
-    add(Opcode.NUMBER);
+    add(Opcode.kNumber);
     add(value);
   }
 
-  public void lambda() {
-    add(Opcode.LAMBDA);
+  public void slap(int height) {
+    add(Opcode.kSlap);
+    add(height);
   }
 
-  private void add(Opcode opcode) {
-    bytes.write(opcode.getCode());
+  public void lambda(CodeBundle code) {
+    int codeIndex = registerLiteral(code);
+    add(Opcode.kLambda);
+    add(codeIndex);
+  }
+
+  public void rethurn() {
+    add(Opcode.kReturn);
+  }
+
+  public void call(String name, int argc) {
+    int nameIndex = registerLiteral(name);
+    add(Opcode.kCall);
+    add(nameIndex);
+    add(argc);
+  }
+
+  public int registerLiteral(Object obj) {
+    int index = literals.indexOf(obj);
+    if (index == -1) {
+      index = literals.size();
+      literals.add(obj);
+    }
+    return index;
   }
 
   private void add(int value) {
     bytes.write(value);
   }
 
-  public Binding getCode() {
-    return new Binding(annots, bytes.toByteArray());
+  public CodeBundle getCode() {
+    return new CodeBundle(bytes.toByteArray(), literals);
   }
 
 }

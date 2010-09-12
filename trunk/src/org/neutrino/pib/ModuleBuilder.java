@@ -15,7 +15,7 @@ public class ModuleBuilder {
     this.name = name;
   }
 
-  public DefinitionBuilder createDefinition(List<String> annots) {
+  public DefinitionBuilder createDefinition(String name, List<String> annots) {
     DefinitionBuilder result = new DefinitionBuilder(annots);
     defs.put(name, result);
     return result;
@@ -24,9 +24,9 @@ public class ModuleBuilder {
   public Module getResult() {
     Map<String, Binding> elms = new HashMap<String, Binding>();
     for (Map.Entry<String, DefinitionBuilder> entry : defs.entrySet()) {
-      Assembler assm = entry.getValue().getAssembler();
-      Binding code = assm.getCode();
-      elms.put(entry.getKey(), code);
+      DefinitionBuilder builder = entry.getValue();
+      Binding binding = builder.getBinding();
+      elms.put(entry.getKey(), binding);
     }
     return new Module(elms);
   }

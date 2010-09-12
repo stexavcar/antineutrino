@@ -18,9 +18,9 @@ public class Binding implements ISeedable {
   public static final String TAG = "org::neutrino::pib::Binding";
 
   public @SeedMember("annotations") List<String> annots;
-  public @SeedMember byte[] code;
+  public @SeedMember CodeBundle code;
 
-  public Binding(List<String> annots, byte[] code) {
+  public Binding(List<String> annots, CodeBundle code) {
     this.annots = annots;
     this.code = code;
   }
@@ -31,7 +31,7 @@ public class Binding implements ISeedable {
     return this.annots;
   }
 
-  public byte[] getCode() {
+  public CodeBundle getCode() {
     return this.code;
   }
 

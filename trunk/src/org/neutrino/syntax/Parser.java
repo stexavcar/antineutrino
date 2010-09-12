@@ -1,6 +1,7 @@
 package org.neutrino.syntax;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -34,9 +35,9 @@ public class Parser {
   }
 
   private Tree.Unit parseUnit() throws SyntaxError {
-    List<Tree.Definition> defs = new ArrayList<Tree.Definition>();
+    List<Tree.Declaration> defs = new ArrayList<Tree.Declaration>();
     while (hasMore()) {
-      Tree.Definition def = parseDefinition();
+      Tree.Declaration def = parseDefinition();
       defs.add(def);
     }
     return new Tree.Unit(defs);
@@ -55,6 +56,10 @@ public class Parser {
 
   private boolean at(Type type) {
     return getCurrent().getType() == type;
+  }
+
+  private boolean atOperator() {
+    return getCurrent().getType().isOperator();
   }
 
   /**
@@ -167,23 +172,31 @@ public class Parser {
    * <def>
    *   -> <annots> "def" <ident> ":=" <expr> ";"
    *   -> <annots> "def" <ident> <params> <funbody>
+   *   -> <annots> "protocol" <ident> ";"
    */
-  private Tree.Definition parseDefinition() throws SyntaxError {
+  private Tree.Declaration parseDefinition() throws SyntaxError {
     List<String> annots = parseAnnotations();
-    expect(Type.DEF);
-    String name = expect(Type.IDENT);
-    if (at(Type.COLON_EQ)) {
-      expect(Type.COLON_EQ);
-      Tree.Expression value = parseExpression();
-      expect(Type.SEMI);
-      return new Tree.Definition(annots, name, value);
-    } else if (at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE)) {
-      List<String> params = parseParameters();
-      Tree.Expression body = parseFunctionBody(true);
-      Tree.Lambda lambda = new Tree.Lambda(params, body);
-      return new Tree.Definition(annots, name, lambda);
+    if (at(Type.DEF)) {
+      expect(Type.DEF);
+      String name = expect(Type.IDENT);
+      if (at(Type.COLON_EQ)) {
+        expect(Type.COLON_EQ);
+        Tree.Expression value = parseExpression();
+        expect(Type.SEMI);
+        return new Tree.Definition(annots, name, value);
+      } else if (at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE)) {
+        List<String> params = parseParameters();
+        Tree.Expression body = parseFunctionBody(true);
+        Tree.Lambda lambda = new Tree.Lambda(params, body);
+        return new Tree.Definition(annots, name, lambda);
+      } else {
+        throw new SyntaxError(getCurrent());
+      }
     } else {
-      throw new SyntaxError(getCurrent());
+      expect(Type.PROTOCOL);
+      String name = expect(Type.IDENT);
+      expect(Type.SEMI);
+      return new Tree.Protocol(annots, name);
     }
   }
 
@@ -211,9 +224,76 @@ public class Parser {
   }
 
   /**
+   * <arguments>
+   *   -> <expr> *: ","
+   */
+  private List<Tree.Expression> parseArguments(Type end) throws SyntaxError {
+    List<Tree.Expression> result = new ArrayList<Tree.Expression>();
+    if (hasMore() && !at(end)) {
+      Tree.Expression first = parseExpression();
+      result.add(first);
+    }
+    while (at(Type.COMMA)) {
+      expect(Type.COMMA);
+      Tree.Expression next = parseExpression();
+      result.add(next);
+    }
+    return result;
+  }
+
+
+  /**
+   * <callexpr-tail>
+   *   -> "." <ident> ("(" <arguments> ")")?
+   *   -> "(" <arguments> ")"
+   */
+  private Tree.Expression parseCallExpressionTail(Tree.Expression recv) throws SyntaxError {
+    String method;
+    if (at(Type.DOT)) {
+      expect(Type.DOT);
+      method = expect(Type.IDENT);
+    } else if (at(Type.LPAREN)) {
+      method = "()";
+    } else {
+      throw new SyntaxError(getCurrent());
+    }
+    List<Tree.Expression> args = new ArrayList<Tree.Expression>();
+    args.add(recv);
+    if (at(Type.LPAREN)) {
+      expect(Type.LPAREN);
+      args.addAll(parseArguments(Type.RPAREN));
+      expect(Type.RPAREN);
+    }
+    return new Tree.Call(method, args);
+  }
+
+  /**
+   * <callexpr>
+   *   -> <atomic> (<callexpr-tail>)*
+   */
+  private Tree.Expression parseCallExpression() throws SyntaxError {
+    Tree.Expression current = parseAtomicExpression();
+    while (at(Type.DOT) || at(Type.LPAREN)) {
+      current = parseCallExpressionTail(current);
+    }
+    return current;
+  }
+
+  private Tree.Expression parseOperatorExpression() throws SyntaxError {
+    Tree.Expression current = parseCallExpression();
+    while (atOperator()) {
+      String op = getCurrent().getValue();
+      advance();
+      Tree.Expression next = parseCallExpression();
+      current = new Tree.Call(op, Arrays.asList(current, next));
+    }
+    return current;
+  }
+
+  /**
    * <funexpr>
    *   -> "fn" <args> <funbody>
-   *    | <atomic>
+   *    | <operatorexpr>
    */
   private Tree.Expression parseFunctionExpression() throws SyntaxError {
     if (at(Type.FN)) {
@@ -222,13 +302,13 @@ public class Parser {
       Tree.Expression body = parseFunctionBody(false);
       return new Tree.Lambda(params, body);
     } else {
-      return parseAtomicExpression();
+      return parseOperatorExpression();
     }
   }
 
   /**
    * <expr>
-   *   -> <atomic>
+   *   -> <funexpr>
    */
   private Tree.Expression parseExpression() throws SyntaxError {
     return parseFunctionExpression();
@@ -258,6 +338,15 @@ public class Parser {
       expect(Type.RPAREN);
       return result;
     }
+    case NULL:
+      expect(Type.NULL);
+      return new Tree.Singleton(Tree.Singleton.Type.NULL);
+    case TRUE:
+      expect(Type.TRUE);
+      return new Tree.Singleton(Tree.Singleton.Type.TRUE);
+    case FALSE:
+      expect(Type.FALSE);
+      return new Tree.Singleton(Tree.Singleton.Type.FALSE);
     default:
       throw new SyntaxError(current);
     }

@@ -5,23 +5,12 @@ package org.neutrino.pib;
  *
  * @author christian.plesner.hansen@gmail.com (Christian Plesner Hansen)
  */
-public enum Opcode {
-
-  NUMBER(0),
-  LAMBDA(1),
-  GLOBAL(2);
+public class Opcode {
 
   public static final int kNumber = 0;
   public static final int kLambda = 1;
-
-  private final int code;
-
-  private Opcode(int code) {
-    this.code = code;
-  }
-
-  public int getCode() {
-    return this.code;
-  }
+  public static final int kSlap = 2;
+  public static final int kCall = 3;
+  public static final int kReturn = 4;
 
 }
