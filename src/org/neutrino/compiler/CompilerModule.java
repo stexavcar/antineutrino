@@ -14,13 +14,13 @@ import org.neutrino.syntax.SyntaxError;
  *
  * @author christian.plesner.hansen@gmail.com (Christian Plesner Hansen)
  */
-public class Module {
+public class CompilerModule {
 
   private final String name;
-  private final Map<String, Module> modules = new TreeMap<String, Module>();
+  private final Map<String, CompilerModule> modules = new TreeMap<String, CompilerModule>();
   private final Map<String, Source> sources = new TreeMap<String, Source>();
 
-  private Module(String name) {
+  private CompilerModule(String name) {
     this.name = name;
   }
 
@@ -40,7 +40,7 @@ public class Module {
         String fullName;
         if (name == null) fullName = shortName;
         else fullName = name + "." + shortName;
-        Module child = ensureModule(shortName, fullName);
+        CompilerModule child = ensureModule(shortName, fullName);
         child.includeFromPath(file);
       } else {
         Source source = Source.create(file);
@@ -50,9 +50,9 @@ public class Module {
     }
   }
 
-  public Module ensureModule(String shortName, String fullName) {
+  public CompilerModule ensureModule(String shortName, String fullName) {
     if (!modules.containsKey(shortName))
-      modules.put(shortName, new Module(fullName));
+      modules.put(shortName, new CompilerModule(fullName));
     return modules.get(shortName);
   }
 
@@ -67,7 +67,7 @@ public class Module {
   public void parseAll() throws SyntaxError {
     for (Source source : sources.values())
       source.ensureParsed();
-    for (Module child : modules.values())
+    for (CompilerModule child : modules.values())
       child.parseAll();
   }
 
@@ -77,12 +77,12 @@ public class Module {
       for (Source source : sources.values())
         source.writeToBinary(module);
     }
-    for (Module child : modules.values())
+    for (CompilerModule child : modules.values())
       child.writeToBinary(builder);
   }
 
-  public static Module createToplevel() {
-    return new Module(null);
+  public static CompilerModule createToplevel() {
+    return new CompilerModule(null);
   }
 
   @Override

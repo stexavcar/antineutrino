@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.neutrino.pib.Binary;
+import org.neutrino.pib.Universe;
 import org.neutrino.plankton.PValue;
 import org.neutrino.plankton.Plankton;
 import org.neutrino.plankton.PlanktonRegistry;
@@ -20,7 +20,7 @@ import org.neutrino.plankton.PlanktonRegistry;
 public class Dump {
 
   public static void main(String[] argArray) throws IOException {
-    Plankton plankton = Binary.getPlankton();
+    Plankton plankton = Universe.getPlankton();
     List<String> args = new ArrayList<String>(Arrays.asList(argArray));
     for (String arg : args) {
       if ("-n".equals(arg)) {

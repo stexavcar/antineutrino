@@ -15,11 +15,6 @@ public class Assembler {
     add(value);
   }
 
-  public void slap(int height) {
-    add(Opcode.kSlap);
-    add(height);
-  }
-
   public void nuhll() {
     add(Opcode.kNull);
   }

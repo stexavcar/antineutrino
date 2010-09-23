@@ -25,4 +25,12 @@ public class RMethod extends RValue implements ISeedable {
 
   public RMethod() { }
 
+  public String getName() {
+    return this.name;
+  }
+
+  public CodeBundle getCode() {
+    return this.code;
+  }
+
 }
