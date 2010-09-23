@@ -14,13 +14,13 @@ public class BinaryBuilder {
     return result;
   }
 
-  public Binary getResult() {
+  public Universe getResult() {
     Map<String, Module> result = new HashMap<String, Module>();
     for (Map.Entry<String, ModuleBuilder> entry : modules.entrySet()) {
       Module module = entry.getValue().getResult();
       result.put(entry.getKey(), module);
     }
-    return new Binary(result);
+    return new Universe(result);
   }
 
 }

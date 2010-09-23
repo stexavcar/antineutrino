@@ -4,11 +4,12 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
-import org.neutrino.pib.Binary;
-import org.neutrino.pib.Binding;
+import org.neutrino.pib.Universe;
 import org.neutrino.plankton.PSeed;
 import org.neutrino.plankton.PValue;
 import org.neutrino.runtime.Interpreter;
+import org.neutrino.runtime.RLambda;
+import org.neutrino.runtime.RValue;
 
 public class Run {
 
@@ -16,11 +17,14 @@ public class Run {
     Interpreter inter = new Interpreter();
     for (String name : args) {
       File file = new File(name);
-      PValue value = Binary.getPlankton().read(new FileInputStream(file));
-      Binary binary = ((PSeed) value).grow(Binary.class);
-      Binding entryPoint = binary.getEntryPoint();
+      PValue value = Universe.getPlankton().read(new FileInputStream(file));
+      Universe binary = ((PSeed) value).grow(Universe.class);
+      binary.initialize();
+      RLambda entryPoint = binary.getEntryPoint();
       assert entryPoint != null : "No entry point found.";
-      Object result = inter.interpret(entryPoint.getCode());
+      RValue entryPointValue = inter.interpret(entryPoint);
+      RLambda entryPointLambda = (RLambda) entryPointValue;
+      RValue result = inter.interpret(entryPointLambda);
       System.out.println(result);
     }
   }

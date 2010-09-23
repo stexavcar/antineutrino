@@ -7,6 +7,7 @@ import java.util.Map;
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
+import org.neutrino.runtime.RLambda;
 import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
 
@@ -27,6 +28,20 @@ public class Module implements ISeedable {
   }
 
   public Module() { }
+
+  public void initialize() {
+
+  }
+
+  public RLambda getEntryPoint() {
+    for (Map.Entry<String, Binding> entry : defs.entrySet()) {
+      Binding binding = entry.getValue();
+      if (binding.getAnnotations().contains("entry_point")) {
+        return new RLambda(this, binding.getCode());
+      }
+    }
+    return null;
+  }
 
   @Override
   public String toString() {

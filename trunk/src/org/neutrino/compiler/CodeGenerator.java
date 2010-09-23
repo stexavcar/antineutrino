@@ -67,8 +67,6 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
       arg.accept(this);
     }
     assm.call(that.getName(), argc);
-    if (argc > 1)
-      assm.slap(argc - 1);
   }
 
   public void generate(Tree.Expression value) {
