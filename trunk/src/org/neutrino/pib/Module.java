@@ -36,7 +36,7 @@ public class Module implements ISeedable {
   public RLambda getEntryPoint() {
     for (Map.Entry<String, Binding> entry : defs.entrySet()) {
       Binding binding = entry.getValue();
-      if (binding.getAnnotations().contains("entry_point")) {
+      if (binding.getAnnotation("entry_point") != null) {
         return new RLambda(this, binding.getCode());
       }
     }

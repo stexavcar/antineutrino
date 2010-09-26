@@ -8,6 +8,7 @@ import java.util.TreeMap;
 
 import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
+import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Tree;
 
 
@@ -32,7 +33,7 @@ public class ModuleBuilder {
     return result;
   }
 
-  public void createProtocol(List<String> annots, String name) {
+  public void createProtocol(List<Annotation> annots, String name) {
     RProtocol proto = new RProtocol(annots, name);
     protos.put(name, proto);
   }

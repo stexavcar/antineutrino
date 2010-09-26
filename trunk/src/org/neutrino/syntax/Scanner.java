@@ -13,6 +13,8 @@ public class Scanner {
 
   private int cursor = 0;
   private final String source;
+  private int startOffset = 0;
+  private int endOffset = 0;
 
   private Scanner(String source) {
     this.source = source;
@@ -131,6 +133,8 @@ public class Scanner {
         }
       }
       return Token.Type.COLON;
+    case '"':
+      return scanString();
     }
     if (isIdentifierStart(c)) {
       return scanIdentifier();
@@ -158,6 +162,19 @@ public class Scanner {
     return keyword == null ? Token.Type.IDENT : keyword;
   }
 
+  private Token.Type scanString() {
+    assert getCurrent() == '"';
+    startOffset = 1;
+    advance();
+    while (hasMore() && getCurrent() != '"')
+      advance();
+    if (hasMore()) {
+      endOffset = -1;
+      advance();
+    }
+    return Token.Type.STRING;
+  }
+
   private Token.Type scanOperator() {
     assert isOperator(getCurrent());
     int start = getCursor();
@@ -179,12 +196,13 @@ public class Scanner {
   private List<Token> scan() throws SyntaxError {
     List<Token> tokens = new ArrayList<Token>();
     while (hasMore()) {
+      startOffset = endOffset = 0;
       int start = getCursor();
       Token.Type nextType = scanNext();
       if (nextType == null)
         return null;
-      int end = getCursor();
-      String text = getSubstring(start, getCursor());
+      int end = getCursor() + endOffset;
+      String text = getSubstring(start + startOffset, end);
       tokens.add(new Token(nextType, text, start, end));
       skipWhiteSpace();
     }

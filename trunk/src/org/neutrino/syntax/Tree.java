@@ -3,6 +3,9 @@ package org.neutrino.syntax;
 import java.util.List;
 
 import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RInteger;
+import org.neutrino.runtime.RNull;
+import org.neutrino.runtime.RValue;
 
 /**
  * Neutrino syntax trees.
@@ -44,17 +47,25 @@ public class Tree {
 
     public abstract void accept(DeclarationVisitor visitor);
 
-    public abstract List<String> getAnnotations();
+    public abstract List<Annotation> getAnnotations();
+
+    public Annotation getAnnotation(String tag) {
+      for (Annotation annot : getAnnotations()) {
+        if (annot.getTag().equals(tag))
+          return annot;
+      }
+      return null;
+    }
 
   }
 
   public static class Definition extends Declaration {
 
-    private final List<String> annots;
+    private final List<Annotation> annots;
     private final String name;
     private final Expression value;
 
-    public Definition(List<String> annots, String name, Expression value) {
+    public Definition(List<Annotation> annots, String name, Expression value) {
       this.annots = annots;
       this.name = name;
       this.value = value;
@@ -68,7 +79,7 @@ public class Tree {
       return this.value;
     }
 
-    public List<String> getAnnotations() {
+    public List<Annotation> getAnnotations() {
       return this.annots;
     }
 
@@ -87,10 +98,10 @@ public class Tree {
 
   public static class Protocol extends Declaration {
 
-    private final List<String> annots;
+    private final List<Annotation> annots;
     private final String name;
 
-    public Protocol(List<String> annots, String name) {
+    public Protocol(List<Annotation> annots, String name) {
       this.annots = annots;
       this.name = name;
     }
@@ -99,7 +110,7 @@ public class Tree {
       return this.name;
     }
 
-    public List<String> getAnnotations() {
+    public List<Annotation> getAnnotations() {
       return this.annots;
     }
 
@@ -118,12 +129,12 @@ public class Tree {
 
   public static class Method extends Declaration {
 
-    private final List<String> annots;
+    private final List<Annotation> annots;
     private final String name;
     private final List<Parameter> params;
     private final Expression body;
 
-    public Method(List<String> annots, String name, List<Parameter> params,
+    public Method(List<Annotation> annots, String name, List<Parameter> params,
         Expression body) {
       this.annots = annots;
       this.name = name;
@@ -144,7 +155,7 @@ public class Tree {
       visitor.visitMethodDefinition(this);
     }
 
-    public List<String> getAnnotations() {
+    public List<Annotation> getAnnotations() {
       return this.annots;
     }
 
@@ -154,7 +165,7 @@ public class Tree {
 
     @Override
     public String toString() {
-      String an = annotationsToString(getAnnotations());
+      String an = annotationsToString(this.annots);
       return "(method " + an + toString(this.name, params) + " " + body + ")";
     }
 
@@ -163,6 +174,11 @@ public class Tree {
   public static abstract class Expression extends Tree {
 
     public abstract void accept(ExpressionVisitor visitor);
+
+    public RValue toValue() {
+      assert false;
+      return RNull.getInstance();
+    }
 
   }
 
@@ -181,6 +197,8 @@ public class Tree {
     public void visitIdentifier(Identifier that);
 
     public void visitCall(Call that);
+
+    public void visitText(Text that);
 
   }
 
@@ -222,8 +240,37 @@ public class Tree {
     }
 
     @Override
+    public RValue toValue() {
+      return new RInteger(value);
+    }
+
+    @Override
     public void accept(ExpressionVisitor visitor) {
       visitor.visitNumber(this);
+    }
+
+  }
+
+  public static class Text extends Expression {
+
+    private final String value;
+
+    public Text(String value) {
+      this.value = value;
+    }
+
+    public String getValue() {
+      return this.value;
+    }
+
+    @Override
+    public void accept(ExpressionVisitor visitor) {
+      visitor.visitText(this);
+    }
+
+    @Override
+    public String toString() {
+      return "#'" + value + "'";
     }
 
   }
@@ -371,9 +418,27 @@ public class Tree {
     return buf.append(")").toString();
   }
 
-  private static String annotationsToString(List<String> annots) {
-    String an = annots.isEmpty() ? "" : (toString("@", annots) + " ");
-    return an;
+  private static String annotationsToString(List<Annotation> annots) {
+    if (annots.isEmpty()) {
+      return "";
+    } else {
+      StringBuilder result = new StringBuilder();
+      result.append("(@");
+      for (Annotation annot : annots) {
+        List<RValue> args = annot.getArguments();
+        result.append(" ");
+        if (args.size() == 0) {
+          result.append(annot.getTag());
+        } else {
+          result.append("(").append(annot.getTag());
+          for (RValue arg : args) {
+            result.append(" ").append(arg);
+          }
+          result.append(")");
+        }
+      }
+      return result.append(") ").toString();
+    }
   }
 
   private static String toString(List<?> elms) {

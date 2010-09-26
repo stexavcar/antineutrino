@@ -19,6 +19,10 @@ public class Assembler {
     add(Opcode.kNull);
   }
 
+  public void thrue() {
+    add(Opcode.kTrue);
+  }
+
   public void lambda(CodeBundle code) {
     int codeIndex = registerLiteral(code);
     add(Opcode.kLambda);
