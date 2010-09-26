@@ -14,6 +14,7 @@ public class Token {
 
     IDENT,
     NUMBER,
+    STRING,
     OPERATOR(null, false, true),
     ERROR,
     LPAREN("("),

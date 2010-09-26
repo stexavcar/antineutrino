@@ -3,7 +3,11 @@ package org.neutrino.compiler;
 import java.util.List;
 
 import org.neutrino.pib.Assembler;
+import org.neutrino.runtime.Natives;
+import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Tree;
+import org.neutrino.syntax.Tree.Method;
+import org.neutrino.syntax.Tree.Text;
 
 /**
  * Expression visitor that generates platform independent bytecode for
@@ -48,6 +52,11 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
   }
 
   @Override
+  public void visitText(Text that) {
+    assert false;
+  }
+
+  @Override
   public void visitSingleton(Tree.Singleton that) {
     switch (that.getType()) {
     case NULL:
@@ -71,6 +80,12 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
 
   public void generate(Tree.Expression value) {
     value.accept(this);
+    assm.rethurn();
+  }
+
+  public void generateNative(Method that) {
+    Annotation annot = that.getAnnotation(Natives.ANNOTATION);
+    assm.thrue();
     assm.rethurn();
   }
 

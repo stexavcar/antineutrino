@@ -16,6 +16,7 @@ import org.neutrino.plankton.annotations.SeedMember;
 import org.neutrino.runtime.RLambda;
 import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
+import org.neutrino.syntax.Annotation;
 
 /**
  * A platform-independent binary.
@@ -83,6 +84,7 @@ public class Universe implements ISeedable {
     register(CodeBundle.class);
     register(RMethod.class);
     register(Parameter.class);
+    register(Annotation.class);
   }};
 
   private static final Plankton PLANKTON = new Plankton(REGISTRY);

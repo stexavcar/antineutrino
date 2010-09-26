@@ -102,6 +102,10 @@ public class ParserTest extends TestCase {
   public void testAnnotation() {
     toplevelTest("@annot def x := 4;", "(def (@ annot) x #4)");
     toplevelTest("@a @b @c def y := 4;", "(def (@ a b c) y #4)");
+    toplevelTest("@annot() def z := 4;", "(def (@ annot) z #4)");
+    toplevelTest("@annot(1) def z := 4;", "(def (@ (annot 1)) z #4)");
+    toplevelTest("@annot(1, 2) def z := 4;", "(def (@ (annot 1 2)) z #4)");
+    toplevelTest("@annot(1, 2, 3) def z := 4;", "(def (@ (annot 1 2 3)) z #4)");
   }
 
   public void testLambda() {
@@ -113,6 +117,10 @@ public class ParserTest extends TestCase {
     expressionTest("true", "#t");
     expressionTest("false", "#f");
     expressionTest("null", "#n");
+  }
+
+  public void testStrings() {
+    expressionTest("\"foo\"", "#'foo'");
   }
 
   public void testMethodCalls() {

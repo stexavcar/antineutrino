@@ -7,6 +7,8 @@ import java.util.List;
 
 import org.neutrino.pib.CodeBuilder;
 import org.neutrino.pib.ModuleBuilder;
+import org.neutrino.runtime.Natives;
+import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Parser;
 import org.neutrino.syntax.Scanner;
 import org.neutrino.syntax.SyntaxError;
@@ -107,7 +109,12 @@ public class Source {
     public void visitMethodDefinition(Method that) {
       CodeBuilder<?> builder = module.createMethod(that);
       CodeGenerator codegen = new CodeGenerator(builder.getAssembler());
-      codegen.generate(that.getBody());
+      Annotation nathive = that.getAnnotation(Natives.ANNOTATION);
+      if (nathive != null) {
+        codegen.generateNative(that);
+      } else {
+        codegen.generate(that.getBody());
+      }
     }
 
   }

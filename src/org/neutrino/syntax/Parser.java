@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Token.Type;
 
 /**
@@ -170,12 +171,27 @@ public class Parser {
    * <annots>
    *   -> ("@" <ident>)*
    */
-  private List<String> parseAnnotations() throws SyntaxError {
-    List<String> annots = new ArrayList<String>();
+  private List<Annotation> parseAnnotations() throws SyntaxError {
+    List<Annotation> annots = new ArrayList<Annotation>();
     while (at(Type.AT)) {
       expect(Type.AT);
       String name = expect(Type.IDENT);
-      annots.add(name);
+      List<RValue> args = Collections.emptyList();
+      if (at(Type.LPAREN)) {
+        expect(Type.LPAREN);
+        if (!at(Type.RPAREN)) {
+          args = new ArrayList<RValue>();
+          Tree.Expression first = parseExpression();
+          args.add(first.toValue());
+          while (at(Type.COMMA)) {
+            expect(Type.COMMA);
+            Tree.Expression next = parseExpression();
+            args.add(next.toValue());
+          }
+        }
+        expect(Type.RPAREN);
+      }
+      annots.add(new Annotation(name, args));
     }
     return annots;
   }
@@ -196,7 +212,7 @@ public class Parser {
    *   -> <annots> "protocol" <ident> ";"
    */
   private Tree.Declaration parseDeclaration() throws SyntaxError {
-    List<String> annots = parseAnnotations();
+    List<Annotation> annots = parseAnnotations();
     if (at(Type.DEF)) {
       expect(Type.DEF);
       String name = expect(Type.IDENT);
@@ -377,6 +393,9 @@ public class Parser {
     case FALSE:
       expect(Type.FALSE);
       return new Tree.Singleton(Tree.Singleton.Type.FALSE);
+    case STRING:
+      String value = expect(Type.STRING);
+      return new Tree.Text(value);
     default:
       throw new SyntaxError(current);
     }

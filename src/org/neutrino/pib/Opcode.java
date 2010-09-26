@@ -13,5 +13,6 @@ public class Opcode {
   public static final int kCall = 3;
   public static final int kReturn = 4;
   public static final int kNull = 5;
+  public static final int kTrue = 6;
 
 }

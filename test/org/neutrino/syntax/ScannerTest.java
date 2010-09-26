@@ -21,6 +21,10 @@ public class ScannerTest extends TestCase {
     return new Token(Type.NUMBER, value, 0, 0);
   }
 
+  private static Token string(String value) {
+    return new Token(Type.STRING, value, 0, 0);
+  }
+
   private static Token op(String value) {
     return new Token(Type.OPERATOR, value, 0, 0);
   }
@@ -28,7 +32,6 @@ public class ScannerTest extends TestCase {
   private static Token newToken(Token.Type type) {
     return new Token(type, type.getName(), 0, 0);
   }
-
 
   private static final Token LPAREN = newToken(Type.LPAREN);
   private static final Token RPAREN = newToken(Type.RPAREN);
@@ -64,6 +67,11 @@ public class ScannerTest extends TestCase {
         LPAREN, ident("bar"), RPAREN, LPAREN, ident("baz"), RPAREN);
     scannerTest("def fn new null true false protocol", DEF, FN, NEW, NULL, TRUE, FALSE, PROTOCOL);
     scannerTest("12", number("12"));
+  }
+
+  public void testStrings() {
+    scannerTest("\"foo\"", string("foo"));
+    scannerTest("\"\"", string(""));
   }
 
   public void testDelimiters() {

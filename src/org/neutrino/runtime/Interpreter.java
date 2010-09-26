@@ -30,6 +30,10 @@ public class Interpreter {
         frame.stack.push(RNull.getInstance());
         frame.pc += 1;
         break;
+      case Opcode.kTrue:
+        frame.stack.push(RBoolean.getTrue());
+        frame.pc += 1;
+        break;
       case Opcode.kLambda:
         int index = frame.code[frame.pc + 1];
         CodeBundle bundle = (CodeBundle) frame.literals.get(index);
