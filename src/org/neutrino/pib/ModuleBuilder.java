@@ -49,7 +49,8 @@ public class ModuleBuilder {
     for (CodeBuilder<Tree.Method> builder : this.methods) {
       Tree.Method method = builder.getSyntax();
       CodeBundle bundle = builder.getAssembler().getCode();
-      methods.add(new RMethod(method.getName(), method.getParameters(), bundle));
+      methods.add(new RMethod(method.getAnnotations(), method.getName(),
+          method.getParameters(), bundle));
     }
     return new Module(elms, protos, methods);
   }

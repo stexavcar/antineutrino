@@ -34,12 +34,13 @@ public class Interpreter {
         frame.stack.push(RBoolean.getTrue());
         frame.pc += 1;
         break;
-      case Opcode.kLambda:
+      case Opcode.kLambda: {
         int index = frame.code[frame.pc + 1];
         CodeBundle bundle = (CodeBundle) frame.literals.get(index);
         frame.stack.push(new RLambda(frame.module, bundle));
         frame.pc += 2;
         break;
+      }
       case Opcode.kCall: {
         int nameIndex = frame.code[frame.pc + 1];
         String name = (String) frame.literals.get(nameIndex);
@@ -61,6 +62,21 @@ public class Interpreter {
           frame.stack.pop();
         frame.stack.push(value);
         frame.pc += 3;
+        break;
+      }
+      case Opcode.kPush: {
+        int index = frame.code[frame.pc + 1];
+        RValue value = (RValue) frame.literals.get(index);
+        frame.stack.push(value);
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kCallNative: {
+        int index = frame.code[frame.pc + 1];
+        Native nathive = (Native) frame.literals.get(index);
+        RValue value = nathive.call(frame.parent);
+        frame.stack.push(value);
+        frame.pc += 2;
         break;
       }
       default:

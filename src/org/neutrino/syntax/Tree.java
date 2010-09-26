@@ -5,6 +5,7 @@ import java.util.List;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
+import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 
 /**
@@ -266,6 +267,11 @@ public class Tree {
     @Override
     public void accept(ExpressionVisitor visitor) {
       visitor.visitText(this);
+    }
+
+    @Override
+    public RValue toValue() {
+      return new RString(value);
     }
 
     @Override

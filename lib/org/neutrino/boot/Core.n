@@ -1,3 +1,4 @@
 @native protocol Integer;
 
 @native("int+any") def Integer::+(that);
+@native("int-any") def Integer::-(that);
