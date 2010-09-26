@@ -4,6 +4,9 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RValue;
+
 
 public class Assembler {
 
@@ -13,6 +16,12 @@ public class Assembler {
   public void literal(int value) {
     add(Opcode.kNumber);
     add(value);
+  }
+
+  public void push(RValue value) {
+    int index = registerLiteral(value);
+    add(Opcode.kPush);
+    add(index);
   }
 
   public void nuhll() {
@@ -38,6 +47,12 @@ public class Assembler {
     add(Opcode.kCall);
     add(nameIndex);
     add(argc);
+  }
+
+  public void callNative(Native method) {
+    int index = registerLiteral(method);
+    add(Opcode.kCallNative);
+    add(index);
   }
 
   public int registerLiteral(Object obj) {

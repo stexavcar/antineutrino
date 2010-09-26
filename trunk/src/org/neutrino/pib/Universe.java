@@ -13,9 +13,11 @@ import org.neutrino.plankton.Plankton;
 import org.neutrino.plankton.PlanktonRegistry;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
+import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RLambda;
 import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
+import org.neutrino.runtime.RString;
 import org.neutrino.syntax.Annotation;
 
 /**
@@ -85,6 +87,8 @@ public class Universe implements ISeedable {
     register(RMethod.class);
     register(Parameter.class);
     register(Annotation.class);
+    register(RString.class);
+    register(Native.class);
   }};
 
   private static final Plankton PLANKTON = new Plankton(REGISTRY);

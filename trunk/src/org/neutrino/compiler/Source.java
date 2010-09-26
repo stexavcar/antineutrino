@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.neutrino.pib.CodeBuilder;
 import org.neutrino.pib.ModuleBuilder;
-import org.neutrino.runtime.Natives;
+import org.neutrino.runtime.Native;
 import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Parser;
 import org.neutrino.syntax.Scanner;
@@ -109,7 +109,7 @@ public class Source {
     public void visitMethodDefinition(Method that) {
       CodeBuilder<?> builder = module.createMethod(that);
       CodeGenerator codegen = new CodeGenerator(builder.getAssembler());
-      Annotation nathive = that.getAnnotation(Natives.ANNOTATION);
+      Annotation nathive = that.getAnnotation(Native.ANNOTATION);
       if (nathive != null) {
         codegen.generateNative(that);
       } else {

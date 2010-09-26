@@ -3,7 +3,8 @@ package org.neutrino.compiler;
 import java.util.List;
 
 import org.neutrino.pib.Assembler;
-import org.neutrino.runtime.Natives;
+import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RString;
 import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Method;
@@ -84,8 +85,10 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
   }
 
   public void generateNative(Method that) {
-    Annotation annot = that.getAnnotation(Natives.ANNOTATION);
-    assm.thrue();
+    Annotation annot = that.getAnnotation(Native.ANNOTATION);
+    String key = ((RString) annot.getArgument(0)).getValue();
+    Native method = Native.get(key);
+    assm.callNative(method);
     assm.rethurn();
   }
 

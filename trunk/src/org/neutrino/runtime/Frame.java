@@ -22,6 +22,10 @@ public class Frame {
     this.module = module;
   }
 
+  public RValue getArgument(int offset) {
+    return stack.get(stack.size() - 1 - offset);
+  }
+
   public RLambda lookupMethod(String name, int argc) {
     for (RMethod method : module.methods) {
       if (method.getName().equals(name)) {
