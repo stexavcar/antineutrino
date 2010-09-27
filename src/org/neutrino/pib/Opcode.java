@@ -16,5 +16,7 @@ public class Opcode {
   public static final int kTrue = 6;
   public static final int kPush = 7;
   public static final int kCallNative = 8;
+  public static final int kPop = 9;
+  public static final int kGlobal = 10;
 
 }

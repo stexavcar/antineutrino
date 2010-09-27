@@ -24,6 +24,10 @@ public class Assembler {
     add(index);
   }
 
+  public void pop() {
+    add(Opcode.kPop);
+  }
+
   public void nuhll() {
     add(Opcode.kNull);
   }
@@ -36,6 +40,12 @@ public class Assembler {
     int codeIndex = registerLiteral(code);
     add(Opcode.kLambda);
     add(codeIndex);
+  }
+
+  public void global(String name) {
+    int index = registerLiteral(name);
+    add(Opcode.kGlobal);
+    add(index);
   }
 
   public void rethurn() {

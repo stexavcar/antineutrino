@@ -7,6 +7,8 @@ import org.neutrino.pib.Opcode;
 
 public class Interpreter {
 
+  private final Native.Arguments arguments = new Native.Arguments();
+
   public RValue interpret(Module module, CodeBundle code) {
     Frame frame = new Frame(null, code, module);
     return interpret(frame);
@@ -46,6 +48,7 @@ public class Interpreter {
         String name = (String) frame.literals.get(nameIndex);
         int argc = frame.code[frame.pc + 2];
         RLambda lambda = frame.lookupMethod(name, argc);
+        assert lambda != null : "Method " + name + " not found.";
         frame = new Frame(frame, lambda.getCode(), lambda.getModule());
         break;
       }
@@ -71,10 +74,24 @@ public class Interpreter {
         frame.pc += 2;
         break;
       }
+      case Opcode.kPop: {
+        frame.stack.pop();
+        frame.pc += 1;
+        break;
+      }
       case Opcode.kCallNative: {
         int index = frame.code[frame.pc + 1];
         Native nathive = (Native) frame.literals.get(index);
-        RValue value = nathive.call(frame.parent);
+        arguments.prepare(frame.parent, 2);
+        RValue value = nathive.call(arguments);
+        frame.stack.push(value);
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kGlobal: {
+        int index = frame.code[frame.pc + 1];
+        String name = (String) frame.literals.get(index);
+        RValue value = frame.module.getGlobal(name, this);
         frame.stack.push(value);
         frame.pc += 2;
         break;

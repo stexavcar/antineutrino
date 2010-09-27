@@ -57,6 +57,7 @@ public class ParserTest extends TestCase {
     parserTest("def foo() -> 3;", "(unit (def foo (fn () #3)))");
     parserTest("def foo(a) -> 3;", "(unit (def foo (fn (a) #3)))");
     parserTest("def foo(a, b) -> 3;", "(unit (def foo (fn (a b) #3)))");
+    parserTest("def foo() { }", "(unit (def foo (fn () #n)))");
     errorTest("def foo(a, b -> 3;", "->");
     errorTest("def foo(a, b,) -> 3;", ")");
     errorTest("def foo(a, , b) -> 3;", ",");
