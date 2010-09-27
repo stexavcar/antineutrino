@@ -211,6 +211,10 @@ public class Tree {
       this.name = name;
     }
 
+    public String getName() {
+      return name;
+    }
+
     @Override
     public String toString() {
       return "$" + name;
@@ -377,7 +381,12 @@ public class Tree {
     private final List<Expression> exprs;
 
     public Block(List<Expression> exprs) {
+      assert exprs.size() > 0;
       this.exprs = exprs;
+    }
+
+    public List<Expression> getExpressions() {
+      return exprs;
     }
 
     @Override

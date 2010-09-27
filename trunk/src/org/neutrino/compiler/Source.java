@@ -97,7 +97,12 @@ public class Source {
     public void visitDefinition(Definition that) {
       CodeBuilder<?> builder = module.createDefinition(that);
       CodeGenerator codegen = new CodeGenerator(builder.getAssembler());
-      codegen.generate(that.getValue());
+      Annotation nathive = that.getAnnotation(Native.ANNOTATION);
+      if (nathive != null) {
+        codegen.generateNativeLambda(that);
+      } else {
+        codegen.generate(that.getValue());
+      }
     }
 
     @Override
@@ -111,7 +116,7 @@ public class Source {
       CodeGenerator codegen = new CodeGenerator(builder.getAssembler());
       Annotation nathive = that.getAnnotation(Native.ANNOTATION);
       if (nathive != null) {
-        codegen.generateNative(that);
+        codegen.generateNativeMethod(that);
       } else {
         codegen.generate(that.getBody());
       }

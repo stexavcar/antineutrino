@@ -24,8 +24,7 @@ public class Run {
       assert entryPoint != null : "No entry point found.";
       RValue entryPointValue = inter.interpret(entryPoint);
       RLambda entryPointLambda = (RLambda) entryPointValue;
-      RValue result = inter.interpret(entryPointLambda);
-      System.out.println(result);
+      inter.interpret(entryPointLambda);
     }
   }
 

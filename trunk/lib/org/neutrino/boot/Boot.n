@@ -1,1 +1,9 @@
-@entry_point def main() -> 2 - 1;
+@entry_point
+def main() {
+  test_operators();
+}
+
+def test_operators() {
+  assert_true((1 + 1) = 2);
+  assert_true(1 < 2);
+}

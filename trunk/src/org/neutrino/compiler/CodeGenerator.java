@@ -7,6 +7,8 @@ import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RString;
 import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Tree;
+import org.neutrino.syntax.Tree.Definition;
+import org.neutrino.syntax.Tree.Expression;
 import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.Text;
 
@@ -26,12 +28,18 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
 
   @Override
   public void visitBlock(Tree.Block that) {
-    assert false;
+    List<Expression> exprs = that.getExpressions();
+    for (int i = 0; i < exprs.size(); i++) {
+      if (i > 0) {
+        assm.pop();
+      }
+      exprs.get(i).accept(this);
+    }
   }
 
   @Override
   public void visitIdentifier(Tree.Identifier that) {
-    assert false;
+    assm.global(that.getName());
   }
 
   @Override
@@ -40,6 +48,17 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
     CodeGenerator codegen = new CodeGenerator(subAssm);
     codegen.generate(that.getBody());
     assm.lambda(subAssm.getCode());
+  }
+
+  public void generateNativeLambda(Definition that) {
+    Assembler subAssm = new Assembler();
+    Annotation annot = that.getAnnotation(Native.ANNOTATION);
+    String key = ((RString) annot.getArgument(0)).getValue();
+    Native method = Native.get(key);
+    subAssm.callNative(method);
+    subAssm.rethurn();
+    assm.lambda(subAssm.getCode());
+    assm.rethurn();
   }
 
   @Override
@@ -84,7 +103,7 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
     assm.rethurn();
   }
 
-  public void generateNative(Method that) {
+  public void generateNativeMethod(Method that) {
     Annotation annot = that.getAnnotation(Native.ANNOTATION);
     String key = ((RString) annot.getArgument(0)).getValue();
     Native method = Native.get(key);

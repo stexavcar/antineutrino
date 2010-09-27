@@ -1,4 +1,9 @@
 @native protocol Integer;
 
-@native("int+any") def Integer::+(that);
-@native("int-any") def Integer::-(that);
+@native("int+int") def Integer::+(that);
+@native("int-int") def Integer::-(that);
+@native("int<int") def Integer::<(that);
+@native("int=int") def Integer::=(that);
+
+@native("print") def print(obj);
+@native("assert_true") def assert_true(cond);

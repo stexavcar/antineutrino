@@ -19,6 +19,10 @@ public class RBoolean extends RValue {
     return FALSE;
   }
 
+  public static RValue get(boolean b) {
+    return b ? TRUE : FALSE;
+  }
+
   @Override
   public String toString() {
     return value ? "#t" : "#f";
