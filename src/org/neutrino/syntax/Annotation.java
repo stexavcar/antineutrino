@@ -1,11 +1,11 @@
 package org.neutrino.syntax;
 
-import java.util.List;
-
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
 import org.neutrino.runtime.RValue;
+
+import java.util.List;
 
 @Growable(Annotation.TAG)
 public class Annotation implements ISeedable {
@@ -31,6 +31,11 @@ public class Annotation implements ISeedable {
 
   public RValue getArgument(int index) {
     return this.args.get(index);
+  }
+
+  @Override
+  public String toString() {
+    return tag + args;
   }
 
 }

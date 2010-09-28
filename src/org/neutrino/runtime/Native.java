@@ -1,15 +1,15 @@
 package org.neutrino.runtime;
 
+import org.neutrino.plankton.ISeedable;
+import org.neutrino.plankton.annotations.Growable;
+import org.neutrino.plankton.annotations.SeedMember;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
-
-import org.neutrino.plankton.ISeedable;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
 
 @Growable(Native.TAG)
 public class Native implements ISeedable {
@@ -64,6 +64,11 @@ public class Native implements ISeedable {
     return impl.call(args);
   }
 
+  @Override
+  public String toString() {
+    return "#<a Native: " + name + ">";
+  }
+
   @Retention(RetentionPolicy.RUNTIME)
   private static @interface Marker {
     public String value();
@@ -97,6 +102,7 @@ public class Native implements ISeedable {
   };
 
   @Marker("int=int") static final Impl INT_EQ = new Impl() {
+    @Override
     public RValue call(Arguments args) {
       RInteger a = (RInteger) args.getThis();
       RInteger b = (RInteger) args.getArgument(0);

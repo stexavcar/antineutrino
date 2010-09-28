@@ -1,13 +1,13 @@
 package org.neutrino.runtime;
 
-import java.util.List;
-
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Parameter;
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
 import org.neutrino.syntax.Annotation;
+
+import java.util.List;
 
 @Growable(RMethod.TAG)
 public class RMethod extends RValue implements ISeedable {
@@ -35,6 +35,11 @@ public class RMethod extends RValue implements ISeedable {
 
   public CodeBundle getCode() {
     return this.code;
+  }
+
+  @Override
+  public String toString() {
+    return "#<a Method(" + name + "): " + code + ">";
   }
 
 }
