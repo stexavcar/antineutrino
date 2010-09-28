@@ -1,5 +1,11 @@
 package org.neutrino.pib;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Opcodes used to encode syntax trees in platform independent binaries.
  *
@@ -7,16 +13,68 @@ package org.neutrino.pib;
  */
 public class Opcode {
 
-  public static final int kNumber = 0;
-  public static final int kLambda = 1;
-  public static final int kSlap = 2;
-  public static final int kCall = 3;
-  public static final int kReturn = 4;
-  public static final int kNull = 5;
-  public static final int kTrue = 6;
-  public static final int kPush = 7;
-  public static final int kCallNative = 8;
-  public static final int kPop = 9;
-  public static final int kGlobal = 10;
+  public static class OpcodeInfo {
+
+    private final Info info;
+    private final String name;
+    private final ArgumentType[] args;
+
+    public OpcodeInfo(Info info, String name) {
+      this.info = info;
+      this.name = name;
+      this.args = info.value();
+    }
+
+    public int getSize() {
+      return args.length + 1;
+    }
+
+    public ArgumentType[] getArguments() {
+      return args;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+  }
+
+  public enum ArgumentType {
+    LITERAL, NUMBER
+  }
+
+  @Retention(RetentionPolicy.RUNTIME)
+  private @interface Info {
+    public ArgumentType[] value();
+  }
+
+  @Info({ArgumentType.NUMBER}) public static final int kNumber = 0;
+  @Info({ArgumentType.LITERAL}) public static final int kLambda = 1;
+  @Info({ArgumentType.LITERAL, ArgumentType.NUMBER}) public static final int kCall = 3;
+  @Info({}) public static final int kReturn = 4;
+  @Info({}) public static final int kNull = 5;
+  @Info({}) public static final int kTrue = 6;
+  @Info({ArgumentType.LITERAL}) public static final int kPush = 7;
+  @Info({ArgumentType.LITERAL, ArgumentType.NUMBER}) public static final int kCallNative = 8;
+  @Info({}) public static final int kPop = 9;
+  @Info({ArgumentType.LITERAL}) public static final int kGlobal = 10;
+
+  private static final Map<Integer, OpcodeInfo> infos = new HashMap<Integer, OpcodeInfo>() {{
+    try {
+      for (Field field : Opcode.class.getFields()) {
+        Info info = field.getAnnotation(Info.class);
+        if (info != null) {
+          String name = field.getName().substring(1);
+          put(field.getInt(null), new OpcodeInfo(info, name));
+        }
+      }
+    } catch (IllegalAccessException iae) {
+      throw new RuntimeException(iae);
+    }
+  }};
+
+  public static OpcodeInfo getInfo(int code) {
+    return infos.get(code);
+  }
 
 }
