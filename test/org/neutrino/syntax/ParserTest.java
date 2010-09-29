@@ -1,10 +1,10 @@
 package org.neutrino.syntax;
 
+import org.neutrino.syntax.Tree.Unit;
+
 import java.util.List;
 
 import junit.framework.TestCase;
-
-import org.neutrino.syntax.Tree.Unit;
 
 /**
  * Unit test of the {@link Parser} class.
@@ -144,6 +144,10 @@ public class ParserTest extends TestCase {
     expressionTest("1 + 1", "(.+ #1 #1)");
     expressionTest("1 + 2 + 3", "(.+ (.+ #1 #2) #3)");
     expressionTest("1 ** 2 ++ 3", "(.++ (.** #1 #2) #3)");
+  }
+
+  public void testConditionals() {
+    expressionTest("if a then b else c", "");
   }
 
 }

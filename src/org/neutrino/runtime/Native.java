@@ -110,6 +110,14 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("!bool") static final Impl BOOL_NOT = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RBoolean self = (RBoolean) args.getThis();
+      return RBoolean.get(!self.getValue());
+    }
+  };
+
   @Marker("print") static final Impl PRINT = new Impl() {
     @Override
     public RValue call(Arguments args) {
@@ -125,6 +133,18 @@ public class Native implements ISeedable {
         throw new AssertionError("Assertion failed.");
       }
       return RNull.getInstance();
+    }
+  };
+
+  @Marker("select") static final Impl IF = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RBoolean cond = (RBoolean) args.getArgument(0);
+      if (cond.getValue()) {
+        return args.getArgument(1);
+      } else {
+        return args.getArgument(2);
+      }
     }
   };
 

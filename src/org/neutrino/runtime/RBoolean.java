@@ -19,6 +19,10 @@ public class RBoolean extends RValue {
     return FALSE;
   }
 
+  public boolean getValue() {
+    return value;
+  }
+
   public static RValue get(boolean b) {
     return b ? TRUE : FALSE;
   }

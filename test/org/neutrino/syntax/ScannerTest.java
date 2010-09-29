@@ -1,10 +1,10 @@
 package org.neutrino.syntax;
 
+import org.neutrino.syntax.Token.Type;
+
 import java.util.Arrays;
 
 import junit.framework.TestCase;
-
-import org.neutrino.syntax.Token.Type;
 
 /**
  * Unit test of the {@link Scanner} class.
@@ -50,6 +50,9 @@ public class ScannerTest extends TestCase {
   private static final Token NULL = newToken(Type.NULL);
   private static final Token TRUE = newToken(Type.TRUE);
   private static final Token FALSE = newToken(Type.FALSE);
+  private static final Token IF = newToken(Type.IF);
+  private static final Token THEN = newToken(Type.THEN);
+  private static final Token ELSE = newToken(Type.ELSE);
   private static final Token PROTOCOL = newToken(Type.PROTOCOL);
 
   private void scannerTest(String input, Token... expected) {
@@ -65,7 +68,8 @@ public class ScannerTest extends TestCase {
     scannerTest(" foo bar baz ", ident("foo"), ident("bar"), ident("baz"));
     scannerTest("(foo)(bar)(baz)", LPAREN, ident("foo"), RPAREN,
         LPAREN, ident("bar"), RPAREN, LPAREN, ident("baz"), RPAREN);
-    scannerTest("def fn new null true false protocol", DEF, FN, NEW, NULL, TRUE, FALSE, PROTOCOL);
+    scannerTest("def fn new null true false if then else protocol", DEF, FN,
+        NEW, NULL, TRUE, FALSE, IF, THEN, ELSE, PROTOCOL);
     scannerTest("12", number("12"));
   }
 
