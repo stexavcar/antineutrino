@@ -12,6 +12,8 @@ import java.util.List;
 @Growable(RMethod.TAG)
 public class RMethod extends RValue implements ISeedable {
 
+  private static final TypeId TYPE_ID = new TypeId();
+
   private static final String TAG = "org::neutrino::runtime::RMethod";
 
   public @SeedMember List<Annotation> annots;
@@ -35,6 +37,11 @@ public class RMethod extends RValue implements ISeedable {
 
   public CodeBundle getCode() {
     return this.code;
+  }
+
+  @Override
+  public TypeId getTypeId() {
+    return TYPE_ID;
   }
 
   @Override

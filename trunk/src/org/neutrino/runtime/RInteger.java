@@ -2,6 +2,8 @@ package org.neutrino.runtime;
 
 public class RInteger extends RValue {
 
+  private static final TypeId TYPE_ID = new TypeId();
+
   private final int value;
 
   public RInteger(int value) {
@@ -10,6 +12,11 @@ public class RInteger extends RValue {
 
   public int getValue() {
     return value;
+  }
+
+  @Override
+  public TypeId getTypeId() {
+    return TYPE_ID;
   }
 
   @Override

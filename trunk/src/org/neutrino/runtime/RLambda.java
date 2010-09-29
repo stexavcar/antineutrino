@@ -5,6 +5,8 @@ import org.neutrino.pib.Module;
 
 public class RLambda extends RValue {
 
+  private static final TypeId TYPE_ID = new TypeId();
+
   private final Module module;
   private final CodeBundle bundle;
 
@@ -19,6 +21,11 @@ public class RLambda extends RValue {
 
   public CodeBundle getCode() {
     return this.bundle;
+  }
+
+  @Override
+  public TypeId getTypeId() {
+    return TYPE_ID;
   }
 
   @Override

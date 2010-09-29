@@ -1,5 +1,7 @@
 package org.neutrino.runtime;
 
-public class RValue {
+public abstract class RValue {
+
+  public abstract TypeId getTypeId();
 
 }

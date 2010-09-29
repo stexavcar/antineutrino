@@ -7,6 +7,8 @@ import org.neutrino.plankton.annotations.SeedMember;
 @Growable(RString.TAG)
 public class RString extends RValue implements ISeedable {
 
+  private static final TypeId TYPE_ID = new TypeId();
+
   private static final String TAG = "org::neutrino::runtime::RString";
   public @SeedMember String value;
 
@@ -18,6 +20,11 @@ public class RString extends RValue implements ISeedable {
 
   public String getValue() {
     return value;
+  }
+
+  @Override
+  public TypeId getTypeId() {
+    return TYPE_ID;
   }
 
   @Override
