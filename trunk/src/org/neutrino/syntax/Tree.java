@@ -1,12 +1,14 @@
 package org.neutrino.syntax;
 
-import java.util.List;
-
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Neutrino syntax trees.
@@ -80,6 +82,7 @@ public class Tree {
       return this.value;
     }
 
+    @Override
     public List<Annotation> getAnnotations() {
       return this.annots;
     }
@@ -111,6 +114,7 @@ public class Tree {
       return this.name;
     }
 
+    @Override
     public List<Annotation> getAnnotations() {
       return this.annots;
     }
@@ -156,6 +160,7 @@ public class Tree {
       visitor.visitMethodDefinition(this);
     }
 
+    @Override
     public List<Annotation> getAnnotations() {
       return this.annots;
     }
@@ -311,6 +316,19 @@ public class Tree {
 
   }
 
+  public static class If {
+
+    public static Expression create(Tree.Expression cond, Tree.Expression thenPart,
+        Tree.Expression elsePart) {
+      return new Call("()", Arrays.asList(
+          new Identifier("select"),
+          cond,
+          new Lambda(Collections.<String>emptyList(), thenPart),
+          new Lambda(Collections.<String>emptyList(), elsePart)));
+    }
+
+  }
+
   public static class Call extends Expression {
 
     private final String name;
@@ -352,7 +370,7 @@ public class Tree {
       private final String name;
       private Type(String name) { this.name = name; }
       @Override public String toString() { return this.name; }
-    };
+    }
 
     private final Type type;
 

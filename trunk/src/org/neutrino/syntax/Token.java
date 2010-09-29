@@ -35,6 +35,9 @@ public class Token {
     NULL("null", true, false),
     TRUE("true", true, false),
     FALSE("false", true, false),
+    IF("if", true, false),
+    THEN("then", true, false),
+    ELSE("else", true, false),
     PROTOCOL("protocol", true, false);
 
     private final String name;
@@ -112,6 +115,7 @@ public class Token {
     return this.end;
   }
 
+  @Override
   public String toString() {
     if (getType().getName() != null) {
       return this.type.toString();

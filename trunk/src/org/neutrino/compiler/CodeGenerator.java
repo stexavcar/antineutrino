@@ -1,7 +1,5 @@
 package org.neutrino.compiler;
 
-import java.util.List;
-
 import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RString;
@@ -11,6 +9,8 @@ import org.neutrino.syntax.Tree.Definition;
 import org.neutrino.syntax.Tree.Expression;
 import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.Text;
+
+import java.util.List;
 
 /**
  * Expression visitor that generates platform independent bytecode for
@@ -55,7 +55,7 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
     Annotation annot = that.getAnnotation(Native.ANNOTATION);
     String key = ((RString) annot.getArgument(0)).getValue();
     Native method = Native.get(key);
-    subAssm.callNative(method);
+    subAssm.callNative(method, 2);
     subAssm.rethurn();
     assm.lambda(subAssm.getCode());
     assm.rethurn();
@@ -73,7 +73,7 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
 
   @Override
   public void visitText(Text that) {
-    assert false;
+    assm.push(new RString(that.getValue()));
   }
 
   @Override
@@ -81,6 +81,12 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
     switch (that.getType()) {
     case NULL:
       assm.nuhll();
+      break;
+    case TRUE:
+      assm.thrue();
+      break;
+    case FALSE:
+      assm.fahlse();
       break;
     default:
       assert false;
@@ -107,7 +113,7 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
     Annotation annot = that.getAnnotation(Native.ANNOTATION);
     String key = ((RString) annot.getArgument(0)).getValue();
     Native method = Native.get(key);
-    assm.callNative(method);
+    assm.callNative(method, that.getParameters().size());
     assm.rethurn();
   }
 

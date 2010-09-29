@@ -1,13 +1,13 @@
 package org.neutrino.syntax;
 
+import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RValue;
+import org.neutrino.syntax.Token.Type;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-
-import org.neutrino.pib.Parameter;
-import org.neutrino.runtime.RValue;
-import org.neutrino.syntax.Token.Type;
 
 /**
  * Plain vanilla recursive descent parser for the neutrino syntax.
@@ -337,16 +337,25 @@ public class Parser {
   }
 
   /**
-   * <funexpr>
+   * <longexpr>
    *   -> "fn" <args> <funbody>
+   *    | "if" <opexpr> "->" <opexpr> "else" <opexpr>
    *    | <operatorexpr>
    */
-  private Tree.Expression parseFunctionExpression() throws SyntaxError {
+  private Tree.Expression parseLongExpression() throws SyntaxError {
     if (at(Type.FN)) {
       expect(Type.FN);
       List<String> params = parseParameters();
       Tree.Expression body = parseFunctionBody(false);
       return new Tree.Lambda(params, body);
+    } else if (at(Type.IF)) {
+      expect(Type.IF);
+      Tree.Expression cond = parseOperatorExpression();
+      expect(Type.THEN);
+      Tree.Expression thenPart = parseOperatorExpression();
+      expect(Type.ELSE);
+      Tree.Expression elsePart = parseOperatorExpression();
+      return Tree.If.create(cond, thenPart, elsePart);
     } else {
       return parseOperatorExpression();
     }
@@ -357,7 +366,7 @@ public class Parser {
    *   -> <funexpr>
    */
   private Tree.Expression parseExpression() throws SyntaxError {
-    return parseFunctionExpression();
+    return parseLongExpression();
   }
 
   /**

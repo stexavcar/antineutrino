@@ -1,11 +1,11 @@
 package org.neutrino.pib;
 
+import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RValue;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.neutrino.runtime.Native;
-import org.neutrino.runtime.RValue;
 
 
 public class Assembler {
@@ -36,6 +36,10 @@ public class Assembler {
     add(Opcode.kTrue);
   }
 
+  public void fahlse() {
+    add(Opcode.kFalse);
+  }
+
   public void lambda(CodeBundle code) {
     int codeIndex = registerLiteral(code);
     add(Opcode.kLambda);
@@ -59,10 +63,11 @@ public class Assembler {
     add(argc);
   }
 
-  public void callNative(Native method) {
+  public void callNative(Native method, int argc) {
     int index = registerLiteral(method);
     add(Opcode.kCallNative);
     add(index);
+    add(argc);
   }
 
   public int registerLiteral(Object obj) {

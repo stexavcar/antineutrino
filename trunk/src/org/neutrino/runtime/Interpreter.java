@@ -36,6 +36,10 @@ public class Interpreter {
         frame.stack.push(RBoolean.getTrue());
         frame.pc += 1;
         break;
+      case Opcode.kFalse:
+        frame.stack.push(RBoolean.getFalse());
+        frame.pc += 1;
+        break;
       case Opcode.kLambda: {
         int index = frame.code[frame.pc + 1];
         CodeBundle bundle = (CodeBundle) frame.literals.get(index);
@@ -82,10 +86,11 @@ public class Interpreter {
       case Opcode.kCallNative: {
         int index = frame.code[frame.pc + 1];
         Native nathive = (Native) frame.literals.get(index);
-        arguments.prepare(frame.parent, 2);
+        int argc = frame.code[frame.pc + 2];
+        arguments.prepare(frame.parent, argc);
         RValue value = nathive.call(arguments);
         frame.stack.push(value);
-        frame.pc += 2;
+        frame.pc += 3;
         break;
       }
       case Opcode.kGlobal: {
