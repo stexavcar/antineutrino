@@ -147,7 +147,8 @@ public class ParserTest extends TestCase {
   }
 
   public void testConditionals() {
-    expressionTest("if a then b else c", "");
+    expressionTest("if a then b else c", "(.() (.() $select $a (fn () $b) (fn () $c)))");
+    expressionTest("if d then e", "(.() (.() $select $d (fn () $e) (fn () #n)))");
   }
 
 }

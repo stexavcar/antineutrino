@@ -110,6 +110,14 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("null=any") static final Impl NULL_EQ = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RNull self = (RNull) args.getThis();
+      return RBoolean.get(args.getArgument(0) == self);
+    }
+  };
+
   @Marker("!bool") static final Impl BOOL_NOT = new Impl() {
     @Override
     public RValue call(Arguments args) {

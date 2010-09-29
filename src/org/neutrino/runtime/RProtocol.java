@@ -1,11 +1,11 @@
 package org.neutrino.runtime;
 
-import java.util.List;
-
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
 import org.neutrino.syntax.Annotation;
+
+import java.util.List;
 
 @Growable(RProtocol.TAG)
 public class RProtocol extends RValue implements ISeedable {
@@ -21,5 +21,10 @@ public class RProtocol extends RValue implements ISeedable {
   }
 
   public RProtocol() { }
+
+  @Override
+  public String toString() {
+    return "#<a Protocol: " + name + ">";
+  }
 
 }

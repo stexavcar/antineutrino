@@ -1,14 +1,29 @@
 @native protocol Integer;
 
 @native("int+int") def Integer::+(that);
+
 @native("int-int") def Integer::-(that);
+
 @native("int<int") def Integer::<(that);
+
 @native("int=int") def Integer::=(that);
 
+
+
 @native protocol Boolean;
+
 @native("!bool") def Boolean::not();
 
+
+
+@native protocol Null;
+
+@native("null=any") def Null::==(that);
+
+
+
 @native("print") def print(obj);
+
 @native("assert_true") def assert_true(cond);
 
 @native("select") def select(cond, then_part, else_part);

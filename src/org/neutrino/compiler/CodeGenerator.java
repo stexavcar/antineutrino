@@ -55,7 +55,8 @@ public class CodeGenerator implements Tree.ExpressionVisitor {
     Annotation annot = that.getAnnotation(Native.ANNOTATION);
     String key = ((RString) annot.getArgument(0)).getValue();
     Native method = Native.get(key);
-    subAssm.callNative(method, 2);
+    Tree.Lambda lambda = (Tree.Lambda) that.getValue();
+    subAssm.callNative(method, lambda.getParameters().size() + 1);
     subAssm.rethurn();
     assm.lambda(subAssm.getCode());
     assm.rethurn();

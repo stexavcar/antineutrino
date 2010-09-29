@@ -353,8 +353,13 @@ public class Parser {
       Tree.Expression cond = parseOperatorExpression();
       expect(Type.THEN);
       Tree.Expression thenPart = parseOperatorExpression();
-      expect(Type.ELSE);
-      Tree.Expression elsePart = parseOperatorExpression();
+      Tree.Expression elsePart;
+      if (at(Type.ELSE)) {
+        expect(Type.ELSE);
+        elsePart = parseOperatorExpression();
+      } else {
+        elsePart = new Tree.Singleton(Tree.Singleton.Type.NULL);
+      }
       return Tree.If.create(cond, thenPart, elsePart);
     } else {
       return parseOperatorExpression();
