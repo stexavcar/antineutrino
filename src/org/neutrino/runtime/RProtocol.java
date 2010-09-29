@@ -10,6 +10,7 @@ import java.util.List;
 @Growable(RProtocol.TAG)
 public class RProtocol extends RValue implements ISeedable {
 
+  private static final TypeId TYPE_ID = new TypeId();
   private static final String TAG = "org::neutrino::runtime::RProtocol";
 
   public @SeedMember List<Annotation> annotations;
@@ -21,6 +22,11 @@ public class RProtocol extends RValue implements ISeedable {
   }
 
   public RProtocol() { }
+
+  @Override
+  public TypeId getTypeId() {
+    return TYPE_ID;
+  }
 
   @Override
   public String toString() {
