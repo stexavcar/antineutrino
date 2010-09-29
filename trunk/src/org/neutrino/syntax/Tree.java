@@ -6,6 +6,7 @@ import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -314,17 +315,31 @@ public class Tree {
       visitor.visitLambda(this);
     }
 
+    public List<String> getParameters() {
+      return params;
+    }
+
+    public static Expression createCall(Expression fun, List<Expression> args) {
+      List<Expression> allArgs = new ArrayList<Expression>();
+      allArgs.add(fun);
+      allArgs.addAll(args);
+      return new Call("()", allArgs);
+    }
+
   }
 
   public static class If {
 
     public static Expression create(Tree.Expression cond, Tree.Expression thenPart,
         Tree.Expression elsePart) {
-      return new Call("()", Arrays.asList(
-          new Identifier("select"),
-          cond,
-          new Lambda(Collections.<String>emptyList(), thenPart),
-          new Lambda(Collections.<String>emptyList(), elsePart)));
+      return Lambda.createCall(
+          Lambda.createCall(
+              new Identifier("select"),
+              Arrays.asList(
+                  cond,
+                  new Lambda(Collections.<String>emptyList(), thenPart),
+                  new Lambda(Collections.<String>emptyList(), elsePart))),
+          Collections.<Expression>emptyList());
     }
 
   }

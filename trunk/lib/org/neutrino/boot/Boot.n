@@ -18,5 +18,8 @@ def test_singletons() {
 }
 
 def test_conditionals() {
-  print(if true then "knirk" else "knork");
+  assert_true((if true then 1 else 2) = 1);
+  assert_true((if false then 1 else 2) = 2);
+  assert_true((if true then 1) = 1);
+  assert_true((if false then 1) == null);
 }
