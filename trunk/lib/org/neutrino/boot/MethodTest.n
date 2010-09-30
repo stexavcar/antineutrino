@@ -1,3 +1,4 @@
+(*
 def i := 0;
 def a := 1;
 def b := 2;
@@ -10,10 +11,22 @@ def nth_arg(i, a, b, c, d) {
   else if i = 2 then c
   else d
 }
+*)
+
+def id(x) -> x;
+
+def first(x, y) -> x;
+def second(x, y) -> y;
 
 def test_methods() {
   print("Testing methods");
   assert_true((1 + 1) = 2);
   assert_true(("1" + "1") = "11");
-  assert_true(nth_arg(0, 1, 2, 3, 4) = 1);
+  (* assert_true(nth_arg(0, 1, 2, 3, 4) = 1); *)
+  assert_true(id(4) = 4);
+  assert_true(id(5) = 5);
+  assert_true(first(2, 3) = 2);
+  assert_true(first(4, 5) = 4);
+  assert_true(second(6, 7) = 7);
+  assert_true(second(8, 9) = 9);
 }

@@ -93,6 +93,13 @@ public class Interpreter {
         frame.pc += 1;
         break;
       }
+      case Opcode.kArgument: {
+        int index = frame.code[frame.pc + 1];
+        RValue value = frame.parent.peekArgument(index);
+        frame.stack.push(value);
+        frame.pc += 2;
+        break;
+      }
       case Opcode.kCallNative: {
         int index = frame.code[frame.pc + 1];
         Native nathive = (Native) frame.literals.get(index);

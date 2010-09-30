@@ -1,15 +1,16 @@
 package org.neutrino.syntax;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
+import org.neutrino.compiler.Symbol;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Neutrino syntax trees.
@@ -182,6 +183,8 @@ public class Tree {
 
     public abstract void accept(ExpressionVisitor visitor);
 
+    public abstract void traverse(ExpressionVisitor visitor);
+
     public RValue toValue() {
       assert false;
       return RNull.getInstance();
@@ -189,29 +192,50 @@ public class Tree {
 
   }
 
-  public static interface ExpressionVisitor {
+  public static class ExpressionVisitor {
 
-    public void visitLocalDefinition(LocalDefinition that);
+    public void visitExpression(Expression that) {
+      that.traverse(this);
+    }
 
-    public void visitBlock(Block that);
+    public void visitLocalDefinition(LocalDefinition that) {
+      visitExpression(that);
+    }
 
-    public void visitSingleton(Singleton that);
+    public void visitBlock(Block that) {
+      visitExpression(that);
+    }
 
-    public void visitLambda(Lambda that);
+    public void visitSingleton(Singleton that) {
+      visitExpression(that);
+    }
 
-    public void visitNumber(Number that);
+    public void visitLambda(Lambda that) {
+      visitExpression(that);
+    }
 
-    public void visitIdentifier(Identifier that);
+    public void visitNumber(Number that) {
+      visitExpression(that);
+    }
 
-    public void visitCall(Call that);
+    public void visitIdentifier(Identifier that) {
+      visitExpression(that);
+    }
 
-    public void visitText(Text that);
+    public void visitCall(Call that) {
+      visitExpression(that);
+    }
+
+    public void visitText(Text that) {
+      visitExpression(that);
+    }
 
   }
 
   public static class Identifier extends Expression {
 
     private final String name;
+    private Symbol symbol;
 
     public Identifier(String name) {
       this.name = name;
@@ -221,10 +245,23 @@ public class Tree {
       return name;
     }
 
+    public void bind(Symbol symbol) {
+      assert this.symbol == null;
+      this.symbol = symbol;
+    }
+
+    public Symbol getSymbol() {
+      assert this.symbol != null;
+      return this.symbol;
+    }
+
     @Override
     public String toString() {
       return "$" + name;
     }
+
+    @Override
+    public void traverse(ExpressionVisitor visitor) { }
 
     @Override
     public void accept(ExpressionVisitor visitor) {
@@ -256,6 +293,9 @@ public class Tree {
     }
 
     @Override
+    public void traverse(ExpressionVisitor visitor) { }
+
+    @Override
     public void accept(ExpressionVisitor visitor) {
       visitor.visitNumber(this);
     }
@@ -273,6 +313,9 @@ public class Tree {
     public String getValue() {
       return this.value;
     }
+
+    @Override
+    public void traverse(ExpressionVisitor visitor) { }
 
     @Override
     public void accept(ExpressionVisitor visitor) {
@@ -303,6 +346,11 @@ public class Tree {
 
     public Expression getBody() {
       return this.body;
+    }
+
+    @Override
+    public void traverse(ExpressionVisitor visitor) {
+      body.accept(visitor);
     }
 
     @Override
@@ -355,6 +403,12 @@ public class Tree {
     }
 
     @Override
+    public void traverse(ExpressionVisitor visitor) {
+      for (Expression arg : args)
+        arg.accept(visitor);
+    }
+
+    @Override
     public void accept(ExpressionVisitor visitor) {
       visitor.visitCall(this);
     }
@@ -403,6 +457,9 @@ public class Tree {
     }
 
     @Override
+    public void traverse(ExpressionVisitor visitor) { }
+
+    @Override
     public void accept(ExpressionVisitor visitor) {
       visitor.visitSingleton(this);
     }
@@ -416,6 +473,12 @@ public class Tree {
     public Block(List<Expression> exprs) {
       assert exprs.size() > 0;
       this.exprs = exprs;
+    }
+
+    @Override
+    public void traverse(ExpressionVisitor visitor) {
+      for (Expression expr : exprs)
+        expr.accept(visitor);
     }
 
     public List<Expression> getExpressions() {
@@ -444,6 +507,12 @@ public class Tree {
       this.name = name;
       this.value = value;
       this.body = body;
+    }
+
+    @Override
+    public void traverse(ExpressionVisitor visitor) {
+      value.accept(visitor);
+      body.accept(visitor);
     }
 
     @Override

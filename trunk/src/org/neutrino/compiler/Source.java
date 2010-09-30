@@ -96,12 +96,11 @@ public class Source {
     @Override
     public void visitDefinition(Definition that) {
       CodeBuilder<?> builder = module.createDefinition(that);
-      CodeGenerator codegen = new CodeGenerator(builder.getAssembler());
       Annotation nathive = that.getAnnotation(Native.ANNOTATION);
       if (nathive != null) {
-        codegen.generateNativeLambda(that);
+        Compiler.compileNativeLambda(builder.getAssembler(), that);
       } else {
-        codegen.generate(that.getValue());
+        Compiler.compile(builder.getAssembler(), that.getValue());
       }
     }
 
@@ -113,12 +112,11 @@ public class Source {
     @Override
     public void visitMethodDefinition(Method that) {
       CodeBuilder<?> builder = module.createMethod(that);
-      CodeGenerator codegen = new CodeGenerator(builder.getAssembler());
       Annotation nathive = that.getAnnotation(Native.ANNOTATION);
       if (nathive != null) {
-        codegen.generateNativeMethod(that);
+        Compiler.compileNativeMethod(builder.getAssembler(), that);
       } else {
-        codegen.generate(that.getBody());
+        Compiler.compile(builder.getAssembler(), that.getBody());
       }
     }
 

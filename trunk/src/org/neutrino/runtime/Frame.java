@@ -1,10 +1,10 @@
 package org.neutrino.runtime;
 
-import org.neutrino.pib.CodeBundle;
-import org.neutrino.pib.Module;
-
 import java.util.List;
 import java.util.Stack;
+
+import org.neutrino.pib.CodeBundle;
+import org.neutrino.pib.Module;
 
 public class Frame {
 
@@ -28,6 +28,10 @@ public class Frame {
 
   public RLambda lookupMethod(String name, int argc) {
     return module.lookupMethod(name, argc, this);
+  }
+
+  public RValue peekArgument(int index) {
+    return stack.get(stack.size() - index);
   }
 
 }

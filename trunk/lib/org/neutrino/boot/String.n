@@ -1,0 +1,8 @@
+(*
+ * Plain text strings.
+ *)
+@native("str") protocol String;
+
+@native("string+string") def String::+(that: String);
+
+@native("string=string") def String::=(that: String);
