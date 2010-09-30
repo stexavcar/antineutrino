@@ -338,10 +338,21 @@ public class Tree {
 
     private final List<Parameter> params;
     private final Expression body;
+    private List<Symbol> captured;
 
     public Lambda(List<Parameter> params, Expression body) {
       this.params = params;
       this.body = body;
+    }
+
+    public void bind(List<Symbol> captured) {
+      assert this.captured == null;
+      this.captured = captured;
+    }
+
+    public List<Symbol> getCaptured() {
+      assert this.captured != null;
+      return this.captured;
     }
 
     public Expression getBody() {

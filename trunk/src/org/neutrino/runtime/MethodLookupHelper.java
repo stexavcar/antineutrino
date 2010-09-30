@@ -1,10 +1,10 @@
 package org.neutrino.runtime;
 
-import org.neutrino.pib.Module;
-import org.neutrino.pib.Parameter;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.neutrino.pib.Module;
+import org.neutrino.pib.Parameter;
 
 public class MethodLookupHelper {
 
@@ -46,7 +46,7 @@ public class MethodLookupHelper {
         result = method;
       }
     }
-    return new RLambda(module, result.getCode());
+    return new RLambda(module, result.getCode(), null);
   }
 
 }

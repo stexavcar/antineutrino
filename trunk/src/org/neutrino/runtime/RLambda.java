@@ -1,5 +1,7 @@
 package org.neutrino.runtime;
 
+import java.util.Arrays;
+
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 
@@ -9,14 +11,20 @@ public class RLambda extends RValue {
 
   private final Module module;
   private final CodeBundle bundle;
+  private final RValue[] captured;
 
-  public RLambda(Module module, CodeBundle bundle) {
+  public RLambda(Module module, CodeBundle bundle, RValue[] captured) {
     this.module = module;
     this.bundle = bundle;
+    this.captured = captured;
   }
 
   public Module getModule() {
     return this.module;
+  }
+
+  public RValue[] getOuter() {
+    return this.captured;
   }
 
   public CodeBundle getCode() {
@@ -30,7 +38,7 @@ public class RLambda extends RValue {
 
   @Override
   public String toString() {
-    return "#<a Lambda>";
+    return "#<a Lambda: " + bundle + " : " + Arrays.asList(captured) + ">";
   }
 
 }

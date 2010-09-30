@@ -47,7 +47,10 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
     Assembler subAssm = new Assembler();
     CodeGenerator codegen = new CodeGenerator(subAssm);
     codegen.generate(that.getBody());
-    assm.lambda(subAssm.getCode());
+    List<Symbol> captured = that.getCaptured();
+    for (Symbol symbol : captured)
+      symbol.emit(assm);
+    assm.lambda(subAssm.getCode(), captured.size());
   }
 
   public void generateNativeLambda(Definition that) {
@@ -58,7 +61,7 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
     Tree.Lambda lambda = (Tree.Lambda) that.getValue();
     subAssm.callNative(method, lambda.getParameters().size() + 1);
     subAssm.rethurn();
-    assm.lambda(subAssm.getCode());
+    assm.lambda(subAssm.getCode(), 0);
     assm.rethurn();
   }
 

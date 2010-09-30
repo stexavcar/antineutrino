@@ -10,7 +10,7 @@ public class Interpreter {
   private final Native.Arguments arguments = new Native.Arguments();
 
   public RValue interpret(Module module, CodeBundle code) {
-    Frame frame = new Frame(null, code, module);
+    Frame frame = new Frame(null, code, null, module);
     return interpret(frame);
   }
 
@@ -52,9 +52,18 @@ public class Interpreter {
         break;
       case Opcode.kLambda: {
         int index = frame.code[frame.pc + 1];
+        int outc = frame.code[frame.pc + 2];
         CodeBundle bundle = (CodeBundle) frame.literals.get(index);
-        frame.stack.push(new RLambda(frame.module, bundle));
-        frame.pc += 2;
+        RValue[] outer;
+        if (outc == 0) {
+          outer = null;
+        } else {
+          outer = new RValue[outc];
+          for (int i = 0; i < outc; i++)
+            outer[outc - i - 1] = frame.stack.pop();
+        }
+        frame.stack.push(new RLambda(frame.module, bundle, outer));
+        frame.pc += 3;
         break;
       }
       case Opcode.kCall: {
@@ -63,7 +72,7 @@ public class Interpreter {
         int argc = frame.code[frame.pc + 2];
         RLambda lambda = frame.lookupMethod(name, argc);
         assert lambda != null : "Method " + getMethodName(name, argc, frame) + " not found.";
-        frame = new Frame(frame, lambda.getCode(), lambda.getModule());
+        frame = new Frame(frame, lambda.getCode(), lambda.getOuter(), lambda.getModule());
         break;
       }
       case Opcode.kReturn: {
@@ -97,6 +106,12 @@ public class Interpreter {
         int index = frame.code[frame.pc + 1];
         RValue value = frame.parent.peekArgument(index);
         frame.stack.push(value);
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kOuter: {
+        int index = frame.code[frame.pc + 1];
+        frame.stack.push(frame.outer[index]);
         frame.pc += 2;
         break;
       }

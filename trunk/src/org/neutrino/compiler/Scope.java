@@ -9,18 +9,24 @@ public abstract class Scope {
 
   public abstract Symbol lookup(String name);
 
-  private static class MethodScope extends Scope {
+  public static class MethodScope extends Scope {
 
     private final List<Parameter> params;
     private final List<Symbol> symbols;
-    private final Scope outer;
+    private final List<Symbol> outerTransient = new ArrayList<Symbol>();
+    private final List<Symbol> outerCaptures = new ArrayList<Symbol>();
+    private final Scope outerScope;
 
     public MethodScope(List<Parameter> params, Scope outer) {
       this.params = params;
-      this.outer = outer;
+      this.outerScope = outer;
       this.symbols = new ArrayList<Symbol>();
       for (int i = 0; i < params.size(); i++)
         symbols.add(Symbol.parameter(i, params.size()));
+    }
+
+    public List<Symbol> getOuterTransient() {
+      return this.outerTransient;
     }
 
     @Override
@@ -29,13 +35,19 @@ public abstract class Scope {
         if (params.get(i).getName().equals(name))
           return symbols.get(i);
       }
-      return outer.lookup(name);
+      Symbol outerResult = outerScope.lookup(name);
+      if (!outerResult.isTransient())
+        return outerResult;
+      int index = outerTransient.indexOf(outerResult);
+      if (index == -1) {
+        index = outerTransient.size();
+        Symbol capture = Symbol.outer(index);
+        outerTransient.add(outerResult);
+        outerCaptures.add(capture);
+      }
+      return outerCaptures.get(index);
     }
 
-  }
-
-  public static Scope methodScope(List<Parameter> params, Scope outer) {
-    return new MethodScope(params, outer);
   }
 
   private static class GlobalScope extends Scope {

@@ -47,7 +47,7 @@ public class Opcode {
   }
 
   @Info({ArgumentType.NUMBER}) public static final int kNumber = 0;
-  @Info({ArgumentType.LITERAL}) public static final int kLambda = 1;
+  @Info({ArgumentType.LITERAL, ArgumentType.NUMBER}) public static final int kLambda = 1;
   @Info({ArgumentType.LITERAL, ArgumentType.NUMBER}) public static final int kCall = 3;
   @Info({}) public static final int kReturn = 4;
   @Info({}) public static final int kNull = 5;
@@ -58,6 +58,7 @@ public class Opcode {
   @Info({ArgumentType.LITERAL}) public static final int kGlobal = 10;
   @Info({}) public static final int kFalse = 11;
   @Info({ArgumentType.NUMBER}) public static final int kArgument = 12;
+  @Info({ArgumentType.NUMBER}) public static final int kOuter = 13;
 
   private static final Map<Integer, OpcodeInfo> infos = new HashMap<Integer, OpcodeInfo>() {{
     try {
