@@ -10,6 +10,14 @@
 
 
 
+@native protocol String;
+
+@native("string+string") def String::+(that);
+
+@native("string=string") def String::=(that);
+
+
+
 @native protocol Boolean;
 
 @native("!bool") def Boolean::not();
@@ -18,7 +26,7 @@
 
 @native protocol Null;
 
-@native("null=any") def Null::==(that);
+@native("null=any") def Null::=(that);
 
 
 

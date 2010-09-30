@@ -147,7 +147,6 @@ public class Parser {
    * <funbody>
    *   -> "->" <expr> ";"
    *   -> <block>
-   * @return
    */
   private Tree.Expression parseFunctionBody(boolean isStatement) throws SyntaxError {
     if (at(Type.ARROW)) {

@@ -1,11 +1,11 @@
-@entry_point
-def main() {
+def test_primitives() {
   test_integer_operators();
   test_singletons();
-  test_conditionals();
+  test_conditionals(); 
 }
 
 def test_integer_operators() {
+  print("Testing integer operators");
   assert_true((1 + 1) = 2);
   assert_true((1 + 2) = 3);
   assert_true((2 + 1) = 3);
@@ -13,13 +13,15 @@ def test_integer_operators() {
 }
 
 def test_singletons() {
+  print("Testing singletons");
   assert_true(true);
   assert_true(false.not());
 }
 
 def test_conditionals() {
+  print("Testing conditionals");
   assert_true((if true then 1 else 2) = 1);
   assert_true((if false then 1 else 2) = 2);
   assert_true((if true then 1) = 1);
-  assert_true((if false then 1) == null);
+  assert_true((if false then 1) = null);
 }

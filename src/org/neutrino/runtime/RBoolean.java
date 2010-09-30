@@ -2,7 +2,7 @@ package org.neutrino.runtime;
 
 public class RBoolean extends RValue {
 
-  private static final TypeId TYPE_ID = new TypeId();
+  private static final TypeId TYPE_ID = TypeId.get("Boolean");
 
   private static final RBoolean TRUE = new RBoolean(true);
   private static final RBoolean FALSE = new RBoolean(false);

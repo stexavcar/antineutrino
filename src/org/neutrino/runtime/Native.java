@@ -110,6 +110,24 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("string+string") static final Impl STRING_PLUS = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RString self = (RString) args.getThis();
+      RString other = (RString) args.getArgument(0);
+      return new RString(self.getValue() + other.getValue());
+    }
+  };
+
+  @Marker("string=string") static final Impl STRING_EQ = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RString self = (RString) args.getThis();
+      RString other = (RString) args.getArgument(0);
+      return RBoolean.get(self.getValue().equals(other.getValue()));
+    }
+  };
+
   @Marker("null=any") static final Impl NULL_EQ = new Impl() {
     @Override
     public RValue call(Arguments args) {
@@ -129,7 +147,8 @@ public class Native implements ISeedable {
   @Marker("print") static final Impl PRINT = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      System.out.println(args.getArgument(0));
+      RValue value = args.getArgument(0);
+      System.out.println(value.toExternalString());
       return RNull.getInstance();
     }
   };

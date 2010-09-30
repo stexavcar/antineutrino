@@ -1,0 +1,5 @@
+@entry_point
+def main() {
+  test_primitives();
+  test_methods();
+}

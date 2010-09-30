@@ -5,7 +5,7 @@ import org.neutrino.pib.Module;
 
 public class RLambda extends RValue {
 
-  private static final TypeId TYPE_ID = new TypeId();
+  private static final TypeId TYPE_ID = TypeId.get("Lambda");
 
   private final Module module;
   private final CodeBundle bundle;
