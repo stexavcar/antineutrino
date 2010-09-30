@@ -1,13 +1,13 @@
 package org.neutrino.compiler;
 
+import org.neutrino.pib.BinaryBuilder;
+import org.neutrino.pib.ModuleBuilder;
+import org.neutrino.syntax.SyntaxError;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
-
-import org.neutrino.pib.BinaryBuilder;
-import org.neutrino.pib.ModuleBuilder;
-import org.neutrino.syntax.SyntaxError;
 
 /**
  * A single neutrino module.
@@ -45,7 +45,7 @@ public class CompilerModule {
       } else {
         Source source = Source.create(file);
         if (source != null)
-          sources.put(source.getName(), source);;
+          sources.put(source.getName(), source);
       }
     }
   }

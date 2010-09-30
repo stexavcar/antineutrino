@@ -1,5 +1,9 @@
 package org.neutrino.plankton;
 
+import org.neutrino.plankton.PValue.Type;
+import org.neutrino.plankton.annotations.Growable;
+import org.neutrino.plankton.annotations.SeedMember;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -8,10 +12,6 @@ import java.util.Collections;
 import java.util.HashMap;
 
 import junit.framework.TestCase;
-
-import org.neutrino.plankton.PValue.Type;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
 
 /**
  * Test of the {@link Plankton} utility class.
@@ -42,7 +42,7 @@ public class PlanktonTest extends TestCase {
     assertEquals("hey!", ((PString) result).getValue());
   }
 
-  public void testCompositeEncoding() throws IOException {
+  public void testCompositeEncoding() {
     final PMap original = Plankton.newMap(new HashMap<PString, PValue>() {{
       put(Plankton.newString("a"), Plankton.newInteger(4));
       put(Plankton.newString("b"), Plankton.newInteger(7));
@@ -62,7 +62,7 @@ public class PlanktonTest extends TestCase {
     });
   }
 
-  public void testArrayEncoding() throws IOException {
+  public void testArrayEncoding() {
     PArray array = Plankton.newArray(Arrays.asList(
       Plankton.newString("a"),
       Plankton.newInteger(4),
@@ -99,6 +99,7 @@ public class PlanktonTest extends TestCase {
       this.y = y;
     }
 
+    @SuppressWarnings("unused")
     public Point() { }
 
     public int getX() {
@@ -111,7 +112,7 @@ public class PlanktonTest extends TestCase {
 
   }
 
-  public void testSeeds() throws IOException {
+  public void testSeeds() {
     registry.register(Point.class);
     Point p = new Point(2, 3);
     PSeed seed = plankton.newSeed(p);

@@ -1,6 +1,7 @@
 package org.neutrino.runtime;
 
 import org.neutrino.pib.CodeBundle;
+import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
@@ -12,7 +13,7 @@ import java.util.List;
 @Growable(RMethod.TAG)
 public class RMethod extends RValue implements ISeedable {
 
-  private static final TypeId TYPE_ID = new TypeId();
+  private static final TypeId TYPE_ID = TypeId.get("Method");
 
   private static final String TAG = "org::neutrino::runtime::RMethod";
 
@@ -20,6 +21,8 @@ public class RMethod extends RValue implements ISeedable {
   public @SeedMember String name;
   public @SeedMember List<Parameter> params;
   public @SeedMember CodeBundle code;
+
+
 
   public RMethod(List<Annotation> annots, String name, List<Parameter> params,
       CodeBundle code) {
@@ -31,12 +34,21 @@ public class RMethod extends RValue implements ISeedable {
 
   public RMethod() { }
 
+  public void initialize(Module module) {
+    for (Parameter param : params)
+      param.initialize(module);
+  }
+
   public String getName() {
     return this.name;
   }
 
   public CodeBundle getCode() {
     return this.code;
+  }
+
+  public List<Parameter> getParameters() {
+    return this.params;
   }
 
   @Override

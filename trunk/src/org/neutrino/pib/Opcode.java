@@ -15,12 +15,10 @@ public class Opcode {
 
   public static class OpcodeInfo {
 
-    private final Info info;
     private final String name;
     private final ArgumentType[] args;
 
     public OpcodeInfo(Info info, String name) {
-      this.info = info;
       this.name = name;
       this.args = info.value();
     }
