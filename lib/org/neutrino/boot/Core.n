@@ -1,32 +1,32 @@
-@native protocol Integer;
+@native("int") protocol Integer;
 
-@native("int+int") def Integer::+(that);
+@native("int+int") def Integer::+(that: Integer);
 
-@native("int-int") def Integer::-(that);
+@native("int-int") def Integer::-(that: Integer);
 
-@native("int<int") def Integer::<(that);
+@native("int<int") def Integer::<(that: Integer);
 
-@native("int=int") def Integer::=(that);
-
-
-
-@native protocol String;
-
-@native("string+string") def String::+(that);
-
-@native("string=string") def String::=(that);
+@native("int=int") def Integer::=(that: Integer);
 
 
 
-@native protocol Boolean;
+@native("str") protocol String;
+
+@native("string+string") def String::+(that: String);
+
+@native("string=string") def String::=(that: String);
+
+
+
+@native("bool") protocol Boolean;
 
 @native("!bool") def Boolean::not();
 
 
 
-@native protocol Null;
+@native("null") protocol Null;
 
-@native("null=any") def Null::=(that);
+@native("null=any") def Null::=(that: Null);
 
 
 

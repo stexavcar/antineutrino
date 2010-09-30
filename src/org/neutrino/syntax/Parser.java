@@ -223,15 +223,14 @@ public class Parser {
       } else if (at(Type.COOLON)) {
         expect(Type.COOLON);
         String method = expectName();
-        List<String> paramNames = parseParameters();
+        List<Parameter> argParams = parseParameters();
         Tree.Expression body = parseFunctionBody(true);
-        List<Parameter> paramTypes = new ArrayList<Parameter>();
-        paramTypes.add(new Parameter("this", name));
-        for (int i = 0; i < paramNames.size(); i++)
-          paramTypes.add(new Parameter(paramNames.get(i), "Object"));
-        return new Tree.Method(annots, method, paramTypes, body);
+        List<Parameter> params = new ArrayList<Parameter>();
+        params.add(new Parameter("this", name));
+        params.addAll(argParams);
+        return new Tree.Method(annots, method, params, body);
       } else if (at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE)) {
-        List<String> params = parseParameters();
+        List<Parameter> params = parseParameters();
         Tree.Expression body = parseFunctionBody(true);
         Tree.Lambda lambda = new Tree.Lambda(params, body);
         return new Tree.Definition(annots, name, lambda);
@@ -246,14 +245,19 @@ public class Parser {
     }
   }
 
-  private List<String> parseParameters() throws SyntaxError {
+  private List<Parameter> parseParameters() throws SyntaxError {
     if (at(Type.LPAREN)) {
       expect(Type.LPAREN);
-      List<String> result = new ArrayList<String>();
+      List<Parameter> result = new ArrayList<Parameter>();
       if (!at(Type.RPAREN)) {
         while (true) {
           String name = expect(Type.IDENT);
-          result.add(name);
+          String type = "Object";
+          if (at(Type.COLON)) {
+            expect(Type.COLON);
+            type = expect(Type.IDENT);
+          }
+          result.add(new Parameter(name, type));
           if (at(Type.COMMA)) {
             expect(Type.COMMA);
             continue;
@@ -344,7 +348,7 @@ public class Parser {
   private Tree.Expression parseLongExpression() throws SyntaxError {
     if (at(Type.FN)) {
       expect(Type.FN);
-      List<String> params = parseParameters();
+      List<Parameter> params = parseParameters();
       Tree.Expression body = parseFunctionBody(false);
       return new Tree.Lambda(params, body);
     } else if (at(Type.IF)) {

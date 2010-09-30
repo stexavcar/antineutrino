@@ -2,7 +2,7 @@ package org.neutrino.runtime;
 
 public class RInteger extends RValue {
 
-  private static final TypeId TYPE_ID = TypeId.get("Integer");
+  private static final TypeId TYPE_ID = TypeId.get("int");
 
   private final int value;
 

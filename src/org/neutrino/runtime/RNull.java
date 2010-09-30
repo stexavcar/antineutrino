@@ -2,7 +2,7 @@ package org.neutrino.runtime;
 
 public class RNull extends RValue {
 
-  private static final TypeId TYPE_ID = TypeId.get("Null");
+  private static final TypeId TYPE_ID = TypeId.get("null");
   private static final RNull INSTANCE = new RNull();
 
   private RNull() { }

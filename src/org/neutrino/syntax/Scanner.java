@@ -47,13 +47,42 @@ public class Scanner {
     }
   }
 
+  private boolean atPair(char first, char second) {
+    return (getCurrent() == first) && peekAhead(second);
+  }
+
+  private boolean peekAhead(char value) {
+    return (cursor + 1) < source.length() && source.charAt(cursor + 1) == value;
+  }
+
+  private void skipComment() {
+    assert getCurrent() == '(';
+    advance();
+    assert getCurrent() == '*';
+    while (hasMore() && !atPair('*', ')'))
+      advance();
+    if (hasMore()) {
+      assert getCurrent() == '*';
+      advance();
+      assert getCurrent() == ')';
+      advance();
+    }
+  }
+
   /**
    * Skip over zero or more characters for whom {@link #isWhitespace(char)}
    * returns true.
    */
   private void skipWhiteSpace() {
-    while (hasMore() && isWhitespace(getCurrent()))
-      advance();
+    while (hasMore()) {
+      if (isWhitespace(getCurrent())) {
+        advance();
+      } else if (atPair('(', '*')) {
+        skipComment();
+      } else {
+        break;
+      }
+    }
   }
 
   /**

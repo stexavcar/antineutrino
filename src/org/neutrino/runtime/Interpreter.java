@@ -18,6 +18,16 @@ public class Interpreter {
     return interpret(lambda.getModule(), lambda.getCode());
   }
 
+  private String getMethodName(String name, int argc, Frame frame) {
+    StringBuilder buf = new StringBuilder().append(name).append("(");
+    for (int i = 0; i < argc; i++) {
+      if (i > 0) buf.append(", ");
+      RValue value = frame.getArgument(argc, i);
+      buf.append(value.getTypeId());
+    }
+    return buf.append(")").toString();
+  }
+
   private RValue interpret(Frame frame) {
     while (true) {
       int opcode = frame.code[frame.pc];
@@ -52,7 +62,7 @@ public class Interpreter {
         String name = (String) frame.literals.get(nameIndex);
         int argc = frame.code[frame.pc + 2];
         RLambda lambda = frame.lookupMethod(name, argc);
-        assert lambda != null : "Method " + name + " not found.";
+        assert lambda != null : "Method " + getMethodName(name, argc, frame) + " not found.";
         frame = new Frame(frame, lambda.getCode(), lambda.getModule());
         break;
       }
