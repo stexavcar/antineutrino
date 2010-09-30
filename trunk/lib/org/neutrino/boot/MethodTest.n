@@ -1,5 +1,19 @@
+def i := 0;
+def a := 1;
+def b := 2;
+def c := 3;
+def d := 4;
+
+def nth_arg(i, a, b, c, d) {
+  if i = 0 then a
+  else if i = 1 then b
+  else if i = 2 then c
+  else d
+}
+
 def test_methods() {
   print("Testing methods");
   assert_true((1 + 1) = 2);
   assert_true(("1" + "1") = "11");
+  assert_true(nth_arg(0, 1, 2, 3, 4) = 1);
 }

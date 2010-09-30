@@ -355,11 +355,11 @@ public class Parser {
       expect(Type.IF);
       Tree.Expression cond = parseOperatorExpression();
       expect(Type.THEN);
-      Tree.Expression thenPart = parseOperatorExpression();
+      Tree.Expression thenPart = parseLongExpression();
       Tree.Expression elsePart;
       if (at(Type.ELSE)) {
         expect(Type.ELSE);
-        elsePart = parseOperatorExpression();
+        elsePart = parseLongExpression();
       } else {
         elsePart = new Tree.Singleton(Tree.Singleton.Type.NULL);
       }
@@ -401,6 +401,8 @@ public class Parser {
       expect(Type.RPAREN);
       return result;
     }
+    case LBRACE:
+      return parseBlock();
     case NULL:
       expect(Type.NULL);
       return new Tree.Singleton(Tree.Singleton.Type.NULL);
