@@ -14,11 +14,13 @@ public class Frame {
   public final List<Object> literals;
   public final Module module;
   public final Frame parent;
+  public final RValue[] outer;
 
-  public Frame(Frame parent, CodeBundle code, Module module) {
+  public Frame(Frame parent, CodeBundle code, RValue[] outer, Module module) {
     this.parent = parent;
     this.code = code.getCode();
     this.literals = code.getLiterals();
+    this.outer = outer;
     this.module = module;
   }
 

@@ -33,6 +33,11 @@ public class Assembler {
     add(index);
   }
 
+  public void outer(int index) {
+    add(Opcode.kOuter);
+    add(index);
+  }
+
   public void nuhll() {
     add(Opcode.kNull);
   }
@@ -45,10 +50,11 @@ public class Assembler {
     add(Opcode.kFalse);
   }
 
-  public void lambda(CodeBundle code) {
+  public void lambda(CodeBundle code, int outc) {
     int codeIndex = registerLiteral(code);
     add(Opcode.kLambda);
     add(codeIndex);
+    add(outc);
   }
 
   public void global(String name) {

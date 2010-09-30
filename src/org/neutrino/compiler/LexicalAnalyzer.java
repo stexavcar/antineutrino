@@ -1,5 +1,6 @@
 package org.neutrino.compiler;
 
+import org.neutrino.compiler.Scope.MethodScope;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Identifier;
 import org.neutrino.syntax.Tree.Lambda;
@@ -12,10 +13,12 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor {
   public void visitLambda(Lambda that) {
     Scope prev = scope;
     try {
-      scope = Scope.methodScope(that.getParameters(), prev);
+      MethodScope scope = new MethodScope(that.getParameters(), prev);
+      this.scope = scope;
       that.getBody().accept(this);
+      that.bind(scope.getOuterTransient());
     } finally {
-      scope = prev;
+      this.scope = prev;
     }
   }
 

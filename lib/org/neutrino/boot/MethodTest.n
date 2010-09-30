@@ -1,32 +1,39 @@
-(*
-def i := 0;
-def a := 1;
-def b := 2;
-def c := 3;
-def d := 4;
-
-def nth_arg(i, a, b, c, d) {
-  if i = 0 then a
-  else if i = 1 then b
-  else if i = 2 then c
-  else d
-}
-*)
-
-def id(x) -> x;
-
-def first(x, y) -> x;
-def second(x, y) -> y;
-
 def test_methods() {
-  print("Testing methods");
+  test_simple_multimethods();
+  test_first_level_arguments();
+  test_second_level_arguments();
+}
+
+def test_simple_multimethods() {
+  print("Testing simple multimethods");
   assert_true((1 + 1) = 2);
   assert_true(("1" + "1") = "11");
-  (* assert_true(nth_arg(0, 1, 2, 3, 4) = 1); *)
+}
+
+def id(x) -> x;
+def first(x, y) -> x;
+def second(x, y) -> y;
+def third(x, y, z) -> z;
+
+def test_first_level_arguments() {
+  print("Testing first level arguments");
   assert_true(id(4) = 4);
   assert_true(id(5) = 5);
   assert_true(first(2, 3) = 2);
   assert_true(first(4, 5) = 4);
   assert_true(second(6, 7) = 7);
   assert_true(second(8, 9) = 9);
+  assert_true(third(10, 11, 12) = 12);
+}
+
+def minus(a) -> fn (b) -> a - b;
+
+def minus2(a, b) -> fn () -> a - b;
+
+def test_second_level_arguments() {
+  print("Testing second level arguments");
+  assert_true(minus(1)(1) = 0);
+  assert_true(minus(2)(1) = 1);
+  assert_true(minus2(1, 1)() = 0);
+  assert_true(minus2(2, 1)() = 1);
 }
