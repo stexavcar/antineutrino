@@ -293,10 +293,10 @@ public class Tree {
 
   public static class Lambda extends Expression {
 
-    private final List<String> params;
+    private final List<Parameter> params;
     private final Expression body;
 
-    public Lambda(List<String> params, Expression body) {
+    public Lambda(List<Parameter> params, Expression body) {
       this.params = params;
       this.body = body;
     }
@@ -315,7 +315,7 @@ public class Tree {
       visitor.visitLambda(this);
     }
 
-    public List<String> getParameters() {
+    public List<Parameter> getParameters() {
       return params;
     }
 
@@ -337,8 +337,8 @@ public class Tree {
               new Identifier("select"),
               Arrays.asList(
                   cond,
-                  new Lambda(Collections.<String>emptyList(), thenPart),
-                  new Lambda(Collections.<String>emptyList(), elsePart))),
+                  new Lambda(Collections.<Parameter>emptyList(), thenPart),
+                  new Lambda(Collections.<Parameter>emptyList(), elsePart))),
           Collections.<Expression>emptyList());
     }
 

@@ -25,7 +25,14 @@ public class RProtocol extends RValue implements ISeedable {
   public RProtocol() { }
 
   public void initialize() {
-    this.instanceTypeId = TypeId.get(name);
+    String key = name;
+    for (Annotation annot : annotations) {
+      if (annot.getTag().equals(Native.ANNOTATION)) {
+        key = ((RString) annot.getArgument(0)).getValue();
+        break;
+      }
+    }
+    this.instanceTypeId = TypeId.get(key);
   }
 
   public TypeId getInstanceTypeId() {

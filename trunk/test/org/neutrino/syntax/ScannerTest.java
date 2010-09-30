@@ -89,4 +89,14 @@ public class ScannerTest extends TestCase {
     scannerTest("++ -- *?", op("++"), op("--"), op("*?"));
   }
 
+  public void testComments() {
+    scannerTest("(* foo *) + (* bar *) - (* baz *)", op("+"), op("-"));
+    scannerTest("foo (*) bar", ident("foo"), ident("bar"));
+    scannerTest("((", LPAREN, LPAREN);
+    scannerTest("(", LPAREN);
+    scannerTest("(*");
+    scannerTest("(**");
+    scannerTest("(**)");
+  }
+
 }
