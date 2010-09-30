@@ -1,11 +1,11 @@
 package org.neutrino.pib;
 
-import org.neutrino.runtime.Native;
-import org.neutrino.runtime.RValue;
-
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RValue;
 
 
 public class Assembler {
@@ -26,6 +26,11 @@ public class Assembler {
 
   public void pop() {
     add(Opcode.kPop);
+  }
+
+  public void argument(int index) {
+    add(Opcode.kArgument);
+    add(index);
   }
 
   public void nuhll() {

@@ -1,0 +1,12 @@
+(*
+ * Signed integers 
+ *)
+@native("int") protocol Integer;
+
+@native("int+int") def Integer::+(that: Integer);
+
+@native("int-int") def Integer::-(that: Integer);
+
+@native("int<int") def Integer::<(that: Integer);
+
+@native("int=int") def Integer::=(that: Integer);

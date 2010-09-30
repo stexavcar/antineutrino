@@ -34,6 +34,10 @@ public class Parameter implements ISeedable {
     return this.typeId;
   }
 
+  public String getName() {
+    return this.name;
+  }
+
   @Override
   public String toString() {
     if ("Object".equals(type)) return name;
