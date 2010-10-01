@@ -48,7 +48,6 @@ public class Token {
     IF("if", Category.KEYWORD),
     THEN("then", Category.KEYWORD),
     ELSE("else", Category.KEYWORD),
-    NOT("not", Category.KEYWORD),
     AND("and", Category.KEYWORD),
     OR("or", Category.KEYWORD),
     PROTOCOL("protocol", Category.KEYWORD);

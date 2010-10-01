@@ -1,5 +1,11 @@
 package org.neutrino.main;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.neutrino.pib.Universe;
 import org.neutrino.plankton.PSeed;
 import org.neutrino.plankton.PValue;
@@ -9,15 +15,13 @@ import org.neutrino.runtime.RLambda;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 public class Run {
 
   public static void main(String[] args) throws IOException {
+    if (args.length < 2) {
+      System.out.println("Usage: run.sh <binary> <entry-point> <arg> ...");
+      System.exit(1);
+    }
     Interpreter inter = new Interpreter();
     String pibFile = args[0];
     String entryPointName = args[1];
