@@ -53,7 +53,7 @@ public class Interpreter {
       case Opcode.kLambda: {
         int index = frame.code[frame.pc + 1];
         int outc = frame.code[frame.pc + 2];
-        CodeBundle bundle = (CodeBundle) frame.literals.get(index);
+        CodeBundle bundle = (CodeBundle) frame.getLiteral(index);
         RValue[] outer;
         if (outc == 0) {
           outer = null;
@@ -68,7 +68,7 @@ public class Interpreter {
       }
       case Opcode.kCall: {
         int nameIndex = frame.code[frame.pc + 1];
-        String name = (String) frame.literals.get(nameIndex);
+        String name = (String) frame.getLiteral(nameIndex);
         int argc = frame.code[frame.pc + 2];
         RLambda lambda = frame.lookupMethod(name, argc);
         assert lambda != null : "Method " + getMethodName(name, argc, frame) + " not found.";
@@ -77,7 +77,7 @@ public class Interpreter {
       }
       case Opcode.kReturn: {
         RValue value = frame.stack.pop();
-        assert frame.stack.isEmpty();
+        assert frame.stack.size() == frame.getLocalCount();
         Frame parent = frame.parent;
         if (parent == null) {
           return value;
@@ -92,7 +92,7 @@ public class Interpreter {
       }
       case Opcode.kPush: {
         int index = frame.code[frame.pc + 1];
-        RValue value = (RValue) frame.literals.get(index);
+        RValue value = (RValue) frame.getLiteral(index);
         frame.stack.push(value);
         frame.pc += 2;
         break;
@@ -117,7 +117,7 @@ public class Interpreter {
       }
       case Opcode.kCallNative: {
         int index = frame.code[frame.pc + 1];
-        Native nathive = (Native) frame.literals.get(index);
+        Native nathive = (Native) frame.getLiteral(index);
         int argc = frame.code[frame.pc + 2];
         arguments.prepare(frame.parent, argc);
         RValue value = nathive.call(arguments);
@@ -127,8 +127,21 @@ public class Interpreter {
       }
       case Opcode.kGlobal: {
         int index = frame.code[frame.pc + 1];
-        String name = (String) frame.literals.get(index);
+        String name = (String) frame.getLiteral(index);
         RValue value = frame.module.getGlobal(name, this);
+        frame.stack.push(value);
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kStoreLocal: {
+        int index = frame.code[frame.pc + 1];
+        frame.setLocal(index, frame.stack.pop());
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kLocal: {
+        int index = frame.code[frame.pc + 1];
+        RValue value = frame.getLocal(index);
         frame.stack.push(value);
         frame.pc += 2;
         break;

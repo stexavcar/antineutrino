@@ -1,17 +1,22 @@
 package org.neutrino.pib;
 
+import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RValue;
+
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.neutrino.runtime.Native;
-import org.neutrino.runtime.RValue;
 
 
 public class Assembler {
 
   private final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
   private final List<Object> literals = new ArrayList<Object>();
+  private int localCount = 0;
+
+  public void setLocalCount(int localCount) {
+    this.localCount = localCount;
+  }
 
   public void literal(int value) {
     add(Opcode.kNumber);
@@ -35,6 +40,16 @@ public class Assembler {
 
   public void outer(int index) {
     add(Opcode.kOuter);
+    add(index);
+  }
+
+  public void local(int index) {
+    add(Opcode.kLocal);
+    add(index);
+  }
+
+  public void storeLocal(int index) {
+    add(Opcode.kStoreLocal);
     add(index);
   }
 
@@ -95,7 +110,8 @@ public class Assembler {
   }
 
   public CodeBundle getCode() {
-    return new CodeBundle(bytes.toByteArray(), literals);
+    assert localCount >= 0;
+    return new CodeBundle(bytes.toByteArray(), literals, localCount);
   }
 
 }

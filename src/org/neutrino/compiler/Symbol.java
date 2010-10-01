@@ -87,4 +87,32 @@ public abstract class Symbol {
     return new OuterSymbol(index);
   }
 
+  public static class LocalSymbol extends Symbol {
+
+    private final int index;
+
+    public LocalSymbol(int index) {
+      this.index = index;
+    }
+
+    public int getIndex() {
+      return index;
+    }
+
+    @Override
+    public void emit(Assembler assm) {
+      assm.local(index);
+    }
+
+    @Override
+    public boolean isTransient() {
+      return true;
+    }
+
+  }
+
+  public static LocalSymbol local(int index) {
+    return new LocalSymbol(index);
+  }
+
 }

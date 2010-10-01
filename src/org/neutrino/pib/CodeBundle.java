@@ -15,10 +15,12 @@ public class CodeBundle implements ISeedable {
 
   public @SeedMember byte[] code;
   public @SeedMember List<Object> literals;
+  public @SeedMember int localCount;
 
-  public CodeBundle(byte[] code, List<Object> literals) {
+  public CodeBundle(byte[] code, List<Object> literals, int localCount) {
     this.code = code;
     this.literals = literals;
+    this.localCount = localCount;
   }
 
   public CodeBundle() { }
