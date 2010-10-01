@@ -1,7 +1,5 @@
 package org.neutrino.compiler;
 
-import java.util.List;
-
 import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RString;
@@ -11,6 +9,8 @@ import org.neutrino.syntax.Tree.Definition;
 import org.neutrino.syntax.Tree.Expression;
 import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.Text;
+
+import java.util.List;
 
 /**
  * Expression visitor that generates platform independent bytecode for
@@ -48,6 +48,7 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
     CodeGenerator codegen = new CodeGenerator(subAssm);
     codegen.generate(that.getBody());
     List<Symbol> captured = that.getCaptured();
+    subAssm.setLocalCount(that.getLocalCount());
     for (Symbol symbol : captured)
       symbol.emit(assm);
     assm.lambda(subAssm.getCode(), captured.size());
@@ -67,7 +68,10 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
 
   @Override
   public void visitLocalDefinition(Tree.LocalDefinition that) {
-    assert false;
+    that.getValue().accept(this);
+    int index = that.getSymbol().getIndex();
+    assm.storeLocal(index);
+    that.getBody().accept(this);
   }
 
   @Override

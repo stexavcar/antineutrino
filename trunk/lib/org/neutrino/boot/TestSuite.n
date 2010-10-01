@@ -2,4 +2,6 @@
 def main() {
   test_primitives();
   test_methods();
+  test_arrays();
+  test_local_definitions();
 }

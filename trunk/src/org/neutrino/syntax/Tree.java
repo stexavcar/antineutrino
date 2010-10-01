@@ -1,16 +1,18 @@
 package org.neutrino.syntax;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
+import org.neutrino.compiler.Scope.MethodScope;
 import org.neutrino.compiler.Symbol;
+import org.neutrino.compiler.Symbol.LocalSymbol;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Neutrino syntax trees.
@@ -339,20 +341,27 @@ public class Tree {
     private final List<Parameter> params;
     private final Expression body;
     private List<Symbol> captured;
+    private int localCount = -1;
 
     public Lambda(List<Parameter> params, Expression body) {
       this.params = params;
       this.body = body;
     }
 
-    public void bind(List<Symbol> captured) {
+    public void bind(MethodScope scope) {
       assert this.captured == null;
-      this.captured = captured;
+      this.captured = scope.getOuterTransient();
+      this.localCount = scope.getLocalCount();
     }
 
     public List<Symbol> getCaptured() {
       assert this.captured != null;
       return this.captured;
+    }
+
+    public int getLocalCount() {
+      assert this.localCount >= 0;
+      return this.localCount;
     }
 
     public Expression getBody() {
@@ -513,11 +522,34 @@ public class Tree {
     private final String name;
     private final Expression value;
     private final Expression body;
+    private LocalSymbol symbol;
 
     public LocalDefinition(String name, Expression value, Expression body) {
       this.name = name;
       this.value = value;
       this.body = body;
+    }
+
+    public void bind(LocalSymbol symbol) {
+      assert this.symbol == null;
+      this.symbol = symbol;
+    }
+
+    public LocalSymbol getSymbol() {
+      assert this.symbol != null;
+      return this.symbol;
+    }
+
+    public String getName() {
+      return name;
+    }
+
+    public Expression getValue() {
+      return value;
+    }
+
+    public Expression getBody() {
+      return body;
     }
 
     @Override

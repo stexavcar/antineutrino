@@ -59,6 +59,8 @@ public class Opcode {
   @Info({}) public static final int kFalse = 11;
   @Info({ArgumentType.NUMBER}) public static final int kArgument = 12;
   @Info({ArgumentType.NUMBER}) public static final int kOuter = 13;
+  @Info({ArgumentType.NUMBER}) public static final int kLocal = 14;
+  @Info({ArgumentType.NUMBER}) public static final int kStoreLocal = 15;
 
   private static final Map<Integer, OpcodeInfo> infos = new HashMap<Integer, OpcodeInfo>() {{
     try {
