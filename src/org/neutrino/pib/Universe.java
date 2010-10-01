@@ -47,9 +47,9 @@ public class Universe implements ISeedable {
       module.initialize(this);
   }
 
-  public RLambda getEntryPoint() {
+  public RLambda getEntryPoint(String name) {
     for (Module module : modules.values()) {
-      RLambda value = module.getEntryPoint();
+      RLambda value = module.getEntryPoint(name);
       if (value != null)
         return value;
     }
