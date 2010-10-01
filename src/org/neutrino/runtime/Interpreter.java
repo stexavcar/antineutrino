@@ -1,11 +1,11 @@
 package org.neutrino.runtime;
 
 
+import java.util.Collections;
+
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Opcode;
-
-import java.util.Collections;
 
 public class Interpreter {
 
@@ -138,7 +138,7 @@ public class Interpreter {
       case Opcode.kGlobal: {
         int index = frame.code[frame.pc + 1];
         String name = (String) frame.getLiteral(index);
-        RValue value = frame.module.getGlobal(name, this);
+        RValue value = frame.module.getUniverse().getGlobal(name, this);
         frame.stack.push(value);
         frame.pc += 2;
         break;

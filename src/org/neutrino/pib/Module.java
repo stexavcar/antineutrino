@@ -1,5 +1,10 @@
 package org.neutrino.pib;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
@@ -12,11 +17,6 @@ import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Annotation;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Growable(Module.TAG)
 public class Module implements ISeedable {
@@ -83,7 +83,8 @@ public class Module implements ISeedable {
     RValue result = globals.get(name);
     if (result == null) {
       Binding binding = defs.get(name);
-      assert binding != null : name;
+      if (binding == null)
+        return null;
       result = inter.interpret(this, binding.getCode());
       globals.put(name, result);
     }

@@ -1,5 +1,11 @@
 package org.neutrino.pib;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Map;
+import java.util.Set;
+
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.PSeed;
 import org.neutrino.plankton.PValue;
@@ -7,18 +13,14 @@ import org.neutrino.plankton.Plankton;
 import org.neutrino.plankton.PlanktonRegistry;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
+import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RLambda;
 import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
+import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Annotation;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * A platform-independent binary.
@@ -55,6 +57,16 @@ public class Universe implements ISeedable {
     }
     return null;
   }
+
+  public RValue getGlobal(String name, Interpreter inter) {
+    for (Module module : modules.values()) {
+      RValue value = module.getGlobal(name, inter);
+      if (value != null)
+        return value;
+    }
+    return null;
+  }
+
 
   public void write(OutputStream out) throws IOException {
     PLANKTON.write(out, PLANKTON.newSeed(this));
