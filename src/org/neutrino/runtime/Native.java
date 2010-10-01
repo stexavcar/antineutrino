@@ -1,5 +1,6 @@
 package org.neutrino.runtime;
 
+import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
@@ -144,6 +145,41 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("array[]") static final Impl ARRAY_GET = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RObjectArray arr = (RObjectArray) args.getThis();
+      RInteger index = (RInteger) args.getArgument(0);
+      return arr.get(index.getValue());
+    }
+  };
+
+  @Marker("byte_array[]") static final Impl BYTE_ARRAY_GET = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RByteArray arr = (RByteArray) args.getThis();
+      RInteger index = (RInteger) args.getArgument(0);
+      return new RInteger(arr.get(index.getValue()));
+    }
+  };
+
+  @Marker("byte_array.length") static final Impl BYTE_ARRAY_LENGTH = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RByteArray arr = (RByteArray) args.getThis();
+      return new RInteger(arr.getLength());
+    }
+  };
+
+  @Marker("file.read") static final Impl FILE_READ = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RFile file = (RFile) args.getThis();
+      byte[] data = file.read();
+      return new RByteArray(data);
+    }
+  };
+
   @Marker("print") static final Impl PRINT = new Impl() {
     @Override
     public RValue call(Arguments args) {
@@ -169,6 +205,15 @@ public class Native implements ISeedable {
     @Override
     public RValue call(Arguments args) {
       throw new RuntimeException("Fail");
+    }
+  };
+
+  @Marker("open_file") static final Impl OPEN_FILE = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RString name = (RString) args.getArgument(0);
+      File file = new File(name.getValue());
+      return new RFile(file);
     }
   };
 

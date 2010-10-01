@@ -1,5 +1,5 @@
 @entry_point("test")
-def main() {
+def test_main() {
   test_primitives();
   test_methods();
   test_arrays();
