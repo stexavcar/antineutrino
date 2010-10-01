@@ -1,15 +1,15 @@
 package org.neutrino.runtime;
 
-import org.neutrino.plankton.ISeedable;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+
+import org.neutrino.plankton.ISeedable;
+import org.neutrino.plankton.annotations.Growable;
+import org.neutrino.plankton.annotations.SeedMember;
 
 @Growable(Native.TAG)
 public class Native implements ISeedable {
@@ -110,7 +110,7 @@ public class Native implements ISeedable {
     }
   };
 
-  @Marker("string+string") static final Impl STRING_PLUS = new Impl() {
+  @Marker("str+str") static final Impl STRING_PLUS = new Impl() {
     @Override
     public RValue call(Arguments args) {
       RString self = (RString) args.getThis();
@@ -119,7 +119,7 @@ public class Native implements ISeedable {
     }
   };
 
-  @Marker("string=string") static final Impl STRING_EQ = new Impl() {
+  @Marker("str=str") static final Impl STRING_EQ = new Impl() {
     @Override
     public RValue call(Arguments args) {
       RString self = (RString) args.getThis();
@@ -153,16 +153,6 @@ public class Native implements ISeedable {
     }
   };
 
-  @Marker("assert_true") static final Impl ASSERT_TRUE = new Impl() {
-    @Override
-    public RValue call(Arguments args) {
-      if (args.getArgument(0) != RBoolean.getTrue()) {
-        throw new AssertionError("Assertion failed.");
-      }
-      return RNull.getInstance();
-    }
-  };
-
   @Marker("select") static final Impl IF = new Impl() {
     @Override
     public RValue call(Arguments args) {
@@ -172,6 +162,13 @@ public class Native implements ISeedable {
       } else {
         return args.getArgument(2);
       }
+    }
+  };
+
+  @Marker("fail") static final Impl FAIL = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      throw new RuntimeException("Fail");
     }
   };
 

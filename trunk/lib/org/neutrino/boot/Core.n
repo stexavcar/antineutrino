@@ -1,5 +1,5 @@
 @native("print") def print(obj);
 
-@native("assert_true") def assert_true(cond);
-
 @native("select") def select(cond, then_part, else_part);
+
+@native("fail") def fail();

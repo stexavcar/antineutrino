@@ -6,3 +6,7 @@ def main() {
   test_local_definitions();
   test_blocks();
 }
+
+def assert_true(cond) -> if cond.not() then fail();
+
+def assert_equal(expected, found) -> assert_true(expected = found);

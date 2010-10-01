@@ -1,9 +1,5 @@
 package org.neutrino.plankton;
 
-import org.neutrino.plankton.PValue.Type;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -12,6 +8,10 @@ import java.util.Collections;
 import java.util.HashMap;
 
 import junit.framework.TestCase;
+
+import org.neutrino.plankton.PValue.Type;
+import org.neutrino.plankton.annotations.Growable;
+import org.neutrino.plankton.annotations.SeedMember;
 
 /**
  * Test of the {@link Plankton} utility class.
@@ -99,7 +99,6 @@ public class PlanktonTest extends TestCase {
       this.y = y;
     }
 
-    @SuppressWarnings("unused")
     public Point() { }
 
     public int getX() {
