@@ -5,17 +5,27 @@ import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Opcode;
 
+import java.util.Collections;
+
 public class Interpreter {
+
+  private static final CodeBundle BOTTOM_FRAME_CODE = new CodeBundle(
+      new byte[] { Opcode.kCall, 0, 0, Opcode.kTerminate },
+      Collections.<Object>emptyList(),
+      0);
 
   private final Native.Arguments arguments = new Native.Arguments();
 
-  public RValue interpret(Module module, CodeBundle code) {
-    Frame frame = new Frame(null, code, null, module);
+  public RValue interpret(Module module, CodeBundle code, RValue... args) {
+    Frame parent = new Frame(null, BOTTOM_FRAME_CODE, null, null);
+    for (RValue arg : args)
+      parent.stack.push(arg);
+    Frame frame = new Frame(parent, code, null, module);
     return interpret(frame);
   }
 
-  public RValue interpret(RLambda lambda) {
-    return interpret(lambda.getModule(), lambda.getCode());
+  public RValue interpret(RLambda lambda, RValue... args) {
+    return interpret(lambda.getModule(), lambda.getCode(), args);
   }
 
   private String getMethodName(String name, int argc, Frame frame) {
@@ -78,17 +88,17 @@ public class Interpreter {
       case Opcode.kReturn: {
         RValue value = frame.stack.pop();
         assert frame.stack.size() == frame.getLocalCount();
-        Frame parent = frame.parent;
-        if (parent == null) {
-          return value;
-        }
-        frame = parent;
+        frame = frame.parent;
         int argc = frame.code[frame.pc + 2];
         for (int i = 0; i < argc; i++)
           frame.stack.pop();
         frame.stack.push(value);
         frame.pc += 3;
         break;
+      }
+      case Opcode.kTerminate: {
+        RValue value = frame.stack.pop();
+        return value;
       }
       case Opcode.kPush: {
         int index = frame.code[frame.pc + 1];

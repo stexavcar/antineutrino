@@ -9,7 +9,9 @@ import org.neutrino.runtime.MethodLookupHelper;
 import org.neutrino.runtime.RLambda;
 import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
+import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
+import org.neutrino.syntax.Annotation;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -54,11 +56,14 @@ public class Module implements ISeedable {
     return protos.get(name);
   }
 
-  public RLambda getEntryPoint() {
+  public RLambda getEntryPoint(String name) {
     for (Map.Entry<String, Binding> entry : defs.entrySet()) {
       Binding binding = entry.getValue();
-      if (binding.getAnnotation("entry_point") != null) {
-        return new RLambda(this, binding.getCode(), null);
+      Annotation annot = binding.getAnnotation("entry_point");
+      if (annot != null) {
+        RValue value = annot.getArgument(0);
+        if (((RString) value).getValue().equals(name))
+          return new RLambda(this, binding.getCode(), null);
       }
     }
     return null;

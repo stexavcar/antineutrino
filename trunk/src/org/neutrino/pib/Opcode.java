@@ -61,6 +61,7 @@ public class Opcode {
   @Info({ArgumentType.NUMBER}) public static final int kOuter = 13;
   @Info({ArgumentType.NUMBER}) public static final int kLocal = 14;
   @Info({ArgumentType.NUMBER}) public static final int kStoreLocal = 15;
+  @Info({}) public static final int kTerminate = 16;
 
   private static final Map<Integer, OpcodeInfo> infos = new HashMap<Integer, OpcodeInfo>() {{
     try {
