@@ -1,9 +1,3 @@
-@native("bool") protocol Boolean;
-
-@native("!bool") def Boolean::not();
-
-
-
 @native("null") protocol Null;
 
 @native("null=any") def Null::=(that: Null);

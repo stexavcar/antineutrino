@@ -1,7 +1,7 @@
 def test_primitives() {
   test_integer_operators();
   test_singletons();
-  test_conditionals(); 
+  test_conditionals();
 }
 
 def test_integer_operators() {
@@ -25,3 +25,4 @@ def test_conditionals() {
   assert_true((if true then 1) = 1);
   assert_true((if false then 1) = null);
 }
+
