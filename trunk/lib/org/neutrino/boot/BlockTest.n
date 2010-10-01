@@ -1,0 +1,33 @@
+def test_blocks() {
+  test_expression_blocks();
+  test_statement_blocks();
+}
+
+def test_expression_blocks() {
+  print("Testing expression blocks");
+  assert_true({1; 2} = 2);
+  assert_true(4 = {3; 4});
+}
+
+def test_statement_blocks() {
+  print("Testing statement blocks");
+  assert_true(11 = block_foo_1());
+  assert_true(12 = block_foo_2());
+  assert_true(13 = block_foo_3());
+}
+
+def block_foo_1() {
+  1 + 2;
+  {
+    3 + 4;
+  }
+  5 + 6;
+}
+
+def block_foo_2() {
+  { { { 3 + 6; 5 + 7 } } }
+}
+
+def block_foo_3() {
+  { { { 5 + 8; 6 + 7; }; }; };
+}

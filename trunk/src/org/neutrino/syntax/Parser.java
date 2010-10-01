@@ -19,6 +19,7 @@ public class Parser {
 
   private int cursor = 0;
   private final List<Token> tokens;
+  private boolean hasTransientSemicolon = false;
 
   private Parser(List<Token> tokens) {
     this.tokens = tokens;
@@ -30,6 +31,7 @@ public class Parser {
 
   private void advance() {
     cursor++;
+    hasTransientSemicolon = false;
   }
 
   private boolean hasMore() {
@@ -72,6 +74,7 @@ public class Parser {
     return result;
   }
 
+
   /**
    * <statement>
    */
@@ -98,25 +101,30 @@ public class Parser {
     }
   }
 
+  private boolean consumeSemicolon() throws SyntaxError {
+    if (at(Type.SEMI)) {
+      expect(Type.SEMI);
+    } else if (!hasTransientSemicolon) {
+      return false;
+    }
+    return !at(Type.RBRACE);
+  }
+
   /**
    * <statements>
    *   <statement> +: ";"+ ";"?
    */
   private Tree.Expression parseStatements() throws SyntaxError {
     Tree.Expression expr = parseStatement();
-    if (at(Type.SEMI)) {
-      expect(Type.SEMI);
+    if (consumeSemicolon()) {
       if (hasMore() && !at(Type.RBRACE)) {
         List<Tree.Expression> exprs = new ArrayList<Tree.Expression>();
         exprs.add(expr);
         while (hasMore() && !at(Type.RBRACE)) {
           Tree.Expression next = parseStatement();
           exprs.add(next);
-          if (at(Type.SEMI)) {
-            expect(Type.SEMI);
-          } else {
+          if (!consumeSemicolon())
             break;
-          }
         }
         return new Tree.Block(exprs);
       } else {
@@ -401,8 +409,11 @@ public class Parser {
       expect(Type.RPAREN);
       return result;
     }
-    case LBRACE:
-      return parseBlock();
+    case LBRACE: {
+      Tree.Expression result = parseBlock();
+      hasTransientSemicolon = true;
+      return result;
+    }
     case NULL:
       expect(Type.NULL);
       return new Tree.Singleton(Tree.Singleton.Type.NULL);
