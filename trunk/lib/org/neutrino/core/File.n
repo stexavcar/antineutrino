@@ -1,0 +1,5 @@
+@native("open_file") def open_file(name);
+
+@native("file") protocol File;
+
+@native("file.read") def File::read();

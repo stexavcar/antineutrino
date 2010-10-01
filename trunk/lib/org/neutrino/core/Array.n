@@ -1,0 +1,9 @@
+@native("array") protocol Array;
+
+@native("array[]") def Array::get(index: Integer);
+
+@native("byte_array") protocol ByteArray;
+
+@native("byte_array[]") def ByteArray::get(index: Integer);
+
+@native("byte_array.length") def ByteArray::length();
