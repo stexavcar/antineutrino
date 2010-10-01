@@ -1,0 +1,3 @@
+@native("null") protocol Null;
+
+@native("null=any") def Null::=(that: Null);

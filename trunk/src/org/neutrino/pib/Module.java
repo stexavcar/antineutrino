@@ -1,10 +1,5 @@
 package org.neutrino.pib;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
@@ -15,6 +10,11 @@ import org.neutrino.runtime.RLambda;
 import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RValue;
+
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Growable(Module.TAG)
 public class Module implements ISeedable {
@@ -27,6 +27,7 @@ public class Module implements ISeedable {
   private final MethodLookupHelper methodLookupHelper = new MethodLookupHelper(this);
 
   private final Map<String, RValue> globals = new HashMap<String, RValue>();
+  private Universe universe;
 
   public Module(Map<String, Binding> defs, Map<String, RProtocol> protos,
       List<RMethod> methods) {
@@ -37,7 +38,12 @@ public class Module implements ISeedable {
 
   public Module() { }
 
-  public void initialize() {
+  public Universe getUniverse() {
+    return universe;
+  }
+
+  public void initialize(Universe universe) {
+    this.universe = universe;
     for (RProtocol proto : protos.values())
       proto.initialize();
     for (RMethod method : methods)
