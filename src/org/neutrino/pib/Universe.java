@@ -1,11 +1,5 @@
 package org.neutrino.pib;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Map;
-import java.util.Set;
-
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.PSeed;
 import org.neutrino.plankton.PValue;
@@ -19,6 +13,12 @@ import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.syntax.Annotation;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * A platform-independent binary.
@@ -44,7 +44,7 @@ public class Universe implements ISeedable {
 
   public void initialize() {
     for (Module module : modules.values())
-      module.initialize();
+      module.initialize(this);
   }
 
   public RLambda getEntryPoint() {

@@ -1,4 +1,4 @@
-@entry_point
+@entry_point("test")
 def main() {
   test_primitives();
   test_methods();
