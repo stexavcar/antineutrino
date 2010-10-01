@@ -38,7 +38,9 @@ public class RLambda extends RValue {
 
   @Override
   public String toString() {
-    return "#<a Lambda: " + bundle + " : " + Arrays.asList(captured) + ">";
+    boolean hasCaptured = (captured != null) && captured.length > 0;
+    String captureText = hasCaptured ? (" : " + Arrays.asList(captured)) : "";
+    return "#<a Lambda: " + bundle + captureText + ">";
   }
 
 }
