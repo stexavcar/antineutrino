@@ -10,12 +10,22 @@ import java.util.Map;
  */
 public class Token {
 
+  private enum Category {
+    KEYWORD(true, false), OPERATOR(false, true), NONE(false, false);
+    private boolean isKeyword;
+    private boolean isOperator;
+    private Category(boolean isKeyword, boolean isOperator) {
+      this.isKeyword = isKeyword;
+      this.isOperator = isOperator;
+    }
+  }
+
   public enum Type {
 
     IDENT,
     NUMBER,
     STRING,
-    OPERATOR(null, false, true),
+    OPERATOR(null, Category.OPERATOR),
     ERROR,
     LPAREN("("),
     RPAREN(")"),
@@ -26,36 +36,37 @@ public class Token {
     COLON(":"),
     COOLON("::"),
     COLON_EQ(":="),
-    ARROW("->", false, true),
-    AT("@", false, true),
-    DOT(".", false, true),
-    DEF("def", true, false),
-    FN("fn", true, false),
-    NEW("new", true, false),
-    NULL("null", true, false),
-    TRUE("true", true, false),
-    FALSE("false", true, false),
-    IF("if", true, false),
-    THEN("then", true, false),
-    ELSE("else", true, false),
-    PROTOCOL("protocol", true, false);
+    ARROW("->", Category.OPERATOR),
+    AT("@", Category.OPERATOR),
+    DOT(".", Category.OPERATOR),
+    DEF("def", Category.KEYWORD),
+    FN("fn", Category.KEYWORD),
+    NEW("new", Category.KEYWORD),
+    NULL("null", Category.KEYWORD),
+    TRUE("true", Category.KEYWORD),
+    FALSE("false", Category.KEYWORD),
+    IF("if", Category.KEYWORD),
+    THEN("then", Category.KEYWORD),
+    ELSE("else", Category.KEYWORD),
+    NOT("not", Category.KEYWORD),
+    AND("and", Category.KEYWORD),
+    OR("or", Category.KEYWORD),
+    PROTOCOL("protocol", Category.KEYWORD);
 
     private final String name;
-    private final boolean isKeyword;
-    private final boolean isOperator;
+    private final Category category;
 
-    private Type(String name, boolean isKeyword, boolean isOperator) {
+    private Type(String name, Category category) {
       this.name = name;
-      this.isKeyword = isKeyword;
-      this.isOperator = isOperator;
+      this.category = category;
     }
 
     private Type(String name) {
-      this(name, false, false);
+      this(name, Category.NONE);
     }
 
     private Type() {
-      this(null, false, false);
+      this(null, Category.NONE);
     }
 
     public String getName() {
@@ -63,7 +74,7 @@ public class Token {
     }
 
     public boolean isOperator() {
-      return this.isOperator;
+      return this.category.isOperator;
     }
 
     @Override
@@ -73,14 +84,14 @@ public class Token {
 
     public static final Map<String, Type> KEYWORD_MAP = new HashMap<String, Type>() {{
       for (Type type : Type.values()) {
-        if (type.isKeyword)
+        if (type.category.isKeyword)
           put(type.getName(), type);
       }
     }};
 
     public static final Map<String, Type> RESERVED_OPERATOR_MAP = new HashMap<String, Type>() {{
       for (Type type : Type.values()) {
-        if (type.getName() != null && type.isOperator)
+        if (type.getName() != null && type.category.isOperator)
           put(type.getName(), type);
       }
     }};
