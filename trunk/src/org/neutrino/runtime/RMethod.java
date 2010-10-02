@@ -1,5 +1,7 @@
 package org.neutrino.runtime;
 
+import java.util.List;
+
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
@@ -8,14 +10,12 @@ import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
 import org.neutrino.syntax.Annotation;
 
-import java.util.List;
-
 @Growable(RMethod.TAG)
 public class RMethod extends RValue implements ISeedable {
 
   private static final TypeId TYPE_ID = TypeId.get("Method");
 
-  private static final String TAG = "org::neutrino::runtime::RMethod";
+  static final String TAG = "org::neutrino::runtime::RMethod";
 
   public @SeedMember List<Annotation> annots;
   public @SeedMember String name;

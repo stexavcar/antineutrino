@@ -1,17 +1,17 @@
 package org.neutrino.runtime;
 
+import java.util.List;
+
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
 import org.neutrino.syntax.Annotation;
 
-import java.util.List;
-
 @Growable(RProtocol.TAG)
 public class RProtocol extends RValue implements ISeedable {
 
   private static final TypeId TYPE_ID = TypeId.get("Protocol");
-  private static final String TAG = "org::neutrino::runtime::RProtocol";
+  static final String TAG = "org::neutrino::runtime::RProtocol";
 
   public @SeedMember List<Annotation> annotations;
   public @SeedMember String name;

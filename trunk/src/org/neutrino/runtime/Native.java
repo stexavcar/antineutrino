@@ -37,7 +37,7 @@ public class Native implements ISeedable {
 
   }
 
-  private static final String TAG = "org::neutrino::runtime::Native";
+  static final String TAG = "org::neutrino::runtime::Native";
   public static final String ANNOTATION = "native";
 
   private static abstract class Impl {

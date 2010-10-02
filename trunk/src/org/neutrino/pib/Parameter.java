@@ -9,7 +9,7 @@ import org.neutrino.runtime.TypeId;
 @Growable(Parameter.TAG)
 public class Parameter implements ISeedable {
 
-  private static final String TAG = "org::neutrino::pib::Parameter";
+  static final String TAG = "org::neutrino::pib::Parameter";
 
   public @SeedMember String name;
   public @SeedMember String type;

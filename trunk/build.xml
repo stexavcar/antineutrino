@@ -1,0 +1,54 @@
+<project>
+  
+  <property name="src.dir" value="src"/>
+  <property name="bin.dir" value="bin"/>
+  <property name="lib.dir" value="lib"/>
+
+  <property name="class.dir" value="${bin.dir}/classes"/>
+  <property name="pib.dir" value="${bin.dir}/pib"/>
+  <property name="libpib.path" value="${pib.dir}/lib.pib"/>
+  
+  <property name="main.package" value="org.neutrino.main"/>
+  <property name="compiler.class" value="${main.package}.Compile"/>
+  <property name="run.class" value="${main.package}.Run"/>
+  
+  <target name="compile">
+    <mkdir dir="${class.dir}"/>
+    <javac srcdir="${src.dir}" destdir="${class.dir}"/>
+  </target>
+  
+  <target name="junit">
+    <junit printsummary="yes">
+      <classpath>
+        <path location="${class.dir}"/>
+      </classpath>
+      <batchtest fork="yes">
+          <fileset dir="${src.dir}" includes="*Test.java"/>
+      </batchtest>
+    </junit>
+  </target>
+  
+  <target name="compile-lib" depends="compile">
+    <mkdir dir="${pib.dir}"/>
+    <java classname="${compiler.class}">
+      <classpath>
+        <path location="${class.dir}"/>
+      </classpath>
+      <arg value="--root-path"/><arg value="${lib.dir}"/>
+      <arg value="--outfile"/><arg value="${libpib.path}"/>
+    </java>
+  </target>
+  
+  <target name="nunit" depends="compile-lib">
+    <java classname="${run.class}">
+      <classpath>
+        <path location="${class.dir}"/>
+      </classpath>
+      <arg value="--pib-path"/><arg value="${libpib.path}"/>
+      <arg value="--entry-point"/><arg value="test"/>
+    </java>
+  </target>
+  
+  <target name="test" depends="nunit"/>
+  
+</project>

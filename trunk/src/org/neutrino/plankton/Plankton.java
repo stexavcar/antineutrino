@@ -425,14 +425,14 @@ public class Plankton {
     int length = value.length();
     writeInt32(out, length);
     for (int i = 0; i < length; i++)
-      writeInt32(out, value.charAt(i));
+      out.write(value.charAt(i) & 0xFF);
   }
 
   private static String readString(InputStream in) throws IOException {
     int length = readInt32(in);
     char[] chars = new char[length];
     for (int i = 0; i < length; i++)
-      chars[i] = (char) readInt32(in);
+      chars[i] = (char) in.read();
     return new String(chars);
   }
 

@@ -1,18 +1,18 @@
 package org.neutrino.syntax;
 
-import org.neutrino.compiler.Scope.MethodScope;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.neutrino.compiler.Symbol;
+import org.neutrino.compiler.Scope.MethodScope;
 import org.neutrino.compiler.Symbol.LocalSymbol;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Neutrino syntax trees.
@@ -35,7 +35,7 @@ public class Tree {
 
     @Override
     public String toString() {
-      return toString("unit", decls);
+      return Tree.toString("unit", decls);
     }
 
   }
@@ -176,7 +176,7 @@ public class Tree {
     @Override
     public String toString() {
       String an = annotationsToString(this.annots);
-      return "(method " + an + toString(this.name, params) + " " + body + ")";
+      return "(method " + an + Tree.toString(this.name, params) + " " + body + ")";
     }
 
   }
@@ -375,7 +375,7 @@ public class Tree {
 
     @Override
     public String toString() {
-      return "(fn " + toString(params) + " " + body + ")";
+      return "(fn " + Tree.toString(params) + " " + body + ")";
     }
 
     @Override
@@ -507,7 +507,7 @@ public class Tree {
 
     @Override
     public String toString() {
-      return toString(":", exprs);
+      return Tree.toString(":", exprs);
     }
 
     @Override

@@ -16,7 +16,7 @@ import org.neutrino.syntax.Annotation;
 public class Binding implements ISeedable {
 
   public static final String ENTRY_POINT_ANNOTATION = "entry_point";
-  public static final String TAG = "org::neutrino::pib::Binding";
+  static final String TAG = "org::neutrino::pib::Binding";
 
   public @SeedMember("annotations") List<Annotation> annots;
   public @SeedMember CodeBundle code;
