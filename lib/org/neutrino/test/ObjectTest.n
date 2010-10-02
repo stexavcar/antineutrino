@@ -1,0 +1,3 @@
+def test_objects() {
+  print("Testing objects");
+}

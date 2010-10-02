@@ -1,16 +1,16 @@
 package org.neutrino.syntax;
 
+import java.util.List;
+
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
 import org.neutrino.runtime.RValue;
 
-import java.util.List;
-
 @Growable(Annotation.TAG)
 public class Annotation implements ISeedable {
 
-  private static final String TAG = "org::neutrino::syntax::Annotation";
+  static final String TAG = "org::neutrino::syntax::Annotation";
   public @SeedMember String tag;
   public @SeedMember List<RValue> args;
 

@@ -5,6 +5,7 @@ def test_main() {
   test_arrays();
   test_local_definitions();
   test_blocks();
+  test_objects();
 }
 
 def assert_true(cond) -> if cond.not() then fail();

@@ -9,7 +9,7 @@ public class RString extends RValue implements ISeedable {
 
   private static final TypeId TYPE_ID = TypeId.get("str");
 
-  private static final String TAG = "org::neutrino::runtime::RString";
+  static final String TAG = "org::neutrino::runtime::RString";
   public @SeedMember String value;
 
   public RString(String value) {

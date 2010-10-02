@@ -1,3 +1,4 @@
 #!/bin/sh
 
-java -ea -cp bin org.neutrino.main.Run $*
+. `dirname $0`/shared.sh
+run_main org.neutrino.main.Run

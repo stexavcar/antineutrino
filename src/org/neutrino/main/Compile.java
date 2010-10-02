@@ -5,8 +5,8 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import org.neutrino.compiler.CompilerModule;
-import org.neutrino.pib.Universe;
 import org.neutrino.pib.BinaryBuilder;
+import org.neutrino.pib.Universe;
 import org.neutrino.syntax.SyntaxError;
 
 /**
@@ -16,14 +16,16 @@ import org.neutrino.syntax.SyntaxError;
  */
 public class Compile {
 
-  public static void main(String[] args) throws IOException, SyntaxError {
+  public static @Flags.Flag("root-path") String rootPath;
+  public static @Flags.Flag("outfile") String outputPath = "a.pib";
+
+  public static void main(String[] rawArgs) throws IOException, SyntaxError {
+    Flags.parseArguments(rawArgs, Compile.class);
     CompilerModule top = CompilerModule.createToplevel();
-    for (String arg : args) {
-      File path = new File(arg);
-      top.includeFromPath(path);
-    }
+    File path = new File(rootPath);
+    top.includeFromPath(path);
     Universe binary = compile(top);
-    FileOutputStream out = new FileOutputStream("a.out");
+    FileOutputStream out = new FileOutputStream(outputPath);
     binary.write(out);
     out.close();
   }

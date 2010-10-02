@@ -30,7 +30,7 @@ import org.neutrino.syntax.Annotation;
 @Growable(Universe.TAG)
 public class Universe implements ISeedable {
 
-  private static final String TAG = "org::neutrino::pib::Universe";
+  static final String TAG = "org::neutrino::pib::Universe";
 
   public @SeedMember Map<String, Module> modules;
 
