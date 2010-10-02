@@ -15,7 +15,7 @@ public class Flags {
     public String value() default "";
   }
 
-  private static class FlagInfo {
+  private static abstract class FlagInfo {
 
     private final Field field;
 
@@ -23,9 +23,52 @@ public class Flags {
       this.field = field;
     }
 
-    public void setValue(String value) {
+    protected Field getField() {
+      return field;
+    }
+
+    public abstract int process(int index, String[] args);
+
+  }
+
+  private static class StringFlagInfo extends FlagInfo {
+
+    public StringFlagInfo(Field field) {
+      super(field);
+    }
+
+    @Override
+    public int process(int index, String[] args) {
+      setValue(args[index]);
+      return index + 1;
+    }
+
+    private void setValue(String value) {
       try {
-        field.set(null, value);
+        getField().set(null, value);
+      } catch (IllegalAccessException iae) {
+        throw new RuntimeException(iae);
+      }
+    }
+
+  }
+
+  private static class BooleanFlagInfo extends FlagInfo {
+
+    public BooleanFlagInfo(Field field) {
+      super(field);
+    }
+
+    @Override
+    public int process(int index, String[] args) {
+      toggleValue();
+      return index;
+    }
+
+    private void toggleValue() {
+      try {
+        boolean value = getField().getBoolean(null);
+        getField().set(0, !value);
       } catch (IllegalAccessException iae) {
         throw new RuntimeException(iae);
       }
@@ -41,7 +84,13 @@ public class Flags {
         String setName = flag.value();
         if (setName.isEmpty())
           setName = field.getName();
-        flags.put(setName, new FlagInfo(field));
+        if (field.getType() == String.class) {
+          flags.put(setName, new StringFlagInfo(field));
+        } else if (field.getType() == Boolean.TYPE) {
+          flags.put(setName, new BooleanFlagInfo(field));
+        } else {
+          assert false: setName;
+        }
       }
     }
     List<String> result = new ArrayList<String>();
@@ -52,7 +101,7 @@ public class Flags {
         FlagInfo handler = flags.get(flagName);
         if (handler == null)
           throw new RuntimeException("Unknown flag " + flagName);
-        handler.setValue(args[i++]);
+        i = handler.process(i, args);
       } else {
         result.add(arg);
       }
