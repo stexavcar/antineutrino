@@ -24,7 +24,7 @@ You can then inspect the PIB by doing
 ./scripts/dump.sh <pibfile>
 }}}
 
-Add the `-raw` option to see the raw contents, otherwise you will see the fully grown object.  Finally, you can run a PIB using
+Add the `--raw` option to see the raw contents, otherwise you will see the fully grown object.  Finally, you can run a PIB using
 
 {{{
 ./scripts/run.sh --classpath <classes> --pib-path <pibfile> --entry-point <name>
