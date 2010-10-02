@@ -17,11 +17,9 @@ public class Flags {
 
   private static class FlagInfo {
 
-    private final Flag flag;
     private final Field field;
 
-    public FlagInfo(Flag flag, Field field) {
-      this.flag = flag;
+    public FlagInfo(Field field) {
       this.field = field;
     }
 
@@ -43,7 +41,7 @@ public class Flags {
         String setName = flag.value();
         if (setName.isEmpty())
           setName = field.getName();
-        flags.put(setName, new FlagInfo(flag, field));
+        flags.put(setName, new FlagInfo(field));
       }
     }
     List<String> result = new ArrayList<String>();

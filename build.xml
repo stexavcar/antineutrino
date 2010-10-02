@@ -19,31 +19,28 @@
   
   <target name="junit">
     <junit printsummary="yes">
-      <classpath>
-        <path location="${class.dir}"/>
-      </classpath>
+      <classpath><path location="${class.dir}"/></classpath>
+      <assertions><enable/></assertions>
       <batchtest fork="yes">
-          <fileset dir="${src.dir}" includes="*Test.java"/>
+        <fileset dir="${src.dir}" includes="*Test.java"/>
       </batchtest>
     </junit>
   </target>
   
   <target name="compile-lib" depends="compile">
     <mkdir dir="${pib.dir}"/>
-    <java classname="${compiler.class}">
-      <classpath>
-        <path location="${class.dir}"/>
-      </classpath>
+    <java classname="${compiler.class}" fork="yes">
+      <classpath><path location="${class.dir}"/></classpath>
+      <assertions><enable/></assertions>
       <arg value="--root-path"/><arg value="${lib.dir}"/>
       <arg value="--outfile"/><arg value="${libpib.path}"/>
     </java>
   </target>
   
   <target name="nunit" depends="compile-lib">
-    <java classname="${run.class}">
-      <classpath>
-        <path location="${class.dir}"/>
-      </classpath>
+    <java classname="${run.class}" fork="yes">
+      <classpath><path location="${class.dir}"/></classpath>
+      <assertions><enable/></assertions>
       <arg value="--pib-path"/><arg value="${libpib.path}"/>
       <arg value="--entry-point"/><arg value="test"/>
     </java>
