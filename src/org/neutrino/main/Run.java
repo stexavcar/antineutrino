@@ -20,6 +20,14 @@ public class Run {
   public static @Flags.Flag("pib-path") String pibPath;
   public static @Flags.Flag("entry-point") String entryPoint = "main";
 
+  private static RObjectArray buildStringList(List<String> list) {
+    List<RValue> result = new ArrayList<RValue>();
+    for (int i = 0; i < list.size(); i++)
+      result.add(new RString(list.get(i)));
+    RObjectArray argsObject = new RObjectArray(result);
+    return argsObject;
+  }
+
   public static void main(String[] rawArgs) throws IOException {
     List<String> args = Flags.parseArguments(rawArgs, Run.class);
     Interpreter inter = new Interpreter();
@@ -31,10 +39,7 @@ public class Run {
     assert entryPointBinding != null : "No entry point found.";
     RValue entryPointValue = inter.interpret(entryPointBinding);
     RLambda entryPointLambda = (RLambda) entryPointValue;
-    List<RValue> argList = new ArrayList<RValue>();
-    for (int i = 0; i < args.size(); i++)
-      argList.add(new RString(args.get(i)));
-    RObjectArray argsObject = new RObjectArray(argList);
+    RObjectArray argsObject = buildStringList(args);
     inter.interpret(entryPointLambda, argsObject);
   }
 
