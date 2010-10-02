@@ -1,4 +1,4 @@
-<project>
+<project name="neutrino" default="test">
   
   <property name="src.dir" value="src"/>
   <property name="bin.dir" value="bin"/>
@@ -12,7 +12,7 @@
   <property name="compiler.class" value="${main.package}.Compile"/>
   <property name="run.class" value="${main.package}.Run"/>
   
-  <target name="compile">
+  <target name="build">
     <mkdir dir="${class.dir}"/>
     <javac srcdir="${src.dir}" destdir="${class.dir}"/>
   </target>
@@ -27,7 +27,7 @@
     </junit>
   </target>
   
-  <target name="compile-lib" depends="compile">
+  <target name="build-lib" depends="build">
     <mkdir dir="${pib.dir}"/>
     <java classname="${compiler.class}" fork="yes">
       <classpath><path location="${class.dir}"/></classpath>
@@ -37,7 +37,7 @@
     </java>
   </target>
   
-  <target name="nunit" depends="compile-lib">
+  <target name="nunit" depends="build-lib">
     <java classname="${run.class}" fork="yes">
       <classpath><path location="${class.dir}"/></classpath>
       <assertions><enable/></assertions>

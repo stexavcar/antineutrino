@@ -109,7 +109,7 @@ public class PlanktonRegistry {
   );
 
   public PlanktonRegistry() {
-    register(ReferenceScope.class);
+
   }
 
   public <T> void register(Class<T> klass) {

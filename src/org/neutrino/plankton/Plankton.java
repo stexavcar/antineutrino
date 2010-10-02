@@ -184,11 +184,11 @@ public class Plankton {
 
   private class SeedImpl extends ValueImpl implements PSeed {
 
-    private final String tag;
+    private final PValue tag;
     private final PValue payload;
     private Object value;
 
-    public SeedImpl(String tag, PValue payload) {
+    public SeedImpl(PValue tag, PValue payload) {
       this.tag = tag;
       this.payload = payload;
     }
@@ -199,7 +199,7 @@ public class Plankton {
     }
 
     @Override
-    public String getTag() {
+    public PValue getTag() {
       return tag;
     }
 
@@ -247,7 +247,7 @@ public class Plankton {
   }
 
   public PSeed newSeed(String tag, PValue payload) {
-    return new SeedImpl(tag, payload);
+    return new SeedImpl(newString(tag), payload);
   }
 
   public PSeed newSeed(ISeedable value) {
@@ -257,7 +257,8 @@ public class Plankton {
   }
 
   private Object growSeed(PSeed seed) {
-    PlanktonRegistry.ICodec<?> codec = registry.getSeedCodec(seed.getTag());
+    String tag = ((PString) seed.getTag()).getValue();
+    PlanktonRegistry.ICodec<?> codec = registry.getSeedCodec(tag);
     if (codec == null)
       return null;
     return codec.decode(this, seed.getPayload());
@@ -324,22 +325,75 @@ public class Plankton {
     return null;
   }
 
+  private static class CodecData {
+
+    public static final int kNoReference = -1;
+    public static final boolean kUseReferences = true;
+
+    private final Map<Integer, Object> objs = new HashMap<Integer, Object>();
+    private final Map<Object, Integer> indices = new HashMap<Object, Integer>();
+
+    public int getIndex(Object obj) {
+      Integer result = indices.get(obj);
+      return (result == null) ? kNoReference : result;
+    }
+
+    public void map(int index, Object obj) {
+      objs.put(index, obj);
+      indices.put(obj, index);
+    }
+
+    public Object getObject(int index) {
+      return objs.get(index);
+    }
+
+    public int register(Object obj) {
+      int index = objs.size();
+      map(index, obj);
+      return index;
+    }
+
+  }
+
   static final int kStringTag = 0;
   static final int kMapTag = 1;
   static final int kBlobTag = 2;
   static final int kIntegerTag = 3;
   static final int kArrayTag = 4;
   static final int kSeedTag = 5;
+  static final int kNewReference = 6;
+  static final int kGetReference = 7;
 
-  public void write(final OutputStream out, PValue value) throws IOException {
+  public void write(OutputStream out, PValue value) throws IOException {
+    write(out, value, new CodecData());
+  }
+
+  private void write(final OutputStream out, PValue value,
+      final CodecData data) throws IOException {
     PValue.Type type = value.getType();
-    out.write(type.getTag());
     switch (type) {
     case STRING: {
-      writeString(out, ((PString) value).getValue());
+      String str = ((PString) value).getValue();
+      if (str.length() < 4 || !CodecData.kUseReferences) {
+        out.write(type.getTag());
+        writeString(out, str);
+      } else {
+        int index = data.getIndex(str);
+        if (index == CodecData.kNoReference) {
+          int newIndex = data.register(str);
+          out.write(kNewReference);
+          writeInt16(out, newIndex);
+          out.write(type.getTag());
+          writeString(out, str);
+        } else {
+          out.write(kGetReference);
+          writeInt16(out, index);
+        }
+      }
       break;
     }
     case BLOB: {
+      out.write(type.getTag());
       PBlob blob = (PBlob) value;
       int length = blob.length();
       writeInt32(out, length);
@@ -348,32 +402,36 @@ public class Plankton {
       break;
     }
     case MAP:
+      out.write(type.getTag());
       PMap map = (PMap) value;
       writeInt32(out, map.size());
       map.forEach(new ThrowingThunk<IOException>() {
         @Override
         public boolean call(PValue key, PValue value) throws IOException {
-          write(out, key);
-          write(out, value);
+          write(out, key, data);
+          write(out, value, data);
           return true;
         }
       });
       break;
     case INTEGER:
+      out.write(type.getTag());
       writeInt32(out, ((PInteger) value).getValue());
       break;
     case ARRAY: {
+      out.write(type.getTag());
       PArray elms = (PArray) value;
       int length = elms.length();
       writeInt32(out, length);
       for (int i = 0; i < length; i++)
-        write(out, elms.get(i));
+        write(out, elms.get(i), data);
       break;
     }
     case SEED:
+      out.write(type.getTag());
       PSeed seed = (PSeed) value;
-      writeString(out, seed.getTag());
-      write(out, seed.getPayload());
+      write(out, seed.getTag(), data);
+      write(out, seed.getPayload(), data);
       break;
     default:
       assert false;
@@ -381,8 +439,22 @@ public class Plankton {
   }
 
   public PValue read(InputStream in) throws IOException {
+    return read(in, new CodecData());
+  }
+
+  private PValue read(InputStream in, CodecData data) throws IOException {
     int tag = in.read();
     switch (tag) {
+    case kNewReference: {
+      int index = readInt16(in);
+      PValue value = read(in, data);
+      data.map(index, value);
+      return value;
+    }
+    case kGetReference: {
+      int index = readInt16(in);
+      return (PValue) data.getObject(index);
+    }
     case kStringTag:
       String str = readString(in);
       return Plankton.newString(str);
@@ -390,29 +462,29 @@ public class Plankton {
       int size = readInt32(in);
       Map<PValue, PValue> map = new HashMap<PValue, PValue>();
       for (int i = 0; i < size; i++) {
-        PValue key = read(in);
-        PValue value = read(in);
+        PValue key = read(in, data);
+        PValue value = read(in, data);
         map.put(key, value);
       }
       return Plankton.newMap(map);
     }
     case kBlobTag:
       int size = readInt32(in);
-      byte[] data = new byte[size];
-      in.read(data);
-      return Plankton.newBlob(data);
+      byte[] bytes = new byte[size];
+      in.read(bytes);
+      return Plankton.newBlob(bytes);
     case kIntegerTag:
       return Plankton.newInteger(readInt32(in));
     case kArrayTag: {
       int length = readInt32(in);
       List<PValue> elms = new ArrayList<PValue>();
       for (int i = 0; i < length; i++)
-        elms.add(read(in));
+        elms.add(read(in, data));
       return new ArrayImpl(elms);
     }
     case kSeedTag: {
-      String seedTag = readString(in);
-      PValue payload = read(in);
+      PValue seedTag = read(in, data);
+      PValue payload = read(in, data);
       return new SeedImpl(seedTag, payload);
     }
     default:
@@ -443,11 +515,21 @@ public class Plankton {
     out.write((value >> 24) & 0xFF);
   }
 
+  private static void writeInt16(OutputStream out, int value) throws IOException {
+    out.write((value >> 0) & 0xFF);
+    out.write((value >> 8) & 0xFF);
+  }
+
   private static int readInt32(InputStream in) throws IOException {
     return (in.read() << 0)
          | (in.read() << 8)
          | (in.read() << 16)
          | (in.read() << 24);
+  }
+
+  private static int readInt16(InputStream in) throws IOException {
+    return (in.read() << 0)
+         | (in.read() << 8);
   }
 
 }
