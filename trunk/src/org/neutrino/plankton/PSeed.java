@@ -11,7 +11,7 @@ public interface PSeed extends PValue {
   /**
    * Returns the type tag of this seed.
    */
-  public String getTag();
+  public PValue getTag();
 
   /**
    * Returns the payload object of this seed.

@@ -123,6 +123,13 @@ public class PlanktonTest extends TestCase {
     assertEquals(3, result.getY());
   }
 
+  public void testRepetition() {
+    PString str = Plankton.newString("foobarbaz");
+    PValue value = Plankton.newArray(str, str, str);
+    byte[] encoded = marshal(value);
+    unmarshal(encoded);
+  }
+
   private final byte[] marshal(PValue value) {
     try {
       ByteArrayOutputStream out = new ByteArrayOutputStream();
