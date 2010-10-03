@@ -15,7 +15,7 @@ This will compile the java code, compile the neutrino libraries and tests into a
 Compile neutrino somehow, possibly using the ant script.  Compile the neutrino libraries and tests into a PIB,
 
 {{{
-./scripts/compile.sh --classpath <classes> --root-path lib --outfile <pibfile>
+./scripts/compile.sh --classpath=<classes> --root-path lib --outfile <pibfile>
 }}}
 
 You can then inspect the PIB by doing
@@ -27,7 +27,7 @@ You can then inspect the PIB by doing
 Add the `--raw` option to see the raw contents, otherwise you will see the fully grown object.  Finally, you can run a PIB using
 
 {{{
-./scripts/run.sh --classpath <classes> --pib-path <pibfile> --entry-point <name>
+./scripts/run.sh --classpath=<classes> --pib-path <pibfile> --entry-point <name>
 }}}
 
 The entry point for running the tests is `test`.
