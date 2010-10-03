@@ -5,6 +5,7 @@ def test_main() {
   test_arrays();
   test_local_definitions();
   test_blocks();
+  test_refs();
   test_objects();
 }
 

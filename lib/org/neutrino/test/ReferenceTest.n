@@ -1,0 +1,6 @@
+def test_refs() {
+  def r := ref(4);
+  assert_equal(4, r.get());
+  assert_equal(5, r.set(5));
+  assert_equal(5, r.get());
+}

@@ -139,6 +139,7 @@ public class Interpreter {
         int index = frame.code[frame.pc + 1];
         String name = (String) frame.getLiteral(index);
         RValue value = frame.module.getUniverse().getGlobal(name, this);
+        assert value != null: "Undefined global " + name;
         frame.stack.push(value);
         frame.pc += 2;
         break;

@@ -1,0 +1,7 @@
+@native("ref") protocol Reference;
+
+@native("ref") def ref(value);
+
+@native("ref.get") def Reference::get();
+
+@native("ref.set") def Reference::set(value);
