@@ -21,12 +21,12 @@ public class Native implements ISeedable {
     private int argc;
 
     public RValue getThis() {
-      Stack<RValue> stack = frame.stack;
+      Stack<RValue> stack = frame.parent.stack;
       return stack.get(stack.size() - argc + 1);
     }
 
     public RValue getArgument(int index) {
-      Stack<RValue> stack = frame.stack;
+      Stack<RValue> stack = frame.parent.stack;
       return stack.get(stack.size() - argc + index + 2);
     }
 
@@ -37,6 +37,10 @@ public class Native implements ISeedable {
     public void prepare(Frame frame, int argc) {
       this.frame = frame;
       this.argc = argc;
+    }
+
+    public Frame getFrame() {
+      return frame;
     }
 
   }
@@ -251,6 +255,19 @@ public class Native implements ISeedable {
       RInteger value = (RInteger) args.getArgument(0);
       System.exit(value.getValue());
       return RNull.getInstance();
+    }
+  };
+
+  @Marker("cont.fire") static final Impl CONT_FIRE = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RContinuation target = (RContinuation) args.getThis();
+      RValue value = args.getArgument(0);
+      while (args.frame.marker != target)
+        args.frame = args.frame.parent;
+      args.frame.stack.pop();
+      args.frame.stack.pop();
+      return value;
     }
   };
 

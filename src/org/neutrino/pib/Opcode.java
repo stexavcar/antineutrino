@@ -62,6 +62,7 @@ public class Opcode {
   @Info({}) public static final int kTerminate = 16;
   @Info({ArgType.LITERAL, ArgType.NUMBER}) public static final int kNew = 17;
   @Info({ArgType.NUMBER}) public static final int kField = 18;
+  @Info({ArgType.NUMBER, ArgType.NUMBER}) public static final int kWith1Cc = 19;
 
   private static final Map<Integer, OpcodeInfo> infos = new HashMap<Integer, OpcodeInfo>() {{
     try {

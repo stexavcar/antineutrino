@@ -66,6 +66,18 @@ public class Interpreter {
         frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
         break;
       }
+      case Opcode.kWith1Cc: {
+        String name = "()";
+        int argc = frame.code[frame.pc + 2];
+        RContinuation cont = new RContinuation();
+        frame.stack.push(cont);
+        RValue self = frame.getArgument(argc, 0);
+        Lambda lambda = frame.lookupMethod(name, argc);
+        assert lambda != null : "Method " + getMethodName(name, argc, frame) + " not found.";
+        frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
+        frame.marker = cont;
+        break;
+      }
       case Opcode.kReturn: {
         RValue value = frame.stack.pop();
         assert frame.stack.size() == frame.getLocalCount();
@@ -110,8 +122,9 @@ public class Interpreter {
         int index = frame.code[frame.pc + 1];
         Native nathive = (Native) frame.getLiteral(index);
         int argc = frame.code[frame.pc + 2];
-        arguments.prepare(frame.parent, argc);
+        arguments.prepare(frame, argc);
         RValue value = nathive.call(arguments);
+        frame = arguments.getFrame();
         frame.stack.push(value);
         frame.pc += 3;
         break;

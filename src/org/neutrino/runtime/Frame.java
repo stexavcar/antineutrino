@@ -14,6 +14,7 @@ public class Frame {
   public final Module module;
   public final Frame parent;
   public final RValue holder;
+  public RContinuation marker;
 
   public Frame(Frame parent, RValue holder, CodeBundle code, Module module) {
     this.parent = parent;

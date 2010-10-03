@@ -7,6 +7,7 @@ def test_main() {
   test_blocks();
   test_refs();
   test_objects();
+  test_loops();
 }
 
 def assert_true(cond) -> if cond.not() then fail();

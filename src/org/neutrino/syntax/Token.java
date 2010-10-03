@@ -51,6 +51,7 @@ public class Token {
     AND("and", Category.KEYWORD),
     OR("or", Category.KEYWORD),
     INTERNAL("internal", Category.KEYWORD),
+    WITH_1CC("with_1cc", Category.KEYWORD),
     PROTOCOL("protocol", Category.KEYWORD);
 
     private final String name;
