@@ -1,10 +1,23 @@
 def test_objects() {
   test_records();
+  test_record_methods();
 }
 
 def test_records() {
   print("Testing records");
-  def o := new { a := 10, b := 12 };
-  assert_equal(10, o.a());
-  assert_equal(12, o.b());
+  def o1 := new { a := 10, b := 12 };
+  assert_equal(10, o1.a());
+  assert_equal(12, o1.b());
+  def o2 := new { a := "x", b := "y", c := "z" };
+  assert_equal("x", o2.a());
+  assert_equal("y", o2.b());
+  assert_equal("z", o2.c());
+  new { };
+}
+
+def inc(cnt) -> cnt.set(cnt.get() + 1);
+
+def test_record_methods() {
+  print("Testing record methods");
+  def cnt := ref(0);
 }

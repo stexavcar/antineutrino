@@ -145,6 +145,30 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("ref") static final Impl NEW_REF = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RValue value = args.getArgument(0);
+      return new RReference(value);
+    }
+  };
+
+  @Marker("ref.get") static final Impl REF_GET = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      return ((RReference) args.getThis()).getValue();
+    }
+  };
+
+  @Marker("ref.set") static final Impl REF_SET = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RValue value = args.getArgument(0);
+      ((RReference) args.getThis()).setValue(value);
+      return value;
+    }
+  };
+
   @Marker("array[]") static final Impl ARRAY_GET = new Impl() {
     @Override
     public RValue call(Arguments args) {
