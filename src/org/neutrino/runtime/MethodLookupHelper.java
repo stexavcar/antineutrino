@@ -1,10 +1,11 @@
 package org.neutrino.runtime;
 
-import org.neutrino.pib.Module;
-import org.neutrino.pib.Parameter;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.neutrino.pib.Module;
+import org.neutrino.pib.Parameter;
+import org.neutrino.pib.Universe;
 
 public class MethodLookupHelper {
 
@@ -15,13 +16,14 @@ public class MethodLookupHelper {
     this.origin = origin;
   }
 
+
+
   public RLambda lookupMethod(String name, int argc, Frame frame) {
     if ("()".equals(name))
       return (RLambda) frame.stack.get(frame.stack.size() - argc);
     matches.clear();
-    for (Module module : origin.getUniverse().modules.values()) {
-      searchModule(module, name, argc, frame);
-    }
+    Universe uni = origin.getUniverse();
+    searchUniverse(name, argc, frame, uni);
     RMethod result = null;
     if (matches.size() == 0) {
       return null;
@@ -33,6 +35,17 @@ public class MethodLookupHelper {
       }
     }
     return new RLambda(origin, result.getCode(), null);
+  }
+
+
+
+  private void searchUniverse(String name, int argc, Frame frame,
+      Universe universe) {
+    for (Module module : universe.modules.values())
+      searchModule(module, name, argc, frame);
+    Universe parallel = universe.getParallelUniverse();
+    if (parallel != null)
+      searchUniverse(name, argc, frame, parallel);
   }
 
   private void searchModule(Module module, String name, int argc, Frame frame) {

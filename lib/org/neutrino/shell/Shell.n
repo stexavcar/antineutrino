@@ -1,0 +1,3 @@
+@native("exit") def exit(value);
+
+def quit() -> exit(0);
