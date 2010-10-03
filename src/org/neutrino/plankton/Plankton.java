@@ -374,7 +374,7 @@ public class Plankton {
     switch (type) {
     case STRING: {
       String str = ((PString) value).getValue();
-      if (str.length() < 4 || !CodecData.kUseReferences) {
+      if (!CodecData.kUseReferences) {
         out.write(type.getTag());
         writeString(out, str);
       } else {

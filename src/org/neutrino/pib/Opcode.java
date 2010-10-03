@@ -16,7 +16,7 @@ public class Opcode {
   public static class OpcodeInfo {
 
     private final String name;
-    private final ArgumentType[] args;
+    private final ArgType[] args;
 
     public OpcodeInfo(Info info, String name) {
       this.name = name;
@@ -27,7 +27,7 @@ public class Opcode {
       return args.length + 1;
     }
 
-    public ArgumentType[] getArguments() {
+    public ArgType[] getArguments() {
       return args;
     }
 
@@ -37,31 +37,33 @@ public class Opcode {
 
   }
 
-  public enum ArgumentType {
+  public enum ArgType {
     LITERAL, NUMBER
   }
 
   @Retention(RetentionPolicy.RUNTIME)
   private @interface Info {
-    public ArgumentType[] value();
+    public ArgType[] value();
   }
 
-  @Info({ArgumentType.NUMBER}) public static final int kNumber = 0;
-  @Info({ArgumentType.LITERAL, ArgumentType.NUMBER}) public static final int kLambda = 1;
-  @Info({ArgumentType.LITERAL, ArgumentType.NUMBER}) public static final int kCall = 3;
+  @Info({ArgType.NUMBER}) public static final int kNumber = 0;
+  @Info({ArgType.LITERAL, ArgType.NUMBER}) public static final int kLambda = 1;
+  @Info({ArgType.LITERAL, ArgType.NUMBER}) public static final int kCall = 3;
   @Info({}) public static final int kReturn = 4;
   @Info({}) public static final int kNull = 5;
   @Info({}) public static final int kTrue = 6;
-  @Info({ArgumentType.LITERAL}) public static final int kPush = 7;
-  @Info({ArgumentType.LITERAL, ArgumentType.NUMBER}) public static final int kCallNative = 8;
+  @Info({ArgType.LITERAL}) public static final int kPush = 7;
+  @Info({ArgType.LITERAL, ArgType.NUMBER}) public static final int kCallNative = 8;
   @Info({}) public static final int kPop = 9;
-  @Info({ArgumentType.LITERAL}) public static final int kGlobal = 10;
+  @Info({ArgType.LITERAL}) public static final int kGlobal = 10;
   @Info({}) public static final int kFalse = 11;
-  @Info({ArgumentType.NUMBER}) public static final int kArgument = 12;
-  @Info({ArgumentType.NUMBER}) public static final int kOuter = 13;
-  @Info({ArgumentType.NUMBER}) public static final int kLocal = 14;
-  @Info({ArgumentType.NUMBER}) public static final int kStoreLocal = 15;
+  @Info({ArgType.NUMBER}) public static final int kArgument = 12;
+  @Info({ArgType.NUMBER}) public static final int kOuter = 13;
+  @Info({ArgType.NUMBER}) public static final int kLocal = 14;
+  @Info({ArgType.NUMBER}) public static final int kStoreLocal = 15;
   @Info({}) public static final int kTerminate = 16;
+  @Info({ArgType.LITERAL, ArgType.NUMBER}) public static final int kNew = 17;
+  @Info({ArgType.NUMBER}) public static final int kField = 18;
 
   private static final Map<Integer, OpcodeInfo> infos = new HashMap<Integer, OpcodeInfo>() {{
     try {

@@ -1,28 +1,30 @@
 package org.neutrino.pib;
 
-import org.neutrino.syntax.Tree;
+import java.util.List;
+
+import org.neutrino.syntax.Annotation;
 
 
-public class CodeBuilder<Ast extends Tree.Declaration> {
+public class CodeBuilder {
 
-  private final Ast ast;
+  private final List<Annotation> annots;
   private final Assembler assm;
 
-  public CodeBuilder(Ast ast) {
-    this.ast = ast;
+  public CodeBuilder(List<Annotation> annots) {
+    this.annots = annots;
     this.assm = new Assembler();
-  }
-
-  public Ast getSyntax() {
-    return this.ast;
   }
 
   public Assembler getAssembler() {
     return this.assm;
   }
 
+  public List<Annotation> getAnnotations() {
+    return annots;
+  }
+
   public Binding getBinding() {
-    return new Binding(ast.getAnnotations(), assm.getCode());
+    return new Binding(annots, assm.getCode());
   }
 
 }

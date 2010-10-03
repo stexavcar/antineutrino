@@ -1,3 +1,10 @@
 def test_objects() {
-  print("Testing objects");
+  test_records();
+}
+
+def test_records() {
+  print("Testing records");
+  def o := new { a := 10, b := 12 };
+  assert_equal(10, o.a());
+  assert_equal(12, o.b());
 }
