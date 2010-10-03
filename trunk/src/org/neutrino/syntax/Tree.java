@@ -687,19 +687,4 @@ public class Tree {
     }
   }
 
-  private static String toString(List<?> elms) {
-    StringBuilder buf = new StringBuilder();
-    buf.append("(");
-    boolean first = true;
-    for (Object obj : elms) {
-      if (first) {
-        first = false;
-      } else {
-        buf.append(" ");
-      }
-      buf.append(obj);
-    }
-    return buf.append(")").toString();
-  }
-
 }
