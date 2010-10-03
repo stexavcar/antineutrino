@@ -19,11 +19,6 @@ public class Assembler {
     this.localCount = localCount;
   }
 
-  public void literal(int value) {
-    add(Opcode.kNumber);
-    add(value);
-  }
-
   public void push(RValue value) {
     int index = registerLiteral(value);
     add(Opcode.kPush);

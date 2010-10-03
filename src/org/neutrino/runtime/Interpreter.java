@@ -44,12 +44,6 @@ public class Interpreter {
     while (true) {
       int opcode = frame.code[frame.pc];
       switch (opcode) {
-      case Opcode.kNumber: {
-        int value = frame.code[frame.pc + 1];
-        frame.stack.push(new RInteger(value));
-        frame.pc += 2;
-        break;
-      }
       case Opcode.kNull:
         frame.stack.push(RNull.getInstance());
         frame.pc += 1;

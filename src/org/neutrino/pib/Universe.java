@@ -18,6 +18,7 @@ import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.MethodLookupHelper;
 import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RObject;
 import org.neutrino.runtime.RProtocol;
@@ -131,6 +132,7 @@ public class Universe implements ISeedable {
     register(RString.class);
     register(Native.class);
     register(TypeId.class);
+    register(RInteger.class);
   }};
 
   private static final Plankton PLANKTON = new Plankton(REGISTRY);

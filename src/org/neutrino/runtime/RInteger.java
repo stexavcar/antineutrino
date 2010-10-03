@@ -1,14 +1,22 @@
 package org.neutrino.runtime;
 
-public class RInteger extends RValue {
+import org.neutrino.plankton.ISeedable;
+import org.neutrino.plankton.annotations.Growable;
+import org.neutrino.plankton.annotations.SeedMember;
 
+@Growable(RInteger.TAG)
+public class RInteger extends RValue implements ISeedable {
+
+  static final String TAG = "org::neutrino::runtime::RInteger";
   private static final TypeId TYPE_ID = TypeId.get("int");
 
-  private final int value;
+  public @SeedMember int value;
 
   public RInteger(int value) {
     this.value = value;
   }
+
+  public RInteger() { }
 
   public int getValue() {
     return value;

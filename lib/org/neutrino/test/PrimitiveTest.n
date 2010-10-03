@@ -2,6 +2,7 @@ def test_primitives() {
   test_integer_operators();
   test_singletons();
   test_conditionals();
+  test_number_encoding();
 }
 
 def test_integer_operators() {
@@ -26,3 +27,9 @@ def test_conditionals() {
   assert_true((if false then 1) = null);
 }
 
+def tne_sum(n) -> if n = 0 then 0 else n + tne_sum(n - 1);
+
+def test_number_encoding() {
+  print("Testing number encoding");
+  assert_true(tne_sum(256) = 32896);
+}
