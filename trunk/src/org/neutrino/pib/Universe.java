@@ -34,6 +34,7 @@ public class Universe implements ISeedable {
   static final String TAG = "org::neutrino::pib::Universe";
 
   public @SeedMember Map<String, Module> modules;
+  private Universe parallelUniverse = null;
 
   public Universe(Map<String, Module> modules) {
     this.modules = modules;
@@ -43,6 +44,14 @@ public class Universe implements ISeedable {
 
   public static BinaryBuilder builder() {
     return new BinaryBuilder();
+  }
+
+  public void setParallelUniverse(Universe universe) {
+    this.parallelUniverse = universe;
+  }
+
+  public Universe getParallelUniverse() {
+    return this.parallelUniverse;
   }
 
   public void initialize() {
@@ -56,7 +65,9 @@ public class Universe implements ISeedable {
       if (value != null)
         return value;
     }
-    return null;
+    return (parallelUniverse == null)
+        ? null
+        : parallelUniverse.getEntryPoint(name);
   }
 
   public RValue getGlobal(String name, Interpreter inter) {
@@ -65,7 +76,9 @@ public class Universe implements ISeedable {
       if (value != null)
         return value;
     }
-    return null;
+    return (parallelUniverse == null)
+        ? null
+        : parallelUniverse.getGlobal(name, inter);
   }
 
 
@@ -84,6 +97,10 @@ public class Universe implements ISeedable {
 
   public Set<Map.Entry<String, Module>> getModules() {
     return modules.entrySet();
+  }
+
+  public Module getModule(String name) {
+    return modules.get(name);
   }
 
   @Override

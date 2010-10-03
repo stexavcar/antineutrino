@@ -241,6 +241,15 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("exit") static final Impl EXIT = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RInteger value = (RInteger) args.getArgument(0);
+      System.exit(value.getValue());
+      return RNull.getInstance();
+    }
+  };
+
   private static final Map<String, Impl> IMPLS = new HashMap<String, Impl>() {{
     try {
       for (Field field : Native.class.getDeclaredFields()) {
