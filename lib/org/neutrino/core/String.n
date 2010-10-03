@@ -3,6 +3,6 @@
  *)
 @native("str") protocol String;
 
-@native("str+str") def String::+(that: String);
+def String::+(that: String) -> internal "str+str";
 
-@native("str=str") def String::=(that: String);
+def String::=(that: String) -> internal "str=str";

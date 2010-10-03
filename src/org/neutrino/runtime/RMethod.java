@@ -21,8 +21,7 @@ public class RMethod extends RValue implements ISeedable {
   public @SeedMember String name;
   public @SeedMember List<Parameter> params;
   public @SeedMember CodeBundle code;
-
-
+  public Module origin;
 
   public RMethod(List<Annotation> annots, String name, List<Parameter> params,
       CodeBundle code) {
@@ -37,6 +36,7 @@ public class RMethod extends RValue implements ISeedable {
   public void initialize(Module module) {
     for (Parameter param : params)
       param.initialize(module);
+    this.origin = module;
   }
 
   public String getName() {
@@ -49,6 +49,10 @@ public class RMethod extends RValue implements ISeedable {
 
   public List<Parameter> getParameters() {
     return this.params;
+  }
+
+  public Module getOrigin() {
+    return origin;
   }
 
   @Override

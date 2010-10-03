@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.neutrino.compiler.Symbol;
-import org.neutrino.compiler.Scope.MethodScope;
 import org.neutrino.compiler.Symbol.LocalSymbol;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RInteger;
@@ -213,10 +212,6 @@ public class Tree {
       visitExpression(that);
     }
 
-    public void visitLambda(Lambda that) {
-      visitExpression(that);
-    }
-
     public void visitNumber(Number that) {
       visitExpression(that);
     }
@@ -234,6 +229,10 @@ public class Tree {
     }
 
     public void visitNew(New that) {
+      visitExpression(that);
+    }
+
+    public void visitInternal(Internal that) {
       visitExpression(that);
     }
 
@@ -341,55 +340,46 @@ public class Tree {
 
   }
 
-  public static class Lambda extends Expression {
+  public static class Internal extends Expression {
 
-    private final List<Parameter> params;
-    private final Expression body;
-    private List<Symbol> captured;
-    private int localCount = -1;
+    private final String name;
+    private int argc = -1;
 
-    public Lambda(List<Parameter> params, Expression body) {
-      this.params = params;
-      this.body = body;
+    public Internal(String name) {
+      this.name = name;
     }
 
-    public void bind(MethodScope scope) {
-      assert this.captured == null;
-      this.captured = scope.getOuterTransient();
-      this.localCount = scope.getLocalCount();
+    public void setArgumentCount(int value) {
+      assert argc == -1;
+      this.argc = value;
     }
 
-    public List<Symbol> getCaptured() {
-      assert this.captured != null;
-      return this.captured;
+    public int getArgumentCount() {
+      assert argc != -1;
+      return argc;
     }
 
-    public int getLocalCount() {
-      assert this.localCount >= 0;
-      return this.localCount;
-    }
-
-    public Expression getBody() {
-      return this.body;
-    }
-
-    @Override
-    public void traverse(ExpressionVisitor visitor) {
-      body.accept(visitor);
-    }
-
-    @Override
-    public String toString() {
-      return "(fn " + Tree.toString(params) + " " + body + ")";
+    public String getName() {
+      return name;
     }
 
     @Override
     public void accept(ExpressionVisitor visitor) {
-      visitor.visitLambda(this);
+      visitor.visitInternal(this);
     }
 
-    public List<Parameter> getParameters() {
-      return params;
+    @Override
+    public void traverse(ExpressionVisitor visitor) {
+      // ignore
+    }
+
+  }
+
+  public static class Lambda {
+
+    public static Expression create(List<Parameter> params, Expression body) {
+      New.Field call = new New.Field(params, "()", body, false);
+      return new New(Collections.singletonList(call));
     }
 
     public static Expression createCall(Expression fun, List<Expression> args) {
@@ -410,8 +400,8 @@ public class Tree {
               new Identifier("select"),
               Arrays.asList(
                   cond,
-                  new Lambda(Collections.<Parameter>emptyList(), thenPart),
-                  new Lambda(Collections.<Parameter>emptyList(), elsePart))),
+                  Lambda.create(Collections.<Parameter>emptyList(), thenPart),
+                  Lambda.create(Collections.<Parameter>emptyList(), elsePart))),
           Collections.<Expression>emptyList());
     }
 
@@ -495,29 +485,64 @@ public class Tree {
 
     public static class Field {
 
+      private final List<Parameter> params;
       private final String name;
-      private final Expression value;
+      private final Expression body;
+      private final boolean hasEagerValue;
+      private int localCount = -1;
 
-      public Field(String name, Expression value) {
+      public Field(List<Parameter> params, String name, Expression body,
+          boolean hasEagerValue) {
+        this.params = params;
         this.name = name;
-        this.value = value;
+        this.body = body;
+        this.hasEagerValue = hasEagerValue;
       }
 
       public String getName() {
         return name;
       }
 
-      public Expression getValue() {
-        return value;
+      public Expression getBody() {
+        return body;
+      }
+
+      public List<Parameter> getParameters() {
+        return params;
+      }
+
+      public boolean hasEagerValue() {
+        return this.hasEagerValue;
+      }
+
+      public void setLocalCount(int localCount) {
+        assert this.localCount == -1;
+        this.localCount = localCount;
+      }
+
+      public int getLocalCount() {
+        assert this.localCount != -1;
+        return this.localCount;
       }
 
     }
 
     private final List<Field> fields;
     private RProtocol protocol;
+    private List<Symbol> captures;
 
     public New(List<Field> fields) {
       this.fields = fields;
+    }
+
+    public void setCaptures(List<Symbol> captures) {
+      assert this.captures == null;
+      this.captures = captures;
+    }
+
+    public List<Symbol> getCaptures() {
+      assert this.captures != null;
+      return this.captures;
     }
 
     public RProtocol getProtocol() {
@@ -542,7 +567,7 @@ public class Tree {
     @Override
     public void traverse(ExpressionVisitor visitor) {
       for (Field field : fields)
-        field.getValue().accept(visitor);
+        field.getBody().accept(visitor);
     }
 
   }

@@ -3,27 +3,27 @@ package org.neutrino.runtime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
 import org.neutrino.pib.Universe;
 
 public class MethodLookupHelper {
 
-  private final Module origin;
+  private final Universe universe;
   private final List<RMethod> matches = new ArrayList<RMethod>();
 
-  public MethodLookupHelper(Module origin) {
-    this.origin = origin;
+  public MethodLookupHelper(Universe universe) {
+    this.universe = universe;
   }
 
-
-
-  public RLambda lookupMethod(String name, int argc, Frame frame) {
-    if ("()".equals(name))
-      return (RLambda) frame.stack.get(frame.stack.size() - argc);
+  public Lambda lookupMethod(String name, int argc, Frame frame) {
     matches.clear();
-    Universe uni = origin.getUniverse();
-    searchUniverse(name, argc, frame, uni);
+    searchUniverse(name, argc, frame, universe);
+    return resolveResult(frame.getArgument(argc, 0));
+  }
+
+  private Lambda resolveResult(RValue holder) {
     RMethod result = null;
     if (matches.size() == 0) {
       return null;
@@ -34,10 +34,14 @@ public class MethodLookupHelper {
         result = method;
       }
     }
-    return new RLambda(origin, result.getCode(), null);
+    return new Lambda(result.getOrigin(), result.getCode());
   }
 
-
+  public Lambda lookupLambda(RObject holder) {
+    Frame fakeFrame = new Frame(null, null, new CodeBundle(), null);
+    fakeFrame.stack.push(holder);
+    return lookupMethod("()", 1, fakeFrame);
+  }
 
   private void searchUniverse(String name, int argc, Frame frame,
       Universe universe) {

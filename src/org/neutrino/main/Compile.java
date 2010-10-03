@@ -21,6 +21,7 @@ public class Compile {
 
   public static void main(String[] rawArgs) throws IOException, SyntaxError {
     Flags.parseArguments(rawArgs, Compile.class);
+    assert rootPath != null: "No --root-path specified.";
     CompilerModule top = CompilerModule.createToplevel();
     File path = new File(rootPath);
     top.includeFromPath(path);

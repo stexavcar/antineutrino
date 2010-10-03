@@ -7,8 +7,6 @@ import java.util.List;
 
 import org.neutrino.pib.CodeBuilder;
 import org.neutrino.pib.ModuleBuilder;
-import org.neutrino.runtime.Native;
-import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Parser;
 import org.neutrino.syntax.Scanner;
 import org.neutrino.syntax.SyntaxError;
@@ -96,12 +94,7 @@ public class Source {
     @Override
     public void visitDefinition(Definition that) {
       CodeBuilder builder = module.createDefinition(that);
-      Annotation nathive = that.getAnnotation(Native.ANNOTATION);
-      if (nathive != null) {
-        Compiler.compileNativeLambda(builder.getAssembler(), that);
-      } else {
-        Compiler.compile(module, builder.getAssembler(), that.getValue());
-      }
+      Compiler.compile(module, builder.getAssembler(), that.getValue());
     }
 
     @Override
@@ -113,12 +106,7 @@ public class Source {
     public void visitMethodDefinition(Method that) {
       CodeBuilder builder = module.createMethod(that.getAnnotations(),
           that.getName(), that.getParameters());
-      Annotation nathive = that.getAnnotation(Native.ANNOTATION);
-      if (nathive != null) {
-        Compiler.compileNativeMethod(builder.getAssembler(), that);
-      } else {
-        Compiler.compile(module, builder.getAssembler(), that.getBody());
-      }
+      Compiler.compileMethod(module, builder.getAssembler(), that);
     }
 
   }

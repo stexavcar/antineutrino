@@ -3,10 +3,10 @@
  *)
 @native("int") protocol Integer;
 
-@native("int+int") def Integer::+(that: Integer);
+def Integer::+(that: Integer) -> internal "int+int";
 
-@native("int-int") def Integer::-(that: Integer);
+def Integer::-(that: Integer) -> internal "int-int";
 
-@native("int<int") def Integer::<(that: Integer);
+def Integer::<(that: Integer) -> internal "int<int";
 
-@native("int=int") def Integer::=(that: Integer);
+def Integer::=(that: Integer) -> internal "int=int";

@@ -7,8 +7,8 @@ import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RString;
 import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Tree;
-import org.neutrino.syntax.Tree.Definition;
 import org.neutrino.syntax.Tree.Expression;
+import org.neutrino.syntax.Tree.Internal;
 import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.New;
 import org.neutrino.syntax.Tree.Text;
@@ -46,30 +46,6 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
   @Override
   public void visitIdentifier(Tree.Identifier that) {
     that.getSymbol().emit(assm);
-  }
-
-  @Override
-  public void visitLambda(Tree.Lambda that) {
-    Assembler subAssm = new Assembler();
-    CodeGenerator codegen = new CodeGenerator(subAssm);
-    codegen.generate(that.getBody());
-    List<Symbol> captured = that.getCaptured();
-    subAssm.setLocalCount(that.getLocalCount());
-    for (Symbol symbol : captured)
-      symbol.emit(assm);
-    assm.lambda(subAssm.getCode(), captured.size());
-  }
-
-  public void generateNativeLambda(Definition that) {
-    Assembler subAssm = new Assembler();
-    Annotation annot = that.getAnnotation(Native.ANNOTATION);
-    String key = ((RString) annot.getArgument(0)).getValue();
-    Native method = Native.get(key);
-    Tree.Lambda lambda = (Tree.Lambda) that.getValue();
-    subAssm.callNative(method, lambda.getParameters().size() + 1);
-    subAssm.rethurn();
-    assm.lambda(subAssm.getCode(), 0);
-    assm.rethurn();
   }
 
   @Override
@@ -121,9 +97,23 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
   @Override
   public void visitNew(New that) {
     List<Tree.New.Field> fields = that.getFields();
-    for (Tree.New.Field field : fields)
-      field.getValue().accept(this);
-    assm.nhew(that.getProtocol(), fields.size());
+    int outerCount = 0;
+    for (Tree.New.Field field : fields) {
+      if (field.hasEagerValue()) {
+        field.getBody().accept(this);
+        outerCount++;
+      }
+    }
+    for (Symbol symbol : that.getCaptures()) {
+      symbol.emit(assm);
+      outerCount++;
+    }
+    assm.nhew(that.getProtocol(), outerCount);
+  }
+
+  @Override
+  public void visitInternal(Internal that) {
+    assm.callNative(Native.get(that.getName()), that.getArgumentCount());
   }
 
   public void generate(Tree.Expression value) {

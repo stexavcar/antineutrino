@@ -22,12 +22,16 @@ public class Native implements ISeedable {
 
     public RValue getThis() {
       Stack<RValue> stack = frame.stack;
-      return stack.get(stack.size() - argc);
+      return stack.get(stack.size() - argc + 1);
     }
 
     public RValue getArgument(int index) {
       Stack<RValue> stack = frame.stack;
-      return stack.get(stack.size() - argc + index + 1);
+      return stack.get(stack.size() - argc + index + 2);
+    }
+
+    public RValue getFunctionArgument(int index) {
+      return getArgument(index - 1);
     }
 
     public void prepare(Frame frame, int argc) {
@@ -148,7 +152,7 @@ public class Native implements ISeedable {
   @Marker("ref") static final Impl NEW_REF = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RValue value = args.getArgument(0);
+      RValue value = args.getFunctionArgument(0);
       return new RReference(value);
     }
   };
@@ -207,20 +211,20 @@ public class Native implements ISeedable {
   @Marker("print") static final Impl PRINT = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RValue value = args.getArgument(0);
+      RValue value = args.getFunctionArgument(0);
       System.out.println(value.toExternalString());
       return RNull.getInstance();
     }
   };
 
-  @Marker("select") static final Impl IF = new Impl() {
+  @Marker("select") static final Impl SELECT = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RBoolean cond = (RBoolean) args.getArgument(0);
+      RBoolean cond = (RBoolean) args.getFunctionArgument(0);
       if (cond.getValue()) {
-        return args.getArgument(1);
+        return args.getFunctionArgument(1);
       } else {
-        return args.getArgument(2);
+        return args.getFunctionArgument(2);
       }
     }
   };
