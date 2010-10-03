@@ -1,0 +1,3 @@
+@native("continuation") protocol Continuation;
+
+def Continuation::fire(value) -> internal "cont.fire";

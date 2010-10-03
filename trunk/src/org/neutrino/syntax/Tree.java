@@ -236,6 +236,10 @@ public class Tree {
       visitExpression(that);
     }
 
+    public void visitWith1Cc(With1Cc that) {
+      visitExpression(that);
+    }
+
   }
 
   public static class Identifier extends Expression {
@@ -393,7 +397,7 @@ public class Tree {
 
   public static class If {
 
-    public static Expression create(Tree.Expression cond, Tree.Expression thenPart,
+    public static Expression create(Expression cond, Expression thenPart,
         Tree.Expression elsePart) {
       return Lambda.createCall(
           Lambda.createCall(
@@ -403,6 +407,37 @@ public class Tree {
                   Lambda.create(Collections.<Parameter>emptyList(), thenPart),
                   Lambda.create(Collections.<Parameter>emptyList(), elsePart))),
           Collections.<Expression>emptyList());
+    }
+
+  }
+
+  public static class With1Cc extends Expression {
+
+    private final Expression callback;
+
+    private With1Cc(Expression callback) {
+      this.callback = callback;
+    }
+
+    public Expression getCallback() {
+      return callback;
+    }
+
+    @Override
+    public void accept(ExpressionVisitor visitor) {
+      visitor.visitWith1Cc(this);
+    }
+
+    @Override
+    public void traverse(ExpressionVisitor visitor) {
+      callback.accept(visitor);
+    }
+
+    public static Expression create(String name, Expression body) {
+      Parameter param = new Parameter(name, "Object");
+      Expression lambda = Lambda.create(Collections.singletonList(param),
+          body);
+      return new With1Cc(lambda);
     }
 
   }

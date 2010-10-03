@@ -90,6 +90,12 @@ public class Assembler {
     add(argc);
   }
 
+  public void with1Cc() {
+    add(Opcode.kWith1Cc);
+    add(0);
+    add(2);
+  }
+
   public void callNative(Native method, int argc) {
     int index = registerLiteral(method);
     add(Opcode.kCallNative);

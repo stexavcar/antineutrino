@@ -13,6 +13,7 @@ import org.neutrino.syntax.Tree.Internal;
 import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.New;
 import org.neutrino.syntax.Tree.Text;
+import org.neutrino.syntax.Tree.With1Cc;
 
 /**
  * Expression visitor that generates platform independent bytecode for
@@ -93,6 +94,12 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
       arg.accept(this);
     }
     assm.call(that.getName(), argc);
+  }
+
+  @Override
+  public void visitWith1Cc(With1Cc that) {
+    that.getCallback().accept(this);
+    assm.with1Cc();
   }
 
   @Override

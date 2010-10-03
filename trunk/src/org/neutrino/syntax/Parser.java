@@ -372,6 +372,12 @@ public class Parser {
         elsePart = new Tree.Singleton(Tree.Singleton.Type.NULL);
       }
       return Tree.If.create(cond, thenPart, elsePart);
+    } else if (at(Type.WITH_1CC)) {
+      expect(Type.WITH_1CC);
+      String name = expect(Type.IDENT);
+      expect(Type.ARROW);
+      Tree.Expression value = parseLongExpression();
+      return Tree.With1Cc.create(name, value);
     } else {
       return parseOperatorExpression();
     }
