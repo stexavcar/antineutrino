@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RString;
 import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Tree;
@@ -58,7 +59,7 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
 
   @Override
   public void visitNumber(Tree.Number that) {
-    assm.literal(that.getValue());
+    assm.push(new RInteger(that.getValue()));
   }
 
   @Override

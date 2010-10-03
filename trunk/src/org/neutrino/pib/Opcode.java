@@ -46,7 +46,6 @@ public class Opcode {
     public ArgType[] value();
   }
 
-  @Info({ArgType.NUMBER}) public static final int kNumber = 0;
   @Info({ArgType.LITERAL, ArgType.NUMBER}) public static final int kCall = 3;
   @Info({}) public static final int kReturn = 4;
   @Info({}) public static final int kNull = 5;

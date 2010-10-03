@@ -15,8 +15,6 @@ def test_records() {
   new { };
 }
 
-def inc(cnt) -> cnt.set(cnt.get() + 1);
-
 def test_record_methods() {
   print("Testing record methods");
   def cnt := ref(0);
