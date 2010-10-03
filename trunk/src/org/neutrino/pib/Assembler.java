@@ -13,7 +13,7 @@ public class Assembler {
 
   private final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
   private final List<Object> literals = new ArrayList<Object>();
-  private int localCount = 0;
+  private int localCount = -1;
 
   public void setLocalCount(int localCount) {
     this.localCount = localCount;
@@ -69,13 +69,6 @@ public class Assembler {
 
   public void fahlse() {
     add(Opcode.kFalse);
-  }
-
-  public void lambda(CodeBundle code, int outc) {
-    int codeIndex = registerLiteral(code);
-    add(Opcode.kLambda);
-    add(codeIndex);
-    add(outc);
   }
 
   public void global(String name) {

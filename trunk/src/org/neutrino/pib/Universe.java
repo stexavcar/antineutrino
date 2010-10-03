@@ -13,10 +13,13 @@ import org.neutrino.plankton.Plankton;
 import org.neutrino.plankton.PlanktonRegistry;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
+import org.neutrino.runtime.Frame;
 import org.neutrino.runtime.Interpreter;
+import org.neutrino.runtime.Lambda;
+import org.neutrino.runtime.MethodLookupHelper;
 import org.neutrino.runtime.Native;
-import org.neutrino.runtime.RLambda;
 import org.neutrino.runtime.RMethod;
+import org.neutrino.runtime.RObject;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
@@ -35,6 +38,7 @@ public class Universe implements ISeedable {
 
   public @SeedMember Map<String, Module> modules;
   private Universe parallelUniverse = null;
+  private final MethodLookupHelper methodLookupHelper = new MethodLookupHelper(this);
 
   public Universe(Map<String, Module> modules) {
     this.modules = modules;
@@ -59,9 +63,9 @@ public class Universe implements ISeedable {
       module.initialize(this);
   }
 
-  public RLambda getEntryPoint(String name) {
+  public Lambda getEntryPoint(String name) {
     for (Module module : modules.values()) {
-      RLambda value = module.getEntryPoint(name);
+      Lambda value = module.getEntryPoint(name);
       if (value != null)
         return value;
     }
@@ -81,6 +85,13 @@ public class Universe implements ISeedable {
         : parallelUniverse.getGlobal(name, inter);
   }
 
+  public Lambda lookupMethod(String name, int argc, Frame frame) {
+    return methodLookupHelper.lookupMethod(name, argc, frame);
+  }
+
+  public Lambda getLambda(RObject function) {
+    return methodLookupHelper.lookupLambda(function);
+  }
 
   public void write(OutputStream out) throws IOException {
     PLANKTON.write(out, PLANKTON.newSeed(this));

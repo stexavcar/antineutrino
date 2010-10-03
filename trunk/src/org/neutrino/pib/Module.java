@@ -8,10 +8,8 @@ import java.util.Map;
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
-import org.neutrino.runtime.Frame;
 import org.neutrino.runtime.Interpreter;
-import org.neutrino.runtime.MethodLookupHelper;
-import org.neutrino.runtime.RLambda;
+import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
@@ -26,7 +24,6 @@ public class Module implements ISeedable {
   public @SeedMember Map<String, Binding> defs;
   public @SeedMember Map<String, RProtocol> protos;
   public @SeedMember List<RMethod> methods;
-  private final MethodLookupHelper methodLookupHelper = new MethodLookupHelper(this);
 
   private final Map<String, RValue> globals = new HashMap<String, RValue>();
   private Universe universe;
@@ -56,14 +53,14 @@ public class Module implements ISeedable {
     return protos.get(name);
   }
 
-  public RLambda getEntryPoint(String name) {
+  public Lambda getEntryPoint(String name) {
     for (Map.Entry<String, Binding> entry : defs.entrySet()) {
       Binding binding = entry.getValue();
       Annotation annot = binding.getAnnotation("entry_point");
       if (annot != null) {
         RValue value = annot.getArgument(0);
         if (((RString) value).getValue().equals(name))
-          return new RLambda(this, binding.getCode(), null);
+          return new Lambda(this, binding.getCode());
       }
     }
     return null;
@@ -89,10 +86,6 @@ public class Module implements ISeedable {
       globals.put(name, result);
     }
     return result;
-  }
-
-  public RLambda lookupMethod(String name, int argc, Frame frame) {
-    return methodLookupHelper.lookupMethod(name, argc, frame);
   }
 
 }

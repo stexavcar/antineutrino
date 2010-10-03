@@ -10,7 +10,8 @@ import org.neutrino.pib.Universe;
 import org.neutrino.plankton.PSeed;
 import org.neutrino.plankton.PValue;
 import org.neutrino.runtime.Interpreter;
-import org.neutrino.runtime.RLambda;
+import org.neutrino.runtime.Lambda;
+import org.neutrino.runtime.RObject;
 import org.neutrino.runtime.RObjectArray;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
@@ -33,12 +34,12 @@ public class Run {
     Interpreter inter = new Interpreter();
     File file = new File(pibPath);
     PValue value = Universe.getPlankton().read(new FileInputStream(file));
-    Universe binary = ((PSeed) value).grow(Universe.class);
-    binary.initialize();
-    RLambda entryPointBinding = binary.getEntryPoint(entryPoint);
+    Universe universe = ((PSeed) value).grow(Universe.class);
+    universe.initialize();
+    Lambda entryPointBinding = universe.getEntryPoint(entryPoint);
     assert entryPointBinding != null : "No entry point found.";
     RValue entryPointValue = inter.interpret(entryPointBinding);
-    RLambda entryPointLambda = (RLambda) entryPointValue;
+    Lambda entryPointLambda = universe.getLambda((RObject) entryPointValue);
     RObjectArray argsObject = buildStringList(args);
     inter.interpret(entryPointLambda, argsObject);
   }

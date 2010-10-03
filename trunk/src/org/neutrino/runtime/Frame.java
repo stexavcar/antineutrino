@@ -1,9 +1,9 @@
 package org.neutrino.runtime;
 
+import java.util.Stack;
+
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
-
-import java.util.Stack;
 
 public class Frame {
 
@@ -13,13 +13,13 @@ public class Frame {
   public final CodeBundle bundle;
   public final Module module;
   public final Frame parent;
-  public final RValue[] outer;
+  public final RValue holder;
 
-  public Frame(Frame parent, CodeBundle code, RValue[] outer, Module module) {
+  public Frame(Frame parent, RValue holder, CodeBundle code, Module module) {
     this.parent = parent;
+    this.holder = holder;
     this.code = code.getCode();
     this.bundle = code;
-    this.outer = outer;
     this.module = module;
     for (int i = 0; i < code.localCount; i++)
       stack.push(RNull.getInstance());
@@ -33,8 +33,8 @@ public class Frame {
     return stack.get(stack.size() - argc + index);
   }
 
-  public RLambda lookupMethod(String name, int argc) {
-    return module.lookupMethod(name, argc, this);
+  public Lambda lookupMethod(String name, int argc) {
+    return module.getUniverse().lookupMethod(name, argc, this);
   }
 
   public RValue peekArgument(int index) {

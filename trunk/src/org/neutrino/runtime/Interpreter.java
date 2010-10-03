@@ -19,14 +19,14 @@ public class Interpreter {
   private final Native.Arguments arguments = new Native.Arguments();
 
   public RValue interpret(Module module, CodeBundle code, RValue... args) {
-    Frame parent = new Frame(null, BOTTOM_FRAME_CODE, null, null);
+    Frame parent = new Frame(null, null, BOTTOM_FRAME_CODE, null);
     for (RValue arg : args)
       parent.stack.push(arg);
-    Frame frame = new Frame(parent, code, null, module);
+    Frame frame = new Frame(parent, null, code, module);
     return interpret(frame);
   }
 
-  public RValue interpret(RLambda lambda, RValue... args) {
+  public RValue interpret(Lambda lambda, RValue... args) {
     return interpret(lambda.getModule(), lambda.getCode(), args);
   }
 
@@ -62,27 +62,14 @@ public class Interpreter {
         frame.stack.push(RBoolean.getFalse());
         frame.pc += 1;
         break;
-      case Opcode.kLambda: {
-        int index = frame.code[frame.pc + 1];
-        int outc = frame.code[frame.pc + 2];
-        CodeBundle bundle = (CodeBundle) frame.getLiteral(index);
-        RValue[] outer = NO_VALUES;
-        if (outc > 0) {
-          outer = new RValue[outc];
-          for (int i = 0; i < outc; i++)
-            outer[outc - i - 1] = frame.stack.pop();
-        }
-        frame.stack.push(new RLambda(frame.module, bundle, outer));
-        frame.pc += 3;
-        break;
-      }
       case Opcode.kCall: {
         int nameIndex = frame.code[frame.pc + 1];
         String name = (String) frame.getLiteral(nameIndex);
         int argc = frame.code[frame.pc + 2];
-        RLambda lambda = frame.lookupMethod(name, argc);
+        RValue self = frame.getArgument(argc, 0);
+        Lambda lambda = frame.lookupMethod(name, argc);
         assert lambda != null : "Method " + getMethodName(name, argc, frame) + " not found.";
-        frame = new Frame(frame, lambda.getCode(), lambda.getOuter(), lambda.getModule());
+        frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
         break;
       }
       case Opcode.kReturn: {
@@ -121,7 +108,7 @@ public class Interpreter {
       }
       case Opcode.kOuter: {
         int index = frame.code[frame.pc + 1];
-        frame.stack.push(frame.outer[index]);
+        frame.stack.push(((RObject) frame.holder).getField(index));
         frame.pc += 2;
         break;
       }

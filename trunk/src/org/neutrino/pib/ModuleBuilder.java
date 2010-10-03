@@ -15,7 +15,7 @@ import org.neutrino.syntax.Tree;
 
 public class ModuleBuilder {
 
-  private int nextImplicitProtocolIndex = 0;
+  private static int nextImplicitProtocolIndex = 0;
   private final Map<String, CodeBuilder> defs = new TreeMap<String, CodeBuilder>();
   private final Map<String, RProtocol> protos = new HashMap<String, RProtocol>();
   private final List<MethodInfo> methods = new ArrayList<MethodInfo>();

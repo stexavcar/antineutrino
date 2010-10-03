@@ -1,5 +1,5 @@
-@native("print") def print(obj);
+def print(obj) -> internal "print";
 
-@native("select") def select(cond, then_part, else_part);
+def select(cond, then_part, else_part) -> internal "select";
 
-@native("fail") def fail();
+def fail() -> internal "fail";

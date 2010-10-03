@@ -1,6 +1,8 @@
 package org.neutrino.compiler;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 import org.neutrino.pib.Assembler;
 import org.neutrino.pib.CodeBuilder;
@@ -22,16 +24,36 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
   public void visitNew(Tree.New that) {
     RProtocol proto = module.createImplicitProtocol();
     that.bind(proto);
-    int index = 0;
+    int eagerFieldCount = 0;
     for (Tree.New.Field field : that.getFields()) {
-      String name = field.getName();
-      CodeBuilder builder = module.createMethod(
-          Collections.<Annotation>emptyList(), name,
-          Collections.singletonList(new Parameter(name, proto.getName())));
-      Assembler assm = builder.getAssembler();
-      assm.field(index);
-      assm.rethurn();
-      index++;
+      field.getBody().accept(this);
+      if (field.hasEagerValue()) {
+        String name = field.getName();
+        CodeBuilder builder = module.createMethod(
+            Collections.<Annotation>emptyList(), name,
+            Collections.singletonList(new Parameter("this", proto.getName())));
+        Assembler assm = builder.getAssembler();
+        assm.field(eagerFieldCount);
+        assm.rethurn();
+        assm.setLocalCount(0);
+        eagerFieldCount++;
+      }
+    }
+    for (Tree.New.Field field : that.getFields()) {
+      if (!field.hasEagerValue()) {
+        String name = field.getName();
+        Parameter param = new Parameter("this", proto.getName());
+        List<Parameter> allParams = new ArrayList<Parameter>();
+        allParams.add(param);
+        allParams.addAll(field.getParameters());
+        CodeBuilder builder = module.createMethod(
+            Collections.<Annotation>emptyList(), name,
+            allParams);
+        Assembler assm = builder.getAssembler();
+        CodeGenerator codegen = new CodeGenerator(assm);
+        codegen.generate(field.getBody());
+        assm.setLocalCount(field.getLocalCount());
+      }
     }
   }
 

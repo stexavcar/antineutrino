@@ -1,21 +1,52 @@
 package org.neutrino.compiler;
 
-import org.neutrino.compiler.Symbol.LocalSymbol;
-import org.neutrino.pib.Parameter;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import org.neutrino.compiler.Symbol.LocalSymbol;
+import org.neutrino.pib.Parameter;
 
 public abstract class Scope {
 
   public abstract Symbol lookup(String name);
 
+  public static class CapturingScope extends Scope {
+
+    private final int symbolIndexOffset;
+    private final List<Symbol> outerTransient = new ArrayList<Symbol>();
+    private final List<Symbol> outerCaptures = new ArrayList<Symbol>();
+    private final Scope outerScope;
+
+    public CapturingScope(Scope outer, int symbolIndexOffset) {
+      this.outerScope = outer;
+      this.symbolIndexOffset = symbolIndexOffset;
+    }
+
+    public List<Symbol> getOuterTransient() {
+      return outerTransient;
+    }
+
+    @Override
+    public Symbol lookup(String name) {
+      Symbol outerResult = outerScope.lookup(name);
+      if (!outerResult.isTransient())
+        return outerResult;
+      int index = outerTransient.indexOf(outerResult);
+      if (index == -1) {
+        index = symbolIndexOffset + outerTransient.size();
+        Symbol capture = Symbol.outer(index);
+        outerTransient.add(outerResult);
+        outerCaptures.add(capture);
+      }
+      return outerCaptures.get(index);
+    }
+
+  }
+
   public static class MethodScope extends Scope {
 
     private final List<Parameter> params;
     private final List<Symbol> symbols;
-    private final List<Symbol> outerTransient = new ArrayList<Symbol>();
-    private final List<Symbol> outerCaptures = new ArrayList<Symbol>();
     private final Scope outerScope;
     private int localCount = 0;
 
@@ -27,12 +58,12 @@ public abstract class Scope {
         symbols.add(Symbol.parameter(i, params.size()));
     }
 
-    public int nextLocal() {
-      return localCount++;
+    public List<Parameter> getParameters() {
+      return params;
     }
 
-    public List<Symbol> getOuterTransient() {
-      return this.outerTransient;
+    public int nextLocal() {
+      return localCount++;
     }
 
     public int getLocalCount() {
@@ -45,17 +76,7 @@ public abstract class Scope {
         if (params.get(i).getName().equals(name))
           return symbols.get(i);
       }
-      Symbol outerResult = outerScope.lookup(name);
-      if (!outerResult.isTransient())
-        return outerResult;
-      int index = outerTransient.indexOf(outerResult);
-      if (index == -1) {
-        index = outerTransient.size();
-        Symbol capture = Symbol.outer(index);
-        outerTransient.add(outerResult);
-        outerCaptures.add(capture);
-      }
-      return outerCaptures.get(index);
+      return outerScope.lookup(name);
     }
 
   }

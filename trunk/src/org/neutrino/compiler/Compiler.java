@@ -4,6 +4,8 @@ import org.neutrino.pib.Assembler;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.ModuleBuilder;
 import org.neutrino.syntax.Tree;
+import org.neutrino.syntax.Tree.Expression;
+import org.neutrino.syntax.Tree.Method;
 
 public class Compiler {
 
@@ -15,17 +17,20 @@ public class Compiler {
     body.accept(implicitor);
     CodeGenerator codegen = new CodeGenerator(assm);
     codegen.generate(body);
+    assm.setLocalCount(0);
     return assm.getCode();
   }
 
-  public static void compileNativeLambda(Assembler assm, Tree.Definition that) {
+  public static void compileMethod(ModuleBuilder module, Assembler assm,
+      Method that) {
+    Expression body = that.getBody();
+    LexicalAnalyzer lexicizer = new LexicalAnalyzer(that);
+    body.accept(lexicizer);
+    ImplicitDeclarationVisitor implicitor = new ImplicitDeclarationVisitor(module);
+    body.accept(implicitor);
     CodeGenerator codegen = new CodeGenerator(assm);
-    codegen.generateNativeLambda(that);
-  }
-
-  public static void compileNativeMethod(Assembler assm, Tree.Method that) {
-    CodeGenerator codegen = new CodeGenerator(assm);
-    codegen.generateNativeMethod(that);
+    codegen.generate(body);
+    assm.setLocalCount(0);
   }
 
 }

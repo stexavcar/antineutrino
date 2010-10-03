@@ -240,7 +240,7 @@ public class Parser {
       } else if (at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE)) {
         List<Parameter> params = parseParameters();
         Tree.Expression body = parseFunctionBody(true);
-        Tree.Lambda lambda = new Tree.Lambda(params, body);
+        Tree.Expression lambda = Tree.Lambda.create(params, body);
         return new Tree.Definition(annots, name, lambda);
       } else {
         throw new SyntaxError(getCurrent());
@@ -358,7 +358,7 @@ public class Parser {
       expect(Type.FN);
       List<Parameter> params = parseParameters();
       Tree.Expression body = parseFunctionBody(false);
-      return new Tree.Lambda(params, body);
+      return Tree.Lambda.create(params, body);
     } else if (at(Type.IF)) {
       expect(Type.IF);
       Tree.Expression cond = parseOperatorExpression();
@@ -387,9 +387,22 @@ public class Parser {
 
   private Tree.New.Field parseNewField() throws SyntaxError {
     String name = expect(Type.IDENT);
-    expect(Type.COLON_EQ);
-    Tree.Expression value = parseAtomicExpression();
-    return new Tree.New.Field(name, value);
+    List<Parameter> params;
+    Tree.Expression body;
+    boolean hasEagerValue;
+    if (at(Type.COLON_EQ)) {
+      expect(Type.COLON_EQ);
+      body = parseExpression();
+      params = Collections.<Parameter>emptyList();
+      hasEagerValue = true;
+    } else if (at(Type.ARROW)) {
+      params = new ArrayList<Parameter>();
+      body = parseFunctionBody(false);
+      hasEagerValue = false;
+    } else {
+      throw new SyntaxError(getCurrent());
+    }
+    return new Tree.New.Field(params, name, body, hasEagerValue);
   }
 
   private Tree.Expression parseNewExpression() throws SyntaxError {
@@ -418,6 +431,7 @@ public class Parser {
    *   -> <block>
    *   -> "null" | "true" | "false"
    *   -> <new>
+   *   -> "native" "(" <id> ")"
    */
   private Tree.Expression parseAtomicExpression() throws SyntaxError {
     Token current = getCurrent();
@@ -456,6 +470,10 @@ public class Parser {
     case STRING:
       String value = expect(Type.STRING);
       return new Tree.Text(value);
+    case INTERNAL:
+      expect(Type.INTERNAL);
+      String name = expect(Type.STRING);
+      return new Tree.Internal(name);
     default:
       throw new SyntaxError(current);
     }
