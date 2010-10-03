@@ -2,7 +2,7 @@ package org.neutrino.pib;
 
 import java.util.List;
 
-import org.neutrino.pib.Opcode.ArgumentType;
+import org.neutrino.pib.Opcode.ArgType;
 import org.neutrino.pib.Opcode.OpcodeInfo;
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
@@ -43,12 +43,12 @@ public class CodeBundle implements ISeedable {
       OpcodeInfo info = Opcode.getInfo(op);
       assert info != null : "Unknown opcode " + op;
       buf.append(info.getName()).append("(");
-      ArgumentType[] args = info.getArguments();
+      ArgType[] args = info.getArguments();
       for (int i = 0; i < args.length; i++) {
         if (i > 0)
           buf.append(", ");
         int value = code[pc + 1 + i];
-        ArgumentType type = args[i];
+        ArgType type = args[i];
         switch (type) {
         case LITERAL:
           buf.append(literals.get(value));

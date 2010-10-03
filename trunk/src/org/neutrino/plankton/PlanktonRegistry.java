@@ -1,6 +1,8 @@
 package org.neutrino.plankton;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -8,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.neutrino.plankton.PMap.Thunk;
+import org.neutrino.plankton.annotations.Factory;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
 
@@ -32,11 +35,25 @@ public class PlanktonRegistry {
       this.klass = klass;
     }
 
+    @SuppressWarnings("unchecked")
+    private T createNewInstance(PValue payload) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+      try {
+        return klass.newInstance();
+      } catch (InstantiationException ie) {
+        for (Method method : klass.getDeclaredMethods()) {
+          if (method.getAnnotation(Factory.class) != null) {
+            return (T) method.invoke(null, payload);
+          }
+        }
+        return null;
+      }
+    }
+
     @Override
     public T decode(Plankton plankton, PValue payload) {
       PMap fields = (PMap) payload;
       try {
-        T result = klass.newInstance();
+        T result = createNewInstance(payload);
         for (Field field : klass.getDeclaredFields()) {
           SeedMember seedMember = field.getAnnotation(SeedMember.class);
           if (seedMember != null) {
@@ -52,6 +69,8 @@ public class PlanktonRegistry {
       } catch (InstantiationException e) {
         throw new RuntimeException(e);
       } catch (IllegalAccessException e) {
+        throw new RuntimeException(e);
+      } catch (InvocationTargetException e) {
         throw new RuntimeException(e);
       }
     }

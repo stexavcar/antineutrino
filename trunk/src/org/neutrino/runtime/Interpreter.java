@@ -9,6 +9,8 @@ import org.neutrino.pib.Opcode;
 
 public class Interpreter {
 
+  private static final RValue[] NO_VALUES = new RValue[0];
+
   private static final CodeBundle BOTTOM_FRAME_CODE = new CodeBundle(
       new byte[] { Opcode.kCall, 0, 0, Opcode.kTerminate },
       Collections.<Object>emptyList(),
@@ -64,10 +66,8 @@ public class Interpreter {
         int index = frame.code[frame.pc + 1];
         int outc = frame.code[frame.pc + 2];
         CodeBundle bundle = (CodeBundle) frame.getLiteral(index);
-        RValue[] outer;
-        if (outc == 0) {
-          outer = null;
-        } else {
+        RValue[] outer = NO_VALUES;
+        if (outc > 0) {
           outer = new RValue[outc];
           for (int i = 0; i < outc; i++)
             outer[outc - i - 1] = frame.stack.pop();
@@ -153,6 +153,27 @@ public class Interpreter {
         int index = frame.code[frame.pc + 1];
         RValue value = frame.getLocal(index);
         frame.stack.push(value);
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kNew: {
+        int protoIndex = frame.code[frame.pc + 1];
+        int outc = frame.code[frame.pc + 2];
+        RProtocol proto = (RProtocol) frame.getLiteral(protoIndex);
+        RValue[] outer = NO_VALUES;
+        if (outc > 0) {
+          outer = new RValue[outc];
+          for (int i = 0; i < outc; i++)
+            outer[outc - i - 1] = frame.stack.pop();
+        }
+        frame.stack.push(new RObject(proto, outer));
+        frame.pc += 3;
+        break;
+      }
+      case Opcode.kField: {
+        int index = frame.code[frame.pc + 1];
+        RObject obj = (RObject) frame.parent.getArgument(1, 0);
+        frame.stack.push(obj.getField(index));
         frame.pc += 2;
         break;
       }

@@ -2,13 +2,17 @@ package org.neutrino.compiler;
 
 import org.neutrino.pib.Assembler;
 import org.neutrino.pib.CodeBundle;
+import org.neutrino.pib.ModuleBuilder;
 import org.neutrino.syntax.Tree;
 
 public class Compiler {
 
-  public static CodeBundle compile(Assembler assm, Tree.Expression body) {
+  public static CodeBundle compile(ModuleBuilder module, Assembler assm,
+      Tree.Expression body) {
     LexicalAnalyzer lexicizer = new LexicalAnalyzer();
     body.accept(lexicizer);
+    ImplicitDeclarationVisitor implicitor = new ImplicitDeclarationVisitor(module);
+    body.accept(implicitor);
     CodeGenerator codegen = new CodeGenerator(assm);
     codegen.generate(body);
     return assm.getCode();

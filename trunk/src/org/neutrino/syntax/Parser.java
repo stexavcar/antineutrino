@@ -1,13 +1,13 @@
 package org.neutrino.syntax;
 
-import org.neutrino.pib.Parameter;
-import org.neutrino.runtime.RValue;
-import org.neutrino.syntax.Token.Type;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+
+import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RValue;
+import org.neutrino.syntax.Token.Type;
 
 /**
  * Plain vanilla recursive descent parser for the neutrino syntax.
@@ -385,11 +385,39 @@ public class Parser {
     return parseLongExpression();
   }
 
+  private Tree.New.Field parseNewField() throws SyntaxError {
+    String name = expect(Type.IDENT);
+    expect(Type.COLON_EQ);
+    Tree.Expression value = parseAtomicExpression();
+    return new Tree.New.Field(name, value);
+  }
+
+  private Tree.Expression parseNewExpression() throws SyntaxError {
+    assert at(Type.NEW);
+    expect(Type.NEW);
+    expect(Type.LBRACE);
+    List<Tree.New.Field> fields = new ArrayList<Tree.New.Field>();
+    if (!at(Type.RBRACE)) {
+      Tree.New.Field first = parseNewField();
+      fields.add(first);
+      while (at(Type.COMMA)) {
+        expect(Type.COMMA);
+        Tree.New.Field next = parseNewField();
+        fields.add(next);
+      }
+    }
+    expect(Type.RBRACE);
+    return new Tree.New(fields);
+  }
+
   /**
    * <atomic>
    *   -> <ident>
    *   -> <number>
    *   -> "(" <expr> ")"
+   *   -> <block>
+   *   -> "null" | "true" | "false"
+   *   -> <new>
    */
   private Tree.Expression parseAtomicExpression() throws SyntaxError {
     Token current = getCurrent();
@@ -403,6 +431,8 @@ public class Parser {
       int value = Integer.parseInt(str);
       return new Tree.Number(value);
     }
+    case NEW:
+      return parseNewExpression();
     case LPAREN: {
       expect(Type.LPAREN);
       Tree.Expression result = parseExpression();

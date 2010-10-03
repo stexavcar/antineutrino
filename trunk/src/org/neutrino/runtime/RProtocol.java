@@ -15,16 +15,17 @@ public class RProtocol extends RValue implements ISeedable {
 
   public @SeedMember List<Annotation> annotations;
   public @SeedMember String name;
-  private TypeId instanceTypeId;
+  public @SeedMember TypeId instanceTypeId;
 
   public RProtocol(List<Annotation> annotations, String name) {
     this.annotations = annotations;
     this.name = name;
+    this.instanceTypeId = createTypeId();
   }
 
   public RProtocol() { }
 
-  public void initialize() {
+  private TypeId createTypeId() {
     String key = name;
     for (Annotation annot : annotations) {
       if (annot.getTag().equals(Native.ANNOTATION)) {
@@ -32,11 +33,16 @@ public class RProtocol extends RValue implements ISeedable {
         break;
       }
     }
-    this.instanceTypeId = TypeId.get(key);
+    return TypeId.get(key);
+  }
+
+  public void initialize() { }
+
+  public String getName() {
+    return name;
   }
 
   public TypeId getInstanceTypeId() {
-    assert this.instanceTypeId != null;
     return this.instanceTypeId;
   }
 

@@ -95,12 +95,12 @@ public class Source {
 
     @Override
     public void visitDefinition(Definition that) {
-      CodeBuilder<?> builder = module.createDefinition(that);
+      CodeBuilder builder = module.createDefinition(that);
       Annotation nathive = that.getAnnotation(Native.ANNOTATION);
       if (nathive != null) {
         Compiler.compileNativeLambda(builder.getAssembler(), that);
       } else {
-        Compiler.compile(builder.getAssembler(), that.getValue());
+        Compiler.compile(module, builder.getAssembler(), that.getValue());
       }
     }
 
@@ -111,12 +111,13 @@ public class Source {
 
     @Override
     public void visitMethodDefinition(Method that) {
-      CodeBuilder<?> builder = module.createMethod(that);
+      CodeBuilder builder = module.createMethod(that.getAnnotations(),
+          that.getName(), that.getParameters());
       Annotation nathive = that.getAnnotation(Native.ANNOTATION);
       if (nathive != null) {
         Compiler.compileNativeMethod(builder.getAssembler(), that);
       } else {
-        Compiler.compile(builder.getAssembler(), that.getBody());
+        Compiler.compile(module, builder.getAssembler(), that.getBody());
       }
     }
 

@@ -1,11 +1,12 @@
 package org.neutrino.pib;
 
-import org.neutrino.runtime.Native;
-import org.neutrino.runtime.RValue;
-
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+
+import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RProtocol;
+import org.neutrino.runtime.RValue;
 
 
 public class Assembler {
@@ -40,6 +41,11 @@ public class Assembler {
 
   public void outer(int index) {
     add(Opcode.kOuter);
+    add(index);
+  }
+
+  public void field(int index) {
+    add(Opcode.kField);
     add(index);
   }
 
@@ -80,6 +86,13 @@ public class Assembler {
 
   public void rethurn() {
     add(Opcode.kReturn);
+  }
+
+  public void nhew(RProtocol proto, int outc) {
+    int index = registerLiteral(proto);
+    add(Opcode.kNew);
+    add(index);
+    add(outc);
   }
 
   public void call(String name, int argc) {

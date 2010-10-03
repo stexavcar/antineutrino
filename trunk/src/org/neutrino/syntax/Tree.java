@@ -11,6 +11,7 @@ import org.neutrino.compiler.Symbol.LocalSymbol;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
+import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 
@@ -229,6 +230,10 @@ public class Tree {
     }
 
     public void visitText(Text that) {
+      visitExpression(that);
+    }
+
+    public void visitNew(New that) {
       visitExpression(that);
     }
 
@@ -482,6 +487,62 @@ public class Tree {
     @Override
     public void accept(ExpressionVisitor visitor) {
       visitor.visitSingleton(this);
+    }
+
+  }
+
+  public static class New extends Expression {
+
+    public static class Field {
+
+      private final String name;
+      private final Expression value;
+
+      public Field(String name, Expression value) {
+        this.name = name;
+        this.value = value;
+      }
+
+      public String getName() {
+        return name;
+      }
+
+      public Expression getValue() {
+        return value;
+      }
+
+    }
+
+    private final List<Field> fields;
+    private RProtocol protocol;
+
+    public New(List<Field> fields) {
+      this.fields = fields;
+    }
+
+    public RProtocol getProtocol() {
+      assert protocol != null;
+      return protocol;
+    }
+
+    public List<Field> getFields() {
+      return fields;
+    }
+
+    public void bind(RProtocol proto) {
+      assert protocol == null;
+      this.protocol = proto;
+    }
+
+    @Override
+    public void accept(ExpressionVisitor visitor) {
+      visitor.visitNew(this);
+    }
+
+    @Override
+    public void traverse(ExpressionVisitor visitor) {
+      for (Field field : fields)
+        field.getValue().accept(visitor);
     }
 
   }

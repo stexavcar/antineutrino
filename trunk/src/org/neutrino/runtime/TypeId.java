@@ -3,11 +3,22 @@ package org.neutrino.runtime;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TypeId {
+import org.neutrino.plankton.ISeedable;
+import org.neutrino.plankton.PMap;
+import org.neutrino.plankton.PString;
+import org.neutrino.plankton.PValue;
+import org.neutrino.plankton.Plankton;
+import org.neutrino.plankton.annotations.Factory;
+import org.neutrino.plankton.annotations.Growable;
+import org.neutrino.plankton.annotations.SeedMember;
 
+@Growable(TypeId.TAG)
+public class TypeId implements ISeedable {
+
+  static final String TAG = "org::neutrino::runtime::TypeId";
   private static Map<String, TypeId> namedTypes = new HashMap<String, TypeId>();
 
-  private final Object token;
+  public @SeedMember Object token;
 
   private TypeId(Object token) { this.token = token; }
 
@@ -20,14 +31,15 @@ public class TypeId {
     return id;
   }
 
-  public static TypeId anonymous() {
-    return new TypeId(null);
+  private static final PString TOKEN = Plankton.newString("token");
+  public static @Factory TypeId grow(PValue payload) {
+    return get(((PString) ((PMap) payload).get(TOKEN, null)).getValue());
   }
 
   @Override
   public String toString() {
     if (token == null) {
-      return "?";
+      return "*";
     } else {
       return "%" + token.toString();
     }

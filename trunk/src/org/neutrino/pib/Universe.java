@@ -20,6 +20,7 @@ import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
+import org.neutrino.runtime.TypeId;
 import org.neutrino.syntax.Annotation;
 
 /**
@@ -101,6 +102,7 @@ public class Universe implements ISeedable {
     register(Annotation.class);
     register(RString.class);
     register(Native.class);
+    register(TypeId.class);
   }};
 
   private static final Plankton PLANKTON = new Plankton(REGISTRY);
