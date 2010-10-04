@@ -40,8 +40,13 @@ public class Source {
 
   void ensureParsed() throws SyntaxError {
     if (this.code == null) {
+    	try {
       List<Token> tokens = Scanner.tokenize(contents);
       this.code = Parser.parse(tokens);
+    	} catch (SyntaxError se) {
+    		System.err.println("Parse error in " + name + ": " + se);
+    		throw se;
+    	}
     }
   }
 
