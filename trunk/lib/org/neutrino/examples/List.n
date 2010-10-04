@@ -1,0 +1,51 @@
+(* A list abstract data type
+ * TODO: Figure out how to express this as a protocol
+ *)
+
+(* ADT *)
+
+protocol Empty;
+protocol Cons;
+
+def Empty::isEmpty -> true;
+def Empty::=(other : Empty) -> true;
+
+def Cons::isEmpty -> false;
+def Cons::=(other : Empty) -> false;
+(* FIXME better with boolean and/or. Also it doesn't work *)
+def Cons::=(other : Cons) -> if this.head = other.head then this.tail = other.tail else false;
+
+
+def empty() -> new Empty;
+
+def cons(el, list) -> new {head := el, tail := list} is Cons;
+
+def head(list : Cons) -> list.head;
+
+def tail(list : Cons) -> list.tail;
+
+def print_list(list) -> map(print, list);
+
+(* HOFs *)
+
+def foldl(f, v, list : Empty) -> v;
+def foldl(f, v, list : Cons) -> foldl(f, f(v, head(list)), tail(list));
+
+def foldr(f, v, list : Empty) -> v;
+def foldr(f, v, list : Cons) -> f(head(list), foldr(f, v, tail(list)));
+
+def map(f, list : Empty) -> empty();
+def map(f, list : Cons) -> cons(f(head(list)), map(f, tail(list)));
+
+def map2(f, list) -> foldr(fn(el, l) -> cons(f(el), l), empty(), list);
+
+def take(n, list : Empty) -> empty();
+def take(n, list : Cons) -> cons(head(list), take(n-1, tail(list)));
+
+def drop(n, list : Empty) -> empty();
+def drop(n, list : Cons) -> drop(n-1, tail(list));
+
+def filter(p, list : Empty) -> empty();
+def filter(p, list : Cons) -> 
+  if p(head(list)) then cons(head(list), filter(p, tail(list)))
+  else filter(p, tail(list));
