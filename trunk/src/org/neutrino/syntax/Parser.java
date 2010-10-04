@@ -49,10 +49,10 @@ public class Parser {
 
   private String expect(Type type) throws SyntaxError {
     if (!hasMore())
-      throw new SyntaxError(new Token(Type.ERROR, "<eof>", 0, 0));
+      throw new SyntaxError(new Token(Type.ERROR, "<eof>", 0, 0), type);
     Token current = getCurrent();
     if (!current.getType().equals(type))
-      throw new SyntaxError(current);
+      throw new SyntaxError(current, type);
     String value = current.getValue();
     advance();
     return value;
