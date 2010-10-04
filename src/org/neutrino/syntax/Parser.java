@@ -237,6 +237,11 @@ public class Parser {
         params.add(new Parameter("this", name));
         params.addAll(argParams);
         return new Tree.Method(annots, method, params, body);
+      } else if (at(Type.IS)) {
+        expect(Type.IS);
+        String parent = expect(Type.IDENT);
+        expect(Type.SEMI);
+        return new Tree.Inheritance(annots, name, parent);
       } else if (at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE)) {
         List<Parameter> params = parseParameters();
         Tree.Expression body = parseFunctionBody(true);
@@ -414,19 +419,34 @@ public class Parser {
   private Tree.Expression parseNewExpression() throws SyntaxError {
     assert at(Type.NEW);
     expect(Type.NEW);
-    expect(Type.LBRACE);
     List<Tree.New.Field> fields = new ArrayList<Tree.New.Field>();
-    if (!at(Type.RBRACE)) {
-      Tree.New.Field first = parseNewField();
-      fields.add(first);
+    boolean implicitIs = !at(Type.LBRACE);
+    if (at(Type.LBRACE)) {
+      expect(Type.LBRACE);
+      if (!at(Type.RBRACE)) {
+        Tree.New.Field first = parseNewField();
+        fields.add(first);
+        while (at(Type.COMMA)) {
+          expect(Type.COMMA);
+          Tree.New.Field next = parseNewField();
+          fields.add(next);
+        }
+      }
+      expect(Type.RBRACE);
+    }
+    List<String> protocols = new ArrayList<String>();
+    if (implicitIs || at(Type.IS)) {
+      if (!implicitIs)
+        expect(Type.IS);
+      String first = expect(Type.IDENT);
+      protocols.add(first);
       while (at(Type.COMMA)) {
         expect(Type.COMMA);
-        Tree.New.Field next = parseNewField();
-        fields.add(next);
+        String next = expect(Type.IDENT);
+        protocols.add(next);
       }
     }
-    expect(Type.RBRACE);
-    return new Tree.New(fields);
+    return new Tree.New(fields, protocols);
   }
 
   /**

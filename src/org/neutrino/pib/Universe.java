@@ -3,6 +3,8 @@ package org.neutrino.pib;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -84,6 +86,20 @@ public class Universe implements ISeedable {
     return (parallelUniverse == null)
         ? null
         : parallelUniverse.getGlobal(name, inter);
+  }
+
+  public List<TypeId> getParents(TypeId id) {
+    String token = id.token;
+    List<TypeId> parents = new ArrayList<TypeId>();
+    addParents(parents, token);
+    return parents;
+  }
+
+  private void addParents(List<TypeId> out, String token) {
+    for (Module module : this.modules.values())
+      module.addParents(out, token);
+    if (parallelUniverse != null)
+      parallelUniverse.addParents(out, token);
   }
 
   public Lambda lookupMethod(String name, int argc, Frame frame) {

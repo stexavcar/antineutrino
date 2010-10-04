@@ -1,0 +1,43 @@
+def test_protocols() {
+  test_simple_inheritance();
+  test_this();
+  test_mixed_operator_comparison();
+}
+
+protocol A;
+def A::foo() -> 1;
+def A::bar() -> 3;
+
+protocol B;
+def B is A;
+def B::foo() -> 2;
+
+def test_simple_inheritance() {
+  print("Testing simple inheritance");
+  def a := new A;
+  assert_equal(1, a.foo());
+  assert_equal(3, a.bar());
+  def b := new B;
+  assert_equal(2, b.foo());
+  assert_equal(3, b.bar());
+  def c := new { baz := 4, bar := 5 } is B;
+  assert_equal(2, c.foo());
+  assert_equal(5, c.bar());
+  assert_equal(4, c.baz());
+}
+
+protocol Point;
+def Point::size() -> (this.x * this.x) + (this.y * this.y);
+
+def test_this() {
+  print("Testing this");
+  def p := new { x := 3, y := 4 } is Point;
+  assert_equal(25, p.size());
+}
+
+def test_mixed_operator_comparison() {
+  print("Testing mixed operator comparison");
+  assert_false(1 = "1");
+  assert_false(4 = null);
+  assert_false(null = "x");
+}

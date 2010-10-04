@@ -1,8 +1,12 @@
+protocol Object;
+
 def print(obj) -> internal "print";
 
 def select(cond, then_part, else_part) -> internal "select";
 
 def fail() -> internal "fail";
+
+def Object::=(that) -> false;
 
 def loop(f) {
   f();

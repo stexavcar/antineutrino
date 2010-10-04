@@ -46,7 +46,9 @@ public class Tree {
 
     void visitProtocol(Protocol that);
 
-    void visitMethodDefinition(Method methodDefinition);
+    void visitMethodDefinition(Method that);
+
+    void visitInheritance(Inheritance that);
 
   }
 
@@ -132,6 +134,38 @@ public class Tree {
     public String toString() {
       String an = annotationsToString(getAnnotations());
       return "(protocol " + an + name + ")";
+    }
+
+  }
+
+  public static class Inheritance extends Declaration {
+
+    private final List<Annotation> annots;
+    private final String name;
+    private final String parent;
+
+    public Inheritance(List<Annotation> annots, String name, String parent) {
+      this.annots = annots;
+      this.name = name;
+      this.parent = parent;
+    }
+
+    public String getSub() {
+      return name;
+    }
+
+    public String getSuper() {
+      return parent;
+    }
+
+    @Override
+    public void accept(DeclarationVisitor visitor) {
+      visitor.visitInheritance(this);
+    }
+
+    @Override
+    public List<Annotation> getAnnotations() {
+      return annots;
     }
 
   }
@@ -383,7 +417,8 @@ public class Tree {
 
     public static Expression create(List<Parameter> params, Expression body) {
       New.Field call = new New.Field(params, "()", body, false);
-      return new New(Collections.singletonList(call));
+      return new New(Collections.singletonList(call),
+          Collections.<String>emptyList());
     }
 
     public static Expression createCall(Expression fun, List<Expression> args) {
@@ -563,11 +598,17 @@ public class Tree {
     }
 
     private final List<Field> fields;
+    private final List<String> protocols;
     private RProtocol protocol;
     private List<Symbol> captures;
 
-    public New(List<Field> fields) {
+    public New(List<Field> fields, List<String> protocols) {
       this.fields = fields;
+      this.protocols = protocols;
+    }
+
+    public List<String> getProtocols() {
+      return protocols;
     }
 
     public void setCaptures(List<Symbol> captures) {
