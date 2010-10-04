@@ -18,9 +18,9 @@ public class TypeId implements ISeedable {
   static final String TAG = "org::neutrino::runtime::TypeId";
   private static Map<String, TypeId> namedTypes = new HashMap<String, TypeId>();
 
-  public @SeedMember Object token;
+  public @SeedMember String token;
 
-  private TypeId(Object token) { this.token = token; }
+  private TypeId(String token) { this.token = token; }
 
   public static TypeId get(String name) {
     TypeId id = namedTypes.get(name);

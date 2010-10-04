@@ -19,6 +19,7 @@ public class ModuleBuilder {
   private final Map<String, CodeBuilder> defs = new TreeMap<String, CodeBuilder>();
   private final Map<String, RProtocol> protos = new HashMap<String, RProtocol>();
   private final List<MethodInfo> methods = new ArrayList<MethodInfo>();
+  private final Map<String, List<String>> inheritance = new HashMap<String, List<String>>();
 
   private static class MethodInfo {
 
@@ -36,6 +37,15 @@ public class ModuleBuilder {
   }
 
   public ModuleBuilder(String name) {
+  }
+
+  public void declareInheritance(String sub, String shuper) {
+    List<String> locals = inheritance.get(sub);
+    if (locals == null) {
+      locals = new ArrayList<String>();
+      inheritance.put(sub, locals);
+    }
+    locals.add(shuper);
   }
 
   public CodeBuilder createDefinition(Tree.Definition def) {
@@ -77,7 +87,7 @@ public class ModuleBuilder {
       methods.add(new RMethod(builder.getAnnotations(), info.name,
           info.params, bundle));
     }
-    return new Module(elms, protos, methods);
+    return new Module(elms, protos, methods, inheritance);
   }
 
 }

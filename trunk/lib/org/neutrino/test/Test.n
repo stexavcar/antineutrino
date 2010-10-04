@@ -8,8 +8,11 @@ def test_main() {
   test_refs();
   test_objects();
   test_loops();
+  test_protocols();
 }
 
 def assert_true(cond) -> if cond.not() then fail();
+
+def assert_false(cond) -> assert_true(cond.not());
 
 def assert_equal(expected, found) -> assert_true(expected = found);

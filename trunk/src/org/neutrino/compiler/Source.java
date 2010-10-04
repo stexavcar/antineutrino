@@ -13,6 +13,7 @@ import org.neutrino.syntax.SyntaxError;
 import org.neutrino.syntax.Token;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Definition;
+import org.neutrino.syntax.Tree.Inheritance;
 import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.Protocol;
 
@@ -107,6 +108,11 @@ public class Source {
       CodeBuilder builder = module.createMethod(that.getAnnotations(),
           that.getName(), that.getParameters());
       Compiler.compileMethod(module, builder.getAssembler(), that);
+    }
+
+    @Override
+    public void visitInheritance(Inheritance that) {
+      module.declareInheritance(that.getSub(), that.getSuper());
     }
 
   }

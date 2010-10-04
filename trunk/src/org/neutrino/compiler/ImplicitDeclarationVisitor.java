@@ -55,6 +55,8 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
         assm.setLocalCount(field.getLocalCount());
       }
     }
+    for (String shuper : that.getProtocols())
+      module.declareInheritance(proto.getName(), shuper);
   }
 
 }

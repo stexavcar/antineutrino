@@ -14,6 +14,7 @@ import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
+import org.neutrino.runtime.TypeId;
 import org.neutrino.syntax.Annotation;
 
 @Growable(Module.TAG)
@@ -23,16 +24,18 @@ public class Module implements ISeedable {
 
   public @SeedMember Map<String, Binding> defs;
   public @SeedMember Map<String, RProtocol> protos;
+  public @SeedMember Map<String, List<String>> inheritance;
   public @SeedMember List<RMethod> methods;
 
   private final Map<String, RValue> globals = new HashMap<String, RValue>();
   private Universe universe;
 
   public Module(Map<String, Binding> defs, Map<String, RProtocol> protos,
-      List<RMethod> methods) {
+      List<RMethod> methods, Map<String, List<String>> inheritance) {
     this.defs = defs;
     this.protos = protos;
     this.methods = methods;
+    this.inheritance = inheritance;
   }
 
   public Module() { }
@@ -86,6 +89,14 @@ public class Module implements ISeedable {
       globals.put(name, result);
     }
     return result;
+  }
+
+  public void addParents(List<TypeId> out, String token) {
+    List<String> parents = inheritance.get(token);
+    if (parents != null) {
+      for (String parent : parents)
+        out.add(TypeId.get(parent));
+    }
   }
 
 }
