@@ -280,6 +280,15 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("are_identical") static final Impl ARE_IDENTICAL = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RValue self = args.getThis();
+      RValue that = args.getArgument(0);
+      return RBoolean.get(self == that);
+    }
+  };
+
   private static final Map<String, Impl> IMPLS = new HashMap<String, Impl>() {{
     try {
       for (Field field : Native.class.getDeclaredFields()) {

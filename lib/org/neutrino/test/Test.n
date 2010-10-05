@@ -9,6 +9,7 @@ def test_main() {
   test_objects();
   test_loops();
   test_protocols();
+  test_lambdas();
 }
 
 def assert_true(cond) -> if cond.not() then fail();
