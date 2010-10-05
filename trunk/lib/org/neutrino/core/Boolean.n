@@ -1,3 +1,3 @@
 @native("bool") protocol Boolean;
 
-def Boolean::not() -> internal "!bool";
+def Boolean::negate() -> internal "!bool";

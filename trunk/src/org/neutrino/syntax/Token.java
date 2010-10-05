@@ -50,6 +50,7 @@ public class Token {
     ELSE("else", Category.KEYWORD),
     AND("and", Category.KEYWORD),
     OR("or", Category.KEYWORD),
+    NOT("not", Category.KEYWORD),
     IS("is", Category.KEYWORD),
     INTERNAL("internal", Category.KEYWORD),
     WITH_1CC("with_1cc", Category.KEYWORD),

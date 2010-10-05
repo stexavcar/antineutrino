@@ -8,6 +8,7 @@ import java.util.List;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Token.Type;
+import org.neutrino.syntax.Tree.If;
 
 /**
  * Plain vanilla recursive descent parser for the neutrino syntax.
@@ -352,6 +353,43 @@ public class Parser {
     return current;
   }
 
+  private Tree.Expression parseNotExpression() throws SyntaxError {
+    if (at(Type.NOT)) {
+      expect(Type.NOT);
+      Tree.Expression inner = parseNotExpression();
+      return new Tree.Call("negate", Collections.singletonList(inner));
+    } else {
+      return parseOperatorExpression();
+    }
+  }
+
+  private Tree.Expression parseAndExpression() throws SyntaxError {
+    Tree.Expression current = parseNotExpression();
+    while (at(Type.AND)) {
+      expect(Type.AND);
+      Tree.Expression next = parseNotExpression();
+      current = If.create(current, next,
+          new Tree.Singleton(Tree.Singleton.Type.FALSE));
+    }
+    return current;
+  }
+
+  private Tree.Expression parseOrExpression() throws SyntaxError {
+    Tree.Expression current = parseAndExpression();
+    while (at(Type.OR)) {
+      expect(Type.OR);
+      Tree.Expression next = parseAndExpression();
+      current = If.create(current,
+          new Tree.Singleton(Tree.Singleton.Type.TRUE),
+          next);
+    }
+    return current;
+  }
+
+  private Tree.Expression parseLogicalExpression() throws SyntaxError {
+    return parseOrExpression();
+  }
+
   /**
    * <longexpr>
    *   -> "fn" <args> <funbody>
@@ -366,7 +404,7 @@ public class Parser {
       return Tree.Lambda.create(params, body);
     } else if (at(Type.IF)) {
       expect(Type.IF);
-      Tree.Expression cond = parseOperatorExpression();
+      Tree.Expression cond = parseLogicalExpression();
       expect(Type.THEN);
       Tree.Expression thenPart = parseLongExpression();
       Tree.Expression elsePart;
@@ -384,7 +422,7 @@ public class Parser {
       Tree.Expression value = parseLongExpression();
       return Tree.With1Cc.create(name, value);
     } else {
-      return parseOperatorExpression();
+      return parseLogicalExpression();
     }
   }
 

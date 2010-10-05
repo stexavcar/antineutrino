@@ -1,0 +1,13 @@
+def test_logical_operators() {
+  print("Testing logical operators");
+  assert_equal(true, true and true or true);
+  assert_equal(true, true and true or false);
+  assert_equal(true, true and false or true);
+  assert_equal(false, true and false or false);
+  assert_equal(true, false and true or true);
+  assert_equal(false, false and true or false);
+  assert_equal(true, false and false or true);
+  assert_equal(false, false and false or false);  
+  assert_equal(false, not false and false);
+  assert_equal(true, not false or true);
+}
