@@ -16,7 +16,7 @@ def test_integer_operators() {
 def test_singletons() {
   print("Testing singletons");
   assert_true(true);
-  assert_true(false.not());
+  assert_true(false.negate());
 }
 
 def test_conditionals() {

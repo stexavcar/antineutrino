@@ -10,10 +10,11 @@ def test_main() {
   test_loops();
   test_protocols();
   test_lambdas();
+  test_logical_operators();
 }
 
-def assert_true(cond) -> if cond.not() then fail();
+def assert_true(cond) -> if not cond then fail();
 
-def assert_false(cond) -> assert_true(cond.not());
+def assert_false(cond) -> assert_true(not cond);
 
 def assert_equal(expected, found) -> assert_true(expected = found);

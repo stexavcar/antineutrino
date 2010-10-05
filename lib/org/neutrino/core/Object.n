@@ -1,0 +1,5 @@
+protocol Object;
+
+def are_identical(a, b) -> internal "are_identical";
+
+def Object::=(that) -> are_identical(this, that);
