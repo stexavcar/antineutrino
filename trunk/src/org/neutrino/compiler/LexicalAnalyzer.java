@@ -22,6 +22,10 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor {
     scope = methodScope;
   }
 
+  public int getLocalCount() {
+    return methodScope.getLocalCount();
+  }
+
   private void visitLazyField(New.Field field) {
     MethodScope prevMethodScope = methodScope;
     Scope prevScope = scope;

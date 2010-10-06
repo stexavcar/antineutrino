@@ -1,4 +1,5 @@
-def test_refs() {
+def LanguageTest::test_refs() {
+  this.on_start("references");
   def r := ref(4);
   assert_equal(4, r.get());
   assert_equal(5, r.set(5));

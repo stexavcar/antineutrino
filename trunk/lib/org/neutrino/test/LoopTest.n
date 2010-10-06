@@ -1,5 +1,5 @@
-def test_loops() {
-  print("Testing loops");
+def LanguageTest::test_loops() {
+  this.on_start("loops");
   def i := ref(0);
   def x := with_1cc break -> loop(fn () {
     if i.get() = 10 then {

@@ -1,11 +1,11 @@
-def test_methods() {
-  test_simple_multimethods();
-  test_first_level_arguments();
-  test_higher_level_arguments();
+def LanguageTest::test_methods() {
+  this.test_simple_multimethods();
+  this.test_first_level_arguments();
+  this.test_higher_level_arguments();
 }
 
-def test_simple_multimethods() {
-  print("Testing simple multimethods");
+def LanguageTest::test_simple_multimethods() {
+  this.on_start("simple multimethods");
   assert_true((1 + 1) = 2);
   assert_true(("1" + "1") = "11");
 }
@@ -15,8 +15,8 @@ def first(x, y) -> x;
 def second(x, y) -> y;
 def third(x, y, z) -> z;
 
-def test_first_level_arguments() {
-  print("Testing first level arguments");
+def LanguageTest::test_first_level_arguments() {
+  this.on_start("first level arguments");
   assert_true(id(4) = 4);
   assert_true(id(5) = 5);
   assert_true(first(2, 3) = 2);
@@ -32,8 +32,8 @@ def minus2(a, b) -> fn () -> a - b;
 
 def minus3(a) -> fn() -> fn (b) -> a - b;
 
-def test_higher_level_arguments() {
-  print("Testing second level arguments");
+def LanguageTest::test_higher_level_arguments() {
+  this.on_start("second level arguments");
   assert_true(minus(1)(1) = 0);
   assert_true(minus(2)(1) = 1);
   assert_true(minus2(1, 1)() = 0);

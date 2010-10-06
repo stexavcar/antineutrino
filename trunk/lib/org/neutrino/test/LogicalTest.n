@@ -1,5 +1,5 @@
-def test_logical_operators() {
-  print("Testing logical operators");
+def LanguageTest::test_logical_operators() {
+  this.on_start("logical operators");
   assert_equal(true, true and true or true);
   assert_equal(true, true and true or false);
   assert_equal(true, true and false or true);
