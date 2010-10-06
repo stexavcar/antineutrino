@@ -50,7 +50,7 @@ public class CodeBundle implements ISeedable {
         int value = code[pc + 1 + i];
         ArgType type = args[i];
         switch (type) {
-        case LITERAL:
+        case LIT:
           buf.append(literals.get(value));
           break;
         default:

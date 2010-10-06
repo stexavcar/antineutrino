@@ -1,6 +1,7 @@
 package org.neutrino.runtime;
 
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import org.neutrino.pib.CodeBundle;
@@ -163,6 +164,15 @@ public class Interpreter {
         }
         frame.stack.push(new RObject(proto, outer));
         frame.pc += 3;
+        break;
+      }
+      case Opcode.kNewArray: {
+        int elmc = frame.code[frame.pc + 1];
+        RValue[] elms = new RValue[elmc];
+        for (int i = 0; i < elmc; i++)
+          elms[elmc - i - 1] = frame.stack.pop();
+        frame.stack.push(new RObjectArray(Arrays.asList(elms)));
+        frame.pc += 2;
         break;
       }
       case Opcode.kField: {

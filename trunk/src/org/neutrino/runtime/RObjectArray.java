@@ -21,6 +21,10 @@ public class RObjectArray extends RArray {
     return elements.get(index);
   }
 
+  public int getLength() {
+    return elements.size();
+  }
+
   @Override
   public String toString() {
     StringBuilder buf = new StringBuilder().append("#[");

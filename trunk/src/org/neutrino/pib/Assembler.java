@@ -83,6 +83,11 @@ public class Assembler {
     add(outc);
   }
 
+  public void newArray(int elmc) {
+    add(Opcode.kNewArray);
+    add(elmc);
+  }
+
   public void call(String name, int argc) {
     int nameIndex = registerLiteral(name);
     add(Opcode.kCall);

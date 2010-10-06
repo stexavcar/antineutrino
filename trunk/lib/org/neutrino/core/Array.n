@@ -1,6 +1,8 @@
-@native("array") protocol Array;
+@native("array") protocol PrimitiveArray;
 
-def Array::get(index: Integer) -> internal "array[]";
+def PrimitiveArray::get(index: Integer) -> internal "array[]";
+
+def PrimitiveArray::length() -> internal "array.length";
 
 @native("byte_array") protocol ByteArray;
 
