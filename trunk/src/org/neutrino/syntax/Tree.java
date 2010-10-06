@@ -464,10 +464,15 @@ public class Tree {
 
   public static class Lambda {
 
-    public static Expression create(List<Parameter> params, Expression body) {
-      New.Field call = new New.Field(params, "()", body, false);
+    public static Expression create(String methodName, List<Parameter> params,
+        Expression body) {
+      New.Field call = new New.Field(params, methodName, body, false);
       return new New(Collections.singletonList(call),
           Collections.<String>emptyList(), "Lambda");
+    }
+
+    public static Expression create(List<Parameter> params, Expression body) {
+      return create("()", params, body);
     }
 
     public static Expression createCall(Expression fun, List<Expression> args) {

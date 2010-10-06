@@ -1,8 +1,8 @@
 def LanguageTest::test_arrays() {
   this.on_start("arrays");
   def e := #[1, 2, 3];
-  assert_equal(3, e.length());
-  assert_equal(1, e.get(0));
-  assert_equal(2, e.get(1));
-  assert_equal(3, e.get(2));  
+  assert_equal(3, e.length);
+  assert_equal(1, e[0]);
+  assert_equal(2, e[1]);
+  assert_equal(3, e[2]);  
 }
