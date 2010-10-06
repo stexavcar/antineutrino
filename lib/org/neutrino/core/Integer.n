@@ -22,12 +22,11 @@ protocol Interval;
 def new_interval(from, to) -> new {from := from, to := to} is Interval;
 
 def Interval::for_each(fun) {
-  def i := ref(this.from());
+  ref i := this.from();
   with_1cc leave -> loop(fn () {
-    def current := i.get();
-    if current > this.to() then
-      leave.fire(current);
-    fun(current);
-    i.set(current + 1);
+    if i > this.to() then
+      leave.fire(i);
+    fun(i);
+    i := i + 1;
   });
 }

@@ -274,6 +274,10 @@ public class Tree {
       visitExpression(that);
     }
 
+    public void visitAssignment(Assignment that) {
+      visitExpression(that);
+    }
+
   }
 
   public static class Identifier extends Expression {
@@ -310,6 +314,47 @@ public class Tree {
     @Override
     public void accept(ExpressionVisitor visitor) {
       visitor.visitIdentifier(this);
+    }
+
+  }
+
+  public static class Assignment extends Expression {
+
+    private final String name;
+    private final Tree.Expression value;
+    private Symbol symbol;
+
+    public Assignment(String name, Tree.Expression value) {
+      this.name = name;
+      this.value = value;
+    }
+
+    public Symbol getSymbol() {
+      assert symbol != null;
+      return symbol;
+    }
+
+    public String getName() {
+      return this.name;
+    }
+
+    public Tree.Expression getValue() {
+      return this.value;
+    }
+
+    public void bind(Symbol symbol) {
+      assert this.symbol == null;
+      this.symbol = symbol;
+    }
+
+    @Override
+    public void accept(ExpressionVisitor visitor) {
+      visitor.visitAssignment(this);
+    }
+
+    @Override
+    public void traverse(ExpressionVisitor visitor) {
+      value.accept(visitor);
     }
 
   }
@@ -684,17 +729,24 @@ public class Tree {
     private final String name;
     private final Expression value;
     private final Expression body;
+    private final boolean isReference;
     private LocalSymbol symbol;
 
-    public LocalDefinition(String name, Expression value, Expression body) {
+    public LocalDefinition(String name, Expression value, Expression body,
+        boolean isReference) {
       this.name = name;
       this.value = value;
       this.body = body;
+      this.isReference = isReference;
     }
 
     public void bind(LocalSymbol symbol) {
       assert this.symbol == null;
       this.symbol = symbol;
+    }
+
+    public boolean isReference() {
+      return this.isReference;
     }
 
     public LocalSymbol getSymbol() {

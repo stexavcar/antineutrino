@@ -3,14 +3,14 @@ def sum(n) -> if n = 1 then 1 else n + sum(n-1);
 
 (* Sums 1..n with a loop *)
 def isum(n) {
-  def n := ref(n);
-  def s := ref(0);
+  ref n := n;
+  ref s := 0;
   with_1cc break -> loop(fn() {
-    if n.get() < 1 then 
+    if n < 1 then 
         break.fire(null)
     else {
-      s.set(s.get() + n.get());
-      n.set(n.get() - 1);
+      s := s + n;
+      n := n - 1;
     }
   });
   s.get();
@@ -39,18 +39,18 @@ def fastfib(n) {
 
 (* Calculates the nth fibbonacci number with a loop *)
 def ifib(n) {
-  def n := ref(n - 1);
-  def s1 := ref(0);
-  def s2 := ref(1);
+  ref n := n - 1;
+  ref s1 := 0;
+  ref s2 := 1;
   with_1cc break -> loop(fn() {
-    if n.get() < 1 then 
+    if n < 1 then 
         break.fire(null)
     else {
-      def tmp := s1.get() + s2.get();
-      s1.set(s2.get());
-      s2.set(tmp);
-      n.set(n.get() - 1);
+      def tmp := s1 + s2;
+      s1 := s2;
+      s2 := tmp;
+      n := n - 1;
     }
   });
-  s2.get();
+  s2;
 }
