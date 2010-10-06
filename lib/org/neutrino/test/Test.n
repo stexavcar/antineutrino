@@ -13,15 +13,20 @@ def kPrintProgress := false;
 @entry_point("test")
 def test_main() {
   def counter := new_ref(0);
-  def language_tests := new_language_test(counter);
-  language_tests.run();
-  def utils_tests := new_utils_test(counter);
-  utils_tests.run();
+  def suites := #[
+    new_language_test(counter),
+    new_utils_test(counter),
+    new_example_test(counter)
+  ];
+  (0 .. suites.length).for_each(fn (i) -> suites[i].run());
   print("Ran " + counter.get().to_string() + " tests.");
 }
 
-def assert_true(cond) -> if not cond then fail();
+def assert_true(cond) -> if not cond then fail("");
 
 def assert_false(cond) -> assert_true(not cond);
 
-def assert_equal(expected, found) -> assert_true(expected = found);
+def assert_equal(expected, found) {
+  if not expected = found then
+    fail(expected.to_string() + " != " + found.to_string())
+}

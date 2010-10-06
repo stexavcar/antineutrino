@@ -1,0 +1,4 @@
+def ExampleTest::test_hanoi() {
+  this.on_start("hanoi");
+  assert_equal(127, run_hanoi(7));
+}
