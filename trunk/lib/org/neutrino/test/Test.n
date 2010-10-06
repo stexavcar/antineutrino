@@ -1,7 +1,7 @@
 (* Container for all the language tests. *)
 protocol LanguageTest;
 
-def new_language_test -> new { count := new_ref(0) } is LanguageTest;
+def new_language_test -> new LanguageTest { count := new_ref(0) };
 
 def kPrintProgress := false;
 

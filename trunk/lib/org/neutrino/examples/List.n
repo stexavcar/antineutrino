@@ -18,7 +18,7 @@ def Cons::=(other : Cons) -> if this.head = other.head then this.tail = other.ta
 
 def empty() -> new Empty;
 
-def cons(el, list) -> new {head := el, tail := list} is Cons;
+def cons(el, list) -> new Cons {head := el, tail := list};
 
 def head(list : Cons) -> list.head;
 
