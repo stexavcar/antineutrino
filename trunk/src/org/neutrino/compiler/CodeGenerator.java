@@ -47,12 +47,26 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
 
   @Override
   public void visitIdentifier(Tree.Identifier that) {
-    that.getSymbol().emit(assm);
+    that.getSymbol().emitLoad(assm);
+    if (that.getSymbol().isReference())
+      assm.call("get", 1);
+  }
+
+  @Override
+  public void visitAssignment(Tree.Assignment that) {
+    assert that.getSymbol().isReference();
+    that.getSymbol().emitLoad(assm);
+    that.getValue().accept(this);
+    assm.call("set", 2);
   }
 
   @Override
   public void visitLocalDefinition(Tree.LocalDefinition that) {
+    if (that.isReference())
+      assm.global("new_ref");
     that.getValue().accept(this);
+    if (that.isReference())
+      assm.call("()", 2);
     int index = that.getSymbol().getIndex();
     assm.storeLocal(index);
     that.getBody().accept(this);
@@ -113,7 +127,7 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
       }
     }
     for (Symbol symbol : that.getCaptures()) {
-      symbol.emit(assm);
+      symbol.emitLoad(assm);
       outerCount++;
     }
     assm.nhew(that.getProtocol(), outerCount);

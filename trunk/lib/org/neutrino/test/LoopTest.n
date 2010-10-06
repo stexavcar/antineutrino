@@ -5,7 +5,7 @@ def LanguageTest::test_loops() {
 
 def LanguageTest::test_raw_loops() {
   this.on_start("raw loops");
-  def i := ref(0);
+  def i := new_ref(0);
   def x := with_1cc break -> loop(fn () {
     if i.get() = 10 then {
       break.fire("k")
@@ -21,10 +21,11 @@ def LanguageTest::test_raw_loops() {
 
 def LanguageTest::test_intervals() {
   this.on_start("intervals");
-  def expected := ref(0);
-  (0 .. 10).for_each(fn (i) {
-    assert_equal(i, expected.get());
-    expected.set(i + 1);
+  ref expected := 0;
+  def r := (0 .. 10).for_each(fn (i) {
+    assert_equal(i, expected);
+    expected := i + 1;
   });
-  assert_equal(10, expected.get());
+  assert_equal(10, expected);
+  assert_equal(10, r);
 }

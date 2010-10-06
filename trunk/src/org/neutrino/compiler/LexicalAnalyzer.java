@@ -4,6 +4,7 @@ import org.neutrino.compiler.Scope.CapturingScope;
 import org.neutrino.compiler.Scope.LocalScope;
 import org.neutrino.compiler.Scope.MethodScope;
 import org.neutrino.syntax.Tree;
+import org.neutrino.syntax.Tree.Assignment;
 import org.neutrino.syntax.Tree.Identifier;
 import org.neutrino.syntax.Tree.Internal;
 import org.neutrino.syntax.Tree.LocalDefinition;
@@ -80,11 +81,21 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor {
   }
 
   @Override
+  public void visitAssignment(Assignment that) {
+    that.getValue().accept(this);
+    String name = that.getName();
+    Symbol symbol = scope.lookup(name);
+    assert symbol.isReference() : "Cannot assign to " + name;
+    that.bind(symbol);
+  }
+
+  @Override
   public void visitLocalDefinition(LocalDefinition that) {
     that.getValue().accept(this);
     Scope prevScope = scope;
     try {
-      LocalScope local = Scope.localScope(that.getName(), methodScope.nextLocal(), prevScope);
+      LocalScope local = Scope.localScope(that, methodScope.nextLocal(),
+          prevScope);
       that.bind(local.getSymbol());
       scope = local;
       that.getBody().accept(this);

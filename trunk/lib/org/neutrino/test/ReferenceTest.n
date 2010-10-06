@@ -1,7 +1,28 @@
 def LanguageTest::test_refs() {
-  this.on_start("references");
-  def r := ref(4);
+  this.test_raw_refs();
+  this.test_simple_ref_syntax();
+}
+
+def LanguageTest::test_raw_refs() {
+  this.on_start("raw references");
+  def r := new_ref(4);
   assert_equal(4, r.get());
   assert_equal(5, r.set(5));
   assert_equal(5, r.get());
+}
+
+def LanguageTest::test_simple_ref_syntax() {
+  this.on_start("simple ref syntax");
+  ref i := 0;
+  assert_equal(0, i);
+  def inc -> i := i + 1;
+  inc();
+  assert_equal(1, i);
+  inc();
+  assert_equal(2, i);
+  def cap := new { k := i };
+  assert_equal(2, cap.k());
+  inc();
+  assert_equal(3, i);
+  assert_equal(2, cap.k());
 }

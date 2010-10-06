@@ -4,7 +4,7 @@ import org.neutrino.pib.Assembler;
 
 public abstract class Symbol {
 
-  public abstract void emit(Assembler assm);
+  public abstract void emitLoad(Assembler assm);
 
   /**
    * Is this symbol transient, that is, if an inner scope accesses
@@ -12,6 +12,10 @@ public abstract class Symbol {
    * be available in the outside scope.
    */
   public abstract boolean isTransient();
+
+  public boolean isReference() {
+    return false;
+  }
 
   private static class GlobalSymbol extends Symbol {
 
@@ -22,7 +26,7 @@ public abstract class Symbol {
     }
 
     @Override
-    public void emit(Assembler assm) {
+    public void emitLoad(Assembler assm) {
       assm.global(name);
     }
 
@@ -48,7 +52,7 @@ public abstract class Symbol {
     }
 
     @Override
-    public void emit(Assembler assm) {
+    public void emitLoad(Assembler assm) {
       assm.argument(argc - index);
     }
 
@@ -65,14 +69,16 @@ public abstract class Symbol {
 
   private static class OuterSymbol extends Symbol {
 
+    private final Symbol outer;
     private final int index;
 
-    public OuterSymbol(int index) {
+    public OuterSymbol(Symbol outer, int index) {
+      this.outer = outer;
       this.index = index;
     }
 
     @Override
-    public void emit(Assembler assm) {
+    public void emitLoad(Assembler assm) {
       assm.outer(index);
     }
 
@@ -81,17 +87,24 @@ public abstract class Symbol {
       return true;
     }
 
+    @Override
+    public boolean isReference() {
+      return outer.isReference();
+    }
+
   }
 
-  public static Symbol outer(int index) {
-    return new OuterSymbol(index);
+  public static Symbol outer(Symbol outerSymbol, int index) {
+    return new OuterSymbol(outerSymbol, index);
   }
 
   public static class LocalSymbol extends Symbol {
 
+    private final boolean isReference;
     private final int index;
 
-    public LocalSymbol(int index) {
+    public LocalSymbol(boolean isReference, int index) {
+      this.isReference = isReference;
       this.index = index;
     }
 
@@ -100,7 +113,7 @@ public abstract class Symbol {
     }
 
     @Override
-    public void emit(Assembler assm) {
+    public void emitLoad(Assembler assm) {
       assm.local(index);
     }
 
@@ -109,10 +122,15 @@ public abstract class Symbol {
       return true;
     }
 
+    @Override
+    public boolean isReference() {
+      return isReference;
+    }
+
   }
 
-  public static LocalSymbol local(int index) {
-    return new LocalSymbol(index);
+  public static LocalSymbol local(boolean isReference, int index) {
+    return new LocalSymbol(isReference, index);
   }
 
 }

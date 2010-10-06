@@ -75,13 +75,26 @@ public class Parser {
     return result;
   }
 
+  boolean atDefinitionStart() {
+    return at(Type.DEF) || at(Type.REF);
+  }
+
+  boolean consumeDefinitionStart() throws SyntaxError {
+    if (at(Type.REF)) {
+      expect(Type.REF);
+      return true;
+    } else {
+      expect(Type.DEF);
+      return false;
+    }
+  }
 
   /**
    * <statement>
    */
   private Tree.Expression parseStatement() throws SyntaxError {
-    if (at(Type.DEF)) {
-      expect(Type.DEF);
+    if (atDefinitionStart()) {
+      boolean isReference = consumeDefinitionStart();
       String name = expect(Type.IDENT);
       Tree.Expression value;
       if (at(Type.COLON_EQ)) {
@@ -104,7 +117,7 @@ public class Parser {
       } else {
         body = new Tree.Singleton(Tree.Singleton.Type.NULL);
       }
-      return new Tree.LocalDefinition(name, value, body);
+      return new Tree.LocalDefinition(name, value, body, isReference);
     } else {
       return parseExpression();
     }
@@ -366,13 +379,25 @@ public class Parser {
     return current;
   }
 
+  private Tree.Expression parseAssignmentExpression() throws SyntaxError {
+    Tree.Expression target = parseOperatorExpression();
+    if (at(Type.COLON_EQ)) {
+      String name = ((Tree.Identifier) target).getName();
+      expect(Type.COLON_EQ);
+      Tree.Expression value = parseAssignmentExpression();
+      return new Tree.Assignment(name, value);
+    } else {
+      return target;
+    }
+  }
+
   private Tree.Expression parseNotExpression() throws SyntaxError {
     if (at(Type.NOT)) {
       expect(Type.NOT);
       Tree.Expression inner = parseNotExpression();
       return new Tree.Call("negate", Collections.singletonList(inner));
     } else {
-      return parseOperatorExpression();
+      return parseAssignmentExpression();
     }
   }
 

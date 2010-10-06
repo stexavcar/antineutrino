@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.neutrino.compiler.Symbol.LocalSymbol;
 import org.neutrino.pib.Parameter;
+import org.neutrino.syntax.Tree.LocalDefinition;
 
 public abstract class Scope {
 
@@ -34,7 +35,7 @@ public abstract class Scope {
       int index = outerTransient.indexOf(outerResult);
       if (index == -1) {
         index = symbolIndexOffset + outerTransient.size();
-        Symbol capture = Symbol.outer(index);
+        Symbol capture = Symbol.outer(outerResult, index);
         outerTransient.add(outerResult);
         outerCaptures.add(capture);
       }
@@ -102,10 +103,10 @@ public abstract class Scope {
     private final String name;
     private final LocalSymbol symbol;
 
-    private LocalScope(String name, int index, Scope outer) {
+    private LocalScope(LocalDefinition def, int index, Scope outer) {
       this.outer = outer;
-      this.name = name;
-      this.symbol = Symbol.local(index);
+      this.name = def.getName();
+      this.symbol = Symbol.local(def.isReference(), index);
     }
 
     public LocalSymbol getSymbol() {
@@ -121,8 +122,9 @@ public abstract class Scope {
 
   }
 
-  public static LocalScope localScope(String name, int index, Scope outer) {
-    return new LocalScope(name, index, outer);
+  public static LocalScope localScope(LocalDefinition def,
+      int index, Scope outer) {
+    return new LocalScope(def, index, outer);
   }
 
 }
