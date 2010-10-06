@@ -83,11 +83,19 @@ public class Parser {
     if (at(Type.DEF)) {
       expect(Type.DEF);
       String name = expect(Type.IDENT);
-      expect(Type.COLON_EQ);
-      Tree.Expression value = parseExpression();
+      Tree.Expression value;
+      if (at(Type.COLON_EQ)) {
+        expect(Type.COLON_EQ);
+        value = parseExpression();
+      } else if (atFunctionDefinitionMarker()) {
+        List<Parameter> params = parseParameters();
+        Tree.Expression body = parseFunctionBody(false);
+        value = Tree.Lambda.create(params, body);
+      } else {
+        throw new SyntaxError(getCurrent());
+      }
       Tree.Expression body;
-      if (at(Type.SEMI)) {
-        expect(Type.SEMI);
+      if (consumeSemicolon()) {
         if (hasMore() && !at(Type.RBRACE)) {
           body = parseStatements();
         } else {
@@ -166,6 +174,7 @@ public class Parser {
       return body;
     } else if (at(Type.LBRACE)) {
       Tree.Expression body = parseBlock();
+      hasTransientSemicolon = true;
       return body;
     } else if (isStatement && at(Type.SEMI)) {
       expect(Type.SEMI);
@@ -212,6 +221,10 @@ public class Parser {
     }
   }
 
+  private boolean atFunctionDefinitionMarker() {
+    return at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE);
+  }
+
   /**
    * <def>
    *   -> <annots> "def" <ident> ":=" <expr> ";"
@@ -243,7 +256,7 @@ public class Parser {
         String parent = expect(Type.IDENT);
         expect(Type.SEMI);
         return new Tree.Inheritance(annots, name, parent);
-      } else if (at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE)) {
+      } else if (atFunctionDefinitionMarker()) {
         List<Parameter> params = parseParameters();
         Tree.Expression body = parseFunctionBody(true);
         Tree.Expression lambda = Tree.Lambda.create(params, body);

@@ -1,6 +1,7 @@
 def test_local_definitions() {
   test_simple_local_definitions();
   test_block_nested_local_definitions();
+  test_local_function_declarations();
 }
 
 def test_simple_local_definitions() {
@@ -25,4 +26,14 @@ def test_block_nested_local_definitions() {
   }
   assert_true(a = 1);
   assert_true(b = 2);
+}
+
+def test_local_function_declarations() {
+  print("Testing local function declarations");
+  def double(x) -> 2 * x;
+  assert_equal(16, double(8));
+  def add_4(y) { y + 4; }
+  assert_equal(7, add_4(3));
+  def punt -> 5;
+  assert_equal(5, punt());
 }
