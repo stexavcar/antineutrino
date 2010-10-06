@@ -1,5 +1,6 @@
 package org.neutrino.pib;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -24,9 +25,10 @@ public class Module implements ISeedable {
 
   public @SeedMember Map<String, Binding> defs;
   public @SeedMember Map<String, RProtocol> protos;
-  public @SeedMember Map<String, List<String>> inheritance;
+  public @SeedMember Map<String, List<String>> rawInheritance;
   public @SeedMember List<RMethod> methods;
 
+  private final Map<TypeId, List<TypeId>> inheritance = new HashMap<TypeId, List<TypeId>>();
   private final Map<String, RValue> globals = new HashMap<String, RValue>();
   private Universe universe;
 
@@ -35,7 +37,7 @@ public class Module implements ISeedable {
     this.defs = defs;
     this.protos = protos;
     this.methods = methods;
-    this.inheritance = inheritance;
+    this.rawInheritance = inheritance;
   }
 
   public Module() { }
@@ -50,6 +52,19 @@ public class Module implements ISeedable {
       proto.initialize();
     for (RMethod method : methods)
       method.initialize(this);
+    for (Map.Entry<String, List<String>> entry : rawInheritance.entrySet()) {
+      String name = entry.getKey();
+      RProtocol proto = getProtocol(name);
+      assert proto != null : "Protocol " + name + " not found.";
+      List<String> rawParents = entry.getValue();
+      List<TypeId> parents = new ArrayList<TypeId>();
+      for (String rawParent : rawParents) {
+        RProtocol parentProto = getProtocol(rawParent);
+        assert parentProto != null : "Protocol " + rawParent + " not found.";
+        parents.add(parentProto.getInstanceTypeId());
+      }
+      inheritance.put(proto.getInstanceTypeId(), parents);
+    }
   }
 
   public RProtocol getProtocol(String name) {
@@ -92,11 +107,11 @@ public class Module implements ISeedable {
     return result;
   }
 
-  public void addParents(List<TypeId> out, String token) {
-    List<String> parents = inheritance.get(token);
+  public void addParents(List<TypeId> out, TypeId id) {
+    List<TypeId> parents = inheritance.get(id);
     if (parents != null) {
-      for (String parent : parents)
-        out.add(TypeId.get(parent));
+      for (TypeId parent : parents)
+        out.add(parent);
     }
   }
 

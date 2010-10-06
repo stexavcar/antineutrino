@@ -101,17 +101,16 @@ public class Universe implements ISeedable {
 
 
   public List<TypeId> getParents(TypeId id) {
-    String token = id.token;
     List<TypeId> parents = new ArrayList<TypeId>();
-    addParents(parents, token);
+    addParents(parents, id);
     return parents;
   }
 
-  private void addParents(List<TypeId> out, String token) {
+  private void addParents(List<TypeId> out, TypeId id) {
     for (Module module : this.modules.values())
-      module.addParents(out, token);
+      module.addParents(out, id);
     if (parallelUniverse != null)
-      parallelUniverse.addParents(out, token);
+      parallelUniverse.addParents(out, id);
   }
 
   public Lambda lookupMethod(String name, int argc, Frame frame) {

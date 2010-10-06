@@ -63,6 +63,8 @@ public class Interpreter {
         int argc = frame.code[frame.pc + 2];
         RValue self = frame.getArgument(argc, 0);
         Lambda lambda = frame.lookupMethod(name, argc);
+        if (lambda == null)
+          frame.lookupMethod(name, argc);
         assert lambda != null : "Method " + getMethodName(name, argc, frame) + " not found.";
         frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
         break;
@@ -171,7 +173,7 @@ public class Interpreter {
         RValue[] elms = new RValue[elmc];
         for (int i = 0; i < elmc; i++)
           elms[elmc - i - 1] = frame.stack.pop();
-        frame.stack.push(new RObjectArray(Arrays.asList(elms)));
+        frame.stack.push(new RPrimitiveArray(Arrays.asList(elms)));
         frame.pc += 2;
         break;
       }

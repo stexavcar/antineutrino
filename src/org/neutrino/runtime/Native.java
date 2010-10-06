@@ -186,10 +186,29 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("mutprimarr") static final Impl MUT_PRIM_ARR = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RInteger size = (RInteger) args.getFunctionArgument(0);
+      return new RMutablePrimitiveArray(size.getValue());
+    }
+  };
+
+  @Marker("mutarr.set") static final Impl MUTARR_SET = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RMutablePrimitiveArray self = (RMutablePrimitiveArray) args.getThis();
+      RInteger index = (RInteger) args.getArgument(0);
+      RValue value = args.getArgument(1);
+      self.set(index.getValue(), value);
+      return value;
+    }
+  };
+
   @Marker("array[]") static final Impl ARRAY_GET = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RObjectArray arr = (RObjectArray) args.getThis();
+      RPrimitiveArray arr = (RPrimitiveArray) args.getThis();
       RInteger index = (RInteger) args.getArgument(0);
       return arr.get(index.getValue());
     }
@@ -198,7 +217,7 @@ public class Native implements ISeedable {
   @Marker("array.length") static final Impl ARRAY_LENGTH = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RObjectArray arr = (RObjectArray) args.getThis();
+      RPrimitiveArray arr = (RPrimitiveArray) args.getThis();
       return new RInteger(arr.getLength());
     }
   };
