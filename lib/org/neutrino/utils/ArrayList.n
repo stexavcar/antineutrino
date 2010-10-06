@@ -1,0 +1,33 @@
+protocol ArrayList;
+
+def new_array_list(size) -> new ArrayList {
+  contents_ := new_ref(new_mutable_primitive_array(size)),
+  length_ := new_ref(size)
+};
+
+def ArrayList::[i: Integer] -> this.contents[i];
+
+def ArrayList::length -> this.length_.get();
+
+def ArrayList::contents -> this.contents_.get();
+
+def ArrayList::set(i: Integer, value) -> this.contents.set(i, value);
+
+def ArrayList::add(value) {
+  def new_length := this.length + 1;
+  this.ensure_capacity(new_length);
+  this.contents.set(this.length, value);
+  this.length_.set(new_length);
+  value;
+}
+
+def ArrayList::ensure_capacity(capacity) {
+  def old_contents := this.contents;
+  if not capacity < old_contents.length then {
+    def new_contents := new_mutable_primitive_array(capacity * 2);
+    (0 .. this.length).for_each(fn (i) {
+      new_contents.set(i, old_contents[i]);
+    });
+    this.contents_.set(new_contents);
+  }
+}
