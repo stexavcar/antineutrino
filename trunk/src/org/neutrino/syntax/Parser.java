@@ -519,7 +519,7 @@ public class Parser {
       }
       expect(Type.RBRACE);
     }
-    return new Tree.New(fields, protocols);
+    return new Tree.New(fields, protocols, protocols.toString());
   }
 
   /**

@@ -21,7 +21,7 @@ public class RObject extends RValue {
 
   @Override
   public String toString() {
-    return "#<an Object: " + getTypeId() + ">";
+    return "#<an Object: " + proto.getName() + ">";
   }
 
 }
