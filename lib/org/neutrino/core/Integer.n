@@ -11,4 +11,23 @@ def Integer::*(that: Integer) -> internal "int*int";
 
 def Integer::<(that: Integer) -> internal "int<int";
 
+def Integer::>(that: Integer) -> not (this < that or this = that);
+
 def Integer::=(that: Integer) -> internal "int=int";
+
+def Integer::..(that: Integer) -> new_interval(this, that - 1);
+
+protocol Interval;
+
+def new_interval(from, to) -> new {from := from, to := to} is Interval;
+
+def Interval::for_each(fun) {
+  def i := ref(this.from());
+  with_1cc leave -> loop(fn () {
+    def current := i.get();
+    if current > this.to() then
+      leave.fire(current);
+    fun(current);
+    i.set(current + 1);
+  });
+}
