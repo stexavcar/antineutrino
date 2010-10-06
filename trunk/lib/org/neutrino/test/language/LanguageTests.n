@@ -1,0 +1,19 @@
+protocol LanguageTest;
+def LanguageTest is Test;
+
+def new_language_test(counter) -> new LanguageTest { count := counter };
+
+def LanguageTest::run() {
+  this.test_primitives();
+  this.test_methods();
+  this.test_arrays();
+  this.test_local_definitions();
+  this.test_blocks();
+  this.test_refs();
+  this.test_objects();
+  this.test_loops();
+  this.test_protocols();
+  this.test_lambdas();
+  this.test_logical_operators();
+  this.test_indexing();
+}

@@ -26,6 +26,7 @@ public class RFile extends RValue {
     return "#<a File: " + file + ">";
   }
 
+  @SuppressWarnings("deprecation")
   public byte[] read() {
     try {
       FileInputStream in = new FileInputStream(file);
