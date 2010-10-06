@@ -30,5 +30,4 @@ def LanguageTest::test_record_methods() {
   assert_equal(3, cnt);
   assert_equal(4, om.cc());
   assert_equal(4, cnt);
-  
 }

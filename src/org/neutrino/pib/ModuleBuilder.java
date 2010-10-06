@@ -61,16 +61,18 @@ public class ModuleBuilder {
     return result;
   }
 
-  public RProtocol createProtocol(List<Annotation> annots, String name) {
-    RProtocol proto = new RProtocol(annots, name);
-    protos.put(name, proto);
+  public RProtocol createProtocol(List<Annotation> annots, String id,
+      String displayName) {
+    RProtocol proto = new RProtocol(annots, id, displayName);
+    protos.put(id, proto);
     return proto;
   }
 
-  public RProtocol createImplicitProtocol() {
+  public RProtocol createImplicitProtocol(String displayName) {
     int index = nextImplicitProtocolIndex++;
-    String name = "implicit-" + index;
-    return createProtocol(Collections.<Annotation>emptyList(), name);
+    String id = "implicit-" + index;
+    return createProtocol(Collections.<Annotation>emptyList(), id,
+        displayName);
   }
 
   public Module getResult() {

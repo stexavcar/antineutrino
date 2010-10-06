@@ -14,19 +14,22 @@ public class RProtocol extends RValue implements ISeedable {
   static final String TAG = "org::neutrino::runtime::RProtocol";
 
   public @SeedMember List<Annotation> annotations;
-  public @SeedMember String name;
+  public @SeedMember String id;
+  public @SeedMember String displayName;
   public @SeedMember TypeId instanceTypeId;
 
-  public RProtocol(List<Annotation> annotations, String name) {
+  public RProtocol(List<Annotation> annotations, String id,
+      String displayName) {
     this.annotations = annotations;
-    this.name = name;
+    this.id = id;
+    this.displayName = displayName;
     this.instanceTypeId = createTypeId();
   }
 
   public RProtocol() { }
 
   private TypeId createTypeId() {
-    String key = name;
+    String key = id;
     for (Annotation annot : annotations) {
       if (annot.getTag().equals(Native.ANNOTATION)) {
         key = ((RString) annot.getArgument(0)).getValue();
@@ -38,8 +41,12 @@ public class RProtocol extends RValue implements ISeedable {
 
   public void initialize() { }
 
+  public String getId() {
+    return id;
+  }
+
   public String getName() {
-    return name;
+    return displayName;
   }
 
   public TypeId getInstanceTypeId() {
@@ -53,7 +60,7 @@ public class RProtocol extends RValue implements ISeedable {
 
   @Override
   public String toString() {
-    return "#<a Protocol: " + name + ">";
+    return "#<a Protocol: " + id + ">";
   }
 
 }

@@ -463,7 +463,7 @@ public class Tree {
     public static Expression create(List<Parameter> params, Expression body) {
       New.Field call = new New.Field(params, "()", body, false);
       return new New(Collections.singletonList(call),
-          Collections.<String>emptyList());
+          Collections.<String>emptyList(), "Lambda");
     }
 
     public static Expression createCall(Expression fun, List<Expression> args) {
@@ -644,16 +644,23 @@ public class Tree {
 
     private final List<Field> fields;
     private final List<String> protocols;
+    private final String displayName;
     private RProtocol protocol;
     private List<Symbol> captures;
 
-    public New(List<Field> fields, List<String> protocols) {
+    public New(List<Field> fields, List<String> protocols,
+        String displayName) {
       this.fields = fields;
       this.protocols = protocols;
+      this.displayName = displayName;
     }
 
     public List<String> getProtocols() {
       return protocols;
+    }
+
+    public String getDisplayName() {
+      return this.displayName;
     }
 
     public void setCaptures(List<Symbol> captures) {

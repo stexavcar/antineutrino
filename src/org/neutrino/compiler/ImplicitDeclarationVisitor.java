@@ -22,7 +22,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
 
   @Override
   public void visitNew(Tree.New that) {
-    RProtocol proto = module.createImplicitProtocol();
+    RProtocol proto = module.createImplicitProtocol(that.getDisplayName());
     that.bind(proto);
     int eagerFieldCount = 0;
     for (Tree.New.Field field : that.getFields()) {
@@ -31,7 +31,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
         String name = field.getName();
         CodeBuilder builder = module.createMethod(
             Collections.<Annotation>emptyList(), name,
-            Collections.singletonList(new Parameter("this", proto.getName())));
+            Collections.singletonList(new Parameter("this", proto.getId())));
         Assembler assm = builder.getAssembler();
         assm.field(eagerFieldCount);
         assm.rethurn();
@@ -42,7 +42,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
     for (Tree.New.Field field : that.getFields()) {
       if (!field.hasEagerValue()) {
         String name = field.getName();
-        Parameter param = new Parameter("this", proto.getName());
+        Parameter param = new Parameter("this", proto.getId());
         List<Parameter> allParams = new ArrayList<Parameter>();
         allParams.add(param);
         allParams.addAll(field.getParameters());
@@ -56,7 +56,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
       }
     }
     for (String shuper : that.getProtocols())
-      module.declareInheritance(proto.getName(), shuper);
+      module.declareInheritance(proto.getId(), shuper);
   }
 
 }
