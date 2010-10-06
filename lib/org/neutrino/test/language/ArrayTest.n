@@ -21,7 +21,7 @@ def LanguageTest::test_mutable_arrays() {
     assert_equal(null, arr[i]);
   });
   (0 .. kSize).for_each(fn (i) {
-    arr.set(i, i * 3);
+    arr[i] := i * 3;
   });
   (0 .. kSize).for_each(fn (i) {
     assert_equal(i * 3, arr[i]);

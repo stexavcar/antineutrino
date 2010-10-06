@@ -11,12 +11,12 @@ def ArrayList::length -> this.length_.get();
 
 def ArrayList::contents -> this.contents_.get();
 
-def ArrayList::set(i: Integer, value) -> this.contents.set(i, value);
+def ArrayList::[i: Integer]:=(value) -> this.contents[i] := value;
 
 def ArrayList::add(value) {
   def new_length := this.length + 1;
   this.ensure_capacity(new_length);
-  this.contents.set(this.length, value);
+  this.contents[this.length] := value;
   this.length_.set(new_length);
   value;
 }
@@ -26,7 +26,7 @@ def ArrayList::ensure_capacity(capacity) {
   if not capacity < old_contents.length then {
     def new_contents := new_mutable_primitive_array(capacity * 2);
     (0 .. this.length).for_each(fn (i) {
-      new_contents.set(i, old_contents[i]);
+      new_contents[i] := old_contents[i];
     });
     this.contents_.set(new_contents);
   }

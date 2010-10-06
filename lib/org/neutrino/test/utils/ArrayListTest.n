@@ -4,7 +4,7 @@ def UtilsTest::test_array_lists() {
   def a := new_array_list(kInitialSize);
   assert_equal(kInitialSize, a.length);
   (0 .. kInitialSize).for_each(fn (i) -> assert_equal(null, a[i]));
-  (0 .. kInitialSize).for_each(fn (i) -> a.set(i, i));
+  (0 .. kInitialSize).for_each(fn (i) -> a[i] := i);
   (0 .. kInitialSize).for_each(fn (i) -> assert_equal(i, a[i]));
   (0 .. 10).for_each(fn (i) {
     a.add(i);
