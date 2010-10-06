@@ -20,7 +20,7 @@ def LanguageTest::test_simple_inheritance() {
   def b := new B;
   assert_equal(2, b.foo());
   assert_equal(3, b.bar());
-  def c := new { baz := 4, bar := 5 } is B;
+  def c := new B { baz := 4, bar := 5 };
   assert_equal(2, c.foo());
   assert_equal(5, c.bar());
   assert_equal(4, c.baz());
@@ -31,7 +31,7 @@ def Point::size() -> (this.x * this.x) + (this.y * this.y);
 
 def LanguageTest::test_this() {
   this.on_start("this");
-  def p := new { x := 3, y := 4 } is Point;
+  def p := new Point { x := 3, y := 4 };
   assert_equal(25, p.size());
 }
 

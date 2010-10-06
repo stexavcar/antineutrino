@@ -496,7 +496,16 @@ public class Parser {
     assert at(Type.NEW);
     expect(Type.NEW);
     List<Tree.New.Field> fields = new ArrayList<Tree.New.Field>();
-    boolean implicitIs = !at(Type.LBRACE);
+    List<String> protocols = new ArrayList<String>();
+    if (!at(Type.LBRACE)) {
+      String first = expect(Type.IDENT);
+      protocols.add(first);
+      while (at(Type.COMMA)) {
+        expect(Type.COMMA);
+        String next = expect(Type.IDENT);
+        protocols.add(next);
+      }
+    }
     if (at(Type.LBRACE)) {
       expect(Type.LBRACE);
       if (!at(Type.RBRACE)) {
@@ -509,18 +518,6 @@ public class Parser {
         }
       }
       expect(Type.RBRACE);
-    }
-    List<String> protocols = new ArrayList<String>();
-    if (implicitIs || at(Type.IS)) {
-      if (!implicitIs)
-        expect(Type.IS);
-      String first = expect(Type.IDENT);
-      protocols.add(first);
-      while (at(Type.COMMA)) {
-        expect(Type.COMMA);
-        String next = expect(Type.IDENT);
-        protocols.add(next);
-      }
     }
     return new Tree.New(fields, protocols);
   }

@@ -15,11 +15,12 @@ def Integer::>(that: Integer) -> not (this < that or this = that);
 
 def Integer::=(that: Integer) -> internal "int=int";
 
-def Integer::..(that: Integer) -> new_interval(this, that - 1);
+def Integer::..(that: Integer) -> new Interval {
+  from := this,
+  to := that - 1
+};
 
 protocol Interval;
-
-def new_interval(from, to) -> new {from := from, to := to} is Interval;
 
 def Interval::for_each(fun) {
   ref i := this.from();
