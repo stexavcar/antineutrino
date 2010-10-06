@@ -101,9 +101,10 @@ public class Parser {
         expect(Type.COLON_EQ);
         value = parseExpression();
       } else if (atFunctionDefinitionMarker()) {
-        List<Parameter> params = parseParameters();
+        List<Parameter> params = new ArrayList<Parameter>();
+        String methodName = parseParameters(params);
         Tree.Expression body = parseFunctionBody(false);
-        value = Tree.Lambda.create(params, body);
+        value = Tree.Lambda.create(methodName, params, body);
       } else {
         throw new SyntaxError(getCurrent());
       }
@@ -226,16 +227,18 @@ public class Parser {
     return annots;
   }
 
-  private String expectName() throws SyntaxError {
+  private String expectName(boolean allowEmpty) throws SyntaxError {
     if (atOperator()) {
       return expectOperator();
-    } else {
+    } else if (at(Type.IDENT) || !allowEmpty) {
       return expect(Type.IDENT);
+    } else {
+      return null;
     }
   }
 
   private boolean atFunctionDefinitionMarker() {
-    return at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE);
+    return at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE) || at(Type.LBRACK);
   }
 
   /**
@@ -257,8 +260,11 @@ public class Parser {
         return new Tree.Definition(annots, name, value);
       } else if (at(Type.COOLON)) {
         expect(Type.COOLON);
-        String method = expectName();
-        List<Parameter> argParams = parseParameters();
+        String method = expectName(true);
+        List<Parameter> argParams = new ArrayList<Parameter>();
+        String inferredName = parseParameters(argParams);
+        if (method == null)
+          method = inferredName;
         Tree.Expression body = parseFunctionBody(true);
         List<Parameter> params = new ArrayList<Parameter>();
         params.add(new Parameter("this", name));
@@ -270,9 +276,10 @@ public class Parser {
         expect(Type.SEMI);
         return new Tree.Inheritance(annots, name, parent);
       } else if (atFunctionDefinitionMarker()) {
-        List<Parameter> params = parseParameters();
+        List<Parameter> params = new ArrayList<Parameter>();
+        String methodName = parseParameters(params);
         Tree.Expression body = parseFunctionBody(true);
-        Tree.Expression lambda = Tree.Lambda.create(params, body);
+        Tree.Expression lambda = Tree.Lambda.create(methodName, params, body);
         return new Tree.Definition(annots, name, lambda);
       } else {
         throw new SyntaxError(getCurrent());
@@ -285,11 +292,18 @@ public class Parser {
     }
   }
 
-  private List<Parameter> parseParameters() throws SyntaxError {
-    if (at(Type.LPAREN)) {
-      expect(Type.LPAREN);
-      List<Parameter> result = new ArrayList<Parameter>();
-      if (!at(Type.RPAREN)) {
+  private String parseParameters(List<Parameter> params) throws SyntaxError {
+    String methodName = "()";
+    Token.Type begin = Type.LPAREN;
+    Token.Type end = Type.RPAREN;
+    if (at(Type.LBRACK)) {
+      begin = Type.LBRACK;
+      end = Type.RBRACK;
+      methodName = "[]";
+    }
+    if (at(begin)) {
+      expect(begin);
+      if (!at(end)) {
         while (true) {
           String name = expect(Type.IDENT);
           String type = "Object";
@@ -297,7 +311,7 @@ public class Parser {
             expect(Type.COLON);
             type = expect(Type.IDENT);
           }
-          result.add(new Parameter(name, type));
+          params.add(new Parameter(name, type));
           if (at(Type.COMMA)) {
             expect(Type.COMMA);
             continue;
@@ -306,10 +320,10 @@ public class Parser {
           }
         }
       }
-      expect(Type.RPAREN);
-      return result;
+      expect(end);
+      return methodName;
     } else {
-      return Collections.emptyList();
+      return "()";
     }
   }
 
@@ -339,22 +353,32 @@ public class Parser {
    */
   private Tree.Expression parseCallExpressionTail(Tree.Expression recv) throws SyntaxError {
     String method;
+    Type argDelimStart = Type.LPAREN;
+    Type argDelimEnd = Type.RPAREN;
     if (at(Type.DOT)) {
       expect(Type.DOT);
       method = expect(Type.IDENT);
     } else if (at(Type.LPAREN)) {
       method = "()";
+    } else if (at(Type.LBRACK)) {
+      method = "[]";
+      argDelimStart = Type.LBRACK;
+      argDelimEnd = Type.RBRACK;
     } else {
       throw new SyntaxError(getCurrent());
     }
     List<Tree.Expression> args = new ArrayList<Tree.Expression>();
     args.add(recv);
-    if (at(Type.LPAREN)) {
-      expect(Type.LPAREN);
-      args.addAll(parseArguments(Type.RPAREN));
-      expect(Type.RPAREN);
+    if (at(argDelimStart)) {
+      expect(argDelimStart);
+      args.addAll(parseArguments(argDelimEnd));
+      expect(argDelimEnd);
     }
     return new Tree.Call(method, args);
+  }
+
+  private boolean atCallExpressionTail() {
+    return at(Type.DOT) || at(Type.LPAREN) || at(Type.LBRACK);
   }
 
   /**
@@ -363,7 +387,7 @@ public class Parser {
    */
   private Tree.Expression parseCallExpression() throws SyntaxError {
     Tree.Expression current = parseAtomicExpression();
-    while (at(Type.DOT) || at(Type.LPAREN)) {
+    while (atCallExpressionTail()) {
       current = parseCallExpressionTail(current);
     }
     return current;
@@ -437,9 +461,10 @@ public class Parser {
   private Tree.Expression parseLongExpression() throws SyntaxError {
     if (at(Type.FN)) {
       expect(Type.FN);
-      List<Parameter> params = parseParameters();
+      List<Parameter> params = new ArrayList<Parameter>();
+      String methodName = parseParameters(params);
       Tree.Expression body = parseFunctionBody(false);
-      return Tree.Lambda.create(params, body);
+      return Tree.Lambda.create(methodName, params, body);
     } else if (at(Type.IF)) {
       expect(Type.IF);
       Tree.Expression cond = parseLogicalExpression();

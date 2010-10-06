@@ -88,6 +88,18 @@ public class Universe implements ISeedable {
         : parallelUniverse.getGlobal(name, inter);
   }
 
+  public RProtocol getProtocol(String name) {
+    for (Module module : modules.values()) {
+      RProtocol value = module.protos.get(name);
+      if (value != null)
+        return value;
+    }
+    return (parallelUniverse == null)
+        ? null
+        : parallelUniverse.getProtocol(name);
+  }
+
+
   public List<TypeId> getParents(TypeId id) {
     String token = id.token;
     List<TypeId> parents = new ArrayList<TypeId>();

@@ -53,7 +53,8 @@ public class Module implements ISeedable {
   }
 
   public RProtocol getProtocol(String name) {
-    return protos.get(name);
+    RProtocol result = protos.get(name);
+    return result == null ? universe.getProtocol(name) : result;
   }
 
   public Lambda getEntryPoint(String name) {

@@ -1,0 +1,28 @@
+protocol IndexingTester;
+
+def IndexingTester::[i: Integer] -> i - 3;
+def IndexingTester::[i1: Integer, i2: Integer] -> i1 + i2 + 5;
+
+def LanguageTest::test_indexing() {
+  this.test_indexing_dimensions();
+  this.test_local_indexing();
+}
+
+def LanguageTest::test_indexing_dimensions() {
+  this.on_start("indexing dimensions");
+  def idxer := new IndexingTester;
+  assert_equal(1, idxer[4]);
+  assert_equal(5, idxer[8]);
+  assert_equal(14, idxer[4, 5]);
+  assert_equal(13, idxer[7, 1]);
+}
+
+def LanguageTest::test_local_indexing() {
+  this.on_start("local indexing");
+  def foo[a, b] -> a * b;
+  assert_equal(6, foo[3, 2]);
+  assert_equal(20, foo[4, 5]);
+  def tmp := (fn [a] -> a * (a + 1));
+  assert_equal(72, tmp[8]);
+  assert_equal(90, tmp[9]);
+}
