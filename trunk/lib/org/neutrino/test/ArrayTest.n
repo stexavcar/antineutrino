@@ -1,8 +1,29 @@
 def LanguageTest::test_arrays() {
-  this.on_start("arrays");
+  this.test_simple_arrays();
+  this.test_mutable_arrays();
+}
+
+def LanguageTest::test_simple_arrays() {
+  this.on_start("simple arrays");
   def e := #[1, 2, 3];
   assert_equal(3, e.length);
   assert_equal(1, e[0]);
   assert_equal(2, e[1]);
   assert_equal(3, e[2]);  
+}
+
+def LanguageTest::test_mutable_arrays() {
+  this.on_start("mutable arrays");
+  def kSize := 10;
+  def arr := new_mutable_primitive_array(kSize);
+  assert_equal(kSize, arr.length);
+  (0 .. kSize).for_each(fn (i) {
+    assert_equal(null, arr[i]);
+  });
+  (0 .. kSize).for_each(fn (i) {
+    arr.set(i, i * 3);
+  });
+  (0 .. kSize).for_each(fn (i) {
+    assert_equal(i * 3, arr[i]);
+  });
 }

@@ -12,7 +12,7 @@ import org.neutrino.plankton.PValue;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.RObject;
-import org.neutrino.runtime.RObjectArray;
+import org.neutrino.runtime.RPrimitiveArray;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 
@@ -21,11 +21,11 @@ public class Run {
   public static @Flags.Flag("pib-path") String pibPath;
   public static @Flags.Flag("entry-point") String entryPoint = "main";
 
-  private static RObjectArray buildStringList(List<String> list) {
+  private static RPrimitiveArray buildStringList(List<String> list) {
     List<RValue> result = new ArrayList<RValue>();
     for (int i = 0; i < list.size(); i++)
       result.add(new RString(list.get(i)));
-    RObjectArray argsObject = new RObjectArray(result);
+    RPrimitiveArray argsObject = new RPrimitiveArray(result);
     return argsObject;
   }
 
@@ -40,7 +40,7 @@ public class Run {
     assert entryPointBinding != null : "No entry point found.";
     RValue entryPointValue = inter.interpret(entryPointBinding);
     Lambda entryPointLambda = universe.getLambda((RObject) entryPointValue);
-    RObjectArray argsObject = buildStringList(args);
+    RPrimitiveArray argsObject = buildStringList(args);
     inter.interpret(entryPointLambda, argsObject);
   }
 

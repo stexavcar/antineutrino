@@ -2,13 +2,13 @@ package org.neutrino.runtime;
 
 import java.util.List;
 
-public class RObjectArray extends RArray {
+public class RPrimitiveArray extends RArray {
 
   private static final TypeId TYPE_ID = TypeId.get("array");
 
   private final List<RValue> elements;
 
-  public RObjectArray(List<RValue> elements) {
+  public RPrimitiveArray(List<RValue> elements) {
     this.elements = elements;
   }
 
@@ -19,6 +19,10 @@ public class RObjectArray extends RArray {
 
   public RValue get(int index) {
     return elements.get(index);
+  }
+
+  protected List<RValue> getElements() {
+    return elements;
   }
 
   public int getLength() {

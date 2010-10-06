@@ -4,6 +4,13 @@ def PrimitiveArray::[index: Integer] -> internal "array[]";
 
 def PrimitiveArray::length -> internal "array.length";
 
+@native("mutarr") protocol MutablePrimitiveArray;
+def MutablePrimitiveArray is PrimitiveArray;
+
+def new_mutable_primitive_array(size: Integer) -> internal "mutprimarr";
+
+def MutablePrimitiveArray::set(i: Integer, value) -> internal "mutarr.set";
+
 @native("byte_array") protocol ByteArray;
 
 def ByteArray::[index: Integer] -> internal "byte_array[]";
