@@ -9,7 +9,7 @@ def MutablePrimitiveArray is PrimitiveArray;
 
 def new_mutable_primitive_array(size: Integer) -> internal "mutprimarr";
 
-def MutablePrimitiveArray::set(i: Integer, value) -> internal "mutarr.set";
+def MutablePrimitiveArray::[i: Integer]:=(value) -> internal "mutarr.set";
 
 @native("byte_array") protocol ByteArray;
 

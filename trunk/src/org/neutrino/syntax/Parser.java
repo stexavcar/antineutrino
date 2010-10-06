@@ -292,6 +292,16 @@ public class Parser {
     }
   }
 
+  private Parameter parseParameter() throws SyntaxError {
+    String name = expect(Type.IDENT);
+    String type = "Object";
+    if (at(Type.COLON)) {
+      expect(Type.COLON);
+      type = expect(Type.IDENT);
+    }
+    return new Parameter(name, type);
+  }
+
   private String parseParameters(List<Parameter> params) throws SyntaxError {
     String methodName = "()";
     Token.Type begin = Type.LPAREN;
@@ -305,13 +315,7 @@ public class Parser {
       expect(begin);
       if (!at(end)) {
         while (true) {
-          String name = expect(Type.IDENT);
-          String type = "Object";
-          if (at(Type.COLON)) {
-            expect(Type.COLON);
-            type = expect(Type.IDENT);
-          }
-          params.add(new Parameter(name, type));
+          params.add(parseParameter());
           if (at(Type.COMMA)) {
             expect(Type.COMMA);
             continue;
@@ -321,10 +325,15 @@ public class Parser {
         }
       }
       expect(end);
-      return methodName;
-    } else {
-      return "()";
     }
+    if (at(Type.COLON_EQ)) {
+      expect(Type.COLON_EQ);
+      expect(Type.LPAREN);
+      params.add(parseParameter());
+      expect(Type.RPAREN);
+      methodName += ":=";
+    }
+    return methodName;
   }
 
   /**
@@ -406,10 +415,9 @@ public class Parser {
   private Tree.Expression parseAssignmentExpression() throws SyntaxError {
     Tree.Expression target = parseOperatorExpression();
     if (at(Type.COLON_EQ)) {
-      String name = ((Tree.Identifier) target).getName();
       expect(Type.COLON_EQ);
       Tree.Expression value = parseAssignmentExpression();
-      return new Tree.Assignment(name, value);
+      return target.getAssignment(value);
     } else {
       return target;
     }

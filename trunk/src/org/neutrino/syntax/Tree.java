@@ -226,6 +226,10 @@ public class Tree {
       return RNull.getInstance();
     }
 
+    public Expression getAssignment(Expression value) {
+      throw new UnsupportedOperationException();
+    }
+
   }
 
   public static class ExpressionVisitor {
@@ -310,6 +314,11 @@ public class Tree {
     @Override
     public String toString() {
       return "$" + name;
+    }
+
+    @Override
+    public Expression getAssignment(Expression value) {
+      return new Assignment(this.name, value);
     }
 
     @Override
@@ -558,6 +567,15 @@ public class Tree {
 
     public String getName() {
       return this.name;
+    }
+
+    @Override
+    public Expression getAssignment(Expression value) {
+      List<Expression> newArgs = new ArrayList<Expression>();
+      newArgs.addAll(getArguments());
+      newArgs.add(value);
+      String newName = name + ":=";
+      return new Call(newName, newArgs);
     }
 
     @Override
