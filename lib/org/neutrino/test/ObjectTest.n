@@ -1,10 +1,10 @@
-def test_objects() {
-  test_records();
-  test_record_methods();
+def LanguageTest::test_objects() {
+  this.test_records();
+  this.test_record_methods();
 }
 
-def test_records() {
-  print("Testing records");
+def LanguageTest::test_records() {
+  this.on_start("records");
   def o1 := new { a := 10, b := 12 };
   assert_equal(10, o1.a());
   assert_equal(12, o1.b());
@@ -15,8 +15,8 @@ def test_records() {
   new { };
 }
 
-def test_record_methods() {
-  print("Testing record methods");
+def LanguageTest::test_record_methods() {
+  this.on_start("record methods");
   def cnt := ref(0);
   def inc := fn () -> cnt.set(cnt.get() + 1);
   assert_equal(0, cnt.get());

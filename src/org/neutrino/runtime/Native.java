@@ -289,6 +289,13 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("obj.to_string") static final Impl OBJ_TO_STRING = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      return new RString(args.getThis().toExternalString());
+    }
+  };
+
   private static final Map<String, Impl> IMPLS = new HashMap<String, Impl>() {{
     try {
       for (Field field : Native.class.getDeclaredFields()) {

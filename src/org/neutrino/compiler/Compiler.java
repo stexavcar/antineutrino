@@ -30,7 +30,7 @@ public class Compiler {
     body.accept(implicitor);
     CodeGenerator codegen = new CodeGenerator(assm);
     codegen.generate(body);
-    assm.setLocalCount(0);
+    assm.setLocalCount(lexicizer.getLocalCount());
   }
 
 }
