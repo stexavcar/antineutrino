@@ -11,23 +11,27 @@ def Integer::*(that: Integer) -> internal "int*int";
 
 def Integer::<(that: Integer) -> internal "int<int";
 
+def Integer::>=(that: Integer) -> not (this < that);
+
 def Integer::>(that: Integer) -> not (this < that or this = that);
 
 def Integer::=(that: Integer) -> internal "int=int";
 
 def Integer::..(that: Integer) -> new Interval {
   from := this,
-  to := that - 1
+  to := that
 };
 
 protocol Interval;
 
 def Interval::for_each(fun) {
-  ref i := this.from();
+  ref i := this.from;
+  def dir := if this.from < this.to then 1 else 0-1;
+  def delta := if this.from < this.to then 0 else 0-1;
   with_1cc leave -> loop(fn () {
-    if i > this.to() then
+    if i = this.to then
       leave.fire(i);
-    fun(i);
-    i := i + 1;
+    fun(i + delta);
+    i := i + dir;
   });
 }

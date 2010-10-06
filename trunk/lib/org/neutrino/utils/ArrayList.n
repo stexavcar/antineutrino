@@ -5,6 +5,12 @@ def new_array_list(size) -> new ArrayList {
   length_ := new_ref(size)
 };
 
+def new_array_list_of(elms) {
+  def result := new_array_list(elms.length);
+  (0 .. elms.length).for_each(fn (i) -> result[i] := elms[i]);
+  result;
+}
+
 def ArrayList::[i: Integer] -> this.contents[i];
 
 def ArrayList::length -> this.length_.get();

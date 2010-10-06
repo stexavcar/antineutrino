@@ -272,7 +272,8 @@ public class Native implements ISeedable {
   @Marker("fail") static final Impl FAIL = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      throw new RuntimeException("Fail");
+      RValue message = args.getFunctionArgument(0);
+      throw new RuntimeException("Fail: " + message.toExternalString());
     }
   };
 
