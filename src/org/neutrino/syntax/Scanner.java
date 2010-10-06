@@ -143,6 +143,15 @@ public class Scanner {
     case '}':
       advance();
       return Token.Type.RBRACE;
+    case '[':
+      advance();
+      return Token.Type.LBRACK;
+    case ']':
+      advance();
+      return Token.Type.RBRACK;
+    case '#':
+      advance();
+      return Token.Type.HASH;
     case ';':
       advance();
       return Token.Type.SEMI;

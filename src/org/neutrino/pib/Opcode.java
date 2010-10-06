@@ -38,7 +38,7 @@ public class Opcode {
   }
 
   public enum ArgType {
-    LITERAL, NUMBER
+    LIT, NUM
   }
 
   @Retention(RetentionPolicy.RUNTIME)
@@ -46,23 +46,24 @@ public class Opcode {
     public ArgType[] value();
   }
 
-  @Info({ArgType.LITERAL, ArgType.NUMBER}) public static final int kCall = 3;
+  @Info({ArgType.LIT, ArgType.NUM}) public static final int kCall = 3;
   @Info({}) public static final int kReturn = 4;
   @Info({}) public static final int kNull = 5;
   @Info({}) public static final int kTrue = 6;
-  @Info({ArgType.LITERAL}) public static final int kPush = 7;
-  @Info({ArgType.LITERAL, ArgType.NUMBER}) public static final int kCallNative = 8;
+  @Info({ArgType.LIT}) public static final int kPush = 7;
+  @Info({ArgType.LIT, ArgType.NUM}) public static final int kCallNative = 8;
   @Info({}) public static final int kPop = 9;
-  @Info({ArgType.LITERAL}) public static final int kGlobal = 10;
+  @Info({ArgType.LIT}) public static final int kGlobal = 10;
   @Info({}) public static final int kFalse = 11;
-  @Info({ArgType.NUMBER}) public static final int kArgument = 12;
-  @Info({ArgType.NUMBER}) public static final int kOuter = 13;
-  @Info({ArgType.NUMBER}) public static final int kLocal = 14;
-  @Info({ArgType.NUMBER}) public static final int kStoreLocal = 15;
+  @Info({ArgType.NUM}) public static final int kArgument = 12;
+  @Info({ArgType.NUM}) public static final int kOuter = 13;
+  @Info({ArgType.NUM}) public static final int kLocal = 14;
+  @Info({ArgType.NUM}) public static final int kStoreLocal = 15;
   @Info({}) public static final int kTerminate = 16;
-  @Info({ArgType.LITERAL, ArgType.NUMBER}) public static final int kNew = 17;
-  @Info({ArgType.NUMBER}) public static final int kField = 18;
-  @Info({ArgType.NUMBER, ArgType.NUMBER}) public static final int kWith1Cc = 19;
+  @Info({ArgType.LIT, ArgType.NUM}) public static final int kNew = 17;
+  @Info({ArgType.NUM}) public static final int kField = 18;
+  @Info({ArgType.NUM, ArgType.NUM}) public static final int kWith1Cc = 19;
+  @Info({ArgType.NUM}) public static final int kNewArray = 20;
 
   private static final Map<Integer, OpcodeInfo> infos = new HashMap<Integer, OpcodeInfo>() {{
     try {

@@ -278,6 +278,10 @@ public class Tree {
       visitExpression(that);
     }
 
+    public void visitCollection(Collection that) {
+      visitExpression(that);
+    }
+
   }
 
   public static class Identifier extends Expression {
@@ -592,6 +596,31 @@ public class Tree {
     @Override
     public void accept(ExpressionVisitor visitor) {
       visitor.visitSingleton(this);
+    }
+
+  }
+
+  public static class Collection extends Expression {
+
+    private final List<Expression> values;
+
+    public Collection(List<Expression> values) {
+      this.values = values;
+    }
+
+    public List<Expression> getValues() {
+      return values;
+    }
+
+    @Override
+    public void accept(ExpressionVisitor visitor) {
+      visitor.visitCollection(this);
+    }
+
+    @Override
+    public void traverse(ExpressionVisitor visitor) {
+      for (Expression value : values)
+        value.accept(visitor);
     }
 
   }

@@ -522,6 +522,24 @@ public class Parser {
     return new Tree.New(fields, protocols, protocols.toString());
   }
 
+  private Tree.Expression parsePrimitiveCollection() throws SyntaxError {
+    assert at(Type.HASH);
+    expect(Type.HASH);
+    expect(Type.LBRACK);
+    List<Tree.Expression> values = new ArrayList<Tree.Expression>();
+    if (!at(Type.RBRACK)) {
+      Tree.Expression first = parseExpression();
+      values.add(first);
+      while (at(Type.COMMA)) {
+        expect(Type.COMMA);
+        Tree.Expression next = parseExpression();
+        values.add(next);
+      }
+    }
+    expect(Type.RBRACK);
+    return new Tree.Collection(values);
+  }
+
   /**
    * <atomic>
    *   -> <ident>
@@ -573,6 +591,8 @@ public class Parser {
       expect(Type.INTERNAL);
       String name = expect(Type.STRING);
       return new Tree.Internal(name);
+    case HASH:
+      return parsePrimitiveCollection();
     default:
       throw new SyntaxError(current);
     }

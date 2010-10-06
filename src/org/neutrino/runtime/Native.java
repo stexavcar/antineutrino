@@ -195,6 +195,14 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("array.length") static final Impl ARRAY_LENGTH = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RObjectArray arr = (RObjectArray) args.getThis();
+      return new RInteger(arr.getLength());
+    }
+  };
+
   @Marker("byte_array[]") static final Impl BYTE_ARRAY_GET = new Impl() {
     @Override
     public RValue call(Arguments args) {

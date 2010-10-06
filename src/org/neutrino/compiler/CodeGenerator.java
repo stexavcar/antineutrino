@@ -8,6 +8,7 @@ import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RString;
 import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Tree;
+import org.neutrino.syntax.Tree.Collection;
 import org.neutrino.syntax.Tree.Expression;
 import org.neutrino.syntax.Tree.Internal;
 import org.neutrino.syntax.Tree.Method;
@@ -131,6 +132,14 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
       outerCount++;
     }
     assm.nhew(that.getProtocol(), outerCount);
+  }
+
+  @Override
+  public void visitCollection(Collection that) {
+    List<Tree.Expression> values = that.getValues();
+    for (Tree.Expression value : values)
+      value.accept(this);
+    assm.newArray(values.size());
   }
 
   @Override
