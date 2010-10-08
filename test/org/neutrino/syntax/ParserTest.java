@@ -1,10 +1,10 @@
 package org.neutrino.syntax;
 
-import org.neutrino.syntax.Tree.Unit;
-
 import java.util.List;
 
 import junit.framework.TestCase;
+
+import org.neutrino.syntax.Tree.Unit;
 
 /**
  * Unit test of the {@link Parser} class.
@@ -16,7 +16,7 @@ public class ParserTest extends TestCase {
   private static void parserTest(String source, String expected) {
     try {
       List<Token> tokens = Scanner.tokenize(source);
-      Unit tree = Parser.parse(tokens);
+      Unit tree = Parser.parse(null, tokens);
       assertEquals(expected, tree.toString());
     } catch (SyntaxError se) {
       throw new RuntimeException(se);
@@ -26,7 +26,7 @@ public class ParserTest extends TestCase {
   private static void errorTest(String source, String token) {
     try {
       List<Token> tokens = Scanner.tokenize(source);
-      Parser.parse(tokens);
+      Parser.parse(null, tokens);
       fail();
     } catch (SyntaxError se) {
       assertEquals(token, se.getOffendingToken().getValue());

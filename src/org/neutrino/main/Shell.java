@@ -110,7 +110,7 @@ public class Shell {
     List<Token> tokens = Scanner.tokenize(source);
     boolean isDeclaration;
     try {
-      Parser.parse(tokens);
+      Parser.parse(null, tokens);
       isDeclaration = true;
     } catch (SyntaxError se) {
       isDeclaration = false;

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.neutrino.compiler.Source;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Token.Type;
@@ -18,11 +19,13 @@ import org.neutrino.syntax.Tree.If;
  */
 public class Parser {
 
-  private int cursor = 0;
+  private final Source source;
   private final List<Token> tokens;
+  private int cursor = 0;
   private boolean hasTransientSemicolon = false;
 
-  private Parser(List<Token> tokens) {
+  private Parser(Source source, List<Token> tokens) {
+    this.source = source;
     this.tokens = tokens;
   }
 
@@ -104,7 +107,7 @@ public class Parser {
         List<Parameter> params = new ArrayList<Parameter>();
         String methodName = parseParameters("()", params);
         Tree.Expression body = parseFunctionBody(false);
-        value = Tree.Lambda.create(methodName, params, body);
+        value = Tree.Lambda.create(source, methodName, params, body, name);
       } else {
         throw new SyntaxError(getCurrent());
       }
@@ -277,7 +280,8 @@ public class Parser {
         List<Parameter> params = new ArrayList<Parameter>();
         String methodName = parseParameters("()", params);
         Tree.Expression body = parseFunctionBody(true);
-        Tree.Expression lambda = Tree.Lambda.create(methodName, params, body);
+        Tree.Expression lambda = Tree.Lambda.create(source, methodName,
+            params, body, name);
         return new Tree.Definition(annots, name, lambda);
       } else {
         throw new SyntaxError(getCurrent());
@@ -436,7 +440,7 @@ public class Parser {
     while (at(Type.AND)) {
       expect(Type.AND);
       Tree.Expression next = parseNotExpression();
-      current = If.create(current, next,
+      current = If.create(source, current, next,
           new Tree.Singleton(Tree.Singleton.Type.FALSE));
     }
     return current;
@@ -447,7 +451,7 @@ public class Parser {
     while (at(Type.OR)) {
       expect(Type.OR);
       Tree.Expression next = parseAndExpression();
-      current = If.create(current,
+      current = If.create(source, current,
           new Tree.Singleton(Tree.Singleton.Type.TRUE),
           next);
     }
@@ -470,7 +474,7 @@ public class Parser {
       List<Parameter> params = new ArrayList<Parameter>();
       String methodName = parseParameters("()", params);
       Tree.Expression body = parseFunctionBody(false);
-      return Tree.Lambda.create(methodName, params, body);
+      return Tree.Lambda.create(source, methodName, params, body, "fn");
     } else if (at(Type.IF)) {
       expect(Type.IF);
       Tree.Expression cond = parseLogicalExpression();
@@ -483,13 +487,13 @@ public class Parser {
       } else {
         elsePart = new Tree.Singleton(Tree.Singleton.Type.NULL);
       }
-      return Tree.If.create(cond, thenPart, elsePart);
+      return Tree.If.create(source ,cond, thenPart, elsePart);
     } else if (at(Type.WITH_1CC)) {
       expect(Type.WITH_1CC);
       String name = expect(Type.IDENT);
       expect(Type.ARROW);
       Tree.Expression value = parseLongExpression();
-      return Tree.With1Cc.create(name, value);
+      return Tree.With1Cc.create(source, name, value);
     } else {
       return parseLogicalExpression();
     }
@@ -550,7 +554,14 @@ public class Parser {
       }
       expect(Type.RBRACE);
     }
-    return new Tree.New(fields, protocols, protocols.toString());
+    StringBuilder buf = new StringBuilder();
+    boolean first = true;
+    for (String protocol : protocols) {
+      if (first) first = false;
+      else buf.append("&");
+      buf.append(protocol);
+    }
+    return new Tree.New(source, fields, protocols, buf.toString());
   }
 
   private Tree.Expression parsePrimitiveCollection() throws SyntaxError {
@@ -643,8 +654,8 @@ public class Parser {
     }
   }
 
-  public static Tree.Unit parse(List<Token> tokens) throws SyntaxError {
-    return new Parser(tokens).parseUnit();
+  public static Tree.Unit parse(Source source, List<Token> tokens) throws SyntaxError {
+    return new Parser(source, tokens).parseUnit();
   }
 
 }
