@@ -251,8 +251,8 @@ public class Native implements ISeedable {
   @Marker("print") static final Impl PRINT = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RValue value = args.getFunctionArgument(0);
-      System.out.println(value.toExternalString());
+      RString value = (RString) args.getFunctionArgument(0);
+      System.out.println(value.getValue());
       return RNull.getInstance();
     }
   };

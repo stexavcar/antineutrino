@@ -28,7 +28,7 @@ public class RByteArray extends RArray {
     StringBuilder buf = new StringBuilder().append("#<bytes:");
     for (int i = 0; i < data.length && i < 16; i++) {
       buf.append(' ');
-      buf.append(Integer.toHexString(data[i]));
+      buf.append(Integer.toHexString((data[i] + 0x100) & 0xFF));
     }
     if (data.length >= 16)
       buf.append(" ...");
