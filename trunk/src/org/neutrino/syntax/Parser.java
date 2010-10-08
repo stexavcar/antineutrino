@@ -102,7 +102,7 @@ public class Parser {
         value = parseExpression();
       } else if (atFunctionDefinitionMarker()) {
         List<Parameter> params = new ArrayList<Parameter>();
-        String methodName = parseParameters(params);
+        String methodName = parseParameters("()", params);
         Tree.Expression body = parseFunctionBody(false);
         value = Tree.Lambda.create(methodName, params, body);
       } else {
@@ -262,9 +262,7 @@ public class Parser {
         expect(Type.COOLON);
         String method = expectName(true);
         List<Parameter> argParams = new ArrayList<Parameter>();
-        String inferredName = parseParameters(argParams);
-        if (method == null)
-          method = inferredName;
+        method = parseParameters(method, argParams);
         Tree.Expression body = parseFunctionBody(true);
         List<Parameter> params = new ArrayList<Parameter>();
         params.add(new Parameter("this", name));
@@ -277,7 +275,7 @@ public class Parser {
         return new Tree.Inheritance(annots, name, parent);
       } else if (atFunctionDefinitionMarker()) {
         List<Parameter> params = new ArrayList<Parameter>();
-        String methodName = parseParameters(params);
+        String methodName = parseParameters("()", params);
         Tree.Expression body = parseFunctionBody(true);
         Tree.Expression lambda = Tree.Lambda.create(methodName, params, body);
         return new Tree.Definition(annots, name, lambda);
@@ -302,8 +300,8 @@ public class Parser {
     return new Parameter(name, type);
   }
 
-  private String parseParameters(List<Parameter> params) throws SyntaxError {
-    String methodName = "()";
+  private String parseParameters(String name, List<Parameter> params) throws SyntaxError {
+    String methodName = name;
     Token.Type begin = Type.LPAREN;
     Token.Type end = Type.RPAREN;
     if (at(Type.LBRACK)) {
@@ -470,7 +468,7 @@ public class Parser {
     if (at(Type.FN)) {
       expect(Type.FN);
       List<Parameter> params = new ArrayList<Parameter>();
-      String methodName = parseParameters(params);
+      String methodName = parseParameters("()", params);
       Tree.Expression body = parseFunctionBody(false);
       return Tree.Lambda.create(methodName, params, body);
     } else if (at(Type.IF)) {
