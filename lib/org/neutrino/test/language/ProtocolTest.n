@@ -14,10 +14,10 @@ def B::foo() -> 2;
 
 def LanguageTest::test_simple_inheritance() {
   this.on_start("simple inheritance");
-  def a := new A;
+  def a := new A { };
   assert_equal(1, a.foo());
   assert_equal(3, a.bar());
-  def b := new B;
+  def b := new B { };
   assert_equal(2, b.foo());
   assert_equal(3, b.bar());
   def c := new B { baz := 4, bar := 5 };

@@ -3,7 +3,7 @@ def LamFoo::m() -> (fn () -> this);
 
 def LanguageTest::test_lambdas() {
   this.on_start("lambdas");
-  def lam_foo := new LamFoo;
+  def lam_foo := new LamFoo { };
   def fun := lam_foo.m();
   def result := fun();
   assert_equal(lam_foo, result);
