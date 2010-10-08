@@ -16,4 +16,5 @@ def LanguageTest::run() {
   this.test_lambdas();
   this.test_logical_operators();
   this.test_indexing();
+  this.test_getters_setters();
 }

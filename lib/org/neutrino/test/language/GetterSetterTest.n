@@ -1,0 +1,30 @@
+protocol MutablePoint;
+
+def new_mutable_point(x, y) -> new MutablePoint {
+  x_ := new_ref(x),
+  y_ := new_ref(y)
+};
+
+def MutablePoint::x -> this.x_.get;
+
+def MutablePoint::y -> this.y_.get;
+
+def MutablePoint::x := (v) -> this.x_.set(v);
+
+def MutablePoint::y := (v) -> this.y_.set(v);
+
+def MutablePoint::to_string -> "#<a Point: " + this.x.to_string + ", "
+   + this.y.to_string + ">";
+
+def LanguageTest::test_getters_setters() {
+  this.on_start("getters and setters");
+  def p := new_mutable_point(4, 5);
+  assert_equal(4, p.x);
+  assert_equal(5, p.y);
+  p.x := 9;
+  assert_equal(9, p.x);
+  assert_equal(5, p.y);
+  p.y := 11;
+  assert_equal(9, p.x);
+  assert_equal(11, p.y);
+}
