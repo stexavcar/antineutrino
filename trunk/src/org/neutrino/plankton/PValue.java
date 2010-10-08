@@ -14,7 +14,8 @@ public interface PValue {
 
     STRING(Plankton.kStringTag), MAP(Plankton.kMapTag),
     BLOB(Plankton.kBlobTag), INTEGER(Plankton.kIntegerTag),
-    ARRAY(Plankton.kArrayTag), SEED(Plankton.kSeedTag);
+    ARRAY(Plankton.kArrayTag), SEED(Plankton.kSeedTag),
+    BOOL(Plankton.kBoolTag);
 
     private final int tag;
 

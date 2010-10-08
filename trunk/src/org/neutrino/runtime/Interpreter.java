@@ -55,7 +55,7 @@ public class Interpreter {
         RValue self = frame.getArgument(argc, 0);
         Lambda lambda = frame.lookupMethod(name, argc);
         if (lambda == null)
-          throw new LookupError(frame);
+          throw new InterpreterError.MethodNotFound(frame);
         frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
         break;
       }
@@ -67,7 +67,7 @@ public class Interpreter {
         RValue self = frame.getArgument(argc, 0);
         Lambda lambda = frame.lookupMethod(name, argc);
         if (lambda == null)
-          throw new LookupError(frame);
+          throw new InterpreterError.MethodNotFound(frame);
         frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
         frame.marker = cont;
         break;
@@ -127,7 +127,8 @@ public class Interpreter {
         int index = frame.code[frame.pc + 1];
         String name = (String) frame.getLiteral(index);
         RValue value = frame.module.getUniverse().getGlobal(name, this);
-        assert value != null: "Undefined global " + name;
+        if (value == null)
+          throw new InterpreterError.UndefinedGlobal(name, frame);
         frame.stack.push(value);
         frame.pc += 2;
         break;

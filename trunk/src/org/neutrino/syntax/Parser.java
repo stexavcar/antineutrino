@@ -259,6 +259,9 @@ public class Parser {
     List<Annotation> annots = parseAnnotations();
     if (at(Type.DEF)) {
       expect(Type.DEF);
+      boolean hasProtocol = at(Type.PROTOCOL);
+      if (hasProtocol)
+        expect(Type.PROTOCOL);
       String name = expect(Type.IDENT);
       if (at(Type.COLON_EQ)) {
         expect(Type.COLON_EQ);
@@ -272,7 +275,7 @@ public class Parser {
         method = parseParameters(method, argParams);
         Tree.Expression body = parseFunctionBody(true);
         List<Parameter> params = new ArrayList<Parameter>();
-        params.add(new Parameter("this", name));
+        params.add(new Parameter("this", name, hasProtocol));
         params.addAll(argParams);
         return new Tree.Method(annots, method, params, body);
       } else if (at(Type.IS)) {
@@ -305,7 +308,7 @@ public class Parser {
       expect(Type.COLON);
       type = expect(Type.IDENT);
     }
-    return new Parameter(name, type);
+    return new Parameter(name, type, false);
   }
 
   private String parseParameters(String name, List<Parameter> params) throws SyntaxError {
@@ -545,19 +548,17 @@ public class Parser {
         protocols.add(next);
       }
     }
-    if (at(Type.LBRACE)) {
-      expect(Type.LBRACE);
-      if (!at(Type.RBRACE)) {
-        Tree.New.Field first = parseNewField();
-        fields.add(first);
-        while (at(Type.COMMA)) {
-          expect(Type.COMMA);
-          Tree.New.Field next = parseNewField();
-          fields.add(next);
-        }
+    expect(Type.LBRACE);
+    if (!at(Type.RBRACE)) {
+      Tree.New.Field first = parseNewField();
+      fields.add(first);
+      while (at(Type.COMMA)) {
+        expect(Type.COMMA);
+        Tree.New.Field next = parseNewField();
+        fields.add(next);
       }
-      expect(Type.RBRACE);
     }
+    expect(Type.RBRACE);
     StringBuilder buf = new StringBuilder();
     boolean first = true;
     for (String protocol : protocols) {

@@ -1,0 +1,8 @@
+protocol ProtMethTester;
+
+def protocol ProtMethTester::foo -> 4;
+
+def LanguageTest::test_protocol_methods() {
+  this.on_start("protocol methods");
+  assert_equal(4, ProtMethTester.foo);
+}

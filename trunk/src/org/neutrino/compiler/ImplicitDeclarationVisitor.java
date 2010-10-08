@@ -22,7 +22,8 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
 
   @Override
   public void visitNew(Tree.New that) {
-    RProtocol proto = module.createImplicitProtocol(that.getDisplayName());
+    RProtocol proto = module.createImplicitProtocol(that.getOrigin(),
+        that.getDisplayName());
     that.bind(proto);
     int eagerFieldCount = 0;
     for (Tree.New.Field field : that.getFields()) {
@@ -32,7 +33,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
         CodeBuilder builder = module.createMethod(
             that.getOrigin(),
             Collections.<Annotation>emptyList(), name,
-            Collections.singletonList(new Parameter("this", proto.getId())));
+            Collections.singletonList(new Parameter("this", proto.getId(), false)));
         Assembler assm = builder.getAssembler();
         assm.field(eagerFieldCount);
         assm.rethurn();
@@ -43,7 +44,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
     for (Tree.New.Field field : that.getFields()) {
       if (!field.hasEagerValue()) {
         String name = field.getName();
-        Parameter param = new Parameter("this", proto.getId());
+        Parameter param = new Parameter("this", proto.getId(), false);
         List<Parameter> allParams = new ArrayList<Parameter>();
         allParams.add(param);
         allParams.addAll(field.getParameters());

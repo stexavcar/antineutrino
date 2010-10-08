@@ -10,12 +10,12 @@ import org.neutrino.syntax.Annotation;
 @Growable(RProtocol.TAG)
 public class RProtocol extends RValue implements ISeedable {
 
-  private static final TypeId TYPE_ID = TypeId.get("Protocol");
   static final String TAG = "org::neutrino::runtime::RProtocol";
 
   public @SeedMember List<Annotation> annotations;
   public @SeedMember String id;
   public @SeedMember String displayName;
+  public @SeedMember TypeId protocolTypeId;
   public @SeedMember TypeId instanceTypeId;
 
   public RProtocol(List<Annotation> annotations, String id,
@@ -23,20 +23,19 @@ public class RProtocol extends RValue implements ISeedable {
     this.annotations = annotations;
     this.id = id;
     this.displayName = displayName;
-    this.instanceTypeId = createTypeId();
+    String typeIdKey = getTypeIdKey();
+    this.protocolTypeId = TypeId.get(typeIdKey + ".protocol");
+    this.instanceTypeId = TypeId.get(typeIdKey);
   }
 
   public RProtocol() { }
 
-  private TypeId createTypeId() {
-    String key = id;
+  private String getTypeIdKey() {
     for (Annotation annot : annotations) {
-      if (annot.getTag().equals(Native.ANNOTATION)) {
-        key = ((RString) annot.getArgument(0)).getValue();
-        break;
-      }
+      if (annot.getTag().equals(Native.ANNOTATION))
+        return ((RString) annot.getArgument(0)).getValue();
     }
-    return TypeId.get(key);
+    return id;
   }
 
   public void initialize() { }
@@ -55,7 +54,7 @@ public class RProtocol extends RValue implements ISeedable {
 
   @Override
   public TypeId getTypeId() {
-    return TYPE_ID;
+    return this.protocolTypeId;
   }
 
   @Override

@@ -13,11 +13,13 @@ public class Parameter implements ISeedable {
 
   public @SeedMember String name;
   public @SeedMember String type;
+  public @SeedMember boolean isProtocolMethod;
   private TypeId typeId;
 
-  public Parameter(String name, String type) {
+  public Parameter(String name, String type, boolean isProtocolMethod) {
     this.name = name;
     this.type = type;
+    this.isProtocolMethod = isProtocolMethod;
   }
 
   public Parameter() { }
@@ -27,7 +29,7 @@ public class Parameter implements ISeedable {
       return;
     RProtocol proto = module.getProtocol(type);
     assert proto != null : "Undefined protocol " + type;
-    this.typeId = proto.getInstanceTypeId();
+    this.typeId = isProtocolMethod ? proto.getTypeId() : proto.getInstanceTypeId();
   }
 
   public TypeId getTypeId() {

@@ -102,8 +102,8 @@ public class Source {
 
     @Override
     public void visitProtocol(Protocol that) {
-      module.createProtocol(that.getAnnotations(), that.getName(),
-          that.getName());
+      module.createProtocol(Source.this, that.getAnnotations(),
+          that.getName(), that.getName());
     }
 
     @Override

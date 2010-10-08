@@ -17,4 +17,5 @@ def LanguageTest::run() {
   this.test_logical_operators();
   this.test_indexing();
   this.test_getters_setters();
+  this.test_protocol_methods();
 }
