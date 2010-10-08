@@ -15,7 +15,7 @@ public class ParserTest extends TestCase {
 
   private static void parserTest(String source, String expected) {
     try {
-      List<Token> tokens = Scanner.tokenize(source);
+      List<Token> tokens = Scanner.tokenize(null, source);
       Unit tree = Parser.parse(null, tokens);
       assertEquals(expected, tree.toString());
     } catch (SyntaxError se) {
@@ -25,7 +25,7 @@ public class ParserTest extends TestCase {
 
   private static void errorTest(String source, String token) {
     try {
-      List<Token> tokens = Scanner.tokenize(source);
+      List<Token> tokens = Scanner.tokenize(null, source);
       Parser.parse(null, tokens);
       fail();
     } catch (SyntaxError se) {

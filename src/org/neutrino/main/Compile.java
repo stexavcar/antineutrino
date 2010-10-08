@@ -26,13 +26,23 @@ public class Compile {
     File path = new File(rootPath);
     top.includeFromPath(path);
     Universe binary = compile(top);
+    if (binary == null)
+      System.exit(1);
     FileOutputStream out = new FileOutputStream(outputPath);
     binary.write(out);
     out.close();
   }
 
-  public static Universe compile(CompilerModule top) throws SyntaxError {
-    top.parseAll();
+  public static Universe compile(CompilerModule top) {
+    try {
+      top.parseAll();
+    } catch (SyntaxError se) {
+      System.out.println(se.getFileName() + ":" + se.getLineNumber() +
+          ": " + se.getMessage());
+      for (String line : se.getSourceUnderline())
+        System.out.println(line);
+      return null;
+    }
     BinaryBuilder builder = Universe.builder();
     top.writeToBinary(builder);
     return builder.getResult();
