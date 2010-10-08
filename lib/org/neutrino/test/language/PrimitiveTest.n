@@ -3,6 +3,7 @@ def LanguageTest::test_primitives() {
   this.test_singletons();
   this.test_conditionals();
   this.test_number_encoding();
+  this.test_radix_literals();
 }
 
 def LanguageTest::test_integer_operators() {
@@ -32,4 +33,13 @@ def tne_sum(n) -> if n = 0 then 0 else n + tne_sum(n - 1);
 def LanguageTest::test_number_encoding() {
   this.on_start("number encoding");
   assert_true(tne_sum(256) = 32896);
+}
+
+def LanguageTest::test_radix_literals() {
+  this.on_start("radix literals");
+  assert_equal(21, 2r10101);
+  assert_equal(30387, 8r73263);
+  assert_equal(98765, 10r98765);
+  assert_equal(28731, 13r10101);
+  assert_equal(703710, 16rABCDE);
 }

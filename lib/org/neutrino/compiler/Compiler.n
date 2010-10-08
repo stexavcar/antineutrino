@@ -3,5 +3,7 @@ def compile_main(args) {
   def binary_name := args[0];
   def file := open_file(binary_name);
   def contents := file.read_binary();
-  print(contents);
+  def binary := new_mach_o(contents);
+  print(binary.header.magic);
 }
+

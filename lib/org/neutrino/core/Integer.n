@@ -17,7 +17,11 @@ def Integer::>(that: Integer) -> not (this < that or this = that);
 
 def Integer::=(that: Integer) -> internal "int=int";
 
-def Integer::..(that: Integer) -> new Interval {
+def Integer::|(that: Integer) -> internal "int|int";
+
+def Integer::<<(that: Integer) -> internal "int<<int";
+
+def Integer::..(that) -> new Interval {
   from := this,
   to := that
 };

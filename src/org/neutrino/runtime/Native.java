@@ -92,6 +92,24 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("int|int") static final Impl INT_BITWISE_OR = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RInteger a = (RInteger) args.getThis();
+      RInteger b = (RInteger) args.getArgument(0);
+      return new RInteger(a.getValue() | b.getValue());
+    }
+  };
+
+  @Marker("int<<int") static final Impl INT_SHL = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RInteger a = (RInteger) args.getThis();
+      RInteger b = (RInteger) args.getArgument(0);
+      return new RInteger(a.getValue() << b.getValue());
+    }
+  };
+
   @Marker("int-int") static final Impl INT_MINUS = new Impl() {
     @Override
     public RValue call(Arguments args) {
@@ -143,6 +161,16 @@ public class Native implements ISeedable {
       RString self = (RString) args.getThis();
       RString other = (RString) args.getArgument(0);
       return RBoolean.get(self.getValue().equals(other.getValue()));
+    }
+  };
+
+  @Marker("ord2str") static final Impl ORD_2_STR = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      int value = ((RInteger) args.getFunctionArgument(0)).getValue();
+      if (value == 0)
+        return new RString("");
+      return new RString(Character.toString((char) value));
     }
   };
 
@@ -227,7 +255,7 @@ public class Native implements ISeedable {
     public RValue call(Arguments args) {
       RByteArray arr = (RByteArray) args.getThis();
       RInteger index = (RInteger) args.getArgument(0);
-      return new RInteger(arr.get(index.getValue()));
+      return new RInteger((arr.get(index.getValue()) + 0x100) & 0xFF);
     }
   };
 

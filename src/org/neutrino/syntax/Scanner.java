@@ -34,13 +34,20 @@ public class Scanner {
   }
 
   private static boolean isDigit(char c) {
-    return Character.isDigit(c);
+    switch (Character.toLowerCase(c)) {
+    case '0': case '1': case '2': case '3': case '4': case '5':
+    case '6': case '7': case '8': case '9': case 'a': case 'b':
+    case 'c': case 'd': case 'e': case 'f':
+      return true;
+    default:
+      return false;
+    }
   }
 
   private static boolean isOperator(char c) {
     switch (c) {
     case '+': case '-': case '.': case '@': case '%': case '*':
-    case '>': case '<': case '!': case '?': case '=':
+    case '>': case '<': case '!': case '?': case '=': case '|':
       return true;
     default:
       return false;
@@ -226,7 +233,7 @@ public class Scanner {
 
   private Token.Type scanNumber() {
     assert isDigit(getCurrent());
-    while (hasMore() && isDigit(getCurrent()))
+    while (hasMore() && (isDigit(getCurrent()) || (getCurrent() == 'r')))
       advance();
     return Token.Type.NUMBER;
   }

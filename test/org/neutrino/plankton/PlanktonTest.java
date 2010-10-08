@@ -42,6 +42,13 @@ public class PlanktonTest extends TestCase {
     assertEquals("hey!", ((PString) result).getValue());
   }
 
+  public void testLongEncoding() {
+    int value = (int) 4277009102L;
+    byte[] data = marshal(Plankton.newInteger(value));
+    PValue result = unmarshal(data);
+    assertEquals(value, ((PInteger) result).getValue());
+  }
+
   public void testCompositeEncoding() {
     final PMap original = Plankton.newMap(new HashMap<PString, PValue>() {{
       put(Plankton.newString("a"), Plankton.newInteger(4));
