@@ -212,7 +212,11 @@ def DySymtabCommand::to_string -> "#<a DySymtabCommand>";
 protocol DyLinkerCommand;
 def DyLinkerCommand is LoadCommand;
 
-def DyLinkerCommand::to_string -> "#<a DyLinkerCommand>";
+def DyLinkerCommand::to_string -> "#<a DyLinkerCommand: " + this.name + ">";
+
+def DyLinkerCommand::name_offset -> this.data.get_int32(8);
+
+def DyLinkerCommand::name -> this.data.get_c_string(this.name_offset);
 
 (*
  * struct uuid_command {
@@ -224,7 +228,7 @@ def DyLinkerCommand::to_string -> "#<a DyLinkerCommand>";
 protocol UuidCommand;
 def UuidCommand is LoadCommand;
 
-def UuidCommand::to_string -> "#<an UuidCommand>";
+def UuidCommand::to_string -> "#<a UuidCommand>";
 
 (*
  * struct thread_command {
@@ -246,13 +250,28 @@ def ThreadCommand::to_string -> "#<a ThreadCommand>";
  *   uint_32 cmdsize;
  *   struct dylib dylib;
  * };
+ *
+ * struct dylib {
+ *   union lc_str  name;
+ *   uint_32 timestamp;
+ *   uint_32 current_version;
+ *   uint_32 compatibility_version;
+ * };
  *)
 protocol DylibCommand;
 def DylibCommand is LoadCommand;
 
-def DylibCommand::to_string -> "#<a DylibCommand:" + this.name + ">";
+def DylibCommand::to_string -> "#<a DylibCommand: " + this.name + ">";
 
-def DylibCommand::name -> this.data.get_c_string(this.data.get_int32(0));
+def DylibCommand::name_offset -> this.data.get_int32(8);
+
+def DylibCommand::name -> this.data.get_c_string(this.name_offset);
+
+def DylibCommand::timestamp -> this.data.get_int32(12);
+
+def DylibCommand::current_version -> this.data.get_int32(16);
+
+def DylibCommand::compatibility_version -> this.data.get_int32(20);
  
 protocol MachO;
 
