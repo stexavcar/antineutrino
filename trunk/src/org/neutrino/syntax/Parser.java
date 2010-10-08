@@ -571,6 +571,20 @@ public class Parser {
     return new Tree.Collection(values);
   }
 
+  private int parseNumber(String str) {
+    int index = str.indexOf('r');
+    int radix;
+    String body;
+    if (index == -1) {
+      radix = 10;
+      body = str;
+    } else {
+      radix = Integer.parseInt(str.substring(0, index));
+      body = str.substring(index + 1);
+    }
+    return (int) Long.parseLong(body, radix);
+  }
+
   /**
    * <atomic>
    *   -> <ident>
@@ -590,7 +604,7 @@ public class Parser {
     }
     case NUMBER: {
       String str = expect(Type.NUMBER);
-      int value = Integer.parseInt(str);
+      int value = parseNumber(str);
       return new Tree.Number(value);
     }
     case NEW:

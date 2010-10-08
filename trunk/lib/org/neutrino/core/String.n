@@ -6,3 +6,5 @@
 def String::+(that: String) -> internal "str+str";
 
 def String::=(that: String) -> internal "str=str";
+
+def string_from_ordinal(value) -> internal "ord2str";
