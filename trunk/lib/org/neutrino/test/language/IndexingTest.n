@@ -13,7 +13,7 @@ def LanguageTest::test_indexing() {
 
 def LanguageTest::test_indexing_dimensions() {
   this.on_start("indexing dimensions");
-  def idxer := new IndexingTester;
+  def idxer := new IndexingTester { };
   assert_equal(1, idxer[4]);
   assert_equal(5, idxer[8]);
   assert_equal(14, idxer[4, 5]);
@@ -32,7 +32,7 @@ def LanguageTest::test_local_indexing() {
 
 def LanguageTest::test_index_assignment() {
   this.on_start("index assignment");
-  def idxer := new IndexingTester;
+  def idxer := new IndexingTester { };
   assert_equal(1, idxer[0] := 2);
   assert_equal(5, idxer[4, 27] := 8);
 }

@@ -12,9 +12,9 @@ def Cons is List;
 
 (* Core methods *)
 
-def List::empty() -> new Empty;
+def List::empty() -> new Empty { };
 
-def empty() -> new Empty;
+def empty() -> new Empty { };
 
 def cons(el, list : List) -> new Cons {head := el, tail := list};
 
