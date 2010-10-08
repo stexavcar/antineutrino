@@ -5,4 +5,5 @@ def new_example_test(counter) -> new ExampleTest { count := counter };
 
 def ExampleTest::run() {
   this.test_hanoi();
+  this.test_list();
 }
