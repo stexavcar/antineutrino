@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.neutrino.compiler.Source;
 import org.neutrino.compiler.Symbol;
 import org.neutrino.compiler.Symbol.LocalSymbol;
 import org.neutrino.pib.Parameter;
@@ -473,15 +474,16 @@ public class Tree {
 
   public static class Lambda {
 
-    public static Expression create(String methodName, List<Parameter> params,
-        Expression body) {
+    public static Expression create(Source source, String methodName, List<Parameter> params,
+        Expression body, String functionName) {
       New.Field call = new New.Field(params, methodName, body, false);
-      return new New(Collections.singletonList(call),
-          Collections.<String>emptyList(), "Lambda");
+      return new New(source, Collections.singletonList(call),
+          Collections.<String>emptyList(), functionName);
     }
 
-    public static Expression create(List<Parameter> params, Expression body) {
-      return create("()", params, body);
+    public static Expression create(Source source, List<Parameter> params,
+        Expression body, String functionName) {
+      return create(source, "()", params, body, functionName);
     }
 
     public static Expression createCall(Expression fun, List<Expression> args) {
@@ -495,15 +497,17 @@ public class Tree {
 
   public static class If {
 
-    public static Expression create(Expression cond, Expression thenPart,
-        Tree.Expression elsePart) {
+    public static Expression create(Source source, Expression cond,
+        Expression thenPart, Tree.Expression elsePart) {
       return Lambda.createCall(
           Lambda.createCall(
               new Identifier("select"),
               Arrays.asList(
                   cond,
-                  Lambda.create(Collections.<Parameter>emptyList(), thenPart),
-                  Lambda.create(Collections.<Parameter>emptyList(), elsePart))),
+                  Lambda.create(source, Collections.<Parameter>emptyList(),
+                      thenPart, "then"),
+                  Lambda.create(source ,Collections.<Parameter>emptyList(),
+                      elsePart, "else"))),
           Collections.<Expression>emptyList());
     }
 
@@ -531,10 +535,10 @@ public class Tree {
       callback.accept(visitor);
     }
 
-    public static Expression create(String name, Expression body) {
+    public static Expression create(Source source, String name, Expression body) {
       Parameter param = new Parameter(name, "Object");
-      Expression lambda = Lambda.create(Collections.singletonList(param),
-          body);
+      Expression lambda = Lambda.create(source, Collections.singletonList(param),
+          body, "with_1cc");
       return new With1Cc(lambda);
     }
 
@@ -694,17 +698,23 @@ public class Tree {
 
     }
 
+    private final Source origin;
     private final List<Field> fields;
     private final List<String> protocols;
     private final String displayName;
     private RProtocol protocol;
     private List<Symbol> captures;
 
-    public New(List<Field> fields, List<String> protocols,
+    public New(Source origin, List<Field> fields, List<String> protocols,
         String displayName) {
+      this.origin = origin;
       this.fields = fields;
       this.protocols = protocols;
       this.displayName = displayName;
+    }
+
+    public Source getOrigin() {
+      return origin;
     }
 
     public List<String> getProtocols() {

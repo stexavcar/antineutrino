@@ -30,6 +30,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
       if (field.hasEagerValue()) {
         String name = field.getName();
         CodeBuilder builder = module.createMethod(
+            that.getOrigin(),
             Collections.<Annotation>emptyList(), name,
             Collections.singletonList(new Parameter("this", proto.getId())));
         Assembler assm = builder.getAssembler();
@@ -47,7 +48,9 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
         allParams.add(param);
         allParams.addAll(field.getParameters());
         CodeBuilder builder = module.createMethod(
-            Collections.<Annotation>emptyList(), name,
+            that.getOrigin(),
+            Collections.<Annotation>emptyList(),
+            name,
             allParams);
         Assembler assm = builder.getAssembler();
         CodeGenerator codegen = new CodeGenerator(assm);

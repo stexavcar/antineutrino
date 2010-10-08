@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import org.neutrino.compiler.Source;
 import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.syntax.Annotation;
@@ -48,15 +49,15 @@ public class ModuleBuilder {
     locals.add(shuper);
   }
 
-  public CodeBuilder createDefinition(Tree.Definition def) {
-    CodeBuilder result = new CodeBuilder(def.getAnnotations());
+  public CodeBuilder createDefinition(Source origin, Tree.Definition def) {
+    CodeBuilder result = new CodeBuilder(origin, def.getAnnotations());
     defs.put(def.getName(), result);
     return result;
   }
 
-  public CodeBuilder createMethod(List<Annotation> annots, String name,
+  public CodeBuilder createMethod(Source origin, List<Annotation> annots, String name,
       List<Parameter> params) {
-    CodeBuilder result = new CodeBuilder(annots);
+    CodeBuilder result = new CodeBuilder(origin, annots);
     methods.add(new MethodInfo(name, params, result));
     return result;
   }

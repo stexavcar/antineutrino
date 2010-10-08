@@ -15,7 +15,8 @@ public class Interpreter {
   private static final CodeBundle BOTTOM_FRAME_CODE = new CodeBundle(
       new byte[] { Opcode.kCall, 0, 0, Opcode.kTerminate },
       Collections.<Object>emptyList(),
-      0);
+      0,
+      null);
 
   private final Native.Arguments arguments = new Native.Arguments();
 
@@ -29,16 +30,6 @@ public class Interpreter {
 
   public RValue interpret(Lambda lambda, RValue... args) {
     return interpret(lambda.getModule(), lambda.getCode(), args);
-  }
-
-  private String getMethodName(String name, int argc, Frame frame) {
-    StringBuilder buf = new StringBuilder().append(name).append("(");
-    for (int i = 0; i < argc; i++) {
-      if (i > 0) buf.append(", ");
-      RValue value = frame.getArgument(argc, i);
-      buf.append(value.getTypeId());
-    }
-    return buf.append(")").toString();
   }
 
   private RValue interpret(Frame frame) {
@@ -64,8 +55,7 @@ public class Interpreter {
         RValue self = frame.getArgument(argc, 0);
         Lambda lambda = frame.lookupMethod(name, argc);
         if (lambda == null)
-          frame.lookupMethod(name, argc);
-        assert lambda != null : "Method " + getMethodName(name, argc, frame) + " not found.";
+          throw new LookupError(frame);
         frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
         break;
       }
@@ -76,7 +66,8 @@ public class Interpreter {
         frame.stack.push(cont);
         RValue self = frame.getArgument(argc, 0);
         Lambda lambda = frame.lookupMethod(name, argc);
-        assert lambda != null : "Method " + getMethodName(name, argc, frame) + " not found.";
+        if (lambda == null)
+          throw new LookupError(frame);
         frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
         frame.marker = cont;
         break;

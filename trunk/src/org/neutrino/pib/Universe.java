@@ -99,6 +99,19 @@ public class Universe implements ISeedable {
         : parallelUniverse.getProtocol(name);
   }
 
+  public RProtocol getProtocol(TypeId typeId) {
+    for (Module module : modules.values()) {
+      for (RProtocol proto : module.protos.values()) {
+        if (proto.getInstanceTypeId() == typeId)
+          return proto;
+      }
+    }
+    return (parallelUniverse == null)
+      ? null
+      : parallelUniverse.getProtocol(typeId);
+  }
+
+
 
   public List<TypeId> getParents(TypeId id) {
     List<TypeId> parents = new ArrayList<TypeId>();

@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.neutrino.compiler.Source;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RValue;
@@ -11,9 +12,14 @@ import org.neutrino.runtime.RValue;
 
 public class Assembler {
 
+  private final Source origin;
   private final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
   private final List<Object> literals = new ArrayList<Object>();
   private int localCount = -1;
+
+  public Assembler(Source origin) {
+    this.origin = origin;
+  }
 
   public void setLocalCount(int localCount) {
     this.localCount = localCount;
@@ -123,7 +129,8 @@ public class Assembler {
 
   public CodeBundle getCode() {
     assert localCount >= 0;
-    return new CodeBundle(bytes.toByteArray(), literals, localCount);
+    return new CodeBundle(bytes.toByteArray(), literals, localCount,
+        origin.getName());
   }
 
 }

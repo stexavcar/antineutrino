@@ -42,7 +42,7 @@ public class Source {
     if (this.code == null) {
     	try {
       List<Token> tokens = Scanner.tokenize(contents);
-      this.code = Parser.parse(tokens);
+      this.code = Parser.parse(this, tokens);
     	} catch (SyntaxError se) {
     		System.err.println("Parse error in " + name + ": " + se);
     		throw se;
@@ -59,10 +59,8 @@ public class Source {
     String fileName = file.getName();
     if (!fileName.endsWith(EXTENSION))
       return null;
-    int endPos = fileName.length() - EXTENSION.length();
-    String name = fileName.substring(0, endPos);
     String contents = readFile(file);
-    return create(name, contents);
+    return create(file.getPath(), contents);
   }
 
   public static Source create(String name, String str) {
@@ -99,7 +97,7 @@ public class Source {
 
     @Override
     public void visitDefinition(Definition that) {
-      CodeBuilder builder = module.createDefinition(that);
+      CodeBuilder builder = module.createDefinition(Source.this, that);
       Compiler.compile(module, builder.getAssembler(), that.getValue());
     }
 
@@ -111,7 +109,7 @@ public class Source {
 
     @Override
     public void visitMethodDefinition(Method that) {
-      CodeBuilder builder = module.createMethod(that.getAnnotations(),
+      CodeBuilder builder = module.createMethod(Source.this, that.getAnnotations(),
           that.getName(), that.getParameters());
       Compiler.compileMethod(module, builder.getAssembler(), that);
     }
