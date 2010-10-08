@@ -39,8 +39,11 @@ public class Run {
     Lambda entryPointBinding = universe.getEntryPoint(entryPoint);
     assert entryPointBinding != null : "No entry point found.";
     RValue entryPointValue = inter.interpret(entryPointBinding);
-    Lambda entryPointLambda = universe.getLambda((RObject) entryPointValue);
     RPrimitiveArray argsObject = buildStringList(args);
+    Lambda entryPointLambda = universe.getLambda((RObject) entryPointValue,
+        argsObject);
+    if (entryPointLambda == null)
+      entryPointLambda = universe.getLambda((RObject) entryPointValue);
     inter.interpret(entryPointLambda, argsObject);
   }
 

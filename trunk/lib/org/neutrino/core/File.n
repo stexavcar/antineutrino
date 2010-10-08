@@ -2,4 +2,4 @@ def open_file(name) -> internal "open_file";
 
 @native("file") protocol File;
 
-def File::read() -> internal "file.read";
+def File::read_binary -> internal "file.read";

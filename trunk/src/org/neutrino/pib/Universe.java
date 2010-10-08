@@ -117,8 +117,8 @@ public class Universe implements ISeedable {
     return methodLookupHelper.lookupMethod(name, argc, frame);
   }
 
-  public Lambda getLambda(RObject function) {
-    return methodLookupHelper.lookupLambda(function);
+  public Lambda getLambda(RObject function, RValue... args) {
+    return methodLookupHelper.lookupLambda(function, args);
   }
 
   public void write(OutputStream out) throws IOException {

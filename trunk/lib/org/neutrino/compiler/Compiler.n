@@ -1,7 +1,7 @@
 @entry_point("compile")
 def compile_main(args) {
-  def binary_name := args.get(0);
+  def binary_name := args[0];
   def file := open_file(binary_name);
-  def contents := file.read();
-  print(contents.length());
+  def contents := file.read_binary();
+  print(contents);
 }

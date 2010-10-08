@@ -30,10 +30,12 @@ public class MethodLookupHelper {
       return null;
   }
 
-  public Lambda lookupLambda(RObject holder) {
+  public Lambda lookupLambda(RObject holder, RValue... args) {
     Frame fakeFrame = new Frame(null, null, new CodeBundle(), null);
     fakeFrame.stack.push(holder);
-    return lookupMethod("()", 1, fakeFrame);
+    for (RValue arg : args)
+      fakeFrame.stack.push(arg);
+    return lookupMethod("()", 1 + args.length, fakeFrame);
   }
 
   private RMethod findPerfectMatch(String name, int argc, Frame frame,
