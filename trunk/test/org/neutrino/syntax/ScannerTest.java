@@ -1,10 +1,10 @@
 package org.neutrino.syntax;
 
-import org.neutrino.syntax.Token.Type;
-
 import java.util.Arrays;
 
 import junit.framework.TestCase;
+
+import org.neutrino.syntax.Token.Type;
 
 /**
  * Unit test of the {@link Scanner} class.
@@ -57,7 +57,7 @@ public class ScannerTest extends TestCase {
 
   private void scannerTest(String input, Token... expected) {
     try {
-      assertEquals(Arrays.asList(expected), Scanner.tokenize(input));
+      assertEquals(Arrays.asList(expected), Scanner.tokenize(null, input));
     } catch (SyntaxError se) {
       fail(se.toString());
     }

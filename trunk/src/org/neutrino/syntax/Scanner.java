@@ -3,6 +3,8 @@ package org.neutrino.syntax;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.neutrino.compiler.Source;
+
 /**
  * A simple scanner that turns a flat string into a list of neutrino
  * source tokens.
@@ -11,12 +13,14 @@ import java.util.List;
  */
 public class Scanner {
 
+  private final Source origin;
   private int cursor = 0;
   private final String source;
   private int startOffset = 0;
   private int endOffset = 0;
 
-  private Scanner(String source) {
+  private Scanner(Source origin, String source) {
+    this.origin = origin;
     this.source = source;
     skipWhiteSpace();
   }
@@ -129,7 +133,7 @@ public class Scanner {
     int start = cursor;
     int end = cursor + 1;
     Token token = new Token(Token.Type.ERROR, value, start, end);
-    throw new SyntaxError(token);
+    throw new SyntaxError(origin, token);
   }
 
   /**
@@ -254,8 +258,8 @@ public class Scanner {
     return tokens;
   }
 
-  public static List<Token> tokenize(String source) throws SyntaxError {
-    return new Scanner(source).scan();
+  public static List<Token> tokenize(Source origin, String source) throws SyntaxError {
+    return new Scanner(origin, source).scan();
   }
 
 }

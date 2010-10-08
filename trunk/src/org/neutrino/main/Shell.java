@@ -107,7 +107,7 @@ public class Shell {
   }
 
   private boolean isDeclaration(String source) throws SyntaxError {
-    List<Token> tokens = Scanner.tokenize(source);
+    List<Token> tokens = Scanner.tokenize(null, source);
     boolean isDeclaration;
     try {
       Parser.parse(null, tokens);

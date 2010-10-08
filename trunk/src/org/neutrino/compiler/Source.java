@@ -38,15 +38,14 @@ public class Source {
     return this.name;
   }
 
+  public String getContents() {
+    return contents;
+  }
+
   void ensureParsed() throws SyntaxError {
     if (this.code == null) {
-    	try {
-      List<Token> tokens = Scanner.tokenize(contents);
+      List<Token> tokens = Scanner.tokenize(this, contents);
       this.code = Parser.parse(this, tokens);
-    	} catch (SyntaxError se) {
-    		System.err.println("Parse error in " + name + ": " + se);
-    		throw se;
-    	}
     }
   }
 

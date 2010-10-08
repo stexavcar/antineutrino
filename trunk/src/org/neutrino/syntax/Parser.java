@@ -51,12 +51,16 @@ public class Parser {
     return new Tree.Unit(defs);
   }
 
+  private SyntaxError currentSyntaxError() {
+    return new SyntaxError(source, getCurrent());
+  }
+
   private String expect(Type type) throws SyntaxError {
     if (!hasMore())
-      throw new SyntaxError(new Token(Type.ERROR, "<eof>", 0, 0), type);
+      throw new SyntaxError(source, new Token(Type.ERROR, "<eof>", 0, 0), type);
     Token current = getCurrent();
     if (!current.getType().equals(type))
-      throw new SyntaxError(current, type);
+      throw new SyntaxError(source, current, type);
     String value = current.getValue();
     advance();
     return value;
@@ -109,7 +113,7 @@ public class Parser {
         Tree.Expression body = parseFunctionBody(false);
         value = Tree.Lambda.create(source, methodName, params, body, name);
       } else {
-        throw new SyntaxError(getCurrent());
+        throw currentSyntaxError();
       }
       Tree.Expression body;
       if (consumeSemicolon()) {
@@ -197,7 +201,7 @@ public class Parser {
       expect(Type.SEMI);
       return new Tree.Singleton(Tree.Singleton.Type.NULL);
     } else {
-      throw new SyntaxError(getCurrent());
+      throw currentSyntaxError();
     }
   }
 
@@ -284,7 +288,7 @@ public class Parser {
             params, body, name);
         return new Tree.Definition(annots, name, lambda);
       } else {
-        throw new SyntaxError(getCurrent());
+        throw currentSyntaxError();
       }
     } else {
       expect(Type.PROTOCOL);
@@ -376,7 +380,7 @@ public class Parser {
       argDelimStart = Type.LBRACK;
       argDelimEnd = Type.RBRACK;
     } else {
-      throw new SyntaxError(getCurrent());
+      throw currentSyntaxError();
     }
     List<Tree.Expression> args = new ArrayList<Tree.Expression>();
     args.add(recv);
@@ -522,7 +526,7 @@ public class Parser {
       body = parseFunctionBody(false);
       hasEagerValue = false;
     } else {
-      throw new SyntaxError(getCurrent());
+      throw currentSyntaxError();
     }
     return new Tree.New.Field(params, name, body, hasEagerValue);
   }
@@ -650,7 +654,7 @@ public class Parser {
     case HASH:
       return parsePrimitiveCollection();
     default:
-      throw new SyntaxError(current);
+      throw currentSyntaxError();
     }
   }
 
