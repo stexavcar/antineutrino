@@ -277,7 +277,7 @@ protocol MachO;
 
 def new_mach_o(data) {
   def header := new_mach_header(data);
-  def commands := new_array_list(header.ncmds);
+  def commands := ArrayList.make(header.ncmds);
   ref cursor := 28;
   (0 .. header.ncmds).for_each(fn (i) {
     def command := new_load_command(new_blob_view(data, cursor));

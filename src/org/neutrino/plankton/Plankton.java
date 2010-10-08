@@ -182,6 +182,32 @@ public class Plankton {
 
   }
 
+  private static class BoolImpl extends ValueImpl implements PBool {
+
+    private final boolean value;
+    private static final BoolImpl TRUE = new BoolImpl(true);
+    private static final BoolImpl FALSE = new BoolImpl(false);
+
+    private BoolImpl(boolean value) {
+      this.value = value;
+    }
+
+    @Override
+    public Type getType() {
+      return Type.BOOL;
+    }
+
+    @Override
+    public boolean getValue() {
+      return value;
+    }
+
+    public static PBool get(boolean value) {
+      return value ? TRUE : FALSE;
+    }
+
+  }
+
   private class SeedImpl extends ValueImpl implements PSeed {
 
     private final PValue tag;
@@ -236,6 +262,10 @@ public class Plankton {
 
   public static PInteger newInteger(int value) {
     return new IntegerImpl(value);
+  }
+
+  public static PBool newBool(boolean value) {
+    return BoolImpl.get(value);
   }
 
   public static PArray newArray(Collection<? extends PValue> elms) {
@@ -363,6 +393,7 @@ public class Plankton {
   static final int kSeedTag = 5;
   static final int kNewReference = 6;
   static final int kGetReference = 7;
+  static final int kBoolTag = 8;
 
   public void write(OutputStream out, PValue value) throws IOException {
     write(out, value, new CodecData());
@@ -433,6 +464,11 @@ public class Plankton {
       write(out, seed.getTag(), data);
       write(out, seed.getPayload(), data);
       break;
+    case BOOL:
+      out.write(type.getTag());
+      PBool bool = (PBool) value;
+      out.write(bool.getValue() ? 1 : 0);
+      break;
     default:
       assert false;
     }
@@ -482,6 +518,8 @@ public class Plankton {
         elms.add(read(in, data));
       return new ArrayImpl(elms);
     }
+    case kBoolTag:
+      return BoolImpl.get(in.read() != 0);
     case kSeedTag: {
       PValue seedTag = read(in, data);
       PValue payload = read(in, data);

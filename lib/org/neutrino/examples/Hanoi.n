@@ -10,7 +10,7 @@ def HanoiDisk::next -> this.next_.get();
 protocol Hanoi;
 
 def new_hanoi -> new Hanoi {
-  piles := new_array_list_of(#[null, null, null]),
+  piles := ArrayList.make(#[null, null, null]),
   moves := new_ref(0)
 };
 

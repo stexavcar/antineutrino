@@ -119,6 +119,7 @@ public class PlanktonRegistry {
   private final Map<Class<?>, ICodec<?>> typeCodecs = new HashMap<Class<?>, ICodec<?>>() {{
     put(INTEGER_CODEC.getSubjectClass(), INTEGER_CODEC);
     put(STRING_CODEC.getSubjectClass(), STRING_CODEC);
+    put(BOOL_CODEC.getSubjectClass(), BOOL_CODEC);
     put(BLOB_CODEC.getSubjectClass(), BLOB_CODEC);
   }};
 
@@ -173,6 +174,8 @@ public class PlanktonRegistry {
       return MAP_CODEC.decode(plankton, value);
     case ARRAY:
       return LIST_CODEC.decode(plankton, value);
+    case BOOL:
+      return BOOL_CODEC.decode(plankton, value);
     default:
       assert false;
       return null;
@@ -191,6 +194,21 @@ public class PlanktonRegistry {
     @Override
     public Class<Integer> getSubjectClass() {
       return Integer.class;
+    }
+  };
+
+  private static final ICodec<Boolean> BOOL_CODEC = new ICodec<Boolean>() {
+    @Override
+    public Boolean decode(Plankton plankton, PValue payload) {
+      return ((PBool) payload).getValue();
+    }
+    @Override
+    public PValue encode(Plankton plankton, Boolean obj) {
+      return Plankton.newBool(obj);
+    }
+    @Override
+    public Class<Boolean> getSubjectClass() {
+      return Boolean.class;
     }
   };
 
