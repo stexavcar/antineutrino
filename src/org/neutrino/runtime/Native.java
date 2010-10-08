@@ -280,7 +280,7 @@ public class Native implements ISeedable {
   @Marker("open_file") static final Impl OPEN_FILE = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RString name = (RString) args.getArgument(0);
+      RString name = (RString) args.getFunctionArgument(0);
       File file = new File(name.getValue());
       return new RFile(file);
     }
@@ -289,7 +289,7 @@ public class Native implements ISeedable {
   @Marker("exit") static final Impl EXIT = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RInteger value = (RInteger) args.getArgument(0);
+      RInteger value = (RInteger) args.getFunctionArgument(0);
       System.exit(value.getValue());
       return RNull.getInstance();
     }
