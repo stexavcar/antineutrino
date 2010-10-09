@@ -1,0 +1,26 @@
+(*
+ * Provides ordered sequence behaviour.
+ *
+ * Objects implementing this protocol must implement:
+ * - iter: produces an object which iterates over elements in the sequence
+ * Iterator objects must provide:
+ * - has_next: true if another item is available
+ * - next: returns the next item and advances the iteration
+ *)
+
+protocol Iter;
+def Iter::has_next;
+def Iter::next;
+
+protocol Sequence;
+
+def Sequence::for_each(f) {
+  def itr := this.iter;
+  with_1cc leave -> loop(fn () {
+    if not itr.has_next() then
+      leave.fire(this);
+    f(itr.next);
+  });
+}
+
+def Sequence::is_empty -> not this.iter.has_next;

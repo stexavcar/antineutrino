@@ -4,36 +4,38 @@
  *)
 
 protocol List;
+def List is Sequence;
+
 protocol Empty;
 def Empty is List;
 
 (* Core methods *)
 
 def protocol List::empty -> new Empty { };
-def protocol List::cons(el, list : List) -> new List {head := el, tail := list};
+def protocol List::cons(el, list: List) -> new List {head := el, tail := list};
 def protocol List::new -> List.empty;
-def protocol List::new(els : PrimitiveArray) {
-  _build(els, 0);
-}
-
-def protocol List::new(ival : Interval) ->
-  if ival.is_empty then List.empty else List.cons(ival.from, new List((ival.from + ival.dir)..ival.to));
-
-(* This should be a local fn def in new() when its name is visible in its own scope *)
-def _build(els, idx) -> if idx = els.length then List.empty else List.cons(els[idx], _build(els, idx + 1));
-
+def protocol List::new(s: Sequence) -> new List(s.iter);
+def protocol List::new(itr: Iter) -> if itr.has_next then List.cons(itr.next, new List(itr)) else List.empty;
 
 def Empty::isEmpty -> true;
-def Empty::=(other : Empty) -> true;
-def Empty::=(other : List) -> other = this;
+def Empty::=(other: Empty) -> true;
+def Empty::=(other: List) -> other = this;
 def Empty::to_string -> "L[]";
 def Empty::continue_string -> "]";
 
 def List::isEmpty -> false;
-def List::=(other : Empty) -> false;
-def List::=(other : List) -> this.head = other.head and this.tail = other.tail;
+def List::=(other: Empty) -> false;
+def List::=(other: List) -> this.head = other.head and this.tail = other.tail;
 def List::to_string -> "L[" + this.head.to_string() + this.tail.continue_string();
 def List::continue_string -> ", " + this.head.to_string() + this.tail.continue_string();
+
+def List::iter {
+  ref node := this;
+  new Iter {
+    has_next -> not node.isEmpty,
+    next -> { def v := node.head; node := node.tail; v }
+  }
+}
 
 (* HOFs *)
 

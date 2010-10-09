@@ -1,8 +1,18 @@
 @native("array") protocol PrimitiveArray;
+def PrimitiveArray is Sequence;
 
 def PrimitiveArray::[index: Integer] -> internal "array[]";
 
 def PrimitiveArray::length -> internal "array.length";
+
+def PrimitiveArray::iter {
+  def self := this;
+  def index_itr := (0 .. this.length).iter;
+  new Iter {
+    has_next -> index_itr.has_next,
+    next -> self[index_itr.next]
+  };
+}
 
 @native("mutarr") protocol MutablePrimitiveArray;
 def MutablePrimitiveArray is PrimitiveArray;

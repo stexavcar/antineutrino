@@ -12,4 +12,12 @@ def UtilsTest::test_array_lists() {
   });
   (0 .. kInitialSize).for_each(fn (i) -> assert_equal(i, a[i]));
   (0 .. 10).for_each(fn (i) -> assert_equal(i, a[kInitialSize + i]));
+
+  (* Construct from sequence *)
+  def b := new ArrayList(0 .. 10);
+  (0 .. 10).for_each(fn (i) -> assert_equal(i, b[i]));
+
+  (* Construct from ArrayList (also a Sequence) *)
+  def c := new ArrayList(b);
+  b.for_each(fn (el) -> assert_equal(el, c[el]));
 }
