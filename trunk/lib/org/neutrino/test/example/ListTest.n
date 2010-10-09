@@ -12,19 +12,19 @@ def seq(n, m) -> if n = m then List.empty() else List.cons(n, seq(n+1, m));
 
 def ExampleTest::test_isempty() {
   assert_true(List.empty().isEmpty());
-  assert_true(not List.cons(1, List.empty()).isEmpty());
+  assert_true(not seq(0, 1).isEmpty());
 
 }
 
 def ExampleTest::test_eq() {
   assert_equal(List.empty(), List.empty());
-  assert_equal(List.cons(1, List.empty()), List.cons(1, List.empty()));
-  assert_false(List.cons(1, List.empty()) = List.empty());
+  assert_equal(seq(0, 1), seq(0, 1));
+  assert_false(seq(0, 1) = List.empty());
 }
 
 def ExampleTest::test_size() {
   assert_equal(0, List.empty().size());
-  assert_equal(1, List.cons(1, List.empty()).size());
+  assert_equal(1, seq(0, 1).size());
   assert_equal(2, seq(0, 2).size());
   assert_equal(5, seq(0, 5).size());
 }
