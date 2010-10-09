@@ -27,5 +27,5 @@ def LanguageTest::test_intervals() {
     expected := i + 1;
   });
   assert_equal(10, expected);
-  assert_equal(10, r);
+  assert_equal(0 .. 10, r);
 }

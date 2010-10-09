@@ -28,16 +28,14 @@ def Integer::..(that) -> new Interval {
 };
 
 protocol Interval;
+def Interval is Sequence;
 
-def Interval::for_each(fun) {
+def Interval::=(other : Interval) -> this.from = other.from and this.to = other.to;
+
+def Interval::iter {
   ref i := this.from;
-  def delta := if this.from < this.to then 0 else 0-1;
-  with_1cc leave -> loop(fn () {
-    if i = this.to then
-      leave.fire(i);
-    fun(i + delta);
-    i := i + this.dir;
-  });
+  new Iter {
+    has_next -> not i = this.to,
+    next -> { def ret := i; i:= i + this.dir; ret }
+  };
 }
-
-def Interval::is_empty -> this.to = this.from;

@@ -3,6 +3,7 @@ def ExampleTest::test_list() {
   this.test_new();
   this.test_isempty();
   this.test_eq();
+  this.test_iter();
   this.test_folds();
   this.test_map();
   this.test_take_drop();
@@ -25,6 +26,13 @@ def ExampleTest::test_eq() {
   assert_equal(new List(0..1), new List(0..1));
   assert_false(new List(0..1) = List.empty());
   assert_false(List.empty() = new List(0..1));
+}
+
+def ExampleTest::test_iter() {
+  ref sum := 0;
+  def acc(n) -> sum := sum + n;
+  new List(0..5).for_each(acc);
+  assert_equal(10, sum);
 }
 
 def ExampleTest::test_size() {
