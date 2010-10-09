@@ -8,23 +8,23 @@ def ExampleTest::test_list() {
   this.test_filter();
 }
 
-def seq(n, m) -> if n = m then empty() else cons(n, seq(n+1, m));
+def seq(n, m) -> if n = m then List.empty() else List.cons(n, seq(n+1, m));
 
 def ExampleTest::test_isempty() {
-  assert_true(empty().isEmpty());
-  assert_true(not cons(1, empty()).isEmpty());
+  assert_true(List.empty().isEmpty());
+  assert_true(not List.cons(1, List.empty()).isEmpty());
 
 }
 
 def ExampleTest::test_eq() {
-  assert_equal(empty(), empty());
-  assert_equal(cons(1, empty()), cons(1, empty()));
-  assert_false(cons(1, empty()) = empty());
+  assert_equal(List.empty(), List.empty());
+  assert_equal(List.cons(1, List.empty()), List.cons(1, List.empty()));
+  assert_false(List.cons(1, List.empty()) = List.empty());
 }
 
 def ExampleTest::test_size() {
-  assert_equal(0, empty().size());
-  assert_equal(1, cons(1, empty()).size());
+  assert_equal(0, List.empty().size());
+  assert_equal(1, List.cons(1, List.empty()).size());
   assert_equal(2, seq(0, 2).size());
   assert_equal(5, seq(0, 5).size());
 }
@@ -54,15 +54,15 @@ def ExampleTest::test_map() {
 }
 
 def ExampleTest::test_take_drop() {
-  assert_equal(empty(), empty().take(5));
-  assert_equal(empty(), seq(0, 5).take(0));
+  assert_equal(List.empty(), List.empty().take(5));
+  assert_equal(List.empty(), seq(0, 5).take(0));
   assert_equal(seq(0, 2), seq(0, 5).take(2));
   assert_equal(seq(0, 5), seq(0, 5).take(7));
  
-  assert_equal(empty(), empty().drop(5));
+  assert_equal(List.empty(), List.empty().drop(5));
   assert_equal(seq(0, 5), seq(0, 5).drop(0));
   assert_equal(seq(2, 5), seq(0, 5).drop(2));
-  assert_equal(empty(), seq(0, 5).drop(7));
+  assert_equal(List.empty(), seq(0, 5).drop(7));
 }
 
 def ExampleTest::test_filter() {
@@ -70,6 +70,6 @@ def ExampleTest::test_filter() {
   def fallacy(n) -> false;
   def lt(a) -> fn(b) -> b < a;
   assert_equal(seq(0, 5), seq(0, 5).filter(tautology));
-  assert_equal(empty(), seq(0, 5).filter(fallacy));
+  assert_equal(List.empty(), seq(0, 5).filter(fallacy));
   assert_equal(seq(0, 2), seq(0, 5).filter(lt(2)));
 }
