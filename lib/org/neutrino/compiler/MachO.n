@@ -113,7 +113,7 @@ protocol LoadCommand;
 def protocol LoadCommand::new(data) {
   def cmd := data.get_int32(0);
   if cmd = LC_SEGMENT then
-    new SegmentCommand { data := data }
+    new SegmentCommand(data)
   else if cmd = LC_SYMTAB then
     new SymtabCommand { data := data }
   else if cmd = LC_DYSYMTAB then
@@ -136,6 +136,8 @@ def LoadCommand::cmdsize -> this.data.get_int32(4);
 
 def LoadCommand::to_string -> "#<a LoadCommand #" + this.cmd.to_string + ">";
 
+def LoadCommand::print -> print(this);
+
 (*
  * struct segment_command {
  *   uint32_t cmd;
@@ -154,9 +156,68 @@ def LoadCommand::to_string -> "#<a LoadCommand #" + this.cmd.to_string + ">";
 protocol SegmentCommand;
 def SegmentCommand is LoadCommand;
 
-def SegmentCommand::segname -> this.data.get_c_string(8, 16);
+def protocol SegmentCommand::new(data) {
+  def segname := data.get_c_string(8, 24);
+  def nsects := data.get_int32(48);
+  def sections := new ArrayList(nsects);
+  (0 .. nsects).for_each(fn (i) {
+    def offset := SegmentCommand.size + (i * Section.size);
+    def section := new Section(new BlobView(data, offset));
+    sections[i] := section;
+  });
+  new SegmentCommand {
+    data := data,
+    segname := segname,
+    sections := sections
+  };
+}
+
+def protocol SegmentCommand::size -> 56;
 
 def SegmentCommand::to_string -> "#<a SegmentCommand: " + this.segname + ">";
+
+def SegmentCommand::print {
+  print("--- Section: " + this.segname + " ---");
+  this.sections.for_each(fn (section) -> section.print());
+}
+
+(*
+ * struct section {
+ *   char sectname[16];
+ *   char segname[16];
+ *   uint32_t addr;
+ *   uint32_t size;
+ *   uint32_t offset;
+ *   uint32_t align;
+ *   uint32_t reloff;
+ *   uint32_t nreloc;
+ *   uint32_t flags;
+ *   uint32_t reserved1;
+ *   uint32_t reserved2;
+ * };
+ *)
+protocol Section;
+
+def protocol Section::new(data) {
+  def offset := data.get_int32(40);
+  new Section { data := data };
+}
+
+def protocol Section::size -> 68;
+
+def Section::sectname -> this.data.get_c_string(0, 16);
+
+def Section::segname -> this.data.get_c_string(16, 32);
+
+def Section::to_string -> "#<a Section: " + this.segname + " " + this.sectname + ">";
+
+def Section::size -> this.data.get_int32(36);
+
+def Section::offset -> this.data.get_int32(40);
+
+def Section::print {
+  print(" * " + this.sectname + ", " + this.segname);
+}
 
 (*
  * struct symtab_command {
@@ -272,8 +333,14 @@ def DylibCommand::timestamp -> this.data.get_int32(12);
 def DylibCommand::current_version -> this.data.get_int32(16);
 
 def DylibCommand::compatibility_version -> this.data.get_int32(20);
- 
+
 protocol MachO;
+
+def MachO::print {
+  this.load_commands.for_each(fn (elm) {
+    elm.print();
+  });
+}
 
 def protocol MachO::new(data) {
   def header := new MachHeader(data);
@@ -281,7 +348,6 @@ def protocol MachO::new(data) {
   ref cursor := 28;
   (0 .. header.ncmds).for_each(fn (i) {
     def command := new LoadCommand(new BlobView(data, cursor));
-    print(command);
     cursor := cursor + command.cmdsize;
     commands[i] := command;
   });

@@ -4,5 +4,5 @@ def compile_main(args) {
   def file := open_file(binary_name);
   def contents := file.read_binary();
   def binary := new MachO(contents);
-  print(binary.header.magic);
+  binary.print();
 }
