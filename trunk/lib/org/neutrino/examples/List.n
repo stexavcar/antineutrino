@@ -1,6 +1,5 @@
 (* 
  * A list abstract data type.
- * TODO: add ctor from array
  * TODO: add direct indexing
  *)
 
@@ -14,6 +13,17 @@ def Cons is List;
 
 def protocol List::empty -> new Empty { };
 def protocol List::cons(el, list : List) -> new Cons {head := el, tail := list};
+def protocol List::of -> List.empty;
+def protocol List::of(els : PrimitiveArray) {
+  _build(els, 0);
+}
+
+def protocol List::of(ival : Interval) ->
+  if ival.is_empty then List.empty else List.cons(ival.from, List.of((ival.from + ival.dir)..ival.to));
+
+(* This should be a local fn def in of() when its name is visible in its own scope *)
+def _build(els, idx) -> if idx = els.length then List.empty else List.cons(els[idx], _build(els, idx + 1));
+
 
 def Empty::isEmpty -> true;
 def Empty::=(other : Empty) -> true;
