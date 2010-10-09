@@ -2,7 +2,19 @@ protocol ProtMethTester;
 
 def protocol ProtMethTester::foo -> 4;
 
+def ProtMethTester::bar -> 6;
+
+def protocol ProtMethTester::new -> new ProtMethTester { };
+
+def protocol ProtMethTester::new(bar) -> new ProtMethTester { bar := bar };
+
 def LanguageTest::test_protocol_methods() {
   this.on_start("protocol methods");
   assert_equal(4, ProtMethTester.foo);
+  def pmt := new ProtMethTester;
+  assert_equal(6, pmt.bar);
+  def pmt2 := new ProtMethTester();
+  assert_equal(6, pmt2.bar);    
+  def pmt3 := new ProtMethTester(8);
+  assert_equal(8, pmt3.bar); 
 }

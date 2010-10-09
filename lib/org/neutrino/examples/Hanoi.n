@@ -1,6 +1,6 @@
 protocol HanoiDisk;
 
-def new_hanoi_disk(size) -> new HanoiDisk {
+def protocol HanoiDisk::new(size) -> new HanoiDisk {
   size := size,
   next_ := new_ref(null)
 };
@@ -9,8 +9,8 @@ def HanoiDisk::next -> this.next_.get();
 
 protocol Hanoi;
 
-def new_hanoi -> new Hanoi {
-  piles := ArrayList.make(#[null, null, null]),
+def protocol Hanoi::new -> new Hanoi {
+  piles := new ArrayList [null, null, null],
   moves := new_ref(0)
 };
 
@@ -38,7 +38,7 @@ def Hanoi::move_top(from, to) {
 
 def Hanoi::build(pile, disks) {
   (disks .. 0).for_each(fn (i) {
-    this.push(pile, new_hanoi_disk(i))
+    this.push(pile, new HanoiDisk(i))
   });
 }
 
@@ -58,7 +58,7 @@ def Hanoi::pop(pile) {
   top;
 }
 
-def run_hanoi(size) -> new_hanoi().run(size);
+def run_hanoi(size) -> new Hanoi().run(size);
 
 @entry_point("hanoi")
 def hanoi() {
