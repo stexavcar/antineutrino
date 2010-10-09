@@ -19,6 +19,10 @@ def ArrayList::contents -> this.contents_.get();
 
 def ArrayList::[i: Integer]:=(value) -> this.contents[i] := value;
 
+def ArrayList::for_each(fun) {
+  (0 .. this.length).for_each(fn (i) -> fun(this[i]));
+}
+
 def ArrayList::add(value) {
   def new_length := this.length + 1;
   this.ensure_capacity(new_length);
