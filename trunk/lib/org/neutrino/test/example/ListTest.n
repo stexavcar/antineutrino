@@ -24,6 +24,7 @@ def ExampleTest::test_eq() {
   assert_equal(List.empty(), List.empty());
   assert_equal(List.of(0..1), List.of(0..1));
   assert_false(List.of(0..1) = List.empty());
+  assert_false(List.empty() = List.of(0..1));
 }
 
 def ExampleTest::test_size() {

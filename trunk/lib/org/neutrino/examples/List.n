@@ -6,13 +6,11 @@
 protocol List;
 protocol Empty;
 def Empty is List;
-protocol Cons;
-def Cons is List;
 
 (* Core methods *)
 
 def protocol List::empty -> new Empty { };
-def protocol List::cons(el, list : List) -> new Cons {head := el, tail := list};
+def protocol List::cons(el, list : List) -> new List {head := el, tail := list};
 def protocol List::of -> List.empty;
 def protocol List::of(els : PrimitiveArray) {
   _build(els, 0);
@@ -27,35 +25,37 @@ def _build(els, idx) -> if idx = els.length then List.empty else List.cons(els[i
 
 def Empty::isEmpty -> true;
 def Empty::=(other : Empty) -> true;
+def Empty::=(other : List) -> other = this;
 def Empty::to_string -> "L[]";
 def Empty::continue_string -> "]";
 
-def Cons::isEmpty -> false;
-def Cons::=(other : Cons) -> this.head = other.head and this.tail = other.tail;
-def Cons::to_string -> "L[" + this.head.to_string() + this.tail.continue_string();
-def Cons::continue_string -> ", " + this.head.to_string() + this.tail.continue_string();
+def List::isEmpty -> false;
+def List::=(other : Empty) -> false;
+def List::=(other : List) -> this.head = other.head and this.tail = other.tail;
+def List::to_string -> "L[" + this.head.to_string() + this.tail.continue_string();
+def List::continue_string -> ", " + this.head.to_string() + this.tail.continue_string();
 
 (* HOFs *)
 
 def Empty::size -> 0;
-def Cons::size -> 1 + this.tail.size;
+def List::size -> 1 + this.tail.size;
 
 def Empty::foldl(f, v) -> v;
-def Cons::foldl(f, v) -> this.tail.foldl(f, f(v, this.head));
+def List::foldl(f, v) -> this.tail.foldl(f, f(v, this.head));
 
 def Empty::foldr(f, v) -> v;
-def Cons::foldr(f, v) -> f(this.head, this.tail.foldr(f, v));
+def List::foldr(f, v) -> f(this.head, this.tail.foldr(f, v));
 
 def Empty::map(f) -> List.empty;
-def Cons::map(f) -> List.cons(f(this.head), this.tail.map(f));
+def List::map(f) -> List.cons(f(this.head), this.tail.map(f));
 
 def Empty::take(n) -> List.empty;
-def Cons::take(n) -> if n = 0 then List.empty else List.cons(this.head, this.tail.take(n-1));
+def List::take(n) -> if n = 0 then List.empty else List.cons(this.head, this.tail.take(n-1));
 
 def Empty::drop(n) -> List.empty;
-def Cons::drop(n) -> if n = 0 then this else this.tail.drop(n-1);
+def List::drop(n) -> if n = 0 then this else this.tail.drop(n-1);
 
 def Empty::filter(p) -> List.empty;
-def Cons::filter(p) -> 
+def List::filter(p) -> 
   if p(this.head) then List.cons(this.head, this.tail.filter(p))
   else this.tail.filter(p);
