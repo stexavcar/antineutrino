@@ -1,7 +1,7 @@
 def UtilsTest::test_array_lists() {
   this.on_start("array lists");
   def kInitialSize := 5;
-  def a := ArrayList.make(kInitialSize);
+  def a := new ArrayList(kInitialSize);
   assert_equal(kInitialSize, a.length);
   (0 .. kInitialSize).for_each(fn (i) -> assert_equal(null, a[i]));
   (0 .. kInitialSize).for_each(fn (i) -> a[i] := i);

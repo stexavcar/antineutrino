@@ -217,7 +217,7 @@ public class Native implements ISeedable {
   @Marker("mutprimarr") static final Impl MUT_PRIM_ARR = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RInteger size = (RInteger) args.getFunctionArgument(0);
+      RInteger size = (RInteger) args.getArgument(0);
       return new RMutablePrimitiveArray(size.getValue());
     }
   };

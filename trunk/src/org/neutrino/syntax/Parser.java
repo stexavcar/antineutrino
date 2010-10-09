@@ -237,6 +237,8 @@ public class Parser {
   private String expectName(boolean allowEmpty) throws SyntaxError {
     if (atOperator()) {
       return expectOperator();
+    } else if (at(Type.NEW)) {
+      return expect(Type.NEW);
     } else if (at(Type.IDENT) || !allowEmpty) {
       return expect(Type.IDENT);
     } else {
@@ -548,31 +550,53 @@ public class Parser {
         protocols.add(next);
       }
     }
-    expect(Type.LBRACE);
-    if (!at(Type.RBRACE)) {
-      Tree.New.Field first = parseNewField();
-      fields.add(first);
-      while (at(Type.COMMA)) {
-        expect(Type.COMMA);
-        Tree.New.Field next = parseNewField();
-        fields.add(next);
+    if (at(Type.LBRACE)) {
+      expect(Type.LBRACE);
+      if (!at(Type.RBRACE)) {
+        Tree.New.Field first = parseNewField();
+        fields.add(first);
+        while (at(Type.COMMA)) {
+          expect(Type.COMMA);
+          Tree.New.Field next = parseNewField();
+          fields.add(next);
+        }
       }
+      expect(Type.RBRACE);
+      StringBuilder buf = new StringBuilder();
+      boolean first = true;
+      for (String protocol : protocols) {
+        if (first) first = false;
+        else buf.append("&");
+        buf.append(protocol);
+      }
+      return new Tree.New(source, fields, protocols, buf.toString());
     }
-    expect(Type.RBRACE);
-    StringBuilder buf = new StringBuilder();
-    boolean first = true;
-    for (String protocol : protocols) {
-      if (first) first = false;
-      else buf.append("&");
-      buf.append(protocol);
+    assert protocols.size() == 1;
+    List<Tree.Expression> args = new ArrayList<Tree.Expression>();
+    args.add(new Tree.Identifier(protocols.get(0)));
+    if (at(Type.LPAREN)) {
+      expect(Type.LPAREN);
+      args.addAll(parseArguments(Type.RPAREN));
+      expect(Type.RPAREN);
     }
-    return new Tree.New(source, fields, protocols, buf.toString());
+    if (at(Type.LBRACK)) {
+      expect(Type.LBRACK);
+      args.add(parsePrimitiveCollectionContents(Type.RBRACK));
+      expect(Type.RBRACK);
+    }
+    return new Tree.Call("new", args);
   }
 
   private Tree.Expression parsePrimitiveCollection() throws SyntaxError {
     assert at(Type.HASH);
     expect(Type.HASH);
     expect(Type.LBRACK);
+    Tree.Expression result = parsePrimitiveCollectionContents(Type.RBRACK);
+    expect(Type.RBRACK);
+    return result;
+  }
+
+  private Tree.Expression parsePrimitiveCollectionContents(Type end) throws SyntaxError {
     List<Tree.Expression> values = new ArrayList<Tree.Expression>();
     if (!at(Type.RBRACK)) {
       Tree.Expression first = parseExpression();
@@ -583,7 +607,6 @@ public class Parser {
         values.add(next);
       }
     }
-    expect(Type.RBRACK);
     return new Tree.Collection(values);
   }
 
