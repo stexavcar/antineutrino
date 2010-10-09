@@ -49,7 +49,6 @@ public class PlanktonRegistry {
       }
     }
 
-    @Override
     public T decode(Plankton plankton, PValue payload) {
       PMap fields = (PMap) payload;
       try {
@@ -75,7 +74,6 @@ public class PlanktonRegistry {
       }
     }
 
-    @Override
     public PValue encode(Plankton plankton, T obj) {
       return encodeSeedPayload(plankton, obj);
     }
@@ -183,72 +181,58 @@ public class PlanktonRegistry {
   }
 
   private static final ICodec<Integer> INTEGER_CODEC = new ICodec<Integer>() {
-    @Override
     public Integer decode(Plankton plankton, PValue payload) {
       return ((PInteger) payload).getValue();
     }
-    @Override
     public PValue encode(Plankton plankton, Integer obj) {
       return Plankton.newInteger(obj);
     }
-    @Override
     public Class<Integer> getSubjectClass() {
       return Integer.class;
     }
   };
 
   private static final ICodec<Boolean> BOOL_CODEC = new ICodec<Boolean>() {
-    @Override
     public Boolean decode(Plankton plankton, PValue payload) {
       return ((PBool) payload).getValue();
     }
-    @Override
     public PValue encode(Plankton plankton, Boolean obj) {
       return Plankton.newBool(obj);
     }
-    @Override
     public Class<Boolean> getSubjectClass() {
       return Boolean.class;
     }
   };
 
   private static final ICodec<String> STRING_CODEC = new ICodec<String>() {
-    @Override
     public String decode(Plankton plankton, PValue payload) {
       return ((PString) payload).getValue();
     }
-    @Override
     public PValue encode(Plankton plankton, String obj) {
       return Plankton.newString(obj);
     }
-    @Override
     public Class<String> getSubjectClass() {
       return String.class;
     }
   };
 
   private static final ICodec<byte[]> BLOB_CODEC = new ICodec<byte[]>() {
-    @Override
     public byte[] decode(Plankton plankton, PValue payload) {
       return ((PBlob) payload).getData();
     }
-    @Override
     public PValue encode(Plankton plankton, byte[] obj) {
       return Plankton.newBlob(obj);
     }
-    @Override
     public Class<?> getSubjectClass() {
       return byte[].class;
     }
   };
 
   private static final ICodec<Map<?, ?>> MAP_CODEC = new ICodec<Map<?, ?>>() {
-    @Override
     public Map<?, ?> decode(final Plankton plankton, PValue payload) {
       PMap map = (PMap) payload;
       final Map<Object, Object> result = new HashMap<Object, Object>();
       map.forEach(new Thunk() {
-        @Override
         public boolean call(PValue key, PValue value) {
           Object from = plankton.getRegistry().decodeValue(plankton, key);
           Object to = plankton.getRegistry().decodeValue(plankton, value);
@@ -258,7 +242,6 @@ public class PlanktonRegistry {
       });
       return result;
     }
-    @Override
     public PValue encode(Plankton plankton, Map<?, ?> obj) {
       Map<PValue, PValue> map = new HashMap<PValue, PValue>();
       for (Map.Entry<?, ?> entry : obj.entrySet()) {
@@ -268,14 +251,12 @@ public class PlanktonRegistry {
       }
       return Plankton.newMap(map);
     }
-    @Override
     public Class<?> getSubjectClass() {
       return Map.class;
     }
   };
 
   private static final ICodec<List<?>> LIST_CODEC = new ICodec<List<?>>() {
-    @Override
     public List<?> decode(Plankton plankton, PValue value) {
       PArray array = (PArray) value;
       List<Object> elms = new ArrayList<Object>();
@@ -285,7 +266,6 @@ public class PlanktonRegistry {
       }
       return elms;
     }
-    @Override
     public PValue encode(Plankton plankton, List<?> list) {
       List<PValue> values = new ArrayList<PValue>();
       for (Object obj : list) {
@@ -293,7 +273,6 @@ public class PlanktonRegistry {
       }
       return Plankton.newArray(values);
     }
-    @Override
     public Class<?> getSubjectClass() {
       return List.class;
     }
