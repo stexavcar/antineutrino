@@ -1,7 +1,6 @@
 package org.neutrino.compiler;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.neutrino.compiler.Symbol.LocalSymbol;
@@ -25,7 +24,7 @@ public abstract class Scope {
     }
 
     public List<Symbol> getOuterTransient() {
-      return Collections.unmodifiableList(outerTransient);
+      return outerTransient;
     }
 
     @Override
@@ -41,8 +40,7 @@ public abstract class Scope {
         outerCaptures.add(capture);
       }
       if (index >= outerCaptures.size()) {
-      	throw new RuntimeException("Failed lookup " + name + ", outerTransient: " + outerTransient.size()
-      			+ ", outerCaptures: " + outerCaptures.size() + " offset: " + symbolIndexOffset);
+      	throw new RuntimeException("Failed lookup for " + name);
       }
       return outerCaptures.get(index);
     }
