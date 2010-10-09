@@ -4,10 +4,14 @@ import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
+import org.neutrino.pib.CodeBundle;
+import org.neutrino.pib.Opcode;
+import org.neutrino.pib.Universe;
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
@@ -255,7 +259,7 @@ public class Native implements ISeedable {
     public RValue call(Arguments args) {
       RByteArray arr = (RByteArray) args.getThis();
       RInteger index = (RInteger) args.getArgument(0);
-      return new RInteger((arr.get(index.getValue()) + 0x100) & 0xFF);
+      return new RInteger((arr.getByte(index.getValue()) + 0x100) & 0xFF);
     }
   };
 
@@ -349,6 +353,31 @@ public class Native implements ISeedable {
     @Override
     public RValue call(Arguments args) {
       return new RString(args.getThis().toExternalString());
+    }
+  };
+
+  private static final byte[] TRAMPOLINE_CODE = new byte[] {
+    Opcode.kCall, 0, 0, Opcode.kReturnFromApply
+  };
+
+  @Marker("apply") static final Impl APPLY = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RString name = (RString) args.getFunctionArgument(0);
+      RArray values = (RArray) args.getFunctionArgument(1);
+      Universe universe = args.frame.module.getUniverse();
+      Stack<RValue> stack = new Stack<RValue>();
+      int argc = values.getLength();
+      for (int i = 0; i < argc; i++)
+        stack.push(values.get(i));
+      Lambda method = universe.lookupMethod(name.getValue(), argc, stack);
+      Frame trampoline = new Frame(args.frame, values.get(0),
+          new CodeBundle(TRAMPOLINE_CODE, Arrays.<Object>asList(name.getValue()), 0, null),
+          method.getModule());
+      trampoline.stack = stack;
+      args.frame = new Frame(trampoline, values.get(0), method.getCode(),
+          method.getModule());
+      return null;
     }
   };
 

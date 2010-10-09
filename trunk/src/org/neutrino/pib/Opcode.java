@@ -64,6 +64,7 @@ public class Opcode {
   @Info({ArgType.NUM}) public static final int kField = 18;
   @Info({ArgType.NUM, ArgType.NUM}) public static final int kWith1Cc = 19;
   @Info({ArgType.NUM}) public static final int kNewArray = 20;
+  @Info({}) public static final int kReturnFromApply = 21;
 
   private static final Map<Integer, OpcodeInfo> infos = new HashMap<Integer, OpcodeInfo>() {{
     try {

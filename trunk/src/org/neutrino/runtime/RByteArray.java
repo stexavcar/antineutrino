@@ -15,7 +15,11 @@ public class RByteArray extends RArray {
     return TYPE_ID;
   }
 
-  public int get(int value) {
+  public RValue get(int index) {
+    return new RInteger(data[index]);
+  }
+
+  public int getByte(int value) {
     return data[value];
   }
 

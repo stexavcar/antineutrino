@@ -83,6 +83,16 @@ public class Interpreter {
         frame.pc += 3;
         break;
       }
+      case Opcode.kReturnFromApply: {
+        RValue value = frame.stack.pop();
+        frame = frame.parent.parent;
+        frame.stack.pop();
+        frame.stack.pop();
+        frame.stack.pop();
+        frame.stack.push(value);
+        frame.pc += 3;
+        break;
+      }
       case Opcode.kTerminate: {
         RValue value = frame.stack.pop();
         return value;
@@ -119,8 +129,10 @@ public class Interpreter {
         arguments.prepare(frame, argc);
         RValue value = nathive.call(arguments);
         frame = arguments.getFrame();
-        frame.stack.push(value);
-        frame.pc += 3;
+        if (value != null) {
+          frame.stack.push(value);
+          frame.pc += 3;
+        }
         break;
       }
       case Opcode.kGlobal: {

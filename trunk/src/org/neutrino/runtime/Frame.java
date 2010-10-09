@@ -8,7 +8,7 @@ import org.neutrino.pib.Module;
 public class Frame {
 
   public int pc = 0;
-  public final Stack<RValue> stack = new Stack<RValue>();
+  public Stack<RValue> stack = new Stack<RValue>();
   public final byte[] code;
   public final CodeBundle bundle;
   public final Module module;
@@ -35,7 +35,7 @@ public class Frame {
   }
 
   public Lambda lookupMethod(String name, int argc) {
-    return module.getUniverse().lookupMethod(name, argc, this);
+    return module.getUniverse().lookupMethod(name, argc, this.stack);
   }
 
   public RValue peekArgument(int index) {
