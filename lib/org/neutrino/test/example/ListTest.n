@@ -1,6 +1,6 @@
 def ExampleTest::test_list() {
   this.on_start("list");
-  this.test_of();
+  this.test_new();
   this.test_isempty();
   this.test_eq();
   this.test_folds();
@@ -9,29 +9,29 @@ def ExampleTest::test_list() {
   this.test_filter();
 }
 
-def ExampleTest::test_of() {
-  assert_equal(List.empty, List.of);
-  assert_equal(List.empty, List.of(#[]));
-  assert_equal(List.of(0..5), List.of(#[0, 1, 2, 3, 4]));
+def ExampleTest::test_new() {
+  assert_equal(List.empty, new List);
+  assert_equal(List.empty, new List(#[]));
+  assert_equal(new List(0..5), new List(#[0, 1, 2, 3, 4]));
 }
 
 def ExampleTest::test_isempty() {
   assert_true(List.empty().isEmpty());
-  assert_true(not List.of(0..1).isEmpty());
+  assert_true(not new List(0..1).isEmpty());
 }
 
 def ExampleTest::test_eq() {
   assert_equal(List.empty(), List.empty());
-  assert_equal(List.of(0..1), List.of(0..1));
-  assert_false(List.of(0..1) = List.empty());
-  assert_false(List.empty() = List.of(0..1));
+  assert_equal(new List(0..1), new List(0..1));
+  assert_false(new List(0..1) = List.empty());
+  assert_false(List.empty() = new List(0..1));
 }
 
 def ExampleTest::test_size() {
   assert_equal(0, List.empty().size());
-  assert_equal(1, List.of(0..1).size());
-  assert_equal(2, List.of(0..2).size());
-  assert_equal(5, List.of(0..5).size());
+  assert_equal(1, new List(0..1).size());
+  assert_equal(2, new List(0..2).size());
+  assert_equal(5, new List(0..5).size());
 }
 
 def ExampleTest::test_folds() {
@@ -39,42 +39,42 @@ def ExampleTest::test_folds() {
   def sub(a, b) -> a - b;
   def max(a, b) -> if a > b then a else b;
 
-  assert_equal(10, List.of(0..5).foldl(add, 0));
-  assert_equal(0-10, List.of(0..5).foldl(sub, 0));
-  assert_equal(4, List.of(0..5).foldl(max, 0));
-  assert_equal(7, List.of(0..5).foldl(max, 7));
+  assert_equal(10, new List(0..5).foldl(add, 0));
+  assert_equal(0-10, new List(0..5).foldl(sub, 0));
+  assert_equal(4, new List(0..5).foldl(max, 0));
+  assert_equal(7, new List(0..5).foldl(max, 7));
 
-  assert_equal(10, List.of(0..5).foldr(add, 0));
-  assert_equal(2, List.of(0..5).foldr(sub, 0));
-  assert_equal(4, List.of(0..5).foldr(max, 0));
-  assert_equal(7, List.of(0..5).foldr(max, 7));
+  assert_equal(10, new List(0..5).foldr(add, 0));
+  assert_equal(2, new List(0..5).foldr(sub, 0));
+  assert_equal(4, new List(0..5).foldr(max, 0));
+  assert_equal(7, new List(0..5).foldr(max, 7));
 }
 
 def ExampleTest::test_map() {
   def id(x) -> x;
   def inc(x) -> x + 1;
 
-  assert_equal(List.of(0..5), List.of(0..5).map(id));
-  assert_equal(List.of(1..6), List.of(0..5).map(inc));
+  assert_equal(new List(0..5), new List(0..5).map(id));
+  assert_equal(new List(1..6), new List(0..5).map(inc));
 }
 
 def ExampleTest::test_take_drop() {
   assert_equal(List.empty(), List.empty().take(5));
-  assert_equal(List.empty(), List.of(0..5).take(0));
-  assert_equal(List.of(0..2), List.of(0..5).take(2));
-  assert_equal(List.of(0..5), List.of(0..5).take(7));
+  assert_equal(List.empty(), new List(0..5).take(0));
+  assert_equal(new List(0..2), new List(0..5).take(2));
+  assert_equal(new List(0..5), new List(0..5).take(7));
  
   assert_equal(List.empty(), List.empty().drop(5));
-  assert_equal(List.of(0..5), List.of(0..5).drop(0));
-  assert_equal(List.of(2..5), List.of(0..5).drop(2));
-  assert_equal(List.empty(), List.of(0..5).drop(7));
+  assert_equal(new List(0..5), new List(0..5).drop(0));
+  assert_equal(new List(2..5), new List(0..5).drop(2));
+  assert_equal(List.empty(), new List(0..5).drop(7));
 }
 
 def ExampleTest::test_filter() {
   def tautology(x) -> true;
   def fallacy(n) -> false;
   def lt(a) -> fn(b) -> b < a;
-  assert_equal(List.of(0..5), List.of(0..5).filter(tautology));
-  assert_equal(List.empty(), List.of(0..5).filter(fallacy));
-  assert_equal(List.of(0..2), List.of(0..5).filter(lt(2)));
+  assert_equal(new List(0..5), new List(0..5).filter(tautology));
+  assert_equal(List.empty(), new List(0..5).filter(fallacy));
+  assert_equal(new List(0..2), new List(0..5).filter(lt(2)));
 }
