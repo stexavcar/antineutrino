@@ -1,5 +1,6 @@
 def LanguageTest::test_arrays() {
   this.test_simple_arrays();
+  this.test_array_slice();
   this.test_mutable_arrays();
 }
 
@@ -10,6 +11,27 @@ def LanguageTest::test_simple_arrays() {
   assert_equal(1, e[0]);
   assert_equal(2, e[1]);
   assert_equal(3, e[2]);  
+}
+
+def LanguageTest::test_array_slice() {
+  this.on_start("array slices");
+  def e := #[1, 2, 3, 4, 5];
+
+  def s1 := e[0 .. 1];
+  assert_equal(1, s1.length);
+  assert_equal(1, s1[0]);
+
+  def s2 := e[1 .. 4];
+  assert_equal(3, s2.length);
+  assert_equal(2, s2[0]);
+  assert_equal(3, s2[1]);
+  assert_equal(4, s2[2]);
+
+  def s3 := e[4 .. 1];
+  assert_equal(3, s2.length);
+  assert_equal(5, s3[0]);
+  assert_equal(4, s3[1]);
+  assert_equal(3, s3[2]);
 }
 
 def LanguageTest::test_mutable_arrays() {
