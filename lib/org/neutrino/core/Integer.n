@@ -23,19 +23,21 @@ def Integer::<<(that: Integer) -> internal "int<<int";
 
 def Integer::..(that) -> new Interval {
   from := this,
-  to := that
+  to := that,
+  dir := if this < that then 1 else 0-1
 };
 
 protocol Interval;
 
 def Interval::for_each(fun) {
   ref i := this.from;
-  def dir := if this.from < this.to then 1 else 0-1;
   def delta := if this.from < this.to then 0 else 0-1;
   with_1cc leave -> loop(fn () {
     if i = this.to then
       leave.fire(i);
     fun(i + delta);
-    i := i + dir;
+    i := i + this.dir;
   });
 }
+
+def Interval::is_empty -> this.to = this.from;
