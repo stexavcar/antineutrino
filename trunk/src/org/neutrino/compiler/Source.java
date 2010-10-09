@@ -94,26 +94,22 @@ public class Source {
       this.module = module;
     }
 
-    @Override
     public void visitDefinition(Definition that) {
       CodeBuilder builder = module.createDefinition(Source.this, that);
       Compiler.compile(module, builder.getAssembler(), that.getValue());
     }
 
-    @Override
     public void visitProtocol(Protocol that) {
       module.createProtocol(Source.this, that.getAnnotations(),
           that.getName(), that.getName());
     }
 
-    @Override
     public void visitMethodDefinition(Method that) {
       CodeBuilder builder = module.createMethod(Source.this, that.getAnnotations(),
           that.getName(), that.getParameters());
       Compiler.compileMethod(module, builder.getAssembler(), that);
     }
 
-    @Override
     public void visitInheritance(Inheritance that) {
       module.declareInheritance(that.getSub(), that.getSuper());
     }

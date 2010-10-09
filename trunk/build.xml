@@ -14,7 +14,7 @@
   
   <target name="build">
     <mkdir dir="${class.dir}"/>
-    <javac srcdir="${src.dir}" destdir="${class.dir}"/>
+    <javac target="1.5" srcdir="${src.dir}" destdir="${class.dir}"/>
   </target>
   
   <target name="junit">

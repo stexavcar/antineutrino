@@ -60,7 +60,6 @@ public class PlanktonTest extends TestCase {
     assertEquals(Type.MAP, value.getType());
     PMap map = (PMap) value;
     map.forEach(new PMap.Thunk() {
-      @Override
       public boolean call(PValue key, PValue value) {
         assertEquals(Type.STRING, key.getType());
         assertEquals(original.get(key, null), value);

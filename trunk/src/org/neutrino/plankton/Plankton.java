@@ -40,7 +40,6 @@ public class Plankton {
       this.values = values;
     }
 
-    @Override
     public <E extends Throwable> void forEach(ThrowingThunk<E> thunk) throws E {
       for (Map.Entry<? extends PValue, ? extends PValue> entry : values.entrySet()) {
         PValue key = entry.getKey();
@@ -50,17 +49,14 @@ public class Plankton {
       }
     }
 
-    @Override
     public PValue get(PValue key, PValue ifMissing) {
       return values.containsKey(key) ? values.get(key) : ifMissing;
     }
 
-    @Override
     public int size() {
       return values.size();
     }
 
-    @Override
     public Type getType() {
       return Type.MAP;
     }
@@ -75,22 +71,18 @@ public class Plankton {
       this.str = str;
     }
 
-    @Override
     public String getValue() {
       return this.str;
     }
 
-    @Override
     public Type getType() {
       return Type.STRING;
     }
 
-    @Override
     public int hashCode() {
       return str.hashCode();
     }
 
-    @Override
     public boolean equals(Object that) {
       return (that instanceof PString) && ((PString) that).getValue().equals(str);
     }
@@ -105,22 +97,18 @@ public class Plankton {
       this.data = data;
     }
 
-    @Override
     public Type getType() {
       return Type.BLOB;
     }
 
-    @Override
     public int length() {
       return data.length;
     }
 
-    @Override
     public byte[] getData() {
       return this.data;
     }
 
-    @Override
     public int get(int offset) {
       return data[offset];
     }
@@ -135,12 +123,10 @@ public class Plankton {
       this.value = value;
     }
 
-    @Override
     public int getValue() {
       return value;
     }
 
-    @Override
     public Type getType() {
       return Type.INTEGER;
     }
@@ -165,17 +151,14 @@ public class Plankton {
       this.values = values;
     }
 
-    @Override
     public PValue get(int index) {
       return values.get(index);
     }
 
-    @Override
     public int length() {
       return values.size();
     }
 
-    @Override
     public Type getType() {
       return Type.ARRAY;
     }
@@ -192,12 +175,10 @@ public class Plankton {
       this.value = value;
     }
 
-    @Override
     public Type getType() {
       return Type.BOOL;
     }
 
-    @Override
     public boolean getValue() {
       return value;
     }
@@ -219,22 +200,18 @@ public class Plankton {
       this.payload = payload;
     }
 
-    @Override
     public PValue getPayload() {
       return payload;
     }
 
-    @Override
     public PValue getTag() {
       return tag;
     }
 
-    @Override
     public Type getType() {
       return Type.SEED;
     }
 
-    @Override
     public <T> T grow(Class<T> klass) {
       if (this.value == null) {
         value = Plankton.this.growSeed(this);
@@ -306,7 +283,6 @@ public class Plankton {
     case MAP: {
       final Map<String, String> elms = new TreeMap<String, String>();
       ((PMap) value).forEach(new Thunk() {
-        @Override
         public boolean call(PValue key, PValue value) {
           elms.put(Plankton.toString(key), Plankton.toString(value));
           return true;
@@ -437,7 +413,6 @@ public class Plankton {
       PMap map = (PMap) value;
       writeInt32(out, map.size());
       map.forEach(new ThrowingThunk<IOException>() {
-        @Override
         public boolean call(PValue key, PValue value) throws IOException {
           write(out, key, data);
           write(out, value, data);

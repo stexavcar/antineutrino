@@ -1,0 +1,6 @@
+protocol ApplyTestProto;
+
+def LanguageTest::test_apply() {
+  def obj := new ApplyTestProto { };
+  
+}
