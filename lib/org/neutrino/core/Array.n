@@ -14,6 +14,13 @@ def PrimitiveArray::iter {
   };
 }
 
+def PrimitiveArray::[slice: Interval] {
+  def a := new MutablePrimitiveArray(Math.abs(slice.to - slice.from));
+  ref i := 0;
+  slice.for_each(fn (idx) { a[i] := this[idx]; i := i + 1 });
+  a;
+}
+
 @native("mutarr") protocol MutablePrimitiveArray;
 def MutablePrimitiveArray is PrimitiveArray;
 
