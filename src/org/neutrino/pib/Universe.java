@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.PSeed;
@@ -15,7 +16,6 @@ import org.neutrino.plankton.Plankton;
 import org.neutrino.plankton.PlanktonRegistry;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
-import org.neutrino.runtime.Frame;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.MethodLookupHelper;
@@ -126,8 +126,8 @@ public class Universe implements ISeedable {
       parallelUniverse.addParents(out, id);
   }
 
-  public Lambda lookupMethod(String name, int argc, Frame frame) {
-    return methodLookupHelper.lookupMethod(name, argc, frame);
+  public Lambda lookupMethod(String name, int argc, Stack<RValue> stack) {
+    return methodLookupHelper.lookupMethod(name, argc, stack);
   }
 
   public Lambda getLambda(RObject function, RValue... args) {
