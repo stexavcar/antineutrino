@@ -27,9 +27,13 @@ def ArrayList::contents -> this.contents_.get();
 def ArrayList::[i: Integer]:=(value) -> this.contents[i] := value;
 
 def ArrayList::to_string() {
-  ref s := "<an ArrayList: [";
-  this.for_each(fn (el) -> s := s + el.to_string + ", ");
-  s := s + "]>";
+  ref s := "[";
+  ref first := true;
+  this.for_each(fn (el) {
+    if first then first := false else s := s + ", ";
+    s := s + el.to_string;
+  });
+  s := s + "]";
 }
 
 def ArrayList::add(value) {

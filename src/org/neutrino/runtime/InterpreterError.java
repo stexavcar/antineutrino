@@ -45,6 +45,7 @@ public class InterpreterError extends RuntimeException {
         if (argc > 1) {
           argTypes.append("[");
           for (int i = 1; i < argc; i++) {
+            if (i > 1) argTypes.append(", ");
             RValue arg = current.getArgument(argc, i);
             argTypes.append(renderValueType(current, arg));
           }
