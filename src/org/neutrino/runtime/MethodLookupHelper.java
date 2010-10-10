@@ -1,6 +1,9 @@
 package org.neutrino.runtime;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.neutrino.pib.CodeBundle;
@@ -10,21 +13,23 @@ import org.neutrino.pib.Universe;
 
 public class MethodLookupHelper {
 
+  private static final int kInitialScoreVectorSize = 256;
   private static final int kUnrelated = Integer.MAX_VALUE;
   private static final int kUnspecified = Integer.MAX_VALUE / 2;
   private final Universe universe;
-  private int[] bestScore;
-  private int[] candidateScore;
+  private int[] bestScore = new int[kInitialScoreVectorSize];
+  private int[] candidateScore = new int[kInitialScoreVectorSize];
   private RMethod bestMethod;
+  private int scoreVectorSize = kInitialScoreVectorSize;
 
   public MethodLookupHelper(Universe universe) {
     this.universe = universe;
   }
 
   public Lambda lookupMethod(String name, int argc, Stack<RValue> stack) {
-    RMethod result = findPerfectMatch(name, argc, stack, universe);
+    RMethod result = findPerfectMatch(name, argc, stack);
     if (result == null)
-      result = findApproximateMatch(name, argc, stack, universe);
+      result = findApproximateMatch(name, argc, stack);
     if (result != null)
       return new Lambda(result.getOrigin(), result.getCode());
     else
@@ -39,65 +44,85 @@ public class MethodLookupHelper {
     return lookupMethod("()", 1 + args.length, fakeFrame.stack);
   }
 
-  private RMethod findPerfectMatch(String name, int argc,
-      Stack<RValue> stack, Universe universe) {
+  private static class MethodCache {
+
+    private int maxArgc = 0;
+    private final List<List<RMethod>> methodsByArgc = new ArrayList<List<RMethod>>();
+
+    public List<RMethod> get(int argc) {
+      return (maxArgc <= argc) ? null : methodsByArgc.get(argc);
+    }
+
+    public void put(int argc, List<RMethod> values) {
+      while (maxArgc <= argc) {
+        maxArgc++;
+        methodsByArgc.add(null);
+      }
+      methodsByArgc.set(argc, values);
+    }
+
+  }
+
+  private final Map<String, MethodCache> methodCache = new HashMap<String, MethodCache>();
+
+  private List<RMethod> getAllMethods(String name, int argc) {
+    MethodCache cache = methodCache.get(name);
+    if (cache == null) {
+      cache = new MethodCache();
+      methodCache.put(name, cache);
+    }
+    List<RMethod> result = cache.get(argc);
+    if (result == null) {
+      result = new ArrayList<RMethod>();
+      addMethods(result, name, argc, universe);
+      cache.put(argc, result);
+    }
+    return result;
+  }
+
+  private void addMethods(List<RMethod> methods, String name,
+      int argc, Universe universe) {
     for (Module module : universe.modules.values()) {
-      RMethod result = findPerfectMatch(module, name, argc, stack);
-      if (result != null)
-        return result;
+      for (RMethod method : module.methods) {
+        if (method.name.equals(name) && method.getParameters().size() == argc)
+          methods.add(method);
+      }
     }
     Universe parallel = universe.getParallelUniverse();
     if (parallel != null)
-      return findPerfectMatch(name, argc, stack, parallel);
+      addMethods(methods, name, argc, parallel);
+  }
+
+  private RMethod findPerfectMatch(String name, int argc,
+      Stack<RValue> stack) {
+    loop: for (RMethod method : getAllMethods(name, argc)) {
+      List<Parameter> params = method.getParameters();
+      for (int i = 0; i < argc; i++) {
+        TypeId paramType = params.get(i).getTypeId();
+        if (paramType == null)
+          paramType = TypeId.get("Object");
+        RValue arg = stack.get(stack.size() - argc + i);
+        TypeId argType = arg.getTypeId();
+        if (argType != paramType)
+          continue loop;
+      }
+      return method;
+    }
     return null;
   }
 
   private RMethod findApproximateMatch(String name, int argc,
-      Stack<RValue> stack, Universe universe) {
+      Stack<RValue> stack) {
     bestMethod = null;
-    bestScore = new int[argc];
-    candidateScore = new int[argc];
+    if (scoreVectorSize < argc) {
+      scoreVectorSize = argc;
+      bestScore = new int[argc];
+      candidateScore = new int[argc];
+    }
     for (int i = 0; i < argc; i++)
       bestScore[i] = Integer.MAX_VALUE;
-    for (Module module : universe.modules.values())
-      findApproximateMatch(module, name, argc, stack);
-    Universe parallel = universe.getParallelUniverse();
-    if (parallel != null)
-      findApproximateMatch(name, argc, stack, parallel);
-    return bestMethod;
-  }
-
-
-  private RMethod findPerfectMatch(Module module, String name, int argc,
-      Stack<RValue> stack) {
-    loop: for (RMethod method : module.methods) {
-      if (method.getName().equals(name)) {
-        List<Parameter> params = method.getParameters();
-        if (params.size() != argc)
-          continue loop;
-        for (int i = 0; i < argc; i++) {
-          TypeId paramType = params.get(i).getTypeId();
-          if (paramType == null)
-            paramType = TypeId.get("Object");
-          RValue arg = stack.get(stack.size() - argc + i);
-          TypeId argType = arg.getTypeId();
-          if (argType != paramType)
-            continue loop;
-        }
-        return method;
-      }
-    }
-    return null;
-  }
-
-  private RMethod findApproximateMatch(Module module, String name,
-      int argc, Stack<RValue> stack) {
-    loop: for (RMethod method : module.methods) {
-      if (!method.getName().equals(name))
-        continue loop;
+    loop: for (RMethod method : getAllMethods(name, argc)) {
       List<Parameter> params = method.getParameters();
-      if (params.size() != argc)
-        continue loop;
       boolean isBetter = false;
       for (int i = 0; i < argc; i++) {
         TypeId paramType = params.get(i).getTypeId();
