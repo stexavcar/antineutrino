@@ -30,6 +30,7 @@ public class PlanktonRegistry {
   private class AnnotationCodec<T> implements ICodec<T> {
 
     private final Class<T> klass;
+    private boolean isInitialized = false;
 
     public AnnotationCodec(Class<T> klass) {
       this.klass = klass;
@@ -41,7 +42,9 @@ public class PlanktonRegistry {
         return klass.newInstance();
       } catch (InstantiationException ie) {
         for (Method method : klass.getDeclaredMethods()) {
-          if (method.getAnnotation(Factory.class) != null) {
+          Factory factory = method.getAnnotation(Factory.class);
+          if (factory != null) {
+            isInitialized = !factory.initialize();
             return (T) method.invoke(null, payload);
           }
         }
@@ -53,15 +56,17 @@ public class PlanktonRegistry {
       PMap fields = (PMap) payload;
       try {
         T result = createNewInstance(payload);
-        for (Field field : klass.getDeclaredFields()) {
-          SeedMember seedMember = field.getAnnotation(SeedMember.class);
-          if (seedMember != null) {
-            String name = seedMember.value();
-            if (name.isEmpty())
-              name = field.getName();
-            PValue value = fields.get(Plankton.newString(name), null);
-            Object rawValue = decodeValue(plankton, value);
-            field.set(result, rawValue);
+        if (!isInitialized) {
+          for (Field field : klass.getDeclaredFields()) {
+            SeedMember seedMember = field.getAnnotation(SeedMember.class);
+            if (seedMember != null) {
+              String name = seedMember.value();
+              if (name.isEmpty())
+                name = field.getName();
+              PValue value = fields.get(Plankton.newString(name), null);
+              Object rawValue = decodeValue(plankton, value);
+              field.set(result, rawValue);
+            }
           }
         }
         return result;

@@ -1,6 +1,12 @@
 package org.neutrino.runtime;
 
 import org.neutrino.plankton.ISeedable;
+import org.neutrino.plankton.PInteger;
+import org.neutrino.plankton.PMap;
+import org.neutrino.plankton.PString;
+import org.neutrino.plankton.PValue;
+import org.neutrino.plankton.Plankton;
+import org.neutrino.plankton.annotations.Factory;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
 
@@ -10,13 +16,30 @@ public class RInteger extends RValue implements ISeedable {
   static final String TAG = "org::neutrino::runtime::RInteger";
   private static final TypeId TYPE_ID = TypeId.get("int");
 
-  public @SeedMember int value;
+  private static final int kCachedCount = 1024;
+  private static final RInteger[] kCache = new RInteger[kCachedCount];
+  static {
+    for (int i = 0 ; i < kCachedCount; i++)
+      kCache[i] = new RInteger(i);
+  }
 
-  public RInteger(int value) {
+  public final @SeedMember int value;
+
+  private RInteger(int value) {
     this.value = value;
   }
 
-  public RInteger() { }
+  public static RInteger get(int value) {
+    if (0 <= value && value < kCachedCount)
+      return kCache[value];
+    return new RInteger(value);
+  }
+
+  private static final PString VALUE = Plankton.newString("value");
+  @Factory(initialize = false)
+  public static RInteger grow(PValue value) {
+    return get(((PInteger) ((PMap) value).get(VALUE, null)).getValue());
+  }
 
   public int getValue() {
     return value;
