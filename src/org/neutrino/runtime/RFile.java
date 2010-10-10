@@ -2,6 +2,7 @@ package org.neutrino.runtime;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
@@ -41,6 +42,16 @@ public class RFile extends RValue {
         }
       }
       return out.toByteArray();
+    } catch (IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
+  }
+
+  public void write(byte[] bytes) {
+    try {
+      FileOutputStream out = new FileOutputStream(file);
+      out.write(bytes);
+      out.close();
     } catch (IOException ioe) {
       throw new RuntimeException(ioe);
     }

@@ -1,7 +1,31 @@
 @entry_point("compile")
 def compile_main(args) {
-  def in := args[0];
-  def file := open_file(in);
-  def binary := new MachO(file.read_binary());
-  binary.print();
+  def in_name := args[0];
+  def out_name := args[1];
+  def in_file := open_file(in_name);
+  def blob_in := in_file.read_binary();
+  def binary := new MachO(blob_in);
+  def blob_out := binary.blobify;
+  if compare_blobs(blob_in, blob_out) then {
+    open_file(out_name).write_binary(blob_out);
+    print("Wrote " + out_name);
+  }
+}
+
+def compare_blobs(first, second) {
+  if first.length != second.length then
+    print("Different lengths: " + first.length.to_string + " vs. " +
+        second.length.to_string + ".");
+  def min_length := Math.min(first.length, second.length);
+  ref same_contents := true;
+  with_1cc break -> for (def i : 0 .. min_length) {
+    if first[i] != second[i] then {
+      print("First difference at byte " + i.to_string);
+      same_contents := false;
+      break.fire(null);
+    }
+  }
+  if same_contents then
+    print("No differences in content detected.");
+  same_contents
 }

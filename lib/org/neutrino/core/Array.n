@@ -38,5 +38,9 @@ def ByteArray::[index: Integer] -> internal "byte_array[]";
 def ByteArray::length -> internal "byte_array.length";
 
 @native("mutbytarr") protocol MutablePrimitiveByteArray;
+def MutablePrimitiveByteArray is ByteArray;
 
 def protocol MutablePrimitiveByteArray::new(size: Integer) -> internal "mutprimbytarr";
+
+def MutablePrimitiveByteArray::[i: Integer]:=(value: Integer) -> internal "mutbytarr.set";
+

@@ -52,6 +52,7 @@ public class Scanner {
     switch (c) {
     case '+': case '-': case '.': case '@': case '%': case '*':
     case '>': case '<': case '!': case '?': case '=': case '|':
+    case '&':
       return true;
     default:
       return false;

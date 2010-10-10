@@ -27,6 +27,10 @@ public class RByteArray extends RArray {
     return data.length;
   }
 
+  public byte[] getBytes() {
+    return this.data;
+  }
+
   @Override
   public String toString() {
     StringBuilder buf = new StringBuilder().append("#<bytes:");

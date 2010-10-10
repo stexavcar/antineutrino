@@ -19,7 +19,11 @@ def Integer::=(that: Integer) -> internal "int=int";
 
 def Integer::|(that: Integer) -> internal "int|int";
 
+def Integer::&(that: Integer) -> internal "int&int";
+
 def Integer::<<(that: Integer) -> internal "int<<int";
+
+def Integer::>>(that: Integer) -> internal "int>>int";
 
 def Integer::..(that) -> new Interval {
   from := this,
