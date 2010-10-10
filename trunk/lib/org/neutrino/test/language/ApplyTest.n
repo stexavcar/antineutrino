@@ -5,6 +5,7 @@ def ApplyTestProto::two(obj: Integer) -> obj + 2;
 def ApplyTestProto::two(obj: String) -> obj + "2";
 
 def LanguageTest::test_apply() {
+  this.on_start("apply");
   def obj := new ApplyTestProto { };
   assert_equal(1, apply("one", #[obj]));
   assert_equal(8, apply("two", #[obj, 6]));
@@ -12,4 +13,5 @@ def LanguageTest::test_apply() {
   assert_equal(15, apply("+", #[7, 8]));
   def add(x) -> fn (y) -> x + y;
   assert_equal(6, apply("()", #[add(5), 1]));
+  assert_equal(7, apply("()", #[apply, "+", #[3, 4]]));
 }
