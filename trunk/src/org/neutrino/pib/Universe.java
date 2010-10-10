@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -111,12 +112,16 @@ public class Universe implements ISeedable {
       : parallelUniverse.getProtocol(typeId);
   }
 
-
+  private final Map<TypeId, List<TypeId>> parentCache = new HashMap<TypeId, List<TypeId>>();
 
   public List<TypeId> getParents(TypeId id) {
-    List<TypeId> parents = new ArrayList<TypeId>();
-    addParents(parents, id);
-    return parents;
+    List<TypeId> result = parentCache.get(id);
+    if (result == null) {
+      result = new ArrayList<TypeId>();
+      addParents(result, id);
+      parentCache.put(id, result);
+    }
+    return result;
   }
 
   private void addParents(List<TypeId> out, TypeId id) {
