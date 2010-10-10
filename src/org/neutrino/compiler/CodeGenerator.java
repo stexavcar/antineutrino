@@ -75,7 +75,7 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
 
   @Override
   public void visitNumber(Tree.Number that) {
-    assm.push(new RInteger(that.getValue()));
+    assm.push(RInteger.get(that.getValue()));
   }
 
   @Override

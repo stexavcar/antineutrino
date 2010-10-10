@@ -92,7 +92,7 @@ public class Native implements ISeedable {
     public RValue call(Arguments args) {
       RInteger a = (RInteger) args.getThis();
       RInteger b = (RInteger) args.getArgument(0);
-      return new RInteger(a.getValue() + b.getValue());
+      return RInteger.get(a.getValue() + b.getValue());
     }
   };
 
@@ -101,7 +101,7 @@ public class Native implements ISeedable {
     public RValue call(Arguments args) {
       RInteger a = (RInteger) args.getThis();
       RInteger b = (RInteger) args.getArgument(0);
-      return new RInteger(a.getValue() | b.getValue());
+      return RInteger.get(a.getValue() | b.getValue());
     }
   };
 
@@ -110,7 +110,7 @@ public class Native implements ISeedable {
     public RValue call(Arguments args) {
       RInteger a = (RInteger) args.getThis();
       RInteger b = (RInteger) args.getArgument(0);
-      return new RInteger(a.getValue() << b.getValue());
+      return RInteger.get(a.getValue() << b.getValue());
     }
   };
 
@@ -119,7 +119,7 @@ public class Native implements ISeedable {
     public RValue call(Arguments args) {
       RInteger a = (RInteger) args.getThis();
       RInteger b = (RInteger) args.getArgument(0);
-      return new RInteger(a.getValue() - b.getValue());
+      return RInteger.get(a.getValue() - b.getValue());
     }
   };
 
@@ -128,7 +128,7 @@ public class Native implements ISeedable {
     public RValue call(Arguments args) {
       RInteger a = (RInteger) args.getThis();
       RInteger b = (RInteger) args.getArgument(0);
-      return new RInteger(a.getValue() * b.getValue());
+      return RInteger.get(a.getValue() * b.getValue());
     }
   };
 
@@ -171,7 +171,7 @@ public class Native implements ISeedable {
   @Marker("str.len") static final Impl STRING_LENGTH = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      return new RInteger(((RString) args.getThis()).getValue().length());
+      return RInteger.get(((RString) args.getThis()).getValue().length());
     }
   };
 
@@ -257,7 +257,7 @@ public class Native implements ISeedable {
     @Override
     public RValue call(Arguments args) {
       RPrimitiveArray arr = (RPrimitiveArray) args.getThis();
-      return new RInteger(arr.getLength());
+      return RInteger.get(arr.getLength());
     }
   };
 
@@ -266,7 +266,7 @@ public class Native implements ISeedable {
     public RValue call(Arguments args) {
       RByteArray arr = (RByteArray) args.getThis();
       RInteger index = (RInteger) args.getArgument(0);
-      return new RInteger((arr.getByte(index.getValue()) + 0x100) & 0xFF);
+      return RInteger.get((arr.getByte(index.getValue()) + 0x100) & 0xFF);
     }
   };
 
@@ -274,7 +274,7 @@ public class Native implements ISeedable {
     @Override
     public RValue call(Arguments args) {
       RByteArray arr = (RByteArray) args.getThis();
-      return new RInteger(arr.getLength());
+      return RInteger.get(arr.getLength());
     }
   };
 

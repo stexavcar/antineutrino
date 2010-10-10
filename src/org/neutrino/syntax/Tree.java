@@ -392,7 +392,7 @@ public class Tree {
 
     @Override
     public RValue toValue() {
-      return new RInteger(value);
+      return RInteger.get(value);
     }
 
     @Override

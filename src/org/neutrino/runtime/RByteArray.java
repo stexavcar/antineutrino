@@ -16,7 +16,7 @@ public class RByteArray extends RArray {
   }
 
   public RValue get(int index) {
-    return new RInteger(data[index]);
+    return RInteger.get(data[index]);
   }
 
   public int getByte(int value) {
