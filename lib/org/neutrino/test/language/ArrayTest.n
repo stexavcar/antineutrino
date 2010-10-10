@@ -39,13 +39,10 @@ def LanguageTest::test_mutable_arrays() {
   def kSize := 10;
   def arr := new MutablePrimitiveArray(kSize);
   assert_equal(kSize, arr.length);
-  (0 .. kSize).for_each(fn (i) {
+  for (def i : 0 .. kSize)
     assert_equal(null, arr[i]);
-  });
-  (0 .. kSize).for_each(fn (i) {
+  for (def i : 0 .. kSize)
     arr[i] := i * 3;
-  });
-  (0 .. kSize).for_each(fn (i) {
+  for (def i : 0 .. kSize)
     assert_equal(i * 3, arr[i]);
-  });
 }

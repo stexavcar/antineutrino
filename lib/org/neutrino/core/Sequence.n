@@ -14,7 +14,7 @@ def Iter::next;
 
 protocol Sequence;
 
-def Sequence::for_each(f) {
+def Sequence::for(f) {
   def itr := this.iter;
   with_1cc leave -> loop(fn () {
     if not itr.has_next() then

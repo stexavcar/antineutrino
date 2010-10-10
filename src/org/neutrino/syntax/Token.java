@@ -49,6 +49,7 @@ public class Token {
     TRUE("true", Category.KEYWORD),
     FALSE("false", Category.KEYWORD),
     IF("if", Category.KEYWORD),
+    FOR("for", Category.KEYWORD),
     THEN("then", Category.KEYWORD),
     ELSE("else", Category.KEYWORD),
     AND("and", Category.KEYWORD),

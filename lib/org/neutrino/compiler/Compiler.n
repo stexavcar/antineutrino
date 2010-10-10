@@ -1,8 +1,7 @@
 @entry_point("compile")
 def compile_main(args) {
-  def binary_name := args[0];
-  def file := open_file(binary_name);
-  def contents := file.read_binary();
-  def binary := new MachO(contents);
+  def in := args[0];
+  def file := open_file(in);
+  def binary := new MachO(file.read_binary());
   binary.print();
 }
