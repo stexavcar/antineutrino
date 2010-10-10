@@ -22,7 +22,7 @@ def LanguageTest::test_raw_loops() {
 def LanguageTest::test_intervals() {
   this.on_start("intervals");
   ref expected := 0;
-  def r := (0 .. 10).for_each(fn (i) {
+  def r := (0 .. 10).for(fn (i) {
     assert_equal(i, expected);
     expected := i + 1;
   });

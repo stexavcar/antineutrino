@@ -37,9 +37,8 @@ def Hanoi::move_top(from, to) {
 }
 
 def Hanoi::build(pile, disks) {
-  (disks .. 0).for_each(fn (i) {
-    this.push(pile, new HanoiDisk(i))
-  });
+  for (def i : disks .. 0)
+    this.push(pile, new HanoiDisk(i));
 }
 
 def Hanoi::push(pile, disk) {

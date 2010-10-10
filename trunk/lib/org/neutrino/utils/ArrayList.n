@@ -8,13 +8,15 @@ def protocol ArrayList::new(size: Integer) -> new ArrayList {
 
 def protocol ArrayList::new(elms: PrimitiveArray) {
   def result := new ArrayList(elms.length);
-  (0 .. elms.length).for_each(fn (i) -> result[i] := elms[i]);
+  for (def i : 0 .. elms.length)
+    result[i] := elms[i];
   result;
 }
 
 def protocol ArrayList::new(seq: Sequence) {
   def result := new ArrayList(0);
-  seq.for_each(fn (elm) -> result.add(elm));
+  for (def elm : seq)
+    result.add(elm);
   result;
 }
 
@@ -29,10 +31,10 @@ def ArrayList::[i: Integer]:=(value) -> this.contents[i] := value;
 def ArrayList::to_string() {
   ref s := "[";
   ref first := true;
-  this.for_each(fn (el) {
+  for (def el : this) {
     if first then first := false else s := s + ", ";
     s := s + el.to_string;
-  });
+  }
   s := s + "]";
 }
 
@@ -48,9 +50,8 @@ def ArrayList::ensure_capacity(capacity) {
   def old_contents := this.contents;
   if not capacity < old_contents.length then {
     def new_contents := new MutablePrimitiveArray(capacity * 2);
-    (0 .. this.length).for_each(fn (i) {
+    for (def i : 0 .. this.length)
       new_contents[i] := old_contents[i];
-    });
     this.contents_.set(new_contents);
   }
 }

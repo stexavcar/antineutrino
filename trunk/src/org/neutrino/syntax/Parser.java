@@ -10,6 +10,7 @@ import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Token.Type;
 import org.neutrino.syntax.Tree.If;
+import org.neutrino.syntax.Tree.Lambda;
 
 /**
  * Plain vanilla recursive descent parser for the neutrino syntax.
@@ -173,10 +174,12 @@ public class Parser {
     expect(Type.LBRACE);
     if (at(Type.RBRACE)) {
       expect(Type.RBRACE);
+      this.hasTransientSemicolon = true;
       return new Tree.Singleton(Tree.Singleton.Type.NULL);
     } else {
       Tree.Expression result = parseStatements();
       expect(Type.RBRACE);
+      this.hasTransientSemicolon = true;
       return result;
     }
   }
@@ -239,6 +242,8 @@ public class Parser {
       return expectOperator();
     } else if (at(Type.NEW)) {
       return expect(Type.NEW);
+    } else if (at(Type.FOR)) {
+      return expect(Type.FOR);
     } else if (at(Type.IDENT) || !allowEmpty) {
       return expect(Type.IDENT);
     } else {
@@ -305,7 +310,7 @@ public class Parser {
 
   private Parameter parseParameter() throws SyntaxError {
     String name = expect(Type.IDENT);
-    String type = "Object";
+    String type = null;
     if (at(Type.COLON)) {
       expect(Type.COLON);
       type = expect(Type.IDENT);
@@ -377,7 +382,7 @@ public class Parser {
     Type argDelimEnd = Type.RPAREN;
     if (at(Type.DOT)) {
       expect(Type.DOT);
-      method = expect(Type.IDENT);
+      method = expectName(false);
     } else if (at(Type.LPAREN)) {
       method = "()";
     } else if (at(Type.LBRACK)) {
@@ -497,15 +502,36 @@ public class Parser {
         elsePart = new Tree.Singleton(Tree.Singleton.Type.NULL);
       }
       return Tree.If.create(source ,cond, thenPart, elsePart);
+    } else if (at(Type.FOR)) {
+      expect(Type.FOR);
+      expect(Type.LPAREN);
+      expect(Type.DEF);
+      String ident = expect(Type.IDENT);
+      expect(Type.COLON);
+      Tree.Expression coll = parseExpression();
+      expect(Type.RPAREN);
+      Tree.Expression body = parseStatementEnd();
+      return new Tree.Call("for", Arrays.<Tree.Expression>asList(
+          coll,
+          Lambda.create(
+              source,
+              Arrays.<Parameter>asList(new Parameter(ident, null, false)),
+              body,
+              "for")
+          ));
     } else if (at(Type.WITH_1CC)) {
       expect(Type.WITH_1CC);
       String name = expect(Type.IDENT);
       expect(Type.ARROW);
-      Tree.Expression value = parseLongExpression();
+      Tree.Expression value = parseStatementEnd();
       return Tree.With1Cc.create(source, name, value);
     } else {
       return parseLogicalExpression();
     }
+  }
+
+  private Tree.Expression parseStatementEnd() throws SyntaxError {
+    return parseLongExpression();
   }
 
   /**

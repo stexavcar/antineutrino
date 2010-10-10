@@ -536,7 +536,7 @@ public class Tree {
     }
 
     public static Expression create(Source source, String name, Expression body) {
-      Parameter param = new Parameter(name, "Object", false);
+      Parameter param = new Parameter(name, null, false);
       Expression lambda = Lambda.create(source, Collections.singletonList(param),
           body, "with_1cc");
       return new With1Cc(lambda);

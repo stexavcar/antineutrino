@@ -45,11 +45,11 @@ def ByteArray::get_int32(index) ->
 
 def ByteArray::get_c_string(from, to) {
   ref result := "";
-  (from .. to).for_each(fn (i) {
+  for (def i : from .. to) {
     def ord := this[i];
     def chr := string_from_ordinal(ord);
     result := result + chr
-  });
+  }
   result;
 }
 
@@ -160,11 +160,11 @@ def protocol SegmentCommand::new(file, data) {
   def segname := data.get_c_string(8, 24);
   def nsects := data.get_int32(48);
   def sections := new ArrayList(nsects);
-  (0 .. nsects).for_each(fn (i) {
+  for (def i : 0 .. nsects) {
     def offset := SegmentCommand.size + (i * Section.size);
     def section := new Section(file, new BlobView(data, offset));
     sections[i] := section;
-  });
+  }
   new SegmentCommand {
     data := data,
     segname := segname,
@@ -178,7 +178,8 @@ def SegmentCommand::to_string -> "#<a SegmentCommand: " + this.segname + ">";
 
 def SegmentCommand::print {
   print("--- Section: " + this.segname + " ---");
-  this.sections.for_each(fn (section) -> section.print());
+  for (def section : this.sections)
+    section.print();
 }
 
 (*
@@ -241,7 +242,8 @@ def protocol CStringSection::new(data, size) {
 
 def CStringSection::print {
   print(" * __TEXT, __cstring");
-  this.strings.for_each(fn (str) -> print("   - '" + str + "'"));
+  for (def str : this.strings)
+    print("   - '" + str + "'");
 }
 
 (*
@@ -362,20 +364,19 @@ def DylibCommand::compatibility_version -> this.data.get_int32(20);
 protocol MachO;
 
 def MachO::print {
-  this.load_commands.for_each(fn (elm) {
+  for (def elm : this.load_commands)
     elm.print();
-  });
 }
 
 def protocol MachO::new(data) {
   def header := new MachHeader(data);
   def commands := new ArrayList(header.ncmds);
   ref cursor := 28;
-  (0 .. header.ncmds).for_each(fn (i) {
+  for (def i : 0 .. header.ncmds) {
     def command := new LoadCommand(data, new BlobView(data, cursor));
     cursor := cursor + command.cmdsize;
     commands[i] := command;
-  });
+  }
   new MachO {
     data := data,
     header := header,

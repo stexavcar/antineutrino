@@ -31,7 +31,7 @@ def ExampleTest::test_eq() {
 def ExampleTest::test_iter() {
   ref sum := 0;
   def acc(n) -> sum := sum + n;
-  new List(0..5).for_each(acc);
+  new List(0..5).for(acc);
   assert_equal(10, sum);
 }
 

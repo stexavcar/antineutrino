@@ -19,4 +19,5 @@ def LanguageTest::run() {
   this.test_getters_setters();
   this.test_protocol_methods();
   this.test_apply();
+  this.test_for();
 }

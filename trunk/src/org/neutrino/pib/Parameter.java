@@ -18,7 +18,7 @@ public class Parameter implements ISeedable {
 
   public Parameter(String name, String type, boolean isProtocolMethod) {
     this.name = name;
-    this.type = type;
+    this.type = type == null ? "Object" : type;
     this.isProtocolMethod = isProtocolMethod;
   }
 
