@@ -371,6 +371,9 @@ public class Native implements ISeedable {
       for (int i = 0; i < argc; i++)
         stack.push(values.get(i));
       Lambda method = universe.lookupMethod(name.getValue(), argc, stack);
+      if (method == null) {
+        throw new InterpreterError.MethodNotFound(args.frame);
+      }
       Frame trampoline = new Frame(args.frame, values.get(0),
           new CodeBundle(TRAMPOLINE_CODE, Arrays.<Object>asList(name.getValue()), 0, null),
           method.getModule());
