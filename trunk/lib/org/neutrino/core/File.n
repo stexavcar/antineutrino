@@ -3,3 +3,5 @@ def open_file(name) -> internal "open_file";
 @native("file") protocol File;
 
 def File::read_binary -> internal "file.read";
+
+def File::write_binary(data: ByteArray) -> internal "file.write";

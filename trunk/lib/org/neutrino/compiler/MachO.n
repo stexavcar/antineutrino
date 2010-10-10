@@ -88,6 +88,16 @@ protocol MachHeader;
 
 def protocol MachHeader::new(data) -> new MachHeader { data := data };
 
+def MachHeader::write(out) {
+  out.write_int32(this.magic);
+  out.write_int32(this.cputype);
+  out.write_int32(this.cpusubtype);
+  out.write_int32(this.filetype);
+  out.write_int32(this.ncmds);
+  out.write_int32(this.sizeofcmds);
+  out.write_int32(this.flags);
+}
+
 def MachHeader::magic -> this.data.get_int32(0);
 
 def MachHeader::cputype -> this.data.get_int32(4);
@@ -366,6 +376,16 @@ protocol MachO;
 def MachO::print {
   for (def elm : this.load_commands)
     elm.print();
+}
+
+def MachO::blobify {
+  def stream := new BlobStream;
+  this.write(stream);
+  stream.get_blob();
+}
+
+def MachO::write(stream) {
+  this.header.write(stream);
 }
 
 def protocol MachO::new(data) {

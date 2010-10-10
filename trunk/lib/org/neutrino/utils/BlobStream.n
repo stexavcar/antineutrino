@@ -1,0 +1,39 @@
+(*
+ * A stream of bytes.
+ *)
+protocol BlobStream;
+
+def protocol BlobStream::new -> new BlobStream(256);
+
+def protocol BlobStream::new(size: Integer) -> new BlobStream {
+  data_ := new_ref(new MutablePrimitiveByteArray(size)),
+  size_ := new_ref(0)
+};
+
+def BlobStream::size -> this.size_.get();
+
+def BlobStream::capacity -> this.data.length;
+
+def BlobStream::data -> this.data_.get();
+
+def BlobStream::write_int32(word) {
+  this.add(word & 16rFF);
+  this.add((word >> 8) & 16rFF);
+  this.add((word >> 16) & 16rFF);
+  this.add((word >> 24) & 16rFF);
+}
+
+def BlobStream::add(byte) {
+  if this.size >= this.capacity then
+    this.extend_capacity();
+  def index := this.size;
+  this.data[index] := byte;
+  this.size_.set(index + 1);
+}
+
+def BlobStream::get_blob {
+  def result := new MutablePrimitiveByteArray(this.size);
+  for (def i : 0 .. this.size)
+    result[i] := this.data[i];
+  result;
+}

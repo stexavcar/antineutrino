@@ -105,12 +105,30 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("int&int") static final Impl INT_BITWISE_AND = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RInteger a = (RInteger) args.getThis();
+      RInteger b = (RInteger) args.getArgument(0);
+      return RInteger.get(a.getValue() & b.getValue());
+    }
+  };
+
   @Marker("int<<int") static final Impl INT_SHL = new Impl() {
     @Override
     public RValue call(Arguments args) {
       RInteger a = (RInteger) args.getThis();
       RInteger b = (RInteger) args.getArgument(0);
       return RInteger.get(a.getValue() << b.getValue());
+    }
+  };
+
+  @Marker("int>>int") static final Impl INT_SHR = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RInteger a = (RInteger) args.getThis();
+      RInteger b = (RInteger) args.getArgument(0);
+      return RInteger.get(a.getValue() >> b.getValue());
     }
   };
 
@@ -233,6 +251,25 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("mutprimbytarr") static final Impl MUT_PRIM_BYT_ARR = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RInteger size = (RInteger) args.getArgument(0);
+      return new RMutableByteArray(size.getValue());
+    }
+  };
+
+  @Marker("mutbytarr.set") static final Impl MUTBYTARR_SET = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RMutableByteArray self = (RMutableByteArray) args.getThis();
+      RInteger index = (RInteger) args.getArgument(0);
+      RInteger value = (RInteger) args.getArgument(1);
+      self.set(index.getValue(), value.getValue());
+      return value;
+    }
+  };
+
   @Marker("mutarr.set") static final Impl MUTARR_SET = new Impl() {
     @Override
     public RValue call(Arguments args) {
@@ -284,6 +321,16 @@ public class Native implements ISeedable {
       RFile file = (RFile) args.getThis();
       byte[] data = file.read();
       return new RByteArray(data);
+    }
+  };
+
+  @Marker("file.write") static final Impl FILE_WRITE = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RFile file = (RFile) args.getThis();
+      RByteArray data = (RByteArray) args.getArgument(0);
+      file.write(data.getBytes());
+      return RNull.getInstance();
     }
   };
 
