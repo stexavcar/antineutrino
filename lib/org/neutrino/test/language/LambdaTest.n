@@ -1,7 +1,7 @@
 protocol LamFoo;
-def LamFoo::m() -> (fn () -> this);
+def (this: LamFoo).m() -> (fn () -> this);
 
-def LanguageTest::test_lambdas() {
+def (this: LanguageTest).test_lambdas() {
   this.on_start("lambdas");
   def lam_foo := new LamFoo { };
   def fun := lam_foo.m();

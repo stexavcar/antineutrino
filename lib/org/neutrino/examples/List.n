@@ -17,19 +17,19 @@ def List.new -> List.empty;
 def List.new(s: Sequence) -> new List(s.iter);
 def List.new(itr: Iter) -> if itr.has_next then List.cons(itr.next, new List(itr)) else List.empty;
 
-def Empty::isEmpty -> true;
-def Empty::=(other: Empty) -> true;
-def Empty::=(other: List) -> other = this;
-def Empty::to_string -> "L[]";
-def Empty::continue_string -> "]";
+def (this: Empty).isEmpty -> true;
+def (this: Empty)=(other: Empty) -> true;
+def (this: Empty)=(other: List) -> other = this;
+def (this: Empty).to_string -> "L[]";
+def (this: Empty).continue_string -> "]";
 
-def List::isEmpty -> false;
-def List::=(other: Empty) -> false;
-def List::=(other: List) -> this.head = other.head and this.tail = other.tail;
-def List::to_string -> "L[" + this.head.to_string() + this.tail.continue_string();
-def List::continue_string -> ", " + this.head.to_string() + this.tail.continue_string();
+def (this: List).isEmpty -> false;
+def (this: List)=(other: Empty) -> false;
+def (this: List)=(other: List) -> this.head = other.head and this.tail = other.tail;
+def (this: List).to_string -> "L[" + this.head.to_string() + this.tail.continue_string();
+def (this: List).continue_string -> ", " + this.head.to_string() + this.tail.continue_string();
 
-def List::iter {
+def (this: List).iter {
   ref node := this;
   new Iter {
     has_next -> not node.isEmpty,
@@ -39,25 +39,25 @@ def List::iter {
 
 (* HOFs *)
 
-def Empty::size -> 0;
-def List::size -> 1 + this.tail.size;
+def (this: Empty).size -> 0;
+def (this: List).size -> 1 + this.tail.size;
 
-def Empty::foldl(f, v) -> v;
-def List::foldl(f, v) -> this.tail.foldl(f, f(v, this.head));
+def (this: Empty).foldl(f, v) -> v;
+def (this: List).foldl(f, v) -> this.tail.foldl(f, f(v, this.head));
 
-def Empty::foldr(f, v) -> v;
-def List::foldr(f, v) -> f(this.head, this.tail.foldr(f, v));
+def (this: Empty).foldr(f, v) -> v;
+def (this: List).foldr(f, v) -> f(this.head, this.tail.foldr(f, v));
 
-def Empty::map(f) -> List.empty;
-def List::map(f) -> List.cons(f(this.head), this.tail.map(f));
+def (this: Empty).map(f) -> List.empty;
+def (this: List).map(f) -> List.cons(f(this.head), this.tail.map(f));
 
-def Empty::take(n) -> List.empty;
-def List::take(n) -> if n = 0 then List.empty else List.cons(this.head, this.tail.take(n-1));
+def (this: Empty).take(n) -> List.empty;
+def (this: List).take(n) -> if n = 0 then List.empty else List.cons(this.head, this.tail.take(n-1));
 
-def Empty::drop(n) -> List.empty;
-def List::drop(n) -> if n = 0 then this else this.tail.drop(n-1);
+def (this: Empty).drop(n) -> List.empty;
+def (this: List).drop(n) -> if n = 0 then this else this.tail.drop(n-1);
 
-def Empty::filter(p) -> List.empty;
-def List::filter(p) -> 
+def (this: Empty).filter(p) -> List.empty;
+def (this: List).filter(p) -> 
   if p(this.head) then List.cons(this.head, this.tail.filter(p))
   else this.tail.filter(p);

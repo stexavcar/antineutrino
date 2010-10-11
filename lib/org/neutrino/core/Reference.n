@@ -1,7 +1,7 @@
 @native("ref") protocol Reference;
 
-def Reference::get() -> internal "ref.get";
+def (this: Reference).get() -> internal "ref.get";
 
-def Reference::set(value) -> internal "ref.set";
+def (this: Reference).set(value) -> internal "ref.set";
 
 def new_ref(value) -> internal "ref";

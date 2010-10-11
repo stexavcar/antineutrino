@@ -3,7 +3,7 @@ def ExampleTest is Test;
 
 def new_example_test(counter) -> new ExampleTest { count := counter };
 
-def ExampleTest::run() {
+def (this: ExampleTest).run() {
   this.test_hanoi();
   this.test_list();
 }

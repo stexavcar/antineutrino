@@ -3,6 +3,6 @@ def UtilsTest is Test;
 
 def new_utils_test(counter) -> new UtilsTest { count := counter };
 
-def UtilsTest::run() {
+def (this: UtilsTest).run() {
   this.test_array_lists();
 }

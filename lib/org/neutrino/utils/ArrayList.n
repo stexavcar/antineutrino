@@ -20,15 +20,15 @@ def ArrayList.new(seq: Sequence) {
   result;
 }
 
-def ArrayList::[i: Integer] -> this.contents[i];
+def (this: ArrayList)[i] -> this.contents[i];
 
-def ArrayList::length -> this.length_.get();
+def (this: ArrayList).length -> this.length_.get();
 
-def ArrayList::contents -> this.contents_.get();
+def (this: ArrayList).contents -> this.contents_.get();
 
-def ArrayList::[i: Integer]:=(value) -> this.contents[i] := value;
+def (this: ArrayList)[i]:=(value) -> this.contents[i] := value;
 
-def ArrayList::to_string() {
+def (this: ArrayList).to_string() {
   ref s := "[";
   ref first := true;
   for (def el : this) {
@@ -38,7 +38,7 @@ def ArrayList::to_string() {
   s := s + "]";
 }
 
-def ArrayList::add(value) {
+def (this: ArrayList).add(value) {
   def new_length := this.length + 1;
   this.ensure_capacity(new_length);
   this.contents[this.length] := value;
@@ -46,7 +46,7 @@ def ArrayList::add(value) {
   value;
 }
 
-def ArrayList::ensure_capacity(capacity) {
+def (this: ArrayList).ensure_capacity(capacity) {
   def old_contents := this.contents;
   if not capacity < old_contents.length then {
     def new_contents := new MutablePrimitiveArray(capacity * 2);
@@ -56,7 +56,7 @@ def ArrayList::ensure_capacity(capacity) {
   }
 }
 
-def ArrayList::iter {
+def (this: ArrayList).iter {
   def self := this;
   def index_itr := (0 .. self.length).iter;
   new Iter {

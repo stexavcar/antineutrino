@@ -1,11 +1,11 @@
 @native("array") protocol PrimitiveArray;
 def PrimitiveArray is Sequence;
 
-def PrimitiveArray::[index: Integer] -> internal "array[]";
+def (this: PrimitiveArray)[index: Integer] -> internal "array[]";
 
-def PrimitiveArray::length -> internal "array.length";
+def (this: PrimitiveArray).length -> internal "array.length";
 
-def PrimitiveArray::iter {
+def (this: PrimitiveArray).iter {
   def self := this;
   def index_itr := (0 .. this.length).iter;
   new Iter {
@@ -14,7 +14,7 @@ def PrimitiveArray::iter {
   };
 }
 
-def PrimitiveArray::[slice: Interval] {
+def (this: PrimitiveArray)[slice: Interval] {
   def a := new MutablePrimitiveArray(Math.abs(slice.to - slice.from));
   ref i := 0;
   for (def idx : slice) {
@@ -29,18 +29,18 @@ def MutablePrimitiveArray is PrimitiveArray;
 
 def MutablePrimitiveArray.new(size: Integer) -> internal "mutprimarr";
 
-def MutablePrimitiveArray::[i: Integer]:=(value) -> internal "mutarr.set";
+def (this: MutablePrimitiveArray)[i: Integer]:=(value) -> internal "mutarr.set";
 
 @native("byte_array") protocol ByteArray;
 
-def ByteArray::[index: Integer] -> internal "byte_array[]";
+def (this: ByteArray)[index: Integer] -> internal "byte_array[]";
 
-def ByteArray::length -> internal "byte_array.length";
+def (this: ByteArray).length -> internal "byte_array.length";
 
 @native("mutbytarr") protocol MutablePrimitiveByteArray;
 def MutablePrimitiveByteArray is ByteArray;
 
 def MutablePrimitiveByteArray.new(size: Integer) -> internal "mutprimbytarr";
 
-def MutablePrimitiveByteArray::[i: Integer]:=(value: Integer) -> internal "mutbytarr.set";
+def (this: MutablePrimitiveByteArray)[i: Integer]:=(value: Integer) -> internal "mutbytarr.set";
 

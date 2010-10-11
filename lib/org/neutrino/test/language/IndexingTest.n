@@ -1,17 +1,17 @@
 protocol IndexingTester;
 
-def IndexingTester::[i: Integer] -> i - 3;
-def IndexingTester::[i1: Integer, i2: Integer] -> i1 + i2 + 5;
-def IndexingTester::[i: Integer]:=(j: Integer) -> i - j + 3;
-def IndexingTester::[i: Integer, j: Integer]:=(k: Integer) -> i * k - j;
+def (this: IndexingTester)[i: Integer] -> i - 3;
+def (this: IndexingTester)[i1: Integer, i2: Integer] -> i1 + i2 + 5;
+def (this: IndexingTester)[i: Integer]:=(j: Integer) -> i - j + 3;
+def (this: IndexingTester)[i: Integer, j: Integer]:=(k: Integer) -> i * k - j;
 
-def LanguageTest::test_indexing() {
+def (this: LanguageTest).test_indexing() {
   this.test_indexing_dimensions();
   this.test_local_indexing();
   this.test_index_assignment();
 }
 
-def LanguageTest::test_indexing_dimensions() {
+def (this: LanguageTest).test_indexing_dimensions() {
   this.on_start("indexing dimensions");
   def idxer := new IndexingTester { };
   assert_equal(1, idxer[4]);
@@ -20,7 +20,7 @@ def LanguageTest::test_indexing_dimensions() {
   assert_equal(13, idxer[7, 1]);
 }
 
-def LanguageTest::test_local_indexing() {
+def (this: LanguageTest).test_local_indexing() {
   this.on_start("local indexing");
   def foo[a, b] -> a * b;
   assert_equal(6, foo[3, 2]);
@@ -30,7 +30,7 @@ def LanguageTest::test_local_indexing() {
   assert_equal(90, tmp[9]);
 }
 
-def LanguageTest::test_index_assignment() {
+def (this: LanguageTest).test_index_assignment() {
   this.on_start("index assignment");
   def idxer := new IndexingTester { };
   assert_equal(1, idxer[0] := 2);
