@@ -69,7 +69,7 @@ def ByteArray::get_c_string(from) {
 protocol BlobView;
 def BlobView is ByteArray;
 
-def protocol BlobView::new(data, offset) -> new BlobView { data := data, offset := offset };
+def BlobView.new(data, offset) -> new BlobView { data := data, offset := offset };
 
 def BlobView::[index: Integer] -> this.data[this.offset + index];
 
@@ -86,7 +86,7 @@ def BlobView::[index: Integer] -> this.data[this.offset + index];
  *)
 protocol MachHeader;
 
-def protocol MachHeader::new(data) -> new MachHeader { data := data };
+def MachHeader.new(data) -> new MachHeader { data := data };
 
 def MachHeader::write(out) {
   out.write_int32(this.magic);
@@ -120,7 +120,7 @@ def MachHeader::flags -> this.data.get_int32(24);
  *)
 protocol LoadCommand;
 
-def protocol LoadCommand::new(file, data) {
+def LoadCommand.new(file, data) {
   def cmd := data.get_int32(0);
   if cmd = LC_SEGMENT then
     new SegmentCommand(file, data)
@@ -172,7 +172,7 @@ def LoadCommand::sections -> fn for (fun) { };
 protocol SegmentCommand;
 def SegmentCommand is LoadCommand;
 
-def protocol SegmentCommand::new(file, data) {
+def SegmentCommand.new(file, data) {
   def segname := data.get_c_string(8, 24);
   def nsects := data.get_int32(48);
   def sections := new ArrayList(nsects);
@@ -188,7 +188,7 @@ def protocol SegmentCommand::new(file, data) {
   };
 }
 
-def protocol SegmentCommand::size -> 56;
+def SegmentCommand.size -> 56;
 
 def SegmentCommand::to_string -> "#<a SegmentCommand: " + this.segname + ">";
 
@@ -220,7 +220,7 @@ def SegmentCommand::sections -> fn for (fun) {
  *)
 protocol Section;
 
-def protocol Section::new(file, data) {
+def Section.new(file, data) {
   def size := data.get_int32(36);
   def offset := data.get_int32(40);
   def sectname := data.get_c_string(0, 16);
@@ -236,7 +236,7 @@ def protocol Section::new(file, data) {
     };
 }
 
-def protocol Section::size -> 68;
+def Section.size -> 68;
 
 def Section::to_string -> "#<a Section: " + this.sectname + " " + this.segname + ">";
 
@@ -257,7 +257,7 @@ def Section::print {
 protocol CStringSection;
 def CStringSection is Section;
 
-def protocol CStringSection::new(file, data, size) {
+def CStringSection.new(file, data, size) {
   def strs := new ArrayList(0);
   ref cursor := 0;
   with_1cc break -> loop(fn () {
@@ -417,7 +417,7 @@ def MachO::write(out) {
     section.write(out);
 }
 
-def protocol MachO::new(data) {
+def MachO.new(data) {
   def header := new MachHeader(data);
   def commands := new ArrayList(header.ncmds);
   ref cursor := 28;

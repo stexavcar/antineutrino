@@ -1,6 +1,6 @@
 protocol HanoiDisk;
 
-def protocol HanoiDisk::new(size) -> new HanoiDisk {
+def HanoiDisk.new(size) -> new HanoiDisk {
   size := size,
   next_ := new_ref(null)
 };
@@ -9,7 +9,7 @@ def HanoiDisk::next -> this.next_.get();
 
 protocol Hanoi;
 
-def protocol Hanoi::new -> new Hanoi {
+def Hanoi.new -> new Hanoi {
   piles := new ArrayList [null, null, null],
   moves := new_ref(0)
 };

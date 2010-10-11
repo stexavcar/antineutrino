@@ -11,11 +11,11 @@ def Empty is List;
 
 (* Core methods *)
 
-def protocol List::empty -> new Empty { };
-def protocol List::cons(el, list: List) -> new List {head := el, tail := list};
-def protocol List::new -> List.empty;
-def protocol List::new(s: Sequence) -> new List(s.iter);
-def protocol List::new(itr: Iter) -> if itr.has_next then List.cons(itr.next, new List(itr)) else List.empty;
+def List.empty -> new Empty { };
+def List.cons(el, list: List) -> new List {head := el, tail := list};
+def List.new -> List.empty;
+def List.new(s: Sequence) -> new List(s.iter);
+def List.new(itr: Iter) -> if itr.has_next then List.cons(itr.next, new List(itr)) else List.empty;
 
 def Empty::isEmpty -> true;
 def Empty::=(other: Empty) -> true;

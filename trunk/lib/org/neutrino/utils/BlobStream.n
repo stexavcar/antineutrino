@@ -3,9 +3,9 @@
  *)
 protocol BlobStream;
 
-def protocol BlobStream::new -> new BlobStream(256);
+def BlobStream.new -> new BlobStream(256);
 
-def protocol BlobStream::new(size: Integer) -> new BlobStream {
+def BlobStream.new(size: Integer) -> new BlobStream {
   data_ := new_ref(new MutablePrimitiveByteArray(size)),
   length_ := new_ref(0)
 };

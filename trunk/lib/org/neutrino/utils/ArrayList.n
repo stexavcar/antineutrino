@@ -1,19 +1,19 @@
 protocol ArrayList;
 def ArrayList is Sequence;
 
-def protocol ArrayList::new(size: Integer) -> new ArrayList {
+def ArrayList.new(size: Integer) -> new ArrayList {
   contents_ := new_ref(new MutablePrimitiveArray(size)),
   length_ := new_ref(size)
 };
 
-def protocol ArrayList::new(elms: PrimitiveArray) {
+def ArrayList.new(elms: PrimitiveArray) {
   def result := new ArrayList(elms.length);
   for (def i : 0 .. elms.length)
     result[i] := elms[i];
   result;
 }
 
-def protocol ArrayList::new(seq: Sequence) {
+def ArrayList.new(seq: Sequence) {
   def result := new ArrayList(0);
   for (def elm : seq)
     result.add(elm);
