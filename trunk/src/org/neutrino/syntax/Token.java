@@ -39,7 +39,7 @@ public class Token {
     COLON(":"),
     COOLON("::"),
     COLON_EQ(":="),
-    ARROW("->", Category.OPERATOR),
+    ARROW("->"),
     AT("@", Category.OPERATOR),
     DOT(".", Category.OPERATOR),
     DEF("def", Category.KEYWORD),

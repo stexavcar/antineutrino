@@ -146,7 +146,13 @@ def LoadCommand::cmdsize -> this.data.get_int32(4);
 
 def LoadCommand::to_string -> "#<a LoadCommand #" + this.cmd.to_string + ">";
 
+def LoadCommand::write(out) {
+  out.write_data(this.data, 0, this.cmdsize);
+}
+
 def LoadCommand::print -> print(this);
+
+def LoadCommand::sections -> fn for (fun) { };
 
 (*
  * struct segment_command {
@@ -192,6 +198,11 @@ def SegmentCommand::print {
     section.print();
 }
 
+def SegmentCommand::sections -> fn for (fun) {
+  for (def section : this.sections)
+    fun(section);
+};
+
 (*
  * struct section {
  *   char sectname[16];
@@ -215,9 +226,10 @@ def protocol Section::new(file, data) {
   def sectname := data.get_c_string(0, 16);
   def segname := data.get_c_string(16, 32);
   if (segname = "__TEXT") and (sectname = "__cstring") then
-    new CStringSection(new BlobView(file, offset), size)
+    new CStringSection(file, new BlobView(file, offset), size)
   else
     new Section {
+      file := file,
       data := data,
       sectname := sectname,
       segname := segname
@@ -232,13 +244,20 @@ def Section::size -> this.data.get_int32(36);
 
 def Section::offset -> this.data.get_int32(40);
 
+def Section::write(out) {
+  def start := this.offset;
+  def end := start + this.size;
+  out.write_data(this.data, start, end);
+}
+
 def Section::print {
   print(" * " + this.segname + ", " + this.sectname);
 }
 
 protocol CStringSection;
+def CStringSection is Section;
 
-def protocol CStringSection::new(data, size) {
+def protocol CStringSection::new(file, data, size) {
   def strs := new ArrayList(0);
   ref cursor := 0;
   with_1cc break -> loop(fn () {
@@ -247,7 +266,7 @@ def protocol CStringSection::new(data, size) {
     strs.add(str);
     cursor := cursor + str.length + 1;
   });
-  new CStringSection { strings := strs }
+  new CStringSection { file := file, data := data, strings := strs }
 }
 
 def CStringSection::print {
@@ -384,8 +403,18 @@ def MachO::blobify {
   stream.get_blob();
 }
 
-def MachO::write(stream) {
-  this.header.write(stream);
+def MachO::sections -> fn for (fun) {
+  for (def command : this.load_commands)
+    for (def section : command.sections)
+      fun(section);
+};
+
+def MachO::write(out) {
+  this.header.write(out);
+  for (def load_command : this.load_commands)
+    load_command.write(out);
+  for (def section : this.sections)
+    section.write(out);
 }
 
 def protocol MachO::new(data) {
