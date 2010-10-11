@@ -2,8 +2,8 @@ protocol Object;
 
 def are_identical(a, b) -> internal "are_identical";
 
-def Object::=(that) -> are_identical(this, that);
+def (this: Object)=(that) -> are_identical(this, that);
 
-def Object::!=(that) -> not this = that;
+def (this: Object)!=(that) -> not this = that;
 
-def Object::to_string() -> internal "obj.to_string";
+def (this: Object).to_string() -> internal "obj.to_string";

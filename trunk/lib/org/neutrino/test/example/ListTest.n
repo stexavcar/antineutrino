@@ -1,4 +1,4 @@
-def ExampleTest::test_list() {
+def (this: ExampleTest).test_list() {
   this.on_start("list");
   this.test_new();
   this.test_isempty();
@@ -10,39 +10,39 @@ def ExampleTest::test_list() {
   this.test_filter();
 }
 
-def ExampleTest::test_new() {
+def (this: ExampleTest).test_new() {
   assert_equal(List.empty, new List);
   assert_equal(List.empty, new List(#[]));
   assert_equal(new List(0..5), new List(#[0, 1, 2, 3, 4]));
 }
 
-def ExampleTest::test_isempty() {
+def (this: ExampleTest).test_isempty() {
   assert_true(List.empty().isEmpty());
   assert_true(not new List(0..1).isEmpty());
 }
 
-def ExampleTest::test_eq() {
+def (this: ExampleTest).test_eq() {
   assert_equal(List.empty(), List.empty());
   assert_equal(new List(0..1), new List(0..1));
   assert_false(new List(0..1) = List.empty());
   assert_false(List.empty() = new List(0..1));
 }
 
-def ExampleTest::test_iter() {
+def (this: ExampleTest).test_iter() {
   ref sum := 0;
   def acc(n) -> sum := sum + n;
   new List(0..5).for(acc);
   assert_equal(10, sum);
 }
 
-def ExampleTest::test_size() {
+def (this: ExampleTest).test_size() {
   assert_equal(0, List.empty().size());
   assert_equal(1, new List(0..1).size());
   assert_equal(2, new List(0..2).size());
   assert_equal(5, new List(0..5).size());
 }
 
-def ExampleTest::test_folds() {
+def (this: ExampleTest).test_folds() {
   def add(a, b) -> a + b;
   def sub(a, b) -> a - b;
   def max(a, b) -> if a > b then a else b;
@@ -58,7 +58,7 @@ def ExampleTest::test_folds() {
   assert_equal(7, new List(0..5).foldr(max, 7));
 }
 
-def ExampleTest::test_map() {
+def (this: ExampleTest).test_map() {
   def id(x) -> x;
   def inc(x) -> x + 1;
 
@@ -66,7 +66,7 @@ def ExampleTest::test_map() {
   assert_equal(new List(1..6), new List(0..5).map(inc));
 }
 
-def ExampleTest::test_take_drop() {
+def (this: ExampleTest).test_take_drop() {
   assert_equal(List.empty(), List.empty().take(5));
   assert_equal(List.empty(), new List(0..5).take(0));
   assert_equal(new List(0..2), new List(0..5).take(2));
@@ -78,7 +78,7 @@ def ExampleTest::test_take_drop() {
   assert_equal(List.empty(), new List(0..5).drop(7));
 }
 
-def ExampleTest::test_filter() {
+def (this: ExampleTest).test_filter() {
   def tautology(x) -> true;
   def fallacy(n) -> false;
   def lt(a) -> fn(b) -> b < a;

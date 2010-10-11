@@ -3,29 +3,29 @@
  *)
 @native("int") protocol Integer;
 
-def Integer::+(that: Integer) -> internal "int+int";
+def (this: Integer)+(that: Integer) -> internal "int+int";
 
-def Integer::-(that: Integer) -> internal "int-int";
+def (this: Integer)-(that: Integer) -> internal "int-int";
 
-def Integer::*(that: Integer) -> internal "int*int";
+def (this: Integer)*(that: Integer) -> internal "int*int";
 
-def Integer::<(that: Integer) -> internal "int<int";
+def (this: Integer)<(that: Integer) -> internal "int<int";
 
-def Integer::>=(that: Integer) -> not (this < that);
+def (this: Integer)>=(that: Integer) -> not (this < that);
 
-def Integer::>(that: Integer) -> not (this < that or this = that);
+def (this: Integer)>(that: Integer) -> not (this < that or this = that);
 
-def Integer::=(that: Integer) -> internal "int=int";
+def (this: Integer)=(that: Integer) -> internal "int=int";
 
-def Integer::|(that: Integer) -> internal "int|int";
+def (this: Integer)|(that: Integer) -> internal "int|int";
 
-def Integer::&(that: Integer) -> internal "int&int";
+def (this: Integer)&(that: Integer) -> internal "int&int";
 
-def Integer::<<(that: Integer) -> internal "int<<int";
+def (this: Integer)<<(that: Integer) -> internal "int<<int";
 
-def Integer::>>(that: Integer) -> internal "int>>int";
+def (this: Integer)>>(that: Integer) -> internal "int>>int";
 
-def Integer::..(that) -> new Interval {
+def (this: Integer)..(that) -> new Interval {
   from := this,
   to := that,
   dir := if this < that then 1 else 0-1
@@ -34,9 +34,9 @@ def Integer::..(that) -> new Interval {
 protocol Interval;
 def Interval is Sequence;
 
-def Interval::=(other : Interval) -> this.from = other.from and this.to = other.to;
+def (this: Interval)=(other : Interval) -> this.from = other.from and this.to = other.to;
 
-def Interval::iter {
+def (this: Interval).iter {
   ref i := this.from;
   new Iter {
     has_next -> not i = this.to,

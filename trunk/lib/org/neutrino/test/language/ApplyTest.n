@@ -1,10 +1,10 @@
 protocol ApplyTestProto;
 
-def ApplyTestProto::one -> 1;
-def ApplyTestProto::two(obj: Integer) -> obj + 2;
-def ApplyTestProto::two(obj: String) -> obj + "2";
+def (this: ApplyTestProto).one -> 1;
+def (this: ApplyTestProto).two(obj: Integer) -> obj + 2;
+def (this: ApplyTestProto).two(obj: String) -> obj + "2";
 
-def LanguageTest::test_apply() {
+def (this: LanguageTest).test_apply() {
   this.on_start("apply");
   def obj := new ApplyTestProto { };
   assert_equal(1, apply("one", #[obj]));

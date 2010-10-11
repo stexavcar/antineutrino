@@ -260,6 +260,20 @@ public class Parser {
     return at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE) || at(Type.LBRACK);
   }
 
+  private Tree.Method parseMethodTail(List<Annotation> annots,
+      Parameter self) throws SyntaxError {
+    if (at(Type.DOT))
+      expect(Type.DOT);
+    List<Parameter> argParams = new ArrayList<Parameter>();
+    String method = parseParameters("()", argParams);
+    Tree.Expression body = parseFunctionBody(true);
+    List<Parameter> params = new ArrayList<Parameter>();
+    params.add(self);
+    params.addAll(argParams);
+    return new Tree.Method(annots, method, params, body);
+  }
+
+
   /**
    * <def>
    *   -> <annots> "def" <ident> ":=" <expr> ";"
@@ -271,35 +285,35 @@ public class Parser {
     List<Annotation> annots = parseAnnotations();
     if (at(Type.DEF)) {
       expect(Type.DEF);
-      String name = expect(Type.IDENT);
-      if (at(Type.COLON_EQ)) {
-        expect(Type.COLON_EQ);
-        Tree.Expression value = parseExpression();
-        expect(Type.SEMI);
-        return new Tree.Definition(annots, name, value);
-      } else if (at(Type.COOLON) || at(Type.DOT)) {
-        boolean hasProtocol = at(Type.DOT);
-        advance();
-        String method = expectName(true);
-        List<Parameter> argParams = new ArrayList<Parameter>();
-        method = parseParameters(method, argParams);
-        Tree.Expression body = parseFunctionBody(true);
-        List<Parameter> params = new ArrayList<Parameter>();
-        params.add(new Parameter("this", name, hasProtocol));
-        params.addAll(argParams);
-        return new Tree.Method(annots, method, params, body);
-      } else if (at(Type.IS)) {
-        expect(Type.IS);
-        String parent = expect(Type.IDENT);
-        expect(Type.SEMI);
-        return new Tree.Inheritance(annots, name, parent);
-      } else if (atFunctionDefinitionMarker()) {
-        List<Parameter> params = new ArrayList<Parameter>();
-        String methodName = parseParameters("()", params);
-        Tree.Expression body = parseFunctionBody(true);
-        Tree.Expression lambda = Tree.Lambda.create(source, methodName,
-            params, body, name);
-        return new Tree.Definition(annots, name, lambda);
+      if (at(Type.LPAREN)) {
+        expect(Type.LPAREN);
+        Parameter self = parseParameter();
+        expect(Type.RPAREN);
+        return parseMethodTail(annots, self);
+      } else if (at(Type.IDENT)) {
+        String name = expect(Type.IDENT);
+        if (at(Type.COLON_EQ)) {
+          expect(Type.COLON_EQ);
+          Tree.Expression value = parseExpression();
+          expect(Type.SEMI);
+          return new Tree.Definition(annots, name, value);
+        } else if (at(Type.DOT)) {
+          return parseMethodTail(annots, new Parameter("this", name, true));
+        } else if (at(Type.IS)) {
+          expect(Type.IS);
+          String parent = expect(Type.IDENT);
+          expect(Type.SEMI);
+          return new Tree.Inheritance(annots, name, parent);
+        } else if (atFunctionDefinitionMarker()) {
+          List<Parameter> params = new ArrayList<Parameter>();
+          String methodName = parseParameters("()", params);
+          Tree.Expression body = parseFunctionBody(true);
+          Tree.Expression lambda = Tree.Lambda.create(source, methodName,
+              params, body, name);
+          return new Tree.Definition(annots, name, lambda);
+        } else {
+          throw currentSyntaxError();
+        }
       } else {
         throw currentSyntaxError();
       }

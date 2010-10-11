@@ -5,18 +5,18 @@ def new_mutable_point(x, y) -> new MutablePoint {
   y_ := new_ref(y)
 };
 
-def MutablePoint::x -> this.x_.get;
+def (this: MutablePoint).x -> this.x_.get;
 
-def MutablePoint::y -> this.y_.get;
+def (this: MutablePoint).y -> this.y_.get;
 
-def MutablePoint::x := (v) -> this.x_.set(v);
+def (this: MutablePoint).x := (v) -> this.x_.set(v);
 
-def MutablePoint::y := (v) -> this.y_.set(v);
+def (this: MutablePoint).y := (v) -> this.y_.set(v);
 
-def MutablePoint::to_string -> "#<a Point: " + this.x.to_string + ", "
+def (this: MutablePoint).to_string -> "#<a Point: " + this.x.to_string + ", "
    + this.y.to_string + ">";
 
-def LanguageTest::test_getters_setters() {
+def (this: LanguageTest).test_getters_setters() {
   this.on_start("getters and setters");
   def p := new_mutable_point(4, 5);
   assert_equal(4, p.x);

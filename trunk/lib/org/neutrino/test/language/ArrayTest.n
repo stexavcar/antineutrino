@@ -1,10 +1,10 @@
-def LanguageTest::test_arrays() {
+def (this: LanguageTest).test_arrays() {
   this.test_simple_arrays();
   this.test_array_slice();
   this.test_mutable_arrays();
 }
 
-def LanguageTest::test_simple_arrays() {
+def (this: LanguageTest).test_simple_arrays() {
   this.on_start("simple arrays");
   def e := #[1, 2, 3];
   assert_equal(3, e.length);
@@ -13,7 +13,7 @@ def LanguageTest::test_simple_arrays() {
   assert_equal(3, e[2]);  
 }
 
-def LanguageTest::test_array_slice() {
+def (this: LanguageTest).test_array_slice() {
   this.on_start("array slices");
   def e := #[1, 2, 3, 4, 5];
 
@@ -34,7 +34,7 @@ def LanguageTest::test_array_slice() {
   assert_equal(3, s3[2]);
 }
 
-def LanguageTest::test_mutable_arrays() {
+def (this: LanguageTest).test_mutable_arrays() {
   this.on_start("mutable arrays");
   def kSize := 10;
   def arr := new MutablePrimitiveArray(kSize);

@@ -1,4 +1,4 @@
-def LanguageTest::test_primitives() {
+def (this: LanguageTest).test_primitives() {
   this.test_integer_operators();
   this.test_singletons();
   this.test_conditionals();
@@ -6,7 +6,7 @@ def LanguageTest::test_primitives() {
   this.test_radix_literals();
 }
 
-def LanguageTest::test_integer_operators() {
+def (this: LanguageTest).test_integer_operators() {
   this.on_start("integer operators");
   assert_true((1 + 1) = 2);
   assert_true((1 + 2) = 3);
@@ -14,13 +14,13 @@ def LanguageTest::test_integer_operators() {
   assert_true(1 < 2);
 }
 
-def LanguageTest::test_singletons() {
+def (this: LanguageTest).test_singletons() {
   this.on_start("singletons");
   assert_true(true);
   assert_true(false.negate());
 }
 
-def LanguageTest::test_conditionals() {
+def (this: LanguageTest).test_conditionals() {
   this.on_start("conditionals");
   assert_true((if true then 1 else 2) = 1);
   assert_true((if false then 1 else 2) = 2);
@@ -30,12 +30,12 @@ def LanguageTest::test_conditionals() {
 
 def tne_sum(n) -> if n = 0 then 0 else n + tne_sum(n - 1);
 
-def LanguageTest::test_number_encoding() {
+def (this: LanguageTest).test_number_encoding() {
   this.on_start("number encoding");
   assert_true(tne_sum(256) = 32896);
 }
 
-def LanguageTest::test_radix_literals() {
+def (this: LanguageTest).test_radix_literals() {
   this.on_start("radix literals");
   assert_equal(21, 2r10101);
   assert_equal(30387, 8r73263);

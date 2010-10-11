@@ -3,10 +3,10 @@
  *)
 @native("str") protocol String;
 
-def String::+(that: String) -> internal "str+str";
+def (this: String)+(that: String) -> internal "str+str";
 
-def String::=(that: String) -> internal "str=str";
+def (this: String)=(that: String) -> internal "str=str";
 
-def String::length -> internal "str.len";
+def (this: String).length -> internal "str.len";
 
 def string_from_ordinal(value) -> internal "ord2str";
