@@ -237,17 +237,22 @@ public class Parser {
     return annots;
   }
 
+  private boolean atName() {
+    switch (getCurrent().getType()) {
+    case NEW: case FOR: case IDENT:
+      return true;
+    default:
+      return atOperator();
+    }
+  }
+
   private String expectName(boolean allowEmpty) throws SyntaxError {
-    if (atOperator()) {
-      return expectOperator();
-    } else if (at(Type.NEW)) {
-      return expect(Type.NEW);
-    } else if (at(Type.FOR)) {
-      return expect(Type.FOR);
-    } else if (at(Type.IDENT) || !allowEmpty) {
-      return expect(Type.IDENT);
-    } else {
+    if (atName()) {
+      return expect(getCurrent().getType());
+    } else if (allowEmpty) {
       return null;
+    } else {
+      throw currentSyntaxError();
     }
   }
 
@@ -320,6 +325,8 @@ public class Parser {
 
   private String parseParameters(String name, List<Parameter> params) throws SyntaxError {
     String methodName = name;
+    if (atName())
+      methodName = expectName(false);
     Token.Type begin = Type.LPAREN;
     Token.Type end = Type.RPAREN;
     if (at(Type.LBRACK)) {

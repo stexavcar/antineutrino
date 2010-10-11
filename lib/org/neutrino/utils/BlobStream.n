@@ -7,10 +7,10 @@ def protocol BlobStream::new -> new BlobStream(256);
 
 def protocol BlobStream::new(size: Integer) -> new BlobStream {
   data_ := new_ref(new MutablePrimitiveByteArray(size)),
-  size_ := new_ref(0)
+  length_ := new_ref(0)
 };
 
-def BlobStream::size -> this.size_.get();
+def BlobStream::length -> this.length_.get();
 
 def BlobStream::capacity -> this.data.length;
 
@@ -23,17 +23,30 @@ def BlobStream::write_int32(word) {
   this.add((word >> 24) & 16rFF);
 }
 
+def BlobStream::write_data(data, from, to) {
+  for (def i : from .. to)
+    this.add(data[i]);
+}
+
+def BlobStream::extend_capacity(capacity) {
+  def old_contents := this.data;
+  def new_contents := new MutablePrimitiveByteArray(capacity * 2);
+  for (def i : 0 .. this.length)
+    new_contents[i] := old_contents[i];
+  this.data_.set(new_contents);
+}
+
 def BlobStream::add(byte) {
-  if this.size >= this.capacity then
-    this.extend_capacity();
-  def index := this.size;
+  if this.length >= this.capacity then
+    this.extend_capacity(this.length);
+  def index := this.length;
   this.data[index] := byte;
-  this.size_.set(index + 1);
+  this.length_.set(index + 1);
 }
 
 def BlobStream::get_blob {
-  def result := new MutablePrimitiveByteArray(this.size);
-  for (def i : 0 .. this.size)
+  def result := new MutablePrimitiveByteArray(this.length);
+  for (def i : 0 .. this.length)
     result[i] := this.data[i];
   result;
 }
