@@ -271,17 +271,15 @@ public class Parser {
     List<Annotation> annots = parseAnnotations();
     if (at(Type.DEF)) {
       expect(Type.DEF);
-      boolean hasProtocol = at(Type.PROTOCOL);
-      if (hasProtocol)
-        expect(Type.PROTOCOL);
       String name = expect(Type.IDENT);
       if (at(Type.COLON_EQ)) {
         expect(Type.COLON_EQ);
         Tree.Expression value = parseExpression();
         expect(Type.SEMI);
         return new Tree.Definition(annots, name, value);
-      } else if (at(Type.COOLON)) {
-        expect(Type.COOLON);
+      } else if (at(Type.COOLON) || at(Type.DOT)) {
+        boolean hasProtocol = at(Type.DOT);
+        advance();
         String method = expectName(true);
         List<Parameter> argParams = new ArrayList<Parameter>();
         method = parseParameters(method, argParams);
