@@ -36,6 +36,13 @@ def (this: BlobStream).extend_capacity(capacity) {
   this.data_.set(new_contents);
 }
 
+def (this: BlobStream).pad_to(offset) {
+  if this.length < offset then {
+    for (def i : this.length .. offset)
+      this.add(0);
+  }
+}
+
 def (this: BlobStream).add(byte) {
   if this.length >= this.capacity then
     this.extend_capacity(this.length);

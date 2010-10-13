@@ -244,10 +244,16 @@ def (this: Section).size -> this.data.get_int32(36);
 
 def (this: Section).offset -> this.data.get_int32(40);
 
+def (this: Section).sectname -> this.data.get_c_string(0, 16);
+
+def (this: Section).segname -> this.data.get_c_string(16, 32);
+
 def (this: Section).write(out) {
+  print(this.offset.to_string + " " + this.size.to_string);
+  out.pad_to(this.offset);
   def start := this.offset;
   def end := start + this.size;
-  out.write_data(this.data, start, end);
+  out.write_data(this.file, start, end);
 }
 
 def (this: Section).print {
