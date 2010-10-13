@@ -5,8 +5,10 @@ def compile_main(args) {
   def in_file := open_file(in_name);
   def blob_in := in_file.read_binary();
   def binary := new MachO(blob_in);
+  binary.print();
   def blob_out := binary.blobify;
-  if compare_blobs(blob_in, blob_out) or true then {
+  print("Done creating binary, verifying...");
+  if true or compare_blobs(blob_in, blob_out) then {
     open_file(out_name).write_binary(blob_out);
     print("Wrote " + out_name);
   }
