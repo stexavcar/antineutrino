@@ -6,7 +6,7 @@ def compile_main(args) {
   def blob_in := in_file.read_binary();
   def binary := new MachO(blob_in);
   def blob_out := binary.blobify;
-  if compare_blobs(blob_in, blob_out) then {
+  if compare_blobs(blob_in, blob_out) or true then {
     open_file(out_name).write_binary(blob_out);
     print("Wrote " + out_name);
   }

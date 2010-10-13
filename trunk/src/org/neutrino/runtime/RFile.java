@@ -1,11 +1,10 @@
 package org.neutrino.runtime;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-
-import com.sun.xml.internal.messaging.saaj.util.ByteOutputStream;
 
 public class RFile extends RValue {
 
@@ -27,12 +26,11 @@ public class RFile extends RValue {
     return "#<a File: " + file + ">";
   }
 
-  @SuppressWarnings("deprecation")
   public byte[] read() {
     try {
       FileInputStream in = new FileInputStream(file);
       byte[] buffer = new byte[256];
-      ByteOutputStream out = new ByteOutputStream();
+      ByteArrayOutputStream out = new ByteArrayOutputStream();
       while (true) {
         int count = in.read(buffer);
         if (count <= 0) {
