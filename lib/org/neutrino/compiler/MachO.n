@@ -299,6 +299,19 @@ def CStringSection.new(file, header, data, size) {
   new CStringSection { file := file, data := header, strings := strs }
 }
 
+def (this: CStringSection)[prev]:=(next) {
+  for (def i : 0 .. this.strings.length) {
+    if this.strings[i] = prev then
+      this.strings[i] := next;
+  }
+}
+
+def (this: CStringSection).write(out) {
+  out.pad_to(this.offset);
+  for (def str : this.strings)
+    out.add_c_string(str);
+}
+
 def (this: CStringSection).print {
   print(" * __TEXT, __cstring");
   for (def str : this.strings)
@@ -438,6 +451,14 @@ def (this: MachO).sections -> fn for (fun) {
     for (def section : command.sections)
       fun(section);
 };
+
+def (this: MachO).get_section(segment, section) {
+  with_1cc return -> for (def sect : this.sections) {
+    if (sect.segname = segment) and (sect.sectname = section) then
+      return.fire(sect);
+    null;
+  }
+}
 
 def (this: MachO).write(out) {
   this.header.write(out);

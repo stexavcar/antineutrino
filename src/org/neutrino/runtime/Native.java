@@ -193,6 +193,15 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("str[ascii]") static final Impl STRING_GET_ASCII = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RString self = (RString) args.getThis();
+      RInteger index = (RInteger) args.getArgument(0);
+      return RInteger.get(self.getValue().charAt(index.getValue()));
+    }
+  };
+
   @Marker("ord2str") static final Impl ORD_2_STR = new Impl() {
     @Override
     public RValue call(Arguments args) {
