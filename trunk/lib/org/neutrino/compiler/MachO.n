@@ -1,9 +1,9 @@
-(*
+/*
  * This is based on
  * http://developer.apple.com/documentation/DeveloperTools/Conceptual/MachORuntime/index.html
- *)
+ */
  
-(* cpu_type_t *)
+// cpu_type_t
 def CPU_TYPE_VAX := 1;
 def CPU_TYPE_MC680x0 := 6;
 def CPU_TYPE_X86 := 7;
@@ -17,7 +17,7 @@ def CPU_TYPE_I860 := 15;
 def CPU_TYPE_POWERPC := 18;
 def CPU_TYPE_POWERPC64 := CPU_TYPE_POWERPC | CPU_ARCH_ABI64;
 
-(* load commands *)
+// load commands
 def LC_UUID := 16r1B;
 def LC_SEGMENT := 16r01;
 def LC_SEGMENT_64 := 16r19;
@@ -65,7 +65,7 @@ def (this: ByteArray).get_c_string(from) {
   });
 }
 
-(* A view of a region within a byte array. *)
+// A view of a region within a byte array.
 protocol BlobView;
 def BlobView is ByteArray;
 
@@ -73,7 +73,7 @@ def BlobView.new(data, offset) -> new BlobView { data := data, offset := offset 
 
 def (this: BlobView)[index: Integer] -> this.data[this.offset + index];
 
-(*
+/*
  * struct mach_header {
  *   uint32_t magic;
  *   cpu_type_t cputype;
@@ -83,7 +83,7 @@ def (this: BlobView)[index: Integer] -> this.data[this.offset + index];
  *   uint32_t sizeofcmds;
  *   uint32_t flags;
  * };
- *)
+ */
 protocol MachHeader;
 
 def MachHeader.new(data) -> new MachHeader { data := data };
@@ -112,12 +112,12 @@ def (this: MachHeader).sizeofcmds -> this.data.get_int32(20);
 
 def (this: MachHeader).flags -> this.data.get_int32(24);
 
-(*
+/*
  * struct load_command {
  *   uint32_t cmd;
  *   uint32_t cmdsize;
  * };
- *)
+ */
 protocol LoadCommand;
 
 def LoadCommand.new(file, data) {
@@ -154,7 +154,7 @@ def (this: LoadCommand).print -> print(this);
 
 def (this: LoadCommand).sections -> fn for (fun) { };
 
-(*
+/*
  * struct segment_command {
  *   uint32_t cmd;
  *   uint32_t cmdsize;
@@ -168,7 +168,7 @@ def (this: LoadCommand).sections -> fn for (fun) { };
  *   uint32_t nsects;
  *   uint32_t flags;
  * };
- *)
+ */
 protocol SegmentCommand;
 def SegmentCommand is LoadCommand;
 
@@ -207,7 +207,7 @@ def (this: SegmentCommand).sections -> fn for (fun) {
     fun(section);
 };
 
-(*
+/*
  * struct section {
  *   char sectname[16];
  *   char segname[16];
@@ -221,7 +221,7 @@ def (this: SegmentCommand).sections -> fn for (fun) {
  *   uint32_t reserved1;
  *   uint32_t reserved2;
  * };
- *)
+ */
 protocol Section;
 
 def Section.new(file, data) {
@@ -318,7 +318,7 @@ def (this: CStringSection).print {
     print("   - '" + str + "'");
 }
 
-(*
+/*
  * struct symtab_command {
  *   uint_32 cmd;
  *   uint_32 cmdsize;
@@ -327,13 +327,13 @@ def (this: CStringSection).print {
  *   uint_32 stroff;
  *   uint_32 strsize;
  * };
- *)
+ */
 protocol SymtabCommand;
 def SymtabCommand is LoadCommand;
 
 def (this: SymtabCommand).to_string -> "#<a SymtabCommand>";
 
-(*
+/*
  * struct dysymtab_command {
  *   uint32_t cmd;
  *   uint32_t cmdsize;
@@ -356,19 +356,19 @@ def (this: SymtabCommand).to_string -> "#<a SymtabCommand>";
  *   uint32_t locreloff;
  *   uint32_t nlocrel;
  * };
- *)
+ */
 protocol DySymtabCommand;
 def DySymtabCommand is LoadCommand;
 
 def (this: DySymtabCommand).to_string -> "#<a DySymtabCommand>";
 
-(*
+/*
  * struct dylinker_command {
  *   uint32_t cmd;
  *   uint32_t cmdsize;
  *   union lc_str name;
  * };
- *)
+ */
 protocol DyLinkerCommand;
 def DyLinkerCommand is LoadCommand;
 
@@ -378,33 +378,33 @@ def (this: DyLinkerCommand).name_offset -> this.data.get_int32(8);
 
 def (this: DyLinkerCommand).name -> this.data.get_c_string(this.name_offset);
 
-(*
+/*
  * struct uuid_command {
  *   uint32_t cmd;
  *   uint32_t cmdsize;
  *   uint8_t uuid[16];
  * };
- *)
+ */
 protocol UuidCommand;
 def UuidCommand is LoadCommand;
 
 def (this: UuidCommand).to_string -> "#<a UuidCommand>";
 
-(*
+/*
  * struct thread_command {
  *   uint32_t cmd;
  *   uint32_t cmdsize;
- *   /* uint32_t flavor;*/
- *   /* uint32_t count; */
- *   /* struct cpu_thread_state state;*/
+ *   /* uint32_t flavor;* /
+ *   /* uint32_t count; * /
+ *   /* struct cpu_thread_state state;* /
  * };
- *)
+ */
 protocol ThreadCommand;
 def ThreadCommand is LoadCommand;
 
 def (this: ThreadCommand).to_string -> "#<a ThreadCommand>";
 
-(*
+/*
  * struct dylib_command {
  *   uint_32 cmd;
  *   uint_32 cmdsize;
@@ -417,7 +417,7 @@ def (this: ThreadCommand).to_string -> "#<a ThreadCommand>";
  *   uint_32 current_version;
  *   uint_32 compatibility_version;
  * };
- *)
+ */
 protocol DylibCommand;
 def DylibCommand is LoadCommand;
 

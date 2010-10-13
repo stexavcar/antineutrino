@@ -18,12 +18,12 @@ def (this: UtilsTest).test_array_lists() {
   for (def i : 0 .. 10)
     assert_equal(i, a[kInitialSize + i]);
 
-  (* Construct from sequence *)
+  // Construct from sequence
   def b := new ArrayList(0 .. 10);
   for (def i : 0 .. 10)
     assert_equal(i, b[i]);
 
-  (* Construct from ArrayList (also a Sequence) *)
+  // Construct from ArrayList (also a Sequence)
   def c := new ArrayList(b);
   for (def el : b)
     assert_equal(el, c[el]);

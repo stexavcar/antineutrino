@@ -1,7 +1,7 @@
-(* Sums 1..n *)
+// Sums 1..n
 def sum(n) -> if n = 1 then 1 else n + sum(n-1);
 
-(* Sums 1..n with a loop *)
+// Sums 1..n with a loop
 def isum(n) {
   ref n := n;
   ref s := 0;
@@ -16,20 +16,20 @@ def isum(n) {
   s.get();
 }
 
-(* Sums the first n cubes *)
+// Sums the first n cubes
 def sumcubes(n) -> if n = 1 then 1 else cube(n) + sumcubes(n-1);
 
-(* Cubes a number *)
+// Cubes a number
 def cube(n) -> n * n * n;
 
-(* Calculates the nth fibbonacci number (naiive recursion) *)
+// Calculates the nth fibbonacci number (naiive recursion)
 def fib(n) -> 
   if n = 1 then 1
   else if n = 2 then 1
   else fib(n-1) + fib(n-2);
 
-(* Calculates nth fibbonacci number (smarter recursion) *)
-(* NOTE: this one doesn't work yet *)
+// Calculates nth fibbonacci number (smarter recursion)
+// NOTE: this one doesn't work yet
 def fastfib(n) {
   def f := fn(f1, f2, n) ->
     if n = 1 then f2
@@ -37,7 +37,7 @@ def fastfib(n) {
   f(0, 1, n);
 }
 
-(* Calculates the nth fibbonacci number with a loop *)
+// Calculates the nth fibbonacci number with a loop
 def ifib(n) {
   ref n := n - 1;
   ref s1 := 0;

@@ -1,7 +1,7 @@
-(* 
+/* 
  * A list abstract data type.
  * TODO: add direct indexing
- *)
+ */
 
 protocol List;
 def List is Sequence;
@@ -9,7 +9,7 @@ def List is Sequence;
 protocol Empty;
 def Empty is List;
 
-(* Core methods *)
+// Core methods
 
 def List.empty -> new Empty { };
 def List.cons(el, list: List) -> new List {head := el, tail := list};
@@ -37,7 +37,7 @@ def (this: List).iter {
   }
 }
 
-(* HOFs *)
+// HOFs
 
 def (this: Empty).size -> 0;
 def (this: List).size -> 1 + this.tail.size;
