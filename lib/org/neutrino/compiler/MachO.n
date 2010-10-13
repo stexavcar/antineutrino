@@ -175,17 +175,21 @@ def SegmentCommand is LoadCommand;
 def SegmentCommand.new(file, data) {
   def segname := data.get_c_string(8, 24);
   def nsects := data.get_int32(48);
-  def sections := new ArrayList(nsects);
-  for (def i : 0 .. nsects) {
-    def offset := SegmentCommand.size + (i * Section.size);
-    def section := new Section(file, new BlobView(data, offset));
-    sections[i] := section;
-  }
+  def sections := new ArrayList(if nsects = 0 then 1 else nsects);
+  if nsects = 0 then {
+    sections[0] := new NakedSection(file, data, segname);
+  } else {
+    for (def i : 0 .. nsects) {
+      def offset := SegmentCommand.size + (i * Section.size);
+      def section := new Section(file, new BlobView(data, offset));
+      sections[i] := section;
+    }
+  };
   new SegmentCommand {
     data := data,
     segname := segname,
     sections := sections
-  };
+  } 
 }
 
 def SegmentCommand.size -> 56;
@@ -226,7 +230,7 @@ def Section.new(file, data) {
   def sectname := data.get_c_string(0, 16);
   def segname := data.get_c_string(16, 32);
   if (segname = "__TEXT") and (sectname = "__cstring") then
-    new CStringSection(file, new BlobView(file, offset), size)
+    new CStringSection(file, data, new BlobView(file, offset), size)
   else
     new Section {
       file := file,
@@ -249,7 +253,6 @@ def (this: Section).sectname -> this.data.get_c_string(0, 16);
 def (this: Section).segname -> this.data.get_c_string(16, 32);
 
 def (this: Section).write(out) {
-  print(this.offset.to_string + " " + this.size.to_string);
   out.pad_to(this.offset);
   def start := this.offset;
   def end := start + this.size;
@@ -260,10 +263,31 @@ def (this: Section).print {
   print(" * " + this.segname + ", " + this.sectname);
 }
 
+protocol NakedSection;
+
+def NakedSection.new(file, header, segname) -> new NakedSection {
+  file := file,
+  header := header,
+  segname := segname
+};
+
+def (this: NakedSection).print -> print(" * " + this.segname);
+
+def (this: NakedSection).write(out) {
+  out.pad_to(this.offset);
+  def start := this.offset;
+  def end := start + this.size;
+  out.write_data(this.file, start, end);
+}
+
+def (this: NakedSection).offset -> this.header.get_int32(32);
+
+def (this: NakedSection).size -> this.header.get_int32(36);
+
 protocol CStringSection;
 def CStringSection is Section;
 
-def CStringSection.new(file, data, size) {
+def CStringSection.new(file, header, data, size) {
   def strs := new ArrayList(0);
   ref cursor := 0;
   with_1cc break -> loop(fn () {
@@ -272,7 +296,7 @@ def CStringSection.new(file, data, size) {
     strs.add(str);
     cursor := cursor + str.length + 1;
   });
-  new CStringSection { file := file, data := data, strings := strs }
+  new CStringSection { file := file, data := header, strings := strs }
 }
 
 def (this: CStringSection).print {
