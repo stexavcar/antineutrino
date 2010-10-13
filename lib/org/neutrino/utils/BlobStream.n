@@ -1,6 +1,6 @@
-(*
+/*
  * A stream of bytes.
- *)
+ */
 protocol BlobStream;
 
 def BlobStream.new -> new BlobStream(256);

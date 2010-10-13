@@ -1,4 +1,4 @@
-(*
+/*
  * Provides ordered sequence behaviour.
  *
  * Objects implementing this protocol must implement:
@@ -6,7 +6,7 @@
  * Iterator objects must provide:
  * - has_next: true if another item is available
  * - next: returns the next item and advances the iteration
- *)
+ */
 
 protocol Iter;
 def (this: Iter).has_next;

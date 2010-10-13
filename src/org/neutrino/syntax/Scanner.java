@@ -67,18 +67,27 @@ public class Scanner {
     return (cursor + 1) < source.length() && source.charAt(cursor + 1) == value;
   }
 
-  private void skipComment() {
-    assert getCurrent() == '(';
+  private void skipBlockComment() {
+    assert getCurrent() == '/';
     advance();
     assert getCurrent() == '*';
-    while (hasMore() && !atPair('*', ')'))
+    while (hasMore() && !atPair('*', '/'))
       advance();
     if (hasMore()) {
       assert getCurrent() == '*';
       advance();
-      assert getCurrent() == ')';
+      assert getCurrent() == '/';
       advance();
     }
+  }
+
+  private void skipEndOfLineComment() {
+    assert getCurrent() == '/';
+    advance();
+    assert getCurrent() == '/';
+    advance();
+    while (hasMore() && getCurrent() != '\n')
+      advance();
   }
 
   /**
@@ -89,8 +98,10 @@ public class Scanner {
     while (hasMore()) {
       if (isWhitespace(getCurrent())) {
         advance();
-      } else if (atPair('(', '*')) {
-        skipComment();
+      } else if (atPair('/', '*')) {
+        skipBlockComment();
+      } else if (atPair('/', '/')) {
+        skipEndOfLineComment();
       } else {
         break;
       }

@@ -1,6 +1,6 @@
-(*
+/*
  * Signed integers 
- *)
+ */
 @native("int") protocol Integer;
 
 def (this: Integer)+(that: Integer) -> internal "int+int";

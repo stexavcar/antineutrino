@@ -1,7 +1,7 @@
-(* Container for all the language tests. *)
+// Container for all the language tests.
 protocol Test;
 
-(* This should be called at the beginning of all tests. *)
+// This should be called at the beginning of all tests.
 def (this: Test).on_start(name) {
   def index := this.count().get();
   if kPrintProgress then print("Testing " + name);
