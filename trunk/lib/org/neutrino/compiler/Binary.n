@@ -93,7 +93,7 @@ def (this: Binary).encode(out) {
   this.write_mach_header(out);
   this.write_segment_command(out, "__TEXT", text_fileoff, text_filesize, 1);
   this.write_section(out, "__text", "__TEXT", text_fileoff, text_size);
-  this.write_thread_command(out);
+  this.write_thread_command(out, text_fileoff);
   out.pad_to(text_fileoff);
   this.write_text(out);
   out.pad_to(symtab_fileoff);
@@ -120,8 +120,8 @@ def (this: Binary).write_mach_header(out) {
   out.write_int32(CPU_TYPE_X86);
   out.write_int32(3); // cpusubtype
   out.write_int32(MH_EXECUTE);
-  out.write_int32(1);
-  out.write_int32(TEXT_COMMAND_SIZE);
+  out.write_int32(2);
+  out.write_int32(TEXT_COMMAND_SIZE + THREAD_COMMAND_SIZE);
   out.write_int32(5);
 }
 
@@ -155,6 +155,39 @@ def (this: Binary).write_segment_command(out, segname, fileoff, filesize, nsects
 }
 
 /*
+ * struct thread_command {
+ *   uint32_t    cmd;
+ *   uint32_t    cmdsize;
+ *   uint32_t    flavor;
+ *   uint32_t    count
+ *   // struct XXX_thread_state state   thread state for this flavor
+ *   // ...
+ * };
+ */
+def (this: Binary).write_thread_command(out, text_fileoff) {
+  out.write_int32(LC_UNIXTHREAD);
+  out.write_int32(THREAD_COMMAND_SIZE);
+  out.write_int32(1); // i386_THREAD_STATE
+  out.write_int32(i386_THREAD_STATE_COUNT);
+  out.write_int32(0); // eax
+  out.write_int32(0); // ebx
+  out.write_int32(0); // ecx
+  out.write_int32(0); // edx
+  out.write_int32(0); // edi
+  out.write_int32(0); // esi
+  out.write_int32(0); // ebp
+  out.write_int32(0); // esp
+  out.write_int32(0); // ss
+  out.write_int32(0); // eflags
+  out.write_int32(text_fileoff); // eip
+  out.write_int32(0); // cs
+  out.write_int32(0); // ds
+  out.write_int32(0); // es
+  out.write_int32(0); // fs
+  out.write_int32(0); // gs
+}
+
+/*
  * struct section {
  *   char sectname[16];
  *   char segname[16];
@@ -183,10 +216,8 @@ def (this: Binary).write_section(out, sectname, segname, fileoff, size) {
   out.write_int32(0);
 }
 
-def (this: Binary).write_thread_command(out) {
-  
-}
-
 def SEGMENT_COMMAND_SIZE := 56;
 def SECTION_SIZE := 68;
 def TEXT_COMMAND_SIZE := SEGMENT_COMMAND_SIZE + SECTION_SIZE;
+def i386_THREAD_STATE_COUNT := 16;
+def THREAD_COMMAND_SIZE := 16 + (4 * i386_THREAD_STATE_COUNT);
