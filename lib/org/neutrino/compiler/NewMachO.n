@@ -1,62 +1,16 @@
-// cpu_type_t
-def CPU_TYPE_VAX := 1;
-def CPU_TYPE_MC680x0 := 6;
-def CPU_TYPE_X86 := 7;
-def CPU_TYPE_I386 := CPU_TYPE_X86;
-def CPU_TYPE_X86_64 := CPU_TYPE_X86 | CPU_ARCH_ABI64;
-def CPU_TYPE_MC98000 := 10;
-def CPU_TYPE_HPPA := 11;
-def CPU_TYPE_MC88000 := 13;
-def CPU_TYPE_SPARC := 14;
-def CPU_TYPE_I860 := 15;
-def CPU_TYPE_POWERPC := 18;
-def CPU_TYPE_POWERPC64 := CPU_TYPE_POWERPC | CPU_ARCH_ABI64;
-
-// file types
-def MH_OBJECT := 16r1;
-def MH_EXECUTE := 16r2;
-def MH_BUNDLE := 16r8;
-def MH_DYLIB := 16r6;
-def MH_PRELOAD := 16r5;
-def MH_CORE := 16r4;
-def MH_DYLINKER := 16r7;
-def MH_DSYM := 16rA;
-
-// load commands
-def LC_UUID := 16r1B;
-def LC_SEGMENT := 16r01;
-def LC_SEGMENT_64 := 16r19;
-def LC_SYMTAB := 16r2;
-def LC_DYSYMTAB := 16rB;
-def LC_THREAD := 16r4;
-def LC_UNIXTHREAD := 16r5;
-def LC_LOAD_DYLIB := 16rC;
-def LC_ID_DYLIB := 16rD;
-def LC_PREBOUND_DYLIB := 16r10;
-def LC_LOAD_DYLINKER := 16rE;
-def LC_ID_DYLINKER := 16rF;
-def LC_ROUTINES := 16r11;
-def LC_TWOLEVEL_HINTS := 16r16;
-def LC_SUB_FRAMEWORK := 16r12;
-def LC_SUB_UMBRELLA := 16r13;
-def LC_SUB_LIBRARY := 16r15;
-def LC_SUB_CLIENT := 16r14;
-
-def PAGE_SIZE := 16r1000;
-
 /**
  * A Mach-O file.  Use the add_*_command functions to add load commands,
  * and methods on the segment_commands to add segments and sections.
  * 
  * See http://developer.apple.com/documentation/DeveloperTools/
  * Conceptual/MachORuntime/index.html for the full specification.
- */
+ *
 protocol MachO;
 
 /**
  * Create a new Mach-O with the given properties.  Load commands and
  * sections are added after construction.
- */
+ *
 def MachO.new(cputype, cpusubtype, filetype, flags) -> new MachO {
   cputype := cputype,
   cpusubtype := cpusubtype,
@@ -68,13 +22,20 @@ def MachO.new(cputype, cpusubtype, filetype, flags) -> new MachO {
 /**
  * Returns the total size of the load commands contained in this
  * binary.
- */
+ *
 def (this: MachO).cmdsize {
   ref result := 0;
   for (def command : this.commands)
     result := result + command.cmdsize;
   result;
 }
+
+protocol MachOStruct;
+
+def MachOStruct.new() -> new MachOStruct {
+  load_commands := new ArrayList(0),
+  sections := new ArrayList(0)
+};
 
 def (this: MachO).write_binary(out) {
   this.write_header(out);
@@ -94,7 +55,7 @@ def (this: MachO).write_binary(out) {
  *   uint32_t sizeofcmds;
  *   uint32_t flags;
  * };
- */
+ *
 def (this: MachO).write_header(out) {
   out.write_int32(16rFEEDFACE);
   out.write_int32(this.cputype);
@@ -136,9 +97,14 @@ def (this: MachO).write_segments(out) {
   }
 }
 
+def (this: MachO).segments -> fn for (fun) {
+  for (def command : this.commands)
+    command.segments.for(fun)
+};
+
 /**
  * Return a binary blob containing the encoded contents of this Mach-O.
- */
+ *
 def (this: MachO).to_blob {
   def out := new BlobStream;
   this.write_binary(out);
@@ -147,11 +113,19 @@ def (this: MachO).to_blob {
 
 /**
  * Returns a new segment_command contained in this Mach-O.
- */
+ *
 def (this: MachO).add_segment_command(segname) {
   def result := new SegmentCommand {
     segname := segname,
     sections := new ArrayList(0)
+  };
+  this.commands.add(result);
+  result;
+}
+
+def (this: MachO).add_symtab_command {
+  def result := new SymtabCommand {
+    
   };
   this.commands.add(result);
   result;
@@ -163,7 +137,7 @@ def (this: LoadCommand).segments -> fn for (fun) -> null;
 
 /**
  * A load command corresponding to a segment.
- */
+ *
 protocol SegmentCommand;
 def SegmentCommand is LoadCommand;
 
@@ -181,7 +155,7 @@ def SegmentCommand is LoadCommand;
  *   uint32_t nsects;
  *   uint32_t flags;
  * };
- */
+ *
 def (this: SegmentCommand).write_load_command(out, fileoff) {
   out.write_int32(LC_SEGMENT);
   out.write_int32(this.cmdsize);
@@ -227,6 +201,8 @@ def (this: SegmentCommand).add_section(sectname, contents) {
   result;
 }
 
+protocol SymtabCommand;
+
 protocol Section;
 
 def Section.size -> 68;
@@ -245,7 +221,7 @@ def Section.size -> 68;
  *   uint32_t reserved1;
  *   uint32_t reserved2;
  * };
- */
+ *
 def (this: Section).write_header(out, fileoff) {
   out.write_c_string(this.sectname, 16);
   out.write_c_string(this.parent.segname, 16);
@@ -266,3 +242,5 @@ def (this: Section).write_contents(out) {
 }
 
 def (this: Section).filesize -> this.contents.length;
+
+*/
