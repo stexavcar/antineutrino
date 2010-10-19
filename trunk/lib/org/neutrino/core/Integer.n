@@ -9,6 +9,8 @@ def (this: Integer)-(that: Integer) -> internal "int-int";
 
 def (this: Integer)*(that: Integer) -> internal "int*int";
 
+def (this: Integer)%(that: Integer) -> internal "int%int";
+
 def (this: Integer)<(that: Integer) -> internal "int<int";
 
 def (this: Integer)>=(that: Integer) -> not (this < that);

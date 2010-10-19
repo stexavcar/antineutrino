@@ -28,11 +28,19 @@ def (this: BlobStream).write_data(data, from, to) {
     this.add(data[i]);
 }
 
-def (this: BlobStream).add_c_string(str) {
-  for (def c : str.ascii_characters)
+def (this: BlobStream).write_c_string(str, length) {
+  ref pos := 0;
+  for (def c : str.ascii_characters) {
     this.add(c);
-  this.add(0);
+    pos := pos + 1;
+  }
+  if pos < length then {
+    for (def i : pos .. length)
+      this.add(0);
+  }
 }
+
+def (this: BlobStream).write_c_string(str) -> this.add_c_string(str, str.length + 1);
 
 def (this: BlobStream).extend_capacity(capacity) {
   def old_contents := this.data;
@@ -63,3 +71,5 @@ def (this: BlobStream).get_blob {
     result[i] := this.data[i];
   result;
 }
+
+def (this: BlobStream).to_string -> "#<a BlobStream: " + this.length.to_string + ">";
