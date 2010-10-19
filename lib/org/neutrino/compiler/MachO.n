@@ -1,7 +1,7 @@
 /*
  * This is based on
  * http://developer.apple.com/documentation/DeveloperTools/Conceptual/MachORuntime/index.html
- */
+ *
  
 // cpu_type_t
 def CPU_TYPE_VAX := 1;
@@ -73,17 +73,6 @@ def BlobView.new(data, offset) -> new BlobView { data := data, offset := offset 
 
 def (this: BlobView)[index: Integer] -> this.data[this.offset + index];
 
-/*
- * struct mach_header {
- *   uint32_t magic;
- *   cpu_type_t cputype;
- *   cpu_subtype_t cpusubtype;
- *   uint32_t filetype;
- *   uint32_t ncmds;
- *   uint32_t sizeofcmds;
- *   uint32_t flags;
- * };
- */
 protocol MachHeader;
 
 def MachHeader.new(data) -> new MachHeader { data := data };
@@ -117,7 +106,7 @@ def (this: MachHeader).flags -> this.data.get_int32(24);
  *   uint32_t cmd;
  *   uint32_t cmdsize;
  * };
- */
+ *
 protocol LoadCommand;
 
 def LoadCommand.new(file, data) {
@@ -168,29 +157,65 @@ def (this: LoadCommand).sections -> fn for (fun) { };
  *   uint32_t nsects;
  *   uint32_t flags;
  * };
- */
+ *
+ 
+/*
 protocol SegmentCommand;
 def SegmentCommand is LoadCommand;
 
 def SegmentCommand.new(file, data) {
   def segname := data.get_c_string(8, 24);
+  def vmaddr := data.get_int32(24);
+  def vmsize := data.get_int32(28);
+  def fileoff := data.get_int32(32);
+  def filesize := data.get_int32(36);
+  def maxprot := data.get_int32(40);
+  def initprot := data.get_int32(44);
   def nsects := data.get_int32(48);
-  def sections := new ArrayList(if nsects = 0 then 1 else nsects);
-  if nsects = 0 then {
-    sections[0] := new NakedSection(file, data, segname);
-  } else {
-    for (def i : 0 .. nsects) {
-      def offset := SegmentCommand.size + (i * Section.size);
-      def section := new Section(file, new BlobView(data, offset));
-      sections[i] := section;
-    }
-  };
+  def flags := data.get_int32(52);
+  def sections := new ArrayList(nsects);
+  def naked_section := if nsects = 0 then 
+    new NakedSection(file, data, segname)
+  else
+    null;
+  for (def i : 0 .. nsects) {
+    def offset := SegmentCommand.size + (i * Section.size);
+    def section := new Section(file, new BlobView(data, offset));
+    sections[i] := section;
+  }
   new SegmentCommand {
     data := data,
     segname := segname,
-    sections := sections
+    vmaddr := vmaddr,
+    vmsize := vmsize,
+    fileoff := fileoff,
+    filesize := filesize,
+    maxprot := maxprot,
+    initprot := initprot,
+    nsects := nsects,
+    flags := flags,
+    sections := sections,
+    naked_section := naked_section
   } 
 }
+
+ *
+def (this: SegmentCommand).write(out) {
+  out.write_int32(LC_SEGMENT);
+  out.write_int32(SegmentCommand.size);
+  out.add_c_string(this.segname, 16);
+  out.write_int32(this.vmaddr);
+  out.write_int32(this.vmsize);
+  out.write_int32(this.fileoff);
+  out.write_int32(this.filesize);
+  out.write_int32(this.maxprot);
+  out.write_int32(this.initprot);
+  out.write_int32(this.nsects);
+  out.write_int32(this.flags);
+  for (def section : this.sections)
+    section.write_header(out);
+}
+ * 
 
 def SegmentCommand.size -> 56;
 
@@ -203,9 +228,15 @@ def (this: SegmentCommand).print {
 }
 
 def (this: SegmentCommand).sections -> fn for (fun) {
-  for (def section : this.sections)
-    fun(section);
+  if this.sections.length = 0 then {
+    fun(this.naked_section)
+  } else {
+    for (def section : this.sections)
+      fun(section);
+  }
 };
+
+*
 
 /*
  * struct section {
@@ -221,7 +252,7 @@ def (this: SegmentCommand).sections -> fn for (fun) {
  *   uint32_t reserved1;
  *   uint32_t reserved2;
  * };
- */
+ *
 protocol Section;
 
 def Section.new(file, data) {
@@ -238,6 +269,20 @@ def Section.new(file, data) {
       sectname := sectname,
       segname := segname
     };
+}
+
+def (this: Section).write_header(out) {
+  out.add_c_string(this.sectname, 16);
+  out.add_c_string(this.segname, 16);
+  out.write_int32(this.addr);
+  out.write_int32(this.size);
+  out.write_int32(this.offset);
+  out.write_int32(this.align);
+  out.write_int32(this.reloff);
+  out.write_int32(this.nreloc);
+  out.write_int32(this.flags);
+  out.write_int32(this.reserved1);
+  out.write_int32(this.reserved2);
 }
 
 def Section.size -> 68;
@@ -270,6 +315,12 @@ def NakedSection.new(file, header, segname) -> new NakedSection {
   header := header,
   segname := segname
 };
+
+def (this: NakedSection).write_header(out) {
+  out.add_c_string(this.segname, 16);
+  out.add_c_string(this.segname, 16);
+}
+
 
 def (this: NakedSection).print -> print(" * " + this.segname);
 
@@ -327,7 +378,7 @@ def (this: CStringSection).print {
  *   uint_32 stroff;
  *   uint_32 strsize;
  * };
- */
+ *
 protocol SymtabCommand;
 def SymtabCommand is LoadCommand;
 
@@ -356,7 +407,7 @@ def (this: SymtabCommand).to_string -> "#<a SymtabCommand>";
  *   uint32_t locreloff;
  *   uint32_t nlocrel;
  * };
- */
+ *
 protocol DySymtabCommand;
 def DySymtabCommand is LoadCommand;
 
@@ -368,7 +419,7 @@ def (this: DySymtabCommand).to_string -> "#<a DySymtabCommand>";
  *   uint32_t cmdsize;
  *   union lc_str name;
  * };
- */
+ *
 protocol DyLinkerCommand;
 def DyLinkerCommand is LoadCommand;
 
@@ -384,7 +435,7 @@ def (this: DyLinkerCommand).name -> this.data.get_c_string(this.name_offset);
  *   uint32_t cmdsize;
  *   uint8_t uuid[16];
  * };
- */
+ *
 protocol UuidCommand;
 def UuidCommand is LoadCommand;
 
@@ -398,7 +449,7 @@ def (this: UuidCommand).to_string -> "#<a UuidCommand>";
  *   /* uint32_t count; * /
  *   /* struct cpu_thread_state state;* /
  * };
- */
+ *
 protocol ThreadCommand;
 def ThreadCommand is LoadCommand;
 
@@ -417,7 +468,7 @@ def (this: ThreadCommand).to_string -> "#<a ThreadCommand>";
  *   uint_32 current_version;
  *   uint_32 compatibility_version;
  * };
- */
+ *
 protocol DylibCommand;
 def DylibCommand is LoadCommand;
 
@@ -483,3 +534,5 @@ def MachO.new(data) {
     load_commands := commands
   }
 }
+
+*/

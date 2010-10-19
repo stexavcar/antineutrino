@@ -150,6 +150,15 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("int%int") static final Impl INT_MOD = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RInteger a = (RInteger) args.getThis();
+      RInteger b = (RInteger) args.getArgument(0);
+      return RInteger.get(a.getValue() % b.getValue());
+    }
+  };
+
   @Marker("int<int") static final Impl INT_LT = new Impl() {
     @Override
     public RValue call(Arguments args) {
