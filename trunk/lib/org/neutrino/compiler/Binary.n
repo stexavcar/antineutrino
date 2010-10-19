@@ -1,0 +1,192 @@
+// cpu_type_t
+def CPU_TYPE_VAX := 1;
+def CPU_TYPE_MC680x0 := 6;
+def CPU_TYPE_X86 := 7;
+def CPU_TYPE_I386 := CPU_TYPE_X86;
+def CPU_TYPE_X86_64 := CPU_TYPE_X86 | CPU_ARCH_ABI64;
+def CPU_TYPE_MC98000 := 10;
+def CPU_TYPE_HPPA := 11;
+def CPU_TYPE_MC88000 := 13;
+def CPU_TYPE_SPARC := 14;
+def CPU_TYPE_I860 := 15;
+def CPU_TYPE_POWERPC := 18;
+def CPU_TYPE_POWERPC64 := CPU_TYPE_POWERPC | CPU_ARCH_ABI64;
+
+// file types
+def MH_OBJECT := 16r1;
+def MH_EXECUTE := 16r2;
+def MH_BUNDLE := 16r8;
+def MH_DYLIB := 16r6;
+def MH_PRELOAD := 16r5;
+def MH_CORE := 16r4;
+def MH_DYLINKER := 16r7;
+def MH_DSYM := 16rA;
+
+// load commands
+def LC_UUID := 16r1B;
+def LC_SEGMENT := 16r01;
+def LC_SEGMENT_64 := 16r19;
+def LC_SYMTAB := 16r2;
+def LC_DYSYMTAB := 16rB;
+def LC_THREAD := 16r4;
+def LC_UNIXTHREAD := 16r5;
+def LC_LOAD_DYLIB := 16rC;
+def LC_ID_DYLIB := 16rD;
+def LC_PREBOUND_DYLIB := 16r10;
+def LC_LOAD_DYLINKER := 16rE;
+def LC_ID_DYLINKER := 16rF;
+def LC_ROUTINES := 16r11;
+def LC_TWOLEVEL_HINTS := 16r16;
+def LC_SUB_FRAMEWORK := 16r12;
+def LC_SUB_UMBRELLA := 16r13;
+def LC_SUB_LIBRARY := 16r15;
+def LC_SUB_CLIENT := 16r14;
+
+def PAGE_SIZE := 16r1000;
+
+def align(value, factor) {
+  if (value % factor) = 0 then
+    value
+  else
+    value + (factor - (value % factor));
+}
+
+def page_size_align(size) -> align(size, PAGE_SIZE);
+
+protocol Binary;
+
+def Binary.new() -> new Binary {
+  entries := new ArrayList(0)
+};
+
+protocol BinaryEntry;
+
+def BinaryEntry.new(name, code) -> new BinaryEntry {
+  name := name,
+  code := code
+};
+
+def (this: Binary).add_entry(name, code) {
+  this.entries.add(new BinaryEntry(name, code));
+}
+
+def (this: Binary).encode {
+  def out := new BlobStream;
+  this.encode(out);
+  out.get_blob();
+}
+
+def (this: Binary).encode(out) {
+  ref text_size := 0;
+  def symtab_size := this.entries.length;
+  ref strtab_size := 0;
+  for (def entry : this.entries) {
+    text_size := text_size + entry.code.length;
+    strtab_size := strtab_size + entry.name.length + 1;
+  }
+  def text_fileoff := PAGE_SIZE;
+  def text_filesize := page_size_align(text_size);
+  def symtab_fileoff := text_fileoff + text_filesize;
+  def symtab_filesize := page_size_align(symtab_size);
+  def linkedit_fileoff := symtab_fileoff + symtab_filesize;
+  def linkedit_filesize := page_size_align(strtab_size);
+  this.write_mach_header(out);
+  this.write_segment_command(out, "__TEXT", text_fileoff, text_filesize, 1);
+  this.write_section(out, "__text", "__TEXT", text_fileoff, text_size);
+  this.write_thread_command(out);
+  out.pad_to(text_fileoff);
+  this.write_text(out);
+  out.pad_to(symtab_fileoff);
+}
+
+def (this: Binary).write_text(out) {
+  for (def entry : this.entries)
+    out.write_data(entry.code, 0, entry.code.length);
+}
+
+/*
+ * struct mach_header {
+ *   uint32_t magic;
+ *   cpu_type_t cputype;
+ *   cpu_subtype_t cpusubtype;
+ *   uint32_t filetype;
+ *   uint32_t ncmds;
+ *   uint32_t sizeofcmds;
+ *   uint32_t flags;
+ * };
+ */
+def (this: Binary).write_mach_header(out) {
+  out.write_int32(16rFEEDFACE);
+  out.write_int32(CPU_TYPE_X86);
+  out.write_int32(3); // cpusubtype
+  out.write_int32(MH_EXECUTE);
+  out.write_int32(1);
+  out.write_int32(TEXT_COMMAND_SIZE);
+  out.write_int32(5);
+}
+
+/*
+ * struct segment_command {
+ *   uint32_t cmd;
+ *   uint32_t cmdsize;
+ *   char segname[16];
+ *   uint32_t vmaddr;
+ *   uint32_t vmsize;
+ *   uint32_t fileoff;
+ *   uint32_t filesize;
+ *   vm_prot_t maxprot;
+ *   vm_prot_t initprot;
+ *   uint32_t nsects;
+ *   uint32_t flags;
+ * };
+ */
+def (this: Binary).write_segment_command(out, segname, fileoff, filesize, nsects) {
+  out.write_int32(LC_SEGMENT);
+  out.write_int32(SEGMENT_COMMAND_SIZE + (nsects * SECTION_SIZE));
+  out.write_c_string(segname, 16);
+  out.write_int32(fileoff);
+  out.write_int32(filesize);
+  out.write_int32(fileoff);
+  out.write_int32(filesize);
+  out.write_int32(7); // maxprot
+  out.write_int32(5); // initprot
+  out.write_int32(nsects);
+  out.write_int32(0); // flags
+}
+
+/*
+ * struct section {
+ *   char sectname[16];
+ *   char segname[16];
+ *   uint32_t addr;
+ *   uint32_t size;
+ *   uint32_t offset;
+ *   uint32_t align;
+ *   uint32_t reloff;
+ *   uint32_t nreloc;
+ *   uint32_t flags;
+ *   uint32_t reserved1;
+ *   uint32_t reserved2;
+ * };
+ */
+def (this: Binary).write_section(out, sectname, segname, fileoff, size) {
+  out.write_c_string(sectname, 16);
+  out.write_c_string(segname, 16);
+  out.write_int32(fileoff);
+  out.write_int32(size);
+  out.write_int32(fileoff);
+  out.write_int32(2);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(16r80000400);
+  out.write_int32(0);
+  out.write_int32(0);
+}
+
+def (this: Binary).write_thread_command(out) {
+  
+}
+
+def SEGMENT_COMMAND_SIZE := 56;
+def SECTION_SIZE := 68;
+def TEXT_COMMAND_SIZE := SEGMENT_COMMAND_SIZE + SECTION_SIZE;

@@ -14,13 +14,19 @@ def compile_main(args) {
 
 @entry_point("compile")
 def compile(args) {
-  def out_name := args[0];
+  /*
   def binary := new MachO(CPU_TYPE_X86, 3, MH_EXECUTE, 5);
   def textseg := binary.add_segment_command("__TEXT");
   def text := #[ 16rCC ]; // int3
   def textsect := textseg.add_section("__text", text);
   def data := binary.to_blob;
   open_file(out_name).write_binary(data);
+  */
+  def out_name := args[0];
+  def binary := new Binary();
+  binary.add_entry("_main", #[ 16rCC ]);
+  def data := binary.encode;
+  open_file(out_name).write_binary(data);  
 }
 
 def compare_blobs(first, second) {
