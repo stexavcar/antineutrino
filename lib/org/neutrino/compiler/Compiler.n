@@ -1,48 +1,20 @@
-def compile_main(args) {
-  def in_name := args[0];
-  def out_name := args[1];
-  def in_file := open_file(in_name);
-  def blob_in := in_file.read_binary();
-  def binary := new MachO(blob_in);
-  def strings := binary.get_section("__TEXT", "__cstring");
-  strings["Hello World!"] := "Hullo Wurld?";
-  def blob_out := binary.blobify;
-  compare_blobs(blob_in, blob_out);
-  open_file(out_name).write_binary(blob_out);
-  print("Wrote " + out_name);
-}
+protocol AssemblerI386;
+
+def AssemblerI386.new() -> new AssemblerI386 {
+  stream := new BlobStream()
+};
+
+def (this: AssemblerI386).int3 -> this.stream.add(16rCC);
+
+def (this: AssemblerI386).get_code -> this.stream.get_blob;
 
 @entry_point("compile")
-def compile(args) {
-  /*
-  def binary := new MachO(CPU_TYPE_X86, 3, MH_EXECUTE, 5);
-  def textseg := binary.add_segment_command("__TEXT");
-  def text := #[ 16rCC ]; // int3
-  def textsect := textseg.add_section("__text", text);
-  def data := binary.to_blob;
-  open_file(out_name).write_binary(data);
-  */
+def compile_main(args) {
   def out_name := args[0];
   def binary := new Binary();
-  binary.add_entry("_main", #[ 16rCC ]);
+  def start := new AssemblerI386();
+  start.int3();
+  binary.add_entry("start", start.get_code());
   def data := binary.encode;
   open_file(out_name).write_binary(data);  
-}
-
-def compare_blobs(first, second) {
-  if first.length != second.length then
-    print("Different lengths: " + first.length.to_string + " vs. " +
-        second.length.to_string + ".");
-  def min_length := Math.min(first.length, second.length);
-  ref same_contents := true;
-  with_1cc break -> for (def i : 0 .. min_length) {
-    if first[i] != second[i] then {
-      print("First difference at byte " + i.to_string);
-      same_contents := false;
-      break.fire(null);
-    }
-  }
-  if same_contents then
-    print("No differences in content detected.");
-  same_contents
 }
