@@ -33,8 +33,7 @@ def (this: Integer)..(that) -> new Interval {
   dir := if this < that then 1 else 0-1
 };
 
-protocol Interval;
-def Interval is Sequence;
+protocol Interval is Sequence;
 
 def (this: Interval)=(other : Interval) -> this.from = other.from and this.to = other.to;
 

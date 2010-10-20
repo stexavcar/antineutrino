@@ -1,0 +1,348 @@
+// cpu_type_t
+def CPU_TYPE_VAX := 1;
+def CPU_TYPE_MC680x0 := 6;
+def CPU_TYPE_X86 := 7;
+def CPU_TYPE_I386 := CPU_TYPE_X86;
+def CPU_TYPE_X86_64 := CPU_TYPE_X86 | CPU_ARCH_ABI64;
+def CPU_TYPE_MC98000 := 10;
+def CPU_TYPE_HPPA := 11;
+def CPU_TYPE_MC88000 := 13;
+def CPU_TYPE_SPARC := 14;
+def CPU_TYPE_I860 := 15;
+def CPU_TYPE_POWERPC := 18;
+def CPU_TYPE_POWERPC64 := CPU_TYPE_POWERPC | CPU_ARCH_ABI64;
+
+// file types
+def MH_OBJECT := 16r1;
+def MH_EXECUTE := 16r2;
+def MH_BUNDLE := 16r8;
+def MH_DYLIB := 16r6;
+def MH_PRELOAD := 16r5;
+def MH_CORE := 16r4;
+def MH_DYLINKER := 16r7;
+def MH_DSYM := 16rA;
+
+// load commands
+def LC_UUID := 16r1B;
+def LC_SEGMENT := 16r01;
+def LC_SEGMENT_64 := 16r19;
+def LC_SYMTAB := 16r2;
+def LC_DYSYMTAB := 16rB;
+def LC_THREAD := 16r4;
+def LC_UNIXTHREAD := 16r5;
+def LC_LOAD_DYLIB := 16rC;
+def LC_ID_DYLIB := 16rD;
+def LC_PREBOUND_DYLIB := 16r10;
+def LC_LOAD_DYLINKER := 16rE;
+def LC_ID_DYLINKER := 16rF;
+def LC_ROUTINES := 16r11;
+def LC_TWOLEVEL_HINTS := 16r16;
+def LC_SUB_FRAMEWORK := 16r12;
+def LC_SUB_UMBRELLA := 16r13;
+def LC_SUB_LIBRARY := 16r15;
+def LC_SUB_CLIENT := 16r14;
+
+def PAGE_SIZE := 16r1000;
+
+protocol MachO;
+
+def MachO.new() -> new MachO {
+  elements := new ArrayList()
+};
+
+def (this: MachO).add(elm) -> this.elements.add(elm);
+
+def MachO.header_size -> 28;
+
+def (this: MachO).encode(out) {
+  this.encode_mach_header(out);
+  def layout := this.calc_segment_layout();
+  this.encode_load_commands(out, layout);
+  this.encode_segments(out, layout);
+}
+
+def (this: MachO).calc_segment_layout() {
+  def result := new ArrayList(this.elements.length);
+  ref fileoff := align(MachO.header_size + this.sizeofcmds, PAGE_SIZE);
+  for (def i : 0 .. result.length) {
+    def raw_size := this.elements[i].segment_size;
+    def aligned_size := align(raw_size, PAGE_SIZE);
+    result[i] := new {
+      fileoff := fileoff,
+      raw_size := raw_size,
+      aligned_size := aligned_size
+    };
+    fileoff := fileoff + aligned_size;
+  }
+  result;
+}
+
+def align(value, factor) {
+  if (value % factor) = 0 then
+    value
+  else
+    value + (factor - (value % factor));
+}
+
+/*
+ * struct mach_header {
+ *   uint32_t magic;
+ *   cpu_type_t cputype;
+ *   cpu_subtype_t cpusubtype;
+ *   uint32_t filetype;
+ *   uint32_t ncmds;
+ *   uint32_t sizeofcmds;
+ *   uint32_t flags;
+ * };
+ */
+def (this: MachO).encode_mach_header(out) {
+  out.write_int32(16rFEEDFACE);
+  out.write_int32(CPU_TYPE_X86);
+  out.write_int32(3); // cpusubtype
+  out.write_int32(MH_EXECUTE);
+  out.write_int32(this.ncmds);
+  out.write_int32(this.sizeofcmds);
+  out.write_int32(5);
+}
+
+def (this: MachO).encode_load_commands(out, layout) {
+  for (def i : 0 .. this.elements.length)
+    this.elements[i].encode_load_command(out, layout[i]);
+}
+
+def (this: MachO).encode_segments(out, layout) {
+  for (def i : 0 .. this.elements.length) {
+    out.pad_to(layout[i].fileoff);
+    this.elements[i].encode_segment(out, layout[i]);
+  }
+  out.pad_to(align(out.length, PAGE_SIZE));
+}
+
+def (this: MachO).ncmds {
+  ref result := 0;
+  for (def element : this.elements)
+    result := result + element.load_command_count;
+  result;
+}
+
+def (this: MachO).sizeofcmds {
+  ref result := 0;
+  for (def element : this.elements)
+    result := result + element.load_command_size;
+  result;
+}
+
+/**
+ * A single element in a mach-o file.  An element may represent either
+ * a load command, a segment, or both.
+ */
+protocol MachOElement;
+
+/**
+ * Default: no segment.
+ */
+def (this: MachOElement).segment_size -> 0;
+
+/**
+ * Default: no segment to encode.
+ */
+def (this: MachOElement).encode_segment(out, layout) -> null;
+
+/**
+ * Default: a mach element corresponds to one load command.
+ */
+def (this: MachOElement).load_command_count -> 1;
+
+protocol SegmentElement is MachOElement;
+
+def SegmentElement.base_load_command_size -> 56;
+
+def SegmentElement.section_header_size -> 68;
+
+def (this: SegmentElement).load_command_size -> SegmentElement.base_load_command_size + (this.section_count * SegmentElement.section_header_size);
+
+/*
+ * struct segment_command {
+ *   uint32_t cmd;
+ *   uint32_t cmdsize;
+ *   char segname[16];
+ *   uint32_t vmaddr;
+ *   uint32_t vmsize;
+ *   uint32_t fileoff;
+ *   uint32_t filesize;
+ *   vm_prot_t maxprot;
+ *   vm_prot_t initprot;
+ *   uint32_t nsects;
+ *   uint32_t flags;
+ * };
+ */
+def (this: SegmentElement).encode_segment_command(out, layout, segname, nsects) {
+  out.write_int32(LC_SEGMENT);
+  out.write_int32(this.load_command_size);
+  out.write_c_string(segname, 16);
+  out.write_int32(layout.fileoff);
+  out.write_int32(layout.aligned_size);
+  out.write_int32(layout.fileoff);
+  out.write_int32(layout.aligned_size);
+  out.write_int32(7); // maxprot
+  out.write_int32(5); // initprot
+  out.write_int32(nsects);
+  out.write_int32(0); // flags
+}
+
+
+/*
+ * struct section {
+ *   char sectname[16];
+ *   char segname[16];
+ *   uint32_t addr;
+ *   uint32_t size;
+ *   uint32_t offset;
+ *   uint32_t align;
+ *   uint32_t reloff;
+ *   uint32_t nreloc;
+ *   uint32_t flags;
+ *   uint32_t reserved1;
+ *   uint32_t reserved2;
+ * };
+ */
+def (this: SegmentElement).encode_segment_header(out, sectname, segname, size, fileoff) {
+  out.write_c_string(sectname, 16);
+  out.write_c_string(segname, 16);
+  out.write_int32(fileoff);
+  out.write_int32(size);
+  out.write_int32(fileoff);
+  out.write_int32(2);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(16r80000400);
+  out.write_int32(0);
+  out.write_int32(0);  
+}
+
+/**
+ * A __TEXT section and the associated load command.
+ */
+protocol TextElement is SegmentElement;
+
+def TextElement.new() -> new TextElement {
+  stream := new BlobStream()
+};
+
+def (this: TextElement).add_text(data) -> this.stream.write_data(data);
+
+def (this: TextElement).section_count -> 1;
+
+def (this: TextElement).segment_size -> this.stream.length;
+
+def (this: TextElement).encode_load_command(out, layout) {
+  this.encode_segment_command(out, layout, "__TEXT", 1);
+  this.encode_segment_header(out, "__text", "__TEXT", this.segment_size, layout.fileoff);
+}
+
+def (this: TextElement).encode_segment(out, layout) {
+  out.write_data(this.stream.get_blob());
+}
+
+/**
+ * A unix thread_command.
+ */
+protocol ThreadElement is MachOElement;
+
+def ThreadElement.new() -> new ThreadElement { };
+
+def ThreadElement.i386_thread_state_count -> 16;
+
+def (this: ThreadElement).load_command_size -> 16 + (4 * ThreadElement.i386_thread_state_count);
+
+/*
+ * struct thread_command {
+ *   uint32_t    cmd;
+ *   uint32_t    cmdsize;
+ *   uint32_t    flavor;
+ *   uint32_t    count
+ *   // struct XXX_thread_state state   thread state for this flavor
+ *   // ...
+ * };
+ */
+def (this: ThreadElement).encode_load_command(out, layout) {
+  out.write_int32(LC_UNIXTHREAD);
+  out.write_int32(this.load_command_size);
+  out.write_int32(1); // i386_THREAD_STATE
+  out.write_int32(ThreadElement.i386_thread_state_count);
+  out.write_int32(0); // eax
+  out.write_int32(0); // ebx
+  out.write_int32(0); // ecx
+  out.write_int32(0); // edx
+  out.write_int32(0); // edi
+  out.write_int32(0); // esi
+  out.write_int32(0); // ebp
+  out.write_int32(0); // esp
+  out.write_int32(0); // ss
+  out.write_int32(0); // eflags
+  out.write_int32(16r1000); // eip
+  out.write_int32(0); // cs
+  out.write_int32(0); // ds
+  out.write_int32(0); // es
+  out.write_int32(0); // fs
+  out.write_int32(0); // gs
+}
+
+/**
+ * A dynamic library load command.
+ */
+
+protocol DylibElement is MachOElement;
+
+def DylibElement.new(name, timestamp, current_version, compatibility_version)
+  -> new DylibElement {
+  name := name,
+  timestamp := timestamp,
+  current_version := current_version,
+  compatibility_version := compatibility_version
+};
+
+def DylibElement.header_size -> 24;
+
+def (this: DylibElement).load_command_size
+  -> align(DylibElement.header_size + this.name.length + 1, 4);
+
+def (this: DylibElement).encode_load_command(out, layout) {
+  out.write_int32(LC_LOAD_DYLIB);
+  out.write_int32(this.load_command_size);
+  out.write_int32(DylibElement.header_size);
+  out.write_int32(this.timestamp);
+  out.write_int32(this.current_version.encode);
+  out.write_int32(this.compatibility_version.encode);
+  out.write_c_string(this.name);
+}
+
+protocol Version;
+
+def Version.new(entries) -> new Version { entries := entries };
+
+def (this: Version).encode {
+  ref result := 0;
+  for (def entry : this.entries)
+    result := (result << 8) + entry;
+  result;
+}
+
+/**
+ * A dylinker_command.
+ */
+protocol DylinkerElement is MachOElement;
+
+def DylinkerElement.new(path) -> new DylinkerElement { path := path };
+
+def DylinkerElement.header_size -> 12;
+
+def (this: DylinkerElement).load_command_size
+  -> align(DylinkerElement.header_size + this.path.length + 1, 4);
+
+def (this: DylinkerElement).encode_load_command(out, layout) {
+  out.write_int32(LC_LOAD_DYLINKER);
+  out.write_int32(this.load_command_size);
+  out.write_int32(DylinkerElement.header_size);
+  out.write_c_string(this.path, align(this.path.length + 1, 4));
+}

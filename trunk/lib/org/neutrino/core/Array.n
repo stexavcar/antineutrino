@@ -1,5 +1,4 @@
-@native("array") protocol PrimitiveArray;
-def PrimitiveArray is Sequence;
+@native("array") protocol PrimitiveArray is Sequence;
 
 def (this: PrimitiveArray)[index: Integer] -> internal "array[]";
 
@@ -24,8 +23,7 @@ def (this: PrimitiveArray)[slice: Interval] {
   a;
 }
 
-@native("mutarr") protocol MutablePrimitiveArray;
-def MutablePrimitiveArray is PrimitiveArray;
+@native("mutarr") protocol MutablePrimitiveArray is PrimitiveArray;
 
 def MutablePrimitiveArray.new(size: Integer) -> internal "mutprimarr";
 
@@ -37,8 +35,7 @@ def (this: ByteArray)[index: Integer] -> internal "byte_array[]";
 
 def (this: ByteArray).length -> internal "byte_array.length";
 
-@native("mutbytarr") protocol MutablePrimitiveByteArray;
-def MutablePrimitiveByteArray is ByteArray;
+@native("mutbytarr") protocol MutablePrimitiveByteArray is ByteArray;
 
 def MutablePrimitiveByteArray.new(size: Integer) -> internal "mutprimbytarr";
 
