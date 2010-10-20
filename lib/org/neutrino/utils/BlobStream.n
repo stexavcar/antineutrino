@@ -28,6 +28,8 @@ def (this: BlobStream).write_data(data, from, to) {
     this.add(data[i]);
 }
 
+def (this: BlobStream).write_data(data) -> this.write_data(data, 0, data.length);
+
 def (this: BlobStream).write_c_string(str, length) {
   ref pos := 0;
   for (def c : str.ascii_characters) {

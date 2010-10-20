@@ -46,8 +46,8 @@ public class Parser {
   private Tree.Unit parseUnit() throws SyntaxError {
     List<Tree.Declaration> defs = new ArrayList<Tree.Declaration>();
     while (hasMore()) {
-      Tree.Declaration def = parseDeclaration();
-      defs.add(def);
+      List<Tree.Declaration> def = parseDeclaration();
+      defs.addAll(def);
     }
     return new Tree.Unit(defs);
   }
@@ -281,7 +281,7 @@ public class Parser {
    *   -> <annots> "def" <ident> <params> <funbody>
    *   -> <annots> "protocol" <ident> ";"
    */
-  private Tree.Declaration parseDeclaration() throws SyntaxError {
+  private List<Tree.Declaration> parseDeclaration() throws SyntaxError {
     List<Annotation> annots = parseAnnotations();
     if (at(Type.DEF)) {
       expect(Type.DEF);
@@ -289,28 +289,33 @@ public class Parser {
         expect(Type.LPAREN);
         Parameter self = parseParameter();
         expect(Type.RPAREN);
-        return parseMethodTail(annots, self);
+        Tree.Declaration result = parseMethodTail(annots, self);
+        return Collections.singletonList(result);
       } else if (at(Type.IDENT)) {
         String name = expect(Type.IDENT);
         if (at(Type.COLON_EQ)) {
           expect(Type.COLON_EQ);
           Tree.Expression value = parseExpression();
           expect(Type.SEMI);
-          return new Tree.Definition(annots, name, value);
+          Tree.Declaration result = new Tree.Definition(annots, name, value);
+          return Collections.singletonList(result);
         } else if (at(Type.DOT)) {
-          return parseMethodTail(annots, new Parameter("this", name, true));
+          Tree.Declaration result = parseMethodTail(annots, new Parameter("this", name, true));
+          return Collections.singletonList(result);
         } else if (at(Type.IS)) {
           expect(Type.IS);
           String parent = expect(Type.IDENT);
           expect(Type.SEMI);
-          return new Tree.Inheritance(annots, name, parent);
+          Tree.Declaration result = new Tree.Inheritance(annots, name, parent);
+          return Collections.singletonList(result);
         } else if (atFunctionDefinitionMarker()) {
           List<Parameter> params = new ArrayList<Parameter>();
           String methodName = parseParameters("()", params);
           Tree.Expression body = parseFunctionBody(true);
           Tree.Expression lambda = Tree.Lambda.create(source, methodName,
               params, body, name);
-          return new Tree.Definition(annots, name, lambda);
+          Tree.Declaration result = new Tree.Definition(annots, name, lambda);
+          return Collections.singletonList(result);
         } else {
           throw currentSyntaxError();
         }
@@ -318,10 +323,22 @@ public class Parser {
         throw currentSyntaxError();
       }
     } else {
+      List<Tree.Declaration> result = new ArrayList<Tree.Declaration>();
       expect(Type.PROTOCOL);
       String name = expect(Type.IDENT);
+      if (at(Type.IS)) {
+        expect(Type.IS);
+        String first = expect(Type.IDENT);
+        result.add(new Tree.Inheritance(Collections.<Annotation>emptyList(), name, first));
+        while (at(Type.COMMA)) {
+          expect(Type.COMMA);
+          String next = expect(Type.IDENT);
+          result.add(new Tree.Inheritance(Collections.<Annotation>emptyList(), name, next));
+        }
+      }
+      result.add(new Tree.Protocol(annots, name));
       expect(Type.SEMI);
-      return new Tree.Protocol(annots, name);
+      return result;
     }
   }
 

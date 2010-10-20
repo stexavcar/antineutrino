@@ -4,6 +4,8 @@ def AssemblerI386.new() -> new AssemblerI386 {
   stream := new BlobStream()
 };
 
+def (this: AssemblerI386).halt -> this.stream.add(16rF4);
+
 def (this: AssemblerI386).int3 -> this.stream.add(16rCC);
 
 def (this: AssemblerI386).get_code -> this.stream.get_blob;

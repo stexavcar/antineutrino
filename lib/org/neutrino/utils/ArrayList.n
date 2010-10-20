@@ -1,5 +1,6 @@
-protocol ArrayList;
-def ArrayList is Sequence;
+protocol ArrayList is Sequence;
+
+def ArrayList.new() -> new ArrayList(0);
 
 def ArrayList.new(size: Integer) -> new ArrayList {
   contents_ := new_ref(new MutablePrimitiveArray(size)),
