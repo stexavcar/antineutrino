@@ -40,7 +40,7 @@ def (this: BlobStream).write_c_string(str, length) {
   }
 }
 
-def (this: BlobStream).write_c_string(str) -> this.add_c_string(str, str.length + 1);
+def (this: BlobStream).write_c_string(str) -> this.write_c_string(str, str.length + 1);
 
 def (this: BlobStream).extend_capacity(capacity) {
   def old_contents := this.data;
