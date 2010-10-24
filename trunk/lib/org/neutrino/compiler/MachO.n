@@ -47,8 +47,14 @@ def PAGE_SIZE := 16r1000;
 protocol MachO;
 
 def MachO.new() -> new MachO {
-  elements := new ArrayList()
+  elements := new ArrayList(),
+  rLayout := new_ref(null),
+  string_table := new StringTable()
 };
+
+def (this: MachO).layout -> this.rLayout.get();
+
+def (this: MachO).layout:=(value) -> this.rLayout.set(value);
 
 def (this: MachO).add(elm) -> this.elements.add(elm);
 
@@ -57,8 +63,11 @@ def MachO.header_size -> 28;
 def (this: MachO).encode(out) {
   this.encode_mach_header(out);
   def layout := this.calc_segment_layout();
-  this.encode_load_commands(out, layout);
+  this.layout := layout;
+  this.encode_load_commands(out);
   this.encode_segments(out, layout);
+  this.string_table.add("foo");
+  this.string_table.encode(out);
 }
 
 def (this: MachO).calc_segment_layout() {
@@ -99,15 +108,15 @@ def (this: MachO).encode_mach_header(out) {
   out.write_int32(16rFEEDFACE);
   out.write_int32(CPU_TYPE_X86);
   out.write_int32(3); // cpusubtype
-  out.write_int32(MH_EXECUTE);
+  out.write_int32(MH_OBJECT);
   out.write_int32(this.ncmds);
   out.write_int32(this.sizeofcmds);
   out.write_int32(5);
 }
 
-def (this: MachO).encode_load_commands(out, layout) {
+def (this: MachO).encode_load_commands(out) {
   for (def i : 0 .. this.elements.length)
-    this.elements[i].encode_load_command(out, layout[i]);
+    this.elements[i].encode_load_command(out, this, this.layout[i]);
 }
 
 def (this: MachO).encode_segments(out, layout) {
@@ -230,7 +239,7 @@ def PageZeroElement.new() -> new PageZeroElement { };
 
 def (this: PageZeroElement).section_count -> 0;
 
-def (this: PageZeroElement).encode_load_command(out, layout) {
+def (this: PageZeroElement).encode_load_command(out, image, layout) {
   this.encode_segment_command(out, 0, PAGE_SIZE, 0, 0, "__PAGEZERO", 0, 0, 0);
 }
 
@@ -246,7 +255,7 @@ def (this: DataElement).add_data(name, contents) {
 
 def (this: DataElement).section_count -> this.blocks.length;
 
-def (this: DataElement).encode_load_command(out, layout) {
+def (this: DataElement).encode_load_command(out, image, layout) {
   this.encode_segment_command(out, layout.fileoff, layout.aligned_size,
     layout.fileoff, layout.aligned_size, "__DATA", this.section_count,
     7, 3);
@@ -278,7 +287,7 @@ def (this: TextElement).section_count -> 1;
 
 def (this: TextElement).segment_size -> this.stream.length;
 
-def (this: TextElement).encode_load_command(out, layout) {
+def (this: TextElement).encode_load_command(out, image, layout) {
   this.encode_segment_command(out, layout.fileoff, layout.aligned_size,
      layout.fileoff, layout.aligned_size, "__TEXT", 1, 7, 5);
   this.encode_segment_header(out, "__text", "__TEXT", this.segment_size, layout.fileoff);
@@ -309,7 +318,7 @@ def (this: ThreadElement).load_command_size -> 16 + (4 * ThreadElement.i386_thre
  *   // ...
  * };
  */
-def (this: ThreadElement).encode_load_command(out, layout) {
+def (this: ThreadElement).encode_load_command(out, image, layout) {
   out.write_int32(LC_UNIXTHREAD);
   out.write_int32(this.load_command_size);
   out.write_int32(1); // i386_THREAD_STATE
@@ -351,7 +360,7 @@ def DylibElement.header_size -> 24;
 def (this: DylibElement).load_command_size
   -> align(DylibElement.header_size + this.name.length + 1, 4);
 
-def (this: DylibElement).encode_load_command(out, layout) {
+def (this: DylibElement).encode_load_command(out, image, layout) {
   out.write_int32(LC_LOAD_DYLIB);
   out.write_int32(this.load_command_size);
   out.write_int32(DylibElement.header_size);
@@ -384,9 +393,30 @@ def DylinkerElement.header_size -> 12;
 def (this: DylinkerElement).load_command_size
   -> align(DylinkerElement.header_size + this.path.length + 1, 4);
 
-def (this: DylinkerElement).encode_load_command(out, layout) {
+def (this: DylinkerElement).encode_load_command(out, image, layout) {
   out.write_int32(LC_LOAD_DYLINKER);
   out.write_int32(this.load_command_size);
   out.write_int32(DylinkerElement.header_size);
   out.write_c_string(this.path, align(this.path.length + 1, 4));
+}
+
+protocol StringTable;
+
+def StringTable.new() -> new StringTable {
+  strings := new ArrayList(),
+  rFileoff := new_ref(null) 
+};
+
+def (this: StringTable).fileoff -> this.rFileoff.get();
+
+def (this: StringTable).fileoff:=(value) -> this.rFileoff.set(value);
+
+def (this: StringTable).add(str) {
+  this.strings.add(str);
+  this.strings.length;
+}
+
+def (this: StringTable).encode(out) {
+  for (def str : this.strings)
+    out.write_c_string(str);
 }

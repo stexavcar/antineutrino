@@ -6,13 +6,17 @@
 
   <property name="class.dir" value="${bin.dir}/classes"/>
   <property name="pib.dir" value="${bin.dir}/pib"/>
+  <property name="obj.dir" value="${bin.dir}/obj"/>
   <property name="libpib.path" value="${pib.dir}/lib.pib"/>
+  <property name="libobj.path" value="${obj.dir}/lib.o"/>
   
   <property name="main.package" value="org.neutrino.main"/>
   <property name="compiler.class" value="${main.package}.Compile"/>
   <property name="run.class" value="${main.package}.Run"/>
   
-  <target name="build">
+  <property name="crtobj.path" value="/usr/lib/crt1.o"/>
+  
+  <target name="javatrino.build">
     <mkdir dir="${class.dir}"/>
     <javac target="1.5" srcdir="${src.dir}" destdir="${class.dir}"/>
   </target>
@@ -27,7 +31,7 @@
     </junit>
   </target>
   
-  <target name="build-lib" depends="build">
+  <target name="libpib.build.javatrino" depends="javatrino.build">
     <mkdir dir="${pib.dir}"/>
     <java classname="${compiler.class}" fork="yes">
       <classpath><path location="${class.dir}"/></classpath>
@@ -37,7 +41,7 @@
     </java>
   </target>
   
-  <target name="nunit" depends="build-lib">
+  <target name="nunit.javatrino" depends="libpib.build.javatrino">
     <java classname="${run.class}" fork="yes">
       <classpath><path location="${class.dir}"/></classpath>
       <assertions><enable/></assertions>
@@ -46,6 +50,32 @@
     </java>
   </target>
   
-  <target name="test" depends="nunit"/>
+  <target name="test" depends="nunit.javatrino"/>
+  
+  <target name="libobj.build.neutrino" depends="libpib.build.javatrino">
+    <mkdir dir="${obj.dir}"/>
+    <java classname="${run.class}" fork="yes">
+      <classpath><path location="${class.dir}"/></classpath>
+      <assertions><enable/></assertions>
+      <arg value="--pib-path"/><arg value="${libpib.path}"/>
+      <arg value="--entry-point"/><arg value="compile"/>
+      <arg value="${libobj.path}"/>
+    </java>
+  </target>
+  
+  <target name="libexe.build" depends="libpib.build.javatrino">
+    <exec executable="ld">
+      <arg value="${libobj.path}"/>
+      <arg value="${crtobj.path}"/>
+      <arg value="-lSystem"/>
+    </exec>
+  </target>
+  
+  <target name="libobj.dump" depends="libpib.build.javatrino">
+    <exec executable="otool">
+      <arg value="-l"/>
+      <arg value="${libobj.path}"/>
+    </exec>
+  </target>
   
 </project>
