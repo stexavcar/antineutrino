@@ -11,17 +11,17 @@ def CodeBlock.new(name, code) -> new CodeBlock {
   code := code
 };
 
-def (this: Binary).add_code_block(name, code) {
+def (this is Binary).add_code_block(name, code) {
   this.blocks.add(new CodeBlock(name, code));
 }
 
-def (this: Binary).encode {
+def (this is Binary).encode {
   def out := new BlobStream;
   this.to_mach_o().encode(out);
   out.get_blob();
 }
 
-def (this: Binary).to_mach_o() {
+def (this is Binary).to_mach_o() {
   def result := new MachO();
   def text := result.text;
   for (def block : this.blocks)
