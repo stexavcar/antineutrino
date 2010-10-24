@@ -1,7 +1,7 @@
 protocol Binary;
 
 def Binary.new() -> new Binary {
-  entries := new ArrayList(0)
+  blocks := new ArrayList(0)
 };
 
 protocol CodeBlock;
@@ -12,7 +12,7 @@ def CodeBlock.new(name, code) -> new CodeBlock {
 };
 
 def (this: Binary).add_code_block(name, code) {
-  this.entries.add(new CodeBlock(name, code));
+  this.blocks.add(new CodeBlock(name, code));
 }
 
 def (this: Binary).encode {
@@ -23,9 +23,9 @@ def (this: Binary).encode {
 
 def (this: Binary).to_mach_o() {
   def result := new MachO();
-  def text := new TextElement();
-  for (def entry : this.entries)
-    text.add_text(entry.code);
-  result.add(text);
+  def text := new TextSection();
+  result.add_section(text);
+  for (def block : this.blocks)
+    text.add_block(block.name, block.code);
   result;
 }
