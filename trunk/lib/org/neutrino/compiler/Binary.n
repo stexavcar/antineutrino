@@ -23,9 +23,8 @@ def (this: Binary).encode {
 
 def (this: Binary).to_mach_o() {
   def result := new MachO();
-  def text := new TextSection();
-  result.add_section(text);
+  def text := result.text;
   for (def block : this.blocks)
-    text.add_block(block.name, block.code);
+    result.add_code_block(block.name, block.code);
   result;
 }
