@@ -1,9 +1,9 @@
-def (this: LanguageTest).test_loops() {
+def (this is LanguageTest).test_loops() {
   this.test_raw_loops();
   this.test_intervals();
 }
 
-def (this: LanguageTest).test_raw_loops() {
+def (this is LanguageTest).test_raw_loops() {
   this.on_start("raw loops");
   def i := new_ref(0);
   def x := with_1cc break -> loop(fn () {
@@ -19,7 +19,7 @@ def (this: LanguageTest).test_raw_loops() {
   assert_equal(5, y);
 }
 
-def (this: LanguageTest).test_intervals() {
+def (this is LanguageTest).test_intervals() {
   this.on_start("intervals");
   ref expected := 0;
   def r := (0 .. 10).for(fn (i) {

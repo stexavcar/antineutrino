@@ -9,12 +9,12 @@
  */
 
 protocol Iter;
-def (this: Iter).has_next;
-def (this: Iter).next;
+def (this is Iter).has_next;
+def (this is Iter).next;
 
 protocol Sequence;
 
-def (this: Sequence).for(f) {
+def (this is Sequence).for(f) {
   def itr := this.iter;
   with_1cc leave -> loop(fn () {
     if not itr.has_next() then
@@ -23,4 +23,4 @@ def (this: Sequence).for(f) {
   });
 }
 
-def (this: Sequence).is_empty -> not this.iter.has_next;
+def (this is Sequence).is_empty -> not this.iter.has_next;

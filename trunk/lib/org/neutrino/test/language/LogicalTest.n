@@ -1,4 +1,4 @@
-def (this: LanguageTest).test_logical_operators() {
+def (this is LanguageTest).test_logical_operators() {
   this.on_start("logical operators");
   assert_equal(true, true and true or true);
   assert_equal(true, true and true or false);

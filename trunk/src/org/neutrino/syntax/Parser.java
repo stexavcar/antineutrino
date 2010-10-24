@@ -1,16 +1,16 @@
 package org.neutrino.syntax;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import org.neutrino.compiler.Source;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Token.Type;
 import org.neutrino.syntax.Tree.If;
 import org.neutrino.syntax.Tree.Lambda;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Plain vanilla recursive descent parser for the neutrino syntax.
@@ -345,8 +345,8 @@ public class Parser {
   private Parameter parseParameter() throws SyntaxError {
     String name = expect(Type.IDENT);
     String type = null;
-    if (at(Type.COLON)) {
-      expect(Type.COLON);
+    if (at(Type.IS)) {
+      expect(Type.IS);
       type = expect(Type.IDENT);
     }
     return new Parameter(name, type, false);

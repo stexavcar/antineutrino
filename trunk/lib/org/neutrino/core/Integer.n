@@ -3,31 +3,31 @@
  */
 @native("int") protocol Integer;
 
-def (this: Integer)+(that: Integer) -> internal "int+int";
+def (this is Integer)+(that is Integer) -> internal "int+int";
 
-def (this: Integer)-(that: Integer) -> internal "int-int";
+def (this is Integer)-(that is Integer) -> internal "int-int";
 
-def (this: Integer)*(that: Integer) -> internal "int*int";
+def (this is Integer)*(that is Integer) -> internal "int*int";
 
-def (this: Integer)%(that: Integer) -> internal "int%int";
+def (this is Integer)%(that is Integer) -> internal "int%int";
 
-def (this: Integer)<(that: Integer) -> internal "int<int";
+def (this is Integer)<(that is Integer) -> internal "int<int";
 
-def (this: Integer)>=(that: Integer) -> not (this < that);
+def (this is Integer)>=(that is Integer) -> not (this < that);
 
-def (this: Integer)>(that: Integer) -> not (this < that or this = that);
+def (this is Integer)>(that is Integer) -> not (this < that or this = that);
 
-def (this: Integer)=(that: Integer) -> internal "int=int";
+def (this is Integer)=(that is Integer) -> internal "int=int";
 
-def (this: Integer)|(that: Integer) -> internal "int|int";
+def (this is Integer)|(that is Integer) -> internal "int|int";
 
-def (this: Integer)&(that: Integer) -> internal "int&int";
+def (this is Integer)&(that is Integer) -> internal "int&int";
 
-def (this: Integer)<<(that: Integer) -> internal "int<<int";
+def (this is Integer)<<(that is Integer) -> internal "int<<int";
 
-def (this: Integer)>>(that: Integer) -> internal "int>>int";
+def (this is Integer)>>(that is Integer) -> internal "int>>int";
 
-def (this: Integer)..(that) -> new Interval {
+def (this is Integer)..(that) -> new Interval {
   from := this,
   to := that,
   dir := if this < that then 1 else 0-1
@@ -35,9 +35,9 @@ def (this: Integer)..(that) -> new Interval {
 
 protocol Interval is Sequence;
 
-def (this: Interval)=(other : Interval) -> this.from = other.from and this.to = other.to;
+def (this is Interval)=(other is Interval) -> this.from = other.from and this.to = other.to;
 
-def (this: Interval).iter {
+def (this is Interval).iter {
   ref i := this.from;
   new Iter {
     has_next -> not i = this.to,
