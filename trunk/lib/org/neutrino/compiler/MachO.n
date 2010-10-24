@@ -62,13 +62,13 @@ def MachO.new() {
 
 def MachO.header_size -> 7 * WORD_SIZE;
 
-def (this: MachO).encode(out) {
+def (this is MachO).encode(out) {
   this.encode_mach_header(out);
   this.encode_load_commands(out);
   this.encode_sections(out);
 }
 
-def (this: MachO).add_code_block(name, code) {
+def (this is MachO).add_code_block(name, code) {
   def name_index := this.strings.add(name);
   def code_start := this.text.add_block(name_index, code);
   this.symbols.add(name_index, this.segment_fileoff + code_start);
@@ -81,29 +81,29 @@ def TextSection.new() -> new TextSection {
   rLength := new_ref(0)
 };
 
-def (this: TextSection).length -> this.rLength.get();
+def (this is TextSection).length -> this.rLength.get();
 
-def (this: TextSection).length:=(value) -> this.rLength.set(value);
+def (this is TextSection).length:=(value) -> this.rLength.set(value);
 
-def (this: TextSection).segname -> "__TEXT";
+def (this is TextSection).segname -> "__TEXT";
 
-def (this: TextSection).sectname -> "__text";
+def (this is TextSection).sectname -> "__text";
 
-def (this: TextSection).add_block(name, code) {
+def (this is TextSection).add_block(name, code) {
   this.blocks.add(new { name := name, code := code });
   def result := this.length;
   this.length := this.length + code.length;
   result;
 }
 
-def (this: TextSection).size {
+def (this is TextSection).size {
   ref result := 0;
   for (def block : this.blocks)
     result := result + block.code.length;
   result;
 }
 
-def (this: TextSection).encode(out) {
+def (this is TextSection).encode(out) {
   ref offset := out.length;
   for (def block : this.blocks) {
     out.write_data(block.code);
@@ -129,24 +129,24 @@ def StringTable.new() {
   result;
 }
 
-def (this: StringTable).add(name) {
+def (this is StringTable).add(name) {
   this.strings.add(name);
   this.strings.length - 1;
 }
 
-def (this: StringTable).encode(out) {
+def (this is StringTable).encode(out) {
   for (def str : this.strings)
     out.write_c_string(str);
 }
 
-def (this: StringTable).size {
+def (this is StringTable).size {
   ref result := 0;
   for (def str : this.strings)
     result := result + str.length + 1;
   result;
 }
 
-def (this: StringTable).length -> this.strings.length;
+def (this is StringTable).length -> this.strings.length;
 
 protocol SymbolTable;
 
@@ -154,18 +154,18 @@ def SymbolTable.new() -> new SymbolTable {
   symbols := new ArrayList()
 };
 
-def (this: SymbolTable).add(name_index, code_start) {
+def (this is SymbolTable).add(name_index, code_start) {
   this.symbols.add(new Symbol(name_index, code_start));
 }
 
-def (this: SymbolTable).length -> this.symbols.length;
+def (this is SymbolTable).length -> this.symbols.length;
 
-def (this: SymbolTable).encode(out) {
+def (this is SymbolTable).encode(out) {
   for (def symbol : this.symbols)
     symbol.encode(out);
 }
 
-def (this: SymbolTable).size -> this.length * Symbol.size;
+def (this is SymbolTable).size -> this.length * Symbol.size;
 
 protocol Symbol;
 
@@ -173,7 +173,7 @@ def Symbol.new(name, start) -> new Symbol { name := name, start := start };
 
 def Symbol.size -> 3 * WORD_SIZE;
 
-def (this: Symbol).encode(out) {
+def (this is Symbol).encode(out) {
   out.write_int32(this.name);
   out.write_int8(16rF);
   out.write_int8(1);
@@ -192,7 +192,7 @@ def (this: Symbol).encode(out) {
  *   uint32_t flags;
  * };
  */
-def (this: MachO).encode_mach_header(out) {
+def (this is MachO).encode_mach_header(out) {
   out.write_int32(16rFEEDFACE);
   out.write_int32(CPU_TYPE_X86);
   out.write_int32(3); // cpusubtype
@@ -202,30 +202,30 @@ def (this: MachO).encode_mach_header(out) {
   out.write_int32(5);
 }
 
-def (this: MachO).header_size -> 7 * WORD_SIZE;
+def (this is MachO).header_size -> 7 * WORD_SIZE;
 
-def (this: MachO).segment_fileoff -> this.header_size + this.sizeofcmds;
+def (this is MachO).segment_fileoff -> this.header_size + this.sizeofcmds;
 
-def (this: MachO).nsects -> this.sections.length;
+def (this is MachO).nsects -> this.sections.length;
 
-def (this: MachO).ncmds -> 2;
+def (this is MachO).ncmds -> 2;
 
-def (this: MachO).sizeofcmds -> this.sizeof_segment_command + this.sizeof_symtab_command;
+def (this is MachO).sizeofcmds -> this.sizeof_segment_command + this.sizeof_symtab_command;
 
-def (this: MachO).sizeof_segment_command -> SEGMENT_COMMAND_SIZE + (this.nsects * SECTION_HEADER_SIZE);
+def (this is MachO).sizeof_segment_command -> SEGMENT_COMMAND_SIZE + (this.nsects * SECTION_HEADER_SIZE);
 
-def (this: MachO).sizeof_symtab_command -> 6 * WORD_SIZE;
+def (this is MachO).sizeof_symtab_command -> 6 * WORD_SIZE;
 
 def SEGMENT_COMMAND_SIZE := 56;
 def SECTION_HEADER_SIZE := 68;
 
-def (this: MachO).encode_load_commands(out) {
+def (this is MachO).encode_load_commands(out) {
   this.encode_segment_command(out);
   this.encode_section_headers(out);
   this.encode_symtab_command(out);
 }
 
-def (this: MachO).encode_symtab_command(out) {
+def (this is MachO).encode_symtab_command(out) {
   out.write_int32(LC_SYMTAB);
   out.write_int32(this.sizeof_symtab_command);
   out.write_int32(this.offset_of(this.symbols));
@@ -249,7 +249,7 @@ def (this: MachO).encode_symtab_command(out) {
  *   uint32_t flags;
  * };
  */
-def (this: MachO).encode_segment_command(out) {
+def (this is MachO).encode_segment_command(out) {
   out.write_int32(LC_SEGMENT);
   out.write_int32(this.sizeof_segment_command);
   out.write_c_string("", 16);
@@ -279,7 +279,7 @@ def (this: MachO).encode_segment_command(out) {
  *   uint32_t reserved2;
  * };
  */
-def (this: MachO).encode_section_headers(out) {
+def (this is MachO).encode_section_headers(out) {
   ref fileoff := this.segment_fileoff;
   for (def section : this.sections) {
     out.write_c_string(section.sectname, 16);
@@ -298,9 +298,9 @@ def (this: MachO).encode_section_headers(out) {
   }
 }
 
-def (this: MachO).all_sections -> this.sections + this.dark_sections;
+def (this is MachO).all_sections -> this.sections + this.dark_sections;
 
-def (this: MachO).encode_sections(out) {
+def (this is MachO).encode_sections(out) {
   ref fileoff := this.segment_fileoff;
   for (def section : this.all_sections) {
     out.pad_to(fileoff);
@@ -311,7 +311,7 @@ def (this: MachO).encode_sections(out) {
   out.pad_to(fileoff);
 }
 
-def (this: MachO).offset_of(target) {
+def (this is MachO).offset_of(target) {
   ref fileoff := this.segment_fileoff;
   with_1cc return ->
     for (def section : this.all_sections) {
@@ -323,14 +323,14 @@ def (this: MachO).offset_of(target) {
     };
 }
 
-def (this: MachO).segment_size {
+def (this is MachO).segment_size {
   ref result := 0;
   for (def section : this.sections)
     result := result + section.size;
   result;
 }
 
-def (this: MachO).encode_segments(out, layout) {
+def (this is MachO).encode_segments(out, layout) {
   for (def i : 0 .. this.elements.length) {
     out.pad_to(layout[i].fileoff);
     this.elements[i].encode_segment(out, layout[i]);
@@ -338,14 +338,14 @@ def (this: MachO).encode_segments(out, layout) {
   out.pad_to(align(out.length, PAGE_SIZE));
 }
 
-def (this: MachO).ncmds {
+def (this is MachO).ncmds {
   ref result := 0;
   for (def element : this.elements)
     result := result + element.load_command_count;
   result;
 }
 
-def (this: MachO).sizeofcmds {
+def (this is MachO).sizeofcmds {
   ref result := 0;
   for (def element : this.elements)
     result := result + element.load_command_size;
