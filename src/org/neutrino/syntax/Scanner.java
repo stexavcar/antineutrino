@@ -1,9 +1,9 @@
 package org.neutrino.syntax;
 
+import org.neutrino.compiler.Source;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import org.neutrino.compiler.Source;
 
 /**
  * A simple scanner that turns a flat string into a list of neutrino
@@ -52,7 +52,7 @@ public class Scanner {
     switch (c) {
     case '+': case '-': case '.': case '@': case '%': case '*':
     case '>': case '<': case '!': case '?': case '=': case '|':
-    case '&':
+    case '&': case '/':
       return true;
     default:
       return false;

@@ -1,0 +1,18 @@
+def (this is UtilsTest).test_delegates() {
+  this.test_simple_delegates();
+  this.test_higher_order_functions();
+}
+
+def (this is UtilsTest).test_simple_delegates() {
+  this.on_start("simple delegates");
+  assert_equal(5, op("+")(2, 3));
+  assert_equal(3, op("length")("foo"));
+  assert_equal(7, op("+").bind(4)(3));
+  assert_equal(9, op("()").bind(fn (a, b, c) -> a + b + c).bind(2).bind(3).bind(4)());
+}
+
+def (this is UtilsTest).test_higher_order_functions() {
+  this.on_start("higher order functions");
+  assert_equal(15, new ArrayList [1, 2, 3, 4, 5].fold_left(op("+"), 0));
+  assert_equal(new ArrayList [6, 3, 2], new ArrayList ["123456", "123", "12"].map(op("length")));
+}

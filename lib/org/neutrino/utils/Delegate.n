@@ -1,0 +1,24 @@
+protocol Delegate;
+
+def (this is Delegate)() -> this.run(#[]);
+def (this is Delegate)(a) -> this.run(#[a]);
+def (this is Delegate)(a, b) -> this.run(#[a, b]);
+def (this is Delegate)(a, b, c) -> this.run(#[a, b, c]);
+def (this is Delegate)(a, b, c, d) -> this.run(#[a, b, c, d]);
+def (this is Delegate)(a, b, c, d, e) -> this.run(#[a, b, c, d, e]);
+
+protocol SimpleDelegate is Delegate;
+
+def (this is SimpleDelegate).to_string -> this.name + "/" + this.argc.to_string;
+
+def (this is SimpleDelegate).run(args) -> apply(this.name, args);
+
+def op(name) -> new SimpleDelegate { name := name };
+
+protocol BoundDelegate is Delegate;
+
+def BoundDelegate.new(target, args) -> new BoundDelegate { target := target, args := args };
+
+def (this is Delegate).bind(a) -> new BoundDelegate(this, #[a]);
+
+def (this is BoundDelegate).run(args) -> this.target.run(this.args + args);
