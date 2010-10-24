@@ -4,15 +4,15 @@ def Binary.new() -> new Binary {
   entries := new ArrayList(0)
 };
 
-protocol BinaryEntry;
+protocol CodeBlock;
 
-def BinaryEntry.new(name, code) -> new BinaryEntry {
+def CodeBlock.new(name, code) -> new CodeBlock {
   name := name,
   code := code
 };
 
-def (this: Binary).add_entry(name, code) {
-  this.entries.add(new BinaryEntry(name, code));
+def (this: Binary).add_code_block(name, code) {
+  this.entries.add(new CodeBlock(name, code));
 }
 
 def (this: Binary).encode {
@@ -23,11 +23,18 @@ def (this: Binary).encode {
 
 def (this: Binary).to_mach_o() {
   def result := new MachO();
+  result.add(new PageZeroElement());
   def text := new TextElement();
   for (def entry : this.entries)
     text.add_text(entry.code);
   result.add(text);
-  // result.add(new DylinkerElement("/usr/lib/dyld"));
+  def data := new DataElement();
+  data.add_data("__dyld", #[16r00, 16r10, 16re0, 16r8f, 16r08, 16r10,
+    16re0, 16r8f, 16r00, 16r10, 16r00, 16r00, 16r0c, 16r20, 16r00,
+    16r00, 16r08, 16r20, 16r00, 16r00, 16r04, 16r20, 16r00, 16r00,
+    16r00, 16r20, 16r00, 16r00]);
+  result.add(data);
+  result.add(new DylinkerElement("/usr/lib/dyld"));
   result.add(new ThreadElement());
   result.add(new DylibElement("/usr/lib/libSystem.B.dylib", 0,
     new Version [111, 1, 5], new Version [1, 0, 0]));
