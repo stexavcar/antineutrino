@@ -71,21 +71,30 @@ def (this: MachO).encode(out) {
 def (this: MachO).add_code_block(name, code) {
   def name_index := this.strings.add(name);
   def code_start := this.text.add_block(name_index, code);
-  this.symbols.add(name_index, code_start);
+  this.symbols.add(name_index, this.segment_fileoff + code_start);
 }
 
 protocol TextSection;
 
 def TextSection.new() -> new TextSection {
-  blocks := new ArrayList()
+  blocks := new ArrayList(),
+  rLength := new_ref(0)
 };
+
+def (this: TextSection).length -> this.rLength.get();
+
+def (this: TextSection).length:=(value) -> this.rLength.set(value);
 
 def (this: TextSection).segname -> "__TEXT";
 
 def (this: TextSection).sectname -> "__text";
 
-def (this: TextSection).add_block(name, code)
- -> this.blocks.add(new { name := name, code := code });
+def (this: TextSection).add_block(name, code) {
+  this.blocks.add(new { name := name, code := code });
+  def result := this.length;
+  this.length := this.length + code.length;
+  result;
+}
 
 def (this: TextSection).size {
   ref result := 0;
@@ -112,13 +121,17 @@ def align(value, factor) {
 
 protocol StringTable;
 
-def StringTable.new() -> new StringTable {
-  strings := new ArrayList()
-};
+def StringTable.new() {
+  def result := new StringTable {
+    strings := new ArrayList()
+  };
+  result.add("");
+  result;
+}
 
 def (this: StringTable).add(name) {
   this.strings.add(name);
-  this.strings.length;
+  this.strings.length - 1;
 }
 
 def (this: StringTable).encode(out) {
@@ -162,8 +175,10 @@ def Symbol.size -> 3 * WORD_SIZE;
 
 def (this: Symbol).encode(out) {
   out.write_int32(this.name);
-  out.write_int32(0);
-  out.write_int32(0);
+  out.write_int8(16rF);
+  out.write_int8(1);
+  out.write_int16(0);
+  out.write_int32(this.start);
 }
 
 /*
@@ -216,7 +231,7 @@ def (this: MachO).encode_symtab_command(out) {
   out.write_int32(this.offset_of(this.symbols));
   out.write_int32(this.symbols.length);
   out.write_int32(this.offset_of(this.strings));
-  out.write_int32(this.strings.length);
+  out.write_int32(this.strings.size);
 }
 
 /*
@@ -283,8 +298,7 @@ def (this: MachO).encode_section_headers(out) {
   }
 }
 
-def (this: MachO).all_sections -> fn for (fun)
- -> (this.sections + this.dark_sections).for(fun);
+def (this: MachO).all_sections -> this.sections + this.dark_sections;
 
 def (this: MachO).encode_sections(out) {
   ref fileoff := this.segment_fileoff;
@@ -307,7 +321,6 @@ def (this: MachO).offset_of(target) {
       def size := section.size;
       fileoff := fileoff + size;
     };
-  0;
 }
 
 def (this: MachO).segment_size {

@@ -8,7 +8,8 @@
   <property name="pib.dir" value="${bin.dir}/pib"/>
   <property name="obj.dir" value="${bin.dir}/obj"/>
   <property name="libpib.path" value="${pib.dir}/lib.pib"/>
-  <property name="libobj.path" value="${obj.dir}/lib.o"/>
+  <property name="libobj.path" value="${obj.dir}/lib.no"/>
+  <property name="libexe.path" value="${obj.dir}/lib"/>
   
   <property name="main.package" value="org.neutrino.main"/>
   <property name="compiler.class" value="${main.package}.Compile"/>
@@ -68,6 +69,7 @@
       <arg value="${libobj.path}"/>
       <arg value="${crtobj.path}"/>
       <arg value="-lSystem"/>
+      <arg value="-o"/><arg value="${libexe.path}"/>
     </exec>
   </target>
   

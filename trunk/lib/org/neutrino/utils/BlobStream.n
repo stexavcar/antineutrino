@@ -23,6 +23,15 @@ def (this: BlobStream).write_int32(word) {
   this.add((word >> 24) & 16rFF);
 }
 
+def (this: BlobStream).write_int16(word) {
+  this.add(word & 16rFF);
+  this.add((word >> 8) & 16rFF);
+}
+
+def (this: BlobStream).write_int8(word) {
+  this.add(word & 16rFF);
+}
+
 def (this: BlobStream).write_data(data, from, to) {
   for (def i : from .. to)
     this.add(data[i]);
