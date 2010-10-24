@@ -1,11 +1,5 @@
 package org.neutrino.main;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.neutrino.pib.Universe;
 import org.neutrino.plankton.PSeed;
 import org.neutrino.plankton.PValue;
@@ -15,6 +9,12 @@ import org.neutrino.runtime.RObject;
 import org.neutrino.runtime.RPrimitiveArray;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Run {
 

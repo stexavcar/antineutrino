@@ -5,25 +5,24 @@ protocol BlobStream;
 
 def BlobStream.new -> new BlobStream(256);
 
-def BlobStream.new(size) -> new BlobStream {
+def BlobStream.new(size: Integer) -> new BlobStream {
   data_ := new_ref(new MutablePrimitiveByteArray(size)),
   length_ := new_ref(0)
 };
 
-def (this is BlobStream).length -> this.length_.get();
+def (this: BlobStream).length -> this.length_.get();
 
-def (this is BlobStream).capacity -> this.data.length;
+def (this: BlobStream).capacity -> this.data.length;
 
-def (this is BlobStream).data -> this.data_.get();
+def (this: BlobStream).data -> this.data_.get();
 
-def (this is BlobStream).write_int32(word) {
+def (this: BlobStream).write_int32(word) {
   this.add(word & 16rFF);
   this.add((word >> 8) & 16rFF);
   this.add((word >> 16) & 16rFF);
   this.add((word >> 24) & 16rFF);
 }
 
-<<<<<<< HEAD
 def (this: BlobStream).write_int16(word) {
   this.add(word & 16rFF);
   this.add((word >> 8) & 16rFF);
@@ -34,16 +33,13 @@ def (this: BlobStream).write_int8(word) {
 }
 
 def (this: BlobStream).write_data(data, from, to) {
-=======
-def (this is BlobStream).write_data(data, from, to) {
->>>>>>> Changed parameter type constraint syntax.
   for (def i : from .. to)
     this.add(data[i]);
 }
 
-def (this is BlobStream).write_data(data) -> this.write_data(data, 0, data.length);
+def (this: BlobStream).write_data(data) -> this.write_data(data, 0, data.length);
 
-def (this is BlobStream).write_c_string(str, length) {
+def (this: BlobStream).write_c_string(str, length) {
   ref pos := 0;
   for (def c : str.ascii_characters) {
     this.add(c);
@@ -55,9 +51,9 @@ def (this is BlobStream).write_c_string(str, length) {
   }
 }
 
-def (this is BlobStream).write_c_string(str) -> this.write_c_string(str, str.length + 1);
+def (this: BlobStream).write_c_string(str) -> this.write_c_string(str, str.length + 1);
 
-def (this is BlobStream).extend_capacity(capacity) {
+def (this: BlobStream).extend_capacity(capacity) {
   def old_contents := this.data;
   def new_contents := new MutablePrimitiveByteArray(capacity * 2);
   for (def i : 0 .. this.length)
@@ -65,14 +61,14 @@ def (this is BlobStream).extend_capacity(capacity) {
   this.data_.set(new_contents);
 }
 
-def (this is BlobStream).pad_to(offset) {
+def (this: BlobStream).pad_to(offset) {
   if this.length < offset then {
     for (def i : this.length .. offset)
       this.add(0);
   }
 }
 
-def (this is BlobStream).add(byte) {
+def (this: BlobStream).add(byte) {
   if this.length >= this.capacity then
     this.extend_capacity(this.length);
   def index := this.length;
@@ -80,11 +76,11 @@ def (this is BlobStream).add(byte) {
   this.length_.set(index + 1);
 }
 
-def (this is BlobStream).get_blob {
+def (this: BlobStream).get_blob {
   def result := new MutablePrimitiveByteArray(this.length);
   for (def i : 0 .. this.length)
     result[i] := this.data[i];
   result;
 }
 
-def (this is BlobStream).to_string -> "#<a BlobStream: " + this.length.to_string + ">";
+def (this: BlobStream).to_string -> "#<a BlobStream: " + this.length.to_string + ">";
