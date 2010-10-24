@@ -43,47 +43,53 @@ def LC_SUB_LIBRARY := 16r15;
 def LC_SUB_CLIENT := 16r14;
 
 def PAGE_SIZE := 16r1000;
+def WORD_SIZE := 4;
 
 protocol MachO;
 
 def MachO.new() -> new MachO {
-  elements := new ArrayList(),
-  rLayout := new_ref(null),
-  string_table := new StringTable()
+  sections := new ArrayList()
 };
 
-def (this: MachO).layout -> this.rLayout.get();
-
-def (this: MachO).layout:=(value) -> this.rLayout.set(value);
-
-def (this: MachO).add(elm) -> this.elements.add(elm);
-
-def MachO.header_size -> 28;
+def MachO.header_size -> 7 * WORD_SIZE;
 
 def (this: MachO).encode(out) {
   this.encode_mach_header(out);
-  def layout := this.calc_segment_layout();
-  this.layout := layout;
   this.encode_load_commands(out);
-  this.encode_segments(out, layout);
-  this.string_table.add("foo");
-  this.string_table.encode(out);
+  this.encode_sections(out);
 }
 
-def (this: MachO).calc_segment_layout() {
-  def result := new ArrayList(this.elements.length);
-  ref fileoff := align(MachO.header_size + this.sizeofcmds, PAGE_SIZE);
-  for (def i : 0 .. result.length) {
-    def raw_size := this.elements[i].segment_size;
-    def aligned_size := align(raw_size, PAGE_SIZE);
-    result[i] := new {
-      fileoff := fileoff,
-      raw_size := raw_size,
-      aligned_size := aligned_size
-    };
-    fileoff := fileoff + aligned_size;
-  }
+protocol TextSection;
+
+def TextSection.new() -> new TextSection {
+  blocks := new ArrayList()
+};
+
+def (this: TextSection).segname -> "__TEXT";
+
+def (this: TextSection).sectname -> "__text";
+
+def (this: TextSection).add_block(name, code)
+ -> this.blocks.add(new { name := name, code := code });
+
+def (this: TextSection).size {
+  ref result := 0;
+  for (def block : this.blocks)
+    result := result + block.code.length;
   result;
+}
+
+def (this: TextSection).encode(out) {
+  ref offset := out.length;
+  for (def block : this.blocks) {
+    out.write_data(block.code);
+    offset := offset + block.code.length;
+    out.pad_to(offset);
+  }
+}
+
+def (this: MachO).add_section(sect) {
+  this.sections.add(sect);
 }
 
 def align(value, factor) {
@@ -114,9 +120,106 @@ def (this: MachO).encode_mach_header(out) {
   out.write_int32(5);
 }
 
+def (this: MachO).header_size -> 28;
+
+def (this: MachO).segment_fileoff -> this.header_size + this.sizeofcmds;
+
+def (this: MachO).nsects -> this.sections.length;
+
+def (this: MachO).ncmds -> 1;
+
+def (this: MachO).sizeofcmds -> this.sizeof_segment_command;
+
+def (this: MachO).sizeof_segment_command -> SEGMENT_COMMAND_SIZE + (this.nsects * SECTION_HEADER_SIZE);
+
+def SEGMENT_COMMAND_SIZE := 56;
+def SECTION_HEADER_SIZE := 68;
+
 def (this: MachO).encode_load_commands(out) {
-  for (def i : 0 .. this.elements.length)
-    this.elements[i].encode_load_command(out, this, this.layout[i]);
+  this.encode_segment_command(out);
+  this.encode_section_headers(out);
+}
+
+/*
+ * struct segment_command {
+ *   uint32_t cmd;
+ *   uint32_t cmdsize;
+ *   char segname[16];
+ *   uint32_t vmaddr;
+ *   uint32_t vmsize;
+ *   uint32_t fileoff;
+ *   uint32_t filesize;
+ *   vm_prot_t maxprot;
+ *   vm_prot_t initprot;
+ *   uint32_t nsects;
+ *   uint32_t flags;
+ * };
+ */
+def (this: MachO).encode_segment_command(out) {
+  out.write_int32(LC_SEGMENT);
+  out.write_int32(this.sizeof_segment_command);
+  out.write_c_string("", 16);
+  def size := this.segment_size;
+  out.write_int32(0);
+  out.write_int32(size);
+  out.write_int32(this.segment_fileoff);
+  out.write_int32(size);
+  out.write_int32(7);
+  out.write_int32(5);
+  out.write_int32(this.nsects);
+  out.write_int32(0); // flags
+}
+
+/*
+ * struct section {
+ *   char sectname[16];
+ *   char segname[16];
+ *   uint32_t addr;
+ *   uint32_t size;
+ *   uint32_t offset;
+ *   uint32_t align;
+ *   uint32_t reloff;
+ *   uint32_t nreloc;
+ *   uint32_t flags;
+ *   uint32_t reserved1;
+ *   uint32_t reserved2;
+ * };
+ */
+def (this: MachO).encode_section_headers(out) {
+  ref fileoff := this.segment_fileoff;
+  for (def section : this.sections) {
+    out.write_c_string(section.sectname, 16);
+    out.write_c_string(section.segname, 16);
+    out.write_int32(fileoff);
+    def size := section.size;
+    out.write_int32(size);
+    out.write_int32(fileoff);
+    out.write_int32(2);
+    out.write_int32(0);
+    out.write_int32(0);
+    out.write_int32(16r80000400);
+    out.write_int32(0);
+    out.write_int32(0);
+    fileoff := fileoff + size;
+  }
+}
+
+def (this: MachO).encode_sections(out) {
+  ref fileoff := this.segment_fileoff;
+  for (def section : this.sections) {
+    out.pad_to(fileoff);
+    section.encode(out);
+    def size := section.size;
+    fileoff := fileoff + size;
+  }
+  out.pad_to(fileoff);
+}
+
+def (this: MachO).segment_size {
+  ref result := 0;
+  for (def section : this.sections)
+    result := result + section.size;
+  result;
 }
 
 def (this: MachO).encode_segments(out, layout) {
@@ -198,36 +301,6 @@ def (this: SegmentElement).encode_segment_command(out, vmaddr, vmsize,
   out.write_int32(initprot);
   out.write_int32(nsects);
   out.write_int32(0); // flags
-}
-
-
-/*
- * struct section {
- *   char sectname[16];
- *   char segname[16];
- *   uint32_t addr;
- *   uint32_t size;
- *   uint32_t offset;
- *   uint32_t align;
- *   uint32_t reloff;
- *   uint32_t nreloc;
- *   uint32_t flags;
- *   uint32_t reserved1;
- *   uint32_t reserved2;
- * };
- */
-def (this: SegmentElement).encode_segment_header(out, sectname, segname, size, fileoff) {
-  out.write_c_string(sectname, 16);
-  out.write_c_string(segname, 16);
-  out.write_int32(fileoff);
-  out.write_int32(size);
-  out.write_int32(fileoff);
-  out.write_int32(2);
-  out.write_int32(0);
-  out.write_int32(0);
-  out.write_int32(16r80000400);
-  out.write_int32(0);
-  out.write_int32(0);  
 }
 
 /**

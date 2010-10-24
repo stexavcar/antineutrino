@@ -63,7 +63,7 @@
     </java>
   </target>
   
-  <target name="libexe.build" depends="libpib.build.javatrino">
+  <target name="libexe.build" depends="libobj.build.neutrino">
     <exec executable="ld">
       <arg value="${libobj.path}"/>
       <arg value="${crtobj.path}"/>
@@ -71,7 +71,7 @@
     </exec>
   </target>
   
-  <target name="libobj.dump" depends="libpib.build.javatrino">
+  <target name="libobj.dump" depends="libobj.build.neutrino">
     <exec executable="otool">
       <arg value="-l"/>
       <arg value="${libobj.path}"/>
