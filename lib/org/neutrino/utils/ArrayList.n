@@ -39,6 +39,15 @@ def (this: ArrayList).to_string() {
   s := s + "]";
 }
 
+def (this: ArrayList)+(that: ArrayList) {
+  def result := new ArrayList(this.length + that.length);
+  for (def i : 0 .. this.length)
+    result[i] := this[i];
+  for (def i : 0 .. that.length)
+    result[this.length + i] := that[i];
+  result;
+}
+
 def (this: ArrayList).add(value) {
   def new_length := this.length + 1;
   this.ensure_capacity(new_length);
