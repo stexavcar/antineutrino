@@ -1,4 +1,4 @@
-def (this: LanguageTest).test_for() {
+def (this is LanguageTest).test_for() {
   this.on_start("for");
   ref expected := 0;
   for (def i : 0 .. 10) {

@@ -1,4 +1,4 @@
-def (this: UtilsTest).test_array_lists() {
+def (this is UtilsTest).test_array_lists() {
   this.on_start("array lists");
   def kInitialSize := 5;
   def a := new ArrayList(kInitialSize);

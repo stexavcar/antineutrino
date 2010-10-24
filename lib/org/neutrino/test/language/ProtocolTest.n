@@ -1,18 +1,18 @@
-def (this: LanguageTest).test_protocols() {
+def (this is LanguageTest).test_protocols() {
   this.test_simple_inheritance();
   this.test_this();
   this.test_mixed_operator_comparison();
 }
 
 protocol A;
-def (this: A).foo() -> 1;
-def (this: A).bar() -> 3;
+def (this is A).foo() -> 1;
+def (this is A).bar() -> 3;
 
 protocol B;
 def B is A;
-def (this: B).foo() -> 2;
+def (this is B).foo() -> 2;
 
-def (this: LanguageTest).test_simple_inheritance() {
+def (this is LanguageTest).test_simple_inheritance() {
   this.on_start("simple inheritance");
   def a := new A { };
   assert_equal(1, a.foo());
@@ -27,15 +27,15 @@ def (this: LanguageTest).test_simple_inheritance() {
 }
 
 protocol Point;
-def (this: Point).size -> (this.x * this.x) + (this.y * this.y);
+def (this is Point).size -> (this.x * this.x) + (this.y * this.y);
 
-def (this: LanguageTest).test_this() {
+def (this is LanguageTest).test_this() {
   this.on_start("this");
   def p := new Point { x := 3, y := 4 };
   assert_equal(25, p.size());
 }
 
-def (this: LanguageTest).test_mixed_operator_comparison() {
+def (this is LanguageTest).test_mixed_operator_comparison() {
   this.on_start("mixed operator comparison");
   assert_false(1 = "1");
   assert_false(4 = null);

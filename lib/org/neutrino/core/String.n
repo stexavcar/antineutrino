@@ -3,23 +3,23 @@
  */
 @native("str") protocol String;
 
-def (this: String)+(that: String) -> internal "str+str";
+def (this is String)+(that is String) -> internal "str+str";
 
-def (this: String)=(that: String) -> internal "str=str";
+def (this is String)=(that is String) -> internal "str=str";
 
-def (this: String).length -> internal "str.len";
+def (this is String).length -> internal "str.len";
 
 /*
  * Returns an enumeration of the ascii characters in this string.
  * This is a temporary method that will eventually be removed.
  */
-def (this: String).ascii_characters -> fn for (fun) {
+def (this is String).ascii_characters -> fn for (fun) {
   for (def i : 0 .. this.length) {
     fun(this._get_ascii_character(i));
   }
 };
 
 // Temporary method.  Don't use under any circumstances.
-def (this: String)._get_ascii_character(i) -> internal "str[ascii]";
+def (this is String)._get_ascii_character(i) -> internal "str[ascii]";
 
 def string_from_ordinal(value) -> internal "ord2str";

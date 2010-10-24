@@ -1,77 +1,86 @@
-protocol ArrayList is Sequence;
+/*
+ * A stream of bytes.
+ */
+protocol BlobStream;
 
-def ArrayList.new() -> new ArrayList(0);
+def BlobStream.new -> new BlobStream(256);
 
-def ArrayList.new(size: Integer) -> new ArrayList {
-  contents_ := new_ref(new MutablePrimitiveArray(size)),
-  length_ := new_ref(size)
+def BlobStream.new(size: Integer) -> new BlobStream {
+  data_ := new_ref(new MutablePrimitiveByteArray(size)),
+  length_ := new_ref(0)
 };
 
-def ArrayList.new(elms: PrimitiveArray) {
-  def result := new ArrayList(elms.length);
-  for (def i : 0 .. elms.length)
-    result[i] := elms[i];
-  result;
+def (this: BlobStream).length -> this.length_.get();
+
+def (this: BlobStream).capacity -> this.data.length;
+
+def (this: BlobStream).data -> this.data_.get();
+
+def (this: BlobStream).write_int32(word) {
+  this.add(word & 16rFF);
+  this.add((word >> 8) & 16rFF);
+  this.add((word >> 16) & 16rFF);
+  this.add((word >> 24) & 16rFF);
 }
 
-def ArrayList.new(seq: Sequence) {
-  def result := new ArrayList(0);
-  for (def elm : seq)
-    result.add(elm);
-  result;
+def (this: BlobStream).write_int16(word) {
+  this.add(word & 16rFF);
+  this.add((word >> 8) & 16rFF);
 }
 
-def (this: ArrayList)[i] -> this.contents[i];
+def (this: BlobStream).write_int8(word) {
+  this.add(word & 16rFF);
+}
 
-def (this: ArrayList).length -> this.length_.get();
+def (this: BlobStream).write_data(data, from, to) {
+  for (def i : from .. to)
+    this.add(data[i]);
+}
 
-def (this: ArrayList).contents -> this.contents_.get();
+def (this: BlobStream).write_data(data) -> this.write_data(data, 0, data.length);
 
-def (this: ArrayList)[i]:=(value) -> this.contents[i] := value;
-
-def (this: ArrayList).to_string() {
-  ref s := "[";
-  ref first := true;
-  for (def el : this) {
-    if first then first := false else s := s + ", ";
-    s := s + el.to_string;
+def (this: BlobStream).write_c_string(str, length) {
+  ref pos := 0;
+  for (def c : str.ascii_characters) {
+    this.add(c);
+    pos := pos + 1;
   }
-  s := s + "]";
+  if pos < length then {
+    for (def i : pos .. length)
+      this.add(0);
+  }
 }
 
-def (this: ArrayList)+(that: ArrayList) {
-  def result := new ArrayList(this.length + that.length);
+def (this: BlobStream).write_c_string(str) -> this.write_c_string(str, str.length + 1);
+
+def (this: BlobStream).extend_capacity(capacity) {
+  def old_contents := this.data;
+  def new_contents := new MutablePrimitiveByteArray(capacity * 2);
   for (def i : 0 .. this.length)
-    result[i] := this[i];
-  for (def i : 0 .. that.length)
-    result[this.length + i] := that[i];
-  result;
+    new_contents[i] := old_contents[i];
+  this.data_.set(new_contents);
 }
 
-def (this: ArrayList).add(value) {
-  def new_length := this.length + 1;
-  this.ensure_capacity(new_length);
-  this.contents[this.length] := value;
-  this.length_.set(new_length);
-  value;
-}
-
-def (this: ArrayList).ensure_capacity(capacity) {
-  def old_contents := this.contents;
-  if not capacity < old_contents.length then {
-    def new_contents := new MutablePrimitiveArray(capacity * 2);
-    for (def i : 0 .. this.length)
-      new_contents[i] := old_contents[i];
-    this.contents_.set(new_contents);
+def (this: BlobStream).pad_to(offset) {
+  if this.length < offset then {
+    for (def i : this.length .. offset)
+      this.add(0);
   }
 }
 
-def (this: ArrayList).iter {
-  def self := this;
-  def index_itr := (0 .. self.length).iter;
-  new Iter {
-    has_next -> index_itr.has_next,
-    next -> self[index_itr.next]
-  };
+def (this: BlobStream).add(byte) {
+  if this.length >= this.capacity then
+    this.extend_capacity(this.length);
+  def index := this.length;
+  this.data[index] := byte;
+  this.length_.set(index + 1);
 }
 
+def (this: BlobStream).get_blob {
+  def result := new MutablePrimitiveByteArray(this.length);
+  for (def i : 0 .. this.length)
+    result[i] := this.data[i];
+  result;
+}
+
+def (this: BlobStream).to_string -> "#<a BlobStream: " + this.length.to_string + ">";

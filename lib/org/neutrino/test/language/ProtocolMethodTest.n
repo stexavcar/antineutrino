@@ -2,13 +2,13 @@ protocol ProtMethTester;
 
 def ProtMethTester.foo -> 4;
 
-def (this: ProtMethTester).bar -> 6;
+def (this is ProtMethTester).bar -> 6;
 
 def ProtMethTester.new -> new ProtMethTester { };
 
 def ProtMethTester.new(bar) -> new ProtMethTester { bar := bar };
 
-def (this: LanguageTest).test_protocol_methods() {
+def (this is LanguageTest).test_protocol_methods() {
   this.on_start("protocol methods");
   assert_equal(4, ProtMethTester.foo);
   def pmt := new ProtMethTester;

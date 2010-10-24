@@ -1,10 +1,10 @@
-def (this: LanguageTest).test_local_definitions() {
+def (this is LanguageTest).test_local_definitions() {
   this.test_simple_local_definitions();
   this.test_block_nested_local_definitions();
   this.test_local_function_declarations();
 }
 
-def (this: LanguageTest).test_simple_local_definitions() {
+def (this is LanguageTest).test_simple_local_definitions() {
   this.on_start("simple local definitions");
   def x := 4;
   assert_true(x = 4);
@@ -12,7 +12,7 @@ def (this: LanguageTest).test_simple_local_definitions() {
   assert_true(y = 8);
 }
 
-def (this: LanguageTest).test_block_nested_local_definitions() {
+def (this is LanguageTest).test_block_nested_local_definitions() {
   this.on_start("block nested local definitions");
   def a := 1;
   def b := 2;
@@ -28,7 +28,7 @@ def (this: LanguageTest).test_block_nested_local_definitions() {
   assert_true(b = 2);
 }
 
-def (this: LanguageTest).test_local_function_declarations() {
+def (this is LanguageTest).test_local_function_declarations() {
   this.on_start("local function declarations");
   def double(x) -> 2 * x;
   assert_equal(16, double(8));

@@ -1,15 +1,15 @@
-def (this: LanguageTest).test_blocks() {
+def (this is LanguageTest).test_blocks() {
   this.test_expression_blocks();
   this.test_statement_blocks();
 }
 
-def (this: LanguageTest).test_expression_blocks() {
+def (this is LanguageTest).test_expression_blocks() {
   this.on_start("expression blocks");
   assert_true({1; 2} = 2);
   assert_true(4 = {3; 4});
 }
 
-def (this: LanguageTest).test_statement_blocks() {
+def (this is LanguageTest).test_statement_blocks() {
   this.on_start("statement blocks");
   assert_true(11 = block_foo_1());
   assert_true(12 = block_foo_2());

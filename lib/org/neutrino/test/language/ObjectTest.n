@@ -1,9 +1,9 @@
-def (this: LanguageTest).test_objects() {
+def (this is LanguageTest).test_objects() {
   this.test_records();
   this.test_record_methods();
 }
 
-def (this: LanguageTest).test_records() {
+def (this is LanguageTest).test_records() {
   this.on_start("records");
   def o1 := new { a := 10, b := 12 };
   assert_equal(10, o1.a());
@@ -15,7 +15,7 @@ def (this: LanguageTest).test_records() {
   new { };
 }
 
-def (this: LanguageTest).test_record_methods() {
+def (this is LanguageTest).test_record_methods() {
   this.on_start("record methods");
   ref cnt := 0;
   def inc := fn () -> cnt := cnt + 1;

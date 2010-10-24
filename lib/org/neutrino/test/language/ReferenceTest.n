@@ -1,9 +1,9 @@
-def (this: LanguageTest).test_refs() {
+def (this is LanguageTest).test_refs() {
   this.test_raw_refs();
   this.test_simple_ref_syntax();
 }
 
-def (this: LanguageTest).test_raw_refs() {
+def (this is LanguageTest).test_raw_refs() {
   this.on_start("raw references");
   def r := new_ref(4);
   assert_equal(4, r.get());
@@ -11,7 +11,7 @@ def (this: LanguageTest).test_raw_refs() {
   assert_equal(5, r.get());
 }
 
-def (this: LanguageTest).test_simple_ref_syntax() {
+def (this is LanguageTest).test_simple_ref_syntax() {
   this.on_start("simple ref syntax");
   ref i := 0;
   assert_equal(0, i);
