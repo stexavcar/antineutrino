@@ -176,16 +176,17 @@ def (this: SegmentElement).load_command_size -> SegmentElement.base_load_command
  *   uint32_t flags;
  * };
  */
-def (this: SegmentElement).encode_segment_command(out, layout, segname, nsects) {
+def (this: SegmentElement).encode_segment_command(out, vmaddr, vmsize,
+    fileoff, filesize, segname, nsects, maxprot, initprot) {
   out.write_int32(LC_SEGMENT);
   out.write_int32(this.load_command_size);
   out.write_c_string(segname, 16);
-  out.write_int32(layout.fileoff);
-  out.write_int32(layout.aligned_size);
-  out.write_int32(layout.fileoff);
-  out.write_int32(layout.aligned_size);
-  out.write_int32(7); // maxprot
-  out.write_int32(5); // initprot
+  out.write_int32(vmaddr);
+  out.write_int32(vmsize);
+  out.write_int32(fileoff);
+  out.write_int32(filesize);
+  out.write_int32(maxprot);
+  out.write_int32(initprot);
   out.write_int32(nsects);
   out.write_int32(0); // flags
 }
@@ -221,6 +222,48 @@ def (this: SegmentElement).encode_segment_header(out, sectname, segname, size, f
 }
 
 /**
+ * A __PAGEZERO segment.
+ */
+protocol PageZeroElement is SegmentElement;
+
+def PageZeroElement.new() -> new PageZeroElement { };
+
+def (this: PageZeroElement).section_count -> 0;
+
+def (this: PageZeroElement).encode_load_command(out, layout) {
+  this.encode_segment_command(out, 0, PAGE_SIZE, 0, 0, "__PAGEZERO", 0, 0, 0);
+}
+
+protocol DataElement is SegmentElement;
+
+def DataElement.new() -> new DataElement {
+  blocks := new ArrayList()
+};
+
+def (this: DataElement).add_data(name, contents) {
+  this.blocks.add(new { name := name, contents := contents });
+}
+
+def (this: DataElement).section_count -> this.blocks.length;
+
+def (this: DataElement).encode_load_command(out, layout) {
+  this.encode_segment_command(out, layout.fileoff, layout.aligned_size,
+    layout.fileoff, layout.aligned_size, "__DATA", this.section_count,
+    7, 3);
+  ref fileoff := layout.fileoff;
+  for (def block : this.blocks) {
+    def size := block.contents.length;
+    this.encode_segment_header(out, block.name, "__DATA", size, fileoff);
+    fileoff := fileoff + size;
+  }
+}
+
+def (this: DataElement).encode_segment(out, layout) {
+  for (def block : this.blocks)
+    out.write_data(block.contents);
+}
+
+/**
  * A __TEXT section and the associated load command.
  */
 protocol TextElement is SegmentElement;
@@ -236,7 +279,8 @@ def (this: TextElement).section_count -> 1;
 def (this: TextElement).segment_size -> this.stream.length;
 
 def (this: TextElement).encode_load_command(out, layout) {
-  this.encode_segment_command(out, layout, "__TEXT", 1);
+  this.encode_segment_command(out, layout.fileoff, layout.aligned_size,
+     layout.fileoff, layout.aligned_size, "__TEXT", 1, 7, 5);
   this.encode_segment_header(out, "__text", "__TEXT", this.segment_size, layout.fileoff);
 }
 
