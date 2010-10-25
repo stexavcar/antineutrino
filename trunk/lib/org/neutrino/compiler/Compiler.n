@@ -1,23 +1,15 @@
-protocol AssemblerI386;
-
-def AssemblerI386.new() -> new AssemblerI386 {
-  stream := new BlobStream()
-};
-
-def (this is AssemblerI386).halt -> this.stream.add(16rF4);
-
-def (this is AssemblerI386).int3 -> this.stream.add(16rCC);
-
-def (this is AssemblerI386).get_code -> this.stream.get_blob;
-
 @entry_point("compile")
 def compile_main(args) {
   def out_name := args[0];
-  def binary := new Binary();
-  def start := new AssemblerI386();
-  start.int3();
-  binary.add_code_block("_main", start.get_code());
-  binary.add_code_block("foo", start.get_code());
+  def binary := new Binary(new Ia386());
+
+  def main := binary.add_code_block("_main");
+  main.mov(10, rEax);
+  main.call(CallTarget.local("foo"));
+  
+  def foo := binary.add_code_block("foo");
+  foo.int3();
+
   def data := binary.encode;
   open_file(out_name).write_binary(data);  
 }

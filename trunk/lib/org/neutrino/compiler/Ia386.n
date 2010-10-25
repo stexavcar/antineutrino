@@ -1,0 +1,59 @@
+protocol Register;
+
+def Register.new(index) -> new Register { index := index };
+
+def rEax := new Register(0);
+def rEcx := new Register(1);
+def rEdx := new Register(2);
+def rEbx := new Register(3);
+def rEsp := new Register(4);
+def rEbp := new Register(5);
+def rEsi := new Register(6);
+def rEdi := new Register(7);
+
+protocol CallTarget;
+
+protocol LocalCallTarget;
+
+def CallTarget.local(name) -> new LocalCallTarget { name := name };
+
+protocol AssemblerIa386;
+
+def AssemblerIa386.new(binary) -> new AssemblerIa386 {
+  binary := binary,
+  stream := new BlobStream(),
+  calls := new ArrayList()
+};
+
+def (this is AssemblerIa386).finalize() {
+  for (def call : this.calls) {
+    def target := call.target;
+    def reloff := call.offset;
+    def codeoff := this.binary.code_block_offset(target.name);
+    this.stream.rewrite_int32(reloff, codeoff - (reloff + 4));
+  }
+}
+
+def (this is AssemblerIa386).mov(imm32, reg) {
+  this.stream.write_int8(16rB8 + reg.index);
+  this.stream.write_int32(imm32);
+}
+
+def (this is AssemblerIa386).call(target) {
+  this.stream.write_int8(16rE8);
+  def offset := this.stream.length;
+  this.stream.write_int32(0);
+  this.calls.add(new { target := target, offset := offset });
+}
+
+def (this is AssemblerIa386).int3 -> this.stream.write_int8(16rCC);
+
+def (this is AssemblerIa386).length -> this.stream.length;
+
+def (this is AssemblerIa386).code -> this.stream.get_blob;
+
+protocol Ia386;
+
+def Ia386.new -> new Ia386 { };
+
+def (this is Ia386).new_assembler(binary) -> new AssemblerIa386(binary);
