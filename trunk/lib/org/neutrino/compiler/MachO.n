@@ -123,15 +123,22 @@ protocol StringTable;
 
 def StringTable.new() {
   def result := new StringTable {
-    strings := new ArrayList()
+    strings := new ArrayList(),
+    rCursor := new_ref(0)
   };
   result.add("");
   result;
 }
 
+def (this is StringTable).cursor -> this.rCursor.get();
+
+def (this is StringTable).cursor:=(value) -> this.rCursor.set(value);
+
 def (this is StringTable).add(name) {
+  def result := this.cursor;
+  this.cursor := this.cursor + name.length + 1;
   this.strings.add(name);
-  this.strings.length - 1;
+  result;
 }
 
 def (this is StringTable).encode(out) {

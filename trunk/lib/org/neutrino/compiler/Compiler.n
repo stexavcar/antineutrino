@@ -17,6 +17,7 @@ def compile_main(args) {
   def start := new AssemblerI386();
   start.int3();
   binary.add_code_block("_main", start.get_code());
+  binary.add_code_block("foo", start.get_code());
   def data := binary.encode;
   open_file(out_name).write_binary(data);  
 }
