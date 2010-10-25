@@ -80,4 +80,11 @@
     </exec>
   </target>
   
+  <target name="libobj.disass" depends="libexe.build">
+    <exec executable="otool">
+      <arg value="-tV"/>
+      <arg value="${libobj.path}"/>
+    </exec>
+  </target>
+  
 </project>
