@@ -22,16 +22,12 @@ protocol AssemblerIa386;
 def AssemblerIa386.new(binary) -> new AssemblerIa386 {
   binary := binary,
   stream := new BlobStream(),
-  calls := new ArrayList()
+  fixups := new ArrayList()
 };
 
 def (this is AssemblerIa386).finalize() {
-  for (def call : this.calls) {
-    def target := call.target;
-    def reloff := call.offset;
-    def codeoff := this.binary.code_block_offset(target.name);
-    this.stream.rewrite_int32(reloff, codeoff - (reloff + 4));
-  }
+  for (def fixup : this.fixups)
+    fixup();
 }
 
 def (this is AssemblerIa386).mov(imm32, reg) {
@@ -41,9 +37,12 @@ def (this is AssemblerIa386).mov(imm32, reg) {
 
 def (this is AssemblerIa386).call(target) {
   this.stream.write_int8(16rE8);
-  def offset := this.stream.length;
+  def reloff := this.stream.length;
   this.stream.write_int32(0);
-  this.calls.add(new { target := target, offset := offset });
+  this.fixups.add(fn {
+    def codeoff := this.binary.code_block_offset(target.name);
+    this.stream.rewrite_int32(reloff, codeoff - (reloff + 4));
+  });
 }
 
 def (this is AssemblerIa386).int3 -> this.stream.write_int8(16rCC);
