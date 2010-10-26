@@ -14,7 +14,7 @@ def CodeBlock.new(name, code) -> new CodeBlock {
 };
 
 def (this is Binary).add_code_block(name) {
-  def assm := this.arch.new_assembler(this);
+  def assm := this.arch.new_assembler(this, name);
   this.entries.add(new {
     name := name,
     assm := assm
@@ -34,13 +34,20 @@ def (this is Binary).code_block_offset(name) {
     };
 }
 
-def (this is Binary).register_extern(name) {
-  this.externs.add(name);
+def (this is Binary).jump_table_offset {
+  ref offset := 0;
+  for (def entry : this.entries)
+    offset := offset + entry.assm.length;
+  offset;  
 }
 
-def (this is Binary).extern_offset(name) {
-  16r006;
+def (this is Binary).register_extern(name) {
+  this.externs.add(name);
+  this.externs.length - 1;
 }
+
+def (this is Binary).extern_offset(index)
+  -> this.jump_table_offset + (5 * index);
 
 def (this is Binary).encode {
   this.finalize();

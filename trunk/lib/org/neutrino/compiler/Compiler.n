@@ -6,6 +6,7 @@ def compile_main(args) {
   def main := binary.add_code_block("_main");
   main.mov(10, rEax);
   main.call(CallTarget.local("foo"));
+  main.call(CallTarget.extern("hyp"));
   
   def foo := binary.add_code_block("foo");
   foo.call(CallTarget.extern("_exit"));

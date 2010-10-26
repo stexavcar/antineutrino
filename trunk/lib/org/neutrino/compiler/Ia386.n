@@ -23,8 +23,9 @@ def CallTarget.extern(name) -> new ExternalCallTarget { name := name };
 
 protocol AssemblerIa386;
 
-def AssemblerIa386.new(binary) -> new AssemblerIa386 {
+def AssemblerIa386.new(binary, name) -> new AssemblerIa386 {
   binary := binary,
+  name := name,
   stream := new BlobStream(),
   fixups := new ArrayList()
 };
@@ -44,8 +45,9 @@ def (this is AssemblerIa386).call(target is LocalCallTarget) {
   def reloff := this.stream.length;
   this.stream.write_int32(0);
   this.fixups.add(fn {
+    def ownoff := this.binary.code_block_offset(this.name);
     def codeoff := this.binary.code_block_offset(target.name);
-    this.stream.rewrite_int32(reloff, codeoff - (reloff + 4));
+    this.stream.rewrite_int32(reloff, codeoff - (ownoff + reloff + 4));
   });
 }
 
@@ -53,10 +55,11 @@ def (this is AssemblerIa386).call(target is ExternalCallTarget) {
   this.stream.write_int8(16rE8);
   def reloff := this.stream.length;
   this.stream.write_int32(0);
-  this.binary.register_extern(target.name);
+  def index := this.binary.register_extern(target.name);
   this.fixups.add(fn {
-    def codeoff := this.binary.extern_offset(target.name);
-    this.stream.rewrite_int32(reloff, codeoff - (reloff + 4));
+    def ownoff := this.binary.code_block_offset(this.name);
+    def codeoff := this.binary.extern_offset(index);
+    this.stream.rewrite_int32(reloff, codeoff - (ownoff + reloff + 4));
   });  
 }
 
@@ -70,4 +73,5 @@ protocol Ia386;
 
 def Ia386.new -> new Ia386 { };
 
-def (this is Ia386).new_assembler(binary) -> new AssemblerIa386(binary);
+def (this is Ia386).new_assembler(binary, name)
+ -> new AssemblerIa386(binary, name);
