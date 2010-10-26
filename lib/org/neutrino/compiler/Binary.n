@@ -2,7 +2,8 @@ protocol Binary;
 
 def Binary.new(arch) -> new Binary {
   arch := arch,
-  entries := new ArrayList()
+  entries := new ArrayList(),
+  externs := new ArrayList()
 };
 
 protocol CodeBlock;
@@ -33,6 +34,14 @@ def (this is Binary).code_block_offset(name) {
     };
 }
 
+def (this is Binary).register_extern(name) {
+  this.externs.add(name);
+}
+
+def (this is Binary).extern_offset(name) {
+  16r006;
+}
+
 def (this is Binary).encode {
   this.finalize();
   def out := new BlobStream;
@@ -47,8 +56,9 @@ def (this is Binary).finalize {
 
 def (this is Binary).to_mach_o() {
   def result := new MachO();
-  def text := result.text;
   for (def entry : this.entries)
     result.add_code_block(entry.name, entry.assm.code);
+  for (def extern : this.externs)
+    result.add_extern(extern);
   result;
 }

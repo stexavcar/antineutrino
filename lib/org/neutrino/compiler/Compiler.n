@@ -8,6 +8,7 @@ def compile_main(args) {
   main.call(CallTarget.local("foo"));
   
   def foo := binary.add_code_block("foo");
+  foo.call(CallTarget.extern("_exit"));
   foo.int3();
 
   def data := binary.encode;
