@@ -44,3 +44,8 @@ def (this is Interval).iter {
     next -> { def ret := i; i:= i + this.dir; ret }
   };
 }
+
+def (this is Interval).for(fun) -> this.for(fun, this.from);
+
+def (this is Interval).for(fun, i)
+ -> if i = this.to then this else { fun(i); this.for(fun, i + this.dir); };

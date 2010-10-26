@@ -1,5 +1,10 @@
 def (this is UtilsTest).test_array_lists() {
-  this.on_start("array lists");
+  this.test_simple_array_lists();
+  this.test_array_list_comparison();
+}
+
+def (this is UtilsTest).test_simple_array_lists() {
+  this.on_start("simple array lists");
   def kInitialSize := 5;
   def a := new ArrayList(kInitialSize);
   assert_equal(kInitialSize, a.length);
@@ -27,4 +32,12 @@ def (this is UtilsTest).test_array_lists() {
   def c := new ArrayList(b);
   for (def el : b)
     assert_equal(el, c[el]);
+}
+
+def (this is UtilsTest).test_array_list_comparison() {
+  this.on_start("array list comparison");
+  assert_equal(new ArrayList [ 1, 2, 3 ], new ArrayList [ 1, 2, 3 ]);
+  assert_true(new ArrayList [ 1, 2, 3, 4 ] != new ArrayList [ 1, 2, 3 ]);
+  assert_true(new ArrayList [ 1, 2, 3 ] != new ArrayList [ 1, 2, 3, 4 ]);
+  assert_true(new ArrayList [ 1, 2, 3 ] != new ArrayList [ 1, 2, 4 ]);
 }

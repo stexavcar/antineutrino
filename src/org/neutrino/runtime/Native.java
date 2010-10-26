@@ -1,5 +1,12 @@
 package org.neutrino.runtime;
 
+import org.neutrino.pib.CodeBundle;
+import org.neutrino.pib.Opcode;
+import org.neutrino.pib.Universe;
+import org.neutrino.plankton.ISeedable;
+import org.neutrino.plankton.annotations.Growable;
+import org.neutrino.plankton.annotations.SeedMember;
+
 import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -8,13 +15,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
-
-import org.neutrino.pib.CodeBundle;
-import org.neutrino.pib.Opcode;
-import org.neutrino.pib.Universe;
-import org.neutrino.plankton.ISeedable;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
 
 @Growable(Native.TAG)
 public class Native implements ISeedable {
@@ -406,6 +406,7 @@ public class Native implements ISeedable {
       RValue value = args.getArgument(0);
       while (args.frame.marker != target)
         args.frame = args.frame.parent;
+      args.frame = args.frame.parent;
       args.frame.stack.pop();
       args.frame.stack.pop();
       return value;

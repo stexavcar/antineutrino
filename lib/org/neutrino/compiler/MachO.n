@@ -484,7 +484,7 @@ def (this is MachO).offset_of(target) {
   with_1cc return ->
     for (def section : this.all_sections) {
       if section = target then {
-        return.fire(fileoff);
+        return(fileoff);
       }
       def size := section.size;
       fileoff := fileoff + size;

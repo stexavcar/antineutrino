@@ -27,7 +27,7 @@ def (this is Binary).code_block_offset(name) {
   with_1cc return ->
     for (def entry : this.entries) {
       if name = entry.name then {
-        return.fire(offset)
+        return(offset)
       } else {
         offset := offset + entry.assm.length
       }

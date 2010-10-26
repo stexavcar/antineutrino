@@ -46,7 +46,7 @@ def (this is ArrayList)=(that is ArrayList) {
     with_1cc return -> {
       for (def i : 0 .. this.length) {
         if this[i] != that[i] then
-          return.fire(false);
+          return(false);
       }
       true;
     }
