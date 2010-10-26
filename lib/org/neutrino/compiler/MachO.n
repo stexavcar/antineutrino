@@ -208,16 +208,11 @@ def (this is IndirectSymbols).count -> this.rCount.get();
 def (this is IndirectSymbols).add -> this.rCount.set(this.count + 1);
 
 def (this is IndirectSymbols).encode(out) {
-  for (def i : 0 .. this.count) {
-    out.write_int8(2);
-    out.write_int8(0);
-    out.write_int8(0);
-    out.write_int8(0);
-    out.write_int8(1);
-  }
+  for (def i : 0 .. this.count)
+    out.write_int32(i);
 }
 
-def (this is IndirectSymbols).size -> align(5 * this.count, WORD_SIZE);
+def (this is IndirectSymbols).size -> WORD_SIZE * this.count;
 
 protocol SymbolTable;
 
@@ -243,10 +238,10 @@ def (this is SymbolTable).length -> this.symbols.length;
 def (this is SymbolTable).symbols -> this.locals + this.externs;
 
 def (this is SymbolTable).encode(out) {
-  for (def symbol : this.locals)
-    symbol.encode_local(out);
   for (def symbol : this.externs)
     symbol.encode_extern(out);
+  for (def symbol : this.locals)
+    symbol.encode_local(out);
 }
 
 def (this is SymbolTable).size -> this.length * Symbol.size;
@@ -337,9 +332,9 @@ def (this is MachO).encode_dysymtab_command(out) {
   out.write_int32(this.sizeof_dysymtab_command);
   out.write_int32(0);
   out.write_int32(0);
+  out.write_int32(this.symbols.local_count);
+  out.write_int32(this.symbols.local_count);
   out.write_int32(0);
-  out.write_int32(this.symbols.local_count);
-  out.write_int32(this.symbols.local_count);
   out.write_int32(this.symbols.external_count);
   out.write_int32(0);
   out.write_int32(0);
@@ -449,14 +444,6 @@ def (this is MachO).segment_size {
   for (def section : this.sections)
     result := result + section.size;
   result;
-}
-
-def (this is MachO).encode_segments(out, layout) {
-  for (def i : 0 .. this.elements.length) {
-    out.pad_to(layout[i].fileoff);
-    this.elements[i].encode_segment(out, layout[i]);
-  }
-  out.pad_to(align(out.length, PAGE_SIZE));
 }
 
 def (this is MachO).ncmds {
