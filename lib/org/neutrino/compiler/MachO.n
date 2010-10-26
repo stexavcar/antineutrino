@@ -105,6 +105,8 @@ def (this is JumpTable).flags -> 16r84000408;
 
 def (this is JumpTable).reserved2 -> 5;
 
+def (this is JumpTable).align -> 0;
+
 def (this is JumpTable).encode(out) {
   for (def i : 0 .. this.size)
     out.write_int8(16rF4); // HLT
@@ -128,6 +130,8 @@ def (this is TextSection).sectname -> "__text";
 def (this is TextSection).flags -> 16r80000400;
 
 def (this is TextSection).reserved2 -> 0;
+
+def (this is TextSection).align -> 2;
 
 def (this is TextSection).add_block(name, code) {
   this.blocks.add(new { name := name, code := code });
@@ -332,11 +336,11 @@ def (this is MachO).encode_dysymtab_command(out) {
   out.write_int32(LC_DYSYMTAB);
   out.write_int32(this.sizeof_dysymtab_command);
   out.write_int32(0);
-  out.write_int32(this.symbols.local_count);
   out.write_int32(0);
   out.write_int32(0);
-  out.write_int32(this.symbols.local_count);
-  out.write_int32(this.symbols.external_count);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
   out.write_int32(0);
   out.write_int32(0);
   out.write_int32(0);
@@ -405,7 +409,7 @@ def (this is MachO).encode_section_headers(out) {
     def size := section.size;
     out.write_int32(size);
     out.write_int32(fileoff);
-    out.write_int32(2);
+    out.write_int32(section.align);
     out.write_int32(0);
     out.write_int32(0);
     out.write_int32(section.flags);
