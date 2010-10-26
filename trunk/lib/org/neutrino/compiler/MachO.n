@@ -52,12 +52,14 @@ def MachO.new() {
   def strings := new StringTable();
   def symbols := new SymbolTable();
   def indirect_symbols := new IndirectSymbols();
+  def jump_table := new JumpTable();
   new MachO {
     text := text,
     strings := strings,
     symbols := symbols,
     indirect_symbols := indirect_symbols,
-    sections := new ArrayList() [ text ],
+    jump_table := jump_table,
+    sections := new ArrayList() [ text, jump_table ],
     dark_sections := new ArrayList() [ strings, symbols, indirect_symbols ]
   };
 }
@@ -76,6 +78,38 @@ def (this is MachO).add_code_block(name, code) {
   this.symbols.add_local(name_index, this.segment_fileoff + code_start);
 }
 
+def (this is MachO).add_extern(name) {
+  def name_index := this.strings.add(name);
+  this.jump_table.add_extern();
+  this.indirect_symbols.add();
+  this.symbols.add_extern(name_index, 16r154);
+}
+
+protocol JumpTable;
+
+def JumpTable.new() -> new JumpTable {
+  rCount := new_ref(0)
+};
+
+def (this is JumpTable).count -> this.rCount.get();
+
+def (this is JumpTable).add_extern -> this.rCount.set(this.count + 1);
+
+def (this is JumpTable).size -> 5 * this.count;
+
+def (this is JumpTable).segname -> "__IMPORT";
+
+def (this is JumpTable).sectname -> "__jump_table";
+
+def (this is JumpTable).flags -> 16r84000408;
+
+def (this is JumpTable).reserved2 -> 5;
+
+def (this is JumpTable).encode(out) {
+  for (def i : 0 .. this.size)
+    out.write_int8(16rF4); // HLT
+}
+
 protocol TextSection;
 
 def TextSection.new() -> new TextSection {
@@ -90,6 +124,10 @@ def (this is TextSection).length:=(value) -> this.rLength.set(value);
 def (this is TextSection).segname -> "__TEXT";
 
 def (this is TextSection).sectname -> "__text";
+
+def (this is TextSection).flags -> 16r80000400;
+
+def (this is TextSection).reserved2 -> 0;
 
 def (this is TextSection).add_block(name, code) {
   this.blocks.add(new { name := name, code := code });
@@ -163,9 +201,16 @@ def IndirectSymbols.new() -> new IndirectSymbols { rCount := new_ref(0) };
 
 def (this is IndirectSymbols).count -> this.rCount.get();
 
+def (this is IndirectSymbols).add -> this.rCount.set(this.count + 1);
+
 def (this is IndirectSymbols).encode(out) {
-  for (def i : 0 .. this.size)
+  for (def i : 0 .. this.count) {
+    out.write_int8(2);
     out.write_int8(0);
+    out.write_int8(0);
+    out.write_int8(0);
+    out.write_int8(0);
+  }
 }
 
 def (this is IndirectSymbols).size -> align(5 * this.count, WORD_SIZE);
@@ -174,24 +219,30 @@ protocol SymbolTable;
 
 def SymbolTable.new() -> new SymbolTable {
   locals := new ArrayList(),
-  externals := new ArrayList()
+  externs := new ArrayList()
 };
 
 def (this is SymbolTable).add_local(name_index, code_start) {
   this.locals.add(new Symbol(name_index, code_start));
 }
 
+def (this is SymbolTable).add_extern(name_index, jump_offset) {
+  this.externs.add(new Symbol(name_index, jump_offset));
+}
+
 def (this is SymbolTable).local_count -> this.locals.length;
 
-def (this is SymbolTable).external_count -> this.externals.length;
+def (this is SymbolTable).external_count -> this.externs.length;
 
 def (this is SymbolTable).length -> this.symbols.length;
 
-def (this is SymbolTable).symbols -> this.locals + this.externals;
+def (this is SymbolTable).symbols -> this.locals + this.externs;
 
 def (this is SymbolTable).encode(out) {
-  for (def symbol : this.symbols)
-    symbol.encode(out);
+  for (def symbol : this.locals)
+    symbol.encode_local(out);
+  for (def symbol : this.externs)
+    symbol.encode_extern(out);
 }
 
 def (this is SymbolTable).size -> this.length * Symbol.size;
@@ -202,13 +253,22 @@ def Symbol.new(name, start) -> new Symbol { name := name, start := start };
 
 def Symbol.size -> 3 * WORD_SIZE;
 
-def (this is Symbol).encode(out) {
+def (this is Symbol).encode_local(out) {
   out.write_int32(this.name);
-  out.write_int8(16rF);
-  out.write_int8(1);
-  out.write_int16(0);
+  out.write_int8(16r0F);
+  out.write_int8(16r01);
+  out.write_int16(16r0000);
   out.write_int32(this.start);
 }
+
+def (this is Symbol).encode_extern(out) {
+  out.write_int32(this.name);
+  out.write_int8(16r01);
+  out.write_int8(16r00);
+  out.write_int16(16r0001);
+  out.write_int32(this.start);
+}
+
 
 /*
  * struct mach_header {
@@ -275,8 +335,8 @@ def (this is MachO).encode_dysymtab_command(out) {
   out.write_int32(this.symbols.local_count);
   out.write_int32(0);
   out.write_int32(0);
-  out.write_int32(0);
-  out.write_int32(0);
+  out.write_int32(this.symbols.local_count);
+  out.write_int32(this.symbols.external_count);
   out.write_int32(0);
   out.write_int32(0);
   out.write_int32(0);
@@ -348,9 +408,9 @@ def (this is MachO).encode_section_headers(out) {
     out.write_int32(2);
     out.write_int32(0);
     out.write_int32(0);
-    out.write_int32(16r80000400);
+    out.write_int32(section.flags);
     out.write_int32(0);
-    out.write_int32(0);
+    out.write_int32(section.reserved2);
     fileoff := fileoff + size;
   }
 }
