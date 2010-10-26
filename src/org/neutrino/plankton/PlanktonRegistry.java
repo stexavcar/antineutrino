@@ -61,7 +61,7 @@ public class PlanktonRegistry {
             SeedMember seedMember = field.getAnnotation(SeedMember.class);
             if (seedMember != null) {
               String name = seedMember.value();
-              if (name.isEmpty())
+              if (name.length() == 0)
                 name = field.getName();
               PValue value = fields.get(Plankton.newString(name), null);
               Object rawValue = decodeValue(plankton, value);
@@ -97,7 +97,7 @@ public class PlanktonRegistry {
       if (seedMember != null) {
         try {
           String name = seedMember.value();
-          if (name.isEmpty())
+          if (name.length() == 0)
             name = field.getName();
           Object rawValue = field.get(obj);
           PValue value = encodeValue(plankton, rawValue);

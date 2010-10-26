@@ -82,7 +82,7 @@ public class Flags {
       Flag flag = field.getAnnotation(Flag.class);
       if (flag != null) {
         String setName = flag.value();
-        if (setName.isEmpty())
+        if (setName.length() == 0)
           setName = field.getName();
         if (field.getType() == String.class) {
           flags.put(setName, new StringFlagInfo(field));
