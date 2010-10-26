@@ -51,12 +51,14 @@ def MachO.new() {
   def text := new TextSection();
   def strings := new StringTable();
   def symbols := new SymbolTable();
+  def indirect_symbols := new IndirectSymbols();
   new MachO {
     text := text,
     strings := strings,
     symbols := symbols,
+    indirect_symbols := indirect_symbols,
     sections := new ArrayList() [ text ],
-    dark_sections := new ArrayList() [ strings, symbols ]
+    dark_sections := new ArrayList() [ strings, symbols, indirect_symbols ]
   };
 }
 
@@ -71,7 +73,7 @@ def (this is MachO).encode(out) {
 def (this is MachO).add_code_block(name, code) {
   def name_index := this.strings.add(name);
   def code_start := this.text.add_block(name_index, code);
-  this.symbols.add(name_index, this.segment_fileoff + code_start);
+  this.symbols.add_local(name_index, this.segment_fileoff + code_start);
 }
 
 protocol TextSection;
@@ -155,17 +157,37 @@ def (this is StringTable).size {
 
 def (this is StringTable).length -> this.strings.length;
 
+protocol IndirectSymbols;
+
+def IndirectSymbols.new() -> new IndirectSymbols { rCount := new_ref(0) };
+
+def (this is IndirectSymbols).count -> this.rCount.get();
+
+def (this is IndirectSymbols).encode(out) {
+  for (def i : 0 .. this.size)
+    out.write_int8(0);
+}
+
+def (this is IndirectSymbols).size -> align(5 * this.count, WORD_SIZE);
+
 protocol SymbolTable;
 
 def SymbolTable.new() -> new SymbolTable {
-  symbols := new ArrayList()
+  locals := new ArrayList(),
+  externals := new ArrayList()
 };
 
-def (this is SymbolTable).add(name_index, code_start) {
-  this.symbols.add(new Symbol(name_index, code_start));
+def (this is SymbolTable).add_local(name_index, code_start) {
+  this.locals.add(new Symbol(name_index, code_start));
 }
 
+def (this is SymbolTable).local_count -> this.locals.length;
+
+def (this is SymbolTable).external_count -> this.externals.length;
+
 def (this is SymbolTable).length -> this.symbols.length;
+
+def (this is SymbolTable).symbols -> this.locals + this.externals;
 
 def (this is SymbolTable).encode(out) {
   for (def symbol : this.symbols)
@@ -215,13 +237,17 @@ def (this is MachO).segment_fileoff -> this.header_size + this.sizeofcmds;
 
 def (this is MachO).nsects -> this.sections.length;
 
-def (this is MachO).ncmds -> 2;
+def (this is MachO).ncmds -> 3;
 
-def (this is MachO).sizeofcmds -> this.sizeof_segment_command + this.sizeof_symtab_command;
+def (this is MachO).sizeofcmds
+ -> this.sizeof_segment_command + this.sizeof_symtab_command +
+    this.sizeof_dysymtab_command;
 
 def (this is MachO).sizeof_segment_command -> SEGMENT_COMMAND_SIZE + (this.nsects * SECTION_HEADER_SIZE);
 
 def (this is MachO).sizeof_symtab_command -> 6 * WORD_SIZE;
+
+def (this is MachO).sizeof_dysymtab_command -> 20 * WORD_SIZE;
 
 def SEGMENT_COMMAND_SIZE := 56;
 def SECTION_HEADER_SIZE := 68;
@@ -230,6 +256,7 @@ def (this is MachO).encode_load_commands(out) {
   this.encode_segment_command(out);
   this.encode_section_headers(out);
   this.encode_symtab_command(out);
+  this.encode_dysymtab_command(out);
 }
 
 def (this is MachO).encode_symtab_command(out) {
@@ -239,6 +266,29 @@ def (this is MachO).encode_symtab_command(out) {
   out.write_int32(this.symbols.length);
   out.write_int32(this.offset_of(this.strings));
   out.write_int32(this.strings.size);
+}
+
+def (this is MachO).encode_dysymtab_command(out) {
+  out.write_int32(LC_DYSYMTAB);
+  out.write_int32(this.sizeof_dysymtab_command);
+  out.write_int32(0);
+  out.write_int32(this.symbols.local_count);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(this.offset_of(this.indirect_symbols));
+  out.write_int32(this.symbols.external_count);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
 }
 
 /*
