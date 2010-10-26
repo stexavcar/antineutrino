@@ -1,12 +1,8 @@
 package org.neutrino.compiler;
 
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.List;
-
 import org.neutrino.pib.CodeBuilder;
 import org.neutrino.pib.ModuleBuilder;
+import org.neutrino.pib.Parameter;
 import org.neutrino.syntax.Parser;
 import org.neutrino.syntax.Scanner;
 import org.neutrino.syntax.SyntaxError;
@@ -16,6 +12,11 @@ import org.neutrino.syntax.Tree.Definition;
 import org.neutrino.syntax.Tree.Inheritance;
 import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.Protocol;
+
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.List;
 
 /**
  * A single source file in a module.
@@ -32,6 +33,29 @@ public class Source {
   private Source(String name, String contents) {
     this.name = name;
     this.contents = contents;
+  }
+
+  public Tree.Declaration findDeclaration(String target) {
+    for (Tree.Declaration decl : code.getDeclarations()) {
+      if (target.equals(decl.getName()))
+        return decl;
+    }
+    return null;
+  }
+
+  public Method findMethod(String holder, String name) {
+    for (Tree.Declaration decl : code.getDeclarations()) {
+      if (!(decl instanceof Tree.Method))
+        continue;
+      Tree.Method method = (Tree.Method) decl;
+      if (!method.getMethodName().equals(name))
+        continue;
+      for (Parameter param : method.getParameters()) {
+        if (param.isProtocolMethod && param.type.equals(holder))
+          return method;
+      }
+    }
+    return null;
   }
 
   public String getName() {
@@ -106,7 +130,7 @@ public class Source {
 
     public void visitMethodDefinition(Method that) {
       CodeBuilder builder = module.createMethod(Source.this, that.getAnnotations(),
-          that.getName(), that.getParameters());
+          that.getMethodName(), that.getParameters());
       Compiler.compileMethod(module, builder.getAssembler(), that);
     }
 

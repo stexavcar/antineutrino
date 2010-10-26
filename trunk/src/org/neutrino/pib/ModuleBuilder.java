@@ -1,5 +1,12 @@
 package org.neutrino.pib;
 
+import org.neutrino.compiler.CompilerUniverse;
+import org.neutrino.compiler.Source;
+import org.neutrino.runtime.RMethod;
+import org.neutrino.runtime.RProtocol;
+import org.neutrino.syntax.Annotation;
+import org.neutrino.syntax.Tree;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -7,15 +14,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.neutrino.compiler.Source;
-import org.neutrino.runtime.RMethod;
-import org.neutrino.runtime.RProtocol;
-import org.neutrino.syntax.Annotation;
-import org.neutrino.syntax.Tree;
-
 
 public class ModuleBuilder {
 
+  private final CompilerUniverse universe;
   private static int nextImplicitProtocolIndex = 0;
   private final Map<String, CodeBuilder> defs = new TreeMap<String, CodeBuilder>();
   private final Map<String, RProtocol> protos = new HashMap<String, RProtocol>();
@@ -37,7 +39,12 @@ public class ModuleBuilder {
 
   }
 
-  public ModuleBuilder(String name) {
+  public ModuleBuilder(CompilerUniverse universe) {
+    this.universe = universe;
+  }
+
+  public CompilerUniverse getUniverse() {
+    return universe;
   }
 
   public void declareInheritance(String sub, String shuper) {

@@ -1,5 +1,6 @@
 package org.neutrino.syntax;
 
+import org.neutrino.compiler.CompilerUniverse;
 import org.neutrino.compiler.Source;
 import org.neutrino.compiler.Symbol;
 import org.neutrino.compiler.Symbol.LocalSymbol;
@@ -59,6 +60,8 @@ public class Tree {
 
     public abstract List<Annotation> getAnnotations();
 
+    public abstract String getName();
+
     public Annotation getAnnotation(String tag) {
       for (Annotation annot : getAnnotations()) {
         if (annot.getTag().equals(tag))
@@ -81,6 +84,7 @@ public class Tree {
       this.value = value;
     }
 
+    @Override
     public String getName() {
       return this.name;
     }
@@ -117,6 +121,7 @@ public class Tree {
       this.name = name;
     }
 
+    @Override
     public String getName() {
       return this.name;
     }
@@ -149,6 +154,11 @@ public class Tree {
       this.annots = annots;
       this.name = name;
       this.parent = parent;
+    }
+
+    @Override
+    public String getName() {
+      return null;
     }
 
     public String getSub() {
@@ -190,7 +200,12 @@ public class Tree {
       return this.params;
     }
 
+    @Override
     public String getName() {
+      return null;
+    }
+
+    public String getMethodName() {
       return this.name;
     }
 
@@ -218,6 +233,8 @@ public class Tree {
 
   public static abstract class Expression extends Tree {
 
+    public enum Type { LAMBDA };
+
     public abstract void accept(ExpressionVisitor visitor);
 
     public abstract void traverse(ExpressionVisitor visitor);
@@ -227,8 +244,16 @@ public class Tree {
       return RNull.getInstance();
     }
 
+    public Tree.Declaration getStaticValue(CompilerUniverse universe) {
+      return null;
+    }
+
     public Expression getAssignment(Expression value) {
       throw new UnsupportedOperationException();
+    }
+
+    public boolean is(Type type) {
+      return false;
     }
 
   }
@@ -296,6 +321,11 @@ public class Tree {
 
     public Identifier(String name) {
       this.name = name;
+    }
+
+    @Override
+    public Declaration getStaticValue(CompilerUniverse universe) {
+      return symbol.getStaticValue(universe);
     }
 
     public String getName() {
@@ -474,6 +504,8 @@ public class Tree {
 
   public static class Lambda {
 
+    public static final String NAME = "()";
+
     public static Expression create(Source source, String methodName, List<Parameter> params,
         Expression body, String functionName) {
       New.Field call = new New.Field(params, methodName, body, false);
@@ -483,14 +515,14 @@ public class Tree {
 
     public static Expression create(Source source, List<Parameter> params,
         Expression body, String functionName) {
-      return create(source, "()", params, body, functionName);
+      return create(source, NAME, params, body, functionName);
     }
 
     public static Expression createCall(Expression fun, List<Expression> args) {
       List<Expression> allArgs = new ArrayList<Expression>();
       allArgs.add(fun);
       allArgs.addAll(args);
-      return new Call("()", allArgs);
+      return new Call(NAME, allArgs);
     }
 
   }
@@ -712,6 +744,19 @@ public class Tree {
 
     public Source getOrigin() {
       return origin;
+    }
+
+    private boolean isLambda() {
+      for (Field field : fields) {
+        if (field.getName().equals(Lambda.NAME))
+          return true;
+      }
+      return false;
+    }
+
+    @Override
+    public boolean is(Type type) {
+      return (type == Type.LAMBDA) && isLambda();
     }
 
     public List<String> getProtocols() {

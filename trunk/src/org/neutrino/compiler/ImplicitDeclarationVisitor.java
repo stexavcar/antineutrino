@@ -1,9 +1,5 @@
 package org.neutrino.compiler;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import org.neutrino.pib.Assembler;
 import org.neutrino.pib.CodeBuilder;
 import org.neutrino.pib.ModuleBuilder;
@@ -11,6 +7,10 @@ import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Tree;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
 
@@ -54,7 +54,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
             name,
             allParams);
         Assembler assm = builder.getAssembler();
-        CodeGenerator codegen = new CodeGenerator(assm);
+        CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
         codegen.generate(field.getBody());
         assm.setLocalCount(field.getLocalCount());
       }

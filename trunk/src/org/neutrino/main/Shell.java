@@ -1,13 +1,7 @@
 package org.neutrino.main;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.List;
-
 import org.neutrino.compiler.CompilerModule;
+import org.neutrino.compiler.CompilerUniverse;
 import org.neutrino.pib.BinaryBuilder;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Universe;
@@ -19,6 +13,13 @@ import org.neutrino.syntax.Parser;
 import org.neutrino.syntax.Scanner;
 import org.neutrino.syntax.SyntaxError;
 import org.neutrino.syntax.Token;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.List;
 
 public class Shell {
 
@@ -73,7 +74,7 @@ public class Shell {
     }
   }
 
-  private RValue eval(String source) throws IOException, SyntaxError {
+  private RValue eval(String source) throws SyntaxError {
     // Create a new instance of the shell module, living on top of the
     // shell module provided by lib.
     CompilerModule module = CompilerModule.createToplevel().ensureModule(SHORT_NAME, LONG_NAME);
@@ -86,7 +87,7 @@ public class Shell {
     }
     // Compile the declaration into a parallel universe.
     module.parseAll();
-    BinaryBuilder binary = Universe.builder();
+    BinaryBuilder binary = Universe.builder(new CompilerUniverse(module));
     module.writeToBinary(binary);
     Universe subUniverse = binary.getResult();
     subUniverse.initialize();

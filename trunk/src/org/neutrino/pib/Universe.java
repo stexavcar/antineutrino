@@ -1,15 +1,6 @@
 package org.neutrino.pib;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-
+import org.neutrino.compiler.CompilerUniverse;
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.PSeed;
 import org.neutrino.plankton.PValue;
@@ -29,6 +20,16 @@ import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 import org.neutrino.runtime.TypeId;
 import org.neutrino.syntax.Annotation;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 
 /**
  * A platform-independent binary.
@@ -50,8 +51,8 @@ public class Universe implements ISeedable {
 
   public Universe() { }
 
-  public static BinaryBuilder builder() {
-    return new BinaryBuilder();
+  public static BinaryBuilder builder(CompilerUniverse universe) {
+    return new BinaryBuilder(universe);
   }
 
   public void setParallelUniverse(Universe universe) {
