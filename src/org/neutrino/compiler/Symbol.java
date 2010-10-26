@@ -1,6 +1,7 @@
 package org.neutrino.compiler;
 
 import org.neutrino.pib.Assembler;
+import org.neutrino.syntax.Tree.Declaration;
 
 public abstract class Symbol {
 
@@ -23,6 +24,11 @@ public abstract class Symbol {
 
     public GlobalSymbol(String name) {
       this.name = name;
+    }
+
+    @Override
+    public Declaration getStaticValue(CompilerUniverse universe) {
+      return universe.findDeclaration(name);
     }
 
     @Override
@@ -131,6 +137,10 @@ public abstract class Symbol {
 
   public static LocalSymbol local(boolean isReference, int index) {
     return new LocalSymbol(isReference, index);
+  }
+
+  public Declaration getStaticValue(CompilerUniverse universe) {
+    return null;
   }
 
 }

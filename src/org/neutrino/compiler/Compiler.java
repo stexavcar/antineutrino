@@ -9,26 +9,26 @@ import org.neutrino.syntax.Tree.Method;
 
 public class Compiler {
 
-  public static CodeBundle compile(ModuleBuilder module, Assembler assm,
-      Tree.Expression body) {
+  public static CodeBundle compile(ModuleBuilder module,
+      Assembler assm, Tree.Expression body) {
     LexicalAnalyzer lexicizer = new LexicalAnalyzer();
     body.accept(lexicizer);
     ImplicitDeclarationVisitor implicitor = new ImplicitDeclarationVisitor(module);
     body.accept(implicitor);
-    CodeGenerator codegen = new CodeGenerator(assm);
+    CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
     codegen.generate(body);
     assm.setLocalCount(0);
     return assm.getCode();
   }
 
-  public static void compileMethod(ModuleBuilder module, Assembler assm,
-      Method that) {
+  public static void compileMethod(ModuleBuilder module,
+      Assembler assm, Method that) {
     Expression body = that.getBody();
     LexicalAnalyzer lexicizer = new LexicalAnalyzer(that);
     body.accept(lexicizer);
     ImplicitDeclarationVisitor implicitor = new ImplicitDeclarationVisitor(module);
     body.accept(implicitor);
-    CodeGenerator codegen = new CodeGenerator(assm);
+    CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
     codegen.generate(body);
     assm.setLocalCount(lexicizer.getLocalCount());
   }

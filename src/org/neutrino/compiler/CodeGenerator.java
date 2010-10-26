@@ -1,6 +1,4 @@
 package org.neutrino.compiler;
-import java.util.List;
-
 import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RInteger;
@@ -15,6 +13,8 @@ import org.neutrino.syntax.Tree.New;
 import org.neutrino.syntax.Tree.Text;
 import org.neutrino.syntax.Tree.With1Cc;
 
+import java.util.List;
+
 /**
  * Expression visitor that generates platform independent bytecode for
  * an expression.
@@ -23,9 +23,11 @@ import org.neutrino.syntax.Tree.With1Cc;
  */
 public class CodeGenerator extends Tree.ExpressionVisitor {
 
+  private final CompilerUniverse universe;
   private final Assembler assm;
 
-  public CodeGenerator(Assembler assm) {
+  public CodeGenerator(CompilerUniverse universe, Assembler assm) {
+    this.universe = universe;
     this.assm = assm;
   }
 
@@ -99,8 +101,34 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
     }
   }
 
+  private Tree.Declaration getIntrinsicTarget(Tree.Call call) {
+    for (Tree.Expression arg : call.getArguments()) {
+      Tree.Declaration origin = arg.getStaticValue(universe);
+      if (origin != null) {
+        if (origin.getAnnotation(Intrinsic.ANNOTATION) != null)
+          return origin;
+      }
+    }
+    return null;
+  }
+
   @Override
   public void visitCall(Tree.Call that) {
+    Tree.Declaration intrinsicTarget = getIntrinsicTarget(that);
+    if (intrinsicTarget != null) {
+      String holder = intrinsicTarget.getName();
+      Tree.Method method = universe.findMethod(holder, that.getName());
+      if (method != null) {
+        Annotation annot = method.getAnnotation(Intrinsic.ANNOTATION);
+        if (annot != null) {
+          String id = ((RString) annot.getArgument(0)).getValue();
+          Intrinsic handler = Intrinsic.get(id);
+          if (handler.isApplicable(that)) {
+            handler.generate(that, this);
+          }
+        }
+      }
+    }
     List<Tree.Expression> args = that.getArguments();
     int argc = args.size();
     for (int i = 0; i < argc; i++) {

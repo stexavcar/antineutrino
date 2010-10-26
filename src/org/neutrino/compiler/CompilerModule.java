@@ -1,13 +1,14 @@
 package org.neutrino.compiler;
 
+import org.neutrino.pib.BinaryBuilder;
+import org.neutrino.pib.ModuleBuilder;
+import org.neutrino.syntax.SyntaxError;
+import org.neutrino.syntax.Tree;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
 import java.util.TreeMap;
-
-import org.neutrino.pib.BinaryBuilder;
-import org.neutrino.pib.ModuleBuilder;
-import org.neutrino.syntax.SyntaxError;
 
 /**
  * A single neutrino module.
@@ -48,6 +49,34 @@ public class CompilerModule {
           sources.put(source.getName(), source);
       }
     }
+  }
+
+  public Tree.Declaration findDeclaration(String name) {
+    for (Source source : sources.values()) {
+      Tree.Declaration result = source.findDeclaration(name);
+      if (result != null)
+        return result;
+    }
+    for (CompilerModule module : modules.values()) {
+      Tree.Declaration result = module.findDeclaration(name);
+      if (result != null)
+        return result;
+    }
+    return null;
+  }
+
+  public Tree.Method findMethod(String holder, String name) {
+    for (Source source : sources.values()) {
+      Tree.Method result = source.findMethod(holder, name);
+      if (result != null)
+        return result;
+    }
+    for (CompilerModule module : modules.values()) {
+      Tree.Method result = module.findMethod(holder, name);
+      if (result != null)
+        return result;
+    }
+    return null;
   }
 
   public CompilerModule ensureModule(String shortName, String fullName) {
