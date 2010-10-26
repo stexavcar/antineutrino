@@ -20,4 +20,5 @@ def (this is LanguageTest).run() {
   this.test_protocol_methods();
   this.test_apply();
   this.test_for();
+  this.test_with_1cc();
 }

@@ -18,7 +18,7 @@ def (this is Sequence).for(f) {
   def itr := this.iter;
   with_1cc leave -> loop(fn () {
     if not itr.has_next() then
-      leave.fire(this);
+      leave(this);
     f(itr.next);
   });
 }

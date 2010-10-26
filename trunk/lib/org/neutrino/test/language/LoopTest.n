@@ -8,7 +8,7 @@ def (this is LanguageTest).test_raw_loops() {
   def i := new_ref(0);
   def x := with_1cc break -> loop(fn () {
     if i.get() = 10 then {
-      break.fire("k")
+      break("k")
     } else {
       i.set(i.get() + 1);
     }
