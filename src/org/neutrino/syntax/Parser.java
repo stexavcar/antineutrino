@@ -239,7 +239,7 @@ public class Parser {
 
   private boolean atName() {
     switch (getCurrent().getType()) {
-    case NEW: case FOR: case IDENT:
+    case NEW: case FOR: case IDENT: case IF:
       return true;
     default:
       return atOperator();

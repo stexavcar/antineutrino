@@ -221,22 +221,6 @@ public class Native implements ISeedable {
     }
   };
 
-  @Marker("null=any") static final Impl NULL_EQ = new Impl() {
-    @Override
-    public RValue call(Arguments args) {
-      RNull self = (RNull) args.getThis();
-      return RBoolean.get(args.getArgument(0) == self);
-    }
-  };
-
-  @Marker("!bool") static final Impl BOOL_NOT = new Impl() {
-    @Override
-    public RValue call(Arguments args) {
-      RBoolean self = (RBoolean) args.getThis();
-      return RBoolean.get(!self.getValue());
-    }
-  };
-
   @Marker("ref") static final Impl NEW_REF = new Impl() {
     @Override
     public RValue call(Arguments args) {
@@ -358,18 +342,6 @@ public class Native implements ISeedable {
       RString value = (RString) args.getFunctionArgument(0);
       System.out.println(value.getValue());
       return RNull.getInstance();
-    }
-  };
-
-  @Marker("select") static final Impl SELECT = new Impl() {
-    @Override
-    public RValue call(Arguments args) {
-      RBoolean cond = (RBoolean) args.getFunctionArgument(0);
-      if (cond.getValue()) {
-        return args.getFunctionArgument(1);
-      } else {
-        return args.getFunctionArgument(2);
-      }
     }
   };
 
