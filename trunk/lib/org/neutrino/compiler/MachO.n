@@ -47,20 +47,23 @@ def WORD_SIZE := 4;
 
 protocol MachO;
 
-def MachO.new() {
-  def text := new TextSection();
+def MachO.new(binary) {
+  def reloc_table := new RelocationTable();
+  def text := new TextSection(reloc_table);
   def strings := new StringTable();
   def symbols := new SymbolTable();
   def indirect_symbols := new IndirectSymbols();
   def jump_table := new JumpTable();
   new MachO {
+    binary := binary,
     text := text,
     strings := strings,
     symbols := symbols,
     indirect_symbols := indirect_symbols,
     jump_table := jump_table,
+    reloc_table := reloc_table,
     sections := new ArrayList() [ text, jump_table ],
-    dark_sections := new ArrayList() [ strings, symbols, indirect_symbols ]
+    dark_sections := new ArrayList() [ strings, symbols, indirect_symbols, reloc_table ]
   };
 }
 
@@ -78,12 +81,52 @@ def (this is MachO).add_code_block(name, code) {
   this.symbols.add_local(name_index, this.segment_fileoff + code_start);
 }
 
-def (this is MachO).add_extern(name) {
+def (this is MachO).add_extern(name, block, offset) {
   def name_index := this.strings.add(name);
   this.jump_table.add_extern();
   this.indirect_symbols.add();
   this.symbols.add_extern(name_index, 16r154);
+  this.reloc_table.add_entry(block, offset);
 }
+
+protocol Relocation;
+
+def Relocation.new(block, offset) -> new Relocation {
+  block := block,
+  offset := offset
+};
+
+def (this is Relocation).encode(out, mach_o) {
+  def block_offset := mach_o.binary.code_block_offset(this.block);
+  out.write_int32(block_offset + this.offset);
+  def symbolnum := 2;
+  def pcrel := 1;
+  def length := 2;
+  def extern := 0;
+  def type := 0;
+  out.write_int32((type << 28) | (extern << 27) | (length << 25) | (pcrel << 24) | symbolnum);
+}
+
+def Relocation.size -> 2 * WORD_SIZE;
+
+protocol RelocationTable;
+
+def RelocationTable.new() -> new RelocationTable {
+  entries := new ArrayList()
+};
+
+def (this is RelocationTable).add_entry(block, offset) {
+  this.entries.add(new Relocation(block, offset));
+}
+
+def (this is RelocationTable).encode(out, mach_o) {
+  for (def entry : this.entries)
+    entry.encode(out, mach_o);
+}
+
+def (this is RelocationTable).count -> this.entries.length;
+
+def (this is RelocationTable).size -> this.entries.length * Relocation.size;
 
 protocol JumpTable;
 
@@ -107,19 +150,25 @@ def (this is JumpTable).reserved2 -> 5;
 
 def (this is JumpTable).align -> 0;
 
-def (this is JumpTable).encode(out) {
+def (this is JumpTable).nreloc -> 0;
+
+def (this is JumpTable).encode(out, mach_o) {
   for (def i : 0 .. this.size)
     out.write_int8(16rF4); // HLT
 }
 
 protocol TextSection;
 
-def TextSection.new() -> new TextSection {
+def TextSection.new(reloc_table) -> new TextSection {
+  reloc_table := reloc_table,
   blocks := new ArrayList(),
-  rLength := new_ref(0)
+  rLength := new_ref(0),
+  rNreloc := new_ref(0)
 };
 
 def (this is TextSection).length -> this.rLength.get();
+
+def (this is TextSection).nreloc -> this.reloc_table.count;
 
 def (this is TextSection).length:=(value) -> this.rLength.set(value);
 
@@ -147,7 +196,7 @@ def (this is TextSection).size {
   result;
 }
 
-def (this is TextSection).encode(out) {
+def (this is TextSection).encode(out, mach_o) {
   ref offset := out.length;
   for (def block : this.blocks) {
     out.write_data(block.code);
@@ -185,7 +234,7 @@ def (this is StringTable).add(name) {
   result;
 }
 
-def (this is StringTable).encode(out) {
+def (this is StringTable).encode(out, mach_o) {
   for (def str : this.strings)
     out.write_c_string(str);
 }
@@ -207,7 +256,7 @@ def (this is IndirectSymbols).count -> this.rCount.get();
 
 def (this is IndirectSymbols).add -> this.rCount.set(this.count + 1);
 
-def (this is IndirectSymbols).encode(out) {
+def (this is IndirectSymbols).encode(out, mach_o) {
   for (def i : 0 .. this.count)
     out.write_int32(i);
 }
@@ -237,7 +286,7 @@ def (this is SymbolTable).length -> this.symbols.length;
 
 def (this is SymbolTable).symbols -> this.locals + this.externs;
 
-def (this is SymbolTable).encode(out) {
+def (this is SymbolTable).encode(out, mach_o) {
   for (def symbol : this.externs)
     symbol.encode_extern(out);
   for (def symbol : this.locals)
@@ -405,8 +454,11 @@ def (this is MachO).encode_section_headers(out) {
     out.write_int32(size);
     out.write_int32(fileoff);
     out.write_int32(section.align);
-    out.write_int32(0);
-    out.write_int32(0);
+    if section.nreloc = 0 then
+      out.write_int32(0)
+    else
+      out.write_int32(this.offset_of(this.reloc_table));
+    out.write_int32(section.nreloc);
     out.write_int32(section.flags);
     out.write_int32(0);
     out.write_int32(section.reserved2);
@@ -420,7 +472,7 @@ def (this is MachO).encode_sections(out) {
   ref fileoff := this.segment_fileoff;
   for (def section : this.all_sections) {
     out.pad_to(fileoff);
-    section.encode(out);
+    section.encode(out, this);
     def size := section.size;
     fileoff := fileoff + size;
   }

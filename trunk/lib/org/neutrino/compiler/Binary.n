@@ -41,8 +41,8 @@ def (this is Binary).jump_table_offset {
   offset;  
 }
 
-def (this is Binary).register_extern(name) {
-  this.externs.add(name);
+def (this is Binary).register_extern(name, block, offset) {
+  this.externs.add(new { name := name, block := block, offset := offset });
   this.externs.length - 1;
 }
 
@@ -62,10 +62,10 @@ def (this is Binary).finalize {
 }
 
 def (this is Binary).to_mach_o() {
-  def result := new MachO();
+  def result := new MachO(this);
   for (def entry : this.entries)
     result.add_code_block(entry.name, entry.assm.code);
   for (def extern : this.externs)
-    result.add_extern(extern);
+    result.add_extern(extern.name, extern.block, extern.offset);
   result;
 }
