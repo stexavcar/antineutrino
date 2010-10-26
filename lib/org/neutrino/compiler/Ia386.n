@@ -55,7 +55,7 @@ def (this is AssemblerIa386).call(target is ExternalCallTarget) {
   this.stream.write_int8(16rE8);
   def reloff := this.stream.length;
   this.stream.write_int32(0);
-  def index := this.binary.register_extern(target.name);
+  def index := this.binary.register_extern(target.name, this.name, reloff);
   this.fixups.add(fn {
     def ownoff := this.binary.code_block_offset(this.name);
     def codeoff := this.binary.extern_offset(index);
