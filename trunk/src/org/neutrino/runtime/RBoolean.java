@@ -2,14 +2,14 @@ package org.neutrino.runtime;
 
 public class RBoolean extends RValue {
 
-  private static final TypeId TYPE_ID = TypeId.get("bool");
+  private static final RBoolean TRUE = new RBoolean(TypeId.get("true"), true);
+  private static final RBoolean FALSE = new RBoolean(TypeId.get("false"), false);
 
-  private static final RBoolean TRUE = new RBoolean(true);
-  private static final RBoolean FALSE = new RBoolean(false);
-
+  private final TypeId typeId;
   private final boolean value;
 
-  private RBoolean(boolean value) {
+  private RBoolean(TypeId typeId, boolean value) {
+    this.typeId = typeId;
     this.value = value;
   }
 
@@ -31,7 +31,7 @@ public class RBoolean extends RValue {
 
   @Override
   public TypeId getTypeId() {
-    return TYPE_ID;
+    return typeId;
   }
 
   @Override

@@ -1,10 +1,5 @@
 package org.neutrino.syntax;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import org.neutrino.compiler.Source;
 import org.neutrino.compiler.Symbol;
 import org.neutrino.compiler.Symbol.LocalSymbol;
@@ -14,6 +9,11 @@ import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Neutrino syntax trees.
@@ -499,16 +499,13 @@ public class Tree {
 
     public static Expression create(Source source, Expression cond,
         Expression thenPart, Tree.Expression elsePart) {
-      return Lambda.createCall(
-          Lambda.createCall(
-              new Identifier("select"),
-              Arrays.asList(
-                  cond,
-                  Lambda.create(source, Collections.<Parameter>emptyList(),
-                      thenPart, "then"),
-                  Lambda.create(source ,Collections.<Parameter>emptyList(),
-                      elsePart, "else"))),
-          Collections.<Expression>emptyList());
+      return new Call("if", Arrays.asList(
+              new Identifier("Control"),
+              cond,
+              Lambda.create(source, Collections.<Parameter>emptyList(),
+                  thenPart, "then"),
+              Lambda.create(source ,Collections.<Parameter>emptyList(),
+                  elsePart, "else")));
     }
 
   }

@@ -1,3 +1,11 @@
-@native("bool") protocol Boolean;
+protocol Boolean;
 
-def (this is Boolean).negate() -> internal "!bool";
+@native("true")
+protocol True is Boolean;
+
+def (this is True).negate -> false;
+
+@native("false")
+protocol False is Boolean;
+
+def (this is False).negate -> true;

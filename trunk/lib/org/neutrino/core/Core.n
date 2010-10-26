@@ -2,13 +2,6 @@ def print_string(obj is String) -> internal "print";
 
 def print(obj) -> print_string(obj.to_string());
 
-def select(cond, then_part, else_part) -> internal "select";
-
 def fail(message is String) -> internal "fail";
-
-def loop(f) {
-  f();
-  loop(f);
-}
 
 def apply(name is String, args is PrimitiveArray) -> internal "apply";
