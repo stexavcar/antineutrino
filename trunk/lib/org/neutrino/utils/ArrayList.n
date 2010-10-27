@@ -43,7 +43,7 @@ def (this is ArrayList)=(that is ArrayList) {
   if this.length != that.length then {
     false;
   } else {
-    with_1cc return -> {
+    with_1cc (return) {
       for (i : 0 .. this.length) {
         if this[i] != that[i] then
           return(false);

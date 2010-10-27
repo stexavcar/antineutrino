@@ -481,12 +481,14 @@ def (this is MachO).encode_sections(out) {
 
 def (this is MachO).offset_of(target) {
   ref fileoff := this.segment_fileoff;
-  with_1cc return -> for (section : this.all_sections) {
-    if section = target then {
-      return(fileoff);
+  with_1cc (return) {
+    for (section : this.all_sections) {
+      if section = target then {
+         return(fileoff);
+      }
+      def size := section.size;
+      fileoff := fileoff + size;
     }
-    def size := section.size;
-    fileoff := fileoff + size;
   }
 }
 

@@ -571,10 +571,10 @@ public class Parser {
           ));
     } else if (at(Type.WITH_1CC)) {
       expect(Type.WITH_1CC);
+      expect(Type.LPAREN);
       String name = expect(Type.IDENT);
-      expect(Type.ARROW);
-      Tree.Expression value = parseStatementEnd(isStatement);
-      checkSemicolon(isStatement);
+      expect(Type.RPAREN);
+      Tree.Expression value = parseFunctionBody(isStatement);
       return Tree.With1Cc.create(source, name, value);
     } else {
       Tree.Expression result = parseLogicalExpression();

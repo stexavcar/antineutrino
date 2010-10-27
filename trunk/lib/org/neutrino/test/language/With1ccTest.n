@@ -4,7 +4,7 @@ def (this is LanguageTest).test_with_1cc() {
 
 def (this is LanguageTest).test_escape_nested() {
   this.on_start("escape nested");
-  def r := with_1cc leave -> {
+  def r := with_1cc (leave) {
     for (i : 0 .. 10) {
       if i = 9 then
         leave(i);
