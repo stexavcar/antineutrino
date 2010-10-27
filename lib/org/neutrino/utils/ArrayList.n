@@ -34,7 +34,7 @@ def (this is ArrayList).to_string() {
   ref first := true;
   for (el : this) {
     if first then first := false; else s := s + ", ";
-    s := s + el.to_string;
+    s := s + el.to_string();
   }
   s := s + "]";
 }

@@ -4,7 +4,7 @@ def ProtMethTester.foo -> 4;
 
 def (this is ProtMethTester).bar -> 6;
 
-def ProtMethTester.new -> new ProtMethTester { };
+def ProtMethTester.new() -> new ProtMethTester { };
 
 def ProtMethTester.new(bar) -> new ProtMethTester { bar := bar };
 

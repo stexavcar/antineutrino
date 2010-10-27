@@ -7,7 +7,7 @@ def (this is ApplyTestProto).two(obj is String) -> obj + "2";
 def (this is LanguageTest).test_apply() {
   this.on_start("apply");
   def obj := new ApplyTestProto { };
-  assert_equal(1, apply("one", #[obj]));
+  assert_equal(1, apply(".one", #[obj]));
   assert_equal(8, apply("two", #[obj, 6]));
   assert_equal("32", apply("two", #[obj, "3"]));
   assert_equal(15, apply("+", #[7, 8]));

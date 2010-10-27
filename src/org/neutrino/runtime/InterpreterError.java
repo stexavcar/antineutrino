@@ -1,9 +1,9 @@
 package org.neutrino.runtime;
 
+import org.neutrino.pib.Opcode;
+
 import java.io.PrintStream;
 import java.util.ArrayList;
-
-import org.neutrino.pib.Opcode;
 
 public class InterpreterError extends RuntimeException {
 
@@ -98,7 +98,7 @@ public class InterpreterError extends RuntimeException {
     @Override
     public String getMessage() {
       StackTraceElement topFrame = getStackTrace()[0];
-      return "Method " + topFrame.getClassName() + "."
+      return "Method " + topFrame.getClassName() + "/"
           + topFrame.getMethodName() + " not found";
     }
 

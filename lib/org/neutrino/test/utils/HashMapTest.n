@@ -28,10 +28,10 @@ def (this is UtilsTest).test_large_hash_maps() {
   def map := new HashMap();
   for (i : 0 .. 256) {
     if (i % 5) != 3 then
-      map[i] := i.to_string;
+      map[i] := i.to_string();
   }
   for (i : 0 .. 256) {
-    def expected := if (i % 5) != 3 then i.to_string else null;
+    def expected := if (i % 5) != 3 then i.to_string() else null;
     assert_equal(expected, map[i]);
   }
 }
