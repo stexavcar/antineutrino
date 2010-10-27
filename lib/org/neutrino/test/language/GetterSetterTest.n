@@ -13,8 +13,7 @@ def (this is MutablePoint).x := (v) -> this.x_.set(v);
 
 def (this is MutablePoint).y := (v) -> this.y_.set(v);
 
-def (this is MutablePoint).to_string() -> "#<a Point: " + this.x.to_string() + ", "
-   + this.y.to_string() + ">";
+def (this is MutablePoint).to_string() -> "#<a Point: ${this.x}, ${this.y}>";
 
 def (this is LanguageTest).test_getters_setters() {
   this.on_start("getters and setters");

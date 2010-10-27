@@ -4,6 +4,7 @@ import org.neutrino.compiler.Source;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Stack;
 
 /**
  * A simple scanner that turns a flat string into a list of neutrino
@@ -13,16 +14,32 @@ import java.util.List;
  */
 public class Scanner {
 
+  enum ContextType { TOP, DELIM, INTERPOL }
+
   private final Source origin;
   private int cursor = 0;
   private final String source;
   private int startOffset = 0;
   private int endOffset = 0;
+  private final Stack<ContextType> contexts = new Stack<ContextType>();
 
   private Scanner(Source origin, String source) {
+    pushContext(ContextType.TOP);
     this.origin = origin;
     this.source = source;
     skipWhiteSpace();
+  }
+
+  private void pushContext(ContextType type) {
+    contexts.push(type);
+  }
+
+  private ContextType getContext() {
+    return contexts.peek();
+  }
+
+  private void popContext() {
+    contexts.pop();
   }
 
   private static boolean isWhitespace(char c) {
@@ -152,25 +169,47 @@ public class Scanner {
    * Scan over and return the next token in the input.
    */
   private Token.Type scanNext() throws SyntaxError {
+    if (getContext() == ContextType.INTERPOL) {
+      return scanNextInterpol();
+    } else {
+      return scanNextPlain();
+    }
+  }
+
+  private Token.Type scanNextInterpol() throws SyntaxError {
+    if (getCurrent() == '}') {
+      return scanString(false);
+    } else {
+      return scanNextPlain();
+    }
+  }
+
+  private Token.Type scanNextPlain() throws SyntaxError {
     char c = getCurrent();
     switch (c) {
     case '(':
       advance();
+      pushContext(ContextType.DELIM);
       return Token.Type.LPAREN;
     case ')':
       advance();
+      popContext();
       return Token.Type.RPAREN;
     case '{':
       advance();
+      pushContext(ContextType.DELIM);
       return Token.Type.LBRACE;
     case '}':
       advance();
+      popContext();
       return Token.Type.RBRACE;
     case '[':
       advance();
+      pushContext(ContextType.DELIM);
       return Token.Type.LBRACK;
     case ']':
       advance();
+      popContext();
       return Token.Type.RBRACK;
     case '#':
       advance();
@@ -202,7 +241,7 @@ public class Scanner {
       }
       return Token.Type.COLON;
     case '"':
-      return scanString();
+      return scanString(true);
     }
     if (isIdentifierStart(c)) {
       return scanIdentifier();
@@ -230,17 +269,38 @@ public class Scanner {
     return keyword == null ? Token.Type.IDENT : keyword;
   }
 
-  private Token.Type scanString() {
-    assert getCurrent() == '"';
+  private Token.Type scanString(boolean isPlain) {
+    assert !isPlain || getCurrent() == '"';
+    assert isPlain || getCurrent() == '}';
     startOffset = 1;
     advance();
-    while (hasMore() && getCurrent() != '"')
+    while (hasMore() && (getCurrent() != '"') && !atPair('$', '{'))
       advance();
     if (hasMore()) {
-      endOffset = -1;
-      advance();
+      if (getCurrent() == '"') {
+        endOffset = -1;
+        advance();
+        if (isPlain) {
+          return Token.Type.STRING;
+        } else {
+          popContext();
+          return Token.Type.INTERPOL_END;
+        }
+      } else {
+        assert atPair('$', '{');
+        endOffset = -2;
+        advance();
+        advance();
+        if (isPlain) {
+          pushContext(ContextType.INTERPOL);
+          return Token.Type.INTERPOL_START;
+        } else {
+          return Token.Type.INTERPOL_PART;
+        }
+      }
+    } else {
+      return Token.Type.ERROR;
     }
-    return Token.Type.STRING;
   }
 
   private Token.Type scanOperator() {
@@ -271,7 +331,7 @@ public class Scanner {
         return null;
       int end = getCursor() + endOffset;
       String text = getSubstring(start + startOffset, end);
-      tokens.add(new Token(nextType, text, start, end));
+      tokens.add(new Token(nextType, text, start + startOffset, end));
       skipWhiteSpace();
     }
     return tokens;

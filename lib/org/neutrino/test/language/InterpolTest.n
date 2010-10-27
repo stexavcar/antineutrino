@@ -1,0 +1,10 @@
+def (this is LanguageTest).test_interpolation() {
+  this.on_start("interpolation");
+  assert_equal("foo 1 bar 2 baz", "foo ${1} bar ${2} baz");
+  def x := 4;
+  def y := "?";
+  def z := 7;
+  assert_equal("foo 4 ?", "foo ${x} ${y}");
+  assert_equal("[11]", "[${x + z}]");
+  assert_equal("4 != 7", "${x} != ${z}");
+}

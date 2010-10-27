@@ -21,4 +21,5 @@ def (this is LanguageTest).run() {
   this.test_apply();
   this.test_for();
   this.test_with_1cc();
+  this.test_interpolation();
 }
