@@ -1,7 +1,7 @@
 protocol LanguageTest;
 def LanguageTest is Test;
 
-def new_language_test(counter) -> new LanguageTest { count := counter };
+def LanguageTest.new(counter) -> new LanguageTest { count := counter };
 
 def (this is LanguageTest).run() {
   this.test_primitives();

@@ -233,7 +233,7 @@ public class Native implements ISeedable {
   @Marker("ref") static final Impl NEW_REF = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RValue value = args.getFunctionArgument(0);
+      RValue value = args.getArgument(0);
       return new RReference(value);
     }
   };

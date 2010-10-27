@@ -6,8 +6,8 @@ protocol BlobStream;
 def BlobStream.new() -> new BlobStream(256);
 
 def BlobStream.new(size) -> new BlobStream {
-  data_ := new_ref(new MutablePrimitiveByteArray(size)),
-  length_ := new_ref(0)
+  data_ := new Ref(new MutablePrimitiveByteArray(size)),
+  length_ := new Ref(0)
 }
 
 def (this is BlobStream).length -> this.length_.get();

@@ -1,7 +1,7 @@
 protocol ExampleTest;
 def ExampleTest is Test;
 
-def new_example_test(counter) -> new ExampleTest { count := counter };
+def ExampleTest.new(counter) -> new ExampleTest { count := counter };
 
 def (this is ExampleTest).run() {
   this.test_hanoi();

@@ -5,7 +5,7 @@ def (this is LanguageTest).test_loops() {
 
 def (this is LanguageTest).test_raw_loops() {
   this.on_start("raw loops");
-  def i := new_ref(0);
+  def i := new Ref(0);
   def x := with_1cc (break) -> Control.repeat(fn () {
     if i.get() = 10 then {
       break("k");
