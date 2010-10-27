@@ -3,7 +3,7 @@
  */
 protocol BlobStream;
 
-def BlobStream.new -> new BlobStream(256);
+def BlobStream.new() -> new BlobStream(256);
 
 def BlobStream.new(size) -> new BlobStream {
   data_ := new_ref(new MutablePrimitiveByteArray(size)),
@@ -83,11 +83,11 @@ def (this is BlobStream).add(byte) {
   this.length_.set(index + 1);
 }
 
-def (this is BlobStream).get_blob {
+def (this is BlobStream).get_blob() {
   def result := new MutablePrimitiveByteArray(this.length);
   for (i : 0 .. this.length)
     result[i] := this.data[i];
   result;
 }
 
-def (this is BlobStream).to_string -> "#<a BlobStream: " + this.length.to_string + ">";
+def (this is BlobStream).to_string() -> "#<a BlobStream: " + this.length.to_string() + ">";

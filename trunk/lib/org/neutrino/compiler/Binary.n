@@ -57,7 +57,7 @@ def (this is Binary).encode {
   out.get_blob();
 }
 
-def (this is Binary).finalize {
+def (this is Binary).finalize() {
   for (entry : this.entries)
     entry.assm.finalize();
 }

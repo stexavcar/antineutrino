@@ -63,15 +63,15 @@ def (this is AssemblerIa386).call(target is ExternalCallTarget) {
   });  
 }
 
-def (this is AssemblerIa386).int3 -> this.stream.write_int8(16rCC);
+def (this is AssemblerIa386).int3() -> this.stream.write_int8(16rCC);
 
 def (this is AssemblerIa386).length -> this.stream.length;
 
-def (this is AssemblerIa386).code -> this.stream.get_blob;
+def (this is AssemblerIa386).code -> this.stream.get_blob();
 
 protocol Ia386;
 
-def Ia386.new -> new Ia386 { };
+def Ia386.new() -> new Ia386 { };
 
 def (this is Ia386).new_assembler(binary, name)
  -> new AssemblerIa386(binary, name);

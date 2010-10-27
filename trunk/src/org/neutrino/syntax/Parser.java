@@ -110,7 +110,7 @@ public class Parser {
         value = parseExpression(false);
       } else if (atFunctionDefinitionMarker()) {
         List<Parameter> params = new ArrayList<Parameter>();
-        String methodName = parseParameters("()", params);
+        String methodName = parseParameters("()", params, false);
         Tree.Expression body = parseFunctionBody(false);
         value = Tree.Lambda.create(source, methodName, params, body, name);
       } else {
@@ -141,15 +141,18 @@ public class Parser {
     return !at(Type.RBRACE);
   }
 
-  private void checkSemicolon(boolean isStatement) throws SyntaxError {
-    if (isStatement) {
-      if (at(Type.SEMI)) {
-        expect(Type.SEMI);
-        hasTransientSemicolon = true;
-      } else if (!hasTransientSemicolon) {
-        throw currentSyntaxError();
-      }
+  private void requireSemicolon() throws SyntaxError {
+    if (at(Type.SEMI)) {
+      expect(Type.SEMI);
+      hasTransientSemicolon = true;
+    } else if (!hasTransientSemicolon) {
+      throw currentSyntaxError();
     }
+  }
+
+  private void checkSemicolon(boolean isStatement) throws SyntaxError {
+    if (isStatement)
+      requireSemicolon();
   }
 
   /**
@@ -273,7 +276,7 @@ public class Parser {
     if (at(Type.DOT))
       expect(Type.DOT);
     List<Parameter> argParams = new ArrayList<Parameter>();
-    String method = parseParameters("()", argParams);
+    String method = parseParameters("()", argParams, true);
     Tree.Expression body = parseFunctionBody(true);
     List<Parameter> params = new ArrayList<Parameter>();
     params.add(self);
@@ -304,7 +307,7 @@ public class Parser {
         if (at(Type.COLON_EQ)) {
           expect(Type.COLON_EQ);
           Tree.Expression value = parseExpression(false);
-          expect(Type.SEMI);
+          requireSemicolon();
           Tree.Declaration result = new Tree.Definition(annots, name, value);
           return Collections.singletonList(result);
         } else if (at(Type.DOT)) {
@@ -313,12 +316,12 @@ public class Parser {
         } else if (at(Type.IS)) {
           expect(Type.IS);
           String parent = expect(Type.IDENT);
-          expect(Type.SEMI);
+          requireSemicolon();
           Tree.Declaration result = new Tree.Inheritance(annots, name, parent);
           return Collections.singletonList(result);
         } else if (atFunctionDefinitionMarker()) {
           List<Parameter> params = new ArrayList<Parameter>();
-          String methodName = parseParameters("()", params);
+          String methodName = parseParameters("()", params, false);
           Tree.Expression body = parseFunctionBody(true);
           Tree.Expression lambda = Tree.Lambda.create(source, methodName,
               params, body, name);
@@ -345,7 +348,7 @@ public class Parser {
         }
       }
       result.add(new Tree.Protocol(annots, name));
-      expect(Type.SEMI);
+      requireSemicolon();
       return result;
     }
   }
@@ -372,7 +375,8 @@ public class Parser {
     }
   }
 
-  private String parseParameters(String name, List<Parameter> params) throws SyntaxError {
+  private String parseParameters(String name, List<Parameter> params,
+      boolean paramSyntaxSignificant) throws SyntaxError {
     String methodName = name;
     if (atName())
       methodName = expectName(false);
@@ -388,6 +392,8 @@ public class Parser {
       if (!at(end))
         parseNakedParameters(params);
       expect(end);
+    } else if (paramSyntaxSignificant) {
+      methodName = "." + methodName;
     }
     if (at(Type.COLON_EQ)) {
       expect(Type.COLON_EQ);
@@ -445,6 +451,8 @@ public class Parser {
       expect(argDelimStart);
       args.addAll(parseArguments(argDelimEnd));
       expect(argDelimEnd);
+    } else {
+      method = "." + method;
     }
     return new Tree.Call(method, args);
   }
@@ -533,7 +541,7 @@ public class Parser {
     if (at(Type.FN)) {
       expect(Type.FN);
       List<Parameter> params = new ArrayList<Parameter>();
-      String methodName = parseParameters("()", params);
+      String methodName = parseParameters("()", params, false);
       Tree.Expression body = parseFunctionBody(false);
       return Tree.Lambda.create(source, methodName, params, body, "fn");
     } else if (at(Type.IF)) {
@@ -596,7 +604,7 @@ public class Parser {
   }
 
   private Tree.New.Field parseNewField() throws SyntaxError {
-    String name = expect(Type.IDENT);
+    String name = "." + expect(Type.IDENT);
     List<Parameter> params;
     Tree.Expression body;
     boolean hasEagerValue;

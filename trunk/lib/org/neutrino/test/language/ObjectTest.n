@@ -6,12 +6,12 @@ def (this is LanguageTest).test_objects() {
 def (this is LanguageTest).test_records() {
   this.on_start("records");
   def o1 := new { a := 10, b := 12 };
-  assert_equal(10, o1.a());
-  assert_equal(12, o1.b());
+  assert_equal(10, o1.a);
+  assert_equal(12, o1.b);
   def o2 := new { a := "x", b := "y", c := "z" };
-  assert_equal("x", o2.a());
-  assert_equal("y", o2.b());
-  assert_equal("z", o2.c());
+  assert_equal("x", o2.a);
+  assert_equal("y", o2.b);
+  assert_equal("z", o2.c);
   new { };
 }
 
@@ -22,12 +22,12 @@ def (this is LanguageTest).test_record_methods() {
   assert_equal(0, cnt);
   def ov := new { aa := inc(), bb := inc() };
   assert_equal(2, cnt);
-  assert_equal(1, ov.aa());
-  assert_equal(2, ov.bb());
+  assert_equal(1, ov.aa);
+  assert_equal(2, ov.bb);
   def om := new { cc -> inc(), dd -> inc() };
   assert_equal(2, cnt);
-  assert_equal(3, om.cc());
+  assert_equal(3, om.cc);
   assert_equal(3, cnt);
-  assert_equal(4, om.cc());
+  assert_equal(4, om.cc);
   assert_equal(4, cnt);
 }

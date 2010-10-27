@@ -17,7 +17,7 @@ protocol Sequence;
 def (this is Sequence).for(f) {
   def itr := this.iter;
   with_1cc (leave) -> Control.repeat(fn () {
-    if not itr.has_next() then
+    if not itr.has_next then
       leave(this);
     f(itr.next);
   });

@@ -21,8 +21,8 @@ def (this is LanguageTest).test_simple_ref_syntax() {
   inc();
   assert_equal(2, i);
   def cap := new { k := i };
-  assert_equal(2, cap.k());
+  assert_equal(2, cap.k);
   inc();
   assert_equal(3, i);
-  assert_equal(2, cap.k());
+  assert_equal(2, cap.k);
 }

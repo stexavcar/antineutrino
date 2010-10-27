@@ -136,7 +136,7 @@ def JumpTable.new() -> new JumpTable {
 
 def (this is JumpTable).count -> this.rCount.get();
 
-def (this is JumpTable).add_extern -> this.rCount.set(this.count + 1);
+def (this is JumpTable).add_extern() -> this.rCount.set(this.count + 1);
 
 def (this is JumpTable).size -> 5 * this.count;
 
@@ -254,7 +254,7 @@ def IndirectSymbols.new() -> new IndirectSymbols { rCount := new_ref(0) };
 
 def (this is IndirectSymbols).count -> this.rCount.get();
 
-def (this is IndirectSymbols).add -> this.rCount.set(this.count + 1);
+def (this is IndirectSymbols).add() -> this.rCount.set(this.count + 1);
 
 def (this is IndirectSymbols).encode(out, mach_o) {
   for (i : 0 .. this.count)
