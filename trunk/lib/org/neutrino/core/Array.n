@@ -1,4 +1,6 @@
-@native("array") protocol PrimitiveArray is Sequence;
+protocol PrimitiveCollection;
+
+@native("array") protocol PrimitiveArray is Sequence, PrimitiveCollection;
 
 def (this is PrimitiveArray)[index is Integer] -> internal "array[]";
 

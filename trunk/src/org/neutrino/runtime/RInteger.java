@@ -55,4 +55,14 @@ public class RInteger extends RValue implements ISeedable {
     return Integer.toString(value);
   }
 
+  @Override
+  public int hashCode() {
+    return value;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return (obj instanceof RInteger) && ((RInteger) obj).value == this.value;
+  }
+
 }

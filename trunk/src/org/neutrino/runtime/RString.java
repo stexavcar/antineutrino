@@ -37,4 +37,14 @@ public class RString extends RValue implements ISeedable {
     return value;
   }
 
+  @Override
+  public int hashCode() {
+    return value.hashCode();
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    return (obj instanceof RString) && ((RString) obj).value.equals(this.value);
+  }
+
 }
