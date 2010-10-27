@@ -81,7 +81,7 @@ def (this is HashMap).extend_capacity(new_capacity) {
 
 def (this is HashMap).find_entry(key, hash, create_if_missing) {
   ref offset := hash % this.capacity;
-  with_1cc return -> Control.repeat(fn {
+  with_1cc (return) -> Control.repeat(fn {
     def entry := this.entries[offset];
     if entry = null then {
       if create_if_missing then {
