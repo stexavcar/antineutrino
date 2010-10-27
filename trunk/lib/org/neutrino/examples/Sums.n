@@ -6,9 +6,9 @@ def isum(n) {
   ref n := n;
   ref s := 0;
   with_1cc break -> Control.repeat(fn() {
-    if n < 1 then 
-        break(null)
-    else {
+    if n < 1 then {
+      break(null);
+    } else {
       s := s + n;
       n := n - 1;
     }
@@ -43,9 +43,9 @@ def ifib(n) {
   ref s1 := 0;
   ref s2 := 1;
   with_1cc break -> Control.repeat(fn() {
-    if n < 1 then 
-        break(null)
-    else {
+    if n < 1 then {
+      break(null);
+    } else {
       def tmp := s1 + s2;
       s1 := s2;
       s2 := tmp;

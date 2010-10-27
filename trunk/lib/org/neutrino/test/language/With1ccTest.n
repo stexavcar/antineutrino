@@ -10,6 +10,6 @@ def (this is LanguageTest).test_escape_nested() {
         leave(i);
     }
     5;
-  };
+  }
   assert_equal(9, r);
 }

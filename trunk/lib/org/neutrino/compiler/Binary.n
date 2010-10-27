@@ -4,14 +4,14 @@ def Binary.new(arch) -> new Binary {
   arch := arch,
   entries := new ArrayList(),
   externs := new ArrayList()
-};
+}
 
 protocol CodeBlock;
 
 def CodeBlock.new(name, code) -> new CodeBlock {
   name := name,
   code := code
-};
+}
 
 def (this is Binary).add_code_block(name) {
   def assm := this.arch.new_assembler(this, name);
@@ -24,14 +24,13 @@ def (this is Binary).add_code_block(name) {
 
 def (this is Binary).code_block_offset(name) {
   ref offset := 0;
-  with_1cc return ->
-    for (entry : this.entries) {
-      if name = entry.name then {
-        return(offset)
-      } else {
-        offset := offset + entry.assm.length
-      }
-    };
+  with_1cc return -> for (entry : this.entries) {
+    if name = entry.name then {
+      return(offset);
+    } else {
+      offset := offset + entry.assm.length;
+    }
+  }
 }
 
 def (this is Binary).jump_table_offset {

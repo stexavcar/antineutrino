@@ -28,7 +28,7 @@ def AssemblerIa386.new(binary, name) -> new AssemblerIa386 {
   name := name,
   stream := new BlobStream(),
   fixups := new ArrayList()
-};
+}
 
 def (this is AssemblerIa386).finalize() {
   for (fixup : this.fixups)

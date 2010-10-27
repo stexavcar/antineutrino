@@ -64,7 +64,7 @@ def MachO.new(binary) {
     reloc_table := reloc_table,
     sections := new ArrayList() [ text, jump_table ],
     dark_sections := new ArrayList() [ strings, symbols, indirect_symbols, reloc_table ]
-  };
+  }
 }
 
 def MachO.header_size -> 7 * WORD_SIZE;
@@ -94,7 +94,7 @@ protocol Relocation;
 def Relocation.new(block, offset) -> new Relocation {
   block := block,
   offset := offset
-};
+}
 
 def (this is Relocation).encode(out, mach_o) {
   def block_offset := mach_o.binary.code_block_offset(this.block);
@@ -113,7 +113,7 @@ protocol RelocationTable;
 
 def RelocationTable.new() -> new RelocationTable {
   entries := new ArrayList()
-};
+}
 
 def (this is RelocationTable).add_entry(block, offset) {
   this.entries.add(new Relocation(block, offset));
@@ -132,7 +132,7 @@ protocol JumpTable;
 
 def JumpTable.new() -> new JumpTable {
   rCount := new_ref(0)
-};
+}
 
 def (this is JumpTable).count -> this.rCount.get();
 
@@ -164,7 +164,7 @@ def TextSection.new(reloc_table) -> new TextSection {
   blocks := new ArrayList(),
   rLength := new_ref(0),
   rNreloc := new_ref(0)
-};
+}
 
 def (this is TextSection).length -> this.rLength.get();
 
@@ -207,7 +207,7 @@ def (this is TextSection).encode(out, mach_o) {
 
 def align(value, factor) {
   if (value % factor) = 0 then
-    value
+    value;
   else
     value + (factor - (value % factor));
 }
@@ -218,7 +218,7 @@ def StringTable.new() {
   def result := new StringTable {
     strings := new ArrayList(),
     rCursor := new_ref(0)
-  };
+  }
   result.add("");
   result;
 }
@@ -268,7 +268,7 @@ protocol SymbolTable;
 def SymbolTable.new() -> new SymbolTable {
   locals := new ArrayList(),
   externs := new ArrayList()
-};
+}
 
 def (this is SymbolTable).add_local(name_index, code_start) {
   this.locals.add(new Symbol(name_index, code_start));
@@ -327,7 +327,7 @@ def (this is Symbol).encode_extern(out) {
  *   uint32_t ncmds;
  *   uint32_t sizeofcmds;
  *   uint32_t flags;
- * };
+ * }
  */
 def (this is MachO).encode_mach_header(out) {
   out.write_int32(16rFEEDFACE);
@@ -412,7 +412,7 @@ def (this is MachO).encode_dysymtab_command(out) {
  *   vm_prot_t initprot;
  *   uint32_t nsects;
  *   uint32_t flags;
- * };
+ * }
  */
 def (this is MachO).encode_segment_command(out) {
   out.write_int32(LC_SEGMENT);
@@ -442,7 +442,7 @@ def (this is MachO).encode_segment_command(out) {
  *   uint32_t flags;
  *   uint32_t reserved1;
  *   uint32_t reserved2;
- * };
+ * }
  */
 def (this is MachO).encode_section_headers(out) {
   ref fileoff := this.segment_fileoff;
@@ -455,7 +455,7 @@ def (this is MachO).encode_section_headers(out) {
     out.write_int32(fileoff);
     out.write_int32(section.align);
     if section.nreloc = 0 then
-      out.write_int32(0)
+      out.write_int32(0);
     else
       out.write_int32(this.offset_of(this.reloc_table));
     out.write_int32(section.nreloc);
@@ -481,14 +481,13 @@ def (this is MachO).encode_sections(out) {
 
 def (this is MachO).offset_of(target) {
   ref fileoff := this.segment_fileoff;
-  with_1cc return ->
-    for (section : this.all_sections) {
-      if section = target then {
-        return(fileoff);
-      }
-      def size := section.size;
-      fileoff := fileoff + size;
-    };
+  with_1cc return -> for (section : this.all_sections) {
+    if section = target then {
+      return(fileoff);
+    }
+    def size := section.size;
+    fileoff := fileoff + size;
+  }
 }
 
 def (this is MachO).segment_size {
