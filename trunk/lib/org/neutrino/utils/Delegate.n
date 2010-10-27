@@ -9,8 +9,6 @@ def (this is Delegate)(a, b, c, d, e) -> this.run(#[a, b, c, d, e]);
 
 protocol SimpleDelegate is Delegate;
 
-def (this is SimpleDelegate).to_string() -> this.name + "/" + this.argc.to_string();
-
 def (this is SimpleDelegate).run(args) -> apply(this.name, args);
 
 def op(name) -> new SimpleDelegate { name := name };

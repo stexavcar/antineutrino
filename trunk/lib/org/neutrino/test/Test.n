@@ -4,7 +4,7 @@ protocol Test;
 // This should be called at the beginning of all tests.
 def (this is Test).on_start(name) {
   def index := this.count.get();
-  if kPrintProgress then print("Testing " + name);
+  if kPrintProgress then print("Testing ${name}");
   this.count.set(index + 1);
 }
 
@@ -20,7 +20,7 @@ def test_main() {
   ];
   for (i : 0 .. suites.length)
     suites[i].run();
-  print("Ran " + counter.get().to_string() + " tests.");
+  print("Ran ${counter.get()} tests.");
 }
 
 def assert_true(cond) -> if not cond then fail("");
@@ -29,5 +29,5 @@ def assert_false(cond) -> assert_true(not cond);
 
 def assert_equal(expected, found) {
   if not expected = found then
-    fail(expected.to_string() + " != " + found.to_string());
+    fail("${expected} != ${found}");
 }

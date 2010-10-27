@@ -90,4 +90,4 @@ def (this is BlobStream).get_blob() {
   result;
 }
 
-def (this is BlobStream).to_string() -> "#<a BlobStream: " + this.length.to_string() + ">";
+def (this is BlobStream).to_string() -> "#<a BlobStream: ${this.length}>";

@@ -14,7 +14,7 @@ import java.util.List;
 
 /**
  * Plain vanilla recursive descent parser for the neutrino syntax.
- * Main entry point is {@link #parse(List)}.
+ * Main entry point is {@link #parse(Source, List)}.
  *
  * @author christian.plesner.hansen@gmail.com (Christian Plesner Hansen)
  */
@@ -711,6 +711,30 @@ public class Parser {
     return (int) Long.parseLong(body, radix);
   }
 
+  private static Tree.Expression toString(Tree.Expression expr) {
+    return new Tree.Call("to_string", Arrays.asList(expr));
+  }
+
+  private static Tree.Expression add(Tree.Expression a, Tree.Expression b) {
+    return new Tree.Call("+", Arrays.asList(a, b));
+  }
+
+  private Tree.Expression parseInterpolExpression() throws SyntaxError {
+    String start = expect(Type.INTERPOL_START);
+    Tree.Expression first = parseExpression(false);
+    Tree.Expression result = new Tree.Text(start);
+    result = add(result, toString(first));
+    while (!at(Type.INTERPOL_END)) {
+      String part = expect(Type.INTERPOL_PART);
+      result = add(result, new Tree.Text(part));
+      Tree.Expression next = parseExpression(false);
+      result = add(result, toString(next));
+    }
+    String last = expect(Type.INTERPOL_END);
+    result = add(result, new Tree.Text(last));
+    return result;
+  }
+
   /**
    * <atomic>
    *   -> <ident>
@@ -740,6 +764,9 @@ public class Parser {
       Tree.Expression result = parseExpression(false);
       expect(Type.RPAREN);
       return result;
+    }
+    case INTERPOL_START: {
+      return parseInterpolExpression();
     }
     case LBRACE: {
       Tree.Expression result = parseBlock();
