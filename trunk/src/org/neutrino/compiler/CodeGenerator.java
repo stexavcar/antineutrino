@@ -65,10 +65,10 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
   @Override
   public void visitLocalDefinition(Tree.LocalDefinition that) {
     if (that.isReference())
-      assm.global("new_ref");
+      assm.global("Ref");
     that.getValue().accept(this);
     if (that.isReference())
-      assm.call("()", 2);
+      assm.call("new", 2);
     int index = that.getSymbol().getIndex();
     assm.storeLocal(index);
     that.getBody().accept(this);

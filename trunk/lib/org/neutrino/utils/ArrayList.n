@@ -3,8 +3,8 @@ protocol ArrayList is Sequence;
 def ArrayList.new() -> new ArrayList(0);
 
 def ArrayList.new(size is Integer) -> new ArrayList {
-  contents_ := new_ref(new MutablePrimitiveArray(size)),
-  length_ := new_ref(size)
+  contents_ := new Ref(new MutablePrimitiveArray(size)),
+  length_ := new Ref(size)
 }
 
 def ArrayList.new(elms is PrimitiveArray) {

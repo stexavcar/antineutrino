@@ -5,7 +5,7 @@ def (this is LanguageTest).test_refs() {
 
 def (this is LanguageTest).test_raw_refs() {
   this.on_start("raw references");
-  def r := new_ref(4);
+  def r := new Ref(4);
   assert_equal(4, r.get());
   assert_equal(5, r.set(5));
   assert_equal(5, r.get());

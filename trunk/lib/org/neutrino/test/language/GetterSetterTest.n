@@ -1,8 +1,8 @@
 protocol MutablePoint;
 
 def new_mutable_point(x, y) -> new MutablePoint {
-  x_ := new_ref(x),
-  y_ := new_ref(y)
+  x_ := new Ref(x),
+  y_ := new Ref(y)
 }
 
 def (this is MutablePoint).x -> this.x_.get();

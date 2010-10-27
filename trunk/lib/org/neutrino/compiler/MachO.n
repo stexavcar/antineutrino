@@ -131,7 +131,7 @@ def (this is RelocationTable).size -> this.entries.length * Relocation.size;
 protocol JumpTable;
 
 def JumpTable.new() -> new JumpTable {
-  rCount := new_ref(0)
+  rCount := new Ref(0)
 }
 
 def (this is JumpTable).count -> this.rCount.get();
@@ -162,8 +162,8 @@ protocol TextSection;
 def TextSection.new(reloc_table) -> new TextSection {
   reloc_table := reloc_table,
   blocks := new ArrayList(),
-  rLength := new_ref(0),
-  rNreloc := new_ref(0)
+  rLength := new Ref(0),
+  rNreloc := new Ref(0)
 }
 
 def (this is TextSection).length -> this.rLength.get();
@@ -217,7 +217,7 @@ protocol StringTable;
 def StringTable.new() {
   def result := new StringTable {
     strings := new ArrayList(),
-    rCursor := new_ref(0)
+    rCursor := new Ref(0)
   }
   result.add("");
   result;
@@ -250,7 +250,7 @@ def (this is StringTable).length -> this.strings.length;
 
 protocol IndirectSymbols;
 
-def IndirectSymbols.new() -> new IndirectSymbols { rCount := new_ref(0) };
+def IndirectSymbols.new() -> new IndirectSymbols { rCount := new Ref(0) };
 
 def (this is IndirectSymbols).count -> this.rCount.get();
 

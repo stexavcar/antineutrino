@@ -2,7 +2,7 @@ protocol HanoiDisk;
 
 def HanoiDisk.new(size) -> new HanoiDisk {
   size := size,
-  next_ := new_ref(null)
+  next_ := new Ref(null)
 }
 
 def (this is HanoiDisk).next -> this.next_.get();
@@ -11,7 +11,7 @@ protocol Hanoi;
 
 def Hanoi.new() -> new Hanoi {
   piles := new ArrayList [null, null, null],
-  moves := new_ref(0)
+  moves := new Ref(0)
 }
 
 def (this is Hanoi).run(size) {

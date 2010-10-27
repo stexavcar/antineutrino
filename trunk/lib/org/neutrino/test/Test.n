@@ -12,11 +12,11 @@ def kPrintProgress := false;
 
 @entry_point("test")
 def test_main() {
-  def counter := new_ref(0);
-  def suites := #[
-    new_language_test(counter),
-    new_utils_test(counter),
-    new_example_test(counter)
+  def counter := new Ref(0);
+  def suites := new ArrayList [
+    new LanguageTest(counter),
+    new UtilsTest(counter),
+    new ExampleTest(counter)
   ];
   for (i : 0 .. suites.length)
     suites[i].run();

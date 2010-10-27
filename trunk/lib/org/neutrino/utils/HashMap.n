@@ -16,9 +16,9 @@ def HashMap.hash(value) -> internal "obj.hash";
  * Creates a new empty hash map.
  */
 def HashMap.new() -> new HashMap {
-  rEntries := new_ref(new MutablePrimitiveArray(HashMap.kInitialCapacity)),
-  rSize := new_ref(0),
-  rMaxLoad := new_ref((HashMap.kInitialCapacity * 3) / 4)
+  rEntries := new Ref(new MutablePrimitiveArray(HashMap.kInitialCapacity)),
+  rSize := new Ref(0),
+  rMaxLoad := new Ref((HashMap.kInitialCapacity * 3) / 4)
 }
 
 def HashMap.new(init is PrimitiveCollection) {
@@ -110,7 +110,7 @@ protocol HashMapEntry;
 def HashMapEntry.new(key, hash) -> new HashMapEntry {
   key := key,
   hash := hash,
-  rValue := new_ref(null)
+  rValue := new Ref(null)
 }
 
 def (this is HashMapEntry).value -> this.rValue.get();
