@@ -43,6 +43,27 @@ def (this is HashMap)[key] {
   if entry = null then null else entry.value;
 }
 
+def (this is HashMap).values -> fn for (fun) {
+  for (def entry : this.entries) {
+    if entry != null then
+      fun(entry.value);
+  }
+};
+
+def (this is HashMap).keys -> fn for (fun) {
+  for (def entry : this.entries) {
+    if entry != null then
+      fun(entry.key);
+  }
+};
+
+def (this is HashMap).for(fun) {
+  for (def entry : this.entries) {
+    if entry != null then
+      fun(entry.key, entry.value)
+  }
+}
+
 def (this is HashMap)[key]:=(value) -> this.insert(key, this.hash(key), value);
 
 def (this is HashMap).insert(key, hash, value) {

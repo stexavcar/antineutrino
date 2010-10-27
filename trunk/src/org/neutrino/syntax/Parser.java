@@ -352,6 +352,18 @@ public class Parser {
     return new Parameter(name, type, false);
   }
 
+  private void parseNakedParameters(List<Parameter> params) throws SyntaxError {
+    while (true) {
+      params.add(parseParameter());
+      if (at(Type.COMMA)) {
+        expect(Type.COMMA);
+        continue;
+      } else {
+        break;
+      }
+    }
+  }
+
   private String parseParameters(String name, List<Parameter> params) throws SyntaxError {
     String methodName = name;
     if (atName())
@@ -365,17 +377,8 @@ public class Parser {
     }
     if (at(begin)) {
       expect(begin);
-      if (!at(end)) {
-        while (true) {
-          params.add(parseParameter());
-          if (at(Type.COMMA)) {
-            expect(Type.COMMA);
-            continue;
-          } else {
-            break;
-          }
-        }
-      }
+      if (!at(end))
+        parseNakedParameters(params);
       expect(end);
     }
     if (at(Type.COLON_EQ)) {
@@ -542,7 +545,8 @@ public class Parser {
       expect(Type.FOR);
       expect(Type.LPAREN);
       expect(Type.DEF);
-      String ident = expect(Type.IDENT);
+      List<Parameter> params = new ArrayList<Parameter>();
+      parseNakedParameters(params);
       expect(Type.COLON);
       Tree.Expression coll = parseExpression();
       expect(Type.RPAREN);
@@ -551,7 +555,7 @@ public class Parser {
           coll,
           Lambda.create(
               source,
-              Arrays.<Parameter>asList(new Parameter(ident, null, false)),
+              params,
               body,
               "for")
           ));
