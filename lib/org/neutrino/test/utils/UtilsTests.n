@@ -6,4 +6,5 @@ def new_utils_test(counter) -> new UtilsTest { count := counter };
 def (this is UtilsTest).run() {
   this.test_array_lists();
   this.test_delegates();
+  this.test_hash_maps();
 }

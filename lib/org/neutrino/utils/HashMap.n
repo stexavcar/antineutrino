@@ -1,0 +1,101 @@
+/**
+ * A simple hash map.
+ */
+protocol HashMap;
+
+def HashMap.kInitialCapacity -> 16;
+
+/**
+ * Default implementation of the object hash function.  Add your own
+ * HashMap.hash for your type to provide custom hashing for a
+ * particular type of object.
+ */
+def HashMap.hash(value) -> internal "obj.hash";
+
+/**
+ * Creates a new empty hash map.
+ */
+def HashMap.new() -> new HashMap {
+  rEntries := new_ref(new MutablePrimitiveArray(HashMap.kInitialCapacity)),
+  rSize := new_ref(0),
+  rMaxLoad := new_ref((HashMap.kInitialCapacity * 3) / 4)
+};
+
+def HashMap.new(init is PrimitiveCollection) {
+  def result := new HashMap();
+  for (def i : 0 .. init.length)
+    result[i] := init[i];
+  result;
+}
+
+def (this is HashMap).max_load -> this.rMaxLoad.get();
+
+def (this is HashMap).hash(value) -> HashMap.hash(value);
+
+def (this is HashMap).entries -> this.rEntries.get();
+
+def (this is HashMap).size -> this.rSize.get();
+
+def (this is HashMap).capacity -> this.entries.length;
+
+def (this is HashMap)[key] {
+  def entry := this.find_entry(key, this.hash(key), false);
+  if entry = null then null else entry.value;
+}
+
+def (this is HashMap)[key]:=(value) -> this.insert(key, this.hash(key), value);
+
+def (this is HashMap).insert(key, hash, value) {
+  def entry := this.find_entry(key, hash, true);
+  entry.value := value;
+}
+
+def (this is HashMap).extend_capacity(new_capacity) {
+  def new_entries := new MutablePrimitiveArray(new_capacity);
+  def old_entries := this.entries;
+  this.rEntries.set(new_entries);
+  this.rSize.set(0);
+  this.rMaxLoad.set((new_capacity * 3) / 4);
+  for (def entry : old_entries) {
+    if entry != null then
+      this.insert(entry.key, entry.hash, entry.value);
+  }
+}
+
+def (this is HashMap).find_entry(key, hash, create_if_missing) {
+  ref offset := hash % this.capacity;
+  with_1cc return -> Control.repeat(fn {
+    def entry := this.entries[offset];
+    if entry = null then {
+      if create_if_missing then {
+        if this.size < this.max_load then {
+          def result := new HashMapEntry(key, hash);
+          this.entries[offset] := result;
+          this.rSize.set(this.size + 1);
+          return(result);
+        } else {
+          this.extend_capacity(this.capacity * 2);
+          return(this.find_entry(key, hash, create_if_missing));
+        }
+      } else {
+        return(null);
+      }
+    } else if entry.hash = hash and entry.key = key then {
+      return(entry);
+    } else {
+      offset := (offset + 1) % this.capacity;
+    }
+  });
+}
+
+protocol HashMapEntry;
+
+def HashMapEntry.new(key, hash) -> new HashMapEntry {
+  key := key,
+  hash := hash,
+  rValue := new_ref(null)
+};
+
+def (this is HashMapEntry).value -> this.rValue.get();
+
+def (this is HashMapEntry).value:=(v) -> this.rValue.set(v);

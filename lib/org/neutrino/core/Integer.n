@@ -11,9 +11,13 @@ def (this is Integer)*(that is Integer) -> internal "int*int";
 
 def (this is Integer)%(that is Integer) -> internal "int%int";
 
+def (this is Integer)/(that is Integer) -> internal "int/int";
+
 def (this is Integer)<(that is Integer) -> internal "int<int";
 
 def (this is Integer)>=(that is Integer) -> not (this < that);
+
+def (this is Integer)<=(that is Integer) -> not (that < this);
 
 def (this is Integer)>(that is Integer) -> not (this < that or this = that);
 
