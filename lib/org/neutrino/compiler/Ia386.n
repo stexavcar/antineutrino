@@ -35,9 +35,22 @@ def (this is AssemblerIa386).finalize() {
     fixup();
 }
 
-def (this is AssemblerIa386).mov(imm32, reg) {
-  this.stream.write_int8(16rB8 + reg.index);
+def (this is AssemblerIa386).mov(imm32 is Integer, dest) {
+  this.stream.write_int8(16rB8 + dest.index);
   this.stream.write_int32(imm32);
+}
+
+def (this is AssemblerIa386).write_mod_rm(mod, reg, rm) {
+  this.stream.write_int8((mod << 6) | (reg << 3) | rm);
+}
+
+def (this is AssemblerIa386).mov(src is Register, dest) {
+  this.stream.write_int8(16r89);
+  this.write_mod_rm(2r11, src.index, dest.index);
+}
+
+def (this is AssemblerIa386).push(reg) {
+  this.stream.write_int8(16r50 + reg.index);
 }
 
 def (this is AssemblerIa386).call(target is LocalCallTarget) {

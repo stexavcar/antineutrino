@@ -4,14 +4,11 @@ def compile_main(args) {
   def binary := new Binary(new Ia386());
 
   def main := binary.add_code_block("_main");
+  main.push(rEbp);
+  main.mov(rEsp, rEbp);
   main.mov(10, rEax);
-  main.call(CallTarget.local("foo"));
-  main.call(CallTarget.extern("_yum"));
+  main.call(CallTarget.extern("_exit"));
   
-  def foo := binary.add_code_block("foo");
-  foo.call(CallTarget.extern("_exit"));
-  foo.int3();
-
   def data := binary.encode;
   open_file(out_name).write_binary(data);  
 }
