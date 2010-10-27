@@ -21,7 +21,7 @@ def (this is PrimitiveArray).iter {
   new Iter {
     has_next -> index_itr.has_next,
     next -> self[index_itr.next]
-  };
+  }
 }
 
 def (this is PrimitiveArray)[slice is Interval] {

@@ -29,5 +29,5 @@ def assert_false(cond) -> assert_true(not cond);
 
 def assert_equal(expected, found) {
   if not expected = found then
-    fail(expected.to_string() + " != " + found.to_string())
+    fail(expected.to_string() + " != " + found.to_string());
 }

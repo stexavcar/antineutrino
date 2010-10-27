@@ -107,7 +107,7 @@ public class Parser {
       Tree.Expression value;
       if (at(Type.COLON_EQ)) {
         expect(Type.COLON_EQ);
-        value = parseExpression();
+        value = parseExpression(false);
       } else if (atFunctionDefinitionMarker()) {
         List<Parameter> params = new ArrayList<Parameter>();
         String methodName = parseParameters("()", params);
@@ -128,7 +128,7 @@ public class Parser {
       }
       return new Tree.LocalDefinition(name, value, body, isReference);
     } else {
-      return parseExpression();
+      return parseExpression(true);
     }
   }
 
@@ -141,29 +141,41 @@ public class Parser {
     return !at(Type.RBRACE);
   }
 
+  private void checkSemicolon(boolean isStatement) throws SyntaxError {
+    if (isStatement) {
+      if (at(Type.SEMI)) {
+        expect(Type.SEMI);
+        hasTransientSemicolon = true;
+      } else if (!hasTransientSemicolon) {
+        throw currentSyntaxError();
+      }
+    }
+  }
+
   /**
    * <statements>
    *   <statement> +: ";"+ ";"?
    */
   private Tree.Expression parseStatements() throws SyntaxError {
     Tree.Expression expr = parseStatement();
-    if (consumeSemicolon()) {
-      if (hasMore() && !at(Type.RBRACE)) {
-        List<Tree.Expression> exprs = new ArrayList<Tree.Expression>();
-        exprs.add(expr);
-        while (hasMore() && !at(Type.RBRACE)) {
-          Tree.Expression next = parseStatement();
-          exprs.add(next);
-          if (!consumeSemicolon())
-            break;
-        }
-        return new Tree.Block(exprs);
-      } else {
-        return expr;
+    if (hasMore() && !at(Type.RBRACE)) {
+      List<Tree.Expression> exprs = new ArrayList<Tree.Expression>();
+      exprs.add(expr);
+      while (hasMore() && !at(Type.RBRACE)) {
+        Tree.Expression next = parseStatement();
+        exprs.add(next);
+        if (!consumeSemicolon())
+          break;
       }
+      return new Tree.Block(exprs);
     } else {
       return expr;
     }
+  }
+
+  private void consumeRightBrace() throws SyntaxError {
+    expect(Type.RBRACE);
+    this.hasTransientSemicolon = true;
   }
 
   /**
@@ -173,13 +185,11 @@ public class Parser {
   private Tree.Expression parseBlock() throws SyntaxError {
     expect(Type.LBRACE);
     if (at(Type.RBRACE)) {
-      expect(Type.RBRACE);
-      this.hasTransientSemicolon = true;
+      consumeRightBrace();
       return new Tree.Singleton(Tree.Singleton.Type.NULL);
     } else {
       Tree.Expression result = parseStatements();
-      expect(Type.RBRACE);
-      this.hasTransientSemicolon = true;
+      consumeRightBrace();
       return result;
     }
   }
@@ -192,13 +202,11 @@ public class Parser {
   private Tree.Expression parseFunctionBody(boolean isStatement) throws SyntaxError {
     if (at(Type.ARROW)) {
       expect(Type.ARROW);
-      Tree.Expression body = parseExpression();
-      if (isStatement)
-        expect(Type.SEMI);
+      Tree.Expression body = parseExpression(false);
+      checkSemicolon(isStatement);
       return body;
     } else if (at(Type.LBRACE)) {
       Tree.Expression body = parseBlock();
-      hasTransientSemicolon = true;
       return body;
     } else if (isStatement && at(Type.SEMI)) {
       expect(Type.SEMI);
@@ -222,11 +230,11 @@ public class Parser {
         expect(Type.LPAREN);
         if (!at(Type.RPAREN)) {
           args = new ArrayList<RValue>();
-          Tree.Expression first = parseExpression();
+          Tree.Expression first = parseExpression(false);
           args.add(first.toValue());
           while (at(Type.COMMA)) {
             expect(Type.COMMA);
-            Tree.Expression next = parseExpression();
+            Tree.Expression next = parseExpression(false);
             args.add(next.toValue());
           }
         }
@@ -295,7 +303,7 @@ public class Parser {
         String name = expect(Type.IDENT);
         if (at(Type.COLON_EQ)) {
           expect(Type.COLON_EQ);
-          Tree.Expression value = parseExpression();
+          Tree.Expression value = parseExpression(false);
           expect(Type.SEMI);
           Tree.Declaration result = new Tree.Definition(annots, name, value);
           return Collections.singletonList(result);
@@ -398,12 +406,12 @@ public class Parser {
   private List<Tree.Expression> parseArguments(Type end) throws SyntaxError {
     List<Tree.Expression> result = new ArrayList<Tree.Expression>();
     if (hasMore() && !at(end)) {
-      Tree.Expression first = parseExpression();
+      Tree.Expression first = parseExpression(false);
       result.add(first);
     }
     while (at(Type.COMMA)) {
       expect(Type.COMMA);
-      Tree.Expression next = parseExpression();
+      Tree.Expression next = parseExpression(false);
       result.add(next);
     }
     return result;
@@ -521,7 +529,7 @@ public class Parser {
    *    | "if" <opexpr> "->" <opexpr> "else" <opexpr>
    *    | <operatorexpr>
    */
-  private Tree.Expression parseLongExpression() throws SyntaxError {
+  private Tree.Expression parseLongExpression(boolean isStatement) throws SyntaxError {
     if (at(Type.FN)) {
       expect(Type.FN);
       List<Parameter> params = new ArrayList<Parameter>();
@@ -532,11 +540,13 @@ public class Parser {
       expect(Type.IF);
       Tree.Expression cond = parseLogicalExpression();
       expect(Type.THEN);
-      Tree.Expression thenPart = parseLongExpression();
+      Tree.Expression thenPart = parseLongExpression(isStatement);
+      checkSemicolon(isStatement);
       Tree.Expression elsePart;
       if (at(Type.ELSE)) {
         expect(Type.ELSE);
-        elsePart = parseLongExpression();
+        elsePart = parseLongExpression(isStatement);
+        checkSemicolon(isStatement);
       } else {
         elsePart = new Tree.Singleton(Tree.Singleton.Type.NULL);
       }
@@ -547,9 +557,10 @@ public class Parser {
       List<Parameter> params = new ArrayList<Parameter>();
       parseNakedParameters(params);
       expect(Type.COLON);
-      Tree.Expression coll = parseExpression();
+      Tree.Expression coll = parseExpression(false);
       expect(Type.RPAREN);
-      Tree.Expression body = parseStatementEnd();
+      Tree.Expression body = parseStatementEnd(isStatement);
+      checkSemicolon(isStatement);
       return new Tree.Call("for", Arrays.<Tree.Expression>asList(
           coll,
           Lambda.create(
@@ -562,23 +573,26 @@ public class Parser {
       expect(Type.WITH_1CC);
       String name = expect(Type.IDENT);
       expect(Type.ARROW);
-      Tree.Expression value = parseStatementEnd();
+      Tree.Expression value = parseStatementEnd(isStatement);
+      checkSemicolon(isStatement);
       return Tree.With1Cc.create(source, name, value);
     } else {
-      return parseLogicalExpression();
+      Tree.Expression result = parseLogicalExpression();
+      checkSemicolon(isStatement);
+      return result;
     }
   }
 
-  private Tree.Expression parseStatementEnd() throws SyntaxError {
-    return parseLongExpression();
+  private Tree.Expression parseStatementEnd(boolean isStatement) throws SyntaxError {
+    return parseLongExpression(isStatement);
   }
 
   /**
    * <expr>
    *   -> <funexpr>
    */
-  private Tree.Expression parseExpression() throws SyntaxError {
-    return parseLongExpression();
+  private Tree.Expression parseExpression(boolean isStatement) throws SyntaxError {
+    return parseLongExpression(isStatement);
   }
 
   private Tree.New.Field parseNewField() throws SyntaxError {
@@ -588,7 +602,7 @@ public class Parser {
     boolean hasEagerValue;
     if (at(Type.COLON_EQ)) {
       expect(Type.COLON_EQ);
-      body = parseExpression();
+      body = parseExpression(false);
       params = Collections.<Parameter>emptyList();
       hasEagerValue = true;
     } else if (at(Type.ARROW)) {
@@ -626,7 +640,7 @@ public class Parser {
           fields.add(next);
         }
       }
-      expect(Type.RBRACE);
+      consumeRightBrace();
       StringBuilder buf = new StringBuilder();
       boolean first = true;
       for (String protocol : protocols) {
@@ -664,11 +678,11 @@ public class Parser {
   private Tree.Expression parsePrimitiveCollectionContents(Type end) throws SyntaxError {
     List<Tree.Expression> values = new ArrayList<Tree.Expression>();
     if (!at(Type.RBRACK)) {
-      Tree.Expression first = parseExpression();
+      Tree.Expression first = parseExpression(false);
       values.add(first);
       while (at(Type.COMMA)) {
         expect(Type.COMMA);
-        Tree.Expression next = parseExpression();
+        Tree.Expression next = parseExpression(false);
         values.add(next);
       }
     }
@@ -715,7 +729,7 @@ public class Parser {
       return parseNewExpression();
     case LPAREN: {
       expect(Type.LPAREN);
-      Tree.Expression result = parseExpression();
+      Tree.Expression result = parseExpression(false);
       expect(Type.RPAREN);
       return result;
     }

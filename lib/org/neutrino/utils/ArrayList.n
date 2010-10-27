@@ -5,7 +5,7 @@ def ArrayList.new() -> new ArrayList(0);
 def ArrayList.new(size is Integer) -> new ArrayList {
   contents_ := new_ref(new MutablePrimitiveArray(size)),
   length_ := new_ref(size)
-};
+}
 
 def ArrayList.new(elms is PrimitiveArray) {
   def result := new ArrayList(elms.length);
@@ -33,7 +33,7 @@ def (this is ArrayList).to_string() {
   ref s := "[";
   ref first := true;
   for (el : this) {
-    if first then first := false else s := s + ", ";
+    if first then first := false; else s := s + ", ";
     s := s + el.to_string;
   }
   s := s + "]";
@@ -41,7 +41,7 @@ def (this is ArrayList).to_string() {
 
 def (this is ArrayList)=(that is ArrayList) {
   if this.length != that.length then {
-    false
+    false;
   } else {
     with_1cc return -> {
       for (i : 0 .. this.length) {
@@ -86,5 +86,5 @@ def (this is ArrayList).iter {
   new Iter {
     has_next -> index_itr.has_next,
     next -> self[index_itr.next]
-  };
+  }
 }

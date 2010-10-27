@@ -53,16 +53,16 @@ def (this is UtilsTest).test_hash_map_iteration() {
   map[3] := "k";
   def counts := new ArrayList [ 2, 2, 2, 2, 2, 2 ];
   def check_value(value) {
-    if value = "a" then counts[0] := counts[0] - 1
-    else if value = "b" then counts[1] := counts[1] - 1
-    else if value = "k" then counts[2] := counts[2] - 1
-    else fail();    
+    if value = "a" then counts[0] := counts[0] - 1;
+    else if value = "b" then counts[1] := counts[1] - 1;
+    else if value = "k" then counts[2] := counts[2] - 1;
+    else fail();
   }
   def check_key(key) {
-    if key = 0 then counts[3] := counts[3] - 1
-    else if key = 1 then counts[4] := counts[4] - 1
-    else if key = 3 then counts[5] := counts[5] - 1
-    else fail();    
+    if key = 0 then counts[3] := counts[3] - 1;
+    else if key = 1 then counts[4] := counts[4] - 1;
+    else if key = 3 then counts[5] := counts[5] - 1;
+    else fail();
   }
   for (value : map.values)
     check_value(value);

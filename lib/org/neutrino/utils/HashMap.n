@@ -19,7 +19,7 @@ def HashMap.new() -> new HashMap {
   rEntries := new_ref(new MutablePrimitiveArray(HashMap.kInitialCapacity)),
   rSize := new_ref(0),
   rMaxLoad := new_ref((HashMap.kInitialCapacity * 3) / 4)
-};
+}
 
 def HashMap.new(init is PrimitiveCollection) {
   def result := new HashMap();
@@ -40,23 +40,23 @@ def (this is HashMap).capacity -> this.entries.length;
 
 def (this is HashMap)[key] {
   def entry := this.find_entry(key, this.hash(key), false);
-  if entry = null then null else entry.value;
+  if entry = null then null; else entry.value;
 }
 
 def (this is HashMap).values -> fn for (fun) {
   for (key, value : this)
     fun(value);
-};
+}
 
 def (this is HashMap).keys -> fn for (fun) {
   for (key, value : this)
     fun(key);
-};
+}
 
 def (this is HashMap).for(fun) {
   for (entry : this.entries) {
     if entry != null then
-      fun(entry.key, entry.value)
+      fun(entry.key, entry.value);
   }
 }
 
@@ -111,7 +111,7 @@ def HashMapEntry.new(key, hash) -> new HashMapEntry {
   key := key,
   hash := hash,
   rValue := new_ref(null)
-};
+}
 
 def (this is HashMapEntry).value -> this.rValue.get();
 

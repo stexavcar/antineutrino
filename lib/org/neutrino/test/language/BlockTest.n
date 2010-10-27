@@ -5,8 +5,8 @@ def (this is LanguageTest).test_blocks() {
 
 def (this is LanguageTest).test_expression_blocks() {
   this.on_start("expression blocks");
-  assert_true({1; 2} = 2);
-  assert_true(4 = {3; 4});
+  assert_true({1; 2;} = 2);
+  assert_true(4 = {3; 4;});
 }
 
 def (this is LanguageTest).test_statement_blocks() {
@@ -25,7 +25,7 @@ def block_foo_1() {
 }
 
 def block_foo_2() {
-  { { { 3 + 6; 5 + 7 } } }
+  { { { 3 + 6; 5 + 7; } } }
 }
 
 def block_foo_3() {

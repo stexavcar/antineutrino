@@ -17,7 +17,7 @@ def (this is String).ascii_characters -> fn for (fun) {
   for (i : 0 .. this.length) {
     fun(this._get_ascii_character(i));
   }
-};
+}
 
 // Temporary method.  Don't use under any circumstances.
 def (this is String)._get_ascii_character(i) -> internal "str[ascii]";

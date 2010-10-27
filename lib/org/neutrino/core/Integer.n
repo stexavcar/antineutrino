@@ -35,7 +35,7 @@ def (this is Integer)..(that) -> new Interval {
   from := this,
   to := that,
   dir := if this < that then 1 else 0-1
-};
+}
 
 protocol Interval is Sequence;
 
@@ -45,8 +45,8 @@ def (this is Interval).iter {
   ref i := this.from;
   new Iter {
     has_next -> not i = this.to,
-    next -> { def ret := i; i:= i + this.dir; ret }
-  };
+    next -> { def ret := i; i:= i + this.dir; ret; }
+  }
 }
 
 def (this is Interval).for(fun) -> this.for(fun, this.from);

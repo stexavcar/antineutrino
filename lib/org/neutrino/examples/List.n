@@ -33,7 +33,7 @@ def (this is List).iter {
   ref node := this;
   new Iter {
     has_next -> not node.isEmpty,
-    next -> { def v := node.head; node := node.tail; v }
+    next -> { def v := node.head; node := node.tail; v; }
   }
 }
 
