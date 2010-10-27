@@ -8,29 +8,29 @@ def (this is UtilsTest).test_simple_array_lists() {
   def kInitialSize := 5;
   def a := new ArrayList(kInitialSize);
   assert_equal(kInitialSize, a.length);
-  for (def i : 0 .. kInitialSize)
+  for (i : 0 .. kInitialSize)
     assert_equal(null, a[i]);
-  for (def i : 0 .. kInitialSize)
+  for (i : 0 .. kInitialSize)
     a[i] := i;
-  for (def i : 0 .. kInitialSize)
+  for (i : 0 .. kInitialSize)
     assert_equal(i, a[i]);
-  for (def i : 0 .. 10) {
+  for (i : 0 .. 10) {
     a.add(i);
     assert_equal(kInitialSize + i + 1, a.length);
   }
-  for (def i : 0 .. kInitialSize)
+  for (i : 0 .. kInitialSize)
     assert_equal(i, a[i]);
-  for (def i : 0 .. 10)
+  for (i : 0 .. 10)
     assert_equal(i, a[kInitialSize + i]);
 
   // Construct from sequence
   def b := new ArrayList(0 .. 10);
-  for (def i : 0 .. 10)
+  for (i : 0 .. 10)
     assert_equal(i, b[i]);
 
   // Construct from ArrayList (also a Sequence)
   def c := new ArrayList(b);
-  for (def el : b)
+  for (el : b)
     assert_equal(el, c[el]);
 }
 

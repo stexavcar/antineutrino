@@ -1,13 +1,13 @@
 def (this is LanguageTest).test_for() {
   this.on_start("for");
   ref expected := 0;
-  for (def i : 0 .. 10) {
+  for (i : 0 .. 10) {
     assert_equal(expected, i);
     expected := expected + 1;
   }
   assert_equal(expected, 10);
   expected := 5;
-  for (def i : #[5, 4, 3, 2]) {
+  for (i : #[5, 4, 3, 2]) {
     assert_equal(expected, i);
     expected := expected - 1;
   }

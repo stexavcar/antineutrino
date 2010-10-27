@@ -9,14 +9,14 @@ def ArrayList.new(size is Integer) -> new ArrayList {
 
 def ArrayList.new(elms is PrimitiveArray) {
   def result := new ArrayList(elms.length);
-  for (def i : 0 .. elms.length)
+  for (i : 0 .. elms.length)
     result[i] := elms[i];
   result;
 }
 
 def ArrayList.new(seq is Sequence) {
   def result := new ArrayList(0);
-  for (def elm : seq)
+  for (elm : seq)
     result.add(elm);
   result;
 }
@@ -32,7 +32,7 @@ def (this is ArrayList)[i]:=(value) -> this.contents[i] := value;
 def (this is ArrayList).to_string() {
   ref s := "[";
   ref first := true;
-  for (def el : this) {
+  for (el : this) {
     if first then first := false else s := s + ", ";
     s := s + el.to_string;
   }
@@ -44,7 +44,7 @@ def (this is ArrayList)=(that is ArrayList) {
     false
   } else {
     with_1cc return -> {
-      for (def i : 0 .. this.length) {
+      for (i : 0 .. this.length) {
         if this[i] != that[i] then
           return(false);
       }
@@ -55,9 +55,9 @@ def (this is ArrayList)=(that is ArrayList) {
 
 def (this is ArrayList)+(that is ArrayList) {
   def result := new ArrayList(this.length + that.length);
-  for (def i : 0 .. this.length)
+  for (i : 0 .. this.length)
     result[i] := this[i];
-  for (def i : 0 .. that.length)
+  for (i : 0 .. that.length)
     result[this.length + i] := that[i];
   result;
 }
@@ -74,7 +74,7 @@ def (this is ArrayList).ensure_capacity(capacity) {
   def old_contents := this.contents;
   if not capacity < old_contents.length then {
     def new_contents := new MutablePrimitiveArray(capacity * 2);
-    for (def i : 0 .. this.length)
+    for (i : 0 .. this.length)
       new_contents[i] := old_contents[i];
     this.contents_.set(new_contents);
   }

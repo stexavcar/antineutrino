@@ -26,11 +26,11 @@ def (this is UtilsTest).test_simple_hash_maps() {
 def (this is UtilsTest).test_large_hash_maps() {
   this.on_start("large hash maps");
   def map := new HashMap();
-  for (def i : 0 .. 256) {
+  for (i : 0 .. 256) {
     if (i % 5) != 3 then
       map[i] := i.to_string;
   }
-  for (def i : 0 .. 256) {
+  for (i : 0 .. 256) {
     def expected := if (i % 5) != 3 then i.to_string else null;
     assert_equal(expected, map[i]);
   }
@@ -64,11 +64,11 @@ def (this is UtilsTest).test_hash_map_iteration() {
     else if key = 3 then counts[5] := counts[5] - 1
     else fail();    
   }
-  for (def value : map.values)
+  for (value : map.values)
     check_value(value);
-  for (def key : map.keys)
+  for (key : map.keys)
     check_key(key);
-  for (def key, value : map) {
+  for (key, value : map) {
     check_key(key);
     check_value(value);
   }

@@ -544,7 +544,6 @@ public class Parser {
     } else if (at(Type.FOR)) {
       expect(Type.FOR);
       expect(Type.LPAREN);
-      expect(Type.DEF);
       List<Parameter> params = new ArrayList<Parameter>();
       parseNakedParameters(params);
       expect(Type.COLON);

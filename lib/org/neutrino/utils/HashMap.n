@@ -23,7 +23,7 @@ def HashMap.new() -> new HashMap {
 
 def HashMap.new(init is PrimitiveCollection) {
   def result := new HashMap();
-  for (def i : 0 .. init.length)
+  for (i : 0 .. init.length)
     result[i] := init[i];
   result;
 }
@@ -44,21 +44,17 @@ def (this is HashMap)[key] {
 }
 
 def (this is HashMap).values -> fn for (fun) {
-  for (def entry : this.entries) {
-    if entry != null then
-      fun(entry.value);
-  }
+  for (key, value : this)
+    fun(value);
 };
 
 def (this is HashMap).keys -> fn for (fun) {
-  for (def entry : this.entries) {
-    if entry != null then
-      fun(entry.key);
-  }
+  for (key, value : this)
+    fun(key);
 };
 
 def (this is HashMap).for(fun) {
-  for (def entry : this.entries) {
+  for (entry : this.entries) {
     if entry != null then
       fun(entry.key, entry.value)
   }
@@ -77,7 +73,7 @@ def (this is HashMap).extend_capacity(new_capacity) {
   this.rEntries.set(new_entries);
   this.rSize.set(0);
   this.rMaxLoad.set((new_capacity * 3) / 4);
-  for (def entry : old_entries) {
+  for (entry : old_entries) {
     if entry != null then
       this.insert(entry.key, entry.hash, entry.value);
   }

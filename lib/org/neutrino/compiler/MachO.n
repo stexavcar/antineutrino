@@ -120,7 +120,7 @@ def (this is RelocationTable).add_entry(block, offset) {
 }
 
 def (this is RelocationTable).encode(out, mach_o) {
-  for (def entry : this.entries)
+  for (entry : this.entries)
     entry.encode(out, mach_o);
 }
 
@@ -153,7 +153,7 @@ def (this is JumpTable).align -> 0;
 def (this is JumpTable).nreloc -> 0;
 
 def (this is JumpTable).encode(out, mach_o) {
-  for (def i : 0 .. this.size)
+  for (i : 0 .. this.size)
     out.write_int8(16rF4); // HLT
 }
 
@@ -191,14 +191,14 @@ def (this is TextSection).add_block(name, code) {
 
 def (this is TextSection).size {
   ref result := 0;
-  for (def block : this.blocks)
+  for (block : this.blocks)
     result := result + block.code.length;
   result;
 }
 
 def (this is TextSection).encode(out, mach_o) {
   ref offset := out.length;
-  for (def block : this.blocks) {
+  for (block : this.blocks) {
     out.write_data(block.code);
     offset := offset + block.code.length;
     out.pad_to(offset);
@@ -235,13 +235,13 @@ def (this is StringTable).add(name) {
 }
 
 def (this is StringTable).encode(out, mach_o) {
-  for (def str : this.strings)
+  for (str : this.strings)
     out.write_c_string(str);
 }
 
 def (this is StringTable).size {
   ref result := 0;
-  for (def str : this.strings)
+  for (str : this.strings)
     result := result + str.length + 1;
   result;
 }
@@ -257,7 +257,7 @@ def (this is IndirectSymbols).count -> this.rCount.get();
 def (this is IndirectSymbols).add -> this.rCount.set(this.count + 1);
 
 def (this is IndirectSymbols).encode(out, mach_o) {
-  for (def i : 0 .. this.count)
+  for (i : 0 .. this.count)
     out.write_int32(i);
 }
 
@@ -287,9 +287,9 @@ def (this is SymbolTable).length -> this.symbols.length;
 def (this is SymbolTable).symbols -> this.locals + this.externs;
 
 def (this is SymbolTable).encode(out, mach_o) {
-  for (def symbol : this.externs)
+  for (symbol : this.externs)
     symbol.encode_extern(out);
-  for (def symbol : this.locals)
+  for (symbol : this.locals)
     symbol.encode_local(out);
 }
 
@@ -446,7 +446,7 @@ def (this is MachO).encode_segment_command(out) {
  */
 def (this is MachO).encode_section_headers(out) {
   ref fileoff := this.segment_fileoff;
-  for (def section : this.sections) {
+  for (section : this.sections) {
     out.write_c_string(section.sectname, 16);
     out.write_c_string(section.segname, 16);
     out.write_int32(fileoff);
@@ -470,7 +470,7 @@ def (this is MachO).all_sections -> this.sections + this.dark_sections;
 
 def (this is MachO).encode_sections(out) {
   ref fileoff := this.segment_fileoff;
-  for (def section : this.all_sections) {
+  for (section : this.all_sections) {
     out.pad_to(fileoff);
     section.encode(out, this);
     def size := section.size;
@@ -482,7 +482,7 @@ def (this is MachO).encode_sections(out) {
 def (this is MachO).offset_of(target) {
   ref fileoff := this.segment_fileoff;
   with_1cc return ->
-    for (def section : this.all_sections) {
+    for (section : this.all_sections) {
       if section = target then {
         return(fileoff);
       }
@@ -493,21 +493,21 @@ def (this is MachO).offset_of(target) {
 
 def (this is MachO).segment_size {
   ref result := 0;
-  for (def section : this.sections)
+  for (section : this.sections)
     result := result + section.size;
   result;
 }
 
 def (this is MachO).ncmds {
   ref result := 0;
-  for (def element : this.elements)
+  for (element : this.elements)
     result := result + element.load_command_count;
   result;
 }
 
 def (this is MachO).sizeofcmds {
   ref result := 0;
-  for (def element : this.elements)
+  for (element : this.elements)
     result := result + element.load_command_size;
   result;
 }
