@@ -18,7 +18,7 @@ def test_main() {
     new_utils_test(counter),
     new_example_test(counter)
   ];
-  for (def i : 0 .. suites.length)
+  for (i : 0 .. suites.length)
     suites[i].run();
   print("Ran " + counter.get().to_string() + " tests.");
 }

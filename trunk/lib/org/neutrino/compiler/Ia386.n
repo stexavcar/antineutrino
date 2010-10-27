@@ -31,7 +31,7 @@ def AssemblerIa386.new(binary, name) -> new AssemblerIa386 {
 };
 
 def (this is AssemblerIa386).finalize() {
-  for (def fixup : this.fixups)
+  for (fixup : this.fixups)
     fixup();
 }
 

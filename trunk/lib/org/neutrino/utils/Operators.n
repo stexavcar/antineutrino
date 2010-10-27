@@ -1,13 +1,13 @@
 def (this is Sequence).fold_left(fun, zero) {
   ref result := zero;
-  for (def elm : this)
+  for (elm : this)
     result := fun(result, elm);
   result;
 }
 
 def (this is Sequence).map(fun) {
   def result := new ArrayList();
-  for (def elm : this)
+  for (elm : this)
     result.add(fun(elm));
   result;
 }

@@ -25,7 +25,7 @@ def (this is Binary).add_code_block(name) {
 def (this is Binary).code_block_offset(name) {
   ref offset := 0;
   with_1cc return ->
-    for (def entry : this.entries) {
+    for (entry : this.entries) {
       if name = entry.name then {
         return(offset)
       } else {
@@ -36,7 +36,7 @@ def (this is Binary).code_block_offset(name) {
 
 def (this is Binary).jump_table_offset {
   ref offset := 0;
-  for (def entry : this.entries)
+  for (entry : this.entries)
     offset := offset + entry.assm.length;
   offset;  
 }
@@ -57,15 +57,15 @@ def (this is Binary).encode {
 }
 
 def (this is Binary).finalize {
-  for (def entry : this.entries)
+  for (entry : this.entries)
     entry.assm.finalize();
 }
 
 def (this is Binary).to_mach_o() {
   def result := new MachO(this);
-  for (def entry : this.entries)
+  for (entry : this.entries)
     result.add_code_block(entry.name, entry.assm.code);
-  for (def extern : this.externs)
+  for (extern : this.externs)
     result.add_extern(extern.name, extern.block, extern.offset);
   result;
 }

@@ -8,9 +8,9 @@ def (this is PrimitiveArray).length -> internal "array.length";
 
 def (this is PrimitiveArray)+(that is PrimitiveArray) {
   def result := new MutablePrimitiveArray(this.length + that.length);
-  for (def i : 0 .. this.length)
+  for (i : 0 .. this.length)
     result[i] := this[i];
-  for (def i : 0 .. that.length)
+  for (i : 0 .. that.length)
     result[this.length + i] := that[i];
   result;
 }
@@ -27,7 +27,7 @@ def (this is PrimitiveArray).iter {
 def (this is PrimitiveArray)[slice is Interval] {
   def a := new MutablePrimitiveArray(Math.abs(slice.to - slice.from));
   ref i := 0;
-  for (def idx : slice) {
+  for (idx : slice) {
     a[i] := this[idx];
     i := i + 1;
   }
