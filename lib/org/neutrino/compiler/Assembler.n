@@ -1,0 +1,15 @@
+protocol Register;
+
+protocol Deref;
+
+def deref(val) -> new Deref(val);
+
+protocol CallTarget;
+
+protocol LocalCallTarget;
+
+def CallTarget.local(name) -> new LocalCallTarget { name := name };
+
+protocol ExternalCallTarget;
+
+def CallTarget.extern(name) -> new ExternalCallTarget { name := name };

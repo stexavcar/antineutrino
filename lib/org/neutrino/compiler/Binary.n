@@ -1,8 +1,17 @@
+protocol LocalCallMarker;
+
+def LocalCallMarker.new(assm, offset, target) -> new LocalCallMarker {
+  assm := assm,
+  offset := offset,
+  target := target
+}
+
 protocol Binary;
 
 def Binary.new(arch) -> new Binary {
   arch := arch,
   entries := new ArrayList(),
+  markers := new ArrayList(),
   externs := new ArrayList()
 }
 
@@ -12,6 +21,8 @@ def CodeBlock.new(name, code) -> new CodeBlock {
   name := name,
   code := code
 }
+
+def (this is Binary).add_marker(marker) -> this.markers.add(marker);
 
 def (this is Binary).add_code_block(name) {
   def assm := this.arch.new_assembler(this, name);
@@ -68,5 +79,6 @@ def (this is Binary).to_mach_o() {
     result.add_code_block(entry.name, entry.assm.code);
   for (extern : this.externs)
     result.add_extern(extern.name, extern.block, extern.offset);
+  result.finalize();
   result;
 }
