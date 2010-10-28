@@ -4,15 +4,15 @@ def compile_main(args) {
   def binary := new Binary(new Ia386());
 
   def main := binary.add_code_block("_main");
-  main.push(rEbp);
-  main.mov(rEsp, rEbp);
-  main.sub(16r18, rEsp);
-  main.mov(1, deref(rEsp));
-  main.call(CallTarget.extern("_sleep$UNIX2003"));
-  main.mov(10, deref(rEsp));
-  main.call(CallTarget.extern("_exit"));
-  main.leave();
-  main.ret();
+  main.enter_frame();
+  main.call(CallTarget.local("entry_point"));
+  main.exit_frame();
+
+  def ep := binary.add_code_block("entry_point");
+  ep.enter_frame();
+  ep.mov(5, deref(rEsp));
+  ep.call(CallTarget.extern("_sleep$UNIX2003"));
+  ep.exit_frame();
   
   def data := binary.encode;
   open_file(out_name).write_binary(data);  

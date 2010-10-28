@@ -96,6 +96,17 @@ def (this is AssemblerIa386).leave() {
   this.stream.write_int8(16rC9);
 }
 
+def (this is AssemblerIa386).enter_frame() {
+  this.push(rEbp);
+  this.mov(rEsp, rEbp);
+  this.sub(16r18, rEsp);
+}
+
+def (this is AssemblerIa386).exit_frame() {
+  this.leave();
+  this.ret();
+}
+
 def (this is AssemblerIa386).call(target is LocalCallTarget) {
   this.stream.write_int8(16rE8);
   def reloff := this.stream.length;
