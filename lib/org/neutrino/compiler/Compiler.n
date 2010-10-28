@@ -1,18 +1,47 @@
+def make_extern_bridge(binary, name, argc) {
+  def bridge := binary.add_code_block(name);
+  bridge.enter_frame();
+  bridge.mov(rEax, deref(rEsp));
+  bridge.call(CallTarget.extern("_" + name));
+  bridge.exit_frame();  
+}
+
 @entry_point("compile")
 def compile_main(args) {
   def out_name := args[0];
   def binary := new Binary(new Ia386());
 
+  // Make external call bridges.
+  make_extern_bridge(binary, "exit", 1);
+  make_extern_bridge(binary, "putchar", 1);
+
+  // Main function which calls the entry point and then exits.  This
+  // function is called by the system and so must use native calling
+  // conventions.
   def main := binary.add_code_block("_main");
   main.enter_frame();
   main.call(CallTarget.local("entry_point"));
+  main.mov(0, rEax);
+  main.call(CallTarget.local("exit"));
   main.exit_frame();
 
-  def ep := binary.add_code_block("entry_point");
-  ep.enter_frame();
-  ep.mov(5, deref(rEsp));
-  ep.call(CallTarget.extern("_sleep"));
-  ep.exit_frame();
+  // Neutrino entry point.  Called from neutrino.
+  def entry_point := binary.add_code_block("entry_point");
+  entry_point.enter_frame();
+  entry_point.call(CallTarget.local("hello"));
+  entry_point.exit_frame();
+
+  // Utility function that prints a message.  
+  def hello := binary.add_code_block("hello");
+  def puts(s) {
+    for (c : s.ascii_characters) {
+      hello.mov(c, rEax);
+      hello.call(CallTarget.local("putchar"));
+    }
+  }
+  hello.enter_frame();
+  puts("Hello World!\n");
+  hello.exit_frame();
   
   def data := binary.encode;
   open_file(out_name).write_binary(data);  

@@ -91,6 +91,13 @@ def (this is AssemblerIa386).mov(src is Register, dest is Register) {
   this.write_mod_rm(kReg, src.index, dest.index);
 }
 
+// 89 /r -> MOV r/m32, r32
+def (this is AssemblerIa386).mov(src is Register, dest is Deref) {
+  this.write_opcode(16r89);
+  this.write_mod_rm(kDeref, src.index, dest.reg.index);
+  this.write_sib(kScaleOne, 4, dest.reg.index);
+}
+
 // 81 /5 id -> SUB r/m32, imm32
 def (this is AssemblerIa386).sub(imm32 is Integer, reg is Register) {
   this.write_opcode(16r81);

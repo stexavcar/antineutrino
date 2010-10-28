@@ -1,5 +1,10 @@
 package org.neutrino.syntax;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.neutrino.compiler.CompilerUniverse;
 import org.neutrino.compiler.Source;
 import org.neutrino.compiler.Symbol;
@@ -10,11 +15,6 @@ import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Neutrino syntax trees.
@@ -440,7 +440,29 @@ public class Tree {
     private final String value;
 
     public Text(String value) {
-      this.value = value;
+      this.value = unescape(value);
+    }
+
+    private static final String unescape(String str) {
+      StringBuilder buf = new StringBuilder();
+      for (int i = 0; i < str.length(); i++) {
+        char c = str.charAt(i);
+        if (c == '\\') {
+          i++;
+          char n = str.charAt(i);
+          switch (n) {
+            case 'n':
+              buf.append('\n');
+              break;
+            default:
+              buf.append(n);
+              break;
+          }
+        } else {
+          buf.append(c);
+        }
+      }
+      return buf.toString();
     }
 
     public String getValue() {
