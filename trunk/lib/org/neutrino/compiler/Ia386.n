@@ -32,27 +32,13 @@ protocol AssemblerIa386;
 def AssemblerIa386.new(binary, name) -> new AssemblerIa386 {
   binary := binary,
   name := name,
-  stream := new BlobStream(),
+  out := new BlobStream(),
   fixups := new ArrayList()
 }
 
 def (this is AssemblerIa386).finalize() {
   for (fixup : this.fixups)
     fixup();
-}
-
-def (this is AssemblerIa386).write_mod_rm(mod, reg, rm) {
-  this.stream.write_int8((mod << 6) | (reg << 3) | rm);
-}
-
-def (this is AssemblerIa386).write_sib(scale, index, base) {
-  this.stream.write_int8((scale << 6) | (index << 3) | base);
-}
-
-// B8 +rd -> MOV r32, imm32
-def (this is AssemblerIa386).mov(imm32 is Integer, dest is Register) {
-  this.stream.write_int8(16rB8 + dest.index);
-  this.stream.write_int32(imm32);
 }
 
 def kDeref := 2r00;
@@ -63,41 +49,80 @@ def kScaleTwo := 2r01;
 def kScaleFour := 2r10;
 def kScaleEight := 2r11;
 
+def (this is AssemblerIa386).cursor -> this.out.length;
+
+def (this is AssemblerIa386).write_mod_rm(mod, reg, rm) {
+  this.out.write_int8((mod << 6) | (reg << 3) | rm);
+}
+
+def (this is AssemblerIa386).write_sib(scale, index, base) {
+  this.out.write_int8((scale << 6) | (index << 3) | base);
+}
+
+def (this is AssemblerIa386).write_imm32(val) {
+  this.out.write_int32(val);
+}
+
+def (this is AssemblerIa386).rewrite_imm32(offset, val) {
+  this.out.rewrite_int32(offset, val);
+}
+
+def (this is AssemblerIa386).write_opcode(val) {
+  this.out.write_int8(val);
+}
+
+// B8 +rd -> MOV r32, imm32
+def (this is AssemblerIa386).mov(imm32 is Integer, dest is Register) {
+  this.write_opcode(16rB8 + dest.index);
+  this.write_imm32(imm32);
+}
+
 // C7 /0 -> MOV r/m32, imm32
 def (this is AssemblerIa386).mov(imm32 is Integer, dest is Deref) {
-  this.stream.write_int8(16rC7);
+  this.write_opcode(16rC7);
   this.write_mod_rm(kDeref, 0, 4);
   this.write_sib(kScaleOne, 4, dest.reg.index);
-  this.stream.write_int32(imm32);
+  this.write_imm32(imm32);
 }
 
 // 89 /r -> MOV r/m32, r32
 def (this is AssemblerIa386).mov(src is Register, dest is Register) {
-  this.stream.write_int8(16r89);
+  this.write_opcode(16r89);
   this.write_mod_rm(kReg, src.index, dest.index);
 }
 
 // 81 /5 id -> SUB r/m32, imm32
 def (this is AssemblerIa386).sub(imm32 is Integer, reg is Register) {
-  this.stream.write_int8(16r81);
+  this.write_opcode(16r81);
   this.write_mod_rm(kReg, 5, reg.index);
-  this.stream.write_int32(imm32);
+  this.write_imm32(imm32);
 }
 
+// 50 +rd -> PUSH r32
 def (this is AssemblerIa386).push(reg is Register) {
-  this.stream.write_int8(16r50 + reg.index);
+  this.write_opcode(16r50 + reg.index);
 }
 
+// C3 -> RET
 def (this is AssemblerIa386).ret() {
-  this.stream.write_int8(16rC3);
+  this.write_opcode(16rC3);
 }
 
+// C9 -> LEAVE
 def (this is AssemblerIa386).leave() {
-  this.stream.write_int8(16rC9);
+  this.write_opcode(16rC9);
+}
+
+// CC -> INT 3
+def (this is AssemblerIa386).int3() {
+  this.write_opcode(16rCC);
 }
 
 def (this is AssemblerIa386).enter_frame() {
+  // Push the previous frame's base pointer to save it for later.
+  // It will be restored by .leave.
   this.push(rEbp);
+  // Make the current stack pointer the new base pointer.
   this.mov(rEsp, rEbp);
   this.sub(16r18, rEsp);
 }
@@ -108,33 +133,31 @@ def (this is AssemblerIa386).exit_frame() {
 }
 
 def (this is AssemblerIa386).call(target is LocalCallTarget) {
-  this.stream.write_int8(16rE8);
-  def reloff := this.stream.length;
-  this.stream.write_int32(0);
+  this.write_opcode(16rE8);
+  def reloff := this.cursor;
+  this.write_imm32(0);
   this.fixups.add(fn {
     def ownoff := this.binary.code_block_offset(this.name);
     def codeoff := this.binary.code_block_offset(target.name);
-    this.stream.rewrite_int32(reloff, codeoff - (ownoff + reloff + 4));
+    this.rewrite_imm32(reloff, codeoff - (ownoff + reloff + 4));
   });
 }
 
 def (this is AssemblerIa386).call(target is ExternalCallTarget) {
-  this.stream.write_int8(16rE8);
-  def reloff := this.stream.length;
-  this.stream.write_int32(0);
+  this.write_opcode(16rE8);
+  def reloff := this.cursor;
+  this.write_imm32(0);
   def index := this.binary.register_extern(target.name, this.name, reloff);
   this.fixups.add(fn {
     def ownoff := this.binary.code_block_offset(this.name);
     def codeoff := this.binary.extern_offset(index);
-    this.stream.rewrite_int32(reloff, codeoff - (ownoff + reloff + 4));
+    this.rewrite_imm32(reloff, codeoff - (ownoff + reloff + 4));
   });  
 }
 
-def (this is AssemblerIa386).int3() -> this.stream.write_int8(16rCC);
+def (this is AssemblerIa386).length -> this.out.length;
 
-def (this is AssemblerIa386).length -> this.stream.length;
-
-def (this is AssemblerIa386).code -> this.stream.get_blob();
+def (this is AssemblerIa386).code -> this.out.get_blob();
 
 protocol Ia386;
 
