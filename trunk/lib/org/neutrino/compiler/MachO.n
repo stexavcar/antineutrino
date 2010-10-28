@@ -63,7 +63,9 @@ def MachO.new(binary) {
     jump_table := jump_table,
     reloc_table := reloc_table,
     sections := new ArrayList() [ text, jump_table ],
-    dark_sections := new ArrayList() [ strings, symbols, indirect_symbols, reloc_table ]
+    dark_sections := new ArrayList() [ strings, symbols, indirect_symbols, reloc_table ],
+    local_calls := new ArrayList(),
+    dylib_calls := new ArrayList()
   }
 }
 
@@ -77,7 +79,7 @@ def (this is MachO).encode(out) {
 
 def (this is MachO).add_code_block(name, code) {
   def name_index := this.strings.add(name);
-  def code_start := this.text.add_block(name_index, code);
+  def code_start := this.text.add_block(name, name_index, code);
   this.symbols.add_local(name_index, this.segment_fileoff + code_start);
 }
 
@@ -163,7 +165,8 @@ def TextSection.new(reloc_table) -> new TextSection {
   reloc_table := reloc_table,
   blocks := new ArrayList(),
   rLength := new Ref(0),
-  rNreloc := new Ref(0)
+  rNreloc := new Ref(0),
+  code := new BlobStream()
 }
 
 def (this is TextSection).length -> this.rLength.get();
@@ -182,11 +185,30 @@ def (this is TextSection).reserved2 -> 0;
 
 def (this is TextSection).align -> 2;
 
-def (this is TextSection).add_block(name, code) {
-  this.blocks.add(new { name := name, code := code });
+def (this is TextSection).add_block(name, name_index, code) {
+  this.blocks.add(new { name := name, name_index := name_index, code := code });
+  this.code.write_data(code);
   def result := this.length;
   this.length := this.length + code.length;
   result;
+}
+
+def (this is TextSection).code_block_offset(name) {
+  ref offset := 0;
+  with_1cc (return) {
+    for (block : this.blocks) {
+      if block.name = name then {
+        return(offset);
+      } else {
+        offset := offset + block.code.length;
+      }
+    }
+    fail("Code block '${name}' not found");
+  }
+}
+
+def (this is TextSection).rewrite_int32(offset, value) {
+  this.code.rewrite_int32(offset, value);
 }
 
 def (this is TextSection).size {
@@ -197,12 +219,7 @@ def (this is TextSection).size {
 }
 
 def (this is TextSection).encode(out, mach_o) {
-  ref offset := out.length;
-  for (block : this.blocks) {
-    out.write_data(block.code);
-    offset := offset + block.code.length;
-    out.pad_to(offset);
-  }
+  out.write_data(this.code.get_blob());
 }
 
 def align(value, factor) {
@@ -511,4 +528,16 @@ def (this is MachO).sizeofcmds {
   for (element : this.elements)
     result := result + element.load_command_size;
   result;
+}
+
+def (this is MachO).finalize() {
+  for (marker : this.binary.markers)
+    this.process_marker(marker);
+}
+
+def (this is MachO).process_marker(marker is LocalCallMarker) {
+  def source_offset := this.text.code_block_offset(marker.assm.name);
+  def instr_offset := source_offset + marker.offset;
+  def target_offset := this.text.code_block_offset(marker.target);
+  this.text.rewrite_int32(instr_offset, target_offset - (instr_offset + 4));
 }

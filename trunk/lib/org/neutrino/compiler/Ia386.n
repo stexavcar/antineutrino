@@ -1,12 +1,6 @@
-protocol Register;
-
 def Register.new(index) -> new Register { index := index };
 
-protocol Deref;
-
 def Deref.new(reg is Register) -> new Deref { reg := reg };
-
-def deref(val) -> new Deref(val);
 
 def rEax := new Register(0);
 def rEcx := new Register(1);
@@ -16,16 +10,6 @@ def rEsp := new Register(4);
 def rEbp := new Register(5);
 def rEsi := new Register(6);
 def rEdi := new Register(7);
-
-protocol CallTarget;
-
-protocol LocalCallTarget;
-
-def CallTarget.local(name) -> new LocalCallTarget { name := name };
-
-protocol ExternalCallTarget;
-
-def CallTarget.extern(name) -> new ExternalCallTarget { name := name };
 
 protocol AssemblerIa386;
 
@@ -143,11 +127,7 @@ def (this is AssemblerIa386).call(target is LocalCallTarget) {
   this.write_opcode(16rE8);
   def reloff := this.cursor;
   this.write_imm32(0);
-  this.fixups.add(fn {
-    def ownoff := this.binary.code_block_offset(this.name);
-    def codeoff := this.binary.code_block_offset(target.name);
-    this.rewrite_imm32(reloff, codeoff - (ownoff + reloff + 4));
-  });
+  this.binary.add_marker(new LocalCallMarker(this, reloff, target.name));
 }
 
 def (this is AssemblerIa386).call(target is ExternalCallTarget) {
