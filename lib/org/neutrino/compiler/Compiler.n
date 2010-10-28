@@ -11,7 +11,7 @@ def compile_main(args) {
   def ep := binary.add_code_block("entry_point");
   ep.enter_frame();
   ep.mov(5, deref(rEsp));
-  ep.call(CallTarget.extern("_sleep$UNIX2003"));
+  ep.call(CallTarget.extern("_sleep"));
   ep.exit_frame();
   
   def data := binary.encode;
