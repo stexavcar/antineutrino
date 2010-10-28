@@ -6,8 +6,13 @@ def compile_main(args) {
   def main := binary.add_code_block("_main");
   main.push(rEbp);
   main.mov(rEsp, rEbp);
-  main.mov(10, rEax);
+  main.sub(16r18, rEsp);
+  main.mov(1, deref(rEsp));
+  main.call(CallTarget.extern("_sleep$UNIX2003"));
+  main.mov(10, deref(rEsp));
   main.call(CallTarget.extern("_exit"));
+  main.leave();
+  main.ret();
   
   def data := binary.encode;
   open_file(out_name).write_binary(data);  
