@@ -1,0 +1,7 @@
+def (this is UtilsTest).test_string_streams() {
+  this.on_start("string streams");
+  def out := new StringStream();
+  for (i : 0 .. 10)
+    out.add(i);
+  assert_equal("0123456789", out.to_string());
+}

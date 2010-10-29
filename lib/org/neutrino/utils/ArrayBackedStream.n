@@ -1,0 +1,27 @@
+protocol ArrayBackedStream;
+
+def (this is ArrayBackedStream).length -> this.rLength.get();
+
+def (this is ArrayBackedStream).capacity -> this.data.length;
+
+def (this is ArrayBackedStream).data -> this.rData.get();
+
+def (this is ArrayBackedStream).extend_capacity(capacity) {
+  def old_contents := this.data;
+  def new_contents := this.new_backing_array(capacity * 2);
+  for (i : 0 .. this.length)
+    new_contents[i] := old_contents[i];
+  this.rData.set(new_contents);
+}
+
+def (this is ArrayBackedStream).add(obj) -> this.add_to_stream(obj);
+
+def (this is ArrayBackedStream).add_to_stream(byte) {
+  if this.length >= this.capacity then
+    this.extend_capacity(this.length);
+  def index := this.length;
+  this.data[index] := byte;
+  this.rLength.set(index + 1);
+}
+
+def (this is ArrayBackedStream)[index] -> this.data[index];

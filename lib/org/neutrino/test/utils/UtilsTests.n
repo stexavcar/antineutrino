@@ -7,4 +7,5 @@ def (this is UtilsTest).run() {
   this.test_array_lists();
   this.test_delegates();
   this.test_hash_maps();
+  this.test_string_streams();
 }

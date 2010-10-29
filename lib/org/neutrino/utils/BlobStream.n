@@ -1,20 +1,16 @@
 /*
  * A stream of bytes.
  */
-protocol BlobStream;
+protocol BlobStream is ArrayBackedStream;
 
 def BlobStream.new() -> new BlobStream(256);
 
 def BlobStream.new(size) -> new BlobStream {
-  data_ := new Ref(new MutablePrimitiveByteArray(size)),
-  length_ := new Ref(0)
+  rData := new Ref(new MutablePrimitiveByteArray(size)),
+  rLength := new Ref(0)
 }
 
-def (this is BlobStream).length -> this.length_.get();
-
-def (this is BlobStream).capacity -> this.data.length;
-
-def (this is BlobStream).data -> this.data_.get();
+def (this is BlobStream).new_backing_array(size) -> new MutablePrimitiveByteArray(size);
 
 def (this is BlobStream).rewrite_int32(index, word) {
   this.data[index] := (word & 16rFF);
@@ -60,27 +56,11 @@ def (this is BlobStream).write_c_string(str, length) {
 
 def (this is BlobStream).write_c_string(str) -> this.write_c_string(str, str.length + 1);
 
-def (this is BlobStream).extend_capacity(capacity) {
-  def old_contents := this.data;
-  def new_contents := new MutablePrimitiveByteArray(capacity * 2);
-  for (i : 0 .. this.length)
-    new_contents[i] := old_contents[i];
-  this.data_.set(new_contents);
-}
-
 def (this is BlobStream).pad_to(offset) {
   if this.length < offset then {
     for (i : this.length .. offset)
       this.add(0);
   }
-}
-
-def (this is BlobStream).add(byte) {
-  if this.length >= this.capacity then
-    this.extend_capacity(this.length);
-  def index := this.length;
-  this.data[index] := byte;
-  this.length_.set(index + 1);
 }
 
 def (this is BlobStream).get_blob() {

@@ -30,13 +30,16 @@ def (this is ArrayList).contents -> this.contents_.get();
 def (this is ArrayList)[i]:=(value) -> this.contents[i] := value;
 
 def (this is ArrayList).to_string() {
-  ref s := "[";
+  def out := new StringStream();
+  out.add("[");
   ref first := true;
   for (el : this) {
-    if first then first := false; else s := s + ", ";
-    s := s + el.to_string();
+    if first then first := false;
+    else out.add(", ");
+    out.add(el);
   }
-  s := s + "]";
+  out.add("]");
+  out.to_string();
 }
 
 def (this is ArrayList)=(that is ArrayList) {
