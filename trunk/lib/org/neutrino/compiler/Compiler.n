@@ -1,4 +1,15 @@
-def make_extern_bridge(binary, name, argc) {
+protocol NeutrinoCompiler;
+
+def NeutrinoCompiler.new() -> new NeutrinoCompiler { };
+
+@entry_point("compile")
+def compiler_entry_point(args) {
+  def in_name := args[0];
+  def out_name := args[1];
+  new NeutrinoCompiler().compile(in_name, out_name);
+}
+
+def (this is NeutrinoCompiler).add_dylib_bridge(binary, name, argc) {
   def bridge := binary.add_code_block(name);
   bridge.enter_frame();
   bridge.mov(rEax, deref(rEsp));
@@ -6,14 +17,12 @@ def make_extern_bridge(binary, name, argc) {
   bridge.exit_frame();  
 }
 
-@entry_point("compile")
-def compile_main(args) {
-  def out_name := args[0];
+def (this is NeutrinoCompiler).build_binary() {
   def binary := new Binary(new Ia386());
 
   // Make external call bridges.
-  make_extern_bridge(binary, "exit", 1);
-  make_extern_bridge(binary, "putchar", 1);
+  this.add_dylib_bridge(binary, "exit", 1);
+  this.add_dylib_bridge(binary, "putchar", 1);
 
   // Main function which calls the entry point and then exits.  This
   // function is called by the system and so must use native calling
@@ -42,7 +51,31 @@ def compile_main(args) {
   hello.enter_frame();
   puts("Hello World!\n");
   hello.exit_frame();
-  
+  binary;
+}
+
+protocol CompilerGrower;
+
+def CompilerGrower.new() -> new CompilerGrower {
+  handler_table := CompilerGrower.new_handler_table()
+}
+
+def (this is CompilerGrower).grow(tag, payload) {
+  def handler := this.handler_table[tag];
+  if handler = null then
+    fail("Don't know how to grow a ${tag}.");
+  handler(payload);
+}
+
+def (this is NeutrinoCompiler).read_universe(filename) {
+  def raw_data := open_file(filename).read_binary();
+  new Plankton(raw_data, new CompilerGrower()).unmarshal();
+}
+
+def (this is NeutrinoCompiler).compile(in_name, out_name) {
+  def universe := this.read_universe(in_name);
+  print(universe);
+  def binary := this.build_binary();
   def data := binary.encode;
   open_file(out_name).write_binary(data);  
 }

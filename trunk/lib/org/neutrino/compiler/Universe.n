@@ -1,0 +1,75 @@
+def CompilerGrower.new_handler_table() {
+  def result := new HashMap();
+  result[CodeBundle.tag] := (fn (payload) -> CodeBundle.grow(payload));
+  result[Parameter.tag] := (fn (payload) -> Parameter.grow(payload));
+  result[Method.tag] := (fn (payload) -> Method.grow(payload));
+  result[TypeId.tag] := (fn (payload) -> TypeId.grow(payload));
+  result[Binding.tag] := (fn (payload) -> Binding.grow(payload));
+  result[Annotation.tag] := (fn (payload) -> Annotation.grow(payload));
+  result[Module.tag] := (fn (payload) -> Module.grow(payload));
+  result[Native.tag] := (fn (payload) -> Native.grow(payload));
+  result[Universe.tag] := (fn (payload) -> Universe.grow(payload));
+  def id(x) -> x;
+  result[Protocol.tag] := id;
+  result["org::neutrino::runtime::RInteger"] := id;
+  result["org::neutrino::runtime::RString"] := id;
+  result;
+}
+
+protocol CodeBundle;
+
+def CodeBundle.tag -> "org::neutrino::pib::CodeBundle";
+
+def CodeBundle.grow(payload) -> null;
+
+protocol Parameter;
+
+def Parameter.tag -> "org::neutrino::pib::Parameter";
+
+def Parameter.grow(payload) -> null;
+
+protocol Method;
+
+def Method.tag -> "org::neutrino::runtime::RMethod";
+
+def Method.grow(payload) -> null;
+
+protocol TypeId;
+
+def TypeId.tag -> "org::neutrino::runtime::TypeId";
+
+def TypeId.grow(payload) -> null;
+
+protocol Protocol;
+
+def Protocol.tag -> "org::neutrino::runtime::RProtocol";
+
+protocol Binding;
+
+def Binding.tag -> "org::neutrino::pib::Binding";
+
+def Binding.grow(payload) -> null;
+
+protocol Annotation;
+
+def Annotation.tag -> "org::neutrino::syntax::Annotation";
+
+def Annotation.grow(payload) -> null;
+
+protocol Module;
+
+def Module.tag -> "org::neutrino::pib::Module";
+
+def Module.grow(payload) -> null;
+
+protocol Native;
+
+def Native.tag -> "org::neutrino::runtime::Native";
+
+def Native.grow(payload) -> null;
+
+protocol Universe;
+
+def Universe.tag -> "org::neutrino::pib::Universe";
+
+def Universe.grow(payload) -> new Universe { };

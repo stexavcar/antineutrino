@@ -10,6 +10,11 @@ public class InterpreterError extends RuntimeException {
   private final Frame frame;
   private StackTraceElement[] trace;
 
+  public InterpreterError(Throwable cause, Frame frame) {
+    super(cause);
+    this.frame = frame;
+  }
+
   public InterpreterError(Frame frame) {
     this.frame = frame;
   }
@@ -71,6 +76,11 @@ public class InterpreterError extends RuntimeException {
     } catch (Throwable t) {
       t.printStackTrace();
     }
+    Throwable cause = getCause();
+    if (cause != null) {
+      out.println("caused by");
+      cause.printStackTrace(out);
+    }
   }
 
   public static class UndefinedGlobal extends InterpreterError {
@@ -100,6 +110,22 @@ public class InterpreterError extends RuntimeException {
       StackTraceElement topFrame = getStackTrace()[0];
       return "Method " + topFrame.getClassName() + "/"
           + topFrame.getMethodName() + " not found";
+    }
+
+  }
+
+  public static class Failure extends InterpreterError {
+
+    private final String message;
+
+    public Failure(String message, Frame frame) {
+      super(frame);
+      this.message = message;
+    }
+
+    @Override
+    public String getMessage() {
+      return message;
     }
 
   }

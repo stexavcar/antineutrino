@@ -2,6 +2,6 @@ def open_file(name) -> internal "open_file";
 
 @native("file") protocol File;
 
-def (this is File).read_binary -> internal "file.read";
+def (this is File).read_binary() -> internal "file.read";
 
 def (this is File).write_binary(data is ByteArray) -> internal "file.write";

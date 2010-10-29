@@ -30,7 +30,7 @@ def HashMap.new(init is PrimitiveCollection) {
 
 def (this is HashMap).max_load -> this.rMaxLoad.get();
 
-def (this is HashMap).hash(value) -> HashMap.hash(value);
+def (this is HashMap).hash(value) -> Math.abs(HashMap.hash(value));
 
 def (this is HashMap).entries -> this.rEntries.get();
 
