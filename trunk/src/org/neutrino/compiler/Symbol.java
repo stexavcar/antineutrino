@@ -5,7 +5,7 @@ import org.neutrino.syntax.Tree.Declaration;
 
 public abstract class Symbol {
 
-  public abstract void emitLoad(Assembler assm);
+  public abstract int emitLoad(Assembler assm);
 
   /**
    * Is this symbol transient, that is, if an inner scope accesses
@@ -32,8 +32,8 @@ public abstract class Symbol {
     }
 
     @Override
-    public void emitLoad(Assembler assm) {
-      assm.global(name);
+    public int emitLoad(Assembler assm) {
+      return assm.global(name);
     }
 
     @Override
@@ -58,8 +58,8 @@ public abstract class Symbol {
     }
 
     @Override
-    public void emitLoad(Assembler assm) {
-      assm.argument(argc - index);
+    public int emitLoad(Assembler assm) {
+      return assm.argument(argc - index);
     }
 
     @Override
@@ -84,8 +84,8 @@ public abstract class Symbol {
     }
 
     @Override
-    public void emitLoad(Assembler assm) {
-      assm.outer(index);
+    public int emitLoad(Assembler assm) {
+      return assm.outer(index);
     }
 
     @Override
@@ -119,8 +119,8 @@ public abstract class Symbol {
     }
 
     @Override
-    public void emitLoad(Assembler assm) {
-      assm.local(index);
+    public int emitLoad(Assembler assm) {
+      return assm.local(index);
     }
 
     @Override

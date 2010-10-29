@@ -6,8 +6,10 @@
 
   <property name="class.dir" value="${bin.dir}/classes"/>
   <property name="pib.dir" value="${bin.dir}/pib"/>
+  <property name="neupib.dir" value="${bin.dir}/pib"/>
   <property name="obj.dir" value="${bin.dir}/obj"/>
   <property name="libpib.path" value="${pib.dir}/lib.pib"/>
+  <property name="neulibpib.path" value="${pib.dir}/neulib.pib"/>
   <property name="libobj.path" value="${obj.dir}/lib.no"/>
   <property name="libexe.path" value="${obj.dir}/lib"/>
   
@@ -41,6 +43,17 @@
       <arg value="--outfile"/><arg value="${libpib.path}"/>
     </java>
   </target>
+
+  <target name="neulibpib.build.javatrino" depends="javatrino.build">
+    <mkdir dir="${neupib.dir}"/>
+    <java classname="${compiler.class}" fork="yes">
+      <classpath><path location="${class.dir}"/></classpath>
+      <assertions><enable/></assertions>
+      <arg value="--root-path"/><arg value="${lib.dir}"/>
+      <arg value="--outfile"/><arg value="${neulibpib.path}"/>
+      <arg value="--only-module"/><arg value="org::neutrino::neuneu"/>
+    </java>
+  </target>
   
   <target name="nunit.javatrino" depends="libpib.build.javatrino">
     <java classname="${run.class}" fork="yes">
@@ -53,14 +66,14 @@
   
   <target name="test" depends="nunit.javatrino"/>
   
-  <target name="libobj.build.neutrino" depends="libpib.build.javatrino">
+  <target name="libobj.build.neutrino" depends="libpib.build.javatrino,neulibpib.build.javatrino">
     <mkdir dir="${obj.dir}"/>
     <java classname="${run.class}" fork="yes">
       <classpath><path location="${class.dir}"/></classpath>
       <assertions><enable/></assertions>
       <arg value="--pib-path"/><arg value="${libpib.path}"/>
       <arg value="--entry-point"/><arg value="compile"/>
-      <arg value="${libpib.path}"/>
+      <arg value="${neulibpib.path}"/>
       <arg value="${libobj.path}"/>
     </java>
   </target>

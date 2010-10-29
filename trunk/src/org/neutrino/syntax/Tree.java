@@ -1,10 +1,5 @@
 package org.neutrino.syntax;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-
 import org.neutrino.compiler.CompilerUniverse;
 import org.neutrino.compiler.Source;
 import org.neutrino.compiler.Symbol;
@@ -15,6 +10,11 @@ import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Neutrino syntax trees.
@@ -235,9 +235,9 @@ public class Tree {
 
     public enum Type { LAMBDA };
 
-    public abstract void accept(ExpressionVisitor visitor);
+    public abstract <T> T accept(ExpressionVisitor<T> visitor);
 
-    public abstract void traverse(ExpressionVisitor visitor);
+    public abstract void traverse(ExpressionVisitor<?> visitor);
 
     public RValue toValue() {
       assert false;
@@ -258,58 +258,59 @@ public class Tree {
 
   }
 
-  public static class ExpressionVisitor {
+  public static class ExpressionVisitor<T> {
 
-    public void visitExpression(Expression that) {
+    public T visitExpression(Expression that) {
       that.traverse(this);
+      return null;
     }
 
-    public void visitLocalDefinition(LocalDefinition that) {
-      visitExpression(that);
+    public T visitLocalDefinition(LocalDefinition that) {
+      return visitExpression(that);
     }
 
-    public void visitBlock(Block that) {
-      visitExpression(that);
+    public T visitBlock(Block that) {
+      return visitExpression(that);
     }
 
-    public void visitSingleton(Singleton that) {
-      visitExpression(that);
+    public T visitSingleton(Singleton that) {
+      return visitExpression(that);
     }
 
-    public void visitNumber(Number that) {
-      visitExpression(that);
+    public T visitNumber(Number that) {
+      return visitExpression(that);
     }
 
-    public void visitIdentifier(Identifier that) {
-      visitExpression(that);
+    public T visitIdentifier(Identifier that) {
+      return visitExpression(that);
     }
 
-    public void visitCall(Call that) {
-      visitExpression(that);
+    public T visitCall(Call that) {
+      return visitExpression(that);
     }
 
-    public void visitText(Text that) {
-      visitExpression(that);
+    public T visitText(Text that) {
+      return visitExpression(that);
     }
 
-    public void visitNew(New that) {
-      visitExpression(that);
+    public T visitNew(New that) {
+      return visitExpression(that);
     }
 
-    public void visitInternal(Internal that) {
-      visitExpression(that);
+    public T visitInternal(Internal that) {
+      return visitExpression(that);
     }
 
-    public void visitWith1Cc(With1Cc that) {
-      visitExpression(that);
+    public T visitWith1Cc(With1Cc that) {
+      return visitExpression(that);
     }
 
-    public void visitAssignment(Assignment that) {
-      visitExpression(that);
+    public T visitAssignment(Assignment that) {
+      return visitExpression(that);
     }
 
-    public void visitCollection(Collection that) {
-      visitExpression(that);
+    public T visitCollection(Collection that) {
+      return visitExpression(that);
     }
 
   }
@@ -353,11 +354,11 @@ public class Tree {
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) { }
+    public void traverse(ExpressionVisitor<?> visitor) { }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitIdentifier(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitIdentifier(this);
     }
 
   }
@@ -392,12 +393,12 @@ public class Tree {
     }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitAssignment(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitAssignment(this);
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) {
+    public void traverse(ExpressionVisitor<?> visitor) {
       value.accept(visitor);
     }
 
@@ -426,11 +427,11 @@ public class Tree {
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) { }
+    public void traverse(ExpressionVisitor<?> visitor) { }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitNumber(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitNumber(this);
     }
 
   }
@@ -470,11 +471,11 @@ public class Tree {
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) { }
+    public void traverse(ExpressionVisitor<?> visitor) { }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitText(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitText(this);
     }
 
     @Override
@@ -513,12 +514,12 @@ public class Tree {
     }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitInternal(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitInternal(this);
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) {
+    public void traverse(ExpressionVisitor<?> visitor) {
       // ignore
     }
 
@@ -577,12 +578,12 @@ public class Tree {
     }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitWith1Cc(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitWith1Cc(this);
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) {
+    public void traverse(ExpressionVisitor<?> visitor) {
       callback.accept(visitor);
     }
 
@@ -606,14 +607,14 @@ public class Tree {
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) {
+    public void traverse(ExpressionVisitor<?> visitor) {
       for (Expression arg : args)
         arg.accept(visitor);
     }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitCall(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitCall(this);
     }
 
     public List<Expression> getArguments() {
@@ -669,11 +670,11 @@ public class Tree {
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) { }
+    public void traverse(ExpressionVisitor<?> visitor) { }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitSingleton(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitSingleton(this);
     }
 
   }
@@ -691,12 +692,12 @@ public class Tree {
     }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitCollection(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitCollection(this);
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) {
+    public void traverse(ExpressionVisitor<?> visitor) {
       for (Expression value : values)
         value.accept(visitor);
     }
@@ -814,12 +815,12 @@ public class Tree {
     }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitNew(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitNew(this);
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) {
+    public void traverse(ExpressionVisitor<?> visitor) {
       for (Field field : fields)
         field.getBody().accept(visitor);
     }
@@ -836,7 +837,7 @@ public class Tree {
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) {
+    public void traverse(ExpressionVisitor<?> visitor) {
       for (Expression expr : exprs)
         expr.accept(visitor);
     }
@@ -851,8 +852,8 @@ public class Tree {
     }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitBlock(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitBlock(this);
     }
 
   }
@@ -900,7 +901,7 @@ public class Tree {
     }
 
     @Override
-    public void traverse(ExpressionVisitor visitor) {
+    public void traverse(ExpressionVisitor<?> visitor) {
       value.accept(visitor);
       body.accept(visitor);
     }
@@ -911,8 +912,8 @@ public class Tree {
     }
 
     @Override
-    public void accept(ExpressionVisitor visitor) {
-      visitor.visitLocalDefinition(this);
+    public <T> T accept(ExpressionVisitor<T> visitor) {
+      return visitor.visitLocalDefinition(this);
     }
 
   }

@@ -1,0 +1,6 @@
+protocol EntryPoint;
+
+@neuneu_entry_point
+def EntryPoint.start() {
+  1 + 1;
+}

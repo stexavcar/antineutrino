@@ -1,0 +1,19 @@
+protocol CallSyntax;
+
+protocol SyntaxGuide;
+
+def kCall := 3;
+
+def SyntaxGuide.new(code) {
+  def result := new SyntaxGuide {
+    code := code,
+    types := new HashMap()
+  }
+  result.types[kCall] := new CallSyntax { guide := result };
+  result;
+}
+
+def (this is SyntaxGuide).resolve(index) {
+  def opcode := this.code[index];
+  this.types[opcode];
+}

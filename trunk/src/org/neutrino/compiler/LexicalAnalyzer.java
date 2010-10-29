@@ -11,7 +11,7 @@ import org.neutrino.syntax.Tree.LocalDefinition;
 import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.New;
 
-public class LexicalAnalyzer extends Tree.ExpressionVisitor {
+public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
 
   private Scope scope = Scope.globalScope();
   private MethodScope methodScope = null;
@@ -41,13 +41,14 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor {
   }
 
   @Override
-  public void visitInternal(Internal that) {
+  public Void visitInternal(Internal that) {
     int argc = methodScope.getParameters().size() + 1;
     that.setArgumentCount(argc);
+    return null;
   }
 
   @Override
-  public void visitNew(New that) {
+  public Void visitNew(New that) {
     // First visit eager fields within the current scope.
     int eagerFieldCount = 0;
     for (New.Field field : that.getFields()) {
@@ -72,25 +73,28 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor {
     } finally {
       scope = prevScope;
     }
+    return null;
   }
 
   @Override
-  public void visitIdentifier(Identifier that) {
+  public Void visitIdentifier(Identifier that) {
     String name = that.getName();
     that.bind(scope.lookup(name));
+    return null;
   }
 
   @Override
-  public void visitAssignment(Assignment that) {
+  public Void visitAssignment(Assignment that) {
     that.getValue().accept(this);
     String name = that.getName();
     Symbol symbol = scope.lookup(name);
     assert symbol.isReference() : "Cannot assign to " + name;
     that.bind(symbol);
+    return null;
   }
 
   @Override
-  public void visitLocalDefinition(LocalDefinition that) {
+  public Void visitLocalDefinition(LocalDefinition that) {
     that.getValue().accept(this);
     Scope prevScope = scope;
     try {
@@ -102,6 +106,7 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor {
     } finally {
       scope = prevScope;
     }
+    return null;
   }
 
 }

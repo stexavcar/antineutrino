@@ -1,12 +1,12 @@
 package org.neutrino.pib;
 
-import java.util.List;
-
 import org.neutrino.pib.Opcode.ArgType;
 import org.neutrino.pib.Opcode.OpcodeInfo;
 import org.neutrino.plankton.ISeedable;
 import org.neutrino.plankton.annotations.Growable;
 import org.neutrino.plankton.annotations.SeedMember;
+
+import java.util.List;
 
 @Growable(CodeBundle.TAG)
 public class CodeBundle implements ISeedable {
@@ -17,13 +17,15 @@ public class CodeBundle implements ISeedable {
   public @SeedMember List<Object> literals;
   public @SeedMember int localCount;
   public @SeedMember String fileName;
+  public @SeedMember int rootOffset;
 
   public CodeBundle(byte[] code, List<Object> literals, int localCount,
-      String fileName) {
+      String fileName, int rootOffset) {
     this.code = code;
     this.literals = literals;
     this.localCount = localCount;
     this.fileName = fileName;
+    this.rootOffset = rootOffset;
   }
 
   public CodeBundle() { }

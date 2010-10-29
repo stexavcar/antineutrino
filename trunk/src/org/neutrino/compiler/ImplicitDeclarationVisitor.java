@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
+public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
 
   private final ModuleBuilder module;
 
@@ -21,7 +21,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
   }
 
   @Override
-  public void visitNew(Tree.New that) {
+  public Void visitNew(Tree.New that) {
     RProtocol proto = module.createImplicitProtocol(that.getOrigin(),
         that.getDisplayName());
     that.bind(proto);
@@ -37,7 +37,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
         Assembler assm = builder.getAssembler();
         assm.field(eagerFieldCount);
         assm.rethurn();
-        assm.setLocalCount(0);
+        assm.finalize(0, 0);
         eagerFieldCount++;
       }
     }
@@ -56,11 +56,12 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor {
         Assembler assm = builder.getAssembler();
         CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
         codegen.generate(field.getBody());
-        assm.setLocalCount(field.getLocalCount());
+        assm.finalize(field.getLocalCount(), 0);
       }
     }
     for (String shuper : that.getProtocols())
       module.declareInheritance(proto.getId(), shuper);
+    return null;
   }
 
 }
