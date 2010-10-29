@@ -105,6 +105,19 @@ def (this is HashMap).find_entry(key, hash, create_if_missing) {
   });
 }
 
+def (this is HashMap).to_string() {
+  def result := new StringStream();
+  result.add("#<a HashMap: {");
+  ref first := true;
+  for (key, value : this) {
+    if first then first := false;
+    else result.add(", ");
+    result.add("${key}: ${value}");
+  }
+  result.add("}>");
+  result.to_string();
+}
+
 protocol HashMapEntry;
 
 def HashMapEntry.new(key, hash) -> new HashMapEntry {

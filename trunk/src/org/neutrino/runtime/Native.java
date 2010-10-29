@@ -220,6 +220,22 @@ public class Native implements ISeedable {
     }
   };
 
+  @Marker("str.implode") static final Impl STRING_IMPLODE = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RArray elms = (RArray) args.getArgument(0);
+      int length = ((RInteger) args.getArgument(1)).getValue();
+      String sep = ((RString) args.getArgument(2)).getValue();
+      StringBuilder buf = new StringBuilder();
+      for (int i = 0; i < length; i++) {
+        if (i > 0) buf.append(sep);
+        String part = ((RString) elms.get(i)).getValue();
+        buf.append(part);
+      }
+      return new RString(buf.toString());
+    }
+  };
+
   @Marker("ord2str") static final Impl ORD_2_STR = new Impl() {
     @Override
     public RValue call(Arguments args) {

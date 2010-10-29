@@ -1,0 +1,18 @@
+protocol StringStream is ArrayBackedStream;
+
+def StringStream.new() -> new StringStream(16);
+
+def StringStream.new(size) -> new StringStream {
+  rData := new Ref(new MutablePrimitiveArray(size)),
+  rLength := new Ref(0)
+}
+
+def (this is StringStream).new_backing_array(size)
+ -> new MutablePrimitiveArray(size);
+
+def (this is StringStream).add(obj) -> this.add_to_stream(obj.to_string());
+
+def (this is StringStream).add(obj is String) -> this.add_to_stream(obj);
+
+def (this is StringStream).to_string()
+ -> String.implode(this.data, this.length, "");

@@ -19,6 +19,9 @@ def (this is String).ascii_characters -> fn for (fun) {
   }
 }
 
+def String.implode(elms is PrimitiveArray, count is Integer, sep is String)
+ -> internal "str.implode";
+
 // Temporary method.  Don't use under any circumstances.
 def (this is String)._get_ascii_character(i) -> internal "str[ascii]";
 

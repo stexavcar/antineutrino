@@ -72,4 +72,4 @@ protocol Universe;
 
 def Universe.tag -> "org::neutrino::pib::Universe";
 
-def Universe.grow(payload) -> new Universe { };
+def Universe.grow(payload) -> payload;
