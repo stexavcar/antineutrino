@@ -296,8 +296,11 @@ public class Native implements ISeedable {
     @Override
     public RValue call(Arguments args) {
       RPrimitiveArray arr = (RPrimitiveArray) args.getThis();
-      RInteger index = (RInteger) args.getArgument(0);
-      return arr.get(index.getValue());
+      int index = ((RInteger) args.getArgument(0)).getValue();
+      if (index < 0 || index >= arr.getLength()) {
+        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
+      }
+      return arr.get(index);
     }
   };
 
@@ -358,7 +361,8 @@ public class Native implements ISeedable {
     @Override
     public RValue call(Arguments args) {
       RValue message = args.getFunctionArgument(0);
-      throw new RuntimeException("Fail: " + message.toExternalString());
+      throw new InterpreterError.Failure("Fail: " + message.toExternalString(),
+          args.frame);
     }
   };
 

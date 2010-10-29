@@ -1,0 +1,119 @@
+protocol Plankton;
+
+def Plankton.new(data, grower) -> new Plankton {
+  data := data,
+  grower := grower,
+  rCursor := new Ref(0),
+  tag_table := Plankton.new_tag_table(),
+  ref_table := new HashMap()
+}
+
+def kStringTag := 0;
+def kMapTag := 1;
+def kBlobTag := 2;
+def kIntegerTag := 3;
+def kArrayTag := 4;
+def kSeedTag := 5;
+def kNewReference := 6;
+def kGetReference := 7;
+def kBoolTag := 8;
+
+def Plankton.new_tag_table() {
+  def table := new HashMap();
+  table[kSeedTag] := (fn (plankton) -> plankton.read_seed());
+  table[kNewReference] := (fn (plankton) -> plankton.read_new_reference());
+  table[kGetReference] := (fn (plankton) -> plankton.read_get_reference());
+  table[kStringTag] := (fn (plankton) -> plankton.read_string());
+  table[kMapTag] := (fn (plankton) -> plankton.read_map());
+  table[kArrayTag] := (fn (plankton) -> plankton.read_array());
+  table[kIntegerTag] := (fn (plankton) -> plankton.read_integer());
+  table[kBlobTag] := (fn (plankton) -> plankton.read_blob());
+  table[kBoolTag] := (fn (plankton) -> plankton.read_bool());
+  table;
+}
+
+def (this is Plankton).read() {
+  def cursor := this.cursor;
+  def value := this.data[cursor];
+  this.rCursor.set(cursor + 1);
+  value;
+}
+
+def (this is Plankton).read_int16()
+ -> this.read() | (this.read() << 8);
+
+def (this is Plankton).read_int32()
+ -> this.read_int16() | (this.read_int16() << 16);
+
+def (this is Plankton).current -> this.data[this.cursor];
+
+def (this is Plankton).cursor -> this.rCursor.get();
+
+def (this is Plankton).unmarshal() -> this.read_value();
+
+def (this is Plankton).read_value() {
+  def tag := this.read();
+  def handler := this.tag_table[tag];
+  if handler = null then
+    fail("Unhandled plankton tag #${tag}");
+  handler(this);
+}
+
+def (this is Plankton).read_seed() {
+  def tag := this.read_value();
+  def payload := this.read_value();
+  this.grower.grow(tag, payload);
+}
+
+def (this is Plankton).read_new_reference() {
+  def index := this.read_int16();
+  def value := this.read_value();
+  this.ref_table[index] := value;
+  value;
+}
+
+def (this is Plankton).read_get_reference() {
+  def index := this.read_int16();
+  this.ref_table[index];
+}
+
+def (this is Plankton).read_string() {
+  def length := this.read_int32();
+  ref result := "";
+  for (i : 0 .. length) {
+    def ord := this.read();
+    result := result + string_from_ordinal(ord);
+  }
+  result;
+}
+
+def (this is Plankton).read_blob() {
+  def length := this.read_int32();
+  def out := new BlobStream();
+  for (i : 0 .. length)
+    out.write_int8(this.read());
+  out.get_blob();
+}
+
+def (this is Plankton).read_map() {
+  def length := this.read_int32();
+  def result := new HashMap();
+  for (i : 0 .. length) {
+    def key := this.read_value();
+    def value := this.read_value();
+    result[key] := value;
+  }
+  result;
+}
+
+def (this is Plankton).read_array() {
+  def length := this.read_int32();
+  def result := new ArrayList();
+  for (i : 0 .. length)
+    result.add(this.read_value());
+  result;
+}
+
+def (this is Plankton).read_integer() -> this.read_int32();
+
+def (this is Plankton).read_bool() -> this.read() != 0;
