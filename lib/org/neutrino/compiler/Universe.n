@@ -24,7 +24,8 @@ def CodeBundle.grow(payload) -> new CodeBundle {
   literals := payload["literals"],
   local_count := payload["localCount"],
   filename := payload["fileName"],
-  code := payload["code"]
+  code := payload["code"],
+  root_offset := payload["rootOffset"]
 }
 
 protocol Parameter;
@@ -41,7 +42,22 @@ protocol Method;
 
 def Method.tag -> "org::neutrino::runtime::RMethod";
 
-def Method.grow(payload) -> null;
+def Method.grow(payload) -> new Method {
+  annots := payload["annots"],
+  params := payload["params"],
+  name := payload["name"],
+  code := payload["code"]
+}
+
+def (this is Method).get_annotation(name) {
+  with_1cc (yield) {
+    for (annot : this.annots) {
+      if annot.tag = name
+        then yield(annot);
+    }
+    null;
+  }
+}
 
 protocol TypeId;
 
@@ -60,6 +76,16 @@ def Binding.tag -> "org::neutrino::pib::Binding";
 def Binding.grow(payload) -> new Binding {
   annotations := payload["annotations"],
   code := payload["code"]
+}
+
+def (this is Binding).get_annotation(name) {
+  with_1cc (yield) {
+    for (annot : this.annotations) {
+      if annot.tag = name
+        then yield(annot);
+    }
+    null;
+  }
 }
 
 protocol Annotation;
@@ -99,6 +125,16 @@ def Universe.tag -> "org::neutrino::pib::Universe";
 
 def Universe.grow(payload) -> new Universe {
   modules := payload["modules"]
+}
+
+def (this is Universe).bindings -> fn for (fun) {
+  for (module : this.modules.values)
+    module.defs.for(fun);
+}
+
+def (this is Universe).methods -> fn for (fun) {
+  for (module : this.modules.values)
+    module.methods.for(fun);
 }
 
 def (this is Universe).to_string() -> "#<a Universe: ${this.modules}>";

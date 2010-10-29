@@ -1,5 +1,6 @@
 package org.neutrino.compiler;
 
+import org.neutrino.main.Flags;
 import org.neutrino.pib.BinaryBuilder;
 import org.neutrino.pib.ModuleBuilder;
 import org.neutrino.syntax.SyntaxError;
@@ -16,6 +17,8 @@ import java.util.TreeMap;
  * @author christian.plesner.hansen@gmail.com (Christian Plesner Hansen)
  */
 public class CompilerModule {
+
+  public static @Flags.Flag("only-module") String onlyModule = null;
 
   private final String name;
   private final Map<String, CompilerModule> modules = new TreeMap<String, CompilerModule>();
@@ -43,7 +46,7 @@ public class CompilerModule {
         else fullName = name + "::" + shortName;
         CompilerModule child = ensureModule(shortName, fullName);
         child.includeFromPath(file);
-      } else {
+      } else if (onlyModule == null || onlyModule.equals(name)) {
         Source source = Source.create(file);
         if (source != null)
           sources.put(source.getName(), source);

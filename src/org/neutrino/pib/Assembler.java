@@ -1,13 +1,13 @@
 package org.neutrino.pib;
 
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.neutrino.compiler.Source;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RValue;
+
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 
 
 public class Assembler {
@@ -16,33 +16,47 @@ public class Assembler {
   private final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
   private final List<Object> literals = new ArrayList<Object>();
   private int localCount = -1;
+  private int rootOffset = -1;
 
   public Assembler(Source origin) {
     this.origin = origin;
   }
 
-  public void setLocalCount(int localCount) {
+  public void finalize(int localCount, int rootOffset) {
+    assert this.localCount == -1;
+    assert this.rootOffset == -1;
     this.localCount = localCount;
+    this.rootOffset = rootOffset;
   }
 
-  public void push(RValue value) {
+  private int getOffset() {
+    return bytes.size();
+  }
+
+  public int push(RValue value) {
     int index = registerLiteral(value);
+    int result = getOffset();
     add(Opcode.kPush);
     add(index);
+    return result;
   }
 
   public void pop() {
     add(Opcode.kPop);
   }
 
-  public void argument(int index) {
+  public int argument(int index) {
+    int result = getOffset();
     add(Opcode.kArgument);
     add(index);
+    return result;
   }
 
-  public void outer(int index) {
+  public int outer(int index) {
+    int result = getOffset();
     add(Opcode.kOuter);
     add(index);
+    return result;
   }
 
   public void field(int index) {
@@ -50,9 +64,11 @@ public class Assembler {
     add(index);
   }
 
-  public void local(int index) {
+  public int local(int index) {
+    int result = getOffset();
     add(Opcode.kLocal);
     add(index);
+    return result;
   }
 
   public void storeLocal(int index) {
@@ -60,22 +76,30 @@ public class Assembler {
     add(index);
   }
 
-  public void nuhll() {
+  public int nuhll() {
+    int offset = getOffset();
     add(Opcode.kNull);
+    return offset;
   }
 
-  public void thrue() {
+  public int thrue() {
+    int offset = getOffset();
     add(Opcode.kTrue);
+    return offset;
   }
 
-  public void fahlse() {
+  public int fahlse() {
+    int offset = getOffset();
     add(Opcode.kFalse);
+    return offset;
   }
 
-  public void global(String name) {
+  public int global(String name) {
     int index = registerLiteral(name);
+    int result = getOffset();
     add(Opcode.kGlobal);
     add(index);
+    return result;
   }
 
   public void rethurn() {
@@ -94,17 +118,21 @@ public class Assembler {
     add(elmc);
   }
 
-  public void call(String name, int argc) {
+  public int call(String name, int argc) {
     int nameIndex = registerLiteral(name);
+    int result = getOffset();
     add(Opcode.kCall);
     add(nameIndex);
     add(argc);
+    return result;
   }
 
-  public void with1Cc() {
+  public int with1Cc() {
+    int result = getOffset();
     add(Opcode.kWith1Cc);
     add(0);
     add(2);
+    return result;
   }
 
   public void callNative(Native method, int argc) {
@@ -129,8 +157,9 @@ public class Assembler {
 
   public CodeBundle getCode() {
     assert localCount >= 0;
+    assert rootOffset != -1;
     return new CodeBundle(bytes.toByteArray(), literals, localCount,
-        origin.getName());
+        origin.getName(), rootOffset);
   }
 
 }

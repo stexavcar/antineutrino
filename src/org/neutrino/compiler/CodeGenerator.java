@@ -21,7 +21,7 @@ import java.util.List;
  *
  * @author christian.plesner.hansen@gmail.com (Christian Plesner Hansen)
  */
-public class CodeGenerator extends Tree.ExpressionVisitor {
+public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
 
   private final CompilerUniverse universe;
   private final Assembler assm;
@@ -32,12 +32,13 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
   }
 
   @Override
-  public void visitExpression(Expression that) {
+  public Integer visitExpression(Expression that) {
     assert false;
+    return null;
   }
 
   @Override
-  public void visitBlock(Tree.Block that) {
+  public Integer visitBlock(Tree.Block that) {
     List<Expression> exprs = that.getExpressions();
     for (int i = 0; i < exprs.size(); i++) {
       if (i > 0) {
@@ -45,25 +46,28 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
       }
       exprs.get(i).accept(this);
     }
+    // TODO
+    return -2;
   }
 
   @Override
-  public void visitIdentifier(Tree.Identifier that) {
-    that.getSymbol().emitLoad(assm);
+  public Integer visitIdentifier(Tree.Identifier that) {
+    int result = that.getSymbol().emitLoad(assm);
     if (that.getSymbol().isReference())
-      assm.call("get", 1);
+      result = assm.call("get", 1);
+    return result;
   }
 
   @Override
-  public void visitAssignment(Tree.Assignment that) {
+  public Integer visitAssignment(Tree.Assignment that) {
     assert that.getSymbol().isReference();
     that.getSymbol().emitLoad(assm);
     that.getValue().accept(this);
-    assm.call("set", 2);
+    return assm.call("set", 2);
   }
 
   @Override
-  public void visitLocalDefinition(Tree.LocalDefinition that) {
+  public Integer visitLocalDefinition(Tree.LocalDefinition that) {
     if (that.isReference())
       assm.global("Ref");
     that.getValue().accept(this);
@@ -72,32 +76,32 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
     int index = that.getSymbol().getIndex();
     assm.storeLocal(index);
     that.getBody().accept(this);
+    // TODO
+    return -3;
   }
 
   @Override
-  public void visitNumber(Tree.Number that) {
-    assm.push(RInteger.get(that.getValue()));
+  public Integer visitNumber(Tree.Number that) {
+    return assm.push(RInteger.get(that.getValue()));
   }
 
   @Override
-  public void visitText(Text that) {
-    assm.push(new RString(that.getValue()));
+  public Integer visitText(Text that) {
+    return assm.push(new RString(that.getValue()));
   }
 
   @Override
-  public void visitSingleton(Tree.Singleton that) {
+  public Integer visitSingleton(Tree.Singleton that) {
     switch (that.getType()) {
     case NULL:
-      assm.nuhll();
-      break;
+      return assm.nuhll();
     case TRUE:
-      assm.thrue();
-      break;
+      return assm.thrue();
     case FALSE:
-      assm.fahlse();
-      break;
+      return assm.fahlse();
     default:
       assert false;
+      return -4;
     }
   }
 
@@ -113,7 +117,7 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
   }
 
   @Override
-  public void visitCall(Tree.Call that) {
+  public Integer visitCall(Tree.Call that) {
     Tree.Declaration intrinsicTarget = getIntrinsicTarget(that);
     if (intrinsicTarget != null) {
       String holder = intrinsicTarget.getName();
@@ -135,17 +139,17 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
       Tree.Expression arg = args.get(i);
       arg.accept(this);
     }
-    assm.call(that.getName(), argc);
+    return assm.call(that.getName(), argc);
   }
 
   @Override
-  public void visitWith1Cc(With1Cc that) {
+  public Integer visitWith1Cc(With1Cc that) {
     that.getCallback().accept(this);
-    assm.with1Cc();
+    return assm.with1Cc();
   }
 
   @Override
-  public void visitNew(New that) {
+  public Integer visitNew(New that) {
     List<Tree.New.Field> fields = that.getFields();
     int outerCount = 0;
     for (Tree.New.Field field : fields) {
@@ -159,24 +163,31 @@ public class CodeGenerator extends Tree.ExpressionVisitor {
       outerCount++;
     }
     assm.nhew(that.getProtocol(), outerCount);
+    // TODO
+    return -5;
   }
 
   @Override
-  public void visitCollection(Collection that) {
+  public Integer visitCollection(Collection that) {
     List<Tree.Expression> values = that.getValues();
     for (Tree.Expression value : values)
       value.accept(this);
     assm.newArray(values.size());
+    // TODO
+    return -6;
   }
 
   @Override
-  public void visitInternal(Internal that) {
+  public Integer visitInternal(Internal that) {
     assm.callNative(Native.get(that.getName()), that.getArgumentCount());
+    // TODO
+    return -7;
   }
 
-  public void generate(Tree.Expression value) {
-    value.accept(this);
+  public Integer generate(Tree.Expression value) {
+    Integer result = value.accept(this);
     assm.rethurn();
+    return result;
   }
 
   public void generateNativeMethod(Method that) {

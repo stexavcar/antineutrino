@@ -1,12 +1,12 @@
 package org.neutrino.runtime;
 
 
-import java.util.Arrays;
-import java.util.Collections;
-
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Opcode;
+
+import java.util.Arrays;
+import java.util.Collections;
 
 public class Interpreter {
 
@@ -16,7 +16,8 @@ public class Interpreter {
       new byte[] { Opcode.kCall, 0, 0, Opcode.kTerminate },
       Collections.<Object>emptyList(),
       0,
-      null);
+      null,
+      0);
 
   private final Native.Arguments arguments = new Native.Arguments();
 

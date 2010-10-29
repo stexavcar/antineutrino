@@ -20,8 +20,8 @@ public class Compile {
   public static @Flags.Flag("root-path") String rootPath;
   public static @Flags.Flag("outfile") String outputPath = "a.pib";
 
-  public static void main(String[] rawArgs) throws IOException, SyntaxError {
-    Flags.parseArguments(rawArgs, Compile.class);
+  public static void main(String[] rawArgs) throws IOException {
+    Flags.parseArguments(rawArgs, Compile.class, CompilerModule.class);
     assert rootPath != null: "No --root-path specified.";
     CompilerModule top = CompilerModule.createToplevel();
     CompilerUniverse universe = new CompilerUniverse(top);

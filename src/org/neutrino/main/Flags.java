@@ -76,20 +76,22 @@ public class Flags {
 
   }
 
-  public static List<String> parseArguments(String[] args, Class<?> klass) {
+  public static List<String> parseArguments(String[] args, Class<?>... klasses) {
     Map<String, FlagInfo> flags = new HashMap<String, FlagInfo>();
-    for (Field field : klass.getDeclaredFields()) {
-      Flag flag = field.getAnnotation(Flag.class);
-      if (flag != null) {
-        String setName = flag.value();
-        if (setName.length() == 0)
-          setName = field.getName();
-        if (field.getType() == String.class) {
-          flags.put(setName, new StringFlagInfo(field));
-        } else if (field.getType() == Boolean.TYPE) {
-          flags.put(setName, new BooleanFlagInfo(field));
-        } else {
-          assert false: setName;
+    for (Class<?> klass : klasses) {
+      for (Field field : klass.getDeclaredFields()) {
+        Flag flag = field.getAnnotation(Flag.class);
+        if (flag != null) {
+          String setName = flag.value();
+          if (setName.length() == 0)
+            setName = field.getName();
+          if (field.getType() == String.class) {
+            flags.put(setName, new StringFlagInfo(field));
+          } else if (field.getType() == Boolean.TYPE) {
+            flags.put(setName, new BooleanFlagInfo(field));
+          } else {
+            assert false: setName;
+          }
         }
       }
     }
