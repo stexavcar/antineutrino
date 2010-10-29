@@ -9,10 +9,10 @@ def CompilerGrower.new_handler_table() {
   result[Module.tag] := (fn (payload) -> Module.grow(payload));
   result[Native.tag] := (fn (payload) -> Native.grow(payload));
   result[Universe.tag] := (fn (payload) -> Universe.grow(payload));
-  def id(x) -> x;
+  def getter(name) -> fn (payload) -> payload[name];
   result[Protocol.tag] := id;
-  result["org::neutrino::runtime::RInteger"] := id;
-  result["org::neutrino::runtime::RString"] := id;
+  result["org::neutrino::runtime::RInteger"] := getter("value");
+  result["org::neutrino::runtime::RString"] := getter("value");
   result;
 }
 
@@ -20,13 +20,22 @@ protocol CodeBundle;
 
 def CodeBundle.tag -> "org::neutrino::pib::CodeBundle";
 
-def CodeBundle.grow(payload) -> null;
+def CodeBundle.grow(payload) -> new CodeBundle {
+  literals := payload["literals"],
+  local_count := payload["localCount"],
+  filename := payload["fileName"],
+  code := payload["code"]
+}
 
 protocol Parameter;
 
 def Parameter.tag -> "org::neutrino::pib::Parameter";
 
-def Parameter.grow(payload) -> null;
+def Parameter.grow(payload) -> new Parameter {
+  type := payload["type"],
+  name := payload["name"],
+  is_protocol_method := payload["isProtocolMethod"]
+}
 
 protocol Method;
 
@@ -48,28 +57,48 @@ protocol Binding;
 
 def Binding.tag -> "org::neutrino::pib::Binding";
 
-def Binding.grow(payload) -> null;
+def Binding.grow(payload) -> new Binding {
+  annotations := payload["annotations"],
+  code := payload["code"]
+}
 
 protocol Annotation;
 
 def Annotation.tag -> "org::neutrino::syntax::Annotation";
 
-def Annotation.grow(payload) -> null;
+def Annotation.grow(payload) -> new Annotation {
+  tag := payload["tag"],
+  args := payload["args"]
+}
 
 protocol Module;
 
 def Module.tag -> "org::neutrino::pib::Module";
 
-def Module.grow(payload) -> null;
+def Module.grow(payload) -> new Module {
+  defs := payload["defs"],
+  protos := payload["protos"],
+  supers := payload["rawInheritance"],
+  methods := payload["methods"]
+}
+
+def (this is Module).to_string()
+ -> "#<a Module: defs=${this.defs}, protos=${this.protos}, supers=${this.supers}, methods=${this.methods}>";
 
 protocol Native;
 
 def Native.tag -> "org::neutrino::runtime::Native";
 
-def Native.grow(payload) -> null;
+def Native.grow(payload) -> new Native {
+  name := payload["name"]
+}
 
 protocol Universe;
 
 def Universe.tag -> "org::neutrino::pib::Universe";
 
-def Universe.grow(payload) -> payload;
+def Universe.grow(payload) -> new Universe {
+  modules := payload["modules"]
+}
+
+def (this is Universe).to_string() -> "#<a Universe: ${this.modules}>";

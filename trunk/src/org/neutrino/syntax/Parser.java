@@ -68,7 +68,7 @@ public class Parser {
   }
 
   private boolean at(Type type) {
-    return getCurrent().getType() == type;
+    return hasMore() && (getCurrent().getType() == type);
   }
 
   private boolean atOperator() {
