@@ -72,8 +72,9 @@ def (this is NeutrinoCompiler).read_universe(filename) {
   new Plankton(raw_data, new CompilerGrower()).unmarshal();
 }
 
-def (this is NeutrinoCompiler).emit(node, root) {
-  print(node);
+def (this is NeutrinoCompiler).emit(guide, root) {
+  def node := guide.resolve(root);
+  print(Unparser.unparse(node, root));
 }
 
 def (this is NeutrinoCompiler).compile(in_name, out_name) {
@@ -88,9 +89,10 @@ def (this is NeutrinoCompiler).compile(in_name, out_name) {
   if entry_point = null then
     fail("No neuneu entry point found.");
   def entry_point_code := entry_point.code;
-  def guide := new SyntaxGuide(entry_point_code.code);
+  def guide := new SyntaxGuide(entry_point_code.code,
+    entry_point_code.literals);
   def root := entry_point_code.root_offset;
-  this.emit(guide.resolve(root), root);
+  this.emit(guide, root);
   def binary := this.build_binary();
   def data := binary.encode;
   open_file(out_name).write_binary(data);  
