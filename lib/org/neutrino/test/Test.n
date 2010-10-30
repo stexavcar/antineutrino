@@ -8,7 +8,7 @@ def (this is Test).on_start(name) {
   this.count.set(index + 1);
 }
 
-def kPrintProgress := false;
+def kPrintProgress := true;
 
 @entry_point("test")
 def test_main() {

@@ -1,13 +1,13 @@
 package org.neutrino.pib;
 
+import java.io.ByteArrayOutputStream;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.neutrino.compiler.Source;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RValue;
-
-import java.io.ByteArrayOutputStream;
-import java.util.ArrayList;
-import java.util.List;
 
 
 public class Assembler {
@@ -118,12 +118,14 @@ public class Assembler {
     add(elmc);
   }
 
-  public int call(String name, int argc) {
+  public int call(String name, List<Integer> args) {
     int nameIndex = registerLiteral(name);
     int result = getOffset();
     add(Opcode.kCall);
     add(nameIndex);
-    add(argc);
+    add(args.size());
+    for (int arg : args)
+      add(arg);
     return result;
   }
 
@@ -132,6 +134,8 @@ public class Assembler {
     add(Opcode.kWith1Cc);
     add(0);
     add(2);
+    add(0);
+    add(0);
     return result;
   }
 
@@ -140,6 +144,8 @@ public class Assembler {
     add(Opcode.kCallNative);
     add(index);
     add(argc);
+    for (int i = 0; i < argc; i++)
+      add(0);
   }
 
   public int registerLiteral(Object obj) {

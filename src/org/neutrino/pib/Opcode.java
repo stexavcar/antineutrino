@@ -46,6 +46,8 @@ public class Opcode {
     public ArgType[] value();
   }
 
+  public static final int kCallSize = 3;
+
   @Info({ArgType.LIT, ArgType.NUM}) public static final int kCall = 3;
   @Info({}) public static final int kReturn = 4;
   @Info({}) public static final int kNull = 5;

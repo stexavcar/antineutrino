@@ -1,4 +1,8 @@
 package org.neutrino.compiler;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RInteger;
@@ -12,8 +16,6 @@ import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.New;
 import org.neutrino.syntax.Tree.Text;
 import org.neutrino.syntax.Tree.With1Cc;
-
-import java.util.List;
 
 /**
  * Expression visitor that generates platform independent bytecode for
@@ -54,25 +56,26 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
   public Integer visitIdentifier(Tree.Identifier that) {
     int result = that.getSymbol().emitLoad(assm);
     if (that.getSymbol().isReference())
-      result = assm.call("get", 1);
+      result = assm.call("get", Arrays.asList(result));
     return result;
   }
 
   @Override
   public Integer visitAssignment(Tree.Assignment that) {
     assert that.getSymbol().isReference();
-    that.getSymbol().emitLoad(assm);
-    that.getValue().accept(this);
-    return assm.call("set", 2);
+    int ref = that.getSymbol().emitLoad(assm);
+    int value = that.getValue().accept(this);
+    return assm.call("set", Arrays.asList(ref, value));
   }
 
   @Override
   public Integer visitLocalDefinition(Tree.LocalDefinition that) {
+    int ref = -1;
     if (that.isReference())
-      assm.global("Ref");
-    that.getValue().accept(this);
+      ref = assm.global("Ref");
+    int value = that.getValue().accept(this);
     if (that.isReference())
-      assm.call("new", 2);
+      assm.call("new", Arrays.asList(ref, value));
     int index = that.getSymbol().getIndex();
     assm.storeLocal(index);
     that.getBody().accept(this);
@@ -134,12 +137,14 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
       }
     }
     List<Tree.Expression> args = that.getArguments();
+    List<Integer> offsets = new ArrayList<Integer>();
     int argc = args.size();
     for (int i = 0; i < argc; i++) {
       Tree.Expression arg = args.get(i);
-      arg.accept(this);
+      int offset = arg.accept(this);
+      offsets.add(offset);
     }
-    return assm.call(that.getName(), argc);
+    return assm.call(that.getName(), offsets);
   }
 
   @Override
