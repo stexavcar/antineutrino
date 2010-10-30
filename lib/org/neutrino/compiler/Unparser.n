@@ -1,0 +1,18 @@
+protocol Unparser;
+
+def Unparser.unparse(guide is CallGuide, node) {
+  def out := new StringStream();
+  out.add(guide.name(node));
+  out.add("(");
+  def argc := guide.argc(node);
+  for (i : 0 .. argc) {
+    def arg := guide.argument(node, i);
+    def arg_guide := guide.resolve(arg);
+    if i != 0 then out.add(", ");
+    out.add(Unparser.unparse(arg_guide, arg));
+  }
+  out.add(")");
+  out.to_string();
+}
+
+def Unparser.unparse(guide is Null, node) -> "?";

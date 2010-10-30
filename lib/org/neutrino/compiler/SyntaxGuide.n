@@ -1,19 +1,37 @@
-protocol CallSyntax;
-
 protocol SyntaxGuide;
 
 def kCall := 3;
 
-def SyntaxGuide.new(code) {
+protocol NodeGuide;
+
+def (this is NodeGuide).resolve(value) -> this.data.resolve(value);
+
+protocol CallGuide is NodeGuide;
+
+def (this is CallGuide).argc(cursor) -> this.data[cursor + 2];
+
+def (this is CallGuide).name(cursor)
+ -> this.data.literal_at(cursor + 1);
+
+def (this is CallGuide).argument(cursor, index)
+ -> this.data[cursor + 3 + index];
+
+def SyntaxGuide.new(code, literals) {
   def result := new SyntaxGuide {
     code := code,
-    types := new HashMap()
+    literals := literals,
+    guides := new HashMap()
   }
-  result.types[kCall] := new CallSyntax { guide := result };
+  result.guides[kCall] := new CallGuide { data := result };
   result;
 }
 
 def (this is SyntaxGuide).resolve(index) {
-  def opcode := this.code[index];
-  this.types[opcode];
+  def opcode := this[index];
+  this.guides[opcode];
 }
+
+def (this is SyntaxGuide)[index] -> this.code[index];
+
+def (this is SyntaxGuide).literal_at(index)
+  -> this.literals[this[index]];
