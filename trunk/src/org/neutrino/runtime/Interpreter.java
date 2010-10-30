@@ -1,12 +1,12 @@
 package org.neutrino.runtime;
 
 
+import java.util.Arrays;
+import java.util.Collections;
+
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Opcode;
-
-import java.util.Arrays;
-import java.util.Collections;
 
 public class Interpreter {
 
@@ -33,8 +33,10 @@ public class Interpreter {
     return interpret(lambda.getModule(), lambda.getCode(), args);
   }
 
+  int count = 0;
   private RValue interpret(Frame frame) {
     while (true) {
+      count++;
       int opcode = frame.code[frame.pc];
       switch (opcode) {
       case Opcode.kNull:
@@ -81,7 +83,7 @@ public class Interpreter {
         for (int i = 0; i < argc; i++)
           frame.stack.pop();
         frame.stack.push(value);
-        frame.pc += 3;
+        frame.pc += Opcode.kCallSize + argc;
         break;
       }
       case Opcode.kReturnFromApply: {
@@ -91,7 +93,8 @@ public class Interpreter {
         frame.stack.pop();
         frame.stack.pop();
         frame.stack.push(value);
-        frame.pc += 3;
+        int argc = frame.code[frame.pc + 2];
+        frame.pc += Opcode.kCallSize + argc;
         break;
       }
       case Opcode.kTerminate: {
@@ -132,7 +135,8 @@ public class Interpreter {
         frame = arguments.getFrame();
         if (value != null) {
           frame.stack.push(value);
-          frame.pc += 3;
+          int targargc = frame.code[frame.pc + 2];
+          frame.pc += 3 + targargc;
         }
         break;
       }
@@ -190,6 +194,7 @@ public class Interpreter {
         break;
       }
       default:
+        System.out.println(count);
         assert false: "Unexpected opcode " + opcode;
         return null;
       }
