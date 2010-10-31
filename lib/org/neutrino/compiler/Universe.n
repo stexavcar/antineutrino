@@ -35,7 +35,7 @@ def Parameter.tag -> "org::neutrino::pib::Parameter";
 def Parameter.grow(payload) -> new Parameter {
   type := payload["type"],
   name := payload["name"],
-  is_protocol_method := payload["isProtocolMethod"]
+  is_protocol := payload["isProtocolMethod"]
 }
 
 protocol MethodAst;
@@ -117,6 +117,8 @@ def Annotation.grow(payload) -> new Annotation {
   args := payload["args"]
 }
 
+def (this is Annotation)[index] -> this.args[index];
+
 protocol Module;
 
 def Module.tag -> "org::neutrino::pib::Module";
@@ -167,18 +169,6 @@ def (this is Universe).lookup_static_global(name) {
     for (proto_name, proto : this.protocols) {
       if name = proto_name then
         return(proto);
-    }
-    null;
-  }
-}
-
-def (this is Universe).lookup_method(holder, name) {
-  with_1cc (return) -> for (method : this.methods) {
-    if method.name = name then {
-      for (param : method.params) {
-        if param.type = holder then
-          return(method);
-      }
     }
     null;
   }

@@ -91,7 +91,9 @@ def (this is NeutrinoCompiler).compile(in_name, out_name) {
     entry_point_code.literals);
   def root_node := entry_point_code.root_offset;
   def root_guide := guide.resolve(root_node);
-  print(Unparser.unparse(root_guide, root_node));
+  // print(Unparser.unparse(root_guide, root_node));
+  (new TypeAnalysis(universe)).analyze(root_guide, root_node);
+  // print(Unparser.unparse(root_guide, root_node));
   def binary := this.build_binary(universe, root_guide, root_node);
   def data := binary.encode;
   open_file(out_name).write_binary(data);  

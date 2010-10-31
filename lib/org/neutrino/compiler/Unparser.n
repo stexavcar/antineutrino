@@ -1,6 +1,14 @@
 protocol Unparser;
 
-def Unparser.unparse(guide is CallGuide, node) {
+def Unparser.unparse(guide, node) {
+  def type := guide.info(node).type;
+  def str := Unparser.unparse_raw(guide, node);
+  if type = null
+    then str;
+    else "${str}@${type}";
+}
+
+def Unparser.unparse_raw(guide is CallGuide, node) {
   def out := new StringStream();
   out.add(guide.name(node));
   out.add("(");
@@ -15,12 +23,12 @@ def Unparser.unparse(guide is CallGuide, node) {
   out.to_string();
 }
 
-def Unparser.unparse(guide is LiteralGuide, node) {
+def Unparser.unparse_raw(guide is LiteralGuide, node) {
   def value := guide.value(node);
   value.to_string();  
 }
 
-def Unparser.unparse(guide is GlobalGuide, node) {
+def Unparser.unparse_raw(guide is GlobalGuide, node) {
   def name := guide.name(node);
   name;
 }

@@ -1,0 +1,71 @@
+protocol TypeAnalysis;
+
+def TypeAnalysis.new(universe) -> new TypeAnalysis {
+  universe := universe
+}
+
+def (this is TypeAnalysis).analyze(guide, node) {
+  def type := this.do_analyze(guide, node);
+  if type != null then
+    guide.ensure_info(node).type := type;
+  type;
+}
+
+def (this is TypeAnalysis).do_analyze(guide is CallGuide, node) {
+  def types := new ArrayList();
+  for (arg_guide, arg_node : guide.arguments(node)) {
+    def type := this.analyze(arg_guide, arg_node);
+    types.add(type);
+  }
+  def name := guide.name(node);
+  def method := with_1cc (yield) {
+    for (method : this.universe.methods) {
+      if method.name = name then {
+        def params := method.params;
+        if params.length = types.length then {
+          with_1cc (break) {
+            for (i : 0 .. params.length) {
+              def param := params[i];
+              def type := if param.is_protocol
+                then "${param.type}.protocol"
+                else param.type;
+              if type != types[i]
+                then break(null);
+            }
+            yield(method);
+          }
+        }
+      }
+    }
+    null;
+  }
+  if method != null then {
+    if method.get_annotation("inline") != null then {
+      def intrinsic := method.get_annotation("intrinsic");
+      guide.ensure_info(node).intrinsic := intrinsic[0];
+    }
+    def annot := method.get_annotation("static_type");
+    if annot != null
+      then annot[0];
+  }
+}
+
+def (this is TypeAnalysis).do_analyze(guide is LiteralGuide, node) {
+  def value := guide.value(node);
+  this.value_type(value);
+}
+
+def (this is TypeAnalysis).value_type(obj is Integer) -> "Integer";
+
+def (this is TypeAnalysis).value_type(obj is ProtocolAst)
+ -> "${obj.id}.protocol";
+
+def (this is TypeAnalysis).value_type(obj) -> null;
+
+def (this is TypeAnalysis).do_analyze(guide is GlobalGuide, node) {
+  def name := guide.name(node);
+  def value := this.universe.lookup_static_global(name);
+  if value = null
+    then null;
+    else this.value_type(value);
+}

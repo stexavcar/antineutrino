@@ -3,8 +3,15 @@ protocol EntryPoint;
 @intrinsic("int32")
 protocol int32_t;
 
+@inline
+@static_type("int32_t")
+@intrinsic("int32.cast")
+def int32_t.of(x is Integer) -> new int32_t(x);
+
+@inline
+@static_type("int32_t")
 @intrinsic("int32.add")
-def (this is int32_t).+(that is int32_t);
+def (this is int32_t)+(that is int32_t);
 
 @intrinsic
 protocol LibC;
@@ -18,4 +25,4 @@ def LibC.exit(arg is int32_t);
 @entry_point("neuneu") // Make this callable from the java implementation
 @neuneu_entry_point // Mark this as the entry point for the neutrino implementation
 def EntryPoint.start()
- -> LibC.exit(80);
+ -> int32_t.of(1) + int32_t.of(1);
