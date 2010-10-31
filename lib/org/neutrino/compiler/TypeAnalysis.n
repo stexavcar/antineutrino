@@ -44,6 +44,11 @@ def (this is TypeAnalysis).do_analyze(guide is CallGuide, node) {
       def intrinsic := method.get_annotation("intrinsic");
       guide.ensure_info(node).intrinsic := intrinsic[0];
     }
+    def c_call_annot := method.get_annotation("c_call");
+    if c_call_annot != null then {
+      def emit := method.get_annotation("emit");
+      guide.ensure_info(node).c_call := emit[0];
+    }
     def annot := method.get_annotation("static_type");
     if annot != null
       then annot[0];
