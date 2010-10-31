@@ -101,7 +101,7 @@ public class Interpreter {
         RValue value = frame.stack.pop();
         return value;
       }
-      case Opcode.kPush: {
+      case Opcode.kLiteral: {
         int index = frame.code[frame.pc + 1];
         RValue value = (RValue) frame.getLiteral(index);
         frame.stack.push(value);

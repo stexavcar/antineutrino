@@ -94,6 +94,17 @@ def (this is AssemblerIa386).push(reg is Register) {
   this.write_opcode(16r50 + reg.index);
 }
 
+// 58 +rd -> POP r32
+def (this is AssemblerIa386).pop(reg is Register) {
+  this.write_opcode(16r58 + reg.index);
+}
+
+// 68 -> PUSH imm32
+def (this is AssemblerIa386).push(imm32 is Integer) {
+  this.write_opcode(16r68);
+  this.write_imm32(imm32);
+}
+
 // C3 -> RET
 def (this is AssemblerIa386).ret() {
   this.write_opcode(16rC3);

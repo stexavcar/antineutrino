@@ -15,4 +15,14 @@ def Unparser.unparse(guide is CallGuide, node) {
   out.to_string();
 }
 
+def Unparser.unparse(guide is LiteralGuide, node) {
+  def value := guide.value(node);
+  value.to_string();  
+}
+
+def Unparser.unparse(guide is GlobalGuide, node) {
+  def name := guide.name(node);
+  name;
+}
+
 def Unparser.unparse(guide is Null, node) -> "?";

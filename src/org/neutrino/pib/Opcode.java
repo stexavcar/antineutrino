@@ -52,7 +52,7 @@ public class Opcode {
   @Info({}) public static final int kReturn = 4;
   @Info({}) public static final int kNull = 5;
   @Info({}) public static final int kTrue = 6;
-  @Info({ArgType.LIT}) public static final int kPush = 7;
+  @Info({ArgType.LIT}) public static final int kLiteral = 7;
   @Info({ArgType.LIT, ArgType.NUM}) public static final int kCallNative = 8;
   @Info({}) public static final int kPop = 9;
   @Info({ArgType.LIT}) public static final int kGlobal = 10;

@@ -17,7 +17,11 @@ def (this is NeutrinoCompiler).add_dylib_bridge(binary, name, argc) {
   bridge.exit_frame();  
 }
 
-def (this is NeutrinoCompiler).build_binary() {
+def (this is NeutrinoCompiler).emit(assm, guide is LiteralGuide, node) {
+  assm.push(guide.value(node));
+}
+
+def (this is NeutrinoCompiler).build_binary(guide, node) {
   def binary := new Binary(new Ia386());
 
   // Make external call bridges.
@@ -30,17 +34,18 @@ def (this is NeutrinoCompiler).build_binary() {
   def main := binary.add_code_block("_main");
   main.enter_frame();
   main.call(CallTarget.local("entry_point"));
-  main.mov(0, rEax);
   main.call(CallTarget.local("exit"));
   main.exit_frame();
 
   // Neutrino entry point.  Called from neutrino.
   def entry_point := binary.add_code_block("entry_point");
   entry_point.enter_frame();
-  entry_point.call(CallTarget.local("hello"));
+  this.emit(entry_point, guide, node);
+  entry_point.pop(rEax);
   entry_point.exit_frame();
 
-  // Utility function that prints a message.  
+  /*
+  // Utility function that prints a message. 
   def hello := binary.add_code_block("hello");
   def puts(s) {
     for (c : s.ascii_characters) {
@@ -51,6 +56,8 @@ def (this is NeutrinoCompiler).build_binary() {
   hello.enter_frame();
   puts("Hello World!\n");
   hello.exit_frame();
+  */
+
   binary;
 }
 
@@ -72,11 +79,6 @@ def (this is NeutrinoCompiler).read_universe(filename) {
   new Plankton(raw_data, new CompilerGrower()).unmarshal();
 }
 
-def (this is NeutrinoCompiler).emit(guide, root) {
-  def node := guide.resolve(root);
-  print(Unparser.unparse(node, root));
-}
-
 def (this is NeutrinoCompiler).compile(in_name, out_name) {
   def universe := this.read_universe(in_name);
   def entry_point := with_1cc (yield) {
@@ -91,9 +93,10 @@ def (this is NeutrinoCompiler).compile(in_name, out_name) {
   def entry_point_code := entry_point.code;
   def guide := new SyntaxGuide(entry_point_code.code,
     entry_point_code.literals);
-  def root := entry_point_code.root_offset;
-  this.emit(guide, root);
-  def binary := this.build_binary();
+  def root_node := entry_point_code.root_offset;
+  def root_guide := guide.resolve(root_node);
+  print(Unparser.unparse(root_guide, root_node));
+  def binary := this.build_binary(root_guide, root_node);
   def data := binary.encode;
   open_file(out_name).write_binary(data);  
 }
