@@ -36,7 +36,7 @@ public class Assembler {
   public int push(RValue value) {
     int index = registerLiteral(value);
     int result = getOffset();
-    add(Opcode.kPush);
+    add(Opcode.kLiteral);
     add(index);
     return result;
   }

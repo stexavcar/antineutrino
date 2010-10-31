@@ -1,6 +1,8 @@
 protocol SyntaxGuide;
 
 def kCall := 3;
+def kLiteral := 7;
+def kGlobal := 10;
 
 protocol NodeGuide;
 
@@ -15,6 +17,16 @@ def (this is CallGuide).name(cursor)
 
 def (this is CallGuide).argument(cursor, index)
  -> this.data[cursor + 3 + index];
+ 
+protocol LiteralGuide is NodeGuide;
+
+def (this is LiteralGuide).value(cursor)
+ -> this.data.literal_at(cursor + 1);
+ 
+protocol GlobalGuide is NodeGuide;
+
+def (this is GlobalGuide).name(cursor)
+ -> this.data.literal_at(cursor + 1);
 
 def SyntaxGuide.new(code, literals) {
   def result := new SyntaxGuide {
@@ -23,12 +35,17 @@ def SyntaxGuide.new(code, literals) {
     guides := new HashMap()
   }
   result.guides[kCall] := new CallGuide { data := result };
+  result.guides[kLiteral] := new LiteralGuide { data := result };
+  result.guides[kGlobal] := new GlobalGuide { data := result };
   result;
 }
 
 def (this is SyntaxGuide).resolve(index) {
   def opcode := this[index];
-  this.guides[opcode];
+  def guide := this.guides[opcode];
+  if guide = null then
+    print("Unknown opcode #${opcode}.");
+  guide;
 }
 
 def (this is SyntaxGuide)[index] -> this.code[index];
