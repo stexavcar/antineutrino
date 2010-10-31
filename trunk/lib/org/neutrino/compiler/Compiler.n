@@ -17,43 +17,66 @@ def (this is NeutrinoCompiler).add_dylib_bridge(binary, name, argc) {
   bridge.exit_frame();  
 }
 
-def (this is NeutrinoCompiler).build_binary(universe, guide, node) {
-  def binary := new Binary(new Ia386());
+def (this is NeutrinoCompiler).emit_method(universe, method, assm) {
+  assm.enter_frame();
+  def libc := method.get_annotation("libc");
+  if libc = null
+    then this.emit_plain_method(universe, method, assm);
+    else this.emit_libc_method(universe, method, assm);
+  assm.exit_frame();
+}
 
-  // Make external call bridges.
-  this.add_dylib_bridge(binary, "exit", 1);
-  this.add_dylib_bridge(binary, "putchar", 1);
+def (this is NeutrinoCompiler).emit_plain_method(universe, method, assm) {
+  def code := method.code;
+  def guide := new SyntaxGuide(code.code, code.literals);
+  def root_node := code.root_offset;
+  def root_guide := guide.resolve(root_node);
+  new TypeAnalysis(universe).analyze(root_guide, root_node);
+  new CodeGenerator(universe, assm).emit(root_guide, root_node);
+  assm.pop(rEax);
+}
 
-  // Main function which calls the entry point and then exits.  This
-  // function is called by the system and so must use native calling
-  // conventions.
+def (this is NeutrinoCompiler).emit_libc_method(universe, method, assm) {
+  def libc_name := method.get_annotation("libc")[0];
+  assm.ahnd(16rFFFFFFF0, rEsp);
+  assm.mov(rEax, deref(rEsp));
+  assm.call(CallTarget.extern(libc_name));
+}
+
+def (this is NeutrinoCompiler).emit_boilerplate(binary, entry_point) {
   def main := binary.add_code_block("_main");
   main.enter_frame();
-  main.call(CallTarget.local("entry_point"));
-  main.call(CallTarget.local("exit"));
-  main.exit_frame();
+  main.call(CallTarget.local(entry_point));
+  main.exit_frame();  
+}
 
-  // Neutrino entry point.  Called from neutrino.
-  def entry_point := binary.add_code_block("entry_point");
-  entry_point.enter_frame();
-  new CodeGenerator(universe, entry_point).emit(guide, node);
-  entry_point.pop(rEax);
-  entry_point.exit_frame();
+def (this is NeutrinoCompiler).build_binary(universe) {
+  def binary := new Binary(new Ia386());
+  
+  // Locate entry point
+  def entry_point := with_1cc (yield) {
+    for (method : universe.methods) {
+      if method.get_annotation("neuneu_entry_point") != null then {
+        def name := method.get_annotation("emit")[0];
+        yield(name);
+      }
+    }
+    null;
+  }
+  if entry_point = null
+    then fail("No neuneu_entry_point defined.");
 
-  /*
-  // Utility function that prints a message. 
-  def hello := binary.add_code_block("hello");
-  def puts(s) {
-    for (c : s.ascii_characters) {
-      hello.mov(c, rEax);
-      hello.call(CallTarget.local("putchar"));
+  // Emit standard boilerplate
+  this.emit_boilerplate(binary, entry_point);
+
+  for (method : universe.methods) {
+    def emit := method.get_annotation("emit");
+    if emit != null then {
+      def name := emit[0];
+      def assm := binary.add_code_block(name);
+      this.emit_method(universe, method, assm);
     }
   }
-  hello.enter_frame();
-  puts("Hello World!\n");
-  hello.exit_frame();
-  */
-
   binary;
 }
 
@@ -77,24 +100,7 @@ def (this is NeutrinoCompiler).read_universe(filename) {
 
 def (this is NeutrinoCompiler).compile(in_name, out_name) {
   def universe := this.read_universe(in_name);
-  def entry_point := with_1cc (yield) {
-    for (method : universe.methods) {
-      if method.get_annotation("neuneu_entry_point") != null then
-        yield(method);
-    }
-    null;
-  }
-  if entry_point = null then
-    fail("No neuneu entry point found.");
-  def entry_point_code := entry_point.code;
-  def guide := new SyntaxGuide(entry_point_code.code,
-    entry_point_code.literals);
-  def root_node := entry_point_code.root_offset;
-  def root_guide := guide.resolve(root_node);
-  // print(Unparser.unparse(root_guide, root_node));
-  (new TypeAnalysis(universe)).analyze(root_guide, root_node);
-  // print(Unparser.unparse(root_guide, root_node));
-  def binary := this.build_binary(universe, root_guide, root_node);
+  def binary := this.build_binary(universe);
   def data := binary.encode;
   open_file(out_name).write_binary(data);  
 }

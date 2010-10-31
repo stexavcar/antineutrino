@@ -16,13 +16,26 @@ def (this is int32_t)+(that is int32_t);
 @intrinsic
 protocol LibC;
 
-@intrinsic("libc.malloc")
-def LibC.malloc(arg is int32_t);
+@c_call
+@emit("sleep")
+@libc("_sleep")
+@static_type("int32_t")
+def LibC.sleep(arg is int32_t);
 
-@intrinsic("libc.exit")
+@c_call
+@emit("exit")
+@libc("_exit")
 def LibC.exit(arg is int32_t);
 
+@c_call
+@emit("neutrino_start")
+@static_type("int32_t")
+def EntryPoint.start()
+ -> int32_t.of(1) + int32_t.of(2);
+
+@emit("entry_point")
 @entry_point("neuneu") // Make this callable from the java implementation
 @neuneu_entry_point // Mark this as the entry point for the neutrino implementation
-def EntryPoint.start()
- -> int32_t.of(1) + int32_t.of(1);
+def EntryPoint.main() {
+  LibC.exit(EntryPoint.start());
+}

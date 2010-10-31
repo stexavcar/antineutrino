@@ -32,13 +32,31 @@ def (this is CodeGenerator).emit(guide is LiteralGuide, node) {
 }
 
 def (this is CodeGenerator).emit(guide is CallGuide, node) {
-  def intrinsic := guide.info(node).intrinsic;
-  if intrinsic = null
-    then fail("Call ${Unparser.unparse(guide, node)} is not intrinsic.");
-  def handler := this.intrinsics[intrinsic];
-  if handler = null
-    then fail("Unimplemented intrinsic ${intrinsic}.");
-  handler(this, guide, node);
+  def info := guide.info(node);
+  def intrinsic := info.intrinsic;
+  if intrinsic != null then {
+    def handler := this.intrinsics[intrinsic];
+    if handler = null
+      then fail("Unimplemented intrinsic ${intrinsic}.");
+    handler(this, guide, node);
+  } else {
+    def c_call := info.c_call;
+    if c_call = null
+      then fail("Illegal plain call ${Unparser.unparse(guide, node)}");
+    this.emit_c_call(guide, node, c_call);
+  }
+}
+
+def (this is CodeGenerator).emit_c_call(guide, node, target) {
+  def argc := guide.argc(node);
+  for (i : 1 .. argc) {
+    def arg := guide.argument(node, i);
+    this.emit(guide.resolve(arg), arg);
+  }
+  this.assm.call(CallTarget.local(target));
+  for (i : 1 .. argc)
+    this.assm.pop(rEbx);
+  this.assm.push(rEax);
 }
 
 def (this is CodeGenerator).static_value(guide is LiteralGuide, node)
