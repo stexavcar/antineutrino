@@ -1,8 +1,20 @@
+protocol IntrinsicManager;
+
+def IntrinsicManager.new() {
+  def map := new HashMap();
+  map["int32.cast"] := (fn (g, n, c) -> g.int32_cast(n, c));
+  map["int32.add"] := (fn (g, n, c) -> g.int32_add(n, c));
+  new IntrinsicManager { handlers := map };
+}
+
+def (this is IntrinsicManager)[name] -> this.handlers[name];
+
 protocol CodeGenerator;
 
 def CodeGenerator.new(universe, assm) -> new CodeGenerator {
   universe := universe,
-  assm := assm
+  assm := assm,
+  intrinsics := new IntrinsicManager()
 }
 
 def (this is CodeGenerator).resolve_static_value(guide, node) -> null;
@@ -20,21 +32,34 @@ def (this is CodeGenerator).emit(guide is LiteralGuide, node) {
 }
 
 def (this is CodeGenerator).emit(guide is CallGuide, node) {
-  def argc := guide.argc(node);
-  def name := guide.name(node);
-  def intrinsic_method := with_1cc (yield) {
-    for (arg_guide, arg_node : guide.arguments(node)) {
-      def proto := this.resolve_static_value(arg_guide, arg_node);
-      if this.is_intrinsic_protocol(proto) then {
-        def method := this.resolve_method(proto.id, name);
-        if method != null and method.get_annotation("intrinsic") != null then
-          yield(method);
-      }
-    }
-    false;
-  }
-  print(intrinsic_method);
-  assert_true(intrinsic_method != null);
+  def intrinsic := guide.info(node).intrinsic;
+  if intrinsic = null
+    then fail("Call ${Unparser.unparse(guide, node)} is not intrinsic.");
+  def handler := this.intrinsics[intrinsic];
+  if handler = null
+    then fail("Unimplemented intrinsic ${intrinsic}.");
+  handler(this, guide, node);
+}
+
+def (this is CodeGenerator).static_value(guide is LiteralGuide, node)
+ -> guide.value(node);
+
+def (this is CodeGenerator).int32_cast(guide, node) {
+  def arg_node := guide.argument(node, 1);
+  def arg_guide := guide.resolve(arg_node);
+  def value := this.static_value(arg_guide, arg_node);
+  this.assm.push(value);
+}
+
+def (this is CodeGenerator).int32_add(guide, node) {
+  def left_node := guide.argument(node, 0);
+  this.emit(guide.resolve(left_node), left_node);
+  def right_node := guide.argument(node, 1);
+  this.emit(guide.resolve(right_node), right_node);
+  this.assm.pop(rEax);
+  this.assm.pop(rEbx);
+  this.assm.add(rEbx, rEax);
+  this.assm.push(rEax);
 }
 
 def (this is CodeGenerator).is_intrinsic_protocol(value) -> false;

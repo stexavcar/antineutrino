@@ -1,3 +1,20 @@
+protocol NodeInfo;
+
+def NodeInfo.new() -> new NodeInfo {
+  rType := new Ref(null),
+  rIntrinsic := new Ref(null)
+}
+
+def (this is NodeInfo).type -> this.rType.get();
+
+def (this is NodeInfo).type:=(r) -> this.rType.set(r);
+
+def (this is NodeInfo).intrinsic -> this.rIntrinsic.get();
+
+def (this is NodeInfo).intrinsic:=(v) -> this.rIntrinsic.set(v);
+
+def kNoNodeInfo := new NodeInfo();
+
 protocol SyntaxGuide;
 
 def kCall := 3;
@@ -5,6 +22,23 @@ def kLiteral := 7;
 def kGlobal := 10;
 
 protocol NodeGuide;
+
+def (this is NodeGuide).info(cursor) {
+  def info := this.data.info[cursor];
+  if info = null then kNoNodeInfo;
+  else info;
+}
+
+def (this is NodeGuide).ensure_info(cursor) {
+  def info := this.data.info[cursor];
+  if info = null then {
+    def result := new NodeInfo();
+    this.data.info[cursor] := result;
+    result;
+  } else {
+    info;
+  }
+}
 
 def (this is NodeGuide).resolve(value) -> this.data.resolve(value);
 
@@ -40,7 +74,8 @@ def SyntaxGuide.new(code, literals) {
   def result := new SyntaxGuide {
     code := code,
     literals := literals,
-    guides := new HashMap()
+    guides := new HashMap(),
+    info := new HashMap()
   }
   result.guides[kCall] := new CallGuide { data := result };
   result.guides[kLiteral] := new LiteralGuide { data := result };

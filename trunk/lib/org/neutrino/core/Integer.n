@@ -1,7 +1,9 @@
 /*
  * Signed integers 
  */
-@native("int") protocol Integer;
+@intrinsic("int")
+@native("int")
+protocol Integer;
 
 def (this is Integer)+(that is Integer) -> internal "int+int";
 
