@@ -17,6 +17,14 @@ def (this is CallGuide).name(cursor)
 
 def (this is CallGuide).argument(cursor, index)
  -> this.data[cursor + 3 + index];
+
+def (this is CallGuide).arguments(cursor) -> fn for (fun) {
+  for (i : 0 .. this.argc(cursor)) {
+    def arg_cursor := this.data[cursor + 3 + i];
+    def arg_guide := this.resolve(arg_cursor);
+    fun(arg_guide, arg_cursor);
+  }
+}
  
 protocol LiteralGuide is NodeGuide;
 

@@ -17,11 +17,7 @@ def (this is NeutrinoCompiler).add_dylib_bridge(binary, name, argc) {
   bridge.exit_frame();  
 }
 
-def (this is NeutrinoCompiler).emit(assm, guide is LiteralGuide, node) {
-  assm.push(guide.value(node));
-}
-
-def (this is NeutrinoCompiler).build_binary(guide, node) {
+def (this is NeutrinoCompiler).build_binary(universe, guide, node) {
   def binary := new Binary(new Ia386());
 
   // Make external call bridges.
@@ -40,7 +36,7 @@ def (this is NeutrinoCompiler).build_binary(guide, node) {
   // Neutrino entry point.  Called from neutrino.
   def entry_point := binary.add_code_block("entry_point");
   entry_point.enter_frame();
-  this.emit(entry_point, guide, node);
+  new CodeGenerator(universe, entry_point).emit(guide, node);
   entry_point.pop(rEax);
   entry_point.exit_frame();
 
@@ -96,7 +92,7 @@ def (this is NeutrinoCompiler).compile(in_name, out_name) {
   def root_node := entry_point_code.root_offset;
   def root_guide := guide.resolve(root_node);
   print(Unparser.unparse(root_guide, root_node));
-  def binary := this.build_binary(root_guide, root_node);
+  def binary := this.build_binary(universe, root_guide, root_node);
   def data := binary.encode;
   open_file(out_name).write_binary(data);  
 }

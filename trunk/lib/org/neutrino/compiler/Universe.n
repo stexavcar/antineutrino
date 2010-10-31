@@ -2,15 +2,15 @@ def CompilerGrower.new_handler_table() {
   def result := new HashMap();
   result[CodeBundle.tag] := (fn (payload) -> CodeBundle.grow(payload));
   result[Parameter.tag] := (fn (payload) -> Parameter.grow(payload));
-  result[Method.tag] := (fn (payload) -> Method.grow(payload));
   result[TypeId.tag] := (fn (payload) -> TypeId.grow(payload));
   result[Binding.tag] := (fn (payload) -> Binding.grow(payload));
   result[Annotation.tag] := (fn (payload) -> Annotation.grow(payload));
   result[Module.tag] := (fn (payload) -> Module.grow(payload));
   result[Native.tag] := (fn (payload) -> Native.grow(payload));
   result[Universe.tag] := (fn (payload) -> Universe.grow(payload));
+  result[ProtocolAst.tag] := (fn (payload) -> ProtocolAst.grow(payload));
+  result[MethodAst.tag] := (fn (payload) -> MethodAst.grow(payload));
   def getter(name) -> fn (payload) -> payload[name];
-  result[Protocol.tag] := id;
   result["org::neutrino::runtime::RInteger"] := getter("value");
   result["org::neutrino::runtime::RString"] := getter("value");
   result;
@@ -38,18 +38,18 @@ def Parameter.grow(payload) -> new Parameter {
   is_protocol_method := payload["isProtocolMethod"]
 }
 
-protocol Method;
+protocol MethodAst;
 
-def Method.tag -> "org::neutrino::runtime::RMethod";
+def MethodAst.tag -> "org::neutrino::runtime::RMethod";
 
-def Method.grow(payload) -> new Method {
+def MethodAst.grow(payload) -> new MethodAst {
   annots := payload["annots"],
   params := payload["params"],
   name := payload["name"],
   code := payload["code"]
 }
 
-def (this is Method).get_annotation(name) {
+def (this is MethodAst).get_annotation(name) {
   with_1cc (yield) {
     for (annot : this.annots) {
       if annot.tag = name
@@ -59,15 +59,35 @@ def (this is Method).get_annotation(name) {
   }
 }
 
+def (this is MethodAst).to_string() -> "#<a Method: ${this.name}>";
+
 protocol TypeId;
 
 def TypeId.tag -> "org::neutrino::runtime::TypeId";
 
 def TypeId.grow(payload) -> null;
 
-protocol Protocol;
+protocol ProtocolAst;
 
-def Protocol.tag -> "org::neutrino::runtime::RProtocol";
+def ProtocolAst.tag -> "org::neutrino::runtime::RProtocol";
+
+def ProtocolAst.grow(payload) -> new ProtocolAst {
+  instance_type_id := payload["instanceTypeId"],
+  protocol_type_id := payload["protocolTypeId"],
+  id := payload["id"],
+  annotations := payload["annotations"],
+  display_name := payload["displayName"]
+}
+
+def (this is ProtocolAst).get_annotation(name) {
+  with_1cc (yield) {
+    for (annot : this.annotations) {
+      if annot.tag = name
+        then yield(annot);
+    }
+    null;
+  }
+}
 
 protocol Binding;
 
@@ -135,6 +155,33 @@ def (this is Universe).bindings -> fn for (fun) {
 def (this is Universe).methods -> fn for (fun) {
   for (module : this.modules.values)
     module.methods.for(fun);
+}
+
+def (this is Universe).protocols -> fn for (fun) {
+  for (module : this.modules.values)
+    module.protos.for(fun);
+}
+
+def (this is Universe).lookup_static_global(name) {
+  with_1cc (return) {
+    for (proto_name, proto : this.protocols) {
+      if name = proto_name then
+        return(proto);
+    }
+    null;
+  }
+}
+
+def (this is Universe).lookup_method(holder, name) {
+  with_1cc (return) -> for (method : this.methods) {
+    if method.name = name then {
+      for (param : method.params) {
+        if param.type = holder then
+          return(method);
+      }
+    }
+    null;
+  }
 }
 
 def (this is Universe).to_string() -> "#<a Universe: ${this.modules}>";
