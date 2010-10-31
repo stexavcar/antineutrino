@@ -16,7 +16,6 @@ public abstract class Intrinsic {
   public static final String ANNOTATION = "intrinsic";
 
   public static Intrinsic get(String id) {
-    assert INTRINSICS.containsKey(id) : id;
     return INTRINSICS.get(id);
   }
 

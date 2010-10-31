@@ -6,12 +6,16 @@ protocol int32_t;
 @intrinsic("int32.add")
 def (this is int32_t).+(that is int32_t);
 
+@intrinsic
 protocol LibC;
 
 @intrinsic("libc.malloc")
 def LibC.malloc(arg is int32_t);
 
+@intrinsic("libc.exit")
+def LibC.exit(arg is int32_t);
+
 @entry_point("neuneu") // Make this callable from the java implementation
 @neuneu_entry_point // Mark this as the entry point for the neutrino implementation
 def EntryPoint.start()
- -> 80;
+ -> LibC.exit(80);

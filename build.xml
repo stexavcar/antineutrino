@@ -36,7 +36,7 @@
   
   <target name="libpib.build.javatrino" depends="javatrino.build">
     <mkdir dir="${pib.dir}"/>
-    <java classname="${compiler.class}" fork="yes">
+    <java classname="${compiler.class}" fork="yes" failonerror="true">
       <classpath><path location="${class.dir}"/></classpath>
       <assertions><enable/></assertions>
       <arg value="--root-path"/><arg value="${lib.dir}"/>
@@ -68,7 +68,7 @@
   
   <target name="libobj.build.neutrino" depends="libpib.build.javatrino,neulibpib.build.javatrino">
     <mkdir dir="${obj.dir}"/>
-    <java classname="${run.class}" fork="yes">
+    <java classname="${run.class}" fork="yes" failonerror="true">
       <classpath><path location="${class.dir}"/></classpath>
       <assertions><enable/></assertions>
       <arg value="--pib-path"/><arg value="${libpib.path}"/>

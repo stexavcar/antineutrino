@@ -130,7 +130,7 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
         if (annot != null) {
           String id = ((RString) annot.getArgument(0)).getValue();
           Intrinsic handler = Intrinsic.get(id);
-          if (handler.isApplicable(that)) {
+          if (handler != null && handler.isApplicable(that)) {
             handler.generate(that, this);
           }
         }

@@ -1,0 +1,42 @@
+protocol CodeGenerator;
+
+def CodeGenerator.new(universe, assm) -> new CodeGenerator {
+  universe := universe,
+  assm := assm
+}
+
+def (this is CodeGenerator).resolve_static_value(guide, node) -> null;
+
+def (this is CodeGenerator).resolve_static_value(guide is GlobalGuide, node) {
+  def name := guide.name(node);
+  this.universe.lookup_static_global(name);
+}
+
+def (this is CodeGenerator).resolve_method(holder, method)
+ -> this.universe.lookup_method(holder, method);
+
+def (this is CodeGenerator).emit(guide is LiteralGuide, node) {
+  this.assm.push(guide.value(node));
+}
+
+def (this is CodeGenerator).emit(guide is CallGuide, node) {
+  def argc := guide.argc(node);
+  def name := guide.name(node);
+  def intrinsic_method := with_1cc (yield) {
+    for (arg_guide, arg_node : guide.arguments(node)) {
+      def proto := this.resolve_static_value(arg_guide, arg_node);
+      if this.is_intrinsic_protocol(proto) then {
+        def method := this.resolve_method(proto.id, name);
+        if method != null and method.get_annotation("intrinsic") != null then
+          yield(method);
+      }
+    }
+    false;
+  }
+  print(intrinsic_method);
+  assert_true(intrinsic_method != null);
+}
+
+def (this is CodeGenerator).is_intrinsic_protocol(value) -> false;
+def (this is CodeGenerator).is_intrinsic_protocol(p is ProtocolAst)
+ -> p.get_annotation("intrinsic") != null;
