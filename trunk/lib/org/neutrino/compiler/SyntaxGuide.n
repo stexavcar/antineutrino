@@ -25,6 +25,7 @@ protocol SyntaxGuide;
 def kCall := 3;
 def kLiteral := 7;
 def kGlobal := 10;
+def kArgument := 12;
 
 protocol NodeGuide;
 
@@ -75,6 +76,11 @@ protocol GlobalGuide is NodeGuide;
 def (this is GlobalGuide).name(cursor)
  -> this.data.literal_at(cursor + 1);
 
+protocol ArgumentGuide is NodeGuide;
+
+def (this is ArgumentGuide).index(cursor)
+ -> this.data[cursor + 1];
+
 def SyntaxGuide.new(code, literals) {
   def result := new SyntaxGuide {
     code := code,
@@ -85,6 +91,7 @@ def SyntaxGuide.new(code, literals) {
   result.guides[kCall] := new CallGuide { data := result };
   result.guides[kLiteral] := new LiteralGuide { data := result };
   result.guides[kGlobal] := new GlobalGuide { data := result };
+  result.guides[kArgument] := new ArgumentGuide { data := result };
   result;
 }
 

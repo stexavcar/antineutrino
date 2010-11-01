@@ -1,8 +1,12 @@
-protocol Register;
+protocol Operand;
 
-protocol Deref;
+protocol Register is Operand;
 
-def deref(val) -> new Deref(val);
+protocol Memory is Operand;
+
+def Memory.at(base) -> new Memory(base, 0);
+
+def Memory.at_disp(base, disp) -> new Memory(base, disp);
 
 protocol CallTarget;
 

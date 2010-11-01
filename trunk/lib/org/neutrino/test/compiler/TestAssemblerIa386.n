@@ -1,0 +1,157 @@
+protocol Ia386Test;
+
+def (this is Memory).to_string() {
+  if this.disp != 0 then {
+    "0x0${this.disp}(${this.base})";
+  } else {
+    "(${this.base})";
+  }
+}
+
+def kAllRegs := #[rEax, rEbx, rEcx, rEdx, rEsi, rEdi];
+
+def kMakers := #[
+  fn (reg) -> reg,
+  fn (reg) -> Memory.at(reg),
+  fn (reg) -> Memory.at_disp(reg, 4)
+];
+
+protocol TestData;
+
+def (this is TestData).add_expected(str) -> this.expected.add(str);
+
+@entry_point("test_ia386")
+def test_ia386(args) {
+  def binary := new Binary(new Ia386());
+  def test := new Ia386Test { };
+  def datas := new ArrayList();
+  def new_data(name) {
+    def result := new TestData {
+      name := name,
+      assm := binary.add_code_block(name),
+      expected := new ArrayList()
+    }
+    datas.add(result);
+  }
+  test.run_tests(new_data);
+  
+  def bin_name := args[0];
+  open_file(bin_name).write_binary(binary.encode);
+  
+  def blocks := new ArrayList();
+  for (data : datas)
+    blocks.add("${data.name}:\n${data.expected.join("\n")}");
+  def expected := blocks.join("\n");
+  def exp_name := args[1];
+  open_file(exp_name).write_string("${expected}\n");
+}
+
+def (this is Ia386Test).operands -> fn for (fun) {
+  for (reg : kAllRegs) for (maker : kMakers) {
+    fun(maker(reg));
+  }
+}
+
+def (this is Ia386Test).operand_pairs -> fn for (fun) {
+  for (src : this.operands) for (dest : this.operands) {
+    if this.is_valid(src, dest)
+      then fun(src, dest);
+  }
+}
+
+def (this is Ia386Test).is_valid(a, b) -> true;
+
+def (this is Ia386Test).is_valid(a is Memory, b is Memory) -> false;
+
+def (this is Ia386Test).run_tests(new_data) {
+  this.mov(new_data("mov"));
+  this.mov_imm(new_data("mov_imm"));
+  this.add(new_data("add"));
+  this.add_imm(new_data("add_imm"));
+  this.sub(new_data("sub"));
+  this.sub_imm(new_data("sub_imm"));
+  this.ahnd(new_data("and"));
+  this.and_imm(new_data("and_imm"));
+  this.push(new_data("push"));
+  this.pop(new_data("pop"));
+  this.simple(new_data("simple"));
+}
+
+def (this is Ia386Test).mov(data) {
+  for (src, dest : this.operand_pairs) {
+    data.assm.mov(dest, src);
+    data.add_expected("movl ${src},${dest}");
+  }
+}
+
+def (this is Ia386Test).add(data) {
+  for (src, dest : this.operand_pairs) {
+    data.assm.add(dest, src);
+    data.add_expected("addl ${src},${dest}");
+  }
+}
+
+def (this is Ia386Test).add_imm(data) {
+  for (dest : this.operands) {
+    data.assm.add(dest, 10);
+    data.add_expected("addl $0x0000000a,${dest}");
+  }
+}
+
+def (this is Ia386Test).sub(data) {
+  for (src, dest : this.operand_pairs) {
+    data.assm.sub(dest, src);
+    data.add_expected("subl ${src},${dest}");
+  }
+}
+
+def (this is Ia386Test).sub_imm(data) {
+  for (dest : this.operands) {
+    data.assm.sub(dest, 10);
+    data.add_expected("subl $0x0000000a,${dest}");
+  }
+}
+
+def (this is Ia386Test).ahnd(data) {
+  for (src, dest : this.operand_pairs) {
+    data.assm.ahnd(dest, src);
+    data.add_expected("andl ${src},${dest}");
+  }
+}
+
+def (this is Ia386Test).and_imm(data) {
+  for (dest : this.operands) {
+    data.assm.ahnd(dest, 10);
+    data.add_expected("andl $0x0000000a,${dest}");
+  }
+}
+
+def (this is Ia386Test).mov_imm(data) {
+  for (dest : this.operands) {
+    data.assm.mov(dest, 10);
+    data.add_expected("movl $0x0000000a,${dest}");
+  }
+}
+
+def (this is Ia386Test).push(data) {
+  for (src : this.operands) {
+    data.assm.push(src);
+    data.add_expected("pushl ${src}");
+  }
+}
+
+def (this is Ia386Test).pop(data) {
+  for (dest : this.operands) {
+    data.assm.pop(dest);
+    data.add_expected("popl ${dest}");
+  }  
+}
+
+def (this is Ia386Test).simple(data) {
+  data.assm.int3();
+  data.add_expected("int $0x3");
+  data.assm.ret();
+  data.add_expected("ret");
+  data.assm.leave();
+  data.add_expected("leave");
+}

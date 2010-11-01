@@ -91,3 +91,6 @@ def (this is ArrayList).iter {
     next -> self[index_itr.next]
   }
 }
+
+def (this is ArrayList).join(sep)
+ -> String.implode(this.contents, this.length, sep);

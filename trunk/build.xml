@@ -11,6 +11,8 @@
   <property name="libpib.path" value="${pib.dir}/lib.pib"/>
   <property name="neulibpib.path" value="${pib.dir}/neulib.pib"/>
   <property name="libobj.path" value="${obj.dir}/lib.no"/>
+  <property name="test_ia386obj.path" value="${obj.dir}/test_ia386.no"/>
+  <property name="test_ia386exp.path" value="${obj.dir}/test_ia386_exp.txt"/>
   <property name="libexe.path" value="${obj.dir}/lib"/>
   
   <property name="main.package" value="org.neutrino.main"/>
@@ -77,6 +79,23 @@
       <arg value="${libobj.path}"/>
     </java>
   </target>
+
+  <target name="test_ia386obj.build.neutrino" depends="libpib.build.javatrino,neulibpib.build.javatrino">
+    <mkdir dir="${obj.dir}"/>
+    <java classname="${run.class}" fork="yes" failonerror="true">
+      <classpath><path location="${class.dir}"/></classpath>
+      <assertions><enable/></assertions>
+      <arg value="--pib-path"/><arg value="${libpib.path}"/>
+      <arg value="--entry-point"/><arg value="test_ia386"/>
+      <arg value="${test_ia386obj.path}"/>
+      <arg value="${test_ia386exp.path}"/>
+    </java>
+    <exec executable="sh" failonerror="true">
+	  <arg value="scripts/diff-asm.sh"/>
+	  <arg value="${test_ia386obj.path}"/>
+	  <arg value="${test_ia386exp.path}"/>
+	</exec>
+  </target>
   
   <target name="libexe.build" depends="libobj.build.neutrino">
     <exec executable="ld">
@@ -98,6 +117,13 @@
     <exec executable="otool">
       <arg value="-tV"/>
       <arg value="${libobj.path}"/>
+    </exec>
+  </target>
+
+  <target name="test_ia386obj.disass" depends="test_ia386obj.build.neutrino">
+    <exec executable="otool">
+      <arg value="-tV"/>
+      <arg value="${test_ia386obj.path}"/>
     </exec>
   </target>
   

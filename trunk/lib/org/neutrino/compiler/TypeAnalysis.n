@@ -60,13 +60,6 @@ def (this is TypeAnalysis).do_analyze(guide is LiteralGuide, node) {
   this.value_type(value);
 }
 
-def (this is TypeAnalysis).value_type(obj is Integer) -> "Integer";
-
-def (this is TypeAnalysis).value_type(obj is ProtocolAst)
- -> "${obj.id}.protocol";
-
-def (this is TypeAnalysis).value_type(obj) -> null;
-
 def (this is TypeAnalysis).do_analyze(guide is GlobalGuide, node) {
   def name := guide.name(node);
   def value := this.universe.lookup_static_global(name);
@@ -74,3 +67,14 @@ def (this is TypeAnalysis).do_analyze(guide is GlobalGuide, node) {
     then null;
     else this.value_type(value);
 }
+
+def (this is TypeAnalysis).do_analyze(guide is ArgumentGuide, node) {
+  
+}
+
+def (this is TypeAnalysis).value_type(obj is Integer) -> "Integer";
+
+def (this is TypeAnalysis).value_type(obj is ProtocolAst)
+ -> "${obj.id}.protocol";
+
+def (this is TypeAnalysis).value_type(obj) -> null;
