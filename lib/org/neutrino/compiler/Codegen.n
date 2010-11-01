@@ -49,8 +49,7 @@ def (this is CodeGenerator).emit(guide is CallGuide, node) {
 
 def (this is CodeGenerator).emit(guide is ArgumentGuide, node) {
   def index := guide.index(node);
-  this.assm.mov(deref(rEbp), rEax);
-  this.assm.push(rEax);
+  this.assm.push(Memory.at(rEbp));
 }
 
 def (this is CodeGenerator).emit_c_call(guide, node, target) {

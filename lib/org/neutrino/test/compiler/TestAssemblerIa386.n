@@ -1,19 +1,33 @@
 protocol Ia386Test;
 
+def kHexChars := #[
+  "0", "1", "2", "3", "4", "5", "6", "7",
+  "8", "9", "a", "b", "c", "d", "e", "f"
+];
+
+def byte_to_hex(value) {
+  def nib_1 := value & 16r0F;
+  def nib_2 := (value >> 4) & 16r0F;
+  "${kHexChars[nib_2]}${kHexChars[nib_1]}";
+}
+
 def (this is Memory).to_string() {
   if this.disp != 0 then {
-    "0x0${this.disp}(${this.base})";
+    "0x${byte_to_hex(this.disp)}(${this.base})";
+  } else if this.base = rEbp then {
+    "0x00(${this.base})";
   } else {
     "(${this.base})";
   }
 }
 
-def kAllRegs := #[rEax, rEbx, rEcx, rEdx, rEsi, rEdi];
+def kAllRegs := #[rEax, rEbx, rEcx, rEdx, rEsi, rEdi, rEbp, rEsp];
 
 def kMakers := #[
   fn (reg) -> reg,
   fn (reg) -> Memory.at(reg),
-  fn (reg) -> Memory.at_disp(reg, 4)
+  fn (reg) -> Memory.at_disp(reg, 4),
+  fn (reg) -> Memory.at_disp(reg, 0-4)
 ];
 
 protocol TestData;
