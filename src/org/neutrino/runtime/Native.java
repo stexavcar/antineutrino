@@ -363,6 +363,16 @@ public class Native implements ISeedable {
       return RNull.getInstance();
     }
   };
+  
+  @Marker("file.writestring") static final Impl FILE_WRITE_STR = new Impl() {
+	    @Override
+	    public RValue call(Arguments args) {
+	      RFile file = (RFile) args.getThis();
+	      RString data = (RString) args.getArgument(0);
+	      file.write(data.getValue().getBytes());
+	      return RNull.getInstance();
+	    }
+	  };
 
   @Marker("print") static final Impl PRINT = new Impl() {
     @Override
