@@ -531,13 +531,17 @@ def (this is MachO).sizeofcmds {
 }
 
 def (this is MachO).finalize() {
-  for (marker : this.binary.markers)
-    this.process_marker(marker);
+  for (relocation : this.binary.markers)
+    this.process_relocation(relocation, relocation.target);
 }
 
-def (this is MachO).process_marker(marker is LocalCallMarker) {
-  def source_offset := this.text.code_block_offset(marker.assm.name);
-  def instr_offset := source_offset + marker.offset;
-  def target_offset := this.text.code_block_offset(marker.target);
-  this.text.rewrite_int32(instr_offset, target_offset - (instr_offset + 4));
+def (this is MachO).process_relocation(relocation, target is LocalSymbol) {
+  def source_offset := this.text.code_block_offset(relocation.assm.name);
+  def instr_offset := source_offset + relocation.offset;
+  def target_offset := this.text.code_block_offset(target.name);
+  if relocation.is_relative then {
+    this.text.rewrite_int32(instr_offset, target_offset - (instr_offset + 4));
+  } else {
+    this.text.rewrite_int32(instr_offset, target_offset);
+  }
 }

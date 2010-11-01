@@ -69,7 +69,7 @@ def (this is CodeGenerator).emit_c_call(guide, node, target) {
     this.emit(guide.resolve(arg), arg);
   }
   // Call the function
-  this.assm.call(CallTarget.local(target));
+  this.assm.call(Symbol.local(target));
   // Pop the arguments off into a scratch register
   for (i : 1 .. argc)
     this.assm.pop(rEbx);

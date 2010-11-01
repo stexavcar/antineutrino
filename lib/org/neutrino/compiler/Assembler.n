@@ -8,12 +8,12 @@ def Memory.at(base) -> new Memory(base, 0);
 
 def Memory.at_disp(base, disp) -> new Memory(base, disp);
 
-protocol CallTarget;
+protocol Symbol is Operand;
 
-protocol LocalCallTarget;
+protocol LocalSymbol;
 
-def CallTarget.local(name) -> new LocalCallTarget { name := name };
+def Symbol.local(name) -> new LocalSymbol { name := name };
 
 protocol ExternalCallTarget;
 
-def CallTarget.extern(name) -> new ExternalCallTarget { name := name };
+def Symbol.dylib(name) -> new ExternalCallTarget { name := name };
