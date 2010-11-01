@@ -9,6 +9,13 @@ def IntrinsicManager.new() {
 
 def (this is IntrinsicManager)[name] -> this.handlers[name];
 
+/* 
+ * An extremely simple and dumb ia396 code generator.  Code for each operation
+ * is generated from some very simple templates and all operations pop their
+ * arguments from and leave their resulting value on the stack.  Values are
+ * not transferred in registers between operations, through functions return
+ * their values in EAX.
+ */
 protocol CodeGenerator;
 
 def CodeGenerator.new(universe, assm) -> new CodeGenerator {
@@ -49,18 +56,24 @@ def (this is CodeGenerator).emit(guide is CallGuide, node) {
 
 def (this is CodeGenerator).emit(guide is ArgumentGuide, node) {
   def index := guide.index(node);
-  this.assm.push(Memory.at(rEbp));
+  // The arguments are just below EBP, the last one at offset 8, the previous
+  // at 12, etc.
+  this.assm.push(Memory.at_disp(rEbp, 4 + (4 * index)));
 }
 
 def (this is CodeGenerator).emit_c_call(guide, node, target) {
   def argc := guide.argc(node);
+  // Push arguments onto the stack
   for (i : 1 .. argc) {
     def arg := guide.argument(node, i);
     this.emit(guide.resolve(arg), arg);
   }
+  // Call the function
   this.assm.call(CallTarget.local(target));
+  // Pop the arguments off into a scratch register
   for (i : 1 .. argc)
     this.assm.pop(rEbx);
+  // Push the result in EAX onto the stack
   this.assm.push(rEax);
 }
 
@@ -71,6 +84,8 @@ def (this is CodeGenerator).int32_cast(guide, node) {
   def arg_node := guide.argument(node, 1);
   def arg_guide := guide.resolve(arg_node);
   def value := this.static_value(arg_guide, arg_node);
+  // If we have a static integer value we just push it onto the stack as a
+  // raw int32.
   this.assm.push(value);
 }
 
@@ -79,9 +94,12 @@ def (this is CodeGenerator).int32_add(guide, node) {
   this.emit(guide.resolve(left_node), left_node);
   def right_node := guide.argument(node, 1);
   this.emit(guide.resolve(right_node), right_node);
+  // Push the arguments from the stack into two scratch registers.
   this.assm.pop(rEax);
   this.assm.pop(rEbx);
-  this.assm.add(rEbx, rEax);
+  // Add the arguments
+  this.assm.add(rEax, rEbx);
+  // Push the result back onto the stack.
   this.assm.push(rEax);
 }
 
