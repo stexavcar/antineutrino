@@ -22,7 +22,8 @@ def CodeBlock.new(name, code) -> new CodeBlock {
   code := code
 }
 
-def (this is Binary).add_relocation(reloc) -> this.relocs.add(reloc);
+def (this is Binary).add_relocation(reloc)
+ -> this.relocs.add(reloc);
 
 def (this is Binary).add_code_block(name) {
   def assm := this.arch.new_assembler(this, name);

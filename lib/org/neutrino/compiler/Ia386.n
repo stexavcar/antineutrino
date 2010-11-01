@@ -62,8 +62,14 @@ def (this is AssemblerIa386).write_disp8(disp) {
   this.out.write_int8(disp);
 }
 
-def (this is AssemblerIa386).write_imm32(val) {
+def (this is AssemblerIa386).write_imm32(val is Integer) {
   this.out.write_int32(val);
+}
+
+def (this is AssemblerIa386).write_imm32(target is Symbol) {
+  def reloff := this.cursor;
+  this.write_imm32(0);
+  this.binary.add_relocation(new Relocation(this, reloff, target, false));
 }
 
 def (this is AssemblerIa386).rewrite_imm32(offset, val) {
@@ -118,13 +124,13 @@ def (this is AssemblerIa386).write_relative_operand(target is Symbol) {
 // --- Instructions ---
 
 // B8 +rd -> MOV r32, imm32
-def (this is AssemblerIa386).mov(imm32 is Integer, dest is Register) {
+def (this is AssemblerIa386).mov(imm32 is Immediate, dest is Register) {
   this.write_opcode(16rB8 + dest.index);
   this.write_imm32(imm32);
 }
 
 // C7 /0 -> MOV r/m32, imm32
-def (this is AssemblerIa386).mov(dest is Operand, imm32 is Integer) {
+def (this is AssemblerIa386).mov(dest is Operand, imm32 is Immediate) {
   this.write_opcode(16rC7);
   this.write_operand(0, dest);
   this.write_imm32(imm32);
@@ -155,7 +161,7 @@ def (this is AssemblerIa386).add(dest is Operand, src is Register) {
 }
 
 // 81 /0 id -> ADD r/m32, imm32
-def (this is AssemblerIa386).add(dest is Operand, imm32 is Integer) {
+def (this is AssemblerIa386).add(dest is Operand, imm32 is Immediate) {
   this.write_opcode(16r81);
   this.write_operand(0, dest);
   this.write_imm32(imm32);
@@ -174,7 +180,7 @@ def (this is AssemblerIa386).sub(dest is Operand, src is Register) {
 }
 
 // 81 /5 id -> SUB r/m32, imm32
-def (this is AssemblerIa386).sub(dest is Operand, imm32 is Integer) {
+def (this is AssemblerIa386).sub(dest is Operand, imm32 is Immediate) {
   this.write_opcode(16r81);
   this.write_operand(5, dest);
   this.write_imm32(imm32);
@@ -193,7 +199,7 @@ def (this is AssemblerIa386).ahnd(dest is Register, src is Operand) {
 }
 
 // 81 /4 id -> AND r/m32, imm32 
-def (this is AssemblerIa386).ahnd(dest is Operand, imm32 is Integer) {
+def (this is AssemblerIa386).ahnd(dest is Operand, imm32 is Immediate) {
   this.write_opcode(16r81);
   this.write_operand(4, dest);
   this.write_imm32(imm32);
@@ -211,7 +217,7 @@ def (this is AssemblerIa386).push(mem is Operand) {
 }
 
 // 68 -> PUSH imm32
-def (this is AssemblerIa386).push(imm32 is Integer) {
+def (this is AssemblerIa386).push(imm32 is Immediate) {
   this.write_opcode(16r68);
   this.write_imm32(imm32);
 }
