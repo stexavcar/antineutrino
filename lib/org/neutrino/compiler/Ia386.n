@@ -21,6 +21,8 @@ def rEdi := new Register(7, "edi");
 
 def (this is Register)=(that is Register) -> this.index = that.index;
 
+def (this is Register)!=(that is Register) -> this.index != that.index;
+
 protocol AssemblerIa386;
 
 def AssemblerIa386.new(binary, name) -> new AssemblerIa386 {
@@ -209,6 +211,32 @@ def (this is AssemblerIa386).pop(reg is Register) {
   this.write_opcode(16r58 + reg.index);
 }
 
+// FF /2 -> CALL r/m32
+def (this is AssemblerIa386).call(target is Operand) {
+  this.write_opcode(16rFF);
+  this.write_operand(2, target);
+}
+
+def (this is AssemblerIa386).call(target is LocalCallTarget) {
+  this.write_opcode(16rE8);
+  def reloff := this.cursor;
+  this.write_imm32(0);
+  this.binary.add_marker(new LocalCallMarker(this, reloff, target.name));
+}
+
+def (this is AssemblerIa386).call(target is ExternalCallTarget) {
+  this.write_opcode(16rE8);
+  def reloff := this.cursor;
+  this.write_imm32(0);
+  def index := this.binary.register_extern(target.name, this.name, reloff);
+  this.fixups.add(fn {
+    def ownoff := this.binary.code_block_offset(this.name);
+    def codeoff := this.binary.extern_offset(index);
+    this.rewrite_imm32(reloff, codeoff - (ownoff + reloff + 4));
+  });  
+}
+
+
 // 8F /0 -> POP r/m32
 def (this is AssemblerIa386).pop(mem is Operand) {
   this.write_opcode(16r8F);
@@ -242,25 +270,6 @@ def (this is AssemblerIa386).enter_frame() {
 def (this is AssemblerIa386).exit_frame() {
   this.leave();
   this.ret();
-}
-
-def (this is AssemblerIa386).call(target is LocalCallTarget) {
-  this.write_opcode(16rE8);
-  def reloff := this.cursor;
-  this.write_imm32(0);
-  this.binary.add_marker(new LocalCallMarker(this, reloff, target.name));
-}
-
-def (this is AssemblerIa386).call(target is ExternalCallTarget) {
-  this.write_opcode(16rE8);
-  def reloff := this.cursor;
-  this.write_imm32(0);
-  def index := this.binary.register_extern(target.name, this.name, reloff);
-  this.fixups.add(fn {
-    def ownoff := this.binary.code_block_offset(this.name);
-    def codeoff := this.binary.extern_offset(index);
-    this.rewrite_imm32(reloff, codeoff - (ownoff + reloff + 4));
-  });  
 }
 
 def (this is AssemblerIa386).length -> this.out.length;
