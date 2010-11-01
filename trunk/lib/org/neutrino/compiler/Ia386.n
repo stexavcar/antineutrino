@@ -19,6 +19,8 @@ def rEbp := new Register(5, "ebp");
 def rEsi := new Register(6, "esi");
 def rEdi := new Register(7, "edi");
 
+def (this is Register)=(that is Register) -> this.index = that.index;
+
 protocol AssemblerIa386;
 
 def AssemblerIa386.new(binary, name) -> new AssemblerIa386 {
@@ -87,10 +89,24 @@ def (this is AssemblerIa386).write_operand(code is Integer, dest is Register) {
 }
 
 def (this is AssemblerIa386).write_operand(code is Integer, mem is Memory) {
- if mem.disp = 0 then {
-    this.write_mod_rm(kMemory, code, mem.base.index);
+  if mem.disp = 0 then {
+    if mem.base = rEbp then {
+      // Access to memory through EBP cannot be done through a simple mod/rm,
+      // instead it uses an access with a disp8 where the disp8 is 0.
+      this.write_mod_rm(kMemoryDisp8, code, rEbp.index);
+      this.write_disp8(0);
+    } else {
+      this.write_mod_rm(kMemory, code, mem.base.index);
+      // Access to memory through ESP cannot be done through a simple mod/rm,
+      // instead it uses an SIB.
+      if mem.base = rEsp
+        then this.write_sib(kScaleOne, rEsp.index, mem.base.index);
+    }
   } else {
-    this.write_mod_rm(kMemoryDisp8, code, mem.base.index);
+	this.write_mod_rm(kMemoryDisp8, code, mem.base.index);
+	// See above for the special handling of ESP.
+    if mem.base = rEsp
+      then this.write_sib(kScaleOne, rEsp.index, mem.base.index);
     this.write_disp8(mem.disp);
   }
 }
@@ -219,8 +235,8 @@ def (this is AssemblerIa386).enter_frame() {
   // It will be restored by .leave.
   this.push(rEbp);
   // Make the current stack pointer the new base pointer.
-  this.mov(rEsp, rEbp);
-  this.sub(16r18, rEsp);
+  this.mov(rEbp, rEsp);
+  this.sub(rEsp, 16r18);
 }
 
 def (this is AssemblerIa386).exit_frame() {
