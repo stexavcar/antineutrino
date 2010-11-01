@@ -1,9 +1,10 @@
-protocol LocalCallMarker;
+protocol Relocation;
 
-def LocalCallMarker.new(assm, offset, target) -> new LocalCallMarker {
+def Relocation.new(assm, offset, target, is_relative) -> new Relocation {
   assm := assm,
   offset := offset,
-  target := target
+  target := target,
+  is_relative := is_relative
 }
 
 protocol Binary;

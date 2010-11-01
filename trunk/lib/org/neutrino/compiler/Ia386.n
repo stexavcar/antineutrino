@@ -113,6 +113,12 @@ def (this is AssemblerIa386).write_operand(code is Integer, mem is Memory) {
   }
 }
 
+def (this is AssemblerIa386).write_relative_operand(target is LocalSymbol) {
+  def reloff := this.cursor;
+  this.write_imm32(0);
+  this.binary.add_marker(new Relocation(this, reloff, target, true));
+}
+
 // C7 /0 -> MOV r/m32, imm32
 def (this is AssemblerIa386).mov(dest is Operand, imm32 is Integer) {
   this.write_opcode(16rC7);
@@ -217,11 +223,10 @@ def (this is AssemblerIa386).call(target is Operand) {
   this.write_operand(2, target);
 }
 
-def (this is AssemblerIa386).call(target is LocalCallTarget) {
+// E8 cd -> CALL rel32
+def (this is AssemblerIa386).call(target is LocalSymbol) {
   this.write_opcode(16rE8);
-  def reloff := this.cursor;
-  this.write_imm32(0);
-  this.binary.add_marker(new LocalCallMarker(this, reloff, target.name));
+  this.write_relative_operand(target);
 }
 
 def (this is AssemblerIa386).call(target is ExternalCallTarget) {

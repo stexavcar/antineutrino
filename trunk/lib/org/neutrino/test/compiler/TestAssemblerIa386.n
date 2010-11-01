@@ -90,6 +90,7 @@ def (this is Ia386Test).run_tests(new_data) {
   this.pop(new_data("pop"));
   this.simple(new_data("simple"));
   this.call(new_data("call"));
+  this.syms(new_data("syms"));
 }
 
 def (this is Ia386Test).mov(data) {
@@ -184,4 +185,9 @@ def (this is Ia386Test).call(data) {
     data.assm.call(dest);
     data.add_expected(this.call_expectation(dest));
   }  
+}
+
+def (this is Ia386Test).syms(data) {
+  data.assm.call(Symbol.local("mov"));
+  data.add_expected("calll mov");
 }

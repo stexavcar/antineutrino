@@ -41,13 +41,13 @@ def (this is NeutrinoCompiler).emit_libc_method(universe, method, assm) {
   assm.ahnd(rEsp, 16rFFFFFFF0);
   assm.mov(rEax, Memory.at_disp(rEbp, 8));
   assm.mov(Memory.at(rEsp), rEax);
-  assm.call(CallTarget.extern(libc_name));
+  assm.call(Symbol.dylib(libc_name));
 }
 
 def (this is NeutrinoCompiler).emit_boilerplate(binary, entry_point) {
   def main := binary.add_code_block("_main");
   main.enter_frame();
-  main.call(CallTarget.local(entry_point));
+  main.call(Symbol.local(entry_point));
   main.exit_frame();  
 }
 
