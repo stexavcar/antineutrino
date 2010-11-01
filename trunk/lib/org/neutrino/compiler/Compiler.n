@@ -39,6 +39,7 @@ def (this is NeutrinoCompiler).emit_plain_method(universe, method, assm) {
 def (this is NeutrinoCompiler).emit_libc_method(universe, method, assm) {
   def libc_name := method.get_annotation("libc")[0];
   assm.ahnd(rEsp, 16rFFFFFFF0);
+  assm.mov(rEax, Memory.at_disp(rEbp, 8));
   assm.mov(Memory.at(rEsp), rEax);
   assm.call(CallTarget.extern(libc_name));
 }

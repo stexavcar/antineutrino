@@ -37,14 +37,20 @@ protocol Boot;
 
 @c_call
 @static_type("int32_t")
-@emit("sum")
-def Boot.sum(x is int32_t) -> x;
+@emit("first")
+def Boot.first(x is int32_t, y is int32_t) -> x;
+
+@c_call
+@static_type("int32_t")
+@emit("second")
+def Boot.second(x is int32_t, y is int32_t) -> y;
 
 @c_call
 @emit("neutrino_start")
 @static_type("int32_t")
 def Boot.start()
- -> Boot.sum(int32_t.of(1)) + int32_t.of(2);
+ -> Boot.first(int32_t.of(74), int32_t.of(93)) +
+    Boot.second(int32_t.of(16), int32_t.of(53));
 
 @emit("entry_point")
 @entry_point("neuneu") // Make this callable from the java implementation
