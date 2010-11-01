@@ -86,12 +86,15 @@ def (this is MachO).add_code_block(name, code) {
 
 protocol RelocationTableEntry;
 
-def RelocationTableEntry.new(offset) -> new RelocationTableEntry { offset := offset }
+def RelocationTableEntry.new(offset, is_relative) -> new RelocationTableEntry {
+  offset := offset,
+  is_relative := is_relative
+}
 
 def (this is RelocationTableEntry).encode(out) {
   out.write_int32(this.offset);
   def symbolnum := 2;
-  def pcrel := 1;
+  def pcrel := if this.is_relative then 1 else 0;
   def length := 2;
   def extern := 0;
   def type := 0;
@@ -106,8 +109,8 @@ def RelocationTable.new() -> new RelocationTable {
   entries := new ArrayList()
 }
 
-def (this is RelocationTable).add_entry(offset) {
-  this.entries.add(new RelocationTableEntry(offset));
+def (this is RelocationTable).add_entry(offset, is_relative) {
+  this.entries.add(new RelocationTableEntry(offset, is_relative));
 }
 
 def (this is RelocationTable).encode(out) {
@@ -542,7 +545,8 @@ def (this is MachO).preprocess_symbol(relocation, symbol is DylibSymbol) {
     this.symbols.add_extern(name_index, 0);
   }
   def source_offset := this.text.code_block_offset(relocation.assm.name);
-  this.reloc_table.add_entry(source_offset + relocation.offset);
+  this.reloc_table.add_entry(source_offset + relocation.offset,
+      relocation.is_relative);
 }
 
 def (this is MachO).symbol_address(target is DylibSymbol) {

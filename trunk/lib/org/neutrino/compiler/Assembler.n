@@ -8,7 +8,11 @@ def Memory.at(base) -> new Memory(base, 0);
 
 def Memory.at_disp(base, disp) -> new Memory(base, disp);
 
-protocol Symbol is Operand;
+protocol Immediate;
+
+def Integer is Immediate;
+
+protocol Symbol is Immediate;
 
 protocol LocalSymbol is Symbol;
 
