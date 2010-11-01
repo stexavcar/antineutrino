@@ -12,8 +12,7 @@ protocol Binary;
 def Binary.new(arch) -> new Binary {
   arch := arch,
   entries := new ArrayList(),
-  markers := new ArrayList(),
-  externs := new ArrayList()
+  relocs := new ArrayList()
 }
 
 protocol CodeBlock;
@@ -23,7 +22,7 @@ def CodeBlock.new(name, code) -> new CodeBlock {
   code := code
 }
 
-def (this is Binary).add_marker(marker) -> this.markers.add(marker);
+def (this is Binary).add_relocation(reloc) -> this.relocs.add(reloc);
 
 def (this is Binary).add_code_block(name) {
   def assm := this.arch.new_assembler(this, name);
@@ -33,34 +32,6 @@ def (this is Binary).add_code_block(name) {
   });
   assm;
 }
-
-def (this is Binary).code_block_offset(name) {
-  ref offset := 0;
-  with_1cc (return) {
-    for (entry : this.entries) {
-      if name = entry.name then {
-        return(offset);
-      } else {
-        offset := offset + entry.assm.length;
-      }
-    }
-  }
-}
-
-def (this is Binary).jump_table_offset {
-  ref offset := 0;
-  for (entry : this.entries)
-    offset := offset + entry.assm.length;
-  offset;  
-}
-
-def (this is Binary).register_extern(name, block, offset) {
-  this.externs.add(new { name := name, block := block, offset := offset });
-  this.externs.length - 1;
-}
-
-def (this is Binary).extern_offset(index)
-  -> this.jump_table_offset + (5 * index);
 
 def (this is Binary).encode {
   this.finalize();
@@ -78,8 +49,6 @@ def (this is Binary).to_mach_o() {
   def result := new MachO(this);
   for (entry : this.entries)
     result.add_code_block(entry.name, entry.assm.code);
-  for (extern : this.externs)
-    result.add_extern(extern.name, extern.block, extern.offset);
   result.finalize();
   result;
 }

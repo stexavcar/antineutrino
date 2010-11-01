@@ -10,10 +10,10 @@ def Memory.at_disp(base, disp) -> new Memory(base, disp);
 
 protocol Symbol is Operand;
 
-protocol LocalSymbol;
+protocol LocalSymbol is Symbol;
 
 def Symbol.local(name) -> new LocalSymbol { name := name };
 
-protocol ExternalCallTarget;
+protocol DylibSymbol is Symbol;
 
-def Symbol.dylib(name) -> new ExternalCallTarget { name := name };
+def Symbol.dylib(name) -> new DylibSymbol { name := name };
