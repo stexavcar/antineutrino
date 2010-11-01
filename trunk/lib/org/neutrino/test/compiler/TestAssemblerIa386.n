@@ -89,6 +89,7 @@ def (this is Ia386Test).run_tests(new_data) {
   this.push(new_data("push"));
   this.pop(new_data("pop"));
   this.simple(new_data("simple"));
+  this.call(new_data("call"));
 }
 
 def (this is Ia386Test).mov(data) {
@@ -168,4 +169,19 @@ def (this is Ia386Test).simple(data) {
   data.add_expected("ret");
   data.assm.leave();
   data.add_expected("leave");
+}
+
+def (this is Ia386Test).call_expectation(dest)
+ -> "call *${dest}";
+
+def (this is Ia386Test).call_expectation(dest is Memory)
+ -> if dest.disp = 0 and dest.base != rEbp and dest.base != rEsp
+      then "call ${dest}"
+      else "call *${dest}";
+
+def (this is Ia386Test).call(data) {
+  for (dest : this.operands) {
+    data.assm.call(dest);
+    data.add_expected(this.call_expectation(dest));
+  }  
 }
