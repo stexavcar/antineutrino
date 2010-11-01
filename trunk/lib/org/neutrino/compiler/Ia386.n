@@ -48,6 +48,8 @@ def kScaleEight := 2r11;
 
 def (this is AssemblerIa386).cursor -> this.out.length;
 
+// --- Encoding ---
+
 def (this is AssemblerIa386).write_mod_rm(mod, reg, rm) {
   this.out.write_int8((mod << 6) | (reg << 3) | rm);
 }
@@ -70,12 +72,6 @@ def (this is AssemblerIa386).rewrite_imm32(offset, val) {
 
 def (this is AssemblerIa386).write_opcode(val) {
   this.out.write_int8(val);
-}
-
-// B8 +rd -> MOV r32, imm32
-def (this is AssemblerIa386).mov(imm32 is Integer, dest is Register) {
-  this.write_opcode(16rB8 + dest.index);
-  this.write_imm32(imm32);
 }
 
 def (this is AssemblerIa386).write_operands(reg0 is Register, reg1 is Register) {
@@ -113,10 +109,18 @@ def (this is AssemblerIa386).write_operand(code is Integer, mem is Memory) {
   }
 }
 
-def (this is AssemblerIa386).write_relative_operand(target is LocalSymbol) {
+def (this is AssemblerIa386).write_relative_operand(target is Symbol) {
   def reloff := this.cursor;
   this.write_imm32(0);
-  this.binary.add_marker(new Relocation(this, reloff, target, true));
+  this.binary.add_relocation(new Relocation(this, reloff, target, true));
+}
+
+// --- Instructions ---
+
+// B8 +rd -> MOV r32, imm32
+def (this is AssemblerIa386).mov(imm32 is Integer, dest is Register) {
+  this.write_opcode(16rB8 + dest.index);
+  this.write_imm32(imm32);
 }
 
 // C7 /0 -> MOV r/m32, imm32
@@ -224,23 +228,10 @@ def (this is AssemblerIa386).call(target is Operand) {
 }
 
 // E8 cd -> CALL rel32
-def (this is AssemblerIa386).call(target is LocalSymbol) {
+def (this is AssemblerIa386).call(target is Symbol) {
   this.write_opcode(16rE8);
   this.write_relative_operand(target);
 }
-
-def (this is AssemblerIa386).call(target is ExternalCallTarget) {
-  this.write_opcode(16rE8);
-  def reloff := this.cursor;
-  this.write_imm32(0);
-  def index := this.binary.register_extern(target.name, this.name, reloff);
-  this.fixups.add(fn {
-    def ownoff := this.binary.code_block_offset(this.name);
-    def codeoff := this.binary.extern_offset(index);
-    this.rewrite_imm32(reloff, codeoff - (ownoff + reloff + 4));
-  });  
-}
-
 
 // 8F /0 -> POP r/m32
 def (this is AssemblerIa386).pop(mem is Operand) {

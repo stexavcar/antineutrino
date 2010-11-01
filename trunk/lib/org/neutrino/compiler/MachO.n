@@ -65,7 +65,8 @@ def MachO.new(binary) {
     sections := new ArrayList() [ text, jump_table ],
     dark_sections := new ArrayList() [ strings, symbols, indirect_symbols, reloc_table ],
     local_calls := new ArrayList(),
-    dylib_calls := new ArrayList()
+    dylib_calls := new ArrayList(),
+    dysym_indices := new HashMap()
   }
 }
 
@@ -83,24 +84,12 @@ def (this is MachO).add_code_block(name, code) {
   this.symbols.add_local(name_index, this.segment_fileoff + code_start);
 }
 
-def (this is MachO).add_extern(name, block, offset) {
-  def name_index := this.strings.add(name);
-  this.jump_table.add_extern();
-  this.indirect_symbols.add();
-  this.symbols.add_extern(name_index, 16r154);
-  this.reloc_table.add_entry(block, offset);
-}
+protocol RelocationTableEntry;
 
-protocol Relocation;
+def RelocationTableEntry.new(offset) -> new RelocationTableEntry { offset := offset }
 
-def Relocation.new(block, offset) -> new Relocation {
-  block := block,
-  offset := offset
-}
-
-def (this is Relocation).encode(out, mach_o) {
-  def block_offset := mach_o.binary.code_block_offset(this.block);
-  out.write_int32(block_offset + this.offset);
+def (this is RelocationTableEntry).encode(out) {
+  out.write_int32(this.offset);
   def symbolnum := 2;
   def pcrel := 1;
   def length := 2;
@@ -109,7 +98,7 @@ def (this is Relocation).encode(out, mach_o) {
   out.write_int32((type << 28) | (extern << 27) | (length << 25) | (pcrel << 24) | symbolnum);
 }
 
-def Relocation.size -> 2 * WORD_SIZE;
+def RelocationTableEntry.size -> 2 * WORD_SIZE;
 
 protocol RelocationTable;
 
@@ -117,18 +106,20 @@ def RelocationTable.new() -> new RelocationTable {
   entries := new ArrayList()
 }
 
-def (this is RelocationTable).add_entry(block, offset) {
-  this.entries.add(new Relocation(block, offset));
+def (this is RelocationTable).add_entry(offset) {
+  this.entries.add(new RelocationTableEntry(offset));
 }
 
-def (this is RelocationTable).encode(out, mach_o) {
+def (this is RelocationTable).encode(out) {
   for (entry : this.entries)
-    entry.encode(out, mach_o);
+    entry.encode(out);
 }
 
-def (this is RelocationTable).count -> this.entries.length;
+def (this is RelocationTable).count
+ -> this.entries.length;
 
-def (this is RelocationTable).size -> this.entries.length * Relocation.size;
+def (this is RelocationTable).size
+ -> this.entries.length * RelocationTableEntry.size;
 
 protocol JumpTable;
 
@@ -154,7 +145,7 @@ def (this is JumpTable).align -> 0;
 
 def (this is JumpTable).nreloc -> 0;
 
-def (this is JumpTable).encode(out, mach_o) {
+def (this is JumpTable).encode(out) {
   for (i : 0 .. this.size)
     out.write_int8(16rF4); // HLT
 }
@@ -218,7 +209,7 @@ def (this is TextSection).size {
   result;
 }
 
-def (this is TextSection).encode(out, mach_o) {
+def (this is TextSection).encode(out) {
   out.write_data(this.code.get_blob());
 }
 
@@ -251,7 +242,7 @@ def (this is StringTable).add(name) {
   result;
 }
 
-def (this is StringTable).encode(out, mach_o) {
+def (this is StringTable).encode(out) {
   for (str : this.strings)
     out.write_c_string(str);
 }
@@ -273,7 +264,7 @@ def (this is IndirectSymbols).count -> this.rCount.get();
 
 def (this is IndirectSymbols).add() -> this.rCount.set(this.count + 1);
 
-def (this is IndirectSymbols).encode(out, mach_o) {
+def (this is IndirectSymbols).encode(out) {
   for (i : 0 .. this.count)
     out.write_int32(i);
 }
@@ -303,7 +294,7 @@ def (this is SymbolTable).length -> this.symbols.length;
 
 def (this is SymbolTable).symbols -> this.locals + this.externs;
 
-def (this is SymbolTable).encode(out, mach_o) {
+def (this is SymbolTable).encode(out) {
   for (symbol : this.externs)
     symbol.encode_extern(out);
   for (symbol : this.locals)
@@ -398,7 +389,7 @@ def (this is MachO).encode_dysymtab_command(out) {
   out.write_int32(this.sizeof_dysymtab_command);
   out.write_int32(0);
   out.write_int32(0);
-  out.write_int32(this.symbols.local_count);
+  out.write_int32(this.symbols.external_count);
   out.write_int32(this.symbols.local_count);
   out.write_int32(0);
   out.write_int32(this.symbols.external_count);
@@ -489,7 +480,7 @@ def (this is MachO).encode_sections(out) {
   ref fileoff := this.segment_fileoff;
   for (section : this.all_sections) {
     out.pad_to(fileoff);
-    section.encode(out, this);
+    section.encode(out);
     def size := section.size;
     fileoff := fileoff + size;
   }
@@ -531,14 +522,41 @@ def (this is MachO).sizeofcmds {
 }
 
 def (this is MachO).finalize() {
-  for (relocation : this.binary.markers)
-    this.process_relocation(relocation, relocation.target);
+  for (reloc : this.binary.relocs)
+    this.preprocess_symbol(reloc, reloc.target);
+  for (reloc : this.binary.relocs)
+    this.process_relocation(reloc);
 }
 
-def (this is MachO).process_relocation(relocation, target is LocalSymbol) {
+def (this is MachO).preprocess_symbol(relocation, symbol) -> null;
+
+def (this is MachO).preprocess_symbol(relocation, symbol is DylibSymbol) {
+  def name := symbol.name;
+  def index := this.dysym_indices[name];
+  if index = null then {
+    def new_index := this.dysym_indices.size;
+    this.dysym_indices[name] := new_index;
+    def name_index := this.strings.add(name);
+    this.jump_table.add_extern();
+    this.indirect_symbols.add();
+    this.symbols.add_extern(name_index, 0);
+  }
+  def source_offset := this.text.code_block_offset(relocation.assm.name);
+  this.reloc_table.add_entry(source_offset + relocation.offset);
+}
+
+def (this is MachO).symbol_address(target is DylibSymbol) {
+  def index := this.dysym_indices[target.name];
+  this.text.size + (5 * index);  
+}
+
+def (this is MachO).symbol_address(target is LocalSymbol)
+ -> this.text.code_block_offset(target.name);
+
+def (this is MachO).process_relocation(relocation) {
+  def target_offset := this.symbol_address(relocation.target);
   def source_offset := this.text.code_block_offset(relocation.assm.name);
   def instr_offset := source_offset + relocation.offset;
-  def target_offset := this.text.code_block_offset(target.name);
   if relocation.is_relative then {
     this.text.rewrite_int32(instr_offset, target_offset - (instr_offset + 4));
   } else {
