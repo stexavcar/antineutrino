@@ -48,7 +48,7 @@ def kScaleEight := 2r11;
 
 def (this is AssemblerIa386).cursor -> this.out.length;
 
-// --- Encoding ---
+// --- Low-level encoding ---
 
 def (this is AssemblerIa386).write_mod_rm(mod, reg, rm) {
   this.out.write_int8((mod << 6) | (reg << 3) | rm);
@@ -56,6 +56,10 @@ def (this is AssemblerIa386).write_mod_rm(mod, reg, rm) {
 
 def (this is AssemblerIa386).write_sib(scale, index, base) {
   this.out.write_int8((scale << 6) | (index << 3) | base);
+}
+
+def (this is AssemblerIa386).write_int8(disp) {
+  this.out.write_int8(disp);
 }
 
 def (this is AssemblerIa386).write_disp8(disp) {
@@ -66,10 +70,8 @@ def (this is AssemblerIa386).write_imm32(val is Integer) {
   this.out.write_int32(val);
 }
 
-def (this is AssemblerIa386).write_imm32(target is Symbol) {
-  def reloff := this.cursor;
-  this.write_imm32(0);
-  this.binary.add_relocation(new Relocation(this, reloff, target, false));
+def (this is AssemblerIa386).write_imm16(val is Integer) {
+  this.out.write_int16(val);
 }
 
 def (this is AssemblerIa386).rewrite_imm32(offset, val) {
@@ -78,6 +80,19 @@ def (this is AssemblerIa386).rewrite_imm32(offset, val) {
 
 def (this is AssemblerIa386).write_opcode(val) {
   this.out.write_int8(val);
+}
+
+def (this is AssemblerIa386).write_opcode(val_1, val_2) {
+  this.out.write_int8(val_1);
+  this.out.write_int8(val_2);
+}
+
+// -- High-level encoding ---
+
+def (this is AssemblerIa386).write_imm32(target is Symbol) {
+  def reloff := this.cursor;
+  this.write_imm32(0);
+  this.binary.add_relocation(new Relocation(this, reloff, target, false));
 }
 
 def (this is AssemblerIa386).write_operands(reg0 is Register, reg1 is Register) {
@@ -119,6 +134,61 @@ def (this is AssemblerIa386).write_relative_operand(target is Symbol) {
   def reloff := this.cursor;
   this.write_imm32(0);
   this.binary.add_relocation(new Relocation(this, reloff, target, true));
+}
+
+def (this is AssemblerIa386).write_jump_target(target) {
+  if target.is_bound then {
+    // If the label is bound we can just write the relative offset
+    this.write_imm32(target.offset - (this.cursor + 4));
+  } else {
+    // Otherwise we store a pointer to the last offset where the label
+    // was used and store a pointer to this offset in the label
+    // itself so we can fix it up once the label is bound.
+    def offset := this.cursor;
+    this.write_imm32(target.offset);
+    target.offset := offset;
+  }
+}
+
+// --- Label encoding ---
+
+protocol Label;
+
+def Label.new(offset, is_bound) -> new Label {
+  r_offset := new Ref(offset),
+  r_is_bound := new Ref(is_bound)
+}
+
+def (this is Label).offset -> this.r_offset.get();
+
+def (this is Label).offset:=(v) -> this.r_offset.set(v);
+
+def (this is Label).is_bound -> this.r_is_bound.get();
+
+def (this is Label).is_bound:=(v) -> this.r_is_bound.set(v);
+
+def (this is AssemblerIa386).here()
+ -> new Label(this.cursor, true);
+
+def (this is AssemblerIa386).label()
+ -> new Label(0, false);
+
+def (this is AssemblerIa386).bind(label) {
+  assert_true(not label.is_bound);
+  label.is_bound := true;
+  def target := this.cursor;
+  // The targets that jump to this label are linked through the code.
+  // Traverse the chain of targets and rewrite them to jump to the
+  // current offset.
+  ref cursor := label.offset;
+  with_1cc (break) -> Control.repeat(fn () {
+    if cursor = 0
+      then break(null);
+    def next_cursor := this.out.read_int32(cursor);
+    this.out.rewrite_int32(cursor, target - (cursor + 4));
+    cursor := next_cursor;
+  });
+  label.offset := target;
 }
 
 // --- Instructions ---
@@ -250,6 +320,13 @@ def (this is AssemblerIa386).ret() {
   this.write_opcode(16rC3);
 }
 
+// C8 iw 00 -> ENTER imm16, 0
+def (this is AssemblerIa386).enter(imm16) {
+  this.write_opcode(16rC8);
+  this.write_imm16(imm16);
+  this.write_int8(16r00);
+}
+
 // C9 -> LEAVE
 def (this is AssemblerIa386).leave() {
   this.write_opcode(16rC9);
@@ -260,65 +337,86 @@ def (this is AssemblerIa386).int3() {
   this.write_opcode(16rCC);
 }
 
-
 // E9 cd -> JMP rel32
 def (this is AssemblerIa386).jmp(target) {
   this.write_opcode(16rE9);
   this.write_jump_target(target);
 }
 
-def (this is AssemblerIa386).write_jump_target(target) {
-  if target.is_bound then {
-    // If the label is bound we can just write the relative offset
-    this.write_imm32(target.offset - (this.cursor + 4));
-  } else {
-    // Otherwise we store a pointer to the last offset where the label
-    // was used and store a pointer to this offset in the label
-    // itself so we can fix it up once the label is bound.
-    def offset := this.cursor;
-    this.write_imm32(target.offset);
-    target.offset := offset;
-  }
+// 0F 87 cd -> JA rel32 (jump if above)
+def (this is AssemblerIa386).ja(target) {
+  this.write_opcode(16r0F, 16r87);
+  this.write_jump_target(target);
 }
 
-protocol Label is Immediate;
-
-def Label.new(offset, is_bound) -> new Label {
-  r_offset := new Ref(offset),
-  r_is_bound := new Ref(is_bound)
+// 0F 83 cd -> JAE rel32 (jump if above or equal)
+def (this is AssemblerIa386).jae(target) {
+  this.write_opcode(16r0F, 16r83);
+  this.write_jump_target(target);
 }
 
-def (this is Label).offset -> this.r_offset.get();
-
-def (this is Label).offset:=(v) -> this.r_offset.set(v);
-
-def (this is Label).is_bound -> this.r_is_bound.get();
-
-def (this is Label).is_bound:=(v) -> this.r_is_bound.set(v);
-
-def (this is AssemblerIa386).here()
- -> new Label(this.cursor, true);
-
-def (this is AssemblerIa386).label()
- -> new Label(0, false);
-
-def (this is AssemblerIa386).bind(label) {
-  assert_true(not label.is_bound);
-  label.is_bound := true;
-  def target := this.cursor;
-  // The targets that jump to this label are linked through the code.
-  // Traverse the chain of targets and rewrite them to jump to the
-  // current offset.
-  ref cursor := label.offset;
-  with_1cc (break) -> Control.repeat(fn () {
-    if cursor = 0
-      then break(null);
-    def next_cursor := this.out.read_int32(cursor);
-    this.out.rewrite_int32(cursor, target - (cursor + 4));
-    cursor := next_cursor;
-  });
-  label.offset := target;
+// 0F 82 cd -> JB rel32 (jump if below)
+def (this is AssemblerIa386).jb(target) {
+  this.write_opcode(16r0F, 16r82);
+  this.write_jump_target(target);
 }
+
+// 0F 86 cd -> JBE rel32 (jump if below or equal)
+def (this is AssemblerIa386).jbe(target) {
+  this.write_opcode(16r0F, 16r86);
+  this.write_jump_target(target);
+}
+
+// 0F 84 cd -> JE rel32 (jump if equal)
+def (this is AssemblerIa386).je(target) {
+  this.write_opcode(16r0F, 16r84);
+  this.write_jump_target(target);
+}
+
+// 0F 85 cd -> JNE rel32 (jump if not equal)
+def (this is AssemblerIa386).jne(target) {
+  this.write_opcode(16r0F, 16r85);
+  this.write_jump_target(target);
+}
+
+// 0F 8F cd -> JG rel32 (jump if greater)
+def (this is AssemblerIa386).jg(target) {
+  this.write_opcode(16r0F, 16r8F);
+  this.write_jump_target(target);
+}
+
+// 0F 8D cd -> JGE rel32 (jump if greater or equal)
+def (this is AssemblerIa386).jge(target) {
+  this.write_opcode(16r0F, 16r8D);
+  this.write_jump_target(target);
+}
+
+// 0F 8C cd -> JL rel32 (jump if less)
+def (this is AssemblerIa386).jl(target) {
+  this.write_opcode(16r0F, 16r8C);
+  this.write_jump_target(target);
+}
+
+// 0F 8E cd -> JLE rel32 (jump if less or equal)
+def (this is AssemblerIa386).jle(target) {
+  this.write_opcode(16r0F, 16r8E);
+  this.write_jump_target(target);
+}
+
+// 85 /r -> TEST r/m32, r32
+def (this is AssemblerIa386).test(a is Register, b is Operand) {
+  this.write_opcode(16r85);
+  this.write_operands(b, a);
+}
+
+// F7 /0 id -> TEST r/m32, imm32
+def (this is AssemblerIa386).test(a is Operand, i is Immediate) {
+  this.write_opcode(16rF7);
+  this.write_operand(0, a);
+  this.write_imm32(i);
+}
+
+// --- Compound instructions ---
 
 def (this is AssemblerIa386).enter_frame() {
   // Push the previous frame's base pointer to save it for later.

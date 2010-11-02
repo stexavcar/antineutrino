@@ -1,11 +1,11 @@
-protocol Boolean;
+protocol Bool;
 
 @native("true")
-protocol True is Boolean;
+protocol True is Bool;
 
 def (this is True).negate() -> false;
 
 @native("false")
-protocol False is Boolean;
+protocol False is Bool;
 
 def (this is False).negate() -> true;
