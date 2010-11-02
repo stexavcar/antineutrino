@@ -5,23 +5,45 @@ def kHexChars := #[
   "8", "9", "a", "b", "c", "d", "e", "f"
 ];
 
-def byte_to_hex(value) {
+def int8_to_hex(value) {
   def nib_1 := value & 16r0F;
   def nib_2 := (value >> 4) & 16r0F;
   "${kHexChars[nib_2]}${kHexChars[nib_1]}";
 }
 
+def int16_to_hex(value) {
+  def byte_0 := int8_to_hex(value & 16rFF);
+  def byte_1 := int8_to_hex((value >> 8) & 16rFF);
+  "${byte_1}${byte_0}";
+}
+
+def int32_to_hex(value) {
+  def byte_0 := int8_to_hex(value & 16rFF);
+  def byte_1 := int8_to_hex((value >> 8) & 16rFF);
+  def byte_2 := int8_to_hex((value >> 16) & 16rFF);
+  def byte_3 := int8_to_hex((value >> 24) & 16rFF);
+  "${byte_3}${byte_2}${byte_1}${byte_0}";
+}
+
+def to_hex32(value) -> "0x${int32_to_hex(value)}";
+
+def to_hex16(value) -> "0x${int16_to_hex(value)}";
+
+def to_hex8(value) -> "0x${int8_to_hex(value)}";
+
 def (this is Memory).to_string() {
-  if this.disp != 0 then {
-    "0x${byte_to_hex(this.disp)}(${this.base})";
-  } else if this.base = rEbp then {
-    "0x00(${this.base})";
+  if this.disp != 0 or this.base = rEbp then {
+    "${to_hex8(this.disp)}(${this.base})";
   } else {
     "(${this.base})";
   }
 }
 
-def kAllRegs := #[rEax, rEbx, rEcx, rEdx, rEsi, rEdi, rEbp, rEsp];
+def kRegisters := new ArrayList [
+  rEax, rEbx, rEcx, rEdx, rEsi, rEdi, rEbp, rEsp
+];
+
+def kImmediates := new ArrayList [ 0-1, 0, 10, 5 << 28 ];
 
 def kMakers := #[
   fn (reg) -> reg,
@@ -61,7 +83,7 @@ def test_ia386(args) {
 }
 
 def (this is Ia386Test).operands -> fn for (fun) {
-  for (reg : kAllRegs) for (maker : kMakers) {
+  for (reg : this.registers) for (maker : kMakers) {
     fun(maker(reg));
   }
 }
@@ -73,11 +95,21 @@ def (this is Ia386Test).operand_pairs -> fn for (fun) {
   }
 }
 
+def (this is Ia386Test).registers -> kRegisters;
+
+def (this is Ia386Test).immediates -> kImmediates;
+
 def (this is Ia386Test).is_valid(a, b) -> true;
 
 def (this is Ia386Test).is_valid(a is Memory, b is Memory) -> false;
 
 def (this is Ia386Test).run_tests(new_data) {
+  // These should be first because their expectations encode absolute
+  // addresses.
+  this.jmp_forward(new_data("jmp_forward"));
+  this.jmp_back(new_data("jmp_back"));
+  this.branch(new_data("branch"));
+
   this.mov(new_data("mov"));
   this.mov_imm(new_data("mov_imm"));
   this.add(new_data("add"));
@@ -91,9 +123,8 @@ def (this is Ia386Test).run_tests(new_data) {
   this.simple(new_data("simple"));
   this.call(new_data("call"));
   this.syms(new_data("syms"));
-  this.jmp_back(new_data("jmp_back"));
-  this.jmp_forward(new_data("jmp_forward"));
-  this.branch(new_data("branch"));
+  this.test(new_data("test"));
+  this.test_imm(new_data("test_imm"));
 }
 
 def (this is Ia386Test).mov(data) {
@@ -111,9 +142,9 @@ def (this is Ia386Test).add(data) {
 }
 
 def (this is Ia386Test).add_imm(data) {
-  for (dest : this.operands) {
-    data.assm.add(dest, 10);
-    data.add_expected("addl $0x0000000a,${dest}");
+  for (dest : this.operands) for (imm : this.immediates) {
+    data.assm.add(dest, imm);
+    data.add_expected("addl $${to_hex32(imm)},${dest}");
   }
 }
 
@@ -125,9 +156,9 @@ def (this is Ia386Test).sub(data) {
 }
 
 def (this is Ia386Test).sub_imm(data) {
-  for (dest : this.operands) {
-    data.assm.sub(dest, 10);
-    data.add_expected("subl $0x0000000a,${dest}");
+  for (dest : this.operands) for (imm : this.immediates) {
+    data.assm.sub(dest, imm);
+    data.add_expected("subl $${to_hex32(imm)},${dest}");
   }
 }
 
@@ -139,16 +170,16 @@ def (this is Ia386Test).ahnd(data) {
 }
 
 def (this is Ia386Test).and_imm(data) {
-  for (dest : this.operands) {
-    data.assm.ahnd(dest, 10);
-    data.add_expected("andl $0x0000000a,${dest}");
+  for (dest : this.operands) for (imm : this.immediates) {
+    data.assm.ahnd(dest, imm);
+    data.add_expected("andl $${to_hex32(imm)},${dest}");
   }
 }
 
 def (this is Ia386Test).mov_imm(data) {
-  for (dest : this.operands) {
-    data.assm.mov(dest, 10);
-    data.add_expected("movl $0x0000000a,${dest}");
+  for (dest : this.operands) for (imm : this.immediates) {
+    data.assm.mov(dest, imm);
+    data.add_expected("movl $${to_hex32(imm)},${dest}");
   }
 }
 
@@ -173,6 +204,8 @@ def (this is Ia386Test).simple(data) {
   data.add_expected("ret");
   data.assm.leave();
   data.add_expected("leave");
+  data.assm.enter(18);
+  data.add_expected("enter $${to_hex16(18)},$0x00");
 }
 
 def (this is Ia386Test).call_expectation(dest)
@@ -195,6 +228,27 @@ def (this is Ia386Test).syms(data) {
   data.add_expected("calll mov");
 }
 
+def (this is Ia386Test).jmp_forward(data) {
+  def label := data.assm.label();
+  data.assm.jmp(label);
+  data.add_expected("jmpl jmp_back");
+  data.assm.mov(rEax, rEbx);
+  data.add_expected("movl ${rEbx},${rEax}");
+  data.assm.jmp(label);
+  data.add_expected("jmpl jmp_back");
+  data.assm.mov(rEax, rEbx);
+  data.add_expected("movl ${rEbx},${rEax}");
+  data.assm.jmp(label);
+  data.add_expected("jmpl jmp_back");
+  data.assm.mov(rEax, rEbx);
+  data.add_expected("movl ${rEbx},${rEax}");
+  data.assm.jmp(label);
+  data.add_expected("jmpl jmp_back");
+  data.assm.mov(rEax, rEbx);
+  data.add_expected("movl ${rEbx},${rEax}");
+  data.assm.bind(label);
+}
+
 def (this is Ia386Test).jmp_back(data) {
   def start := data.assm.here();
   data.assm.mov(rEax, rEbx);
@@ -207,30 +261,43 @@ def (this is Ia386Test).jmp_back(data) {
   data.assm.jmp(start);
   data.add_expected("jmpl jmp_back");
   data.assm.jmp(mid);
-  data.add_expected("jmpl 0x0000188f");
-}
-
-def (this is Ia386Test).jmp_forward(data) {
-  def label := data.assm.label();
-  data.assm.jmp(label);
-  data.add_expected("jmpl branch");
-  data.assm.mov(rEax, rEbx);
-  data.add_expected("movl ${rEbx},${rEax}");
-  data.assm.jmp(label);
-  data.add_expected("jmpl branch");
-  data.assm.mov(rEax, rEbx);
-  data.add_expected("movl ${rEbx},${rEax}");
-  data.assm.jmp(label);
-  data.add_expected("jmpl branch");
-  data.assm.mov(rEax, rEbx);
-  data.add_expected("movl ${rEbx},${rEax}");
-  data.assm.jmp(label);
-  data.add_expected("jmpl branch");
-  data.assm.mov(rEax, rEbx);
-  data.add_expected("movl ${rEbx},${rEax}");
-  data.assm.bind(label);  
+  data.add_expected("jmpl 0x00000167");
 }
 
 def (this is Ia386Test).branch(data) {
-  
+  def label := data.assm.here();
+  data.assm.ja(label);
+  data.add_expected("jal branch");
+  data.assm.jae(label);
+  data.add_expected("jael branch");
+  data.assm.jb(label);
+  data.add_expected("jbl branch");
+  data.assm.jbe(label);
+  data.add_expected("jbel branch");
+  data.assm.je(label);
+  data.add_expected("jel branch");
+  data.assm.jne(label);
+  data.add_expected("jnel branch");
+  data.assm.jg(label);
+  data.add_expected("jgl branch");
+  data.assm.jge(label);
+  data.add_expected("jgel branch");
+  data.assm.jl(label);
+  data.add_expected("jll branch");
+  data.assm.jle(label);
+  data.add_expected("jlel branch");
+}  
+
+def (this is Ia386Test).test(data) {
+  for (a : this.operands) for (b : this.registers) {
+    data.assm.test(b, a);
+    data.add_expected("testl ${a},${b}");
+  }
+}
+
+def (this is Ia386Test).test_imm(data) {
+  for (a : this.operands) for (b : this.immediates) {
+    data.assm.test(a, b);
+    data.add_expected("testl $${to_hex32(b)},${a}");
+  }
 }
