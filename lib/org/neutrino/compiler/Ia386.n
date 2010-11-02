@@ -260,6 +260,66 @@ def (this is AssemblerIa386).int3() {
   this.write_opcode(16rCC);
 }
 
+
+// E9 cd -> JMP rel32
+def (this is AssemblerIa386).jmp(target) {
+  this.write_opcode(16rE9);
+  this.write_jump_target(target);
+}
+
+def (this is AssemblerIa386).write_jump_target(target) {
+  if target.is_bound then {
+    // If the label is bound we can just write the relative offset
+    this.write_imm32(target.offset - (this.cursor + 4));
+  } else {
+    // Otherwise we store a pointer to the last offset where the label
+    // was used and store a pointer to this offset in the label
+    // itself so we can fix it up once the label is bound.
+    def offset := this.cursor;
+    this.write_imm32(target.offset);
+    target.offset := offset;
+  }
+}
+
+protocol Label is Immediate;
+
+def Label.new(offset, is_bound) -> new Label {
+  r_offset := new Ref(offset),
+  r_is_bound := new Ref(is_bound)
+}
+
+def (this is Label).offset -> this.r_offset.get();
+
+def (this is Label).offset:=(v) -> this.r_offset.set(v);
+
+def (this is Label).is_bound -> this.r_is_bound.get();
+
+def (this is Label).is_bound:=(v) -> this.r_is_bound.set(v);
+
+def (this is AssemblerIa386).here()
+ -> new Label(this.cursor, true);
+
+def (this is AssemblerIa386).label()
+ -> new Label(0, false);
+
+def (this is AssemblerIa386).bind(label) {
+  assert_true(not label.is_bound);
+  label.is_bound := true;
+  def target := this.cursor;
+  // The targets that jump to this label are linked through the code.
+  // Traverse the chain of targets and rewrite them to jump to the
+  // current offset.
+  ref cursor := label.offset;
+  with_1cc (break) -> Control.repeat(fn () {
+    if cursor = 0
+      then break(null);
+    def next_cursor := this.out.read_int32(cursor);
+    this.out.rewrite_int32(cursor, target - (cursor + 4));
+    cursor := next_cursor;
+  });
+  label.offset := target;
+}
+
 def (this is AssemblerIa386).enter_frame() {
   // Push the previous frame's base pointer to save it for later.
   // It will be restored by .leave.

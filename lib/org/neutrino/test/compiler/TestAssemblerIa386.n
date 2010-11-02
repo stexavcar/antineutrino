@@ -91,6 +91,9 @@ def (this is Ia386Test).run_tests(new_data) {
   this.simple(new_data("simple"));
   this.call(new_data("call"));
   this.syms(new_data("syms"));
+  this.jmp_back(new_data("jmp_back"));
+  this.jmp_forward(new_data("jmp_forward"));
+  this.branch(new_data("branch"));
 }
 
 def (this is Ia386Test).mov(data) {
@@ -190,4 +193,44 @@ def (this is Ia386Test).call(data) {
 def (this is Ia386Test).syms(data) {
   data.assm.call(Symbol.local("mov"));
   data.add_expected("calll mov");
+}
+
+def (this is Ia386Test).jmp_back(data) {
+  def start := data.assm.here();
+  data.assm.mov(rEax, rEbx);
+  data.add_expected("movl ${rEbx},${rEax}");
+  data.assm.jmp(start);
+  data.add_expected("jmpl jmp_back");
+  def mid := data.assm.here();
+  data.assm.mov(rEax, rEbx);
+  data.add_expected("movl ${rEbx},${rEax}");
+  data.assm.jmp(start);
+  data.add_expected("jmpl jmp_back");
+  data.assm.jmp(mid);
+  data.add_expected("jmpl 0x0000188f");
+}
+
+def (this is Ia386Test).jmp_forward(data) {
+  def label := data.assm.label();
+  data.assm.jmp(label);
+  data.add_expected("jmpl branch");
+  data.assm.mov(rEax, rEbx);
+  data.add_expected("movl ${rEbx},${rEax}");
+  data.assm.jmp(label);
+  data.add_expected("jmpl branch");
+  data.assm.mov(rEax, rEbx);
+  data.add_expected("movl ${rEbx},${rEax}");
+  data.assm.jmp(label);
+  data.add_expected("jmpl branch");
+  data.assm.mov(rEax, rEbx);
+  data.add_expected("movl ${rEbx},${rEax}");
+  data.assm.jmp(label);
+  data.add_expected("jmpl branch");
+  data.assm.mov(rEax, rEbx);
+  data.add_expected("movl ${rEbx},${rEax}");
+  data.assm.bind(label);  
+}
+
+def (this is Ia386Test).branch(data) {
+  
 }
