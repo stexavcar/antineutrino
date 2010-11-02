@@ -19,6 +19,12 @@ def (this is BlobStream).rewrite_int32(index, word) {
   this.data[index + 3] := ((word >> 24) & 16rFF);
 }
 
+def (this is BlobStream).read_int32(offset)
+ -> this.data[offset]
+  | (this.data[offset + 1] << 8)
+  | (this.data[offset + 2] << 16)
+  | (this.data[offset + 3] << 24);
+
 def (this is BlobStream).write_int32(word) {
   this.add(word & 16rFF);
   this.add((word >> 8) & 16rFF);
