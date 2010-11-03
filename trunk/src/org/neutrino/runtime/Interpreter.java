@@ -62,6 +62,11 @@ public class Interpreter {
         frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
         break;
       }
+      case Opcode.kBlock: {
+        int argc = frame.code[frame.pc + 1];
+        frame.pc += 2 + argc;
+        break;
+      }
       case Opcode.kWith1Cc: {
         String name = "()";
         int argc = frame.code[frame.pc + 2];

@@ -129,6 +129,15 @@ public class Assembler {
     return result;
   }
 
+  public int block(List<Integer> elm) {
+    int result = getOffset();
+    add(Opcode.kBlock);
+    add(elm.size());
+    for (int arg : elm)
+      add(arg);
+    return result;
+  }
+
   public int with1Cc() {
     int result = getOffset();
     add(Opcode.kWith1Cc);

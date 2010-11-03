@@ -11,14 +11,14 @@ def compiler_entry_point(args) {
 
 def (this is NeutrinoCompiler).add_dylib_bridge(binary, name, argc) {
   def bridge := binary.add_code_block(name);
-  bridge.enter_frame();
+  bridge.enter_frame(0);
   bridge.mov(Memory.at(rEsp), rEax);
   bridge.call(CallTarget.extern("_" + name));
   bridge.exit_frame();  
 }
 
 def (this is NeutrinoCompiler).emit_method(universe, method, assm) {
-  assm.enter_frame();
+  assm.enter_frame(0);
   def libc := method.get_annotation("libc");
   if libc = null
     then this.emit_plain_method(universe, method, assm);
@@ -38,6 +38,8 @@ def (this is NeutrinoCompiler).emit_plain_method(universe, method, assm) {
 
 def (this is NeutrinoCompiler).emit_libc_method(universe, method, assm) {
   def libc_name := method.get_annotation("libc")[0];
+  // Align ESP to a 16-byte boundary.  Since the stack grows down this
+  // will cause the stack to grow.
   assm.ahnd(rEsp, 16rFFFFFFF0);
   assm.mov(rEax, Memory.at_disp(rEbp, 8));
   assm.mov(Memory.at(rEsp), rEax);
@@ -46,7 +48,7 @@ def (this is NeutrinoCompiler).emit_libc_method(universe, method, assm) {
 
 def (this is NeutrinoCompiler).emit_boilerplate(binary, entry_point) {
   def main := binary.add_code_block("_main");
-  main.enter_frame();
+  main.enter_frame(0);
   main.call(Symbol.local(entry_point));
   main.exit_frame();  
 }

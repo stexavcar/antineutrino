@@ -42,14 +42,15 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
   @Override
   public Integer visitBlock(Tree.Block that) {
     List<Expression> exprs = that.getExpressions();
+    List<Integer> offsets = new ArrayList<Integer>();
     for (int i = 0; i < exprs.size(); i++) {
       if (i > 0) {
         assm.pop();
       }
-      exprs.get(i).accept(this);
+      int offset = exprs.get(i).accept(this);
+      offsets.add(offset);
     }
-    // TODO
-    return -2;
+    return assm.block(offsets);
   }
 
   @Override
