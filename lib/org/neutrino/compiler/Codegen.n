@@ -89,6 +89,16 @@ def (this is CodeGenerator).int32_cast(guide, node) {
   this.assm.push(value);
 }
 
+def (this is CodeGenerator).emit(guide is BlockGuide, node) {
+  ref has_prev := false;
+  for (elm_guide, elm_node : guide.elements(node)) {
+    if has_prev
+      then this.assm.pop(rEbx);
+    this.emit(elm_guide, elm_node);
+    has_prev := true;
+  }
+}
+
 def (this is CodeGenerator).int32_add(guide, node) {
   def left_node := guide.argument(node, 0);
   this.emit(guide.resolve(left_node), left_node);

@@ -1,12 +1,5 @@
 package org.neutrino.runtime;
 
-import org.neutrino.pib.CodeBundle;
-import org.neutrino.pib.Opcode;
-import org.neutrino.pib.Universe;
-import org.neutrino.plankton.ISeedable;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
-
 import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -15,6 +8,13 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
+
+import org.neutrino.pib.CodeBundle;
+import org.neutrino.pib.Opcode;
+import org.neutrino.pib.Universe;
+import org.neutrino.plankton.ISeedable;
+import org.neutrino.plankton.annotations.Growable;
+import org.neutrino.plankton.annotations.SeedMember;
 
 @Growable(Native.TAG)
 public class Native implements ISeedable {
@@ -332,8 +332,11 @@ public class Native implements ISeedable {
     @Override
     public RValue call(Arguments args) {
       RByteArray arr = (RByteArray) args.getThis();
-      RInteger index = (RInteger) args.getArgument(0);
-      return RInteger.get((arr.getByte(index.getValue()) + 0x100) & 0xFF);
+      int index = ((RInteger) args.getArgument(0)).getValue();
+      if (index < 0 || index >= arr.getLength()) {
+        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
+      }
+      return RInteger.get((arr.getByte(index) + 0x100) & 0xFF);
     }
   };
 
@@ -363,7 +366,7 @@ public class Native implements ISeedable {
       return RNull.getInstance();
     }
   };
-  
+
   @Marker("file.writestring") static final Impl FILE_WRITE_STR = new Impl() {
 	    @Override
 	    public RValue call(Arguments args) {

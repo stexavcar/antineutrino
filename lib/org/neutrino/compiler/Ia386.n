@@ -418,13 +418,8 @@ def (this is AssemblerIa386).test(a is Operand, i is Immediate) {
 
 // --- Compound instructions ---
 
-def (this is AssemblerIa386).enter_frame() {
-  // Push the previous frame's base pointer to save it for later.
-  // It will be restored by .leave.
-  this.push(rEbp);
-  // Make the current stack pointer the new base pointer.
-  this.mov(rEbp, rEsp);
-  this.sub(rEsp, 16r18);
+def (this is AssemblerIa386).enter_frame(locals) {
+  this.enter(locals);
 }
 
 def (this is AssemblerIa386).exit_frame() {

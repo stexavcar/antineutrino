@@ -68,6 +68,13 @@ def (this is TypeAnalysis).do_analyze(guide is GlobalGuide, node) {
     else this.value_type(value);
 }
 
+def (this is TypeAnalysis).do_analyze(guide is BlockGuide, node) {
+  ref last := null;
+  for (elm_guide, elm_node : guide.elements(node))
+    last := this.do_analyze(elm_guide, elm_node);
+  last;
+}
+
 def (this is TypeAnalysis).do_analyze(guide is ArgumentGuide, node) {
   
 }

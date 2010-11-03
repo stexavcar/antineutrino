@@ -26,6 +26,7 @@ def kCall := 3;
 def kLiteral := 7;
 def kGlobal := 10;
 def kArgument := 12;
+def kBlock := 22;
 
 protocol NodeGuide;
 
@@ -65,6 +66,21 @@ def (this is CallGuide).arguments(cursor) -> fn for (fun) {
     fun(arg_guide, arg_cursor);
   }
 }
+
+protocol BlockGuide is NodeGuide;
+
+def (this is BlockGuide).elmc(cursor) -> this.data[cursor + 1];
+
+def (this is CallGuide).element(cursor, index)
+ -> this.data[cursor + 2 + index];
+
+def (this is BlockGuide).elements(cursor) -> fn for (fun) {
+  for (i : 0 .. this.elmc(cursor)) {
+    def elm_cursor := this.data[cursor + 2 + i];
+    def elm_guide := this.resolve(elm_cursor);
+    fun(elm_guide, elm_cursor);
+  }
+}
  
 protocol LiteralGuide is NodeGuide;
 
@@ -92,6 +108,7 @@ def SyntaxGuide.new(code, literals) {
   result.guides[kLiteral] := new LiteralGuide { data := result };
   result.guides[kGlobal] := new GlobalGuide { data := result };
   result.guides[kArgument] := new ArgumentGuide { data := result };
+  result.guides[kBlock] := new BlockGuide { data := result };
   result;
 }
 
