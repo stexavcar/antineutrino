@@ -1,7 +1,42 @@
 protocol TypeAnalysis;
 
 def TypeAnalysis.new(universe) -> new TypeAnalysis {
-  universe := universe
+  universe := universe,
+  r_scope_chain := new Ref(null)
+}
+
+protocol ScopeChainLink;
+
+def (this is TypeAnalysis).scope_chain -> this.r_scope_chain.get();
+
+def (this is TypeAnalysis).scope_chain:=(v) -> this.r_scope_chain.set(v);
+
+def (this is TypeAnalysis).push_local_scope(guide, node) {
+  def prev := this.scope_chain;
+  def next := new ScopeChainLink {
+    guide := guide,
+    node := node,
+    prev := prev
+  }
+  this.scope_chain := next;
+}
+
+def (this is TypeAnalysis).pop_local_scope() {
+  this.scope_chain := this.scope_chain.prev;
+}
+
+def (this is TypeAnalysis).local_type(index) {
+  ref current := this.scope_chain;
+  with_1cc (yield) -> Control.repeat(fn () {
+    if current = null
+      then yield(null);
+    if current.guide.index(current.node) = index then {
+      def value := current.guide.value(current.node);
+      yield(current.guide.info(value).type);
+    } else {
+      current := current.prev;
+    }
+  });
 }
 
 def (this is TypeAnalysis).analyze(guide, node) {
@@ -49,16 +84,14 @@ def (this is TypeAnalysis).do_analyze(guide is CallGuide, node) {
       def emit := method.get_annotation("emit");
       guide.ensure_info(node).c_call := emit[0];
     }
-    def annot := method.get_annotation("static_type");
+    def annot := method.get_annotation("type");
     if annot != null
       then annot[0];
   }
 }
 
-def (this is TypeAnalysis).do_analyze(guide is LiteralGuide, node) {
-  def value := guide.value(node);
-  this.value_type(value);
-}
+def (this is TypeAnalysis).do_analyze(guide is LiteralGuide, node)
+ -> this.value_type(guide.value(node));
 
 def (this is TypeAnalysis).do_analyze(guide is GlobalGuide, node) {
   def name := guide.name(node);
@@ -68,11 +101,24 @@ def (this is TypeAnalysis).do_analyze(guide is GlobalGuide, node) {
     else this.value_type(value);
 }
 
+def (this is TypeAnalysis).do_analyze(guide is LocalGuide, node)
+ -> this.local_type(guide.index(node));
+
 def (this is TypeAnalysis).do_analyze(guide is BlockGuide, node) {
   ref last := null;
   for (elm_guide, elm_node : guide.elements(node))
-    last := this.do_analyze(elm_guide, elm_node);
+    last := this.analyze(elm_guide, elm_node);
   last;
+}
+
+def (this is TypeAnalysis).do_analyze(guide is LocalDefGuide, node) {
+  def value := guide.value(node);
+  this.analyze(guide.resolve(value), value);
+  this.push_local_scope(guide, node);
+  def body := guide.body(node);
+  def result := this.analyze(guide.resolve(body), body);
+  this.pop_local_scope();
+  result;
 }
 
 def (this is TypeAnalysis).do_analyze(guide is ArgumentGuide, node) {

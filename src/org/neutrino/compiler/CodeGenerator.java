@@ -71,17 +71,16 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
 
   @Override
   public Integer visitLocalDefinition(Tree.LocalDefinition that) {
-    int ref = -1;
+    int refOffset = -1;
     if (that.isReference())
-      ref = assm.global("Ref");
-    int value = that.getValue().accept(this);
+      refOffset = assm.global("Ref");
+    int valueOffset = that.getValue().accept(this);
     if (that.isReference())
-      assm.call("new", Arrays.asList(ref, value));
+      valueOffset = assm.call("new", Arrays.asList(refOffset, valueOffset));
     int index = that.getSymbol().getIndex();
     assm.storeLocal(index);
-    that.getBody().accept(this);
-    // TODO
-    return -3;
+    int bodyOffset = that.getBody().accept(this);
+    return assm.defineLocal(index, valueOffset, bodyOffset);
   }
 
   @Override

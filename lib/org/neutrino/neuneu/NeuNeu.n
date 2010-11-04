@@ -4,12 +4,12 @@ protocol EntryPoint;
 protocol int32_t;
 
 @inline
-@static_type("int32_t")
+@type("int32_t")
 @intrinsic("int32.cast")
 def int32_t.of(x is Integer) -> new int32_t(x);
 
 @inline
-@static_type("int32_t")
+@type("int32_t")
 @intrinsic("int32.add")
 def (this is int32_t)+(that is int32_t);
 
@@ -19,7 +19,7 @@ protocol LibC;
 @c_call
 @emit("sleep")
 @libc("_sleep")
-@static_type("int32_t")
+@type("int32_t")
 def LibC.sleep(arg is int32_t);
 
 @c_call
@@ -30,28 +30,38 @@ def LibC.exit(arg is int32_t);
 @c_call
 @emit("malloc")
 @libc("_malloc")
-@static_type("int32_t")
+@type("int32_t")
 def LibC.malloc(arg is int32_t);
 
 protocol Boot;
 
 @c_call
-@static_type("int32_t")
+@type("int32_t")
 @emit("first")
 def Boot.first(x is int32_t, y is int32_t) -> x;
 
 @c_call
-@static_type("int32_t")
+@type("int32_t")
 @emit("second")
 def Boot.second(x is int32_t, y is int32_t) -> y;
 
 @c_call
 @emit("neutrino_start")
-@static_type("int32_t")
+@type("int32_t")
 def Boot.start() {
-  LibC.sleep(int32_t.of(2));
-  Boot.first(int32_t.of(74), int32_t.of(93)) +
-    Boot.second(int32_t.of(16), int32_t.of(53));
+  def time := int32_t.of(2);
+  def one := Boot.first(int32_t.of(74), int32_t.of(93));
+  def two := Boot.second(int32_t.of(16), int32_t.of(53));
+  LibC.sleep(time);
+  one + two;
+}
+
+@print
+@c_call
+@emit("def_test")
+def Boot.def_test() {
+  def time := int32_t.of(2);
+  time;
 }
 
 @emit("entry_point")
