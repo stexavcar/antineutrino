@@ -2,7 +2,7 @@ protocol Unparser;
 
 def Unparser.unparse(guide, node) {
   def type := guide.info(node).type;
-  def str := Unparser.unparse_raw(guide, node);
+  def str := this.unparse_raw(guide, node);
   if type = null
     then str;
     else "${str}@${type}";
@@ -17,10 +17,18 @@ def Unparser.unparse_raw(guide is CallGuide, node) {
     def arg := guide.argument(node, i);
     def arg_guide := guide.resolve(arg);
     if i != 0 then out.add(", ");
-    out.add(Unparser.unparse(arg_guide, arg));
+    out.add(this.unparse(arg_guide, arg));
   }
   out.add(")");
   out.to_string();
+}
+
+def Unparser.unparse_raw(guide is LocalDefGuide, node) {
+  def value_node := guide.value(node);
+  def value := this.unparse(guide.resolve(value_node), value_node);
+  def body_node := guide.body(node);
+  def body := this.unparse(guide.resolve(body_node), body_node);
+  "(def $L${guide.index(node)} := ${value} in ${body})";
 }
 
 def Unparser.unparse_raw(guide is LiteralGuide, node) {
@@ -32,5 +40,8 @@ def Unparser.unparse_raw(guide is GlobalGuide, node) {
   def name := guide.name(node);
   name;
 }
+
+def Unparser.unparse_raw(guide is LocalGuide, node)
+ -> "$L${guide.index(node)}";
 
 def Unparser.unparse(guide is Null, node) -> "?";

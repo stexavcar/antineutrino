@@ -33,10 +33,8 @@ public class Interpreter {
     return interpret(lambda.getModule(), lambda.getCode(), args);
   }
 
-  int count = 0;
   private RValue interpret(Frame frame) {
     while (true) {
-      count++;
       int opcode = frame.code[frame.pc];
       switch (opcode) {
       case Opcode.kNull:
@@ -60,11 +58,6 @@ public class Interpreter {
         if (lambda == null)
           throw new InterpreterError.MethodNotFound(frame);
         frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
-        break;
-      }
-      case Opcode.kBlock: {
-        int argc = frame.code[frame.pc + 1];
-        frame.pc += 2 + argc;
         break;
       }
       case Opcode.kWith1Cc: {
@@ -198,8 +191,17 @@ public class Interpreter {
         frame.pc += 2;
         break;
       }
+      // Structural opcodes without execution semantics.
+      case Opcode.kDefineLocal: {
+        frame.pc += 4;
+        break;
+      }
+      case Opcode.kBlock: {
+        int argc = frame.code[frame.pc + 1];
+        frame.pc += 2 + argc;
+        break;
+      }
       default:
-        System.out.println(count);
         assert false: "Unexpected opcode " + opcode;
         return null;
       }

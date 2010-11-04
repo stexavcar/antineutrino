@@ -1,5 +1,10 @@
 package org.neutrino.syntax;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.neutrino.compiler.CompilerUniverse;
 import org.neutrino.compiler.Source;
 import org.neutrino.compiler.Symbol;
@@ -10,11 +15,6 @@ import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Neutrino syntax trees.
@@ -860,14 +860,16 @@ public class Tree {
 
   public static class LocalDefinition extends Expression {
 
+    private final List<Annotation> annots;
     private final String name;
     private final Expression value;
     private final Expression body;
     private final boolean isReference;
     private LocalSymbol symbol;
 
-    public LocalDefinition(String name, Expression value, Expression body,
-        boolean isReference) {
+    public LocalDefinition(List<Annotation> annots, String name,
+        Expression value, Expression body, boolean isReference) {
+      this.annots = annots;
       this.name = name;
       this.value = value;
       this.body = body;

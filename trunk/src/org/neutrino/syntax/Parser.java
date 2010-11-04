@@ -1,16 +1,16 @@
 package org.neutrino.syntax;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 import org.neutrino.compiler.Source;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Token.Type;
 import org.neutrino.syntax.Tree.If;
 import org.neutrino.syntax.Tree.Lambda;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 /**
  * Plain vanilla recursive descent parser for the neutrino syntax.
@@ -101,6 +101,7 @@ public class Parser {
    * <statement>
    */
   private Tree.Expression parseStatement() throws SyntaxError {
+    List<Annotation> annots = parseAnnotations();
     if (atDefinitionStart()) {
       boolean isReference = consumeDefinitionStart();
       String name = expect(Type.IDENT);
@@ -126,7 +127,7 @@ public class Parser {
       } else {
         body = new Tree.Singleton(Tree.Singleton.Type.NULL);
       }
-      return new Tree.LocalDefinition(name, value, body, isReference);
+      return new Tree.LocalDefinition(annots, name, value, body, isReference);
     } else {
       return parseExpression(true);
     }

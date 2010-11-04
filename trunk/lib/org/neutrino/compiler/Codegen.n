@@ -99,6 +99,40 @@ def (this is CodeGenerator).emit(guide is BlockGuide, node) {
   }
 }
 
+/* |      ...       |     ^
+ * +----------------+     |
+ * |    arg n-1     |     |  higher addresses
+ * +----------------+     |
+ * |     arg n      |
+ * +----------------+
+ * | return address |  <-  EBP
+ * +----------------+
+ * |    local 0     |
+ * +----------------+     |
+ * |    local 1     |     |  lower addresses
+ * +----------------+     |
+ * |      ...       |     v
+ * +----------------+
+ * |                |
+ * |   expression   |
+ * |                |
+ * +----------------+  <-  ESP
+ */
+
+def local_address(index) -> (0 - 4) * (index + 1);
+
+def (this is CodeGenerator).emit(guide is LocalDefGuide, node) {
+  def value := guide.value(node);
+  this.emit(guide.resolve(value), value);
+  this.assm.pop(Memory.at_disp(rEbp, local_address(guide.index(node))));
+  def body := guide.body(node);
+  this.emit(guide.resolve(body), body);
+}
+
+def (this is CodeGenerator).emit(guide is LocalGuide, node) {
+  this.assm.push(Memory.at_disp(rEbp, local_address(guide.index(node))));
+}
+
 def (this is CodeGenerator).int32_add(guide, node) {
   def left_node := guide.argument(node, 0);
   this.emit(guide.resolve(left_node), left_node);

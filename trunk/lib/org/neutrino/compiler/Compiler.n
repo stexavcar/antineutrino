@@ -18,7 +18,7 @@ def (this is NeutrinoCompiler).add_dylib_bridge(binary, name, argc) {
 }
 
 def (this is NeutrinoCompiler).emit_method(universe, method, assm) {
-  assm.enter_frame(0);
+  assm.enter_frame(4 * method.code.local_count);
   def libc := method.get_annotation("libc");
   if libc = null
     then this.emit_plain_method(universe, method, assm);
@@ -29,9 +29,14 @@ def (this is NeutrinoCompiler).emit_method(universe, method, assm) {
 def (this is NeutrinoCompiler).emit_plain_method(universe, method, assm) {
   def code := method.code;
   def guide := new SyntaxGuide(code.code, code.literals);
+  def should_print := (method.get_annotation("print") != null);
   def root_node := code.root_offset;
   def root_guide := guide.resolve(root_node);
+  if should_print
+    then print(Unparser.unparse(root_guide, root_node));
   new TypeAnalysis(universe).analyze(root_guide, root_node);
+  if should_print
+    then print(Unparser.unparse(root_guide, root_node));
   new CodeGenerator(universe, assm).emit(root_guide, root_node);
   assm.pop(rEax);
 }
