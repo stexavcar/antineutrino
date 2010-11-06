@@ -16,39 +16,33 @@ def (this is int32_t)+(that is int32_t);
 @intrinsic
 protocol LibC;
 
-@c_call
-@emit("sleep")
+@boot_level_0
 @libc("_sleep")
 @type("int32_t")
 def LibC.sleep(arg is int32_t);
 
-@c_call
-@emit("exit")
+@boot_level_0
 @libc("_exit")
 def LibC.exit(arg is int32_t);
 
-@c_call
-@emit("malloc")
+@boot_level_0
 @libc("_malloc")
 @type("int32_t")
 def LibC.malloc(arg is int32_t);
 
 protocol Boot;
 
-@c_call
+@boot_level_0
 @type("int32_t")
-@emit("first")
 def Boot.first(x is int32_t, y is int32_t) -> x;
 
-@c_call
+@boot_level_0
 @type("int32_t")
-@emit("second")
 def Boot.second(x is int32_t, y is int32_t) -> y;
 
-@c_call
-@emit("neutrino_start")
+@boot_level_0
 @type("int32_t")
-def Boot.start() {
+def Boot.boot() {
   def time := int32_t.of(2);
   def one := Boot.first(int32_t.of(74), int32_t.of(93));
   def two := Boot.second(int32_t.of(16), int32_t.of(53));
@@ -56,16 +50,15 @@ def Boot.start() {
   one + two;
 }
 
-@c_call
-@emit("def_test")
+@boot_level_0
 def Boot.def_test() {
   def time := int32_t.of(2);
   time;
 }
 
-@emit("entry_point")
+@boot_level_0
 @entry_point("neuneu") // Make this callable from the java implementation
 @neuneu_entry_point // Mark this as the entry point for the neutrino implementation
 def Boot.entry_point() {
-  LibC.exit(Boot.start());
+  LibC.exit(Boot.boot());
 }
