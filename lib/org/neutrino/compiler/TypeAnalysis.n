@@ -1,7 +1,8 @@
 protocol TypeAnalysis;
 
-def TypeAnalysis.new(universe) -> new TypeAnalysis {
+def TypeAnalysis.new(universe, method) -> new TypeAnalysis {
   universe := universe,
+  method := method,
   r_scope_chain := new Ref(null)
 }
 
@@ -120,7 +121,19 @@ def (this is TypeAnalysis).do_analyze(guide is LocalDefGuide, node) {
 }
 
 def (this is TypeAnalysis).do_analyze(guide is ArgumentGuide, node) {
-  
+  def index := guide.index(node);
+  def params := this.method.params;
+  def argc := params.length;
+  def param := params[argc - index];
+  def type := param.type;
+  def value := this.universe.lookup_static_global(type);
+  // For types that don't allow overriding we're safe to assume that the
+  // concrete type of an argument is that class, since for any method we
+  // might call directly as a consequence will not have been overridden and
+  // so will be correct.
+  if value != null and value.get_annotation("no_override") != null
+    then type;
+    else null;
 }
 
 def (this is TypeAnalysis).value_type(obj is Integer) -> "Integer";
