@@ -56,7 +56,6 @@ def Boot.start() {
   one + two;
 }
 
-@print
 @c_call
 @emit("def_test")
 def Boot.def_test() {
