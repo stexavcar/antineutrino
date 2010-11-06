@@ -60,6 +60,23 @@ def (this is NeutrinoCompiler).emit_boilerplate(binary, entry_point) {
   main.exit_frame();  
 }
 
+def get_binary_name(method) {
+  def result := new StringStream();
+  result.add(method.name);
+  result.add("(");
+  ref first := true;
+  for (param : method.params) {
+    if first
+      then first := false;
+      else result.add(",");
+    if param.is_protocol
+      then result.add("%");
+    result.add(param.type);
+  }
+  result.add(")");  
+  result.to_string();
+}
+
 def (this is NeutrinoCompiler).build_binary(universe) {
   def binary := new Binary(new Ia386());
   
@@ -67,7 +84,7 @@ def (this is NeutrinoCompiler).build_binary(universe) {
   def entry_point := with_1cc (yield) {
     for (method : universe.methods) {
       if method.get_annotation("neuneu_entry_point") != null then {
-        def name := method.get_annotation("emit")[0];
+        def name := get_binary_name(method);
         yield(name);
       }
     }
@@ -80,10 +97,9 @@ def (this is NeutrinoCompiler).build_binary(universe) {
   this.emit_boilerplate(binary, entry_point);
 
   for (method : universe.methods) {
-    def emit := method.get_annotation("emit");
+    def emit := method.get_annotation("boot_level_0");
     if emit != null then {
-      def name := emit[0];
-      def assm := binary.add_code_block(name);
+      def assm := binary.add_code_block(get_binary_name(method));
       this.emit_method(universe, method, assm);
     }
   }
