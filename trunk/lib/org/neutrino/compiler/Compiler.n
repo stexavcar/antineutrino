@@ -33,7 +33,7 @@ def (this is NeutrinoCompiler).emit_plain_method(universe, method, assm) {
   def root_guide := guide.resolve(root_node);
   if should_print
     then print(Unparser.unparse(root_guide, root_node));
-  new TypeAnalysis(universe).analyze(root_guide, root_node);
+  new TypeAnalysis(universe, method).analyze(root_guide, root_node);
   if should_print
     then print(Unparser.unparse(root_guide, root_node));
   assm.enter_frame(4 * method.code.local_count);

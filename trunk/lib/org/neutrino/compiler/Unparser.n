@@ -31,6 +31,9 @@ def Unparser.unparse_raw(guide is LocalDefGuide, node) {
   "(def $L${guide.index(node)} := ${value} in ${body})";
 }
 
+def Unparser.unparse_raw(guide is ArgumentGuide, node)
+ -> "$A${guide.index(node)}";
+
 def Unparser.unparse_raw(guide is LiteralGuide, node) {
   def value := guide.value(node);
   value.to_string();  

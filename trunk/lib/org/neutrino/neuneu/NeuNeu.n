@@ -1,5 +1,6 @@
 protocol EntryPoint;
 
+@no_override
 @intrinsic("int32")
 protocol int32_t;
 
@@ -12,6 +13,8 @@ def int32_t.of(x is Integer) -> new int32_t(x);
 @type("int32_t")
 @intrinsic("int32.add")
 def (this is int32_t)+(that is int32_t);
+
+// --- L i b   C ---
 
 @intrinsic
 protocol LibC;
@@ -30,6 +33,13 @@ def LibC.exit(arg is int32_t);
 @type("int32_t")
 def LibC.malloc(arg is int32_t);
 
+@boot_level_0
+@libc("_putchar")
+@type("int32_t")
+def LibC.putchar(arg is int32_t);
+
+// --- B o o t ---
+
 protocol Boot;
 
 @boot_level_0
@@ -42,18 +52,33 @@ def Boot.second(x is int32_t, y is int32_t) -> y;
 
 @boot_level_0
 @type("int32_t")
-def Boot.boot() {
-  def time := int32_t.of(2);
-  def one := Boot.first(int32_t.of(74), int32_t.of(93));
-  def two := Boot.second(int32_t.of(16), int32_t.of(53));
-  LibC.sleep(time);
-  one + two;
+def Boot.add(x is int32_t, y is int32_t) -> x + y;
+
+@boot_level_0
+def Boot.hello_world() {
+  LibC.putchar(int32_t.of(72));
+  LibC.putchar(int32_t.of(101));  
+  LibC.putchar(int32_t.of(108));
+  LibC.putchar(int32_t.of(108));
+  LibC.putchar(int32_t.of(111));
+  LibC.putchar(int32_t.of(32));  
+  LibC.putchar(int32_t.of(87));  
+  LibC.putchar(int32_t.of(111));  
+  LibC.putchar(int32_t.of(114));  
+  LibC.putchar(int32_t.of(108));  
+  LibC.putchar(int32_t.of(100));  
+  LibC.putchar(int32_t.of(33));  
+  LibC.putchar(int32_t.of(10));  
 }
 
 @boot_level_0
-def Boot.def_test() {
-  def time := int32_t.of(2);
-  time;
+@type("int32_t")
+def Boot.boot() {
+  def time := Boot.add(int32_t.of(2), int32_t.of(3));
+  def one := Boot.first(int32_t.of(74), int32_t.of(93));
+  def two := Boot.second(int32_t.of(16), int32_t.of(53));
+  Boot.hello_world();
+  one + two;
 }
 
 @boot_level_0
