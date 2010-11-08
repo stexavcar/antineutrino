@@ -1,12 +1,39 @@
+protocol Platform;
+
+def Platform.new(object_format, architecture) -> new Platform {
+  object_format_name := object_format,
+  architecture_name := architecture
+}
+
+def (this is Platform).architecture {
+  def name := this.architecture_name;
+  if name = "ia386"
+    then new Ia386();
+    else null;
+}
+
+def (this is Platform).object_format {
+  def name := this.object_format_name;
+  if name = "elf" then
+    new ElfFormat();
+  else if name = "mach-o" then
+    new MachOFormat();
+  else
+    null;
+}
+
 protocol NeutrinoCompiler;
 
 def NeutrinoCompiler.new() -> new NeutrinoCompiler { };
 
 @entry_point("compile")
 def compiler_entry_point(args) {
-  def in_name := args[0];
-  def out_name := args[1];
-  new NeutrinoCompiler().compile(in_name, out_name);
+  def object_format := args[0];
+  def architecture := args[1];
+  def platform := new Platform(object_format, architecture);
+  def in_name := args[2];
+  def out_name := args[3];
+  new NeutrinoCompiler().compile(platform, in_name, out_name);
 }
 
 def (this is NeutrinoCompiler).add_dylib_bridge(binary, name, argc) {
@@ -76,8 +103,8 @@ def get_binary_name(method) {
   result.to_string();
 }
 
-def (this is NeutrinoCompiler).build_binary(universe) {
-  def binary := new Binary(new Ia386(), new MachOFormat());
+def (this is NeutrinoCompiler).build_binary(platform, universe) {
+  def binary := new Binary(platform.architecture, platform.object_format);
   
   // Locate entry point
   def entry_point := with_1cc (yield) {
@@ -123,9 +150,9 @@ def (this is NeutrinoCompiler).read_universe(filename) {
   new Plankton(raw_data, new CompilerGrower()).unmarshal();
 }
 
-def (this is NeutrinoCompiler).compile(in_name, out_name) {
+def (this is NeutrinoCompiler).compile(platform, in_name, out_name) {
   def universe := this.read_universe(in_name);
-  def binary := this.build_binary(universe);
+  def binary := this.build_binary(platform, universe);
   def data := binary.encode;
   open_file(out_name).write_binary(data);  
 }
