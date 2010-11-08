@@ -18,7 +18,7 @@ import java.util.TreeMap;
  */
 public class CompilerModule {
 
-  public static @Flags.Flag("only-module") String onlyModule = null;
+  public static @Flags.Flag("module") String module = null;
 
   private final String name;
   private final Map<String, CompilerModule> modules = new TreeMap<String, CompilerModule>();
@@ -46,7 +46,7 @@ public class CompilerModule {
         else fullName = name + "::" + shortName;
         CompilerModule child = ensureModule(shortName, fullName);
         child.includeFromPath(file);
-      } else if (onlyModule == null || onlyModule.equals(name)) {
+      } else if (module == null || module.equals(name)) {
         Source source = Source.create(file);
         if (source != null)
           sources.put(source.getName(), source);

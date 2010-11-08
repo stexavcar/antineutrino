@@ -53,7 +53,7 @@
       <assertions><enable/></assertions>
       <arg value="--root-path"/><arg value="${lib.dir}"/>
       <arg value="--outfile"/><arg value="${neulibpib.path}"/>
-      <arg value="--only-module"/><arg value="org::neutrino::neuneu"/>
+      <arg value="--module"/><arg value="org::neutrino::neuneu"/>
     </java>
   </target>
   
