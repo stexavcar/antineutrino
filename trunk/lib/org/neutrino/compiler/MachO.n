@@ -45,6 +45,12 @@ def LC_SUB_CLIENT := 16r14;
 def PAGE_SIZE := 16r1000;
 def WORD_SIZE := 4;
 
+protocol MachOFormat;
+
+def MachOFormat.new() -> new MachOFormat { };
+
+def (this is MachOFormat).builder(binary) -> new MachO(binary);
+
 protocol MachO;
 
 def MachO.new(binary) {

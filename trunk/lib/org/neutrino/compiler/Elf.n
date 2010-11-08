@@ -1,0 +1,63 @@
+protocol ElfFormat;
+
+def ElfFormat.new() -> new ElfFormat { };
+
+def (this is ElfFormat).builder(binary) -> new Elf(binary);
+
+protocol Elf;
+
+def Elf.new(binary) -> new Elf {
+  binary := binary
+}
+
+def (this is Elf).add_code_block(name, code) { }
+
+def (this is Elf).finalize() { }
+
+def (this is Elf).encode(out) {
+  this.encode_header(out); 
+}
+
+/*
+ * typedef struct Elf32_Ehdr {
+ *   unsigned char e_ident[EI_NIDENT];
+ *   Elf32_Half e_type;
+ *   Elf32_Half e_machine;
+ *   Elf32_Word e_version;
+ *   Elf32_Addr e_entry;
+ *   Elf32_Off e_phoff;
+ *   Elf32_Off e_shoff;
+ *   Elf32_Word e_flags;
+ *   Elf32_Half e_ehsize;
+ *   Elf32_Half e_phentsize;
+ *   Elf32_Half e_phnum;
+ *   Elf32_Half e_shentsize;
+ *   Elf32_Half e_shnum;
+ *   Elf32_Half e_shstrndx;
+ * }
+ */
+def (this is Elf).encode_header(out) {
+  this.encode_identification(out);
+  out.write_int16(1); // ET_REL
+  out.write_int16(3); // EM_386
+  out.write_int32(1); // EV_CURRENT
+  out.write_int32(0); // No entry point
+  out.write_int32(0); // No header table
+  out.write_int32(0); // No section headers
+  out.write_int32(0); // No flags
+  out.write_int16(52); // Size of this header
+  out.write_int16(0); // Size of program headers
+  out.write_int16(0); // Number of program headers
+  out.write_int16(0); // Size of section headers
+  out.write_int16(0); // Number of section headers
+  out.write_int16(0); // Section header string table index 
+}
+
+def (this is Elf).encode_identification(out) {
+  out.write_int32(16r464C457F); // MAGIC
+  out.write_int8(1); // ELFCLASS32
+  out.write_int8(1); // ELFDATA2LSB
+  out.write_int8(1); // VERSION
+  for (i : 7 .. 16)
+    out.write_int8(0); // PAD
+}
