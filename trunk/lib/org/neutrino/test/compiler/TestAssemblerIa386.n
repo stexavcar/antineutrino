@@ -58,7 +58,7 @@ def (this is TestData).add_expected(str) -> this.expected.add(str);
 
 @entry_point("test_ia386")
 def test_ia386(args) {
-  def binary := new Binary(new Ia386());
+  def binary := new Binary(new Ia386(), new MachOFormat());
   def test := new Ia386Test { };
   def datas := new ArrayList();
   def new_data(name) {

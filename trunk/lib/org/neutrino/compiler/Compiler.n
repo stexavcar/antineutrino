@@ -77,7 +77,7 @@ def get_binary_name(method) {
 }
 
 def (this is NeutrinoCompiler).build_binary(universe) {
-  def binary := new Binary(new Ia386(), new ElfFormat());
+  def binary := new Binary(new Ia386(), new MachOFormat());
   
   // Locate entry point
   def entry_point := with_1cc (yield) {
