@@ -1,0 +1,103 @@
+protocol IntrinsicManager;
+
+def IntrinsicManager.new() {
+  def map := new HashMap();
+  map["int32.cast"] := (fn (g, n, c) -> g.int32_cast(n, c));
+  map["int32+int32"] := (fn (g, n, c) -> g.int32_add(n, c));
+  map["int32=int32"] := (fn (g, n, c) -> g.int32_eq(n, c));
+  map["int32!=int32"] := (fn (g, n, c) -> g.int32_neq(n, c));
+  map["if_else"] := (fn (g, n, c) -> g.if_else(n, c));
+  new IntrinsicManager { handlers := map };
+}
+
+def (this is IntrinsicManager)[name] -> this.handlers[name];
+
+def (this is CodeGenerator).int32_cast(guide, node) {
+  def arg_node := guide.argument(node, 1);
+  def arg_guide := guide.resolve(arg_node);
+  def value := this.static_value(arg_guide, arg_node);
+  // If we have a static integer value we just push it onto the stack as a
+  // raw int32.
+  this.assm.push(value);
+}
+
+def (this is CodeGenerator).int32_add(guide, node) {
+  def left_node := guide.argument(node, 0);
+  this.emit(guide.resolve(left_node), left_node);
+  def right_node := guide.argument(node, 1);
+  this.emit(guide.resolve(right_node), right_node);
+  // Push the arguments from the stack into two scratch registers.
+  this.assm.pop(rEax);
+  this.assm.pop(rEbx);
+  // Add the arguments
+  this.assm.add(rEax, rEbx);
+  // Push the result back onto the stack.
+  this.assm.push(rEax);
+}
+
+def kTrue := 16r01;
+def kFalse := 16r00;
+
+// Perform a comparison of two arguments.  The actual comparison must be
+// performed by the given thunk which is given the register and operand
+// to compare and a label to jump to if the comparison yields true.
+def (this is CodeGenerator).compare_int32s(guide, node, jump_if_set) {
+  def left_node := guide.argument(node, 0);
+  this.emit(guide.resolve(left_node), left_node);
+  def right_node := guide.argument(node, 1);
+  this.emit(guide.resolve(right_node), right_node);
+  // Push the arguments from the stack into two scratch registers.
+  this.assm.pop(rEax);
+  this.assm.pop(rEbx);
+  // Add the arguments
+  def on_true := this.assm.label();
+  def bottom := this.assm.label();
+  jump_if_set(rEax, rEbx, on_true);
+  this.assm.push(kFalse);
+  this.assm.jmp(bottom);
+  this.assm.bind(on_true);
+  this.assm.push(kTrue);
+  this.assm.bind(bottom);
+}
+
+def (this is CodeGenerator).int32_eq(guide, node) {
+  this.compare_int32s(guide, node, fn (reg, oper, on_true) {
+    this.assm.cmp(reg, oper);
+    this.assm.je(on_true);
+  });
+}
+
+def (this is CodeGenerator).int32_neq(guide, node) {
+  this.compare_int32s(guide, node, fn (reg, oper, on_true) {
+    this.assm.cmp(reg, oper);
+    this.assm.jne(on_true);
+  });
+}
+
+def (this is CodeGenerator).emit_thunk_body(guide, node) {
+  def proto := guide.proto(node);
+  def method := this.universe.find_method("()", #[proto.id]);
+  method.ensure_analyzed(this.universe);
+  def syntax_tree := method.syntax_tree;
+  def root_guide := syntax_tree.root_guide;
+  def root_node := syntax_tree.root_node;
+  print(Unparser.unparse(root_guide, root_node));
+  this.emit(root_guide, root_node);
+}
+
+def (this is CodeGenerator).if_else(guide, node) {
+  def cond_node := guide.argument(node, 1);
+  this.emit(guide.resolve(cond_node), cond_node);
+  def else_label := this.assm.label();
+  def bottom := this.assm.label();
+  this.assm.pop(rEax);
+  this.assm.cmp(rEax, 0);
+  this.assm.je(else_label);
+  def then_node := guide.argument(node, 2);
+  this.emit_thunk_body(guide.resolve(then_node), then_node);
+  this.assm.jmp(bottom);
+  this.assm.bind(else_label);
+  def else_node := guide.argument(node, 3);
+  this.emit_thunk_body(guide.resolve(else_node), else_node);  
+  this.assm.bind(bottom);
+}

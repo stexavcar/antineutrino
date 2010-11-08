@@ -23,6 +23,9 @@ def Unparser.unparse_raw(guide is CallGuide, node) {
   out.to_string();
 }
 
+def Unparser.unparse_raw(guide is NewGuide, node)
+ -> "new ${guide.proto(node)}";
+
 def Unparser.unparse_raw(guide is LocalDefGuide, node) {
   def value_node := guide.value(node);
   def value := this.unparse(guide.resolve(value_node), value_node);

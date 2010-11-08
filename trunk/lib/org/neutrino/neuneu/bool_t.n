@@ -1,0 +1,4 @@
+/* A materialized boolean represented by 32-bit integers 0 and 1. */
+@no_override
+@intrinsic("int32")
+protocol bool_t;

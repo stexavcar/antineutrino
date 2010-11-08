@@ -167,9 +167,7 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
       symbol.emitLoad(assm);
       outerCount++;
     }
-    assm.nhew(that.getProtocol(), outerCount);
-    // TODO
-    return -5;
+    return assm.nhew(that.getProtocol(), outerCount);
   }
 
   @Override

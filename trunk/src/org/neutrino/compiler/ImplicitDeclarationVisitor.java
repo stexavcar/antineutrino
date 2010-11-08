@@ -55,8 +55,8 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
             allParams);
         Assembler assm = builder.getAssembler();
         CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
-        codegen.generate(field.getBody());
-        assm.finalize(field.getLocalCount(), 0);
+        int rootOffset = codegen.generate(field.getBody());
+        assm.finalize(field.getLocalCount(), rootOffset);
       }
     }
     for (String shuper : that.getProtocols())
