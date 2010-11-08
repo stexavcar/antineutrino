@@ -1,18 +1,11 @@
 protocol EntryPoint;
 
-@no_override
-@intrinsic("int32")
-protocol int32_t;
-
-@inline
-@type("int32_t")
-@intrinsic("int32.cast")
-def int32_t.of(x is Integer) -> new int32_t(x);
-
-@inline
-@type("int32_t")
-@intrinsic("int32.add")
-def (this is int32_t)+(that is int32_t);
+@boot_level_0
+@entry_point("neuneu") // Make this callable from the java implementation
+@neuneu_entry_point // Mark this as the entry point for the neutrino implementation
+def Boot.entry_point() {
+  LibC.exit(Boot.boot());
+}
 
 // --- L i b   C ---
 
@@ -78,12 +71,7 @@ def Boot.boot() {
   def one := Boot.first(int32_t.of(74), int32_t.of(93));
   def two := Boot.second(int32_t.of(16), int32_t.of(53));
   Boot.hello_world();
-  one + two;
-}
-
-@boot_level_0
-@entry_point("neuneu") // Make this callable from the java implementation
-@neuneu_entry_point // Mark this as the entry point for the neutrino implementation
-def Boot.entry_point() {
-  LibC.exit(Boot.boot());
+  if one != two
+    then int32_t.of(1);
+    else int32_t.of(2);
 }

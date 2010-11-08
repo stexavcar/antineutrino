@@ -115,11 +115,13 @@ public class Assembler {
     add(Opcode.kReturn);
   }
 
-  public void nhew(RProtocol proto, int outc) {
-    int index = registerLiteral(proto);
+  public int nhew(RProtocol proto, int outc) {
+	int result = getOffset();
+	int index = registerLiteral(proto);
     add(Opcode.kNew);
     add(index);
     add(outc);
+    return result;
   }
 
   public void newArray(int elmc) {

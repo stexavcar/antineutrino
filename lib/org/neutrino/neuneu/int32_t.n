@@ -1,0 +1,24 @@
+/* 32 bit signed native integers. */
+@no_override
+@intrinsic("int32")
+protocol int32_t;
+
+@inline
+@type("int32_t")
+@intrinsic("int32.cast")
+def int32_t.of(x is Integer) -> new int32_t(x);
+
+@inline
+@type("int32_t")
+@intrinsic("int32+int32")
+def (this is int32_t)+(that is int32_t);
+
+@inline
+@type("bool_t")
+@intrinsic("int32=int32")
+def (this is int32_t)=(that is int32_t);
+
+@inline
+@type("bool_t")
+@intrinsic("int32!=int32")
+def (this is int32_t)!=(that is int32_t);

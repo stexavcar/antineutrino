@@ -46,7 +46,9 @@ def MethodAst.grow(payload) -> new MethodAst {
   annots := payload["annots"],
   params := payload["params"],
   name := payload["name"],
-  code := payload["code"]
+  code := payload["code"],
+  syntax_tree := new SyntaxTree(payload["code"]),
+  r_has_been_analyzed := new Ref(false)
 }
 
 def (this is MethodAst).get_annotation(name) {
@@ -56,6 +58,13 @@ def (this is MethodAst).get_annotation(name) {
         then yield(annot);
     }
     null;
+  }
+}
+
+def (this is MethodAst).ensure_analyzed(universe) {
+  if not this.r_has_been_analyzed.get() then {
+    new TypeAnalysis(universe, this).analyze(this.syntax_tree);
+    this.r_has_been_analyzed.set(true);
   }
 }
 

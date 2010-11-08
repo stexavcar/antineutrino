@@ -26,14 +26,13 @@ def (this is NeutrinoCompiler).emit_method(universe, method, assm) {
 }
 
 def (this is NeutrinoCompiler).emit_plain_method(universe, method, assm) {
-  def code := method.code;
-  def guide := new SyntaxGuide(code.code, code.literals);
+  def syntax_tree := method.syntax_tree;
   def should_print := (method.get_annotation("print") != null);
-  def root_node := code.root_offset;
-  def root_guide := guide.resolve(root_node);
+  def root_node := syntax_tree.root_node;
+  def root_guide := syntax_tree.root_guide;
   if should_print
     then print(Unparser.unparse(root_guide, root_node));
-  new TypeAnalysis(universe, method).analyze(root_guide, root_node);
+  method.ensure_analyzed(universe);
   if should_print
     then print(Unparser.unparse(root_guide, root_node));
   assm.enter_frame(4 * method.code.local_count);
