@@ -28,13 +28,7 @@ protocol AssemblerIa386;
 def AssemblerIa386.new(binary, name) -> new AssemblerIa386 {
   binary := binary,
   name := name,
-  out := new BlobStream(),
-  fixups := new ArrayList()
-}
-
-def (this is AssemblerIa386).finalize() {
-  for (fixup : this.fixups)
-    fixup();
+  out := new BlobStream()
 }
 
 def kMemory := 2r00;

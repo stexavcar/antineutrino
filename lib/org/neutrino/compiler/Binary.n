@@ -9,8 +9,9 @@ def Relocation.new(assm, offset, target, is_relative) -> new Relocation {
 
 protocol Binary;
 
-def Binary.new(arch) -> new Binary {
+def Binary.new(arch, file_format) -> new Binary {
   arch := arch,
+  file_format := file_format,
   entries := new ArrayList(),
   relocs := new ArrayList()
 }
@@ -35,19 +36,13 @@ def (this is Binary).add_code_block(name) {
 }
 
 def (this is Binary).encode {
-  this.finalize();
   def out := new BlobStream;
-  this.to_mach_o().encode(out);
+  this.encode_file_format().encode(out);
   out.get_blob();
 }
 
-def (this is Binary).finalize() {
-  for (entry : this.entries)
-    entry.assm.finalize();
-}
-
-def (this is Binary).to_mach_o() {
-  def result := new MachO(this);
+def (this is Binary).encode_file_format() {
+  def result := this.file_format.builder(this);
   for (entry : this.entries)
     result.add_code_block(entry.name, entry.assm.code);
   result.finalize();
