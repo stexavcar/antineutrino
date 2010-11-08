@@ -1,5 +1,6 @@
 import fnmatch
 import os
+import platform
 from os.path import join
 
 bin_path = 'bin'
@@ -8,6 +9,44 @@ pib_path = join(bin_path, 'pib')
 obj_path = join(bin_path, 'obj')
 class_path = join(bin_path, 'classes')
 java_command = 'java -ea'
+
+class Platform(object):
+
+  def __init__(self, object_format, architecture):
+    self.object_format = object_format
+    self.architecture = architecture
+
+  def __str__(self):
+    return "Platform { %s, %s }" % (self.object_format, self.architecture)
+
+  @staticmethod
+  def get_object_format():
+    system = platform.system()
+    if system == 'Linux':
+      return 'elf'
+    elif system == 'Darwin':
+      return 'mach-o'
+    else:
+      assert False
+
+  @staticmethod
+  def get_architecture():
+    machine = platform.machine()
+    if machine == 'x86_64':
+      return 'ia386'
+    else:
+      assert False
+
+  def get_object_extension(self):
+    return ".%s-%s" % (self.architecture, self.object_format)
+
+  @staticmethod
+  def get():
+    return Platform(Platform.get_object_format(), Platform.get_architecture())
+
+PLATFORM = Platform.get()
+
+PIB_EXT='.pib'
 
 # Add javatrino as a source since it is required to build
 def JavatrinoAdder(source, target, env):
@@ -27,21 +66,29 @@ def CompileGenerator(source, target, env, for_signature):
 
 PIB_BUILDER = Builder(
   generator = CompileGenerator,
-  suffix = '.pib',
+  suffix = PIB_EXT,
   emitter = JavatrinoAdder
 )
 
+COMPILE_COMMAND="\
+%(java)s -cp %(jar)s org.neutrino.main.Run \
+  --pib-path %(pib)s \
+  --entry-point compile \
+  %(format)s %(arch)s \
+  %(input)s $TARGET"
 def NeuCompileGenerator(source, target, env, for_signature):
-  return '%(java)s -cp %(jar)s org.neutrino.main.Run --pib-path %(pib)s --entry-point compile %(input)s $TARGET' % {
+  return COMPILE_COMMAND % {
     'java': java_command,
     'jar': source[0],
+    'format': PLATFORM.object_format,
+    'arch': PLATFORM.architecture,
     'pib': source[1],
     'input': source[2]
   }
 
 NEU_OBJECT_BUILDER = Builder(
   generator = NeuCompileGenerator,
-  suffix = '.no',
+  suffix = PLATFORM.get_object_extension(),
   emitter = JavatrinoAdder
 )
 
