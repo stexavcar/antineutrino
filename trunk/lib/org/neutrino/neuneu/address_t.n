@@ -5,20 +5,24 @@ protocol address_t;
 
 @inline
 @type("int32_t")
-@intrinsic("address.read")
+@intrinsic("read_int32")
 def (this is address_t).value;
 
 @inline
 @type("int32_t")
-@intrinsic("address.read_index")
-def (this is address_t)[index is int32_t];
-
-@inline
-@type("int32_t")
-@intrinsic("address.write")
+@intrinsic("write_int32")
 def (this is address_t).value:=(val is int32_t);
 
 @inline
-@type("int32_t")
-@intrinsic("address.write_index")
-def (this is address_t)[index is int32_t]:=(val is int32_t);
+@type("address_t")
+@intrinsic("add_int32")
+def (this is address_t)+(this is int32_t);
+
+@boot_level_0
+@type("int32")
+def (this is address_t)[index is int32_t] -> (this + index).value;
+
+@boot_level_0
+@type("int32")
+def (this is address_t)[index is int32_t]:=(value is int32_t)
+ -> (this + index).value := value;

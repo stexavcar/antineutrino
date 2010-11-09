@@ -4,14 +4,12 @@ def IntrinsicManager.new() {
   def map := new HashMap();
   // Int32
   map["int32.cast"] := (fn (g, n, c) -> g.int32_cast(n, c));
-  map["int32+int32"] := (fn (g, n, c) -> g.int32_add(n, c));
-  map["int32=int32"] := (fn (g, n, c) -> g.int32_eq(n, c));
-  map["int32!=int32"] := (fn (g, n, c) -> g.int32_neq(n, c));
+  map["add_int32"] := (fn (g, n, c) -> g.add_int32(n, c));
+  map["eq_int32"] := (fn (g, n, c) -> g.eq_int32(n, c));
+  map["neq_int32"] := (fn (g, n, c) -> g.neq_int32(n, c));
   // Address
-  map["address.read"] := (fn (g, n, c) -> g.address_read(n, c));
-  map["address.write"] := (fn (g, n, c) -> g.address_write(n, c));
-  map["address.read_index"] := (fn (g, n, c) -> g.address_read_index(n, c));
-  map["address.write_index"] := (fn (g, n, c) -> g.address_write_index(n, c));
+  map["read_int32"] := (fn (g, n, c) -> g.read_int32(n, c));
+  map["write_int32"] := (fn (g, n, c) -> g.write_int32(n, c));
   // Control
   map["if_else"] := (fn (g, n, c) -> g.if_else(n, c));
   new IntrinsicManager { handlers := map };
@@ -28,7 +26,7 @@ def (this is CodeGenerator).int32_cast(guide, node) {
   this.assm.push(value);
 }
 
-def (this is CodeGenerator).int32_add(guide, node) {
+def (this is CodeGenerator).add_int32(guide, node) {
   def left_node := guide.argument(node, 0);
   this.emit(guide.resolve(left_node), left_node);
   def right_node := guide.argument(node, 1);
@@ -67,39 +65,28 @@ def (this is CodeGenerator).compare_int32s(guide, node, jump_if_set) {
   this.assm.bind(bottom);
 }
 
-def (this is CodeGenerator).int32_eq(guide, node) {
+def (this is CodeGenerator).eq_int32(guide, node) {
   this.compare_int32s(guide, node, fn (reg, oper, on_true) {
     this.assm.cmp(reg, oper);
     this.assm.je(on_true);
   });
 }
 
-def (this is CodeGenerator).int32_neq(guide, node) {
+def (this is CodeGenerator).neq_int32(guide, node) {
   this.compare_int32s(guide, node, fn (reg, oper, on_true) {
     this.assm.cmp(reg, oper);
     this.assm.jne(on_true);
   });
 }
 
-def (this is CodeGenerator).address_read(guide, node) {
+def (this is CodeGenerator).read_int32(guide, node) {
   def addr_node := guide.argument(node, 0);
   this.emit(guide.resolve(addr_node), addr_node);
   this.assm.pop(rEax);
   this.assm.push(Memory.at(rEax));
 }
 
-def (this is CodeGenerator).address_read_index(guide, node) {
-  def addr_node := guide.argument(node, 0);
-  this.emit(guide.resolve(addr_node), addr_node);
-  def index_node := guide.argument(node, 1);
-  this.emit(guide.resolve(index_node), index_node);
-  this.assm.pop(rEbx);
-  this.assm.pop(rEax);
-  this.assm.add(rEax, rEbx);
-  this.assm.push(Memory.at(rEax));
-}
-
-def (this is CodeGenerator).address_write(guide, node) {
+def (this is CodeGenerator).write_int32(guide, node) {
   def addr_node := guide.argument(node, 0);
   this.emit(guide.resolve(addr_node), addr_node);
   def value_node := guide.argument(node, 1);
@@ -110,27 +97,6 @@ def (this is CodeGenerator).address_write(guide, node) {
   this.assm.push(rEax);
 }
 
-def (this is CodeGenerator).address_write_index(guide, node) {
-  def addr_node := guide.argument(node, 0);
-  this.emit(guide.resolve(addr_node), addr_node);
-  def index_node := guide.argument(node, 1);
-  this.emit(guide.resolve(index_node), index_node);
-  def value_node := guide.argument(node, 2);
-  this.emit(guide.resolve(value_node), value_node);
-  // Pop the value into ECX
-  this.assm.pop(rEcx);
-  // Pop the index into EBX
-  this.assm.pop(rEbx);
-  // Pop the address into EAX
-  this.assm.pop(rEax);
-  // Add the index to the address
-  this.assm.add(rEax, rEbx);
-  // Store the value at the resulting address
-  this.assm.mov(Memory.at(rEax), rEcx);
-  // Push the value back as the result of the operation
-  this.assm.push(rEcx);
-}
-
 def (this is CodeGenerator).emit_thunk_body(guide, node) {
   def proto := guide.proto(node);
   def method := this.universe.find_method("()", #[proto.id]);
@@ -138,7 +104,6 @@ def (this is CodeGenerator).emit_thunk_body(guide, node) {
   def syntax_tree := method.syntax_tree;
   def root_guide := syntax_tree.root_guide;
   def root_node := syntax_tree.root_node;
-  print(Unparser.unparse(root_guide, root_node));
   this.emit(root_guide, root_node);
 }
 
