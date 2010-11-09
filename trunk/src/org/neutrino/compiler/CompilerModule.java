@@ -1,15 +1,17 @@
 package org.neutrino.compiler;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+
 import org.neutrino.main.Flags;
 import org.neutrino.pib.BinaryBuilder;
 import org.neutrino.pib.ModuleBuilder;
 import org.neutrino.syntax.SyntaxError;
 import org.neutrino.syntax.Tree;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * A single neutrino module.
@@ -18,7 +20,7 @@ import java.util.TreeMap;
  */
 public class CompilerModule {
 
-  public static @Flags.Flag("module") String module = null;
+  public static @Flags.Flag("module") List<String> module = new ArrayList<String>();
 
   private final String name;
   private final Map<String, CompilerModule> modules = new TreeMap<String, CompilerModule>();
@@ -46,7 +48,7 @@ public class CompilerModule {
         else fullName = name + "::" + shortName;
         CompilerModule child = ensureModule(shortName, fullName);
         child.includeFromPath(file);
-      } else if (module == null || module.equals(name)) {
+      } else if (module.isEmpty() || module.contains(name)) {
         Source source = Source.create(file);
         if (source != null)
           sources.put(source.getName(), source);
