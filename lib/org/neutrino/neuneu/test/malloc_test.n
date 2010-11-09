@@ -1,0 +1,66 @@
+@boot_level_0
+def (this is neu_neu_tests_t).test_malloc() {
+  this.test_raw_malloc();
+  this.test_struct_malloc();
+}
+
+@boot_level_0
+def (this is neu_neu_tests_t).test_raw_malloc() {
+  this.on_start();
+  def addr := LibC.malloc(int32_t.of(8));
+  addr[int32_t.of(0)] := int32_t.of(65);
+  addr[int32_t.of(4)] := int32_t.of(32);
+  this.assert_equal(int32_t.of(65), addr[int32_t.of(0)]);
+  this.assert_equal(int32_t.of(32), addr[int32_t.of(4)]);
+  LibC.free(addr);
+}
+
+@no_override
+protocol point_t;
+
+@boot_level_0
+@type("point_t")
+def point_t.new(x is int32_t, y is int32_t) {
+  def addr := LibC.malloc(int32_t.of(8));
+  addr[int32_t.of(0)] := x;
+  addr[int32_t.of(4)] := y;
+  addr;
+}
+
+@boot_level_0
+def (this is point_t).free() -> LibC.free(this.addr);
+
+@boot_level_0
+@type("address_t")
+def (this is point_t).addr -> this;
+
+@boot_level_0
+@type("int32_t")
+def (this is point_t).x -> this.addr[int32_t.of(0)];
+
+@boot_level_0
+@type("int32_t")
+def (this is point_t).x:=(v is int32_t) -> this.addr[int32_t.of(0)] := v;
+
+@boot_level_0
+@type("int32_t")
+def (this is point_t).y -> this.addr[int32_t.of(4)];
+
+@boot_level_0
+@type("int32_t")
+def (this is point_t).y:=(v is int32_t) -> this.addr[int32_t.of(4)] := v;
+
+@boot_level_0
+def (this is neu_neu_tests_t).test_struct_malloc() {
+  this.on_start();
+  def p := new point_t(int32_t.of(4), int32_t.of(5));
+  this.assert_equal(int32_t.of(4), p.x);
+  this.assert_equal(int32_t.of(5), p.y);  
+  p.x := int32_t.of(7);
+  this.assert_equal(int32_t.of(7), p.x);
+  this.assert_equal(int32_t.of(5), p.y);  
+  p.y := int32_t.of(2);
+  this.assert_equal(int32_t.of(7), p.x);
+  this.assert_equal(int32_t.of(2), p.y);
+  p.free();
+}

@@ -12,6 +12,8 @@ def IntrinsicManager.new() {
   map["write_int32"] := (fn (g, n, c) -> g.write_int32(n, c));
   // Control
   map["if_else"] := (fn (g, n, c) -> g.if_else(n, c));
+  // Misc
+  map["debug_interrupt"] := (fn (g, n, c) -> g.debug_interrupt(n, c));
   new IntrinsicManager { handlers := map };
 }
 
@@ -122,4 +124,10 @@ def (this is CodeGenerator).if_else(guide, node) {
   def else_node := guide.argument(node, 3);
   this.emit_thunk_body(guide.resolve(else_node), else_node);  
   this.assm.bind(bottom);
+}
+
+def (this is CodeGenerator).debug_interrupt(guide, node) {
+  def recv_node := guide.argument(node, 0);
+  this.emit(guide.resolve(recv_node), recv_node);
+  this.assm.int3();
 }

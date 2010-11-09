@@ -76,6 +76,28 @@ public class Flags {
 
   }
 
+  private static class ListFlagInfo extends FlagInfo {
+
+    private final List<String> list;
+
+    @SuppressWarnings("unchecked")
+    public ListFlagInfo(Field field) {
+      super(field);
+      try {
+        list = (List<String>) field.get(null);
+      } catch (IllegalAccessException iae) {
+        throw new RuntimeException(iae);
+      }
+    }
+
+    @Override
+    public int process(int index, String[] args) {
+      list.add(args[index]);
+      return index + 1;
+    }
+
+  }
+
   public static List<String> parseArguments(String[] args, Class<?>... klasses) {
     Map<String, FlagInfo> flags = new HashMap<String, FlagInfo>();
     for (Class<?> klass : klasses) {
@@ -89,6 +111,8 @@ public class Flags {
             flags.put(setName, new StringFlagInfo(field));
           } else if (field.getType() == Boolean.TYPE) {
             flags.put(setName, new BooleanFlagInfo(field));
+          } else if (field.getType() == List.class) {
+            flags.put(setName, new ListFlagInfo(field));
           } else {
             assert false: setName;
           }

@@ -54,6 +54,7 @@
       <arg value="--root-path"/><arg value="${lib.dir}"/>
       <arg value="--outfile"/><arg value="${neulibpib.path}"/>
       <arg value="--module"/><arg value="org::neutrino::neuneu"/>
+      <arg value="--module"/><arg value="org::neutrino::neuneu::test"/>
     </java>
   </target>
   
