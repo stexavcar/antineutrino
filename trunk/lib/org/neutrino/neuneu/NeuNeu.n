@@ -7,30 +7,6 @@ def Boot.entry_point() {
   LibC.exit(Boot.boot());
 }
 
-// --- L i b   C ---
-
-@intrinsic
-protocol LibC;
-
-@boot_level_0
-@libc("_sleep")
-@type("int32_t")
-def LibC.sleep(arg is int32_t);
-
-@boot_level_0
-@libc("_exit")
-def LibC.exit(arg is int32_t);
-
-@boot_level_0
-@libc("_malloc")
-@type("int32_t")
-def LibC.malloc(arg is int32_t);
-
-@boot_level_0
-@libc("_putchar")
-@type("int32_t")
-def LibC.putchar(arg is int32_t);
-
 // --- B o o t ---
 
 protocol Boot;
@@ -66,7 +42,7 @@ def Boot.hello_world() {
 
 @boot_level_0
 @type("int32_t")
-def Boot.boot() {
+def Boot.test() {
   def time := Boot.add(int32_t.of(2), int32_t.of(3));
   def one := Boot.first(int32_t.of(74), int32_t.of(93));
   def two := Boot.second(int32_t.of(16), int32_t.of(53));
@@ -74,4 +50,40 @@ def Boot.boot() {
   if one != two
     then int32_t.of(1);
     else int32_t.of(2);
+}
+
+@no_override
+protocol point_t;
+
+@boot_level_0
+@type("point_t")
+def point_t.new(x is int32_t, y is int32_t) {
+  def addr := LibC.malloc(int32_t.of(8));
+  addr[int32_t.of(0)] := x;
+  addr[int32_t.of(4)] := y;
+  addr;
+}
+
+@boot_level_0
+def (this is point_t).free() -> LibC.free(this.addr);
+
+@boot_level_0
+@type("address_t")
+def (this is point_t).addr -> this;
+
+@boot_level_0
+@type("int32_t")
+def (this is point_t).x -> this.addr[int32_t.of(0)];
+
+@boot_level_0
+@type("int32_t")
+def (this is point_t).y -> this.addr[int32_t.of(4)];
+
+@boot_level_0
+@type("int32_t")
+def Boot.boot() {
+  def p := new point_t(int32_t.of(5), int32_t.of(2));
+  def result := p.y;
+  p.free();
+  result;
 }

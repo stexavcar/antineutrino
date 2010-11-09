@@ -27,14 +27,16 @@ class Platform(object):
     elif system == 'Darwin':
       return 'mach-o'
     else:
+      print system
       assert False
 
   @staticmethod
   def get_architecture():
     machine = platform.machine()
-    if machine == 'x86_64':
+    if machine == 'x86_64' or machine == 'i386':
       return 'ia386'
     else:
+      print machine
       assert False
 
   def get_object_extension(self):

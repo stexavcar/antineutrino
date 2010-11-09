@@ -1,0 +1,24 @@
+/* A materialized boolean represented by 32-bit integers 0 and 1. */
+@no_override
+@intrinsic("int32")
+protocol address_t;
+
+@inline
+@type("int32_t")
+@intrinsic("address.read")
+def (this is address_t).value;
+
+@inline
+@type("int32_t")
+@intrinsic("address.read_index")
+def (this is address_t)[index is int32_t];
+
+@inline
+@type("int32_t")
+@intrinsic("address.write")
+def (this is address_t).value:=(val is int32_t);
+
+@inline
+@type("int32_t")
+@intrinsic("address.write_index")
+def (this is address_t)[index is int32_t]:=(val is int32_t);
