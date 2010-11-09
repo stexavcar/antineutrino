@@ -1,0 +1,25 @@
+@intrinsic
+protocol LibC;
+
+@boot_level_0
+@libc("_sleep")
+@type("int32_t")
+def LibC.sleep(arg is int32_t);
+
+@boot_level_0
+@libc("_exit")
+def LibC.exit(arg is int32_t);
+
+@boot_level_0
+@libc("_malloc")
+@type("address_t")
+def LibC.malloc(size is int32_t);
+
+@boot_level_0
+@libc("_free")
+def LibC.free(memory is address_t);
+
+@boot_level_0
+@libc("_putchar")
+@type("int32_t")
+def LibC.putchar(arg is int32_t);

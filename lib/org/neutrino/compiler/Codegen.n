@@ -53,14 +53,14 @@ def (this is CodeGenerator).emit(guide is ArgumentGuide, node) {
 def (this is CodeGenerator).emit_c_call(guide, node, target) {
   def argc := guide.argc(node);
   // Push arguments onto the stack
-  for (i : 1 .. argc) {
+  for (i : 0 .. argc) {
     def arg := guide.argument(node, i);
     this.emit(guide.resolve(arg), arg);
   }
   // Call the function
   this.assm.call(Symbol.local(target));
   // Pop the arguments off into a scratch register
-  for (i : 1 .. argc)
+  for (i : 0 .. argc)
     this.assm.pop(rEbx);
   // Push the result in EAX onto the stack
   this.assm.push(rEax);
@@ -68,6 +68,12 @@ def (this is CodeGenerator).emit_c_call(guide, node, target) {
 
 def (this is CodeGenerator).static_value(guide is LiteralGuide, node)
  -> guide.value(node);
+
+def (this is CodeGenerator).emit(guide is GlobalGuide, node) {
+  // We don't support globals yet but we need something to take up
+  // space on the stack so we push a 0 in place of the value.
+  this.assm.push(0);
+}
 
 def (this is CodeGenerator).emit(guide is BlockGuide, node) {
   ref has_prev := false;

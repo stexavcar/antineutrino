@@ -75,6 +75,8 @@
       <assertions><enable/></assertions>
       <arg value="--pib-path"/><arg value="${libpib.path}"/>
       <arg value="--entry-point"/><arg value="compile"/>
+      <arg value="mach-o"/>
+      <arg value="ia386"/>
       <arg value="${neulibpib.path}"/>
       <arg value="${libobj.path}"/>
     </java>
