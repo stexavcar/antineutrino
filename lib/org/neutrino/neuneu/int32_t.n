@@ -10,15 +10,15 @@ def int32_t.of(x is Integer) -> new int32_t(x);
 
 @inline
 @type("int32_t")
-@intrinsic("int32+int32")
+@intrinsic("add_int32")
 def (this is int32_t)+(that is int32_t);
 
 @inline
 @type("bool_t")
-@intrinsic("int32=int32")
+@intrinsic("eq_int32")
 def (this is int32_t)=(that is int32_t);
 
 @inline
 @type("bool_t")
-@intrinsic("int32!=int32")
+@intrinsic("neq_int32")
 def (this is int32_t)!=(that is int32_t);
