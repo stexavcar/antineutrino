@@ -4,7 +4,7 @@ protocol EntryPoint;
 @entry_point("neuneu") // Make this callable from the java implementation
 @neuneu_entry_point // Mark this as the entry point for the neutrino implementation
 def Boot.entry_point() {
-  LibC.exit(Boot.boot());
+  libc.exit(Boot.boot());
 }
 
 // --- B o o t ---
@@ -13,19 +13,7 @@ protocol Boot;
 
 @boot_level_0
 def Boot.hello_world() {
-  LibC.putchar(int32_t.of(72));
-  LibC.putchar(int32_t.of(101));  
-  LibC.putchar(int32_t.of(108));
-  LibC.putchar(int32_t.of(108));
-  LibC.putchar(int32_t.of(111));
-  LibC.putchar(int32_t.of(32));  
-  LibC.putchar(int32_t.of(87));  
-  LibC.putchar(int32_t.of(111));  
-  LibC.putchar(int32_t.of(114));  
-  LibC.putchar(int32_t.of(108));  
-  LibC.putchar(int32_t.of(100));  
-  LibC.putchar(int32_t.of(33));  
-  LibC.putchar(int32_t.of(10));  
+  libc.puts(char_ptr_t.of("Hello World!"));
 }
 
 @boot_level_0

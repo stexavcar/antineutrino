@@ -56,6 +56,7 @@ protocol MachO;
 def MachO.new(binary) {
   def reloc_table := new RelocationTable();
   def text := new TextSection(reloc_table);
+  def cstrings := new CStringSection();
   def strings := new StringTable();
   def symbols := new SymbolTable();
   def indirect_symbols := new IndirectSymbols();
@@ -63,12 +64,13 @@ def MachO.new(binary) {
   new MachO {
     binary := binary,
     text := text,
+    cstrings := cstrings,
     strings := strings,
     symbols := symbols,
     indirect_symbols := indirect_symbols,
     jump_table := jump_table,
     reloc_table := reloc_table,
-    sections := new ArrayList() [ text, jump_table ],
+    sections := new ArrayList() [ text, jump_table, cstrings ],
     dark_sections := new ArrayList() [ strings, symbols, indirect_symbols, reloc_table ],
     local_calls := new ArrayList(),
     dylib_calls := new ArrayList(),
@@ -220,6 +222,56 @@ def (this is TextSection).size {
 
 def (this is TextSection).encode(out) {
   out.write_data(this.code.get_blob());
+}
+
+protocol CStringSection;
+
+def CStringSection.new() -> new CStringSection {
+  order := new ArrayList(),
+  strings := new HashMap(),
+  r_length := new Ref(0)
+}
+
+def (this is CStringSection).length -> this.r_length.get();
+
+def (this is CStringSection).nreloc -> 0;
+
+def (this is CStringSection).length:=(value) -> this.r_length.set(value);
+
+def (this is CStringSection).segname -> "__TEXT";
+
+def (this is CStringSection).sectname -> "__cstring";
+
+def (this is CStringSection).flags -> 16r80000400;
+
+def (this is CStringSection).reserved2 -> 0;
+
+def (this is CStringSection).align -> 0;
+
+def (this is CStringSection).ensure(str) -> this[str];
+
+def (this is CStringSection).size -> align(this.length, WORD_SIZE);
+
+def (this is CStringSection)[str] {
+  def prev := this.strings[str];
+  if prev = null then {
+    def offset := this.length;
+    this.order.add(str);
+    this.strings[str] := offset;
+    this.length := offset + str.length + 1;
+    offset;
+  } else {
+    prev;
+  }
+}
+
+def (this is CStringSection).encode(out) {
+  def target := out.length + this.size;
+  for (str : this.order) {
+    out.write_c_string(str);
+    out.write_int8(0);
+  }
+  out.pad_to(target);
 }
 
 def align(value, factor) {
@@ -555,6 +607,12 @@ def (this is MachO).preprocess_symbol(relocation, symbol is DylibSymbol) {
       relocation.is_relative);
 }
 
+def (this is MachO).preprocess_symbol(relocation, symbol is StringSymbol) {
+  def source_offset := this.text.code_block_offset(relocation.assm.name);
+  this.reloc_table.add_entry(source_offset + relocation.offset,
+      false);
+}
+
 def (this is MachO).symbol_address(target is DylibSymbol) {
   def index := this.dysym_indices[target.name];
   this.text.size + (5 * index);  
@@ -562,6 +620,9 @@ def (this is MachO).symbol_address(target is DylibSymbol) {
 
 def (this is MachO).symbol_address(target is LocalSymbol)
  -> this.text.code_block_offset(target.name);
+
+def (this is MachO).symbol_address(target is StringSymbol)
+ -> this.offset_of(this.cstrings) + this.cstrings[target.value];
 
 def (this is MachO).process_relocation(relocation) {
   def target_offset := this.symbol_address(relocation.target);

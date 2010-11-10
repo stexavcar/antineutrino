@@ -4,7 +4,7 @@ protocol neu_neu_tests_t;
 @boot_level_0
 @type("neu_neu_tests_t")
 def neu_neu_tests_t.new() {
-  def addr := LibC.malloc(int32_t.of(4));
+  def addr := libc.malloc(int32_t.of(4));
   addr[int32_t.of(0)] := int32_t.of(0);
   addr;
 }
@@ -43,7 +43,7 @@ def (this is neu_neu_tests_t).assert_equal(a is int32_t, b is int32_t)
  -> this.assert_true(a = b);
 
 @boot_level_0
-def (this is neu_neu_tests_t).free() -> LibC.free(this.addr);
+def (this is neu_neu_tests_t).free() -> libc.free(this.addr);
 
 @boot_level_0
 @type("int32_t")

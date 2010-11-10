@@ -1,0 +1,7 @@
+@no_override
+protocol char_ptr_t;
+
+@inline
+@type("char_ptr_t")
+@intrinsic("char_ptr.cast")
+def char_ptr_t.of(x is String) -> new char_ptr_t(x);

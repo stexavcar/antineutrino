@@ -21,3 +21,7 @@ def Symbol.local(name) -> new LocalSymbol { name := name };
 protocol DylibSymbol is Symbol;
 
 def Symbol.dylib(name) -> new DylibSymbol { name := name };
+
+protocol StringSymbol is Symbol;
+
+def Symbol.string(value) -> new StringSymbol { value := value };
