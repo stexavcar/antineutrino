@@ -1,6 +1,5 @@
 /* 32 bit signed native integers. */
 @no_override
-@intrinsic("int32")
 protocol int32_t;
 
 @inline

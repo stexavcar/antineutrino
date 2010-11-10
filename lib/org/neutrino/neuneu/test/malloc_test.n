@@ -7,12 +7,12 @@ def (this is neu_neu_tests_t).test_malloc() {
 @boot_level_0
 def (this is neu_neu_tests_t).test_raw_malloc() {
   this.on_start();
-  def addr := LibC.malloc(int32_t.of(8));
+  def addr := libc.malloc(int32_t.of(8));
   addr[int32_t.of(0)] := int32_t.of(65);
   addr[int32_t.of(4)] := int32_t.of(32);
   this.assert_equal(int32_t.of(65), addr[int32_t.of(0)]);
   this.assert_equal(int32_t.of(32), addr[int32_t.of(4)]);
-  LibC.free(addr);
+  libc.free(addr);
 }
 
 @no_override
@@ -21,14 +21,14 @@ protocol point_t;
 @boot_level_0
 @type("point_t")
 def point_t.new(x is int32_t, y is int32_t) {
-  def addr := LibC.malloc(int32_t.of(8));
+  def addr := libc.malloc(int32_t.of(8));
   addr[int32_t.of(0)] := x;
   addr[int32_t.of(4)] := y;
   addr;
 }
 
 @boot_level_0
-def (this is point_t).free() -> LibC.free(this.addr);
+def (this is point_t).free() -> libc.free(this.addr);
 
 @boot_level_0
 @type("address_t")

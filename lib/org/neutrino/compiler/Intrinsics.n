@@ -7,6 +7,8 @@ def IntrinsicManager.new() {
   map["add_int32"] := (fn (g, n, c) -> g.add_int32(n, c));
   map["eq_int32"] := (fn (g, n, c) -> g.eq_int32(n, c));
   map["neq_int32"] := (fn (g, n, c) -> g.neq_int32(n, c));
+  // Strings
+  map["char_ptr.cast"] := (fn (g, n, c) -> g.cast_char_ptr(n, c));
   // Address
   map["read_int32"] := (fn (g, n, c) -> g.read_int32(n, c));
   map["write_int32"] := (fn (g, n, c) -> g.write_int32(n, c));
@@ -26,6 +28,13 @@ def (this is CodeGenerator).int32_cast(guide, node) {
   // If we have a static integer value we just push it onto the stack as a
   // raw int32.
   this.assm.push(value);
+}
+
+def (this is CodeGenerator).cast_char_ptr(guide, node) {
+  def arg_node := guide.argument(node, 1);
+  def arg_guide := guide.resolve(arg_node);
+  def value := this.static_value(arg_guide, arg_node);
+  this.assm.push(Symbol.string(value));
 }
 
 def (this is CodeGenerator).add_int32(guide, node) {

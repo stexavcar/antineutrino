@@ -147,6 +147,8 @@ def (this is TypeAnalysis).do_analyze(guide is ArgumentGuide, node) {
 
 def (this is TypeAnalysis).value_type(obj is Integer) -> "Integer";
 
+def (this is TypeAnalysis).value_type(obj is String) -> "String";
+
 def (this is TypeAnalysis).value_type(obj is ProtocolAst)
  -> "${obj.id}.protocol";
 

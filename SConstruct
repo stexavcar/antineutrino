@@ -40,7 +40,7 @@ class Platform(object):
       assert False
 
   def get_object_extension(self):
-    return ".%s-%s" % (self.architecture, self.object_format)
+    return ".%s.%s" % (self.architecture, self.object_format)
 
   @staticmethod
   def get():
@@ -56,9 +56,10 @@ def JavatrinoAdder(source, target, env):
 
 def CompileGenerator(source, target, env, for_signature):
   flags = ''
-  module = env.get('MODULE')
-  if module:
-    flags += '--module %s' % module
+  modules = env.get('MODULES')
+  if modules:
+    for module in modules:
+      flags += ' --module %s' % module
   return '%(java)s -cp %(jar)s org.neutrino.main.Compile --root-path %(root)s --outfile $TARGET %(flags)s' % {
     'java': java_command,
     'jar': source[0],
@@ -128,7 +129,7 @@ def BuildPib(target, source, **kwargs):
 
 libpib = BuildPib(join(pib_path, 'lib'), 'lib')
 
-neuneupib = BuildPib(join(pib_path, 'neuneu'), 'lib', MODULE='org::neutrino::neuneu')
+neuneupib = BuildPib(join(pib_path, 'neuneu'), 'lib', MODULES=['org::neutrino::neuneu', 'org::neutrino::neuneu::test'])
 
 neuneuobj = env.NeuObject(join(obj_path, 'neuneu'), [libpib, neuneupib])
 
