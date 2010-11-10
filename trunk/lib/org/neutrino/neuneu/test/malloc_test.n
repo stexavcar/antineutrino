@@ -6,7 +6,7 @@ def (this is neu_neu_tests_t).test_malloc() {
 
 @boot_level_0
 def (this is neu_neu_tests_t).test_raw_malloc() {
-  this.on_start();
+  this.on_start(char_ptr_t.of("raw malloc"));
   def addr := libc.malloc(int32_t.of(8));
   addr[int32_t.of(0)] := int32_t.of(65);
   addr[int32_t.of(4)] := int32_t.of(32);
@@ -52,7 +52,7 @@ def (this is point_t).y:=(v is int32_t) -> this.addr[int32_t.of(4)] := v;
 
 @boot_level_0
 def (this is neu_neu_tests_t).test_struct_malloc() {
-  this.on_start();
+  this.on_start(char_ptr_t.of("struct malloc"));
   def p := new point_t(int32_t.of(4), int32_t.of(5));
   this.assert_equal(int32_t.of(4), p.x);
   this.assert_equal(int32_t.of(5), p.y);  

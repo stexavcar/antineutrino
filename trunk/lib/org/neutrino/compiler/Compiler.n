@@ -70,12 +70,15 @@ def (this is NeutrinoCompiler).emit_plain_method(universe, method, assm) {
 def (this is NeutrinoCompiler).emit_libc_method(universe, method, assm) {
   def libc_name := method.get_annotation("libc")[0];
   def argc := method.params.length - 1; // discount the receiver
-  assm.enter_frame(argc);
+  assm.enter_frame(4 * argc);
   // Align ESP to a 16-byte boundary.  Since the stack grows down this
   // will cause the stack to grow.
   assm.ahnd(rEsp, 16rFFFFFFF0);
-  assm.mov(rEax, Memory.at_disp(rEbp, 8));
-  assm.mov(Memory.at(rEsp), rEax);
+  for (i : 0 .. argc) {
+    def index := argc - i - 1;
+    assm.mov(rEax, Memory.at_disp(rEbp, 8 + (4 * index)));
+    assm.mov(Memory.at_disp(rEsp, 4 * index), rEax);
+  }
   assm.call(Symbol.dylib(libc_name));
 }
 

@@ -19,8 +19,10 @@ def (this is neu_neu_tests_t).count:=(v is int32_t)
  -> this.addr[int32_t.of(0)] := v;
 
 @boot_level_0
-def (this is neu_neu_tests_t).on_start()
- -> this.count := (this.count + int32_t.of(1));
+def (this is neu_neu_tests_t).on_start(name is char_ptr_t) {
+  libc.puts(name);
+  this.count := (this.count + int32_t.of(1));
+}
 
 @inline
 @type("int32_t")
@@ -50,5 +52,6 @@ def (this is neu_neu_tests_t).free() -> libc.free(this.addr);
 def (this is neu_neu_tests_t).run() {
   this.test_int32_t();
   this.test_malloc();
+  this.test_char_ptr_t();
   this.count;
 }

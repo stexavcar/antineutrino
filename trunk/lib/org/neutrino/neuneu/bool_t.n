@@ -2,3 +2,11 @@
 @no_override
 @intrinsic("int32")
 protocol bool_t;
+
+@boot_level_0
+@type("bool_t")
+def bool_t.yes -> int32_t.of(1);
+
+@boot_level_0
+@type("bool_t")
+def bool_t.no -> int32_t.of(0);
