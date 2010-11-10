@@ -1,0 +1,9 @@
+@boot_level_0
+def (this is neu_neu_tests_t).test_char_ptr_t() {
+  this.on_start(char_ptr_t.of("char_ptr_t"));
+  def str := char_ptr_t.of("testy");
+  def str2 := char_ptr_t.of("tosty");
+  this.assert_equal(int32_t.of(5), str.length);
+  this.assert_true(str = str);
+  this.assert_true(str != str2);
+}

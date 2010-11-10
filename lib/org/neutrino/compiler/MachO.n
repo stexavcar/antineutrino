@@ -242,7 +242,7 @@ def (this is CStringSection).segname -> "__TEXT";
 
 def (this is CStringSection).sectname -> "__cstring";
 
-def (this is CStringSection).flags -> 16r80000400;
+def (this is CStringSection).flags -> 16r00000002;
 
 def (this is CStringSection).reserved2 -> 0;
 
@@ -267,10 +267,8 @@ def (this is CStringSection)[str] {
 
 def (this is CStringSection).encode(out) {
   def target := out.length + this.size;
-  for (str : this.order) {
+  for (str : this.order)
     out.write_c_string(str);
-    out.write_int8(0);
-  }
   out.pad_to(target);
 }
 

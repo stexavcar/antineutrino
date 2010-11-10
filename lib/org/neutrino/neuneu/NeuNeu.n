@@ -12,16 +12,10 @@ def Boot.entry_point() {
 protocol Boot;
 
 @boot_level_0
-def Boot.hello_world() {
-  libc.puts(char_ptr_t.of("Hello World!"));
-}
-
-@boot_level_0
 @type("int32_t")
 def Boot.boot() {
-  Boot.hello_world();
   def tests := new neu_neu_tests_t();
   def result := tests.run();
   tests.free();
-  result;
+  int32_t.of(0);
 }
