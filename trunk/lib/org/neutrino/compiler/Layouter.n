@@ -15,6 +15,17 @@ def Layouter.new() -> new Layouter {
   r_last_name := new Ref(null)
 }
 
+/*
+ * Return the smallest integer >= value that is 0 modulo the given
+ * factor.
+ */
+def align(value, factor) {
+  if (value % factor) = 0 then
+    value;
+  else
+    value + (factor - (value % factor));
+}
+
 def (this is Layouter).info(name) -> this.section_map[name].info;
 
 def (this is Layouter).last_name -> this.r_last_name.get();
@@ -87,6 +98,7 @@ def (this is Layouter).ordered_sections -> fn for (fun) {
     this.visit_section(root, visited, fun);
 }
 
+// Calculate layout information for all the registered sections.
 def (this is Layouter).calculate() {
   ref offset := 0;
   for (section : this.ordered_sections) {

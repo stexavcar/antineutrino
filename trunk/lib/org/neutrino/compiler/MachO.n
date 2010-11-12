@@ -18,7 +18,7 @@ def MachO.new(binary) {
   def text := new TextSection(reloc_table);
   def cstrings := new CStringSection();
   def strings := new StringTable();
-  def symbols := new SymbolTable();
+  def symbols := new SymbolTable(strings);
   def indirect_symbols := new IndirectSymbols();
   def jump_table := new JumpTable();
   new MachO {
@@ -41,9 +41,8 @@ def MachO.new(binary) {
 
 // Used by the binary to create a new code block.
 def (this is MachO).add_code_block(name, code) {
-  def name_index := this.strings.add(name);
-  def code_start := this.text.add_block(name, name_index, code);
-  this.symbols.add_local(name_index, this.segment_fileoff + code_start);
+  this.symbols.add_local(name);
+  this.text.add_block(name, code);
 }
 
 // Called by the binary when all data has been added to this object.
@@ -94,7 +93,9 @@ def (this is MachO).encode_load_commands(out) {
   this.encode_dysymtab_command(out);
 }
 
-def MachO.sections_start_marker -> "SECTIONS{";
+def MachO.segments_start_marker -> "SEGMENTS{";
+
+def MachO.segments_end_marker -> "SEGMENTS}";
 
 def (this is MachO).calculate_layout() {
   def layout := this.layout;
@@ -114,12 +115,15 @@ def (this is MachO).calculate_layout() {
   layout.next_section(MachO.dysymtab_command_name,
       MachO.sizeof_dysymtab_command, WORD_SIZE);
   // Add sections
-  layout.next_section(MachO.sections_start_marker, 0, 1);
+  layout.next_section(MachO.segments_start_marker, 0, 1);
   for (section : this.all_sections) {
     def name := section.name;
     def alignment := 1 << section.align;
     layout.next_section(section.name, section.size, alignment);
   }
+  // Make sure the layout is padded to word size, independent of the
+  // alignment of the last section.
+  layout.next_section(MachO.segments_end_marker, 0, WORD_SIZE);
   layout.calculate();
   layout.dump();
 }
@@ -157,7 +161,7 @@ def (this is RelocationTable).add_entry(offset, is_relative) {
   this.entries.add(new RelocationTableEntry(offset, is_relative));
 }
 
-def (this is RelocationTable).encode(out, layout) {
+def (this is RelocationTable).encode(out, macho) {
   for (entry : this.entries)
     entry.encode(out);
 }
@@ -198,7 +202,7 @@ def (this is JumpTable).align -> 0;
 
 def (this is JumpTable).nreloc -> 0;
 
-def (this is JumpTable).encode(out, layout) {
+def (this is JumpTable).encode(out, macho) {
   for (i : 0 .. this.size)
     out.write_int8(16rF4); // HLT
 }
@@ -229,8 +233,8 @@ def (this is TextSection).reserved2 -> 0;
 
 def (this is TextSection).align -> WORD_ALIGN;
 
-def (this is TextSection).add_block(name, name_index, code) {
-  this.blocks.add(new { name := name, name_index := name_index, code := code });
+def (this is TextSection).add_block(name, code) {
+  this.blocks.add(new { name := name, code := code });
   this.code.write_data(code);
   def result := this.length;
   this.length := this.length + code.length;
@@ -262,7 +266,7 @@ def (this is TextSection).size {
   result;
 }
 
-def (this is TextSection).encode(out, layout) {
+def (this is TextSection).encode(out, macho) {
   out.write_data(this.code.get_blob());
 }
 
@@ -309,41 +313,47 @@ def (this is CStringSection).ensure(str) {
   }
 }
 
-def (this is CStringSection).encode(out, layout) {
+def (this is CStringSection).encode(out, macho) {
   for (str : this.order)
     out.write_c_string(str);
 }
 
-def align(value, factor) {
-  if (value % factor) = 0 then
-    value;
-  else
-    value + (factor - (value % factor));
-}
-
+/*
+ * This string table is only seen by the linker and loader, the
+ * strings here are not loaded into the address space of the program.
+ */
 protocol StringTable;
 
 def StringTable.new() {
   def result := new StringTable {
+    string_map := new HashMap(),
     strings := new ArrayList(),
-    rCursor := new Ref(0)
+    r_cursor := new Ref(0)
   }
-  result.add("");
+  result.ensure("");
   result;
 }
 
-def (this is StringTable).cursor -> this.rCursor.get();
+def (this is StringTable).cursor -> this.r_cursor.get();
 
-def (this is StringTable).cursor:=(value) -> this.rCursor.set(value);
+def (this is StringTable).cursor:=(value) -> this.r_cursor.set(value);
 
-def (this is StringTable).add(name) {
-  def result := this.cursor;
-  this.cursor := this.cursor + name.length + 1;
-  this.strings.add(name);
-  result;
+def (this is StringTable).ensure(name) {
+  def prev := this.string_map[name];
+  if prev = null then {
+    def result := this.cursor;
+    this.cursor := this.cursor + name.length + 1;
+    this.strings.add(name);
+    this.string_map[name] := result;
+    result;
+  } else {
+    prev;
+  }
 }
 
-def (this is StringTable).encode(out, layout) {
+def (this is StringTable)[name] -> this.string_map[name];
+
+def (this is StringTable).encode(out, macho) {
   for (str : this.strings)
     out.write_c_string(str);
 }
@@ -352,7 +362,7 @@ def (this is StringTable).size {
   ref result := 0;
   for (str : this.strings)
     result := result + str.length + 1;
-  align(result, WORD_SIZE);
+  result;
 }
 
 def (this is StringTable).name -> "#STRINGS";
@@ -373,7 +383,7 @@ def (this is IndirectSymbols).count -> this.rCount.get();
 
 def (this is IndirectSymbols).add() -> this.rCount.set(this.count + 1);
 
-def (this is IndirectSymbols).encode(out, layout) {
+def (this is IndirectSymbols).encode(out, macho) {
   for (i : 0 .. this.count)
     out.write_int32(i);
 }
@@ -382,13 +392,16 @@ def (this is IndirectSymbols).size -> WORD_SIZE * this.count;
 
 protocol SymbolTable;
 
-def SymbolTable.new() -> new SymbolTable {
+def SymbolTable.new(strings) -> new SymbolTable {
+  strings := strings,
   locals := new ArrayList(),
   externs := new ArrayList()
 }
 
-def (this is SymbolTable).add_local(name_index, code_start) {
-  this.locals.add(new Symbol(name_index, code_start));
+def (this is SymbolTable).add_local(name) {
+  // Ensure that the string table contains this name.
+  this.strings.ensure(name);
+  this.locals.add(new Symbol(name));
 }
 
 def (this is SymbolTable).add_extern(name_index, jump_offset) {
@@ -407,11 +420,11 @@ def (this is SymbolTable).length -> this.symbols.length;
 
 def (this is SymbolTable).symbols -> this.locals + this.externs;
 
-def (this is SymbolTable).encode(out, layout) {
+def (this is SymbolTable).encode(out, macho) {
   for (symbol : this.externs)
-    symbol.encode_extern(out);
+    symbol.encode_extern(out, macho);
   for (symbol : this.locals)
-    symbol.encode_local(out);
+    symbol.encode_local(out, macho);
 }
 
 def (this is SymbolTable).size -> this.length * Symbol.size;
@@ -420,17 +433,22 @@ protocol Symbol;
 
 def Symbol.new(name, start) -> new Symbol { name := name, start := start };
 
+def Symbol.new(name) -> new Symbol { name := name };
+
 def Symbol.size -> 3 * WORD_SIZE;
 
-def (this is Symbol).encode_local(out) {
-  out.write_int32(this.name);
+def (this is Symbol).encode_local(out, macho) {
+  def name_index := macho.strings[this.name];
+  out.write_int32(name_index);
   out.write_int8(16r0F);
   out.write_int8(16r01);
   out.write_int16(16r0000);
-  out.write_int32(this.start);
+  def base := macho.offset_of(macho.text);
+  def offset := macho.text.code_block_offset(this.name);
+  out.write_int32(base + offset);
 }
 
-def (this is Symbol).encode_extern(out) {
+def (this is Symbol).encode_extern(out, macho) {
   out.write_int32(this.name);
   out.write_int8(16r01);
   out.write_int8(16r00);
@@ -441,8 +459,6 @@ def (this is Symbol).encode_extern(out) {
 def MachO.header_name -> "mach_header";
 
 def MachO.header_size -> 7 * WORD_SIZE;
-
-def (this is MachO).segment_fileoff -> MachO.header_size + this.sizeofcmds;
 
 def (this is MachO).nsects -> this.sections.length;
 
@@ -533,15 +549,18 @@ def (this is MachO).encode_dysymtab_command(out) {
  * }
  */
 def (this is MachO).encode_segment_command(out) {
-  def info := this.layout.info(MachO.segment_command_name);
+  def layout := this.layout;
+  def info := layout.info(MachO.segment_command_name);
   assert_equal(info.start, out.length);
   out.write_int32(16r01); // LC_SEGMENT
   out.write_int32(this.sizeof_segment_command);
   out.write_c_string("", 16);
-  def size := this.segment_size;
+  def segments_start_info := layout.info(MachO.segments_start_marker);
+  def segments_end_info := layout.info(MachO.segments_end_marker);
+  def size := segments_start_info.start - segments_end_info.end;
   out.write_int32(0);
   out.write_int32(size);
-  out.write_int32(this.segment_fileoff);
+  out.write_int32(segments_start_info.start);
   out.write_int32(size);
   out.write_int32(7);
   out.write_int32(5);
@@ -595,7 +614,7 @@ def (this is MachO).encode_sections(out) {
     def info := this.layout.info(section.name);
     assert_true(out.length <= info.start);
     out.pad_to(info.start);
-    section.encode(out, this.layout);
+    section.encode(out, this);
     assert_true(out.length <= info.end);
     out.pad_to(info.end);
   }
@@ -606,7 +625,7 @@ def (this is MachO).address_of(target) {
   // (all sections are mapped to corresponding locations) but starting
   // from the beginning of the segments part, not the beginning of the
   // file.
-  def sections_info := this.layout.info(MachO.sections_start_marker);
+  def sections_info := this.layout.info(MachO.segments_start_marker);
   this.offset_of(target) - sections_info.start;
 }
 
@@ -642,7 +661,7 @@ def (this is MachO).preprocess_symbol(relocation, symbol is DylibSymbol) {
   if index = null then {
     def new_index := this.dysym_indices.size;
     this.dysym_indices[name] := new_index;
-    def name_index := this.strings.add(name);
+    def name_index := this.strings.ensure(name);
     this.jump_table.add_extern();
     this.indirect_symbols.add();
     this.symbols.add_extern(name_index, 0);
