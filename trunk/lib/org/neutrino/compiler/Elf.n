@@ -6,8 +6,24 @@ def (this is ElfFormat).builder(binary) -> new Elf(binary);
 
 protocol Elf;
 
-def Elf.new(binary) -> new Elf {
-  binary := binary
+def Elf.new(binary) {
+  def string_table := new ElfStringTable();
+  def result := new Elf {
+    binary := binary,
+    string_table := string_table,
+    sections := new ArrayList [ string_table ]
+  }
+  result;
+}
+
+def (this is Elf).section_index(section) {
+  with_1cc (return) {
+    for (i : 0 .. this.sections.length) {
+      if this.sections[i] = section
+        then return(i);
+    }
+    null;
+  }
 }
 
 def (this is Elf).add_code_block(name, code) { }
@@ -48,9 +64,33 @@ def (this is Elf).encode_header(out) {
   out.write_int16(52); // Size of this header
   out.write_int16(0); // Size of program headers
   out.write_int16(0); // Number of program headers
-  out.write_int16(0); // Size of section headers
-  out.write_int16(0); // Number of section headers
-  out.write_int16(0); // Section header string table index 
+  def nsect := this.sections.length;
+  out.write_int16(nsect * ElfSection.size); // Size of section headers
+  out.write_int16(nsect); // Number of section headers
+  def strndx := this.section_index(this.string_table);
+  out.write_int16(strndx); // Section header string table index
+  for (section : this.sections)
+    this.encode_section(out, section);
+}
+
+/*
+ * typedef struct Elf32_Shdr {
+ *   Elf32_Word sh_name;
+ *   Elf32_Word sh_type;
+ *   Elf32_Word sh_flags;
+ *   Elf32_Addr sh_addr;
+ *   Elf32_Off sh_offset;
+ *   Elf32_Word sh_size;
+ *   Elf32_Word sh_link;
+ *   Elf32_Word sh_info;
+ *   Elf32_Word sh_addralign;
+ *   Elf32_Word sh_entsize;
+ * }
+ */
+def (this is Elf).encode_section(out, section) {
+  out.write_int32(this.string_table[section.name]);
+  out.write_int32(section.type);
+  out.write_int32(0);
 }
 
 def (this is Elf).encode_identification(out) {
@@ -60,4 +100,31 @@ def (this is Elf).encode_identification(out) {
   out.write_int8(1); // VERSION
   for (i : 7 .. 16)
     out.write_int8(0); // PAD
+}
+
+protocol ElfSection;
+
+def ElfSection.size -> 10 * WORD_SIZE;
+
+protocol ElfStringTable is ElfSection;
+
+def ElfStringTable.new() -> new ElfStringTable {
+  table := new HashMap()
+}
+
+def (this is ElfStringTable).name -> ".strtab";
+
+def (this is ElfStringTable).type -> 3; // SHT_STRTAB
+
+
+
+def (this is ElfStringTable)[key] {
+  def prev := this.table[key];
+  if prev = null then {
+    def index := this.table.size;
+    this.table[prev] := index;
+    index;
+  } else {
+    prev;
+  }
 }
