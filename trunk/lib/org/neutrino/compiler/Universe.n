@@ -155,7 +155,8 @@ protocol Universe;
 def Universe.tag -> "org::neutrino::pib::Universe";
 
 def Universe.grow(payload) -> new Universe {
-  modules := payload["modules"]
+  modules := payload["modules"],
+  global_cache := new HashMap()
 }
 
 def (this is Universe).bindings -> fn for (fun) {
@@ -174,12 +175,19 @@ def (this is Universe).protocols -> fn for (fun) {
 }
 
 def (this is Universe).lookup_static_global(name) {
-  with_1cc (return) {
-    for (proto_name, proto : this.protocols) {
-      if name = proto_name then
-        return(proto);
+  def cached := this.global_cache[name];
+  if cached = null then {
+    with_1cc (return) {
+      for (proto_name, proto : this.protocols) {
+        if name = proto_name then {
+          this.global_cache[name] := proto;
+          return(proto);
+        }
+      }
+      null;
     }
-    null;
+  } else {
+    cached;
   }
 }
 

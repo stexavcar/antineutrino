@@ -11,19 +11,27 @@ protocol Layouter;
 
 def Layouter.new() -> new Layouter {
   sections := new ArrayList(),
-  section_map := new HashMap()
+  section_map := new HashMap(),
+  r_last_name := new Ref(null)
 }
 
 def (this is Layouter).info(name) -> this.section_map[name].info;
 
+def (this is Layouter).last_name -> this.r_last_name.get();
+
+def (this is Layouter).last_name:=(v) -> this.r_last_name.set(v);
+
 protocol LayoutInfo;
 
-def LayoutInfo.new(start, size) -> new LayoutInfo {
+def LayoutInfo.new(section, start, size) -> new LayoutInfo {
+  section := section,
   start := start,
   size := size
 }
 
 def (this is LayoutInfo).end -> this.start + this.size;
+
+def (this is LayoutInfo).unaligned_size -> this.section.size;
 
 protocol LayoutSection;
 
@@ -41,6 +49,14 @@ def (this is Layouter).add_section(id, prev, size, alignment) {
   def sect := new LayoutSection(id, prev, size, alignment);
   this.section_map[id] := sect;
   this.sections.add(sect);
+  this.last_name := id;
+}
+
+def (this is Layouter).next_section(id, size, alignment) {
+  def sect := new LayoutSection(id, this.last_name, size, alignment);
+  this.section_map[id] := sect;
+  this.sections.add(sect);
+  this.last_name := id;
 }
 
 def (this is Layouter).roots {
@@ -76,7 +92,7 @@ def (this is Layouter).calculate() {
   for (section : this.ordered_sections) {
     def aligned_offset := align(offset, section.alignment);
     def aligned_size := align(section.size, section.alignment);
-    section.r_info.set(new LayoutInfo(aligned_offset, aligned_size));
+    section.r_info.set(new LayoutInfo(section, aligned_offset, aligned_size));
     offset := aligned_offset + aligned_size;
   }
 }
@@ -86,6 +102,6 @@ def (this is Layouter).dump() {
     def info := sect.info;
     if info = null
       then print("${sect.id}[${sect.size}]");
-      else print("${info.start}..${info.end}: ${sect.id}[${sect.size}->${info.size}]");
+      else print("${info.start} .. ${info.end}: ${sect.id}[${sect.size} -> ${info.size}]");
   }
 }
