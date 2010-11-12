@@ -1,0 +1,78 @@
+/*
+ * A layouter can calculate the size and offset of a set of sections
+ * that each have a size and a required alignment, and that can
+ * specify one other section that must occur before them.  Each
+ * section has a name and the information for a section can be
+ * extracted by querying that name.
+ * 
+ * This is useful in calculating the file layout of object files.
+ */
+protocol Layouter;
+
+def Layouter.new() -> new Layouter {
+  sections := new ArrayList(),
+  section_map := new HashMap()
+}
+
+def (this is Layouter).info(name) -> this.section_map[name].r_info.get();
+
+protocol LayoutInfo;
+
+def LayoutInfo.new(offset, size) -> new LayoutInfo {
+  offset := offset,
+  size := size
+}
+
+protocol LayoutSection;
+
+def LayoutSection.new(id, prev, size, alignment) -> new LayoutSection {
+  id := id,
+  prev := prev,
+  size := size,
+  alignment := alignment,
+  r_info := new Ref(null)
+}
+
+def (this is Layouter).add_section(id, prev, size, alignment) {
+  def sect := new LayoutSection(id, prev, size, alignment);
+  this.section_map[id] := sect;
+  this.sections.add(sect);
+}
+
+def (this is Layouter).roots {
+  def roots := new ArrayList();
+  for (section : this.sections) {
+    if section.prev = null
+      then roots.add(section);
+  }
+  roots;
+}
+
+def (this is Layouter).visit_section(sect, visited, fun) {
+  if visited[sect.id] = null then {
+    visited[sect.id] = true;
+    fun(sect);
+    for (candidate : this.sections) {
+      if candidate.prev = sect.id
+        then this.visit_section(candidate, visited, fun);
+    }
+  }
+}
+
+// Generates all sections on an order which obeys the relationship
+// specified by the individual sections.
+def (this is Layouter).ordered_sections -> fn for (fun) {
+  def visited := new HashMap();
+  for (root : this.roots)
+    this.visit_section(root, visited, fun);
+}
+
+def (this is Layouter).calculate() {
+  ref offset := 0;
+  for (section : this.ordered_sections) {
+    def aligned_offset := align(offset, section.alignment);
+    def aligned_size := align(section.size, section.alignment);
+    section.r_info.set(new LayoutInfo(aligned_offset, aligned_size));
+    offset := aligned_offset + aligned_size;
+  }
+}
