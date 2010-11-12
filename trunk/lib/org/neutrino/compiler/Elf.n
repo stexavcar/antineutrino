@@ -10,10 +10,32 @@ def Elf.new(binary) {
   def string_table := new ElfStringTable();
   def result := new Elf {
     binary := binary,
+    layout := new Layouter(),
     string_table := string_table,
     sections := new ArrayList [ string_table ]
   }
   result;
+}
+
+def (this is Elf).calculate_layout() {
+  def layout := this.layout;
+  // Add the elf header as the root element
+  def header_name := Elf.header_name;
+  layout.add_section(header_name, null, Elf.header_size, 1);
+  // Add the section headers
+  ref prev_name := header_name;
+  for (section : this.sections) {
+    def name := section.header_name;
+    layout.add_section(name, prev_name, ElfSection.header_size, WORD_SIZE);
+    prev_name := name;
+  }
+  // Add the actual sections
+  for (section : this.sections) {
+    def name := section.name;
+    layout.add_section(name, prev_name, section.size, section.alignment);
+    prev_name := name;
+  }
+  layout.calculate();
 }
 
 def (this is Elf).section_index(section) {
@@ -28,10 +50,17 @@ def (this is Elf).section_index(section) {
 
 def (this is Elf).add_code_block(name, code) { }
 
-def (this is Elf).finalize() { }
+def (this is Elf).finalize() {
+  for (section : this.sections)
+    section.finalize(this);
+  this.calculate_layout();
+  this.layout.dump();
+}
 
 def (this is Elf).encode(out) {
-  this.encode_header(out); 
+  this.encode_header(out);
+  this.encode_section_headers(out);
+  this.encode_sections(out);
 }
 
 /*
@@ -53,6 +82,7 @@ def (this is Elf).encode(out) {
  * }
  */
 def (this is Elf).encode_header(out) {
+  def info := this.layout.info(Elf.header_name);
   this.encode_identification(out);
   out.write_int16(1); // ET_REL
   out.write_int16(3); // EM_386
@@ -65,13 +95,44 @@ def (this is Elf).encode_header(out) {
   out.write_int16(0); // Size of program headers
   out.write_int16(0); // Number of program headers
   def nsect := this.sections.length;
-  out.write_int16(nsect * ElfSection.size); // Size of section headers
+  out.write_int16(nsect * ElfSection.header_size); // Size of section headers
   out.write_int16(nsect); // Number of section headers
   def strndx := this.section_index(this.string_table);
   out.write_int16(strndx); // Section header string table index
-  for (section : this.sections)
-    this.encode_section(out, section);
+  assert_equal(out.length, info.end);
 }
+
+def (this is Elf).encode_identification(out) {
+  out.write_int32(16r464C457F); // MAGIC
+  out.write_int8(1); // ELFCLASS32
+  out.write_int8(1); // ELFDATA2LSB
+  out.write_int8(1); // VERSION
+  out.pad_to(16);
+}
+
+def (this is Elf).encode_section_headers(out) {
+  for (section : this.sections) {
+    def info := this.layout.info(section.header_name);
+    assert_equal(info.start, out.length);
+    this.encode_section_header(out, section);
+    assert_equal(info.end, out.length);
+  }
+}
+
+def (this is Elf).encode_sections(out) {
+  for (section : this.sections) {
+    def info := this.layout.info(section.name);
+    assert_true(out.length <= info.start);
+    out.pad_to(info.start);
+    section.encode(out, this);
+    assert_true(out.length <= info.end);
+    out.pad_to(info.end);
+  }
+}
+
+def Elf.header_size -> 13 * WORD_SIZE;
+
+def Elf.header_name -> "elf.header";
 
 /*
  * typedef struct Elf32_Shdr {
@@ -87,44 +148,64 @@ def (this is Elf).encode_header(out) {
  *   Elf32_Word sh_entsize;
  * }
  */
-def (this is Elf).encode_section(out, section) {
-  out.write_int32(this.string_table[section.name]);
+def (this is Elf).encode_section_header(out, section) {
+  def name := section.name;
+  def info := this.layout.info(name);
+  out.write_int32(this.string_table[name]);
   out.write_int32(section.type);
-  out.write_int32(0);
-}
-
-def (this is Elf).encode_identification(out) {
-  out.write_int32(16r464C457F); // MAGIC
-  out.write_int8(1); // ELFCLASS32
-  out.write_int8(1); // ELFDATA2LSB
-  out.write_int8(1); // VERSION
-  for (i : 7 .. 16)
-    out.write_int8(0); // PAD
+  out.write_int32(0); // flags
+  out.write_int32(0); // addr
+  out.write_int32(info.start); // offset
+  out.write_int32(info.size); // size
+  out.write_int32(0); // link
+  out.write_int32(0); // info
+  out.write_int32(section.alignment); // align
+  out.write_int32(0); // entsize
 }
 
 protocol ElfSection;
 
-def ElfSection.size -> 10 * WORD_SIZE;
+def (this is ElfSection).header_name -> "${this.name}.header";
+
+def (this is ElfSection).finalize(elf) {
+  elf.string_table.ensure(this.name);
+}
+
+def ElfSection.header_size -> 10 * WORD_SIZE;
 
 protocol ElfStringTable is ElfSection;
 
 def ElfStringTable.new() -> new ElfStringTable {
-  table := new HashMap()
+  table := new HashMap(),
+  strings := new ArrayList(),
+  r_size := new Ref(0)
 }
+
+def (this is ElfStringTable).alignment -> 1;
+
+def (this is ElfStringTable).size -> this.r_size.get();
 
 def (this is ElfStringTable).name -> ".strtab";
 
 def (this is ElfStringTable).type -> 3; // SHT_STRTAB
 
+def (this is ElfStringTable)[key]
+ -> this.table[key];
 
-
-def (this is ElfStringTable)[key] {
+def (this is ElfStringTable).ensure(key) {
   def prev := this.table[key];
   if prev = null then {
     def index := this.table.size;
-    this.table[prev] := index;
+    this.table[key] := index;
+    this.r_size.set(this.size + key.length + 1);
+    this.strings.add(key);
     index;
   } else {
     prev;
   }
+}
+
+def (this is ElfStringTable).encode(out, elf) {
+  for (str : this.strings)
+    out.write_c_string(str);
 }

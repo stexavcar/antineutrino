@@ -12,9 +12,9 @@ def (this is CompilerTest).test_simple_layout() {
   layout.calculate();
   def header_info := layout.info("header");
   def footer_info := layout.info("footer");
-  assert_equal(0, header_info.offset);
+  assert_equal(0, header_info.start);
   assert_equal(16, header_info.size);
-  assert_equal(16, footer_info.offset);
+  assert_equal(16, footer_info.start);
   assert_equal(16, footer_info.size);
 }
 
@@ -27,7 +27,7 @@ def (this is CompilerTest).test_cascade_layout() {
   layout.calculate();
   for (i : 0 .. 17) {
     def info := layout.info("s${i}");
-    assert_equal(i * 64, info.offset);
+    assert_equal(i * 64, info.start);
     assert_equal(64, info.size);
   }
 }
@@ -39,10 +39,10 @@ def (this is CompilerTest).test_zero_layout() {
   layout.add_section(1, null, 0, 16);
   layout.add_section(2, null, 0, 16);  
   layout.calculate();
-  assert_equal(0, layout.info(0).offset);
+  assert_equal(0, layout.info(0).start);
   assert_equal(0, layout.info(0).size);
+  assert_equal(0, layout.info(1).start);
   assert_equal(0, layout.info(1).size);
-  assert_equal(0, layout.info(1).offset);
+  assert_equal(0, layout.info(2).start);
   assert_equal(0, layout.info(2).size);
-  assert_equal(0, layout.info(2).offset);
 }
