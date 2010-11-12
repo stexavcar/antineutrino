@@ -10,6 +10,25 @@ obj_path = join(bin_path, 'obj')
 class_path = join(bin_path, 'classes')
 java_command = 'java -ea'
 
+
+class ElfFormat(object):
+
+  def summary_command(self):
+    return "readelf -h $SOURCE"
+
+  def id(self):
+    return "elf"
+
+
+class MachOFormat(object):
+
+  def summary_command(self):
+    return "otool -h $SOURCE"
+
+  def id(self):
+    return "mach-o"
+
+
 class Platform(object):
 
   def __init__(self, object_format, architecture):
@@ -23,9 +42,9 @@ class Platform(object):
   def get_object_format():
     system = platform.system()
     if system == 'Linux':
-      return 'elf'
+      return ElfFormat()
     elif system == 'Darwin':
-      return 'mach-o'
+      return MachOFormat()
     else:
       print system
       assert False
@@ -40,7 +59,7 @@ class Platform(object):
       assert False
 
   def get_object_extension(self):
-    return ".%s.%s" % (self.architecture, self.object_format)
+    return ".%s.%s" % (self.architecture, self.object_format.id())
 
   @staticmethod
   def get():
@@ -83,7 +102,7 @@ def NeuCompileGenerator(source, target, env, for_signature):
   return COMPILE_COMMAND % {
     'java': java_command,
     'jar': source[0],
-    'format': PLATFORM.object_format,
+    'format': PLATFORM.object_format.id(),
     'arch': PLATFORM.architecture,
     'pib': source[1],
     'input': source[2]
@@ -134,6 +153,8 @@ neuneupib = BuildPib(join(pib_path, 'neuneu'), 'lib', MODULES=['org::neutrino::n
 neuneuobj = env.NeuObject(join(obj_path, 'neuneu'), [libpib, neuneupib])
 
 libtest = env.Test('libtest', libpib)
+
+env.Command('neuneu-summary', neuneuobj, PLATFORM.object_format.summary_command())
 
 env.Alias('all', [libtest, neuneuobj])
 
