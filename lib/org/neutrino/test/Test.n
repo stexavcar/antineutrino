@@ -16,7 +16,8 @@ def test_main() {
   def suites := new ArrayList [
     new LanguageTest(counter),
     new UtilsTest(counter),
-    new ExampleTest(counter)
+    new ExampleTest(counter),
+    new CompilerTest(counter)
   ];
   for (i : 0 .. suites.length)
     suites[i].run();

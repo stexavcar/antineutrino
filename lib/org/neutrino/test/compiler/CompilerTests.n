@@ -1,0 +1,8 @@
+protocol CompilerTest;
+def CompilerTest is Test;
+
+def CompilerTest.new(counter) -> new CompilerTest { count := counter };
+
+def (this is CompilerTest).run() {
+  this.test_layouter();
+}
