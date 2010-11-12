@@ -14,14 +14,16 @@ def Layouter.new() -> new Layouter {
   section_map := new HashMap()
 }
 
-def (this is Layouter).info(name) -> this.section_map[name].r_info.get();
+def (this is Layouter).info(name) -> this.section_map[name].info;
 
 protocol LayoutInfo;
 
-def LayoutInfo.new(offset, size) -> new LayoutInfo {
-  offset := offset,
+def LayoutInfo.new(start, size) -> new LayoutInfo {
+  start := start,
   size := size
 }
+
+def (this is LayoutInfo).end -> this.start + this.size;
 
 protocol LayoutSection;
 
@@ -32,6 +34,8 @@ def LayoutSection.new(id, prev, size, alignment) -> new LayoutSection {
   alignment := alignment,
   r_info := new Ref(null)
 }
+
+def (this is LayoutSection).info -> this.r_info.get();
 
 def (this is Layouter).add_section(id, prev, size, alignment) {
   def sect := new LayoutSection(id, prev, size, alignment);
@@ -74,5 +78,14 @@ def (this is Layouter).calculate() {
     def aligned_size := align(section.size, section.alignment);
     section.r_info.set(new LayoutInfo(aligned_offset, aligned_size));
     offset := aligned_offset + aligned_size;
+  }
+}
+
+def (this is Layouter).dump() {
+  for (sect : this.ordered_sections) {
+    def info := sect.info;
+    if info = null
+      then print("${sect.id}[${sect.size}]");
+      else print("${info.start}..${info.end}: ${sect.id}[${sect.size}->${info.size}]");
   }
 }
