@@ -18,32 +18,32 @@ def kNewReference := 6;
 def kGetReference := 7;
 def kBoolTag := 8;
 
-def Plankton.new_tag_table() {
-  def table := new HashMap();
-  table[kSeedTag] := (fn (plankton) -> plankton.read_seed());
-  table[kNewReference] := (fn (plankton) -> plankton.read_new_reference());
-  table[kGetReference] := (fn (plankton) -> plankton.read_get_reference());
-  table[kStringTag] := (fn (plankton) -> plankton.read_string());
-  table[kMapTag] := (fn (plankton) -> plankton.read_map());
-  table[kArrayTag] := (fn (plankton) -> plankton.read_array());
-  table[kIntegerTag] := (fn (plankton) -> plankton.read_integer());
-  table[kBlobTag] := (fn (plankton) -> plankton.read_blob());
-  table[kBoolTag] := (fn (plankton) -> plankton.read_bool());
-  table;
-}
+def Plankton.new_tag_table() -> #[
+  (fn (plankton) -> plankton.read_string()),
+  (fn (plankton) -> plankton.read_map()),
+  (fn (plankton) -> plankton.read_blob()),
+  (fn (plankton) -> plankton.read_integer()),
+  (fn (plankton) -> plankton.read_array()),
+  (fn (plankton) -> plankton.read_seed()),
+  (fn (plankton) -> plankton.read_new_reference()),
+  (fn (plankton) -> plankton.read_get_reference()),
+  (fn (plankton) -> plankton.read_bool())
+];
 
 def (this is Plankton).read() {
   def cursor := this.cursor;
-  def value := this.data[cursor];
   this.rCursor.set(cursor + 1);
-  value;
+  this.data[cursor];
 }
 
 def (this is Plankton).read_int16()
  -> this.read() | (this.read() << 8);
 
-def (this is Plankton).read_int32()
- -> this.read_int16() | (this.read_int16() << 16);
+def (this is Plankton).read_int32() {
+  def cursor := this.cursor;
+  this.rCursor.set(cursor + 4);
+  this.data.int32_at(cursor);
+}
 
 def (this is Plankton).current -> this.data[this.cursor];
 
@@ -79,12 +79,12 @@ def (this is Plankton).read_get_reference() {
 
 def (this is Plankton).read_string() {
   def length := this.read_int32();
-  ref result := "";
+  def result := new StringStream();
   for (i : 0 .. length) {
     def ord := this.read();
-    result := result + string_from_ordinal(ord);
+    result.add(string_from_ordinal(ord));
   }
-  result;
+  result.to_string();
 }
 
 def (this is Plankton).read_blob() {

@@ -328,7 +328,7 @@ public class Native implements ISeedable {
     }
   };
 
-  @Marker("byte_array[]") static final Impl BYTE_ARRAY_GET = new Impl() {
+  @Marker("byte_array[1]") static final Impl BYTE_ARRAY_GET_1 = new Impl() {
     @Override
     public RValue call(Arguments args) {
       RByteArray arr = (RByteArray) args.getThis();
@@ -337,6 +337,23 @@ public class Native implements ISeedable {
         throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
       }
       return RInteger.get((arr.getByte(index) + 0x100) & 0xFF);
+    }
+  };
+
+  @Marker("byte_array[4]") static final Impl BYTE_ARRAY_GET_4 = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RByteArray arr = (RByteArray) args.getThis();
+      int index = ((RInteger) args.getArgument(0)).getValue();
+      if (index < 0 || index + 3 >= arr.getLength()) {
+        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
+      }
+      byte[] bytes = arr.getBytes();
+      int b0 = (bytes[index + 0] + 0x100) & 0xFF;
+      int b1 = (bytes[index + 1] + 0x100) & 0xFF;
+      int b2 = (bytes[index + 2] + 0x100) & 0xFF;
+      int b3 = (bytes[index + 3] + 0x100) & 0xFF;
+      return RInteger.get(b0 | (b1 << 8) | (b2 << 16) | (b3 << 24));
     }
   };
 
