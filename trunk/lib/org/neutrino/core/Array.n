@@ -42,7 +42,9 @@ def (this is MutablePrimitiveArray)[i is Integer]:=(value) -> internal "mutarr.s
 
 @native("byte_array") protocol ByteArray;
 
-def (this is ByteArray)[index is Integer] -> internal "byte_array[]";
+def (this is ByteArray)[index is Integer] -> internal "byte_array[1]";
+
+def (this is ByteArray).int32_at(index is Integer) -> internal "byte_array[4]";
 
 def (this is ByteArray).length -> internal "byte_array.length";
 
