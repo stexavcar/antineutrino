@@ -73,7 +73,10 @@ def (this is MachO).encode_mach_header(out) {
   out.write_int32(3); // cpusubtype
   out.write_int32(1); // MH_OBJECT
   out.write_int32(this.ncmds);
-  out.write_int32(this.sizeofcmds);
+  def start_info := this.layout.info(MachO.commands_start_marker);
+  def end_info := this.layout.info(MachO.commands_end_marker);
+  def sizeofcmds := end_info.end - start_info.start;
+  out.write_int32(sizeofcmds);
   out.write_int32(5);
   assert_equal(info.end, out.length);  
 }
@@ -93,6 +96,10 @@ def (this is MachO).encode_load_commands(out) {
   this.encode_dysymtab_command(out);
 }
 
+def MachO.commands_start_marker -> "COMMANDS{";
+
+def MachO.commands_end_marker -> "COMMANDS}";
+
 def MachO.segments_start_marker -> "SEGMENTS{";
 
 def MachO.segments_end_marker -> "SEGMENTS}";
@@ -103,6 +110,7 @@ def (this is MachO).calculate_layout() {
   layout.add_section(MachO.header_name, null, MachO.header_size,
       WORD_SIZE);
   // Add segment load command with section headers
+  layout.next_section(MachO.commands_start_marker, 0, 1);
   layout.next_section(MachO.segment_command_name,
       MachO.sizeof_segment_command, WORD_SIZE);
   for (section : this.sections) {
@@ -114,6 +122,7 @@ def (this is MachO).calculate_layout() {
       MachO.sizeof_symtab_command, WORD_SIZE);
   layout.next_section(MachO.dysymtab_command_name,
       MachO.sizeof_dysymtab_command, WORD_SIZE);
+  layout.next_section(MachO.commands_end_marker, 0, 1);
   // Add sections
   layout.next_section(MachO.segments_start_marker, 0, 1);
   for (section : this.all_sections) {
@@ -212,6 +221,7 @@ protocol TextSection is MachOSection;
 def TextSection.new(reloc_table) -> new TextSection {
   reloc_table := reloc_table,
   blocks := new ArrayList(),
+  index := new HashMap(),
   rLength := new Ref(0),
   rNreloc := new Ref(0),
   code := new BlobStream()
@@ -237,6 +247,7 @@ def (this is TextSection).add_block(name, code) {
   this.blocks.add(new { name := name, code := code });
   this.code.write_data(code);
   def result := this.length;
+  this.index[name] := result;
   this.length := this.length + code.length;
   result;
 }
@@ -259,12 +270,8 @@ def (this is TextSection).rewrite_int32(offset, value) {
   this.code.rewrite_int32(offset, value);
 }
 
-def (this is TextSection).size {
-  ref result := 0;
-  for (block : this.blocks)
-    result := result + block.code.length;
-  result;
-}
+def (this is TextSection).size
+ -> this.code.length;
 
 def (this is TextSection).encode(out, macho) {
   out.write_data(this.code.get_blob());
@@ -464,10 +471,6 @@ def (this is MachO).nsects -> this.sections.length;
 
 def (this is MachO).ncmds -> 3;
 
-def (this is MachO).sizeofcmds
- -> this.sizeof_segment_command + MachO.sizeof_symtab_command +
-    MachO.sizeof_dysymtab_command;
-
 def MachO.sizeof_segment_command -> SEGMENT_COMMAND_SIZE;
 
 def MachO.segment_command_name -> "LC_SEGMENT";
@@ -632,24 +635,10 @@ def (this is MachO).address_of(target) {
 def (this is MachO).offset_of(target)
  -> this.layout.info(target.name).start;
 
-def (this is MachO).segment_size {
-  ref result := 0;
-  for (section : this.sections)
-    result := result + section.size;
-  result;
-}
-
 def (this is MachO).ncmds {
   ref result := 0;
   for (element : this.elements)
     result := result + element.load_command_count;
-  result;
-}
-
-def (this is MachO).sizeofcmds {
-  ref result := 0;
-  for (element : this.elements)
-    result := result + element.load_command_size;
   result;
 }
 
