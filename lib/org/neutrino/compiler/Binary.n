@@ -13,6 +13,7 @@ def Binary.new(arch, file_format) -> new Binary {
   arch := arch,
   file_format := file_format,
   entries := new ArrayList(),
+  data_entries := new ArrayList(),
   relocs := new ArrayList()
 }
 
@@ -29,6 +30,15 @@ def (this is Binary).add_relocation(reloc)
 def (this is Binary).add_code_block(name) {
   def assm := this.arch.new_assembler(this, name);
   this.entries.add(new {
+    name := name,
+    assm := assm
+  });
+  assm;
+}
+
+def (this is Binary).add_data_block(name) {
+  def assm := this.arch.new_data_assembler(this, name);
+  this.data_entries.add(new {
     name := name,
     assm := assm
   });
