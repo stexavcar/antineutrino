@@ -21,6 +21,7 @@ def MachO.new(binary) {
   def symbols := new SymbolTable(strings);
   def indirect_symbols := new IndirectSymbols();
   def jump_table := new JumpTable();
+  def data := new DataSection(reloc_table);
   new MachO {
     binary := binary,
     text := text,
@@ -30,7 +31,8 @@ def MachO.new(binary) {
     indirect_symbols := indirect_symbols,
     jump_table := jump_table,
     reloc_table := reloc_table,
-    sections := new ArrayList() [ text, jump_table, cstrings ],
+    data := data,
+    sections := new ArrayList() [ text, jump_table, cstrings, data ],
     dark_sections := new ArrayList() [ strings, symbols, indirect_symbols, reloc_table ],
     layout := new Layouter(),
     local_calls := new ArrayList(),
@@ -43,6 +45,10 @@ def MachO.new(binary) {
 def (this is MachO).add_code_block(name, code) {
   this.symbols.add_local(name);
   this.text.add_block(name, code);
+}
+
+def (this is MachO).add_data(block) {
+  this.data.add_block(block);
 }
 
 // Called by the binary when all data has been added to this object.
@@ -148,7 +154,7 @@ def (this is RelocationInfo).is_relative -> false;
 def (this is RelocationInfo).type -> 0;
 
 def (this is RelocationInfo).encode(out, macho) {
-  def address := this.address(macho);
+  def address := this.address;
   def symbolnum := this.symbolnum(macho);
   def pcrel := if this.is_relative then 1 else 0;
   def length := this.length;
@@ -162,15 +168,18 @@ def RelocationInfo.size -> 2 * WORD_SIZE;
 
 protocol CallRelocationInfo is RelocationInfo;
 
-def CallRelocationInfo.new(relocation) -> new CallRelocationInfo {
+def CallRelocationInfo.new(section, relocation) -> new CallRelocationInfo {
+  section := section,
   relocation := relocation
 };
 
-def (this is CallRelocationInfo).address(macho) {
+def (this is CallRelocationInfo).address {
   def relocation := this.relocation;
-  def source_offset := macho.text.code_block_offset(relocation.assm.name);
+  def source_offset := this.section.code_block_offset(relocation.assm.name);
   source_offset + relocation.offset;
 }
+
+def (this is CallRelocationInfo).affects(section) -> section = this.section;
 
 def (this is CallRelocationInfo).is_relative -> this.relocation.is_relative;
 
@@ -193,6 +202,15 @@ def (this is RelocationTable).add_entry(entry) {
 def (this is RelocationTable).encode(out, macho) {
   for (entry : this.entries)
     entry.encode(out, macho);
+}
+
+def (this is RelocationTable).count_for(section) {
+  ref result := 0;
+  for (entry : this.entries) {
+    if entry.affects(section)
+      then result := result + 1;
+  }
+  result;
 }
 
 def (this is RelocationTable).count
@@ -249,7 +267,7 @@ def TextSection.new(reloc_table) -> new TextSection {
 
 def (this is TextSection).length -> this.rLength.get();
 
-def (this is TextSection).nreloc -> this.reloc_table.count;
+def (this is TextSection).nreloc -> this.reloc_table.count_for(this);
 
 def (this is TextSection).length:=(value) -> this.rLength.set(value);
 
@@ -296,6 +314,34 @@ def (this is TextSection).size
 
 def (this is TextSection).encode(out, macho) {
   out.write_data(this.code.get_blob());
+}
+
+protocol DataSection is MachOSection;
+
+def DataSection.new(reloc_table) -> new DataSection {
+  reloc_table := reloc_table,
+  data := new BlobStream()
+}
+
+def (this is DataSection).add_block(code)
+ -> this.data.write_data(code);
+
+def (this is DataSection).nreloc -> this.reloc_table.count_for(this);
+
+def (this is DataSection).segname -> "__DATA";
+
+def (this is DataSection).sectname -> "__data";
+
+def (this is DataSection).flags -> 16r00000000;
+
+def (this is DataSection).reserved2 -> 0;
+
+def (this is DataSection).align -> WORD_ALIGN;
+
+def (this is DataSection).size -> this.data.length;
+
+def (this is DataSection).encode(out, macho) {
+  out.write_data(this.data.get_blob());
 }
 
 // A c_string section.  Strings in this section end up in the address
@@ -689,12 +735,12 @@ def (this is MachO).preprocess_symbol(relocation, symbol is DylibSymbol) {
     this.indirect_symbols.add();
     this.symbols.add_extern(name);
   }
-  def entry := new CallRelocationInfo(relocation);
+  def entry := new CallRelocationInfo(this.text, relocation);
   this.reloc_table.add_entry(entry);
 }
 
 def (this is MachO).preprocess_symbol(relocation, symbol is StringSymbol) {
-  this.reloc_table.add_entry(new CallRelocationInfo(relocation));
+  this.reloc_table.add_entry(new CallRelocationInfo(this.text, relocation));
   this.cstrings.ensure(symbol.value);
 }
 

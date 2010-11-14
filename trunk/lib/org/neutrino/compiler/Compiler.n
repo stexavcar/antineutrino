@@ -108,7 +108,6 @@ def get_binary_name(method) {
 
 def (this is NeutrinoCompiler).build_binary(platform, universe) {
   def binary := new Binary(platform.architecture, platform.object_format);
-  
   // Locate entry point
   def entry_point := with_1cc (yield) {
     for (method : universe.methods) {
