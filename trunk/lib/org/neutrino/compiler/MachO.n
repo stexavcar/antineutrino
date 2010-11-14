@@ -137,24 +137,44 @@ def (this is MachO).calculate_layout() {
   layout.dump();
 }
 
-protocol RelocationTableEntry;
+protocol RelocationInfo;
 
-def RelocationTableEntry.new(offset, is_relative) -> new RelocationTableEntry {
-  offset := offset,
-  is_relative := is_relative
-}
+def (this is RelocationInfo).length -> 2;
 
-def (this is RelocationTableEntry).encode(out) {
-  out.write_int32(this.offset);
-  def symbolnum := 2;
+def (this is RelocationInfo).is_extern -> false;
+
+def (this is RelocationInfo).is_relative -> false;
+
+def (this is RelocationInfo).type -> 0;
+
+def (this is RelocationInfo).encode(out, macho) {
+  def address := this.address(macho);
+  def symbolnum := this.symbolnum(macho);
   def pcrel := if this.is_relative then 1 else 0;
-  def length := 2;
-  def extern := 0;
-  def type := 0;
+  def length := this.length;
+  def extern := if this.is_extern then 1 else 0;
+  def type := this.type;
+  out.write_int32(address);
   out.write_int32((type << 28) | (extern << 27) | (length << 25) | (pcrel << 24) | symbolnum);
 }
 
-def RelocationTableEntry.size -> 2 * WORD_SIZE;
+def RelocationInfo.size -> 2 * WORD_SIZE;
+
+protocol CallRelocationInfo is RelocationInfo;
+
+def CallRelocationInfo.new(relocation) -> new CallRelocationInfo {
+  relocation := relocation
+};
+
+def (this is CallRelocationInfo).address(macho) {
+  def relocation := this.relocation;
+  def source_offset := macho.text.code_block_offset(relocation.assm.name);
+  source_offset + relocation.offset;
+}
+
+def (this is CallRelocationInfo).is_relative -> this.relocation.is_relative;
+
+def (this is CallRelocationInfo).symbolnum(macho) -> macho.index_of(macho.text);
 
 protocol RelocationTable;
 
@@ -166,20 +186,20 @@ def (this is RelocationTable).name -> "#RELOCATION";
 
 def (this is RelocationTable).align -> WORD_ALIGN;
 
-def (this is RelocationTable).add_entry(offset, is_relative) {
-  this.entries.add(new RelocationTableEntry(offset, is_relative));
+def (this is RelocationTable).add_entry(entry) {
+  this.entries.add(entry);
 }
 
 def (this is RelocationTable).encode(out, macho) {
   for (entry : this.entries)
-    entry.encode(out);
+    entry.encode(out, macho);
 }
 
 def (this is RelocationTable).count
  -> this.entries.length;
 
 def (this is RelocationTable).size
- -> this.entries.length * RelocationTableEntry.size;
+ -> this.entries.length * RelocationInfo.size;
 
 protocol MachOSection;
 
@@ -257,6 +277,7 @@ def (this is TextSection).code_block_offset(name) {
   with_1cc (return) {
     for (block : this.blocks) {
       if block.name = name then {
+        assert_equal(this.index[name], offset);
         return(offset);
       } else {
         offset := offset + block.code.length;
@@ -411,8 +432,9 @@ def (this is SymbolTable).add_local(name) {
   this.locals.add(new Symbol(name));
 }
 
-def (this is SymbolTable).add_extern(name_index, jump_offset) {
-  this.externs.add(new Symbol(name_index, jump_offset));
+def (this is SymbolTable).add_extern(name) {
+  this.strings.ensure(name);
+  this.externs.add(new Symbol(name));
 }
 
 def (this is SymbolTable).local_count -> this.locals.length;
@@ -456,7 +478,8 @@ def (this is Symbol).encode_local(out, macho) {
 }
 
 def (this is Symbol).encode_extern(out, macho) {
-  out.write_int32(this.name);
+  def name_index := macho.strings[this.name];
+  out.write_int32(name_index);
   out.write_int8(16r01);
   out.write_int8(16r00);
   out.write_int16(16r0000);
@@ -623,6 +646,18 @@ def (this is MachO).encode_sections(out) {
   }
 }
 
+def (this is MachO).index_of(target) {
+  ref offset := 1;
+  with_1cc (yield) {
+    for (section : this.all_sections) {
+      if section = target
+        then yield(offset);
+      offset := offset + 1;
+    }
+    null;
+  }
+}
+
 def (this is MachO).address_of(target) {
   // The address of a section is just its location within this file
   // (all sections are mapped to corresponding locations) but starting
@@ -650,20 +685,16 @@ def (this is MachO).preprocess_symbol(relocation, symbol is DylibSymbol) {
   if index = null then {
     def new_index := this.dysym_indices.size;
     this.dysym_indices[name] := new_index;
-    def name_index := this.strings.ensure(name);
     this.jump_table.add_extern();
     this.indirect_symbols.add();
-    this.symbols.add_extern(name_index, 0);
+    this.symbols.add_extern(name);
   }
-  def source_offset := this.text.code_block_offset(relocation.assm.name);
-  this.reloc_table.add_entry(source_offset + relocation.offset,
-      relocation.is_relative);
+  def entry := new CallRelocationInfo(relocation);
+  this.reloc_table.add_entry(entry);
 }
 
 def (this is MachO).preprocess_symbol(relocation, symbol is StringSymbol) {
-  def source_offset := this.text.code_block_offset(relocation.assm.name);
-  this.reloc_table.add_entry(source_offset + relocation.offset,
-      false);
+  this.reloc_table.add_entry(new CallRelocationInfo(relocation));
   this.cstrings.ensure(symbol.value);
 }
 
