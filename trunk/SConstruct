@@ -14,7 +14,7 @@ java_command = 'java -ea'
 class ElfFormat(object):
 
   def summary_command(self):
-    return "readelf -h $SOURCE"
+    return "readelf -h -S $SOURCE"
 
   def id(self):
     return "elf"

@@ -1,3 +1,11 @@
+/**
+ * Implementation of objects in the ELF format (Executable and
+ * Linkable Format)
+ * 
+ * See the full specification in the System V Application Binary
+ * Interface, http://www.sco.com/developers/devspecs/gabi41.pdf.
+ */
+
 protocol ElfFormat;
 
 def ElfFormat.new() -> new ElfFormat { };
@@ -8,12 +16,14 @@ protocol Elf;
 
 def Elf.new(binary) {
   def null_section := new ElfNullSection();
+  def text := new ElfTextSection();
   def string_table := new ElfStringTable();
   def result := new Elf {
     binary := binary,
     layout := new Layouter(),
     string_table := string_table,
-    sections := new ArrayList [ null_section, string_table ]
+    text := text,
+    sections := new ArrayList [ null_section, text, string_table ]
   }
   result;
 }
@@ -47,7 +57,9 @@ def (this is Elf).section_index(section) {
   }
 }
 
-def (this is Elf).add_code_block(name, code) { }
+def (this is Elf).add_code_block(name, code) {
+  this.text.add_code(code);
+}
 
 def (this is Elf).finalize() {
   for (section : this.sections)
@@ -180,6 +192,11 @@ def (this is ElfSection).finalize(elf) {
 
 def ElfSection.header_size -> 10 * WORD_SIZE;
 
+/**
+ * The string table (ABI 4-21).  This is simply a sequence of
+ * null-terminated C strings that is indexed by the byte offset of the
+ * first character of the string you're interested in.
+ */
 protocol ElfStringTable is ElfSection;
 
 def ElfStringTable.new() {
@@ -224,6 +241,11 @@ def (this is ElfStringTable).encode(out, elf) {
   assert_equal(info.end, out.length);
 }
 
+/**
+ * This "section" is purely a header, it has no actual section data.
+ * It is used as a marker of some sort -- stuff doesn't work without
+ * it.
+ */
 protocol ElfNullSection is ElfSection;
 
 def ElfNullSection.new() -> new ElfNullSection { };
@@ -237,3 +259,25 @@ def (this is ElfNullSection).type -> 0; // SHT_NULL
 def (this is ElfNullSection).alignment -> 0;
 
 def (this is ElfNullSection).encode(out, elf);
+
+protocol ElfTextSection is ElfSection;
+
+def ElfTextSection.new() -> new ElfTextSection {
+  data := new BlobStream()
+}
+
+def (this is ElfTextSection).add_code(code) {
+  this.data.write_data(code);
+}
+
+def (this is ElfTextSection).name -> ".text";
+
+def (this is ElfTextSection).size -> this.data.length;
+
+def (this is ElfTextSection).type -> 1; // SHT_PROGBITS
+
+def (this is ElfTextSection).alignment -> WORD_SIZE;
+
+def (this is ElfTextSection).encode(out, elf) {
+  out.write_data(this.data.get_blob());
+}
