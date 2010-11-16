@@ -20,7 +20,7 @@ def Layouter.new() -> new Layouter {
  * factor.
  */
 def align(value, factor) {
-  if (value % factor) = 0 then
+  if factor = 0 or (value % factor) = 0 then
     value;
   else
     value + (factor - (value % factor));

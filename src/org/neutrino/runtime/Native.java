@@ -1,5 +1,12 @@
 package org.neutrino.runtime;
 
+import org.neutrino.pib.CodeBundle;
+import org.neutrino.pib.Opcode;
+import org.neutrino.pib.Universe;
+import org.neutrino.plankton.ISeedable;
+import org.neutrino.plankton.annotations.Growable;
+import org.neutrino.plankton.annotations.SeedMember;
+
 import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -8,13 +15,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
-
-import org.neutrino.pib.CodeBundle;
-import org.neutrino.pib.Opcode;
-import org.neutrino.pib.Universe;
-import org.neutrino.plankton.ISeedable;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
 
 @Growable(Native.TAG)
 public class Native implements ISeedable {
@@ -153,9 +153,12 @@ public class Native implements ISeedable {
   @Marker("int%int") static final Impl INT_MOD = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RInteger a = (RInteger) args.getThis();
-      RInteger b = (RInteger) args.getArgument(0);
-      return RInteger.get(a.getValue() % b.getValue());
+      int a = ((RInteger) args.getThis()).getValue();
+      int b = ((RInteger) args.getArgument(0)).getValue();
+      if (b == 0) {
+        throw new InterpreterError(new ArithmeticException(), args.frame);
+      }
+      return RInteger.get(a % b);
     }
   };
 
