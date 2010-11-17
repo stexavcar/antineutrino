@@ -15,17 +15,21 @@ def (this is ElfFormat).builder(binary) -> new Elf(binary);
 protocol Elf;
 
 def Elf.new(binary) {
-  def null_section := new ElfNullSection();
+  def nil := new ElfNullSection();
   def text := new ElfTextSection();
   def strtab := new ElfStringTable();
   def symtab := new ElfSymbolTable(strtab);
+  def reloc := new ElfRelocationSection();
+  def bss := new ElfBssSection();
+  def data := new ElfDataSection();
   def result := new Elf {
     binary := binary,
     layout := new Layouter(),
     strtab := strtab,
     text := text,
     symtab := symtab,
-    sections := new ArrayList [ null_section, text, symtab, strtab ]
+    reloc := reloc,
+    sections := new ArrayList [ nil, text, reloc, data, bss, symtab, strtab ]
   }
   result;
 }
@@ -174,12 +178,12 @@ def (this is Elf).encode_section_header(out, section) {
   assert_equal(header_info.start, out.length);
   out.write_int32(this.strtab[name]);
   out.write_int32(section.type);
-  out.write_int32(0); // flags
+  out.write_int32(section.flags); // flags
   out.write_int32(0); // addr
   out.write_int32(info.start);
   out.write_int32(info.size);
   out.write_int32(section.link(this)); // link
-  out.write_int32(section.info);
+  out.write_int32(section.info(this));
   out.write_int32(section.alignment);
   out.write_int32(section.entry_size);
   assert_equal(header_info.end, out.length);
@@ -197,9 +201,22 @@ def ElfSection.header_size -> 10 * WORD_SIZE;
 
 def (this is ElfSection).entry_size -> 0;
 
-def (this is ElfSection).info -> 0;
+def (this is ElfSection).info(elf) -> 0;
 
 def (this is ElfSection).link(elf) -> 0;
+
+def (this is ElfSection).alignment -> WORD_SIZE;
+
+def (this is ElfSection).is_allocated -> false;
+
+def (this is ElfSection).is_writable -> false;
+
+def (this is ElfSection).is_executable -> false;
+
+def (this is ElfSection).flags
+ -> (if this.is_writable then 16r01 else 0)
+  | (if this.is_allocated then 16r02 else 0)
+  | (if this.is_executable then 16r04 else 0);
 
 /**
  * The string table (ABI 4-21).  This is simply a sequence of
@@ -291,7 +308,9 @@ def (this is ElfTextSection).size -> this.data.length;
 
 def (this is ElfTextSection).type -> 1; // SHT_PROGBITS
 
-def (this is ElfTextSection).alignment -> WORD_SIZE;
+def (this is ElfTextSection).is_executable -> true;
+
+def (this is ElfTextSection).is_allocated -> true;
 
 def (this is ElfTextSection).encode(out, elf) {
   out.write_data(this.data.get_blob());
@@ -317,15 +336,13 @@ def (this is ElfSymbolTable).add_local_entry(name, offset, size) {
   this.entries.add(entry);
 }
 
-def (this is ElfSymbolTable).info -> this.entries.length + 1;
+def (this is ElfSymbolTable).info(elf) -> this.entries.length + 1;
 
 def (this is ElfSymbolTable).link(elf) -> elf.section_index(elf.strtab);
 
 def (this is ElfSymbolTable).type -> 2; // SHT_SYMTAB
 
 def (this is ElfSymbolTable).name -> ".symtab";
-
-def (this is ElfSymbolTable).alignment -> WORD_SIZE;
 
 def (this is ElfSymbolTable).size -> this.entries.length * this.entry_size;
 
@@ -380,3 +397,62 @@ def (this is ElfSymbolTableNullEntry).encode(out, elf) {
   out.write_int8(0);
   out.write_int16(0);
 }
+
+/**
+ * Relocation table (ABI 4-27).
+ */
+protocol ElfRelocationSection is ElfSection;
+
+def ElfRelocationSection.new() -> new ElfRelocationSection { }
+
+def (this is ElfRelocationSection).name -> ".rel.text";
+
+def (this is ElfRelocationSection).size -> 0;
+
+def (this is ElfRelocationSection).entry_size -> ElfRelocationEntry.size;
+
+def (this is ElfRelocationSection).info(elf) -> elf.section_index(elf.text);
+
+def (this is ElfRelocationSection).link(elf) -> elf.section_index(elf.symtab);
+
+def (this is ElfRelocationSection).type -> 9; // SHT_REL
+
+def (this is ElfRelocationSection).encode(out, elf) {
+
+}
+
+protocol ElfRelocationEntry;
+
+def ElfRelocationEntry.size -> 2 * WORD_SIZE;
+
+protocol ElfBssSection is ElfSection;
+
+def ElfBssSection.new() -> new ElfBssSection { }
+
+def (this is ElfBssSection).name -> ".bss";
+
+def (this is ElfBssSection).type -> 8; // SHT_NOBITS
+
+def (this is ElfBssSection).size -> 0;
+
+def (this is ElfBssSection).is_writable -> true;
+
+def (this is ElfBssSection).is_allocated -> true;
+
+def (this is ElfBssSection).encode(out, elf);
+
+protocol ElfDataSection is ElfSection;
+
+def ElfDataSection.new() -> new ElfDataSection { }
+
+def (this is ElfDataSection).name -> ".data";
+
+def (this is ElfDataSection).type -> 1; // SHT_PROGBITS
+
+def (this is ElfDataSection).size -> 0;
+
+def (this is ElfDataSection).is_writable -> true;
+
+def (this is ElfDataSection).is_allocated -> true;
+
+def (this is ElfDataSection).encode(out, elf);
