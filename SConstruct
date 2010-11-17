@@ -59,7 +59,7 @@ class Platform(object):
       assert False
 
   def get_object_extension(self):
-    return ".%s.%s" % (self.architecture, self.object_format.id())
+    return ".%s.%s.o" % (self.architecture, self.object_format.id())
 
   @staticmethod
   def get():
