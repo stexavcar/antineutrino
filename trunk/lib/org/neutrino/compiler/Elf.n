@@ -17,13 +17,15 @@ protocol Elf;
 def Elf.new(binary) {
   def null_section := new ElfNullSection();
   def text := new ElfTextSection();
-  def string_table := new ElfStringTable();
+  def strtab := new ElfStringTable();
+  def symtab := new ElfSymbolTable(strtab);
   def result := new Elf {
     binary := binary,
     layout := new Layouter(),
-    string_table := string_table,
+    strtab := strtab,
     text := text,
-    sections := new ArrayList [ null_section, text, string_table ]
+    symtab := symtab,
+    sections := new ArrayList [ null_section, text, symtab, strtab ]
   }
   result;
 }
@@ -58,7 +60,8 @@ def (this is Elf).section_index(section) {
 }
 
 def (this is Elf).add_code_block(name, code) {
-  this.text.add_code(code);
+  def offset := this.text.add_code(code);
+  this.symtab.add_local_entry(name, offset, code.length);
 }
 
 def (this is Elf).finalize() {
@@ -109,7 +112,7 @@ def (this is Elf).encode_header(out) {
   out.write_int16(ElfSection.header_size); // Size of section headers
   def nsect := this.sections.length;
   out.write_int16(nsect); // Number of section headers
-  def strndx := this.section_index(this.string_table);
+  def strndx := this.section_index(this.strtab);
   out.write_int16(strndx); // Section header string table index
   assert_equal(info.end, out.length);
 }
@@ -169,16 +172,16 @@ def (this is Elf).encode_section_header(out, section) {
   def info := this.layout.info(name);
   def header_info := this.layout.info(section.header_name);
   assert_equal(header_info.start, out.length);
-  out.write_int32(this.string_table[name]);
+  out.write_int32(this.strtab[name]);
   out.write_int32(section.type);
   out.write_int32(0); // flags
   out.write_int32(0); // addr
-  out.write_int32(info.start); // offset
-  out.write_int32(info.size); // size
-  out.write_int32(0); // link
-  out.write_int32(0); // info
-  out.write_int32(section.alignment); // align
-  out.write_int32(0); // entsize
+  out.write_int32(info.start);
+  out.write_int32(info.size);
+  out.write_int32(section.link(this)); // link
+  out.write_int32(section.info);
+  out.write_int32(section.alignment);
+  out.write_int32(section.entry_size);
   assert_equal(header_info.end, out.length);
 }
 
@@ -187,10 +190,16 @@ protocol ElfSection;
 def (this is ElfSection).header_name -> "${this.name}.header";
 
 def (this is ElfSection).finalize(elf) {
-  elf.string_table.ensure(this.name);
+  elf.strtab.ensure(this.name);
 }
 
 def ElfSection.header_size -> 10 * WORD_SIZE;
+
+def (this is ElfSection).entry_size -> 0;
+
+def (this is ElfSection).info -> 0;
+
+def (this is ElfSection).link(elf) -> 0;
 
 /**
  * The string table (ABI 4-21).  This is simply a sequence of
@@ -260,6 +269,10 @@ def (this is ElfNullSection).alignment -> 0;
 
 def (this is ElfNullSection).encode(out, elf);
 
+/**
+ * Text section, containing executable code.  This is just a flat byte
+ * array, the structure is derived from the symtab.
+ */
 protocol ElfTextSection is ElfSection;
 
 def ElfTextSection.new() -> new ElfTextSection {
@@ -267,7 +280,9 @@ def ElfTextSection.new() -> new ElfTextSection {
 }
 
 def (this is ElfTextSection).add_code(code) {
+  def offset := this.data.length;
   this.data.write_data(code);
+  offset;
 }
 
 def (this is ElfTextSection).name -> ".text";
@@ -280,4 +295,88 @@ def (this is ElfTextSection).alignment -> WORD_SIZE;
 
 def (this is ElfTextSection).encode(out, elf) {
   out.write_data(this.data.get_blob());
+}
+
+/**
+ * Symbol table (ABI 4-22).
+ */
+protocol ElfSymbolTable is ElfSection;
+
+def ElfSymbolTable.new(strtab) {
+  def result := new ElfSymbolTable {
+    strtab := strtab,
+    entries := new ArrayList()  
+  }
+  result.entries.add(new ElfSymbolTableNullEntry());
+  result;
+}
+
+def (this is ElfSymbolTable).add_local_entry(name, offset, size) {
+  def name_index := this.strtab.ensure(name);
+  def entry := new ElfSymbolTableEntry(name_index, offset, size);
+  this.entries.add(entry);
+}
+
+def (this is ElfSymbolTable).info -> this.entries.length + 1;
+
+def (this is ElfSymbolTable).link(elf) -> elf.section_index(elf.strtab);
+
+def (this is ElfSymbolTable).type -> 2; // SHT_SYMTAB
+
+def (this is ElfSymbolTable).name -> ".symtab";
+
+def (this is ElfSymbolTable).alignment -> WORD_SIZE;
+
+def (this is ElfSymbolTable).size -> this.entries.length * this.entry_size;
+
+def (this is ElfSymbolTable).entry_size -> ElfSymbolTableEntry.size;
+
+def (this is ElfSymbolTable).encode(out, elf) {
+  for (entry : this.entries)
+    entry.encode(out, elf);
+}
+
+/**
+ * A single symbol table entry.  Corresponds to an Elf32_Sym as defined
+ * in the ABI 4-22.
+ */
+protocol ElfSymbolTableEntry;
+
+def ElfSymbolTableEntry.size -> 4 * WORD_SIZE;
+
+def ElfSymbolTableEntry.new(name_index, offset, size) -> new ElfSymbolTableEntry {
+  name_index := name_index,
+  offset := offset,
+  size := size
+}
+
+/**
+ * struct Elf32_Sym {
+ *   Elf32_Word st_name;
+ *   Elf32_Addr st_value;
+ *   Elf32_Word st_size; 
+ *   unsigned char st_info;
+ *   unsigned char st_other;
+ *   Elf32_Half st_shndx;
+ */
+def (this is ElfSymbolTableEntry).encode(out, elf) {
+  out.write_int32(this.name_index);
+  out.write_int32(this.offset);
+  out.write_int32(this.size);
+  out.write_int8(2); // STT_FUNC
+  out.write_int8(0);
+  out.write_int16(1);
+}
+
+protocol ElfSymbolTableNullEntry is ElfSymbolTableEntry;
+
+def ElfSymbolTableNullEntry.new() -> new ElfSymbolTableNullEntry { }
+
+def (this is ElfSymbolTableNullEntry).encode(out, elf) {
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int8(0);
+  out.write_int8(0);
+  out.write_int16(0);
 }
