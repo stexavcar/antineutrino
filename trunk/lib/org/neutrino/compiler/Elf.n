@@ -21,7 +21,8 @@ def Elf.new(binary) {
   def symtab := new ElfSymbolTable(strtab);
   def reloc := new ElfRelocationSection();
   def bss := new ElfBssSection();
-  def data := new ElfDataSection();
+  def data := new ElfDataSection(".data");
+  def rodata := new ElfDataSection(".rodata");
   def result := new Elf {
     binary := binary,
     layout := new Layouter(),
@@ -29,8 +30,12 @@ def Elf.new(binary) {
     text := text,
     symtab := symtab,
     reloc := reloc,
-    sections := new ArrayList [ nil, text, reloc, data, bss, symtab, strtab ]
+    sections := new ArrayList [ nil, text, reloc, data, rodata, bss, symtab, strtab ]
   }
+  symtab.add_section_entry(result.section_index(text));
+  symtab.add_section_entry(result.section_index(data));
+  symtab.add_section_entry(result.section_index(rodata));
+  symtab.add_section_entry(result.section_index(bss));
   result;
 }
 
@@ -351,6 +356,10 @@ def (this is ElfSymbolTable).add_local_entry(name, offset, size) {
   this.entries.add(entry);
 }
 
+def (this is ElfSymbolTable).add_section_entry(index) {
+  this.entries.add(new ElfSymbolTableSectionEntry(index));
+}
+
 def (this is ElfSymbolTable).info(elf) -> this.entries.length + 1;
 
 def (this is ElfSymbolTable).link(elf) -> elf.section_index(elf.strtab);
@@ -426,6 +435,23 @@ def (this is ElfSymbolTableNullEntry).encode(out, elf) {
   out.write_int16(0);
 }
 
+protocol ElfSymbolTableSectionEntry is ElfSymbolTableEntry;
+
+def ElfSymbolTableSectionEntry.new(index) -> new ElfSymbolTableSectionEntry {
+  index := index
+}
+
+def (this is ElfSymbolTableSectionEntry).name_index -> 0;
+
+def (this is ElfSymbolTableSectionEntry).encode(out, elf) {
+  out.write_int32(this.name_index);
+  out.write_int32(0);
+  out.write_int32(0);
+  out.write_int8(3); // STT_SECTION
+  out.write_int8(0);
+  out.write_int16(this.index);
+}
+
 /**
  * Relocation table (ABI 4-27).
  */
@@ -471,9 +497,7 @@ def (this is ElfBssSection).encode(out, elf);
 
 protocol ElfDataSection is ElfSection;
 
-def ElfDataSection.new() -> new ElfDataSection { }
-
-def (this is ElfDataSection).name -> ".data";
+def ElfDataSection.new(name) -> new ElfDataSection { name := name }
 
 def (this is ElfDataSection).type -> 1; // SHT_PROGBITS
 
