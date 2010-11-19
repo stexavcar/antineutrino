@@ -12,7 +12,7 @@ def ElfFormat.new() -> new ElfFormat { };
 
 def (this is ElfFormat).builder(binary) -> new Elf(binary);
 
-protocol Elf;
+protocol Elf is ObjectFormat;
 
 def Elf.new(binary) {
   def nil := new ElfNullSection();
@@ -66,13 +66,6 @@ def (this is Elf).section_index(section) {
 def (this is Elf).add_code_block(name, code) {
   def offset := this.text.add_code(code);
   this.symtab.add_local_entry(name, offset, code.length);
-}
-
-def (this is Elf).finalize() {
-  for (section : this.sections)
-    section.finalize(this);
-  this.calculate_layout();
-  this.layout.dump();
 }
 
 def (this is Elf).encode(out) {
@@ -189,6 +182,24 @@ def (this is Elf).encode_section_header(out, section) {
   assert_equal(header_info.end, out.length);
 }
 
+def (this is Elf).preprocess_relocation(relocation);
+
+def (this is Elf).process_relocation(relocation) {
+  def target_offset := this.symbol_address(relocation.target);
+  def source_offset := this.symtab.code_block_offset(relocation.assm.name);
+  def instr_offset := source_offset + relocation.offset;
+  if relocation.is_relative then {
+    this.text.rewrite_int32(instr_offset, target_offset - (instr_offset + 4));
+  } else {
+    this.text.rewrite_int32(instr_offset, target_offset);
+  }
+}
+
+def (this is Elf).symbol_address(symbol) -> 0;
+
+def (this is Elf).symbol_address(symbol is LocalSymbol)
+ -> this.symtab.code_block_offset(symbol.name);
+
 protocol ElfSection;
 
 def (this is ElfSection).header_name -> "${this.name}.header";
@@ -302,6 +313,10 @@ def (this is ElfTextSection).add_code(code) {
   offset;
 }
 
+def (this is ElfTextSection).rewrite_int32(offset, value) {
+  this.data.rewrite_int32(offset, value);
+}
+
 def (this is ElfTextSection).name -> ".text";
 
 def (this is ElfTextSection).size -> this.data.length;
@@ -353,6 +368,17 @@ def (this is ElfSymbolTable).encode(out, elf) {
     entry.encode(out, elf);
 }
 
+def (this is ElfSymbolTable).code_block_offset(name) {
+  def name_index := this.strtab[name];
+  with_1cc (yield) {
+    for (entry : this.entries) {
+      if entry.name_index = name_index
+        then yield(entry.offset);
+    }
+    null;
+  }
+}
+
 /**
  * A single symbol table entry.  Corresponds to an Elf32_Sym as defined
  * in the ABI 4-22.
@@ -389,8 +415,10 @@ protocol ElfSymbolTableNullEntry is ElfSymbolTableEntry;
 
 def ElfSymbolTableNullEntry.new() -> new ElfSymbolTableNullEntry { }
 
+def (this is ElfSymbolTableNullEntry).name_index -> 0;
+
 def (this is ElfSymbolTableNullEntry).encode(out, elf) {
-  out.write_int32(0);
+  out.write_int32(this.name_index);
   out.write_int32(0);
   out.write_int32(0);
   out.write_int8(0);

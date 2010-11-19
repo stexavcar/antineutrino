@@ -1,0 +1,19 @@
+protocol ObjectFormat;
+
+/**
+ *  Called by the binary when all data has been added to this object.
+ */
+def (this is ObjectFormat).finalize() {
+  // First allow all sections to finalize themselves.
+  for (section : this.sections)
+    section.finalize(this);
+  // Preprocess relocations, if necessary
+  for (reloc : this.binary.relocs)
+    this.preprocess_relocation(reloc);
+  // All data must have been written by now.  Calculate layout.
+  this.calculate_layout();
+  // Now actually process the relocations.
+  for (reloc : this.binary.relocs)
+    this.process_relocation(reloc);
+  this.layout.dump();
+}
