@@ -11,7 +11,7 @@ def (this is MachOFormat).builder(binary) -> new MachO(binary);
 
 // A mach-o file, or at least the parts of it that are relevant for
 // generating object files for neutrino programs.
-protocol MachO;
+protocol MachO is ObjectFormat;
 
 def MachO.new(binary) {
   def reloc_table := new RelocationTable();
@@ -49,15 +49,6 @@ def (this is MachO).add_code_block(name, code) {
 
 def (this is MachO).add_data(block) {
   this.data.add_block(block);
-}
-
-// Called by the binary when all data has been added to this object.
-def (this is MachO).finalize() {
-  for (reloc : this.binary.relocs)
-    this.preprocess_symbol(reloc, reloc.target);
-  this.calculate_layout();
-  for (reloc : this.binary.relocs)
-    this.process_relocation(reloc);
 }
 
 /*
@@ -140,7 +131,6 @@ def (this is MachO).calculate_layout() {
   // alignment of the last section.
   layout.next_section(MachO.segments_end_marker, 0, WORD_SIZE);
   layout.calculate();
-  layout.dump();
 }
 
 protocol RelocationInfo;
@@ -226,6 +216,8 @@ protocol JumpTable is MachOSection;
 def (this is MachOSection).header_name -> "${this.name}.header";
 
 def (this is MachOSection).name -> "${this.segname}.${this.sectname}";
+
+def (this is MachOSection).finalize(macho);
 
 def JumpTable.new() -> new JumpTable {
   rCount := new Ref(0)
@@ -722,6 +714,9 @@ def (this is MachO).ncmds {
     result := result + element.load_command_count;
   result;
 }
+
+def (this is MachO).preprocess_relocation(relocation)
+ -> this.preprocess_symbol(relocation, relocation.target);
 
 def (this is MachO).preprocess_symbol(relocation, symbol) -> null;
 
