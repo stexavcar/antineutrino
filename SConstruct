@@ -52,7 +52,7 @@ class Platform(object):
   @staticmethod
   def get_architecture():
     machine = platform.machine()
-    if machine == 'x86_64' or machine == 'i386':
+    if machine in ['x86_64', 'i386', 'i686']:
       return 'ia386'
     else:
       print machine
