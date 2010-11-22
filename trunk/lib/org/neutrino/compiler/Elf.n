@@ -68,11 +68,6 @@ def (this is Elf).section_index(section) {
   }
 }
 
-def (this is Elf).add_code_block(name, code) {
-  def offset := this.text.add_code(code);
-  this.symtab.add_local_entry(name, offset, code.length);
-}
-
 def (this is Elf).encode(out) {
   this.encode_header(out);
   this.encode_sections(out);

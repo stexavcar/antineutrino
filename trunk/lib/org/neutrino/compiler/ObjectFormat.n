@@ -17,3 +17,11 @@ def (this is ObjectFormat).finalize() {
     this.process_relocation(reloc);
   this.layout.dump();
 }
+
+/**
+ * Add a named code block to the text section of this object.
+ */
+def (this is ObjectFormat).add_code_block(name, code) {
+  def offset := this.text.add_code(code);
+  this.symtab.add_local_entry(name, offset, code.length);
+}
