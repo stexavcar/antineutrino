@@ -22,7 +22,7 @@ def MachO.new(binary) {
   def indirect_symbols := new IndirectSymbols();
   def jump_table := new MachOJumpTable();
   def data := new MachODataSection(reloc_table);
-  new MachO {
+  def result := new MachO {
     binary := binary,
     text := text,
     cstrings := cstrings,
@@ -39,10 +39,8 @@ def MachO.new(binary) {
     dylib_calls := new ArrayList(),
     dysym_indices := new HashMap()
   }
-}
-
-def (this is MachO).add_data(block) {
-  this.data.add_block(block);
+  symtab.macho := result;
+  result;
 }
 
 /*
@@ -127,6 +125,11 @@ def (this is MachO).calculate_layout() {
   layout.calculate();
 }
 
+def (this is MachO).add_data_block(name, code) {
+  def offset := this.data.add_code(code);
+  this.symtab.add_local_data_entry(name, offset);
+}
+
 protocol RelocationInfo;
 
 def (this is RelocationInfo).length -> 2;
@@ -138,7 +141,7 @@ def (this is RelocationInfo).is_relative -> false;
 def (this is RelocationInfo).type -> 0;
 
 def (this is RelocationInfo).encode(out, macho) {
-  def address := this.address;
+  def address := this.address(macho);
   def symbolnum := this.symbolnum(macho);
   def pcrel := if this.is_relative then 1 else 0;
   def length := this.length;
@@ -157,9 +160,9 @@ def CallRelocationInfo.new(section, relocation) -> new CallRelocationInfo {
   relocation := relocation
 };
 
-def (this is CallRelocationInfo).address {
+def (this is CallRelocationInfo).address(macho) {
   def relocation := this.relocation;
-  def source_offset := this.section.code_block_offset(relocation.assm.name);
+  def source_offset := macho.text.code_block_offset(relocation.assm.name);
   source_offset + relocation.offset;
 }
 
@@ -167,7 +170,7 @@ def (this is CallRelocationInfo).affects(section) -> section = this.section;
 
 def (this is CallRelocationInfo).is_relative -> this.relocation.is_relative;
 
-def (this is CallRelocationInfo).symbolnum(macho) -> macho.index_of(macho.text);
+def (this is CallRelocationInfo).symbolnum(macho) -> macho.index_of(this.section);
 
 protocol MachORelocationTable;
 
@@ -289,8 +292,11 @@ def MachODataSection.new(reloc_table) -> new MachODataSection {
   data := new BlobStream()
 }
 
-def (this is MachODataSection).add_block(code)
- -> this.data.write_data(code);
+def (this is MachODataSection).add_code(code) {
+  def offset := this.data.length;
+  this.data.write_data(code);
+  offset;
+}
 
 def (this is MachODataSection).nreloc -> this.reloc_table.count_for(this);
 
@@ -307,7 +313,7 @@ def (this is MachODataSection).align -> WORD_ALIGN;
 def (this is MachODataSection).size -> this.data.length;
 
 def (this is MachODataSection).encode(out, macho) {
-  out.write_data(this.data.get_blob());
+  out.write_data(this.data);
 }
 
 // A c_string section.  Strings in this section end up in the address
@@ -436,21 +442,40 @@ def MachOSymbolTable.new(strtab) -> new MachOSymbolTable {
   strtab := strtab,
   locals := new ArrayList(),
   externs := new ArrayList(),
-  code_block_index := new HashMap()
+  local_map := new HashMap(),
+  r_macho := new Ref(null)
 }
 
-def (this is MachOSymbolTable).add_local_entry(name, offset, size) {
+def (this is MachOSymbolTable).add_local_code_entry(name, offset, size)
+ -> this.add_local_entry(name, offset, size, this.macho.text);
+ 
+def (this is MachOSymbolTable).add_local_data_entry(name, offset, size)
+ -> this.add_local_entry(name, offset, size, this.macho.data);
+ 
+def (this is MachOSymbolTable).add_local_entry(name, offset, size, section) {
   def name_index := this.strtab.ensure(name);
-  this.code_block_index[name] := offset;
-  this.locals.add(new Symbol(name_index, offset));
+  def symbol := new LocalSymbol(name_index, offset, section);
+  this.local_map[name] := symbol;
+  this.locals.add(symbol);
 }
+
+def (this is MachOSymbolTable).add_local_data_entry(name, offset) {
+  def name_index := this.strtab.ensure(name);
+  def symbol := new LocalSymbol(name_index, offset, this.macho.data);
+  this.local_map[name] := symbol;
+  this.locals.add(symbol);
+}
+
+def (this is MachOSymbolTable).macho:=(v) -> this.r_macho.set(v);
+
+def (this is MachOSymbolTable).macho -> this.r_macho.get();
 
 def (this is MachOSymbolTable).code_block_offset(name)
- -> this.code_block_index[name];
+ -> this.local_map[name].address(this.macho);
 
 def (this is MachOSymbolTable).add_extern(name) {
   def name_index := this.strtab.ensure(name);
-  this.externs.add(new Symbol(name_index));
+  this.externs.add(new ExternSymbol(name_index));
 }
 
 def (this is MachOSymbolTable).local_count -> this.locals.length;
@@ -466,43 +491,55 @@ def (this is MachOSymbolTable).length -> this.symbols.length;
 def (this is MachOSymbolTable).symbols -> this.locals + this.externs;
 
 def (this is MachOSymbolTable).encode(out, macho) {
-  for (symbol : this.externs)
-    symbol.encode_extern(out, macho);
-  for (symbol : this.locals)
-    symbol.encode_local(out, macho);
+  for (symbol : this.externs + this.locals)
+    symbol.encode(out, macho);
 }
 
 def (this is MachOSymbolTable).size -> this.length * Symbol.size;
 
 protocol Symbol;
 
-def Symbol.new(name_index, start) -> new Symbol {
-  name_index := name_index,
-  start := start
-}
+def (this is Symbol).desc -> 16r0000;
 
-def Symbol.new(name_index) -> new Symbol {
-  name_index := name_index
+def (this is Symbol).encode(out, macho) {
+  out.write_int32(this.name_index);
+  out.write_int8(this.type);
+  out.write_int8(this.sect(macho));
+  out.write_int16(this.desc);
+  out.write_int32(this.value(macho));
 }
 
 def Symbol.size -> 3 * WORD_SIZE;
 
-def (this is Symbol).encode_local(out, macho) {
-  out.write_int32(this.name_index);
-  out.write_int8(16r0F);
-  out.write_int8(16r01);
-  out.write_int16(16r0000);
-  def base := macho.offset_of(macho.text);
-  out.write_int32(base + this.start);
+protocol LocalSymbol is Symbol;
+
+def LocalSymbol.new(name_index, start, section) -> new LocalSymbol {
+  name_index := name_index,
+  start := start,
+  section := section
 }
 
-def (this is Symbol).encode_extern(out, macho) {
-  out.write_int32(this.name_index);
-  out.write_int8(16r01);
-  out.write_int8(16r00);
-  out.write_int16(16r0000);
-  out.write_int32(0);
+def (this is LocalSymbol).type -> 16r0F;
+
+def (this is LocalSymbol).sect(macho) -> macho.index_of(this.section);
+
+def (this is LocalSymbol).value(macho)
+ -> macho.offset_of(this.section) + this.start;
+
+def (this is LocalSymbol).address(macho)
+ -> print(macho.address_of(this.section) + this.start);
+
+protocol ExternSymbol is Symbol;
+
+def ExternSymbol.new(name_index) -> new ExternSymbol {
+  name_index := name_index
 }
+
+def (this is ExternSymbol).type -> 16r01;
+
+def (this is ExternSymbol).sect(macho) -> 0;
+
+def (this is ExternSymbol).value(macho) -> 0;
 
 def MachO.header_name -> "mach_header";
 
@@ -601,7 +638,7 @@ def (this is MachO).encode_segment_command(out) {
   out.write_c_string("", 16);
   def segments_start_info := layout.info(MachO.segments_start_marker);
   def segments_end_info := layout.info(MachO.segments_end_marker);
-  def size := segments_start_info.start - segments_end_info.end;
+  def size := segments_end_info.end - segments_start_info.start;
   out.write_int32(0);
   out.write_int32(size);
   out.write_int32(segments_start_info.start);
@@ -719,6 +756,13 @@ def (this is MachO).preprocess_symbol(relocation, symbol is StringSymbol) {
   this.cstrings.ensure(symbol.value);
 }
 
+def (this is MachO).preprocess_symbol(relocation, symbol is LocalSymbol) {
+  if not relocation.is_relative then {
+    def section := this.symtab.local_map[symbol.name].section;
+    this.reloc_table.add_entry(new CallRelocationInfo(section, relocation));
+  }
+}
+
 def (this is MachO).symbol_address(target is DylibSymbol) {
   def jump_table_address := this.address_of(this.jump_table);
   def index := this.dysym_indices[target.name];
@@ -726,7 +770,7 @@ def (this is MachO).symbol_address(target is DylibSymbol) {
 }
 
 def (this is MachO).symbol_address(target is LocalSymbol)
- -> this.text.code_block_offset(target.name);
+ -> this.symtab.code_block_offset(target.name);
 
 def (this is MachO).symbol_address(target is StringSymbol)
  -> this.offset_of(this.cstrings) + this.cstrings[target.value];

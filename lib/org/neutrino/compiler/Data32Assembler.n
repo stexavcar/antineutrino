@@ -1,0 +1,12 @@
+protocol Data32Assembler;
+
+def Data32Assembler.new(name, binary) -> new Data32Assembler {
+  name := name,
+  binary := binary,
+  out := new BlobStream()
+}
+
+def (this is Data32Assembler).data -> this.out.get_blob();
+
+def (this is Data32Assembler).write_int32(value)
+ -> this.out.write_int32(value);
