@@ -106,6 +106,22 @@ def get_binary_name(method) {
   result.to_string();
 }
 
+def (this is NeutrinoCompiler).emit_methods(universe, binary) {
+  for (method : universe.methods) {
+    def emit := method.get_annotation("boot_level_0");
+    if emit != null then {
+      def assm := binary.add_code_block(get_binary_name(method));
+      this.emit_method(universe, method, assm);
+    }
+  }  
+}
+
+def (this is NeutrinoCompiler).emit_data(binary) {
+  def assm := binary.add_data_block("x");
+  assm.write_int32(10);
+  assm.write_int32(11);
+}
+
 def (this is NeutrinoCompiler).build_binary(platform, universe) {
   def binary := new Binary(platform.architecture, platform.object_format);
   // Locate entry point
@@ -123,14 +139,8 @@ def (this is NeutrinoCompiler).build_binary(platform, universe) {
 
   // Emit standard boilerplate
   this.emit_boilerplate(binary, entry_point);
-
-  for (method : universe.methods) {
-    def emit := method.get_annotation("boot_level_0");
-    if emit != null then {
-      def assm := binary.add_code_block(get_binary_name(method));
-      this.emit_method(universe, method, assm);
-    }
-  }
+  this.emit_methods(universe, binary);
+  this.emit_data(binary);
   binary;
 }
 

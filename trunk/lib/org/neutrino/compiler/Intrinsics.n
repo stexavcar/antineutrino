@@ -12,6 +12,7 @@ def IntrinsicManager.new() {
   // Address
   map["read_int32"] := (fn (g, n, c) -> g.read_int32(n, c));
   map["write_int32"] := (fn (g, n, c) -> g.write_int32(n, c));
+  map["static_data_ptr"] := (fn (g, n, c) -> g.static_data_ptr(n, c));
   // Control
   map["if_else"] := (fn (g, n, c) -> g.if_else(n, c));
   // Misc
@@ -133,6 +134,13 @@ def (this is CodeGenerator).if_else(guide, node) {
   def else_node := guide.argument(node, 3);
   this.emit_thunk_body(guide.resolve(else_node), else_node);  
   this.assm.bind(bottom);
+}
+
+def (this is CodeGenerator).static_data_ptr(guide, node) {
+  def arg_node := guide.argument(node, 1);
+  def arg_guide := guide.resolve(arg_node);
+  def value := this.static_value(arg_guide, arg_node);
+  this.assm.push(Symbol.local(value));
 }
 
 def (this is CodeGenerator).debug_interrupt(guide, node) {

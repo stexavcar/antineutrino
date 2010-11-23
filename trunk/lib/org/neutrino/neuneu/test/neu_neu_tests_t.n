@@ -53,5 +53,6 @@ def (this is neu_neu_tests_t).run() {
   this.test_int32_t();
   this.test_malloc();
   this.test_char_ptr_t();
+  this.test_static_data();
   this.count;
 }

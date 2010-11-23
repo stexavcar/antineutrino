@@ -23,5 +23,5 @@ def (this is ObjectFormat).finalize() {
  */
 def (this is ObjectFormat).add_code_block(name, code) {
   def offset := this.text.add_code(code);
-  this.symtab.add_local_entry(name, offset, code.length);
+  this.symtab.add_local_code_entry(name, offset, code.length);
 }

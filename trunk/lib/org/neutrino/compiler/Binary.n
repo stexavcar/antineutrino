@@ -12,7 +12,7 @@ protocol Binary;
 def Binary.new(arch, file_format) -> new Binary {
   arch := arch,
   file_format := file_format,
-  entries := new ArrayList(),
+  code_entries := new ArrayList(),
   data_entries := new ArrayList(),
   relocs := new ArrayList()
 }
@@ -29,7 +29,7 @@ def (this is Binary).add_relocation(reloc)
 
 def (this is Binary).add_code_block(name) {
   def assm := this.arch.new_assembler(this, name);
-  this.entries.add(new {
+  this.code_entries.add(new {
     name := name,
     assm := assm
   });
@@ -37,7 +37,7 @@ def (this is Binary).add_code_block(name) {
 }
 
 def (this is Binary).add_data_block(name) {
-  def assm := this.arch.new_data_assembler(this, name);
+  def assm := new Data32Assembler(this, name);
   this.data_entries.add(new {
     name := name,
     assm := assm
@@ -53,8 +53,10 @@ def (this is Binary).encode {
 
 def (this is Binary).encode_file_format() {
   def result := this.file_format.builder(this);
-  for (entry : this.entries)
-    result.add_code_block(entry.name, entry.assm.code);
+  for (code_entry : this.code_entries)
+    result.add_code_block(code_entry.name, code_entry.assm.code);
+  for (data_entry : this.data_entries)
+    result.add_data_block(data_entry.name, data_entry.assm.data);
   result.finalize();
   result;
 }
