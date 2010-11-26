@@ -357,7 +357,7 @@ def (this is ElfSymbolTable).add_section_entry(index) {
   this.entries.add(new ElfSymbolTableSectionEntry(index));
 }
 
-def (this is ElfSymbolTable).info(elf) -> this.entries.length + 1;
+def (this is ElfSymbolTable).info(elf) -> this.entries.length;
 
 def (this is ElfSymbolTable).link(elf) -> elf.section_index(elf.strtab);
 
