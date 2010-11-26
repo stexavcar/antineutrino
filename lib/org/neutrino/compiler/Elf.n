@@ -39,6 +39,8 @@ def Elf.new(binary) {
   result;
 }
 
+def (this is Elf).add_data_block(name, code);
+
 def (this is Elf).calculate_layout() {
   def layout := this.layout;
   // Add the elf header as the root element
@@ -345,7 +347,7 @@ def ElfSymbolTable.new(strtab) {
   result;
 }
 
-def (this is ElfSymbolTable).add_local_entry(name, offset, size) {
+def (this is ElfSymbolTable).add_local_code_entry(name, offset, size) {
   def name_index := this.strtab.ensure(name);
   def entry := new ElfSymbolTableEntry(name_index, offset, size);
   this.entries.add(entry);
