@@ -83,7 +83,7 @@ def (this is NeutrinoCompiler).emit_libc_method(universe, method, assm) {
 }
 
 def (this is NeutrinoCompiler).emit_boilerplate(binary, entry_point) {
-  def main := binary.add_code_block("_main");
+  def main := binary.add_code_block(binary.file_format.entry_point_name);
   main.enter_frame(0);
   main.call(Symbol.local(entry_point));
   main.exit_frame();  

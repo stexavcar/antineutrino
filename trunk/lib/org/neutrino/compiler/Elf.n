@@ -10,6 +10,8 @@ protocol ElfFormat;
 
 def ElfFormat.new() -> new ElfFormat { };
 
+def (this is ElfFormat).entry_point_name -> "main";
+
 def (this is ElfFormat).builder(binary) -> new Elf(binary);
 
 protocol Elf is ObjectFormat;
@@ -412,7 +414,9 @@ def (this is ElfSymbolTableEntry).encode(out, elf) {
   out.write_int32(this.name_index);
   out.write_int32(this.offset);
   out.write_int32(this.size);
-  out.write_int8(2); // STT_FUNC
+  def type := 2; // STT_FUNC
+  def bind := 1; // STB_GLOBAL
+  out.write_int8((bind << 4) | type);
   out.write_int8(0);
   out.write_int16(1);
 }

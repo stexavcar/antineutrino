@@ -7,6 +7,8 @@ protocol MachOFormat;
 
 def MachOFormat.new() -> new MachOFormat { };
 
+def (this is MachOFormat).entry_point_name -> "_main";
+
 def (this is MachOFormat).builder(binary) -> new MachO(binary);
 
 // A mach-o file, or at least the parts of it that are relevant for
