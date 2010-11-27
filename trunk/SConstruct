@@ -16,6 +16,11 @@ class ElfFormat(object):
   def summary_command(self):
     return "readelf -h -S $SOURCE"
 
+  def link_command(self):
+    # TODO: Figure out how to link using just a linker rather than going
+    #   through GCC.
+    return "gcc -m32 $SOURCE -o $TARGET"
+
   def id(self):
     return "elf"
 
@@ -23,7 +28,10 @@ class ElfFormat(object):
 class MachOFormat(object):
 
   def summary_command(self):
-    return "otool -h $SOURCE"
+    return "otool -l -h $SOURCE"
+
+  def link_command(self):
+    return "ld $SOURCE /usr/lib/crt?.o -lc -o $TARGET"
 
   def id(self):
     return "mach-o"
@@ -60,6 +68,9 @@ class Platform(object):
 
   def get_object_extension(self):
     return ".%s.%s.o" % (self.architecture, self.object_format.id())
+  
+  def get_executable_extension(self):
+    return ".%s.%s" % (self.architecture, self.object_format.id())
 
   @staticmethod
   def get():
@@ -156,6 +167,15 @@ libtest = env.Test('libtest', libpib)
 
 env.Command('neuneu-summary', neuneuobj, PLATFORM.object_format.summary_command())
 
-env.Alias('all', [libtest, neuneuobj])
+# Building an executable
+exe_name = 'neuneu%s' % PLATFORM.get_executable_extension()
+exe_path = join(obj_path, exe_name)
+exe = env.Command(exe_path, neuneuobj, PLATFORM.object_format.link_command())
+env.Alias('neuneu-exe', exe)
+
+# Running neuneu
+run_exe = env.Command("neuneu", [exe], "./%s" % exe_path)
+
+env.Alias('all', [libtest, neuneuobj, run_exe])
 
 Default('all')
