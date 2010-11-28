@@ -17,9 +17,7 @@ class ElfFormat(object):
     return "readelf -h -S $SOURCE"
 
   def link_command(self):
-    # TODO: Figure out how to link using just a linker rather than going
-    #   through GCC.
-    return "gcc -m32 $SOURCE -o $TARGET"
+    return "ld -m elf_i386 $SOURCE /usr/lib/crt?.o -lc -o $TARGET"
 
   def id(self):
     return "elf"
