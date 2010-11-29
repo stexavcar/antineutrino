@@ -15,7 +15,6 @@ def (this is ObjectFormat).finalize() {
   // Now actually process the relocations.
   for (reloc : this.binary.relocs)
     this.process_relocation(reloc);
-  this.layout.dump();
 }
 
 /**
