@@ -7,6 +7,7 @@ def IntrinsicManager.new() {
   map["add_int32"] := (fn (g, n, c) -> g.add_int32(n, c));
   map["and_int32"] := (fn (g, n, c) -> g.and_int32(n, c));
   map["sar_int32"] := (fn (g, n, c) -> g.sar_int32(n, c));
+  map["shl_int32"] := (fn (g, n, c) -> g.shl_int32(n, c));
   map["eq_int32"] := (fn (g, n, c) -> g.eq_int32(n, c));
   map["neq_int32"] := (fn (g, n, c) -> g.neq_int32(n, c));
   // Strings
@@ -88,6 +89,12 @@ def (this is CodeGenerator).int32_shift(guide, node, do_op) {
 def (this is CodeGenerator).sar_int32(guide, node) {
   this.int32_shift(guide, node, fn (dest) {
     this.assm.sar(dest);
+  });
+}
+
+def (this is CodeGenerator).shl_int32(guide, node) {
+  this.int32_shift(guide, node, fn (dest) {
+    this.assm.shl(dest);
   });
 }
 

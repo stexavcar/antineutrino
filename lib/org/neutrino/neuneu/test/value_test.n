@@ -1,0 +1,9 @@
+def (this is neu_neu_tests_t).test_values() {
+  this.on_start(char_ptr_t.of("values"));
+  def x := small_integer_t.of(int32_t.of(4));
+  this.assert_true(x.is_small_integer);
+  this.assert_true(not x.is_object);
+  this.assert_equal(int32_t.of(4), x.value);
+  this.assert_true(x = x);
+  this.assert_equal(int32_t.of(8), (x + x).value);
+}

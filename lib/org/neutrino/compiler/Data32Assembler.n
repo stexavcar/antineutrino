@@ -8,5 +8,5 @@ def Data32Assembler.new(name, binary) -> new Data32Assembler {
 
 def (this is Data32Assembler).data -> this.out.get_blob();
 
-def (this is Data32Assembler).write_int32(value)
- -> this.out.write_int32(value);
+def (this is Data32Assembler).write(arg is small_integer_t)
+ -> this.out.write_int32(arg.value << 2);

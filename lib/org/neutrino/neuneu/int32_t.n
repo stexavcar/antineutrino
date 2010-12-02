@@ -23,6 +23,11 @@ def (this is int32_t)&(that is int32_t);
 def (this is int32_t)>>(dist is int32_t);
 
 @inline
+@type("int32_t")
+@intrinsic("shl_int32")
+def (this is int32_t)<<(dist is int32_t);
+
+@inline
 @type("bool_t")
 @intrinsic("eq_int32")
 def (this is int32_t)=(that is int32_t);
