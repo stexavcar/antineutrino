@@ -1,6 +1,5 @@
 protocol EntryPoint;
 
-@boot_level_0
 @entry_point("neuneu") // Make this callable from the java implementation
 @neuneu_entry_point // Mark this as the entry point for the neutrino implementation
 def Boot.entry_point() {
@@ -11,7 +10,6 @@ def Boot.entry_point() {
 
 protocol Boot;
 
-@boot_level_0
 @type("int32_t")
 def Boot.boot() {
   def tests := new neu_neu_tests_t();

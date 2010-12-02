@@ -86,9 +86,7 @@ def (this is TypeAnalysis).do_analyze(guide is CallGuide, node) {
       def intrinsic := method.get_annotation("intrinsic");
       guide.ensure_info(node).intrinsic := intrinsic[0];
     }
-    if method.get_annotation("boot_level_0") != null then {
-      guide.ensure_info(node).c_call := get_binary_name(method);
-    }
+    guide.ensure_info(node).c_call := method;
     def annot := method.get_annotation("type");
     if annot != null
       then annot[0];

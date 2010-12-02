@@ -1,40 +1,32 @@
 @intrinsic
 protocol libc;
 
-@boot_level_0
 @libc("_sleep")
 @type("int32_t")
 def libc.sleep(arg is int32_t);
 
-@boot_level_0
 @libc("_exit")
 def libc.exit(arg is int32_t);
 
-@boot_level_0
 @libc("_malloc")
 @type("address_t")
 def libc.malloc(size is int32_t);
 
-@boot_level_0
 @libc("_free")
 def libc.free(memory is address_t);
 
-@boot_level_0
 @libc("_putchar")
 @type("int32_t")
 def libc.putchar(arg is int32_t);
 
-@boot_level_0
 @libc("_puts")
 @type("int32_t")
 def libc.puts(arg is char_ptr_t);
 
-@boot_level_0
 @libc("_strlen")
 @type("int32_t")
 def libc.strlen(arg is char_ptr_t);
 
-@boot_level_0
 @libc("_strcmp")
 @type("int32_t")
 def libc.strcmp(a is char_ptr_t, b is char_ptr_t);

@@ -18,11 +18,9 @@ def (this is address_t).value:=(val is int32_t);
 @intrinsic("add_int32")
 def (this is address_t)+(this is int32_t);
 
-@boot_level_0
 @type("int32_t")
 def (this is address_t)[index is int32_t] -> (this + index).value;
 
-@boot_level_0
 @type("int32_t")
 def (this is address_t)[index is int32_t]:=(value is int32_t)
  -> (this + index).value := value;
