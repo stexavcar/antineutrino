@@ -8,3 +8,6 @@ def bool_t.yes -> int32_t.of(1);
 
 @type("bool_t")
 def bool_t.no -> int32_t.of(0);
+
+@type("bool_t")
+def (this is bool_t).negate() -> if this then bool_t.no else bool_t.yes;
