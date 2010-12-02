@@ -2,6 +2,6 @@
 protocol data;
 
 @inline
-@type("address_t")
+@type("value_t")
 @intrinsic("static_data_ptr")
 def data.at(name is String);
