@@ -1,7 +1,6 @@
 @no_override
 protocol neu_neu_tests_t;
 
-@boot_level_0
 @type("neu_neu_tests_t")
 def neu_neu_tests_t.new() {
   def addr := libc.malloc(int32_t.of(4));
@@ -9,16 +8,13 @@ def neu_neu_tests_t.new() {
   addr;
 }
 
-@boot_level_0
 @type("int32_t")
 def (this is neu_neu_tests_t).count
  -> this.addr[int32_t.of(0)];
 
-@boot_level_0
 def (this is neu_neu_tests_t).count:=(v is int32_t)
  -> this.addr[int32_t.of(0)] := v;
 
-@boot_level_0
 def (this is neu_neu_tests_t).on_start(name is char_ptr_t) {
   libc.puts(name);
   this.count := (this.count + int32_t.of(1));
@@ -29,25 +25,20 @@ def (this is neu_neu_tests_t).on_start(name is char_ptr_t) {
 @intrinsic("debug_interrupt")
 def neu_neu_tests_t.fail();
 
-@boot_level_0
 @type("address_t")
 def (this is neu_neu_tests_t).addr -> this;
 
-@boot_level_0
 def (this is neu_neu_tests_t).assert_true(arg is bool_t) {
   if arg
     then int32_t.of(0);
     else neu_neu_tests_t.fail();
 }
 
-@boot_level_0
 def (this is neu_neu_tests_t).assert_equal(a is int32_t, b is int32_t)
  -> this.assert_true(a = b);
 
-@boot_level_0
 def (this is neu_neu_tests_t).free() -> libc.free(this.addr);
 
-@boot_level_0
 @type("int32_t")
 def (this is neu_neu_tests_t).run() {
   this.test_int32_t();

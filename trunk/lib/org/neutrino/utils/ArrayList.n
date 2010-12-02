@@ -42,6 +42,13 @@ def (this is ArrayList).to_string() {
   out.to_string();
 }
 
+def (this is ArrayList).remove_last() {
+  def new_length := this.length - 1;
+  def result := this.contents[new_length];
+  this.length_.set(new_length);
+  result;
+}
+
 def (this is ArrayList)=(that is ArrayList) {
   if this.length != that.length then {
     false;

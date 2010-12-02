@@ -24,7 +24,10 @@ def (this is Platform).object_format {
 
 protocol NeutrinoCompiler;
 
-def NeutrinoCompiler.new() -> new NeutrinoCompiler { };
+def NeutrinoCompiler.new() -> new NeutrinoCompiler {
+  methods_seen := new HashMap(),
+  method_worklist := new ArrayList()
+};
 
 @entry_point("compile")
 def compiler_entry_point(args) {
@@ -63,7 +66,7 @@ def (this is NeutrinoCompiler).emit_plain_method(universe, method, assm) {
   if should_print
     then print(Unparser.unparse(root_guide, root_node));
   assm.enter_frame(4 * method.code.local_count);
-  new CodeGenerator(universe, assm).emit(root_guide, root_node);
+  new CodeGenerator(universe, assm, this).emit(root_guide, root_node);
   assm.pop(rEax);
 }
 
@@ -106,14 +109,28 @@ def get_binary_name(method) {
   result.to_string();
 }
 
+def (this is NeutrinoCompiler).ensure_generated(method) {
+  def name := get_binary_name(method);
+  if this.methods_seen[name] = null then {
+    this.methods_seen[name] := false;
+    this.method_worklist.add(method);
+  }
+}
+
 def (this is NeutrinoCompiler).emit_methods(universe, binary) {
-  for (method : universe.methods) {
-    def emit := method.get_annotation("boot_level_0");
-    if emit != null then {
-      def assm := binary.add_code_block(get_binary_name(method));
-      this.emit_method(universe, method, assm);
-    }
-  }  
+  with_1cc (done) {
+    Control.repeat(fn {
+      if this.method_worklist.length = 0
+        then done(null);
+      def next := this.method_worklist.remove_last();
+      def name := get_binary_name(next);
+      if not this.methods_seen[name] then {
+        def assm := binary.add_code_block(name);
+        this.methods_seen[name] := true;
+        this.emit_method(universe, next, assm);
+      }
+    });
+  }
 }
 
 def (this is NeutrinoCompiler).emit_data(binary) {
@@ -125,20 +142,19 @@ def (this is NeutrinoCompiler).emit_data(binary) {
 def (this is NeutrinoCompiler).build_binary(platform, universe) {
   def binary := new Binary(platform.architecture, platform.object_format);
   // Locate entry point
-  def entry_point := with_1cc (yield) {
+  def entry_point_method := with_1cc (yield) {
     for (method : universe.methods) {
-      if method.get_annotation("neuneu_entry_point") != null then {
-        def name := get_binary_name(method);
-        yield(name);
-      }
+      if method.get_annotation("neuneu_entry_point") != null
+        then yield(method);
     }
     null;
   }
-  if entry_point = null
+  if entry_point_method = null
     then fail("No neuneu_entry_point defined.");
 
   // Emit standard boilerplate
-  this.emit_boilerplate(binary, entry_point);
+  this.emit_boilerplate(binary, get_binary_name(entry_point_method));
+  this.ensure_generated(entry_point_method);
   this.emit_methods(universe, binary);
   this.emit_data(binary);
   binary;

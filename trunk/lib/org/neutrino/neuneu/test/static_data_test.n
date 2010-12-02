@@ -1,4 +1,3 @@
-@boot_level_0
 def (this is neu_neu_tests_t).test_static_data() {
   this.on_start(char_ptr_t.of("static data"));
   def x := data.at("x");
