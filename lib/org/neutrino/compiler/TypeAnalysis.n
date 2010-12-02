@@ -50,6 +50,32 @@ def (this is TypeAnalysis).analyze(guide, node) {
   type;
 }
 
+def (this is Universe).is_static_subtype(expected, found) {
+  if expected = found then {
+    true;
+  } else {
+    def proto := this.lookup_static_global(expected);
+    def check_supers := proto != null and proto.get_annotation("no_override") != null;
+    if check_supers then {
+      with_1cc (yield) {
+        for (super : this.supers(expected)) {
+          if this.is_static_subtype(super, found)
+            then yield(true);
+        }
+        false;
+      }
+    } else {
+      false;
+    }
+  }
+}
+
+def (this is Universe).is_matching_argument(param, type_found) {
+  if param.is_protocol
+    then type_found = "${param.type}.protocol";
+    else this.is_static_subtype(param.type, type_found);
+}
+
 def (this is Universe).find_method(name, types) {
   with_1cc (return) {
     for (method : this.methods) {
@@ -58,11 +84,7 @@ def (this is Universe).find_method(name, types) {
         if params.length = types.length then {
           with_1cc (break) {
             for (i : 0 .. params.length) {
-              def param := params[i];
-              def type := if param.is_protocol
-                then "${param.type}.protocol"
-                else param.type;
-              if type != types[i]
+              if not this.is_matching_argument(params[i], types[i])
                 then break(null);
             }
             return(method);

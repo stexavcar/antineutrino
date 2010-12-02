@@ -156,7 +156,8 @@ def Universe.tag -> "org::neutrino::pib::Universe";
 
 def Universe.grow(payload) -> new Universe {
   modules := payload["modules"],
-  global_cache := new HashMap()
+  global_cache := new HashMap(),
+  super_cache := new HashMap()
 }
 
 def (this is Universe).bindings -> fn for (fun) {
@@ -172,6 +173,21 @@ def (this is Universe).methods -> fn for (fun) {
 def (this is Universe).protocols -> fn for (fun) {
   for (module : this.modules.values)
     module.protos.for(fun);
+}
+
+def (this is Universe).supers -> fn for (fun) {
+  for (module : this.modules.values)
+    module.supers.for(fun);
+}
+
+def (this is Universe).supers(name) {
+  def cached := this.super_cache[name];
+  if cached = null then {
+    def result := new ArrayList();
+    this.super_cache[name] := result;
+  } else {
+    cached;
+  }
 }
 
 def (this is Universe).lookup_static_global(name) {

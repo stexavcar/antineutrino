@@ -157,7 +157,8 @@ def BuildPib(target, source, **kwargs):
 
 libpib = BuildPib(join(pib_path, 'lib'), 'lib')
 
-neuneupib = BuildPib(join(pib_path, 'neuneu'), 'lib', MODULES=['org::neutrino::neuneu', 'org::neutrino::neuneu::test'])
+modules = ['org::neutrino::neuneu', 'org::neutrino::neuneu::test', 'org::neutrino::neuneu::value']
+neuneupib = BuildPib(join(pib_path, 'neuneu'), 'lib', MODULES=modules)
 
 neuneuobj = env.NeuObject(join(obj_path, 'neuneu'), [libpib, neuneupib])
 

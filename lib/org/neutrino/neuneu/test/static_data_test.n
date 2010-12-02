@@ -1,6 +1,8 @@
 def (this is neu_neu_tests_t).test_static_data() {
   this.on_start(char_ptr_t.of("static data"));
-  def x := data.at("x");
-  this.assert_equal(int32_t.of(10), x[int32_t.of(0)]);
-  this.assert_equal(int32_t.of(11), x[int32_t.of(4)]);
+  def x_addr := data.at("x");
+  def x := value_t.from_id(x_addr[int32_t.of(0)]);
+  this.assert_true(x.is_small_integer);
+  def i := small_integer_t.cast(x);
+  this.assert_equal(int32_t.of(5), i.value);
 }

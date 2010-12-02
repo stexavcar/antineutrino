@@ -135,7 +135,7 @@ def (this is NeutrinoCompiler).emit_methods(universe, binary) {
 
 def (this is NeutrinoCompiler).emit_data(binary) {
   def assm := binary.add_data_block("x");
-  assm.write_int32(10);
+  assm.write_int32(20);
   assm.write_int32(11);
 }
 
