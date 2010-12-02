@@ -184,6 +184,12 @@ def (this is Universe).supers(name) {
   def cached := this.super_cache[name];
   if cached = null then {
     def result := new ArrayList();
+    for (found_name, found_supers : this.supers) {
+      if found_name = name then {
+        for (super : found_supers)
+          result.add(super);
+      }
+    }
     this.super_cache[name] := result;
   } else {
     cached;

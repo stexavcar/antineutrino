@@ -179,7 +179,8 @@ def (this is CodeGenerator).static_data_ptr(guide, node) {
   def arg_node := guide.argument(node, 1);
   def arg_guide := guide.resolve(arg_node);
   def value := this.static_value(arg_guide, arg_node);
-  this.assm.push(Symbol.local(value));
+  this.assm.mov(rEax, Symbol.local(value));
+  this.assm.push(Memory.at(rEax));
 }
 
 def (this is CodeGenerator).debug_interrupt(guide, node) {

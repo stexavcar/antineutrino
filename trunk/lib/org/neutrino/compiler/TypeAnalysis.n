@@ -54,12 +54,12 @@ def (this is Universe).is_static_subtype(expected, found) {
   if expected = found then {
     true;
   } else {
-    def proto := this.lookup_static_global(expected);
+    def proto := this.lookup_static_global(found);
     def check_supers := proto != null and proto.get_annotation("no_override") != null;
     if check_supers then {
       with_1cc (yield) {
-        for (super : this.supers(expected)) {
-          if this.is_static_subtype(super, found)
+        for (super : this.supers(found)) {
+          if this.is_static_subtype(expected, super)
             then yield(true);
         }
         false;
