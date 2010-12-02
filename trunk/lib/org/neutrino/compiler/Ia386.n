@@ -269,6 +269,24 @@ def (this is AssemblerIa386).ahnd(dest is Operand, imm32 is Immediate) {
   this.write_imm32(imm32);
 }
 
+// D3 /4 -> SHL r/m32, CL
+def (this is AssemblerIa386).shl(dest is Operand) {
+  this.write_opcode(16rD3);
+  this.write_operand(4, dest);
+}
+
+// D3 /5 -> SHR r/m32, CL
+def (this is AssemblerIa386).shl(dest is Operand) {
+  this.write_opcode(16rD3);
+  this.write_operand(5, dest);
+}
+
+// D3 /7 -> SAR r/m32, CL
+def (this is AssemblerIa386).sar(dest is Operand) {
+  this.write_opcode(16rD3);
+  this.write_operand(7, dest);
+}
+
 // 50 +rd -> PUSH r32
 def (this is AssemblerIa386).push(reg is Register) {
   this.write_opcode(16r50 + reg.index);

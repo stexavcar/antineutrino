@@ -38,9 +38,9 @@ def (this is CodeGenerator).emit(guide is CallGuide, node) {
     handler(this, guide, node);
   } else {
     def c_call := info.c_call;
-    this.compiler.ensure_generated(c_call);
     if c_call = null
       then fail("Illegal plain call ${Unparser.unparse(guide, node)}");
+    this.compiler.ensure_generated(c_call);
     this.emit_c_call(guide, node, get_binary_name(c_call));
   }
 }

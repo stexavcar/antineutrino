@@ -1,0 +1,13 @@
+@no_override
+protocol small_integer_t is value_t;
+
+@type("int32_t")
+def (this is small_integer_t).id -> this;
+
+@type("small_integer_t")
+def small_integer_t.cast(arg is value_t)
+ -> arg;
+
+@type("int32_t")
+def (this is small_integer_t).value
+ -> this.id >> int32_t.of(2);

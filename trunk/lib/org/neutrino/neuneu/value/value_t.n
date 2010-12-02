@@ -1,0 +1,13 @@
+@no_override
+protocol value_t;
+
+@type("int32_t")
+def (this is value_t).id -> this;
+
+@type("value_t")
+def value_t.from_id(arg is int32_t)
+ -> arg;
+
+@type("bool_t")
+def (this is value_t).is_small_integer
+ -> (this.id & int32_t.of(3)) = int32_t.of(0);
