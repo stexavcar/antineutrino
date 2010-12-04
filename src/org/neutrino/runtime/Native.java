@@ -9,12 +9,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
+import org.neutrino.oldton.ISeedable;
+import org.neutrino.oldton.annotations.Growable;
+import org.neutrino.oldton.annotations.SeedMember;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Opcode;
 import org.neutrino.pib.Universe;
-import org.neutrino.plankton.ISeedable;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
 
 @Growable(Native.TAG)
 public class Native implements ISeedable {

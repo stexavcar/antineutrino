@@ -1,4 +1,4 @@
-package org.neutrino.plankton;
+package org.neutrino.oldton;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -9,21 +9,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.neutrino.plankton.PMap.Thunk;
-import org.neutrino.plankton.annotations.Factory;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
+import org.neutrino.oldton.PMap.Thunk;
+import org.neutrino.oldton.annotations.Factory;
+import org.neutrino.oldton.annotations.Growable;
+import org.neutrino.oldton.annotations.SeedMember;
 
 /**
  * A registry where plankton seed types can be registered.
  *
  * @author christian.plesner.hansen@gmail.com (Christian Plesner Hansen)
  */
-public class PlanktonRegistry {
+public class OldtonRegistry {
 
   public interface ICodec<T> {
-    public PValue encode(Plankton plankton, T obj);
-    public T decode(Plankton plankton, PValue payload);
+    public PValue encode(Oldton plankton, T obj);
+    public T decode(Oldton plankton, PValue payload);
     public Class<?> getSubjectClass();
   }
 
@@ -52,7 +52,7 @@ public class PlanktonRegistry {
       }
     }
 
-    public T decode(Plankton plankton, PValue payload) {
+    public T decode(Oldton plankton, PValue payload) {
       PMap fields = (PMap) payload;
       try {
         T result = createNewInstance(payload);
@@ -63,7 +63,7 @@ public class PlanktonRegistry {
               String name = seedMember.value();
               if (name.length() == 0)
                 name = field.getName();
-              PValue value = fields.get(Plankton.newString(name), null);
+              PValue value = fields.get(Oldton.newString(name), null);
               Object rawValue = decodeValue(plankton, value);
               field.set(result, rawValue);
             }
@@ -79,7 +79,7 @@ public class PlanktonRegistry {
       }
     }
 
-    public PValue encode(Plankton plankton, T obj) {
+    public PValue encode(Oldton plankton, T obj) {
       return encodeSeedPayload(plankton, obj);
     }
 
@@ -89,7 +89,7 @@ public class PlanktonRegistry {
 
   }
 
-  PMap encodeSeedPayload(Plankton plankton, Object obj) {
+  PMap encodeSeedPayload(Oldton plankton, Object obj) {
     Class<?> klass = obj.getClass();
     Map<PString, PValue> members = new HashMap<PString, PValue>();
     for (Field field : klass.getDeclaredFields()) {
@@ -101,7 +101,7 @@ public class PlanktonRegistry {
             name = field.getName();
           Object rawValue = field.get(obj);
           PValue value = encodeValue(plankton, rawValue);
-          members.put(Plankton.newString(name), value);
+          members.put(Oldton.newString(name), value);
         } catch (IllegalArgumentException e) {
           throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
@@ -109,11 +109,11 @@ public class PlanktonRegistry {
         }
       }
     }
-    return Plankton.newMap(members);
+    return Oldton.newMap(members);
   }
 
   @SuppressWarnings("unchecked")
-  private <T> PValue encode(ICodec<T> codec, Plankton plankton, Object value) {
+  private <T> PValue encode(ICodec<T> codec, Oldton plankton, Object value) {
     return codec.encode(plankton, (T) value);
   }
 
@@ -131,7 +131,7 @@ public class PlanktonRegistry {
     MAP_CODEC, LIST_CODEC
   );
 
-  public PlanktonRegistry() {
+  public OldtonRegistry() {
 
   }
 
@@ -145,7 +145,7 @@ public class PlanktonRegistry {
     return seedCodecs.get(tag);
   }
 
-  public PValue encodeValue(Plankton plankton, Object value) {
+  public PValue encodeValue(Oldton plankton, Object value) {
     Class<?> type = value.getClass();
     if (value instanceof ISeedable) {
       return plankton.newSeed((ISeedable) value);
@@ -163,7 +163,7 @@ public class PlanktonRegistry {
     }
   }
 
-  public Object decodeValue(Plankton plankton, PValue value) {
+  public Object decodeValue(Oldton plankton, PValue value) {
     switch (value.getType()) {
     case SEED:
       return ((PSeed) value).grow(Object.class);
@@ -186,11 +186,11 @@ public class PlanktonRegistry {
   }
 
   private static final ICodec<Integer> INTEGER_CODEC = new ICodec<Integer>() {
-    public Integer decode(Plankton plankton, PValue payload) {
+    public Integer decode(Oldton plankton, PValue payload) {
       return ((PInteger) payload).getValue();
     }
-    public PValue encode(Plankton plankton, Integer obj) {
-      return Plankton.newInteger(obj);
+    public PValue encode(Oldton plankton, Integer obj) {
+      return Oldton.newInteger(obj);
     }
     public Class<Integer> getSubjectClass() {
       return Integer.class;
@@ -198,11 +198,11 @@ public class PlanktonRegistry {
   };
 
   private static final ICodec<Boolean> BOOL_CODEC = new ICodec<Boolean>() {
-    public Boolean decode(Plankton plankton, PValue payload) {
+    public Boolean decode(Oldton plankton, PValue payload) {
       return ((PBool) payload).getValue();
     }
-    public PValue encode(Plankton plankton, Boolean obj) {
-      return Plankton.newBool(obj);
+    public PValue encode(Oldton plankton, Boolean obj) {
+      return Oldton.newBool(obj);
     }
     public Class<Boolean> getSubjectClass() {
       return Boolean.class;
@@ -210,11 +210,11 @@ public class PlanktonRegistry {
   };
 
   private static final ICodec<String> STRING_CODEC = new ICodec<String>() {
-    public String decode(Plankton plankton, PValue payload) {
+    public String decode(Oldton plankton, PValue payload) {
       return ((PString) payload).getValue();
     }
-    public PValue encode(Plankton plankton, String obj) {
-      return Plankton.newString(obj);
+    public PValue encode(Oldton plankton, String obj) {
+      return Oldton.newString(obj);
     }
     public Class<String> getSubjectClass() {
       return String.class;
@@ -222,11 +222,11 @@ public class PlanktonRegistry {
   };
 
   private static final ICodec<byte[]> BLOB_CODEC = new ICodec<byte[]>() {
-    public byte[] decode(Plankton plankton, PValue payload) {
+    public byte[] decode(Oldton plankton, PValue payload) {
       return ((PBlob) payload).getData();
     }
-    public PValue encode(Plankton plankton, byte[] obj) {
-      return Plankton.newBlob(obj);
+    public PValue encode(Oldton plankton, byte[] obj) {
+      return Oldton.newBlob(obj);
     }
     public Class<?> getSubjectClass() {
       return byte[].class;
@@ -234,7 +234,7 @@ public class PlanktonRegistry {
   };
 
   private static final ICodec<Map<?, ?>> MAP_CODEC = new ICodec<Map<?, ?>>() {
-    public Map<?, ?> decode(final Plankton plankton, PValue payload) {
+    public Map<?, ?> decode(final Oldton plankton, PValue payload) {
       PMap map = (PMap) payload;
       final Map<Object, Object> result = new HashMap<Object, Object>();
       map.forEach(new Thunk() {
@@ -247,14 +247,14 @@ public class PlanktonRegistry {
       });
       return result;
     }
-    public PValue encode(Plankton plankton, Map<?, ?> obj) {
+    public PValue encode(Oldton plankton, Map<?, ?> obj) {
       Map<PValue, PValue> map = new HashMap<PValue, PValue>();
       for (Map.Entry<?, ?> entry : obj.entrySet()) {
         PValue key = plankton.getRegistry().encodeValue(plankton, entry.getKey());
         PValue value = plankton.getRegistry().encodeValue(plankton, entry.getValue());
         map.put(key, value);
       }
-      return Plankton.newMap(map);
+      return Oldton.newMap(map);
     }
     public Class<?> getSubjectClass() {
       return Map.class;
@@ -262,7 +262,7 @@ public class PlanktonRegistry {
   };
 
   private static final ICodec<List<?>> LIST_CODEC = new ICodec<List<?>>() {
-    public List<?> decode(Plankton plankton, PValue value) {
+    public List<?> decode(Oldton plankton, PValue value) {
       PArray array = (PArray) value;
       List<Object> elms = new ArrayList<Object>();
       for (int i = 0; i < array.length(); i++) {
@@ -271,12 +271,12 @@ public class PlanktonRegistry {
       }
       return elms;
     }
-    public PValue encode(Plankton plankton, List<?> list) {
+    public PValue encode(Oldton plankton, List<?> list) {
       List<PValue> values = new ArrayList<PValue>();
       for (Object obj : list) {
         values.add(plankton.getRegistry().encodeValue(plankton, obj));
       }
-      return Plankton.newArray(values);
+      return Oldton.newArray(values);
     }
     public Class<?> getSubjectClass() {
       return List.class;

@@ -1,4 +1,4 @@
-package org.neutrino.plankton;
+package org.neutrino.oldton;
 
 /**
  * Abstract superclass for plankton values.
@@ -12,10 +12,10 @@ public interface PValue {
    */
   public enum Type {
 
-    STRING(Plankton.kStringTag), MAP(Plankton.kMapTag),
-    BLOB(Plankton.kBlobTag), INTEGER(Plankton.kIntegerTag),
-    ARRAY(Plankton.kArrayTag), SEED(Plankton.kSeedTag),
-    BOOL(Plankton.kBoolTag);
+    STRING(Oldton.kStringTag), MAP(Oldton.kMapTag),
+    BLOB(Oldton.kBlobTag), INTEGER(Oldton.kIntegerTag),
+    ARRAY(Oldton.kArrayTag), SEED(Oldton.kSeedTag),
+    BOOL(Oldton.kBoolTag);
 
     private final int tag;
 

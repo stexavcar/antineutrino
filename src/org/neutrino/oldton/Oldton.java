@@ -1,4 +1,4 @@
-package org.neutrino.plankton;
+package org.neutrino.oldton;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,15 +11,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.neutrino.plankton.PMap.ThrowingThunk;
-import org.neutrino.plankton.PMap.Thunk;
-import org.neutrino.plankton.annotations.Growable;
+import org.neutrino.oldton.PMap.ThrowingThunk;
+import org.neutrino.oldton.PMap.Thunk;
+import org.neutrino.oldton.annotations.Growable;
 
-public class Plankton {
+public class Oldton {
 
-  private final PlanktonRegistry registry;
+  private final OldtonRegistry registry;
 
-  public Plankton(PlanktonRegistry registry) {
+  public Oldton(OldtonRegistry registry) {
     this.registry = registry;
   }
 
@@ -27,7 +27,7 @@ public class Plankton {
 
     @Override
     public String toString() {
-      return Plankton.toString(this);
+      return Oldton.toString(this);
     }
 
   }
@@ -214,7 +214,7 @@ public class Plankton {
 
     public <T> T grow(Class<T> klass) {
       if (this.value == null) {
-        value = Plankton.this.growSeed(this);
+        value = Oldton.this.growSeed(this);
       }
       if (value == null) {
         return null;
@@ -265,13 +265,13 @@ public class Plankton {
 
   private Object growSeed(PSeed seed) {
     String tag = ((PString) seed.getTag()).getValue();
-    PlanktonRegistry.ICodec<?> codec = registry.getSeedCodec(tag);
+    OldtonRegistry.ICodec<?> codec = registry.getSeedCodec(tag);
     if (codec == null)
       return null;
     return codec.decode(this, seed.getPayload());
   }
 
-  PlanktonRegistry getRegistry() {
+  OldtonRegistry getRegistry() {
     return registry;
   }
 
@@ -284,7 +284,7 @@ public class Plankton {
       final Map<String, String> elms = new TreeMap<String, String>();
       ((PMap) value).forEach(new Thunk() {
         public boolean call(PValue key, PValue value) {
-          elms.put(Plankton.toString(key), Plankton.toString(value));
+          elms.put(Oldton.toString(key), Oldton.toString(value));
           return true;
         }
       });
@@ -468,7 +468,7 @@ public class Plankton {
     }
     case kStringTag:
       String str = readString(in);
-      return Plankton.newString(str);
+      return Oldton.newString(str);
     case kMapTag: {
       int size = readInt32(in);
       Map<PValue, PValue> map = new HashMap<PValue, PValue>();
@@ -477,15 +477,15 @@ public class Plankton {
         PValue value = read(in, data);
         map.put(key, value);
       }
-      return Plankton.newMap(map);
+      return Oldton.newMap(map);
     }
     case kBlobTag:
       int size = readInt32(in);
       byte[] bytes = new byte[size];
       in.read(bytes);
-      return Plankton.newBlob(bytes);
+      return Oldton.newBlob(bytes);
     case kIntegerTag:
-      return Plankton.newInteger(readInt32(in));
+      return Oldton.newInteger(readInt32(in));
     case kArrayTag: {
       int length = readInt32(in);
       List<PValue> elms = new ArrayList<PValue>();

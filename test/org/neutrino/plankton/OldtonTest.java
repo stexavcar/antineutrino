@@ -9,34 +9,43 @@ import java.util.HashMap;
 
 import junit.framework.TestCase;
 
-import org.neutrino.plankton.PValue.Type;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
+import org.neutrino.oldton.ISeedable;
+import org.neutrino.oldton.PArray;
+import org.neutrino.oldton.PInteger;
+import org.neutrino.oldton.PMap;
+import org.neutrino.oldton.PSeed;
+import org.neutrino.oldton.PString;
+import org.neutrino.oldton.PValue;
+import org.neutrino.oldton.Oldton;
+import org.neutrino.oldton.OldtonRegistry;
+import org.neutrino.oldton.PValue.Type;
+import org.neutrino.oldton.annotations.Growable;
+import org.neutrino.oldton.annotations.SeedMember;
 
 /**
- * Test of the {@link Plankton} utility class.
+ * Test of the {@link Oldton} utility class.
  *
  * @author plesner@google.com (Christian Plesner Hansen)
  */
-public class PlanktonTest extends TestCase {
+public class OldtonTest extends TestCase {
 
-  private PlanktonRegistry registry;
-  private Plankton plankton;
+  private OldtonRegistry registry;
+  private Oldton plankton;
 
   @Override
   protected void setUp() throws Exception {
-    registry = new PlanktonRegistry();
-    plankton = new Plankton(registry);
+    registry = new OldtonRegistry();
+    plankton = new Oldton(registry);
   }
 
   public void testTypes() {
-    assertEquals(Type.STRING, Plankton.newString("foo").getType());
-    assertEquals(Type.BLOB, Plankton.newBlob(new byte[0]).getType());
-    assertEquals(Type.MAP, Plankton.newMap(Collections.<PValue, PValue>emptyMap()).getType());
+    assertEquals(Type.STRING, Oldton.newString("foo").getType());
+    assertEquals(Type.BLOB, Oldton.newBlob(new byte[0]).getType());
+    assertEquals(Type.MAP, Oldton.newMap(Collections.<PValue, PValue>emptyMap()).getType());
   }
 
   public void testStringEncoding() {
-    byte[] data = marshal(Plankton.newString("hey!"));
+    byte[] data = marshal(Oldton.newString("hey!"));
     PValue result = unmarshal(data);
     assertEquals(Type.STRING, result.getType());
     assertEquals("hey!", ((PString) result).getValue());
@@ -44,16 +53,16 @@ public class PlanktonTest extends TestCase {
 
   public void testLongEncoding() {
     int value = (int) 4277009102L;
-    byte[] data = marshal(Plankton.newInteger(value));
+    byte[] data = marshal(Oldton.newInteger(value));
     PValue result = unmarshal(data);
     assertEquals(value, ((PInteger) result).getValue());
   }
 
   public void testCompositeEncoding() {
-    final PMap original = Plankton.newMap(new HashMap<PString, PValue>() {{
-      put(Plankton.newString("a"), Plankton.newInteger(4));
-      put(Plankton.newString("b"), Plankton.newInteger(7));
-      put(Plankton.newString("c"), Plankton.newString("8"));
+    final PMap original = Oldton.newMap(new HashMap<PString, PValue>() {{
+      put(Oldton.newString("a"), Oldton.newInteger(4));
+      put(Oldton.newString("b"), Oldton.newInteger(7));
+      put(Oldton.newString("c"), Oldton.newString("8"));
     }});
     byte[] data = marshal(original);
     PValue value = unmarshal(data);
@@ -69,13 +78,13 @@ public class PlanktonTest extends TestCase {
   }
 
   public void testArrayEncoding() {
-    PArray array = Plankton.newArray(Arrays.asList(
-      Plankton.newString("a"),
-      Plankton.newInteger(4),
-      Plankton.newArray(Arrays.asList(
-        Plankton.newString("b")
+    PArray array = Oldton.newArray(Arrays.asList(
+      Oldton.newString("a"),
+      Oldton.newInteger(4),
+      Oldton.newArray(Arrays.asList(
+        Oldton.newString("b")
       )),
-      Plankton.newString("c")
+      Oldton.newString("c")
     ));
     byte[] data = marshal(array);
     PValue value = unmarshal(data);
@@ -88,7 +97,7 @@ public class PlanktonTest extends TestCase {
     assertEquals(Type.ARRAY, thirdValue.getType());
     PArray thirdArray = (PArray) thirdValue;
     assertEquals(1, thirdArray.length());
-    assertEquals(Plankton.newString("b"), thirdArray.get(0));
+    assertEquals(Oldton.newString("b"), thirdArray.get(0));
     assertEquals(array.get(3), result.get(3));
   }
 
@@ -130,8 +139,8 @@ public class PlanktonTest extends TestCase {
   }
 
   public void testRepetition() {
-    PString str = Plankton.newString("foobarbaz");
-    PValue value = Plankton.newArray(str, str, str);
+    PString str = Oldton.newString("foobarbaz");
+    PValue value = Oldton.newArray(str, str, str);
     byte[] encoded = marshal(value);
     unmarshal(encoded);
   }

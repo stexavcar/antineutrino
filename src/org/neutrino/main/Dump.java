@@ -5,10 +5,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.List;
 
+import org.neutrino.oldton.PValue;
+import org.neutrino.oldton.Oldton;
+import org.neutrino.oldton.OldtonRegistry;
 import org.neutrino.pib.Universe;
-import org.neutrino.plankton.PValue;
-import org.neutrino.plankton.Plankton;
-import org.neutrino.plankton.PlanktonRegistry;
 
 /**
  * Entry point to a simple utility dumping plankton files as text.
@@ -21,13 +21,13 @@ public class Dump {
 
   public static void main(String[] rawArgs) throws IOException {
     List<String> args = Flags.parseArguments(rawArgs, Dump.class);
-    Plankton plankton = raw
-        ? new Plankton(new PlanktonRegistry())
+    Oldton plankton = raw
+        ? new Oldton(new OldtonRegistry())
         : Universe.getPlankton();
     for (String name : args) {
       File file = new File(name);
       PValue value = plankton.read(new FileInputStream(file));
-      String str = Plankton.toString(value);
+      String str = Oldton.toString(value);
       System.out.println(str);
     }
   }

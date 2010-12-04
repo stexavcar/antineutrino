@@ -1,14 +1,14 @@
 package org.neutrino.runtime;
 
-import org.neutrino.plankton.ISeedable;
-import org.neutrino.plankton.PInteger;
-import org.neutrino.plankton.PMap;
-import org.neutrino.plankton.PString;
-import org.neutrino.plankton.PValue;
-import org.neutrino.plankton.Plankton;
-import org.neutrino.plankton.annotations.Factory;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
+import org.neutrino.oldton.ISeedable;
+import org.neutrino.oldton.PInteger;
+import org.neutrino.oldton.PMap;
+import org.neutrino.oldton.PString;
+import org.neutrino.oldton.PValue;
+import org.neutrino.oldton.Oldton;
+import org.neutrino.oldton.annotations.Factory;
+import org.neutrino.oldton.annotations.Growable;
+import org.neutrino.oldton.annotations.SeedMember;
 
 @Growable(RInteger.TAG)
 public class RInteger extends RValue implements ISeedable {
@@ -35,7 +35,7 @@ public class RInteger extends RValue implements ISeedable {
     return new RInteger(value);
   }
 
-  private static final PString VALUE = Plankton.newString("value");
+  private static final PString VALUE = Oldton.newString("value");
   @Factory(initialize = false)
   public static RInteger grow(PValue value) {
     return get(((PInteger) ((PMap) value).get(VALUE, null)).getValue());
