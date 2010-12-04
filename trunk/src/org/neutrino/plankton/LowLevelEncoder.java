@@ -21,6 +21,8 @@ public class LowLevelEncoder {
   }
 
   public void write(int b) throws IOException {
+    assert b >= 0;
+    assert b < 256;
     if (writtenCount == kMaxByteCount)
       flush();
     if (b < kSmallLimit) {
