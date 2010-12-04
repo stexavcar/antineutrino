@@ -1,4 +1,4 @@
-package org.neutrino.plankton;
+package org.neutrino.oldton;
 
 /**
  * The plankton representation of a string.

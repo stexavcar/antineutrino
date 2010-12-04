@@ -1,13 +1,13 @@
 package org.neutrino.pib;
 
 import org.neutrino.compiler.CompilerUniverse;
-import org.neutrino.plankton.ISeedable;
-import org.neutrino.plankton.PSeed;
-import org.neutrino.plankton.PValue;
-import org.neutrino.plankton.Plankton;
-import org.neutrino.plankton.PlanktonRegistry;
-import org.neutrino.plankton.annotations.Growable;
-import org.neutrino.plankton.annotations.SeedMember;
+import org.neutrino.oldton.ISeedable;
+import org.neutrino.oldton.PSeed;
+import org.neutrino.oldton.PValue;
+import org.neutrino.oldton.Oldton;
+import org.neutrino.oldton.OldtonRegistry;
+import org.neutrino.oldton.annotations.Growable;
+import org.neutrino.oldton.annotations.SeedMember;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.MethodLookupHelper;
@@ -149,7 +149,7 @@ public class Universe implements ISeedable {
     return ((PSeed) value).grow(Universe.class);
   }
 
-  public static Plankton getPlankton() {
+  public static Oldton getPlankton() {
     return PLANKTON;
   }
 
@@ -166,7 +166,7 @@ public class Universe implements ISeedable {
     return "a Universe " + modules;
   }
 
-  private static final PlanktonRegistry REGISTRY = new PlanktonRegistry() {{
+  private static final OldtonRegistry REGISTRY = new OldtonRegistry() {{
     register(Binding.class);
     register(Universe.class);
     register(Module.class);
@@ -181,6 +181,6 @@ public class Universe implements ISeedable {
     register(RInteger.class);
   }};
 
-  private static final Plankton PLANKTON = new Plankton(REGISTRY);
+  private static final Oldton PLANKTON = new Oldton(REGISTRY);
 
 }
