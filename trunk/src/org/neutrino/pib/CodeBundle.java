@@ -1,23 +1,24 @@
 package org.neutrino.pib;
 
+import java.util.List;
+
 import org.neutrino.oldton.ISeedable;
 import org.neutrino.oldton.annotations.Growable;
 import org.neutrino.oldton.annotations.SeedMember;
 import org.neutrino.pib.Opcode.ArgType;
 import org.neutrino.pib.Opcode.OpcodeInfo;
-
-import java.util.List;
+import org.neutrino.plankton.Store;
 
 @Growable(CodeBundle.TAG)
 public class CodeBundle implements ISeedable {
 
   static final String TAG = "org::neutrino::pib::CodeBundle";
 
-  public @SeedMember byte[] code;
-  public @SeedMember List<Object> literals;
-  public @SeedMember int localCount;
-  public @SeedMember String fileName;
-  public @SeedMember int rootOffset;
+  public @Store @SeedMember byte[] code;
+  public @Store @SeedMember List<Object> literals;
+  public @Store @SeedMember int localCount;
+  public @Store @SeedMember String fileName;
+  public @Store @SeedMember int rootOffset;
 
   public CodeBundle(byte[] code, List<Object> literals, int localCount,
       String fileName, int rootOffset) {

@@ -25,6 +25,7 @@ public class PlanktonEncoder {
   public static final int kTemplateTag = 12;
   public static final int kPlaceholderTag = 13;
   public static final int kObjectTag = 14;
+  public static final int kBlobTag = 15;
 
   private static class EncoderRecord {
     private final int index;
@@ -123,6 +124,8 @@ public class PlanktonEncoder {
       this.writeInteger((Integer) obj);
     } else if (obj instanceof String) {
       this.writeString((String) obj);
+    } else if (obj instanceof byte[]) {
+      this.writeBlob((byte[]) obj);
     } else {
       this.writeReferrableObject(obj);
     }
@@ -138,15 +141,17 @@ public class PlanktonEncoder {
     } else if (obj instanceof List<?>) {
       nextIndex++;
       this.writeList((List<?>) obj);
-    }
-    int index = 0;
-    for (ObjectEncoder encoder : klasses.getEncoders()) {
-      if (encoder.canHandle(obj)) {
-        nextIndex++;
-        this.writeObject(encoder, obj, index);
-        return;
+    } else {
+      int index = 0;
+      for (ObjectEncoder encoder : klasses.getEncoders()) {
+        if (encoder.canHandle(obj)) {
+          nextIndex++;
+          this.writeObject(encoder, obj, index);
+          return;
+        }
+        index++;
       }
-      index++;
+      assert false : obj.getClass();
     }
   }
 
@@ -193,6 +198,10 @@ public class PlanktonEncoder {
     }
   }
 
+  public void flush() throws IOException {
+    out.flush();
+  }
+
   private void writeNull() throws IOException {
     out.write(kNullTag);
   }
@@ -206,6 +215,13 @@ public class PlanktonEncoder {
     out.write(kStringTag);
     out.writeUnsigned(obj.length());
     for (byte b : obj.getBytes())
+      out.write(((int) b) & 0xFF);
+  }
+
+  private void writeBlob(byte[] obj) throws IOException {
+    out.write(kBlobTag);
+    out.writeUnsigned(obj.length);
+    for (byte b : obj)
       out.write(((int) b) & 0xFF);
   }
 
