@@ -1,7 +1,6 @@
 package org.neutrino.plankton;
 
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,12 +16,10 @@ public class LowLevelCodecTest extends TestCase {
 
   private static class TestEncoder {
 
-    private final ByteArrayOutputStream bytes;
     private final LowLevelEncoder encoder;
 
     public TestEncoder() {
-      bytes = new ByteArrayOutputStream();
-      encoder = new LowLevelEncoder(bytes);
+      encoder = new LowLevelEncoder();
     }
 
     public void writeBytes(int... values) {
@@ -44,7 +41,7 @@ public class LowLevelCodecTest extends TestCase {
 
     public void checkRawBytes(int... values) {
       this.flush();
-      byte[] data = bytes.toByteArray();
+      byte[] data = encoder.getBytes();
       List<Integer> found = new ArrayList<Integer>();
       List<Integer> expected = new ArrayList<Integer>();
       for (byte b : data)
@@ -56,7 +53,7 @@ public class LowLevelCodecTest extends TestCase {
 
     public void checkReadBytes(int... values) {
       this.flush();
-      byte[] data = bytes.toByteArray();
+      byte[] data = encoder.getBytes();
       LowLevelDecoder decoder = new LowLevelDecoder(new ByteArrayInputStream(data));
       List<Integer> expected = new ArrayList<Integer>();
       List<Integer> found = new ArrayList<Integer>();
@@ -73,7 +70,7 @@ public class LowLevelCodecTest extends TestCase {
 
     public LowLevelDecoder getDecoder() {
       this.flush();
-      return new LowLevelDecoder(new ByteArrayInputStream(bytes.toByteArray()));
+      return new LowLevelDecoder(new ByteArrayInputStream(encoder.getBytes()));
     }
 
   }
@@ -120,7 +117,7 @@ public class LowLevelCodecTest extends TestCase {
       encoder.flush();
       // Check that the number of bits in the output is 5 times the
       // number of bytes in the input.
-      assertEquals(5 * kValueCount, 8 * encoder.bytes.size());
+      assertEquals(5 * kValueCount, 8 * encoder.encoder.length());
       encoder.checkReadBytes(values);
     }
   }

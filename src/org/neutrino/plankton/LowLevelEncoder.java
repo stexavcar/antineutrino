@@ -1,7 +1,6 @@
 package org.neutrino.plankton;
 
 import java.io.IOException;
-import java.io.OutputStream;
 
 public class LowLevelEncoder {
 
@@ -9,18 +8,23 @@ public class LowLevelEncoder {
   static final int kMaxEncodedSize = 9;
   static final int kSmallLimit = 16;
 
-  private final OutputStream out;
+  private final ByteStream out = new ByteStream();
   private int writtenCount = 0;
   private boolean atHalf = false;
   private int encodedCursor = 0;
   private final byte[] encoded = new byte[kMaxEncodedSize];
   private final int[] longBuffer = new int[10];
 
-  public LowLevelEncoder(OutputStream out) {
-    this.out = out;
+  private int getPointer() {
+    int lastByte = out.length() + encodedCursor;
+    if (atHalf) {
+      return lastByte << 1;
+    } else {
+      return (lastByte << 1) | 1;
+    }
   }
 
-  public void write(int b) throws IOException {
+  public int write(int b) throws IOException {
     assert b >= 0;
     assert b < 256;
     if (writtenCount == kMaxByteCount)
@@ -44,6 +48,15 @@ public class LowLevelEncoder {
       }
     }
     writtenCount++;
+    return getPointer();
+  }
+
+  public byte[] getBytes() {
+    return out.getBytes();
+  }
+
+  public int length() {
+    return out.length();
   }
 
   public void flush() throws IOException {
@@ -52,7 +65,7 @@ public class LowLevelEncoder {
     }
     while (writtenCount < kMaxByteCount)
       write((byte) 0);
-    out.write(encoded, 0, encodedCursor + 1);
+    out.add(encoded, encodedCursor + 1);
     encoded[0] = 0;
     encodedCursor = 0;
     atHalf = false;
