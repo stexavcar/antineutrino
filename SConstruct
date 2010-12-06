@@ -77,6 +77,7 @@ class Platform(object):
 PLATFORM = Platform.get()
 
 PIB_EXT='.pib'
+PIB2_EXT='.pib2'
 
 # Add javatrino as a source since it is required to build
 def JavatrinoAdder(source, target, env):
@@ -88,16 +89,17 @@ def CompileGenerator(source, target, env, for_signature):
   if modules:
     for module in modules:
       flags += ' --module %s' % module
-  return '%(java)s -cp %(jar)s org.neutrino.main.Compile --root-path %(root)s --outfile $TARGET %(flags)s' % {
+  return '%(java)s -cp %(jar)s org.neutrino.main.Compile --root-path %(root)s --outfile %(target1)s --outfile2 %(target2)s %(flags)s' % {
     'java': java_command,
     'jar': source[0],
     'root': source[1],
-    'flags': flags
+    'flags': flags,
+    'target1': target[0],
+    'target2': target[1]
   }
 
 PIB_BUILDER = Builder(
   generator = CompileGenerator,
-  suffix = PIB_EXT,
   emitter = JavatrinoAdder
 )
 
@@ -155,10 +157,12 @@ def BuildPib(target, source, **kwargs):
       env.Depends(result, join(base, f))
   return result
 
-libpib = BuildPib(join(pib_path, 'lib'), 'lib')
+libpib = join(pib_path, 'lib.pib')
+bld_libpib = BuildPib([libpib, join(pib_path, 'lib.pib2')], 'lib')
 
 modules = ['org::neutrino::neuneu', 'org::neutrino::neuneu::test', 'org::neutrino::neuneu::value']
-neuneupib = BuildPib(join(pib_path, 'neuneu'), 'lib', MODULES=modules)
+neuneupib = join(pib_path, 'neuneu.pib')
+bld_neuneupib = BuildPib([neuneupib, join(pib_path, 'neuneu.pib2')], 'lib', MODULES=modules)
 
 neuneuobj = env.NeuObject(join(obj_path, 'neuneu'), [libpib, neuneupib])
 

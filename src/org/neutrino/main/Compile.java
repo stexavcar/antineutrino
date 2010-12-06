@@ -1,14 +1,14 @@
 package org.neutrino.main;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import org.neutrino.compiler.CompilerModule;
 import org.neutrino.compiler.CompilerUniverse;
 import org.neutrino.pib.BinaryBuilder;
 import org.neutrino.pib.Universe;
 import org.neutrino.syntax.SyntaxError;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 /**
  * Main entry-point to the java neutrino implementation.
@@ -19,6 +19,7 @@ public class Compile {
 
   public static @Flags.Flag("root-path") String rootPath;
   public static @Flags.Flag("outfile") String outputPath = "a.pib";
+  public static @Flags.Flag("outfile2") String outputPath2 = "a.pib2";
 
   public static void main(String[] rawArgs) throws IOException {
     Flags.parseArguments(rawArgs, Compile.class, CompilerModule.class);
@@ -31,8 +32,11 @@ public class Compile {
     if (binary == null)
       System.exit(1);
     FileOutputStream out = new FileOutputStream(outputPath);
-    binary.write(out);
+    binary.writeOldton(out);
     out.close();
+    FileOutputStream out2 = new FileOutputStream(outputPath2);
+    binary.writePlankton(out2);
+    out2.close();
   }
 
   public static Universe compile(CompilerUniverse top) {

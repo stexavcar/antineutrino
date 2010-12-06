@@ -1,13 +1,26 @@
 package org.neutrino.pib;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
+
 import org.neutrino.compiler.CompilerUniverse;
 import org.neutrino.oldton.ISeedable;
-import org.neutrino.oldton.PSeed;
-import org.neutrino.oldton.PValue;
 import org.neutrino.oldton.Oldton;
 import org.neutrino.oldton.OldtonRegistry;
+import org.neutrino.oldton.PSeed;
+import org.neutrino.oldton.PValue;
 import org.neutrino.oldton.annotations.Growable;
 import org.neutrino.oldton.annotations.SeedMember;
+import org.neutrino.plankton.ClassIndex;
+import org.neutrino.plankton.PlanktonEncoder;
+import org.neutrino.plankton.Store;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.MethodLookupHelper;
@@ -21,16 +34,6 @@ import org.neutrino.runtime.RValue;
 import org.neutrino.runtime.TypeId;
 import org.neutrino.syntax.Annotation;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-
 /**
  * A platform-independent binary.
  *
@@ -41,7 +44,7 @@ public class Universe implements ISeedable {
 
   static final String TAG = "org::neutrino::pib::Universe";
 
-  public @SeedMember Map<String, Module> modules;
+  public @Store @SeedMember Map<String, Module> modules;
   private Universe parallelUniverse = null;
   private final MethodLookupHelper methodLookupHelper = new MethodLookupHelper(this);
 
@@ -140,17 +143,24 @@ public class Universe implements ISeedable {
     return methodLookupHelper.lookupLambda(function, args);
   }
 
-  public void write(OutputStream out) throws IOException {
-    PLANKTON.write(out, PLANKTON.newSeed(this));
+  public void writeOldton(OutputStream out) throws IOException {
+    OLDTON.write(out, OLDTON.newSeed(this));
   }
 
-  public Universe read(InputStream in) throws IOException {
-    PValue value = PLANKTON.read(in);
+  public void writePlankton(OutputStream out) throws IOException {
+    PlanktonEncoder encoder = new PlanktonEncoder(REGISTRY.getClassIndex());
+    encoder.write(this);
+    encoder.flush();
+    out.write(encoder.getBytes());
+  }
+
+  public Universe readOldton(InputStream in) throws IOException {
+    PValue value = OLDTON.read(in);
     return ((PSeed) value).grow(Universe.class);
   }
 
-  public static Oldton getPlankton() {
-    return PLANKTON;
+  public static Oldton getOldton() {
+    return OLDTON;
   }
 
   public Set<Map.Entry<String, Module>> getModules() {
@@ -164,6 +174,10 @@ public class Universe implements ISeedable {
   @Override
   public String toString() {
     return "a Universe " + modules;
+  }
+
+  public static ClassIndex getClassIndex() {
+    return REGISTRY.getClassIndex();
   }
 
   private static final OldtonRegistry REGISTRY = new OldtonRegistry() {{
@@ -181,6 +195,6 @@ public class Universe implements ISeedable {
     register(RInteger.class);
   }};
 
-  private static final Oldton PLANKTON = new Oldton(REGISTRY);
+  private static final Oldton OLDTON = new Oldton(REGISTRY);
 
 }

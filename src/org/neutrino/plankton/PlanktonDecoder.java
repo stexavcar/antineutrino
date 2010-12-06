@@ -77,6 +77,8 @@ public class PlanktonDecoder {
     case PlanktonEncoder.kTemplateTag:
       nextIndex++;
       return parseTemplateInstance();
+    case PlanktonEncoder.kBlobTag:
+      return parseBlob();
     default:
       throw new AssertionError("Unknown tag: " + tag);
     }
@@ -121,11 +123,15 @@ public class PlanktonDecoder {
   }
 
   private String parseString() throws IOException {
+    return new String(parseBlob());
+  }
+
+  private byte[] parseBlob() throws IOException {
     int length = (int) in.readUnsigned();
     byte[] bytes = new byte[length];
     for (int i = 0; i < length; i++)
       bytes[i] = (byte) in.read();
-    return new String(bytes);
+    return bytes;
   }
 
   private List<?> parseArray() throws IOException {

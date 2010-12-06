@@ -5,6 +5,7 @@ import java.util.List;
 import org.neutrino.oldton.ISeedable;
 import org.neutrino.oldton.annotations.Growable;
 import org.neutrino.oldton.annotations.SeedMember;
+import org.neutrino.plankton.Store;
 import org.neutrino.syntax.Annotation;
 
 @Growable(RProtocol.TAG)
@@ -12,11 +13,11 @@ public class RProtocol extends RValue implements ISeedable {
 
   static final String TAG = "org::neutrino::runtime::RProtocol";
 
-  public @SeedMember List<Annotation> annotations;
-  public @SeedMember String id;
-  public @SeedMember String displayName;
-  public @SeedMember TypeId protocolTypeId;
-  public @SeedMember TypeId instanceTypeId;
+  public @Store @SeedMember List<Annotation> annotations;
+  public @Store @SeedMember String id;
+  public @Store @SeedMember String displayName;
+  public @Store @SeedMember TypeId protocolTypeId;
+  public @Store @SeedMember TypeId instanceTypeId;
 
   public RProtocol(List<Annotation> annotations, String id,
       String displayName) {

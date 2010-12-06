@@ -13,6 +13,7 @@ import org.neutrino.oldton.PMap.Thunk;
 import org.neutrino.oldton.annotations.Factory;
 import org.neutrino.oldton.annotations.Growable;
 import org.neutrino.oldton.annotations.SeedMember;
+import org.neutrino.plankton.ClassIndex;
 
 /**
  * A registry where plankton seed types can be registered.
@@ -38,16 +39,16 @@ public class OldtonRegistry {
 
     @SuppressWarnings("unchecked")
     private T createNewInstance(PValue payload) throws InvocationTargetException, InstantiationException, IllegalAccessException {
+      for (Method method : klass.getDeclaredMethods()) {
+        Factory factory = method.getAnnotation(Factory.class);
+        if (factory != null) {
+          isInitialized = !factory.initialize();
+          return (T) method.invoke(null, payload);
+        }
+      }
       try {
         return klass.newInstance();
       } catch (InstantiationException ie) {
-        for (Method method : klass.getDeclaredMethods()) {
-          Factory factory = method.getAnnotation(Factory.class);
-          if (factory != null) {
-            isInitialized = !factory.initialize();
-            return (T) method.invoke(null, payload);
-          }
-        }
         return null;
       }
     }
@@ -135,7 +136,14 @@ public class OldtonRegistry {
 
   }
 
+  public ClassIndex getClassIndex() {
+    return classIndex;
+  }
+
+  private final ClassIndex classIndex = new ClassIndex();
+
   public <T> void register(Class<T> klass) {
+    classIndex.add(klass);
     Growable seedable = klass.getAnnotation(Growable.class);
     String tag = seedable.value();
     seedCodecs.put(tag, new AnnotationCodec<T>(klass));

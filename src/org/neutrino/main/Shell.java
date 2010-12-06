@@ -29,7 +29,7 @@ public class Shell {
     Flags.parseArguments(rawArgs, Shell.class);
     assert pibPath != null : "No --pib-path has been specified";
     File file = new File(pibPath);
-    PValue value = Universe.getPlankton().read(new FileInputStream(file));
+    PValue value = Universe.getOldton().read(new FileInputStream(file));
     Universe universe = ((PSeed) value).grow(Universe.class);
     universe.initialize();
     (new Shell(universe)).readEvalPrint();
