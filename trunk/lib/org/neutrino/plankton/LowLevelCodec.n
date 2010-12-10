@@ -1,0 +1,73 @@
+protocol LowLevelDecoder;
+
+def LowLevelDecoder.new() -> new LowLevelDecoder {
+  
+};
+
+protocol LowLevelEncoder;
+
+def kMaxByteCount := 8;
+def kSmallLimit := 16;
+
+def LowLevelEncoder.new() -> new LowLevelEncoder {
+  out := new BlobStream(),
+  r_at_half := new Ref(false),
+  r_encoded_cursor := new Ref(0),
+  encoded := new ArrayList() [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+  r_written_count := new Ref(0)
+};
+
+def (this is LowLevelEncoder).written_count -> this.r_written_count.get();
+
+def (this is LowLevelEncoder).encoded_cursor -> this.r_encoded_cursor.get();
+
+def (this is LowLevelEncoder).advance_encoded_cursor
+ -> this.r_encoded_cursor.set(this.encoded_cursor + 1);
+
+def (this is LowLevelEncoder).at_half -> this.r_at_half.get();
+
+def (this is LowLevelEncoder).at_half:=(value) -> this.r_at_half.set(value);
+
+def (this is LowLevelEncoder).write(b) {
+  if this.written_count = kMaxByteCount
+    then this.flush();
+  if b < kSmallLimit then {
+    if this.at_half then {
+      def before := this.encoded[this.encoded_cursor];
+      this.encoded[this.encoded_cursor]  := before | (b & 16r0F);
+      this.at_half := false;
+    } else {
+      this.encoded[this.advance_encoded_cursor] := b << 4;
+      this.at_half := true;
+    }
+  } else {
+    def nb := b - kSmallLimit;
+    def toc_before := this.encoded[0];
+    this.encoded[0] := toc_before | (128 >> this.written_count);
+    if this.at_half then {
+      def before_one := this.encoded[this.encoded_cursor];
+      this.encoded[this.encoded_cursor] := before_one | ((nb >> 4) & 16r0F);
+      this.encoded[this.advance_encoded_cursor] := nb << 4;
+    } else {
+      this.encoded[this.advance_encoded_cursor] := nb;
+    }
+  }
+  this.r_written_count.set(this.written_count + 1);
+}
+
+def (this is LowLevelEncoder).flush() {
+  if this.written_count > 0 then {
+    with_1cc (break) -> Control.repeat(fn {
+      if this.written_count = kMaxByteCount
+        then break(null);
+      this.write(0);
+    });
+    this.out.write_data(this.encoded, 0, this.encoded_cursor + 1);
+    this.encoded[0] := 0;
+    this.r_encoded_cursor.set(0);
+    this.r_at_half.set(0);
+    this.r_written_count.set(0);
+  }
+}
+
+def (this is LowLevelEncoder).to_blob() -> { this.flush(); this.out.get_blob(); }

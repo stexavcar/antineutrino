@@ -306,6 +306,9 @@ public class Native implements ISeedable {
     public RValue call(Arguments args) {
       RMutablePrimitiveArray self = (RMutablePrimitiveArray) args.getThis();
       RInteger index = (RInteger) args.getArgument(0);
+      if (index.getValue() >= self.getLength()) {
+        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
+      }
       RValue value = args.getArgument(1);
       self.set(index.getValue(), value);
       return value;

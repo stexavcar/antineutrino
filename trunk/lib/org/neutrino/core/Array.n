@@ -40,7 +40,7 @@ def MutablePrimitiveArray.new(size is Integer) -> internal "mutprimarr";
 
 def (this is MutablePrimitiveArray)[i is Integer]:=(value) -> internal "mutarr.set";
 
-@native("byte_array") protocol ByteArray;
+@native("byte_array") protocol ByteArray is PrimitiveArray;
 
 def (this is ByteArray)[index is Integer] -> internal "byte_array[1]";
 
