@@ -1,0 +1,25 @@
+def (this is PlanktonTest).test_low_level_codec() {
+  this.test_encoding();
+}
+
+def (this is LowLevelEncoder).write(elms is PrimitiveArray) {
+  for (elm : elms)
+    this.write(elm);
+}
+
+def (this is PlanktonTest).test_encoding() {
+  this.on_start("low level encoding");
+  def empty := new LowLevelEncoder();
+  empty.write(0);
+  assert_equal(new ArrayList [0, 0, 0, 0, 0], new ArrayList(empty.to_blob()));
+  def full := new LowLevelEncoder();
+  full.write(#[16rFF, 16rFF, 16rFF, 16rFF, 16rFF, 16rFF, 16rFF, 16rFF]);
+  assert_equal(
+    new ArrayList [16rFF, 16rEF, 16rEF, 16rEF, 16rEF, 16rEF, 16rEF, 16rEF, 16rEF],
+    new ArrayList(full.to_blob()));
+  def half := new LowLevelEncoder();
+  half.write(#[0, 0, 0, 0, 16rFF, 16rFF, 16rFF, 16rFF]);
+  assert_equal(
+    new ArrayList [16r0F, 0, 0, 16rEF, 16rEF, 16rEF, 16rEF],
+    new ArrayList(half.to_blob()));
+}
