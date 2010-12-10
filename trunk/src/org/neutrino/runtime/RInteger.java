@@ -1,14 +1,15 @@
 package org.neutrino.runtime;
 
 import org.neutrino.oldton.ISeedable;
+import org.neutrino.oldton.Oldton;
 import org.neutrino.oldton.PInteger;
 import org.neutrino.oldton.PMap;
 import org.neutrino.oldton.PString;
 import org.neutrino.oldton.PValue;
-import org.neutrino.oldton.Oldton;
 import org.neutrino.oldton.annotations.Factory;
 import org.neutrino.oldton.annotations.Growable;
 import org.neutrino.oldton.annotations.SeedMember;
+import org.neutrino.plankton.Store;
 
 @Growable(RInteger.TAG)
 public class RInteger extends RValue implements ISeedable {
@@ -23,11 +24,13 @@ public class RInteger extends RValue implements ISeedable {
       kCache[i] = new RInteger(i);
   }
 
-  public final @SeedMember int value;
+  public @Store @SeedMember int value;
 
   private RInteger(int value) {
     this.value = value;
   }
+
+  public RInteger() { }
 
   public static RInteger get(int value) {
     if (0 <= value && value < kCachedCount)

@@ -8,6 +8,7 @@ import org.neutrino.oldton.annotations.SeedMember;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
+import org.neutrino.plankton.Store;
 import org.neutrino.syntax.Annotation;
 
 @Growable(RMethod.TAG)
@@ -17,10 +18,10 @@ public class RMethod extends RValue implements ISeedable {
 
   static final String TAG = "org::neutrino::runtime::RMethod";
 
-  public @SeedMember List<Annotation> annots;
-  public @SeedMember String name;
-  public @SeedMember List<Parameter> params;
-  public @SeedMember CodeBundle code;
+  public @Store @SeedMember List<Annotation> annots;
+  public @Store @SeedMember String name;
+  public @Store @SeedMember List<Parameter> params;
+  public @Store @SeedMember CodeBundle code;
   public Module origin;
 
   public RMethod(List<Annotation> annots, String name, List<Parameter> params,

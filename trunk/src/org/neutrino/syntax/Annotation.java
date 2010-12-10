@@ -5,14 +5,15 @@ import java.util.List;
 import org.neutrino.oldton.ISeedable;
 import org.neutrino.oldton.annotations.Growable;
 import org.neutrino.oldton.annotations.SeedMember;
+import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RValue;
 
 @Growable(Annotation.TAG)
 public class Annotation implements ISeedable {
 
   static final String TAG = "org::neutrino::syntax::Annotation";
-  public @SeedMember String tag;
-  public @SeedMember List<RValue> args;
+  public @Store @SeedMember String tag;
+  public @Store @SeedMember List<RValue> args;
 
   public Annotation(String tag, List<RValue> args) {
     this.tag = tag;

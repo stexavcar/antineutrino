@@ -3,6 +3,7 @@ package org.neutrino.runtime;
 import org.neutrino.oldton.ISeedable;
 import org.neutrino.oldton.annotations.Growable;
 import org.neutrino.oldton.annotations.SeedMember;
+import org.neutrino.plankton.Store;
 
 @Growable(RString.TAG)
 public class RString extends RValue implements ISeedable {
@@ -10,7 +11,7 @@ public class RString extends RValue implements ISeedable {
   private static final TypeId TYPE_ID = TypeId.get("str");
 
   static final String TAG = "org::neutrino::runtime::RString";
-  public @SeedMember String value;
+  public @Store @SeedMember String value;
 
   public RString(String value) {
     this.value = value;
