@@ -2,6 +2,8 @@ package org.neutrino.plankton;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -41,6 +43,7 @@ public class PlanktonEncoder {
     private final Class<?> klass;
     private final Map<String, Field> fieldMap = new HashMap<String, Field>();
     private final List<Field> fields = new ArrayList<Field>();
+    private final Method atomicFactory;
 
     public ObjectEncoder(Class<?> klass) {
       this.klass = klass;
@@ -50,10 +53,38 @@ public class PlanktonEncoder {
           fields.add(field);
         }
       }
+      boolean isAtomic = (klass.getAnnotation(Atomic.class) != null);
+      if (isAtomic) {
+        for (Method method : klass.getDeclaredMethods()) {
+          if (method.getAnnotation(Generator.class) != null) {
+            atomicFactory = method;
+            return;
+          }
+        }
+        atomicFactory = null;
+      } else {
+        atomicFactory = null;
+      }
     }
 
     public boolean canHandle(Object obj) {
       return klass.isInstance(obj);
+    }
+
+    public boolean isAtomic() {
+      return atomicFactory != null;
+    }
+
+    public Object newAtomicInstance(Object arg) {
+      try {
+        return atomicFactory.invoke(null, arg);
+      } catch (IllegalArgumentException e) {
+        throw new RuntimeException(e);
+      } catch (IllegalAccessException e) {
+        throw new RuntimeException(e);
+      } catch (InvocationTargetException e) {
+        throw new RuntimeException(e);
+      }
     }
 
     public Object newInstance() {
@@ -126,6 +157,8 @@ public class PlanktonEncoder {
       this.writeString((String) obj);
     } else if (obj instanceof byte[]) {
       this.writeBlob((byte[]) obj);
+    } else if (obj instanceof Boolean) {
+      this.writeBoolean((Boolean) obj);
     } else {
       this.writeReferrableObject(obj);
     }
@@ -204,6 +237,14 @@ public class PlanktonEncoder {
 
   private void writeNull() throws IOException {
     out.write(kNullTag);
+  }
+
+  private void writeBoolean(Boolean obj) throws IOException {
+    if (obj.booleanValue()) {
+      out.write(kTrueTag);
+    } else {
+      out.write(kFalseTag);
+    }
   }
 
   private void writeInteger(int value) throws IOException {

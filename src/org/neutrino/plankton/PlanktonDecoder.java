@@ -13,8 +13,20 @@ public class PlanktonDecoder {
 
   private abstract class Template<T> {
 
-    public abstract void instantiate(T obj) throws IOException;
-    public abstract T newInstance() throws IOException;
+    /**
+     * Called when the beginning of the template is encountered but
+     * before the payload has been read.  If an object is returned this
+     * will be the one bound to the object's index.
+     */
+    public abstract T onTemplateStart() throws IOException;
+
+    /**
+     * Called after the payload has been parsed.  If {@link #onTemplateStart()}
+     * returned null and this returns a value then that value will be
+     * bound to this object's index.
+     */
+    public abstract T onTemplatePayload(T obj) throws IOException;
+
 
   }
 
@@ -64,6 +76,12 @@ public class PlanktonDecoder {
       return (int) in.readSigned();
     case PlanktonEncoder.kStringTag:
       return parseString();
+    case PlanktonEncoder.kNullTag:
+      return null;
+    case PlanktonEncoder.kTrueTag:
+      return true;
+    case PlanktonEncoder.kFalseTag:
+      return false;
     case PlanktonEncoder.kMapTag:
       nextIndex++;
       return parseMap();
@@ -104,11 +122,16 @@ public class PlanktonDecoder {
   }
 
   private <T> T instantiateTemplate(Template<T> template, boolean storeRef) throws IOException {
-    T instance = template.newInstance();
-    if (storeRef)
-      refs.put(getCurrentIndex(), instance);
-    template.instantiate(instance);
-    return instance;
+    int index = getCurrentIndex();
+    T beforeInstance = template.onTemplateStart();
+    if (storeRef && beforeInstance != null)
+      refs.put(index, beforeInstance);
+    T afterInstance = template.onTemplatePayload(beforeInstance);
+    if (storeRef && afterInstance != null) {
+      refs.put(index, afterInstance);
+      beforeInstance = afterInstance;
+    }
+    return beforeInstance;
   }
 
   private Object parseTemplateInstance() throws IOException {
@@ -150,13 +173,14 @@ public class PlanktonDecoder {
       parts.add(readTemplate());
     return new Template<List<Object>>() {
       @Override
-      public List<Object> newInstance() {
+      public List<Object> onTemplateStart() {
         return new ArrayList<Object>();
       }
       @Override
-      public void instantiate(List<Object> value) throws IOException {
+      public List<Object> onTemplatePayload(List<Object> value) throws IOException {
         for (int i = 0; i < length; i++)
           value.add(instantiateTemplate(parts.get(i), false));
+        return null;
       }
     };
   }
@@ -182,16 +206,17 @@ public class PlanktonDecoder {
     }
     return new Template<Map<Object, Object>>() {
       @Override
-      public Map<Object, Object> newInstance() {
+      public Map<Object, Object> onTemplateStart() {
         return new HashMap<Object, Object>();
       }
       @Override
-      public void instantiate(Map<Object, Object> map) throws IOException {
+      public Map<Object, Object> onTemplatePayload(Map<Object, Object> map) throws IOException {
         for (int i = 0; i < length; i++) {
           Object key = instantiateTemplate(parts.get(2 * i), false);
           Object value = instantiateTemplate(parts.get(2 * i + 1), false);
           map.put(key, value);
         }
+        return null;
       }
     };
   }
@@ -202,14 +227,20 @@ public class PlanktonDecoder {
     final ObjectEncoder codec = classes.getEncoder(tag);
     return new Template<Object>() {
       @Override
-      public Object newInstance() {
-        return codec.newInstance();
+      public Object onTemplateStart() {
+        return codec.isAtomic() ? null : codec.newInstance();
       }
       @Override
-      public void instantiate(Object obj) throws IOException {
+      public Object onTemplatePayload(Object obj) throws IOException {
         Map<String, Object> fields = (Map<String, Object>) instantiateTemplate(payloadTemplate, false);
-        for (Map.Entry<String, Object> entry : fields.entrySet())
-          codec.set(obj, entry.getKey(), entry.getValue());
+        if (codec.isAtomic()) {
+          Object arg = fields.values().iterator().next();
+          return codec.newAtomicInstance(arg);
+        } else {
+          for (Map.Entry<String, Object> entry : fields.entrySet())
+            codec.set(obj, entry.getKey(), entry.getValue());
+          return null;
+        }
       }
     };
   }
@@ -218,12 +249,12 @@ public class PlanktonDecoder {
     final Object value = read(tag);
     return new Template<Object>() {
       @Override
-      public Object newInstance() {
+      public Object onTemplateStart() {
         return value;
       }
       @Override
-      public void instantiate(Object obj) throws IOException {
-        // ignore
+      public Object onTemplatePayload(Object obj) throws IOException {
+        return null;
       }
     };
   }
@@ -231,12 +262,12 @@ public class PlanktonDecoder {
   private Template<?> parsePlaceholderTemplate() throws IOException {
     return new Template<Object>() {
       @Override
-      public Object newInstance() throws IOException {
+      public Object onTemplateStart() throws IOException {
         return PlanktonDecoder.this.read();
       }
       @Override
-      public void instantiate(Object obj) {
-        // ignore
+      public Object onTemplatePayload(Object obj) {
+        return null;
       }
     };
   }

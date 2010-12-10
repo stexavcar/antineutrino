@@ -3,6 +3,7 @@ package org.neutrino.pib;
 import org.neutrino.oldton.ISeedable;
 import org.neutrino.oldton.annotations.Growable;
 import org.neutrino.oldton.annotations.SeedMember;
+import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.TypeId;
 
@@ -11,9 +12,9 @@ public class Parameter implements ISeedable {
 
   static final String TAG = "org::neutrino::pib::Parameter";
 
-  public @SeedMember String name;
-  public @SeedMember String type;
-  public @SeedMember boolean isProtocolMethod;
+  public @Store @SeedMember String name;
+  public @Store @SeedMember String type;
+  public @Store @SeedMember boolean isProtocolMethod;
   private TypeId typeId;
 
   public Parameter(String name, String type, boolean isProtocolMethod) {

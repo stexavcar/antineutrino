@@ -157,16 +157,18 @@ def BuildPib(target, source, **kwargs):
       env.Depends(result, join(base, f))
   return result
 
+libpib2 = join(pib_path, 'lib.pib2')
 libpib = join(pib_path, 'lib.pib')
-bld_libpib = BuildPib([libpib, join(pib_path, 'lib.pib2')], 'lib')
+bld_libpib = BuildPib([libpib, libpib2], 'lib')
 
 modules = ['org::neutrino::neuneu', 'org::neutrino::neuneu::test', 'org::neutrino::neuneu::value']
 neuneupib = join(pib_path, 'neuneu.pib')
-bld_neuneupib = BuildPib([neuneupib, join(pib_path, 'neuneu.pib2')], 'lib', MODULES=modules)
+neuneupib2 = join(pib_path, 'neuneu.pib2')
+bld_neuneupib = BuildPib([neuneupib, neuneupib2], 'lib', MODULES=modules)
 
-neuneuobj = env.NeuObject(join(obj_path, 'neuneu'), [libpib, neuneupib])
+neuneuobj = env.NeuObject(join(obj_path, 'neuneu'), [libpib2, neuneupib])
 
-libtest = env.Test('libtest', libpib)
+libtest = env.Test('libtest', libpib2)
 
 env.Command('neuneu-summary', neuneuobj, PLATFORM.object_format.summary_command())
 

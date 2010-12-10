@@ -1,20 +1,19 @@
 package org.neutrino.main;
 
-import org.neutrino.oldton.PSeed;
-import org.neutrino.oldton.PValue;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.neutrino.pib.Universe;
+import org.neutrino.plankton.PlanktonDecoder;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.RObject;
 import org.neutrino.runtime.RPrimitiveArray;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class Run {
 
@@ -33,8 +32,9 @@ public class Run {
     List<String> args = Flags.parseArguments(rawArgs, Run.class);
     Interpreter inter = new Interpreter();
     File file = new File(pibPath);
-    PValue value = Universe.getOldton().read(new FileInputStream(file));
-    Universe universe = ((PSeed) value).grow(Universe.class);
+    PlanktonDecoder decoder = new PlanktonDecoder(Universe.getClassIndex(),
+        new FileInputStream(file));
+    Universe universe = (Universe) decoder.read();
     universe.initialize();
     Lambda entryPointBinding = universe.getEntryPoint(entryPoint);
     assert entryPointBinding != null : "No entry point found.";
