@@ -1,8 +1,52 @@
 protocol LowLevelDecoder;
 
-def LowLevelDecoder.new() -> new LowLevelDecoder {
-  
+def LowLevelDecoder.new(in) -> new LowLevelDecoder {
+  r_cursor := new Ref(kMaxByteCount),
+  buffer := new ArrayList(kMaxByteCount),
+  in := in
 };
+
+def (this is LowLevelDecoder).cursor -> this.r_cursor.get();
+
+def (this is LowLevelDecoder).advance_cursor() {
+  def result := this.cursor;
+  this.r_cursor.set(result + 1);
+  result;
+}
+
+def (this is LowLevelDecoder).read() {
+  if this.cursor = kMaxByteCount
+    then this.fill_buffer();
+  this.buffer[this.advance_cursor()];
+}
+
+def (this is LowLevelDecoder).fill_buffer() {
+  def head := this.in.read();
+  ref current := 0;
+  ref at_half := false;
+  for (i : 0 .. kMaxByteCount) {
+    def is_half := (head & (128 >> i)) = 0;
+    if is_half then {
+      if at_half then {
+        this.buffer[i] := current & 16r0F;
+        at_half := false;
+      } else {
+        current := this.in.read();
+        this.buffer[i] := (current >> 4) & 16r0F;
+        at_half := true;
+      }
+    } else {
+      if at_half then {
+        def value := (current & 16r0F) << 4;
+        current := this.in.read();
+        this.buffer[i] := (value | ((current >> 4) & 16r0F)) + kSmallLimit;
+      } else {
+        this.buffer[i] := this.in.read() + kSmallLimit;
+      }
+    }
+  }
+  this.r_cursor.set(0);
+}
 
 protocol LowLevelEncoder;
 
@@ -65,7 +109,7 @@ def (this is LowLevelEncoder).flush() {
     this.out.write_data(this.encoded, 0, this.encoded_cursor + 1);
     this.encoded[0] := 0;
     this.r_encoded_cursor.set(0);
-    this.r_at_half.set(0);
+    this.r_at_half.set(false);
     this.r_written_count.set(0);
   }
 }

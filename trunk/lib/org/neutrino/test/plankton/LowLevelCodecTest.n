@@ -1,5 +1,6 @@
 def (this is PlanktonTest).test_low_level_codec() {
   this.test_encoding();
+  this.test_random_byte_encoding();
 }
 
 def (this is LowLevelEncoder).write(elms is PrimitiveArray) {
@@ -22,4 +23,25 @@ def (this is PlanktonTest).test_encoding() {
   assert_equal(
     new ArrayList [16r0F, 0, 0, 16rEF, 16rEF, 16rEF, 16rEF],
     new ArrayList(half.to_blob()));
+}
+
+def (this is PlanktonTest).test_random_byte_encoding() {
+  this.on_start("random byte encoding");
+  def random := new Random(1105);
+  def value_count := 64;
+  def iteration_count := 8;
+  def data := new MutablePrimitiveByteArray(value_count);
+  for (i : 0 .. iteration_count) {
+    def encoder := new LowLevelEncoder();
+    random.next_bytes(data);
+    for (j : 0 .. value_count)
+      encoder.write(data[j]);
+    def result := encoder.to_blob();
+    def decoder := new LowLevelDecoder(new BlobInputStream(result));
+    def found := new MutablePrimitiveByteArray(value_count);
+    for (j : 0 .. value_count) {
+      found[j] := decoder.read();
+    }
+    assert_equal(data, found);
+  }
 }

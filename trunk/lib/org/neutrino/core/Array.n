@@ -15,6 +15,15 @@ def (this is PrimitiveArray)+(that is PrimitiveArray) {
   result;
 }
 
+def (this is PrimitiveArray)=(that is PrimitiveArray)
+ -> (this.length = that.length) and (with_1cc (yield) {
+   for (i : 0 .. this.length) {
+     if this[i] != that[i]
+       then yield(false);
+   }
+   true;
+ });
+
 def (this is PrimitiveArray).iter {
   def self := this;
   def index_itr := (0 .. this.length).iter;
