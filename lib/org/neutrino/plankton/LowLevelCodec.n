@@ -20,6 +20,23 @@ def (this is LowLevelDecoder).read() {
   this.buffer[this.advance_cursor()];
 }
 
+def (this is LowLevelDecoder).read_unsigned() -> with_1cc (return) {
+  ref result := 0;
+  Control.repeat(fn {
+    def next := this.read();
+    result := (result << 7) | (next >> 1);
+    if (next & 1) = 1
+      then return(result);
+  });
+}
+
+def (this is LowLevelDecoder).read_signed() {
+  def coded := this.read_unsigned();
+  if (coded & 1) = 0
+    then coded >> 1;
+    else (0-(coded >> 1)) - 1;
+}
+
 def (this is LowLevelDecoder).fill_buffer() {
   def head := this.in.read();
   ref current := 0;
@@ -58,6 +75,7 @@ def LowLevelEncoder.new() -> new LowLevelEncoder {
   r_at_half := new Ref(false),
   r_encoded_cursor := new Ref(0),
   encoded := new ArrayList() [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
+  long_buffer := new ArrayList() [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
   r_written_count := new Ref(0)
 };
 
@@ -97,6 +115,33 @@ def (this is LowLevelEncoder).write(b) {
     }
   }
   this.r_written_count.set(this.written_count + 1);
+}
+
+def (this is LowLevelEncoder).write_unsigned(val) {
+  assert_true(val >= 0);
+  ref value := val;
+  ref i := 0;
+  with_1cc (break) {
+    Control.repeat(fn {
+      def low := value & 16r7F;
+      value := value >> 7;
+      def part := low << 1;
+      this.long_buffer[i] := part;
+      i := i + 1;
+      if value = 0
+        then break(null);
+    });
+  }
+  for (j : (i - 1) .. 0)
+    this.write(this.long_buffer[j]);
+  this.write(this.long_buffer[0] | 1);
+}
+
+def (this is LowLevelEncoder).write_signed(val) {
+  this.write_unsigned(
+    if val < 0
+      then ((0 - val - 1) << 1) + 1
+      else val << 1);
 }
 
 def (this is LowLevelEncoder).flush() {
