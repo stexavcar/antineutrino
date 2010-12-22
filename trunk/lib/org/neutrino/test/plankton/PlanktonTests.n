@@ -4,4 +4,5 @@ def PlanktonTest.new(counter) -> new PlanktonTest { count := counter };
 
 def (this is PlanktonTest).run() {
   this.test_low_level_codec();
+  this.test_plankton_codec();
 }

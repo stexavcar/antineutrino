@@ -14,11 +14,11 @@ def kPrintProgress := true;
 def test_main() {
   def counter := new Ref(0);
   def suites := new ArrayList [
-    new PlanktonTest(counter),
     new LanguageTest(counter),
     new UtilsTest(counter),
     new ExampleTest(counter),
-    new CompilerTest(counter)
+    new CompilerTest(counter),
+    new PlanktonTest(counter)
   ];
   for (i : 0 .. suites.length)
     suites[i].run();
