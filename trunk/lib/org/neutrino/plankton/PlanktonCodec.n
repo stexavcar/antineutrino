@@ -1,0 +1,62 @@
+def kIntTag := 0;
+def kStringTag := 1;
+def kNullTag := 2;
+def kTrueTag := 3;
+def kFalseTag := 4;
+
+protocol PlanktonEncoder;
+
+def PlanktonEncoder.new(class_index) -> new PlanktonEncoder {
+  class_index := class_index,
+  out := new LowLevelEncoder()
+}
+
+def (this is PlanktonEncoder).to_blob()
+ -> this.out.to_blob();
+
+def (this is PlanktonEncoder).write(str is String) {
+  this.out.write(kStringTag);
+  this.out.write_unsigned(str.length);
+  for (chr : str.ascii_characters)
+    this.out.write(chr);
+}
+
+def (this is PlanktonEncoder).write(obj is Integer) {
+  this.out.write(kIntTag);
+  this.out.write_signed(obj);
+}
+
+protocol PlanktonDecoder;
+
+def PlanktonDecoder.new_dispatcher() {
+  def result := new HashMap();
+  result[kStringTag] := (fn (d) -> d.read_string());
+  result[kIntTag] := (fn (d) -> d.read_int());
+  result;
+}
+
+def PlanktonDecoder.new(in, class_index) -> new PlanktonDecoder {
+  in := in,
+  class_index := class_index,
+  dispatcher := PlanktonDecoder.new_dispatcher()
+}
+
+def (this is PlanktonDecoder).read()
+ -> this.read(this.in.read());
+
+def (this is PlanktonDecoder).read(tag)
+ -> (this.dispatcher[tag])(this);
+
+ def (this is PlanktonDecoder).read_string() {
+   def length := this.in.read_unsigned();
+   def buf := new StringStream();
+   for (i : 0 .. length) {
+     def ord := this.in.read();
+     buf.add(string_from_ordinal(ord));
+   }
+   buf.to_string();
+ }
+ 
+ def (this is PlanktonDecoder).read_int()
+  -> this.in.read_signed();
+ 

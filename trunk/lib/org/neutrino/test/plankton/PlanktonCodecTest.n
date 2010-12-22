@@ -1,0 +1,19 @@
+def (this is PlanktonTest).test_plankton_codec() {
+  this.test_plankton_atomics();
+}
+
+def (this is PlanktonTest).code(obj) {
+  def encoder := new PlanktonEncoder(null);
+  encoder.write(obj);
+  def data := encoder.to_blob();
+  def stream := new BlobInputStream(data);
+  def decoder := new PlanktonDecoder(new LowLevelDecoder(stream), null);
+  decoder.read();
+}
+
+def (this is PlanktonTest).test_plankton_atomics() {
+  this.on_start("plankton atomics");
+  assert_equal("foo", this.code("foo"));
+  assert_equal(5, this.code(5));
+  assert_equal(0-7, this.code(0-7));
+}
