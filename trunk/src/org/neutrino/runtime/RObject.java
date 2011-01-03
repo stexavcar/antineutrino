@@ -17,6 +17,11 @@ public class RObject extends RValue {
     return outer.get(field);
   }
 
+  public void setField(RFieldKey field, RValue value) {
+    assert state != State.IMMUTABLE;
+    outer.put(field, value);
+  }
+
   @Override
   public TypeId getTypeId() {
     return proto.getInstanceTypeId();

@@ -3,8 +3,8 @@ protocol ArrayList is Sequence;
 def ArrayList.new() -> new ArrayList(0);
 
 def ArrayList.new(size is Integer) -> new ArrayList {
-  contents_ := new Ref(new MutablePrimitiveArray(size)),
-  length_ := new Ref(size)
+  contents := new MutablePrimitiveArray(size),
+  length := size
 }
 
 def ArrayList.new(elms is PrimitiveArray) {
@@ -22,10 +22,6 @@ def ArrayList.new(seq is Sequence) {
 }
 
 def (this is ArrayList)[i] -> this.contents[i];
-
-def (this is ArrayList).length -> this.length_.get();
-
-def (this is ArrayList).contents -> this.contents_.get();
 
 def (this is ArrayList)[i]:=(value) -> this.contents[i] := value;
 
@@ -45,7 +41,7 @@ def (this is ArrayList).to_string() {
 def (this is ArrayList).remove_last() {
   def new_length := this.length - 1;
   def result := this.contents[new_length];
-  this.length_.set(new_length);
+  this.length := new_length;
   result;
 }
 
@@ -76,7 +72,7 @@ def (this is ArrayList).add(value) {
   def new_length := this.length + 1;
   this.ensure_capacity(new_length);
   this.contents[this.length] := value;
-  this.length_.set(new_length);
+  this.length := new_length;
   value;
 }
 
@@ -86,7 +82,7 @@ def (this is ArrayList).ensure_capacity(capacity) {
     def new_contents := new MutablePrimitiveArray(capacity * 2);
     for (i : 0 .. this.length)
       new_contents[i] := old_contents[i];
-    this.contents_.set(new_contents);
+    this.contents := new_contents;
   }
 }
 

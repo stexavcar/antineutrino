@@ -1,6 +1,7 @@
 package org.neutrino.compiler;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -29,15 +30,30 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
     for (Tree.New.Field field : that.getFields()) {
       field.getBody().accept(this);
       if (field.hasEagerValue()) {
-        String name = field.getName();
-        CodeBuilder builder = module.createMethod(
+        // Add getter
+        String getterName = field.getName();
+        CodeBuilder getterBuilder = module.createMethod(
             that.getOrigin(),
-            Collections.<Annotation>emptyList(), name,
-            Collections.singletonList(new Parameter("this", proto.getId(), false)));
-        Assembler assm = builder.getAssembler();
-        assm.getField(field.getField());
-        assm.rethurn();
-        assm.finalize(0, 0);
+            Collections.<Annotation>emptyList(),
+            getterName,
+            Arrays.asList(new Parameter("this", proto.getId(), false)));
+        Assembler getterAssm = getterBuilder.getAssembler();
+        getterAssm.getField(field.getField());
+        getterAssm.rethurn();
+        getterAssm.finalize(0, 0);
+        // Add setter
+        String setterName = field.getName() + ":=";
+        CodeBuilder setterBuilder = module.createMethod(
+            that.getOrigin(),
+            Collections.<Annotation>emptyList(),
+            setterName,
+            Arrays.asList(
+                new Parameter("this", proto.getId(), false),
+                new Parameter("v", null, false)));
+        Assembler setterAssm = setterBuilder.getAssembler();
+        setterAssm.setField(field.getField());
+        setterAssm.rethurn();
+        setterAssm.finalize(0, 0);
         eagerFieldCount++;
       }
     }

@@ -13,8 +13,6 @@ import org.neutrino.pib.Opcode;
 
 public class Interpreter {
 
-  private static final RValue[] NO_VALUES = new RValue[0];
-
   private static final CodeBundle BOTTOM_FRAME_CODE = new CodeBundle(
       new byte[] { Opcode.kCall, 0, 0, Opcode.kTerminate },
       Collections.<Object>emptyList(),
@@ -195,6 +193,16 @@ public class Interpreter {
         RFieldKey field = (RFieldKey) frame.getLiteral(index);
         RObject obj = (RObject) frame.parent.getArgument(1, 0);
         frame.stack.push(obj.getField(field));
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kSetField: {
+        int index = frame.code[frame.pc + 1];
+        RFieldKey field = (RFieldKey) frame.getLiteral(index);
+        RObject obj = (RObject) frame.parent.getArgument(2, 0);
+        RValue value = frame.parent.getArgument(2, 1);
+        obj.setField(field, value);
+        frame.stack.push(value);
         frame.pc += 2;
         break;
       }

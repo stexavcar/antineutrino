@@ -1,16 +1,14 @@
 protocol LowLevelDecoder;
 
 def LowLevelDecoder.new(in) -> new LowLevelDecoder {
-  r_cursor := new Ref(kMaxByteCount),
+  cursor := kMaxByteCount,
   buffer := new ArrayList(kMaxByteCount),
   in := in
 };
 
-def (this is LowLevelDecoder).cursor -> this.r_cursor.get();
-
 def (this is LowLevelDecoder).advance_cursor() {
   def result := this.cursor;
-  this.r_cursor.set(result + 1);
+  this.cursor := result + 1;
   result;
 }
 
@@ -62,7 +60,7 @@ def (this is LowLevelDecoder).fill_buffer() {
       }
     }
   }
-  this.r_cursor.set(0);
+  this.cursor := 0;
 }
 
 protocol LowLevelEncoder;
@@ -72,23 +70,15 @@ def kSmallLimit := 16;
 
 def LowLevelEncoder.new() -> new LowLevelEncoder {
   out := new BlobStream(),
-  r_at_half := new Ref(false),
-  r_encoded_cursor := new Ref(0),
+  at_half := false,
+  encoded_cursor := 0,
   encoded := new ArrayList() [ 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
   long_buffer := new ArrayList() [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ],
-  r_written_count := new Ref(0)
+  written_count := 0
 };
 
-def (this is LowLevelEncoder).written_count -> this.r_written_count.get();
-
-def (this is LowLevelEncoder).encoded_cursor -> this.r_encoded_cursor.get();
-
 def (this is LowLevelEncoder).advance_encoded_cursor
- -> this.r_encoded_cursor.set(this.encoded_cursor + 1);
-
-def (this is LowLevelEncoder).at_half -> this.r_at_half.get();
-
-def (this is LowLevelEncoder).at_half:=(value) -> this.r_at_half.set(value);
+ -> this.encoded_cursor := this.encoded_cursor + 1;
 
 def (this is LowLevelEncoder).write(b) {
   if this.written_count = kMaxByteCount
@@ -114,7 +104,7 @@ def (this is LowLevelEncoder).write(b) {
       this.encoded[this.advance_encoded_cursor] := nb;
     }
   }
-  this.r_written_count.set(this.written_count + 1);
+  this.written_count := this.written_count + 1;
 }
 
 def (this is LowLevelEncoder).write_unsigned(val) {
@@ -153,9 +143,9 @@ def (this is LowLevelEncoder).flush() {
     });
     this.out.write_data(this.encoded, 0, this.encoded_cursor + 1);
     this.encoded[0] := 0;
-    this.r_encoded_cursor.set(0);
-    this.r_at_half.set(false);
-    this.r_written_count.set(0);
+    this.encoded_cursor := 0;
+    this.at_half := false;
+    this.written_count := 0;
   }
 }
 

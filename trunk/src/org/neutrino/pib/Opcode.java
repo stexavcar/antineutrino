@@ -69,6 +69,7 @@ public class Opcode {
   @Info({}) public static final int kReturnFromApply = 21;
   @Info({ArgType.NUM}) public static final int kBlock = 22;
   @Info({ArgType.NUM, ArgType.NUM, ArgType.NUM}) public static final int kDefineLocal = 23;
+  @Info({ArgType.NUM}) public static final int kSetField = 24;
 
   private static final Map<Integer, OpcodeInfo> infos = new HashMap<Integer, OpcodeInfo>() {{
     try {

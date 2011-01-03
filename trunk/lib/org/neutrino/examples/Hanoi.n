@@ -2,22 +2,20 @@ protocol HanoiDisk;
 
 def HanoiDisk.new(size) -> new HanoiDisk {
   size := size,
-  next_ := new Ref(null)
+  next := null
 }
-
-def (this is HanoiDisk).next -> this.next_.get();
 
 protocol Hanoi;
 
 def Hanoi.new() -> new Hanoi {
   piles := new ArrayList [null, null, null],
-  moves := new Ref(0)
+  moves := 0
 }
 
 def (this is Hanoi).run(size) {
   this.build(0, size);
   this.move(0, 1, size);
-  this.moves.get();
+  this.moves;
 }
 
 def (this is Hanoi).move(from, to, disks) {
@@ -33,7 +31,7 @@ def (this is Hanoi).move(from, to, disks) {
 
 def (this is Hanoi).move_top(from, to) {
   this.push(to, this.pop(from));
-  this.moves.set(this.moves.get() + 1);
+  this.moves := this.moves + 1;
 }
 
 def (this is Hanoi).build(pile, disks) {
@@ -45,7 +43,7 @@ def (this is Hanoi).push(pile, disk) {
   def top := this.piles[pile];
   if (top != null) and (disk.size >= top.size) then
     fail();
-  disk.next_.set(top);
+  disk.next := top;
   this.piles[pile] := disk;
 }
 
@@ -53,7 +51,7 @@ def (this is Hanoi).pop(pile) {
   def top := this.piles[pile];
   if top = null then fail();
   this.piles[pile] := top.next;
-  top.next_.set(null);
+  top.next := null;
   top;
 }
 

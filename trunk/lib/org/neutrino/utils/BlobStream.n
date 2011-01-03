@@ -6,8 +6,8 @@ protocol BlobStream is ArrayBackedStream;
 def BlobStream.new() -> new BlobStream(256);
 
 def BlobStream.new(size) -> new BlobStream {
-  rData := new Ref(new MutablePrimitiveByteArray(size)),
-  rLength := new Ref(0)
+  data := new MutablePrimitiveByteArray(size),
+  length := 0
 }
 
 def (this is BlobStream).new_backing_array(size) -> new MutablePrimitiveByteArray(size);

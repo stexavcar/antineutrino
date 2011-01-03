@@ -3,14 +3,10 @@ protocol TypeAnalysis;
 def TypeAnalysis.new(universe, method) -> new TypeAnalysis {
   universe := universe,
   method := method,
-  r_scope_chain := new Ref(null)
+  scope_chain := null
 }
 
 protocol ScopeChainLink;
-
-def (this is TypeAnalysis).scope_chain -> this.r_scope_chain.get();
-
-def (this is TypeAnalysis).scope_chain:=(v) -> this.r_scope_chain.set(v);
 
 def (this is TypeAnalysis).push_local_scope(guide, node) {
   def prev := this.scope_chain;

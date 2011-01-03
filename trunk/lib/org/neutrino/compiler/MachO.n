@@ -220,12 +220,10 @@ def (this is MachOSection).name -> "${this.segname}.${this.sectname}";
 def (this is MachOSection).finalize(macho);
 
 def MachOJumpTable.new() -> new MachOJumpTable {
-  rCount := new Ref(0)
+  count := 0
 }
 
-def (this is MachOJumpTable).count -> this.rCount.get();
-
-def (this is MachOJumpTable).add_extern() -> this.rCount.set(this.count + 1);
+def (this is MachOJumpTable).add_extern() -> this.count := (this.count + 1);
 
 def (this is MachOJumpTable).size -> 5 * this.count;
 
@@ -326,14 +324,10 @@ protocol MachOCStringSection is MachOSection;
 def MachOCStringSection.new() -> new MachOCStringSection {
   order := new ArrayList(),
   strings := new HashMap(),
-  r_length := new Ref(0)
+  length := 0
 }
 
-def (this is MachOCStringSection).length -> this.r_length.get();
-
 def (this is MachOCStringSection).nreloc -> 0;
-
-def (this is MachOCStringSection).length:=(value) -> this.r_length.set(value);
 
 def (this is MachOCStringSection).segname -> "__TEXT";
 
@@ -377,15 +371,11 @@ def MachOStringTable.new() {
   def result := new MachOStringTable {
     string_map := new HashMap(),
     strings := new ArrayList(),
-    r_cursor := new Ref(0)
+    cursor := 0
   }
   result.ensure("");
   result;
 }
-
-def (this is MachOStringTable).cursor -> this.r_cursor.get();
-
-def (this is MachOStringTable).cursor:=(value) -> this.r_cursor.set(value);
 
 def (this is MachOStringTable).ensure(name) {
   def prev := this.string_map[name];
@@ -422,15 +412,15 @@ def (this is MachOStringTable).length -> this.strings.length;
 
 protocol IndirectSymbols;
 
-def IndirectSymbols.new() -> new IndirectSymbols { rCount := new Ref(0) };
+def IndirectSymbols.new() -> new IndirectSymbols {
+  count := 0
+}
 
 def (this is IndirectSymbols).name -> "#INDIRECT";
 
 def (this is IndirectSymbols).align -> WORD_ALIGN;
 
-def (this is IndirectSymbols).count -> this.rCount.get();
-
-def (this is IndirectSymbols).add() -> this.rCount.set(this.count + 1);
+def (this is IndirectSymbols).add() -> this.count := (this.count + 1);
 
 def (this is IndirectSymbols).encode(out, macho) {
   for (i : 0 .. this.count)
@@ -446,7 +436,7 @@ def MachOSymbolTable.new(strtab) -> new MachOSymbolTable {
   locals := new ArrayList(),
   externs := new ArrayList(),
   local_map := new HashMap(),
-  r_macho := new Ref(null)
+  macho := null
 }
 
 def (this is MachOSymbolTable).add_local_code_entry(name, offset, size)
@@ -461,10 +451,6 @@ def (this is MachOSymbolTable).add_local_entry(name, offset, size, section) {
   this.local_map[name] := symbol;
   this.locals.add(symbol);
 }
-
-def (this is MachOSymbolTable).macho:=(v) -> this.r_macho.set(v);
-
-def (this is MachOSymbolTable).macho -> this.r_macho.get();
 
 def (this is MachOSymbolTable).address_of(name)
  -> this.local_map[name].address(this.macho);

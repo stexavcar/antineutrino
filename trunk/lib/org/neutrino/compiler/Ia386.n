@@ -149,17 +149,9 @@ def (this is AssemblerIa386).write_jump_target(target) {
 protocol Label;
 
 def Label.new(offset, is_bound) -> new Label {
-  r_offset := new Ref(offset),
-  r_is_bound := new Ref(is_bound)
+  offset := offset,
+  is_bound := is_bound
 }
-
-def (this is Label).offset -> this.r_offset.get();
-
-def (this is Label).offset:=(v) -> this.r_offset.set(v);
-
-def (this is Label).is_bound -> this.r_is_bound.get();
-
-def (this is Label).is_bound:=(v) -> this.r_is_bound.set(v);
 
 def (this is AssemblerIa386).here()
  -> new Label(this.cursor, true);
