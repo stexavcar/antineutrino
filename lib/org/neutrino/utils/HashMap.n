@@ -16,9 +16,9 @@ def HashMap.hash(value) -> internal "obj.hash";
  * Creates a new empty hash map.
  */
 def HashMap.new() -> new HashMap {
-  rEntries := new Ref(new MutablePrimitiveArray(HashMap.kInitialCapacity)),
-  rSize := new Ref(0),
-  rMaxLoad := new Ref((HashMap.kInitialCapacity * 3) / 4)
+  entries := new MutablePrimitiveArray(HashMap.kInitialCapacity),
+  size := 0,
+  max_load := (HashMap.kInitialCapacity * 3) / 4
 }
 
 def HashMap.new(init is PrimitiveCollection) {
@@ -28,13 +28,7 @@ def HashMap.new(init is PrimitiveCollection) {
   result;
 }
 
-def (this is HashMap).max_load -> this.rMaxLoad.get();
-
 def (this is HashMap).hash(value) -> Math.abs(HashMap.hash(value));
-
-def (this is HashMap).entries -> this.rEntries.get();
-
-def (this is HashMap).size -> this.rSize.get();
 
 def (this is HashMap).capacity -> this.entries.length;
 
@@ -70,9 +64,9 @@ def (this is HashMap).insert(key, hash, value) {
 def (this is HashMap).extend_capacity(new_capacity) {
   def new_entries := new MutablePrimitiveArray(new_capacity);
   def old_entries := this.entries;
-  this.rEntries.set(new_entries);
-  this.rSize.set(0);
-  this.rMaxLoad.set((new_capacity * 3) / 4);
+  this.entries := new_entries;
+  this.size := 0;
+  this.max_load := (new_capacity * 3) / 4;
   for (entry : old_entries) {
     if entry != null then
       this.insert(entry.key, entry.hash, entry.value);
@@ -88,7 +82,7 @@ def (this is HashMap).find_entry(key, hash, create_if_missing) {
         if this.size < this.max_load then {
           def result := new HashMapEntry(key, hash);
           this.entries[offset] := result;
-          this.rSize.set(this.size + 1);
+          this.size := this.size + 1;
           return(result);
         } else {
           this.extend_capacity(this.capacity * 2);
@@ -123,9 +117,5 @@ protocol HashMapEntry;
 def HashMapEntry.new(key, hash) -> new HashMapEntry {
   key := key,
   hash := hash,
-  rValue := new Ref(null)
+  value := null
 }
-
-def (this is HashMapEntry).value -> this.rValue.get();
-
-def (this is HashMapEntry).value:=(v) -> this.rValue.set(v);

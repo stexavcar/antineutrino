@@ -12,7 +12,7 @@ protocol Layouter;
 def Layouter.new() -> new Layouter {
   sections := new ArrayList(),
   section_map := new HashMap(),
-  r_last_name := new Ref(null)
+  last_name := null
 }
 
 /*
@@ -27,10 +27,6 @@ def align(value, factor) {
 }
 
 def (this is Layouter).info(name) -> this.section_map[name].info;
-
-def (this is Layouter).last_name -> this.r_last_name.get();
-
-def (this is Layouter).last_name:=(v) -> this.r_last_name.set(v);
 
 protocol LayoutInfo;
 
@@ -51,10 +47,8 @@ def LayoutSection.new(id, prev, size, alignment) -> new LayoutSection {
   prev := prev,
   size := size,
   alignment := alignment,
-  r_info := new Ref(null)
+  info := null
 }
-
-def (this is LayoutSection).info -> this.r_info.get();
 
 def (this is Layouter).add_section(id, prev, size, alignment) {
   def sect := new LayoutSection(id, prev, size, alignment);
@@ -104,7 +98,7 @@ def (this is Layouter).calculate() {
   for (section : this.ordered_sections) {
     def aligned_offset := align(offset, section.alignment);
     def aligned_size := align(section.size, section.alignment);
-    section.r_info.set(new LayoutInfo(section, aligned_offset, aligned_size));
+    section.info := new LayoutInfo(section, aligned_offset, aligned_size);
     offset := aligned_offset + aligned_size;
   }
 }

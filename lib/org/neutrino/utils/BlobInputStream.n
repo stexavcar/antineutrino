@@ -1,12 +1,12 @@
 protocol BlobInputStream;
 
 def BlobInputStream.new(data) -> new BlobInputStream {
-  r_cursor := new Ref(0),
+  cursor := 0,
   data := data
 }
 
 def (this is BlobInputStream).read() {
-  def cursor := this.r_cursor.get();
-  this.r_cursor.set(cursor + 1);
+  def cursor := this.cursor;
+  this.cursor := cursor + 1;
   this.data[cursor];
 }

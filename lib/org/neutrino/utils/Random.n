@@ -17,16 +17,16 @@ def (this is Random).next_bytes(data) {
 protocol MultiplyWithCarry is Random;
 
 def MultiplyWithCarry.new(seed) -> new MultiplyWithCarry {
-  r_low := new Ref(362436069 + seed),
-  r_high := new Ref(521288629 - seed)
+  low := 362436069 + seed,
+  high := 521288629 - seed
 }
 
 def (this is MultiplyWithCarry).next() {
-  def low := this.r_low.get();
-  def high := this.r_high.get();
+  def low := this.low;
+  def high := this.high;
   def new_high := 23163 * (high & 16rFFFF) + (high >> 16);
   def new_low := 22965 * (low & 16rFFFF) + (low >> 16);
-  this.r_low.set(new_low);
-  this.r_high.set(new_high);
+  this.low := new_low;
+  this.high := new_high;
   ((new_high & 16rFFFF) << 16) | (low & 16rFFFF);
 }

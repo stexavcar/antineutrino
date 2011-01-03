@@ -67,17 +67,15 @@ def PlanktonDecoder.new(in, class_index) -> new PlanktonDecoder {
   dispatcher := PlanktonDecoder.new_dispatcher(),
   template_dispatcher := PlanktonDecoder.new_template_dispatcher(),
   refs := new HashMap(),
-  r_templates := new Ref(null),
-  r_next_index := new Ref(0)
+  templates := null,
+  next_index := 0
 }
 
 def (this is PlanktonDecoder).current_index
- -> this.r_next_index.get() - 1;
+ -> this.next_index - 1;
 
 def (this is PlanktonDecoder).advance_index()
- -> this.r_next_index.set(this.r_next_index.get() + 1);
-
-def (this is PlanktonDecoder).templates -> this.r_templates.get();
+ -> this.next_index := (this.next_index + 1);
 
 def (this is PlanktonDecoder).read()
  -> this.read(this.in.read());
@@ -202,13 +200,13 @@ def (this is PlanktonDecoder).read_template_scope() {
   def count := this.in.read_unsigned();
   def old_scope := this.templates;
   def new_scope := new TemplateScope(old_scope, start);
-  this.r_templates.set(new_scope);
+  this.templates := new_scope;
   for (i : 0 .. count) {
     def template := this.read_template();
     new_scope.add_template(template);
   }
   def result := this.read();
-  this.r_templates.set(old_scope);
+  this.templates := old_scope;
   result;
 }
 

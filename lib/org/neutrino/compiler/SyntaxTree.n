@@ -1,22 +1,10 @@
 protocol NodeInfo;
 
 def NodeInfo.new() -> new NodeInfo {
-  rType := new Ref(null),
-  rIntrinsic := new Ref(null),
-  rCCall := new Ref(null)
+  type := null,
+  intrinsic := null,
+  c_call := null
 }
-
-def (this is NodeInfo).type -> this.rType.get();
-
-def (this is NodeInfo).type:=(r) -> this.rType.set(r);
-
-def (this is NodeInfo).intrinsic -> this.rIntrinsic.get();
-
-def (this is NodeInfo).intrinsic:=(v) -> this.rIntrinsic.set(v);
-
-def (this is NodeInfo).c_call -> this.rCCall.get();
-
-def (this is NodeInfo).c_call:=(v) -> this.rCCall.set(v);
 
 def kNoNodeInfo := new NodeInfo();
 
