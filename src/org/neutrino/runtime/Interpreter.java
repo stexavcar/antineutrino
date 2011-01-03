@@ -3,6 +3,9 @@ package org.neutrino.runtime;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
@@ -33,6 +36,7 @@ public class Interpreter {
     return interpret(lambda.getModule(), lambda.getCode(), args);
   }
 
+  @SuppressWarnings("unchecked")
   private RValue interpret(Frame frame) {
     while (true) {
       int opcode = frame.code[frame.pc];
@@ -120,7 +124,8 @@ public class Interpreter {
       }
       case Opcode.kOuter: {
         int index = frame.code[frame.pc + 1];
-        frame.stack.push(((RObject) frame.holder).getField(index));
+        RFieldKey field = (RFieldKey) frame.getLiteral(index);
+        frame.stack.push(((RObject) frame.holder).getField(field));
         frame.pc += 2;
         break;
       }
@@ -163,13 +168,14 @@ public class Interpreter {
       }
       case Opcode.kNew: {
         int protoIndex = frame.code[frame.pc + 1];
-        int outc = frame.code[frame.pc + 2];
         RProtocol proto = (RProtocol) frame.getLiteral(protoIndex);
-        RValue[] outer = NO_VALUES;
-        if (outc > 0) {
-          outer = new RValue[outc];
-          for (int i = 0; i < outc; i++)
-            outer[outc - i - 1] = frame.stack.pop();
+        int fieldIndex = frame.code[frame.pc + 2];
+        List<RFieldKey> fields = (List<RFieldKey>) frame.getLiteral(fieldIndex);
+        Map<RFieldKey, RValue> outer = Collections.<RFieldKey, RValue>emptyMap();
+        if (fields.size() > 0) {
+          outer = new HashMap<RFieldKey, RValue>();
+          for (int i = fields.size() - 1; i >= 0; i--)
+            outer.put(fields.get(i), frame.stack.pop());
         }
         frame.stack.push(new RObject(proto, outer));
         frame.pc += 3;
@@ -184,10 +190,11 @@ public class Interpreter {
         frame.pc += 2;
         break;
       }
-      case Opcode.kField: {
+      case Opcode.kGetField: {
         int index = frame.code[frame.pc + 1];
+        RFieldKey field = (RFieldKey) frame.getLiteral(index);
         RObject obj = (RObject) frame.parent.getArgument(1, 0);
-        frame.stack.push(obj.getField(index));
+        frame.stack.push(obj.getField(field));
         frame.pc += 2;
         break;
       }

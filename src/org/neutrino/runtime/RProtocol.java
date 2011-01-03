@@ -57,4 +57,9 @@ public class RProtocol extends RValue {
     return "#<a Protocol: " + id + ">";
   }
 
+  @Override
+  public State getState() {
+    return State.IMMUTABLE;
+  }
+
 }

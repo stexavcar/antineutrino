@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.neutrino.compiler.Source;
 import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RValue;
 
@@ -52,15 +53,17 @@ public class Assembler {
     return result;
   }
 
-  public int outer(int index) {
+  public int outer(RFieldKey field) {
+    int index = registerLiteral(field);
     int result = getOffset();
     add(Opcode.kOuter);
     add(index);
     return result;
   }
 
-  public void field(int index) {
-    add(Opcode.kField);
+  public void getField(RFieldKey field) {
+    add(Opcode.kGetField);
+    int index = registerLiteral(field);
     add(index);
   }
 
@@ -115,12 +118,13 @@ public class Assembler {
     add(Opcode.kReturn);
   }
 
-  public int nhew(RProtocol proto, int outc) {
+  public int nhew(RProtocol proto, List<RFieldKey> fields) {
 	int result = getOffset();
-	int index = registerLiteral(proto);
+	int protoIndex = registerLiteral(proto);
+	int fieldsIndex = registerLiteral(fields);
     add(Opcode.kNew);
-    add(index);
-    add(outc);
+    add(protoIndex);
+    add(fieldsIndex);
     return result;
   }
 

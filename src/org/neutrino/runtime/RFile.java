@@ -55,4 +55,9 @@ public class RFile extends RValue {
     }
   }
 
+  @Override
+  public State getState() {
+    return State.IMMUTABLE;
+  }
+
 }

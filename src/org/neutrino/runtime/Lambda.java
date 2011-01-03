@@ -33,4 +33,9 @@ public class Lambda extends RValue {
     return "#<a Lambda: " + bundle + ">";
   }
 
+  @Override
+  public State getState() {
+    return State.IMMUTABLE;
+  }
+
 }

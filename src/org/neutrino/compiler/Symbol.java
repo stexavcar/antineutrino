@@ -1,6 +1,7 @@
 package org.neutrino.compiler;
 
 import org.neutrino.pib.Assembler;
+import org.neutrino.runtime.RFieldKey;
 import org.neutrino.syntax.Tree.Declaration;
 
 public abstract class Symbol {
@@ -76,16 +77,16 @@ public abstract class Symbol {
   private static class OuterSymbol extends Symbol {
 
     private final Symbol outer;
-    private final int index;
+    private final RFieldKey field;
 
-    public OuterSymbol(Symbol outer, int index) {
+    public OuterSymbol(Symbol outer, RFieldKey field) {
       this.outer = outer;
-      this.index = index;
+      this.field = field;
     }
 
     @Override
     public int emitLoad(Assembler assm) {
-      return assm.outer(index);
+      return assm.outer(field);
     }
 
     @Override
@@ -100,8 +101,8 @@ public abstract class Symbol {
 
   }
 
-  public static Symbol outer(Symbol outerSymbol, int index) {
-    return new OuterSymbol(outerSymbol, index);
+  public static Symbol outer(Symbol outerSymbol, RFieldKey field) {
+    return new OuterSymbol(outerSymbol, field);
   }
 
   public static class LocalSymbol extends Symbol {

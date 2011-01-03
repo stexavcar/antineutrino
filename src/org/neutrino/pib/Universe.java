@@ -17,6 +17,7 @@ import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.MethodLookupHelper;
 import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RObject;
@@ -169,6 +170,7 @@ public class Universe {
     add(Native.class);
     add(TypeId.class);
     add(RInteger.class);
+    add(RFieldKey.class);
   }};
 
 }

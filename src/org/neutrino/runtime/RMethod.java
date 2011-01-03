@@ -60,4 +60,9 @@ public class RMethod extends RValue {
     return "#<a Method(" + name + "): " + code + ">";
   }
 
+  @Override
+  public State getState() {
+    return State.IMMUTABLE;
+  }
+
 }

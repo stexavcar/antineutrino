@@ -43,4 +43,9 @@ public class RString extends RValue {
     return (obj instanceof RString) && ((RString) obj).value.equals(this.value);
   }
 
+  @Override
+  public State getState() {
+    return State.IMMUTABLE;
+  }
+
 }

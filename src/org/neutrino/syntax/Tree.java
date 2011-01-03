@@ -10,6 +10,7 @@ import org.neutrino.compiler.Source;
 import org.neutrino.compiler.Symbol;
 import org.neutrino.compiler.Symbol.LocalSymbol;
 import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RProtocol;
@@ -711,7 +712,7 @@ public class Tree {
       private final List<Parameter> params;
       private final String name;
       private final Expression body;
-      private final boolean hasEagerValue;
+      private final RFieldKey field;
       private int localCount = -1;
 
       public Field(List<Parameter> params, String name, Expression body,
@@ -719,7 +720,11 @@ public class Tree {
         this.params = params;
         this.name = name;
         this.body = body;
-        this.hasEagerValue = hasEagerValue;
+        this.field = hasEagerValue ? new RFieldKey() : null;
+      }
+
+      public RFieldKey getField() {
+        return this.field;
       }
 
       public String getName() {
@@ -735,7 +740,7 @@ public class Tree {
       }
 
       public boolean hasEagerValue() {
-        return this.hasEagerValue;
+        return this.field != null;
       }
 
       public void setLocalCount(int localCount) {
@@ -756,6 +761,7 @@ public class Tree {
     private final String displayName;
     private RProtocol protocol;
     private List<Symbol> captures;
+    private List<RFieldKey> captureFields;
 
     public New(Source origin, List<Field> fields, List<String> protocols,
         String displayName) {
@@ -790,14 +796,19 @@ public class Tree {
       return this.displayName;
     }
 
-    public void setCaptures(List<Symbol> captures) {
+    public void setCaptures(List<Symbol> captures, List<RFieldKey> fields) {
       assert this.captures == null;
       this.captures = captures;
+      this.captureFields = fields;
     }
 
     public List<Symbol> getCaptures() {
       assert this.captures != null;
       return this.captures;
+    }
+
+    public List<RFieldKey> getCaptureFields() {
+      return this.captureFields;
     }
 
     public RProtocol getProtocol() {
