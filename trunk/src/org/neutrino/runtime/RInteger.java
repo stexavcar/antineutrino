@@ -50,4 +50,9 @@ public class RInteger extends RValue {
     return (obj instanceof RInteger) && ((RInteger) obj).value == this.value;
   }
 
+  @Override
+  public State getState() {
+    return State.IMMUTABLE;
+  }
+
 }

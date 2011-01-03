@@ -39,4 +39,9 @@ public class RBoolean extends RValue {
     return value ? "#t" : "#f";
   }
 
+  @Override
+  public State getState() {
+    return State.IMMUTABLE;
+  }
+
 }

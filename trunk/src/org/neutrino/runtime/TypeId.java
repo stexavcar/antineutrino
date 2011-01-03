@@ -19,12 +19,16 @@ public class TypeId {
 
   @Generator
   public static TypeId get(String name) {
-    TypeId id = namedTypes.get(name);
-    if (id == null) {
-      id = new TypeId(name);
-      namedTypes.put(name, id);
+    if (name == null) {
+      return new TypeId(null);
+    } else {
+      TypeId id = namedTypes.get(name);
+      if (id == null) {
+        id = new TypeId(name);
+        namedTypes.put(name, id);
+      }
+      return id;
     }
-    return id;
   }
 
   @Override

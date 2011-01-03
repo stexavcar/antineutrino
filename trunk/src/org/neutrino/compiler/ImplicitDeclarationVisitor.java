@@ -1,5 +1,9 @@
 package org.neutrino.compiler;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import org.neutrino.pib.Assembler;
 import org.neutrino.pib.CodeBuilder;
 import org.neutrino.pib.ModuleBuilder;
@@ -7,10 +11,6 @@ import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Tree;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
 
@@ -35,7 +35,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
             Collections.<Annotation>emptyList(), name,
             Collections.singletonList(new Parameter("this", proto.getId(), false)));
         Assembler assm = builder.getAssembler();
-        assm.field(eagerFieldCount);
+        assm.getField(field.getField());
         assm.rethurn();
         assm.finalize(0, 0);
         eagerFieldCount++;

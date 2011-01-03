@@ -61,15 +61,14 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
     // variables into the object.
     Scope prevScope = scope;
     try {
-      CapturingScope capturingScope = new Scope.CapturingScope(prevScope,
-          eagerFieldCount);
+      CapturingScope capturingScope = new Scope.CapturingScope(prevScope);
       scope = capturingScope;
       for (New.Field field : that.getFields()) {
         if (!field.hasEagerValue()) {
           visitLazyField(field);
         }
       }
-      that.setCaptures(capturingScope.getOuterTransient());
+      that.setCaptures(capturingScope.getOuterTransient(), capturingScope.getOuterTransientFields());
     } finally {
       scope = prevScope;
     }

@@ -46,6 +46,7 @@ def CompilerGrower.new_handler_table() {
   result[Universe.tag] := new PlainCodec(Universe);
   result[ProtocolAst.tag] := new PlainCodec(ProtocolAst);
   result[MethodAst.tag] := new PlainCodec(MethodAst);
+  result[FieldKey.tag] := new PlainCodec(FieldKey);
   result["org.neutrino.runtime.RInteger"] := new GetterCodec("value");
   result["org.neutrino.runtime.RString"] := new GetterCodec("value");
   result;
@@ -265,6 +266,14 @@ def Native.tag -> "org.neutrino.runtime.Native";
 def Native.grow(payload) -> new Native {
   name := payload["name"]
 }
+
+protocol FieldKey;
+
+def FieldKey.tag -> "org.neutrino.runtime.RFieldKey";
+
+def FieldKey.new_instance() -> new FieldKey { }
+
+def (this is FieldKey).initialize(payload) -> null;
 
 protocol Universe;
 

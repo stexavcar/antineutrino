@@ -1,8 +1,8 @@
 package org.neutrino.runtime;
 
-public class RContinuation extends RValue {
+public class RFieldKey extends RValue {
 
-  private static final TypeId TYPE_ID = TypeId.get("continuation");
+  private static final TypeId TYPE_ID = TypeId.get("FieldKey");
 
   @Override
   public TypeId getTypeId() {

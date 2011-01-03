@@ -1,17 +1,20 @@
 package org.neutrino.runtime;
 
+import java.util.Map;
+
 public class RObject extends RValue {
 
+  private State state = State.UNDER_CONSTRUCTION;
   private final RProtocol proto;
-  private final RValue[] outer;
+  private final Map<RFieldKey, RValue> outer;
 
-  public RObject(RProtocol proto, RValue[] outer) {
+  public RObject(RProtocol proto, Map<RFieldKey, RValue> outer) {
     this.proto = proto;
     this.outer = outer;
   }
 
-  public RValue getField(int index) {
-    return outer[index];
+  public RValue getField(RFieldKey field) {
+    return outer.get(field);
   }
 
   @Override
@@ -22,6 +25,11 @@ public class RObject extends RValue {
   @Override
   public String toString() {
     return "#<an Object: " + proto.getName() + ">";
+  }
+
+  @Override
+  public State getState() {
+    return state;
   }
 
 }

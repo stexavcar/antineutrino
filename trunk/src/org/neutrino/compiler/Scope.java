@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.neutrino.compiler.Symbol.LocalSymbol;
 import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RFieldKey;
 import org.neutrino.syntax.Tree.LocalDefinition;
 
 public abstract class Scope {
@@ -13,18 +14,21 @@ public abstract class Scope {
 
   public static class CapturingScope extends Scope {
 
-    private final int symbolIndexOffset;
     private final List<Symbol> outerTransient = new ArrayList<Symbol>();
     private final List<Symbol> outerCaptures = new ArrayList<Symbol>();
+    private final List<RFieldKey> outerCaptureFields = new ArrayList<RFieldKey>();
     private final Scope outerScope;
 
-    public CapturingScope(Scope outer, int symbolIndexOffset) {
+    public CapturingScope(Scope outer) {
       this.outerScope = outer;
-      this.symbolIndexOffset = symbolIndexOffset;
     }
 
     public List<Symbol> getOuterTransient() {
       return outerTransient;
+    }
+
+    public List<RFieldKey> getOuterTransientFields() {
+      return outerCaptureFields;
     }
 
     @Override
@@ -34,15 +38,18 @@ public abstract class Scope {
         return outerResult;
       int index = outerTransient.indexOf(outerResult);
       if (index == -1) {
-        index = symbolIndexOffset + outerTransient.size();
-        Symbol capture = Symbol.outer(outerResult, index);
+        RFieldKey field = new RFieldKey();
+        Symbol capture = Symbol.outer(outerResult, field);
         outerTransient.add(outerResult);
         outerCaptures.add(capture);
+        outerCaptureFields.add(field);
+        return capture;
+      } else {
+        if (index >= outerCaptures.size()) {
+          throw new RuntimeException("Failed lookup for " + name);
+        }
+        return outerCaptures.get(index);
       }
-      if (index >= outerCaptures.size()) {
-      	throw new RuntimeException("Failed lookup for " + name);
-      }
-      return outerCaptures.get(index);
     }
 
   }

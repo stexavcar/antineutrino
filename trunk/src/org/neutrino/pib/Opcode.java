@@ -63,7 +63,7 @@ public class Opcode {
   @Info({ArgType.NUM}) public static final int kStoreLocal = 15;
   @Info({}) public static final int kTerminate = 16;
   @Info({ArgType.LIT, ArgType.NUM}) public static final int kNew = 17;
-  @Info({ArgType.NUM}) public static final int kField = 18;
+  @Info({ArgType.NUM}) public static final int kGetField = 18;
   @Info({ArgType.NUM, ArgType.NUM}) public static final int kWith1Cc = 19;
   @Info({ArgType.NUM}) public static final int kNewArray = 20;
   @Info({}) public static final int kReturnFromApply = 21;

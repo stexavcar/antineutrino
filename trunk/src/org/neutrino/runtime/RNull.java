@@ -21,4 +21,9 @@ public class RNull extends RValue {
     return "#n";
   }
 
+  @Override
+  public State getState() {
+    return State.IMMUTABLE;
+  }
+
 }

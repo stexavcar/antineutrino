@@ -39,4 +39,9 @@ public class RPrimitiveArray extends RArray {
     return buf.append("]").toString();
   }
 
+  @Override
+  public State getState() {
+    return State.IMMUTABLE;
+  }
+
 }

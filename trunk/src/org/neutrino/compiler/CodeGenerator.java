@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RString;
 import org.neutrino.syntax.Annotation;
@@ -156,18 +157,23 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
   @Override
   public Integer visitNew(New that) {
     List<Tree.New.Field> fields = that.getFields();
+    List<RFieldKey> keys = new ArrayList<RFieldKey>();
     int outerCount = 0;
     for (Tree.New.Field field : fields) {
       if (field.hasEagerValue()) {
+        keys.add(field.getField());
         field.getBody().accept(this);
         outerCount++;
       }
     }
-    for (Symbol symbol : that.getCaptures()) {
-      symbol.emitLoad(assm);
+    List<Symbol> outers = that.getCaptures();
+    List<RFieldKey> outerFields = that.getCaptureFields();
+    for (int i = 0; i < outers.size(); i++) {
+      keys.add(outerFields.get(i));
+      outers.get(i).emitLoad(assm);
       outerCount++;
     }
-    return assm.nhew(that.getProtocol(), outerCount);
+    return assm.nhew(that.getProtocol(), keys);
   }
 
   @Override

@@ -4,6 +4,7 @@ public class RReference extends RValue {
 
   private static final TypeId TYPE_ID = TypeId.get("ref");
 
+  private State state = State.MUTABLE;
   private RValue value;
 
   public RReference(RValue value) {
@@ -26,6 +27,11 @@ public class RReference extends RValue {
   @Override
   public String toString() {
     return "#<a Reference: " + value + ">";
+  }
+
+  @Override
+  public State getState() {
+    return state;
   }
 
 }
