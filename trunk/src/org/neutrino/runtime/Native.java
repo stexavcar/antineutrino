@@ -9,16 +9,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
-import org.neutrino.oldton.ISeedable;
-import org.neutrino.oldton.annotations.Growable;
-import org.neutrino.oldton.annotations.SeedMember;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Opcode;
 import org.neutrino.pib.Universe;
 import org.neutrino.plankton.Store;
 
-@Growable(Native.TAG)
-public class Native implements ISeedable {
+public class Native {
 
   public static class Arguments {
 
@@ -57,7 +53,7 @@ public class Native implements ISeedable {
     public abstract RValue call(Arguments args);
   }
 
-  public @Store @SeedMember String name;
+  public @Store String name;
   private Impl impl = null;
 
   public Native(String name) {

@@ -2,9 +2,6 @@ package org.neutrino.pib;
 
 import java.util.List;
 
-import org.neutrino.oldton.ISeedable;
-import org.neutrino.oldton.annotations.Growable;
-import org.neutrino.oldton.annotations.SeedMember;
 import org.neutrino.plankton.Store;
 import org.neutrino.syntax.Annotation;
 
@@ -13,14 +10,12 @@ import org.neutrino.syntax.Annotation;
  *
  * @author christian.plesner.hansen@gmail.com (Christian Plesner Hansen)
  */
-@Growable(Binding.TAG)
-public class Binding implements ISeedable {
+public class Binding {
 
   public static final String ENTRY_POINT_ANNOTATION = "entry_point";
-  static final String TAG = "org::neutrino::pib::Binding";
 
-  public @Store @SeedMember("annotations") List<Annotation> annots;
-  public @Store @SeedMember CodeBundle code;
+  public @Store List<Annotation> annots;
+  public @Store CodeBundle code;
 
   public Binding(List<Annotation> annots, CodeBundle code) {
     this.annots = annots;
