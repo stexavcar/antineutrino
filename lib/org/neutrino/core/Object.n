@@ -1,9 +1,11 @@
-protocol Object;
-
 def are_identical(a, b) -> internal "are_identical";
 
-def (this is Object)=(that) -> are_identical(this, that);
+protocol Object {
 
-def (this is Object)!=(that) -> not this = that;
+  def this=(that) -> are_identical(this, that);
 
-def (this is Object).to_string() -> internal "obj.to_string";
+  def this!=(that) -> not this = that;
+
+  def this.to_string() -> internal "obj.to_string";
+
+}

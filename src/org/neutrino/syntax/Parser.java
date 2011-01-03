@@ -285,6 +285,12 @@ public class Parser {
     return new Tree.Method(annots, method, params, body);
   }
 
+  private Tree.Declaration parseInnerDefinition(String name) throws SyntaxError {
+    List<Annotation> annots = parseAnnotations();
+    expect(Type.DEF);
+    String self = expect(Type.IDENT);
+    return parseMethodTail(annots, new Parameter(self, name, false));
+  }
 
   /**
    * <def>
@@ -347,6 +353,13 @@ public class Parser {
           String next = expect(Type.IDENT);
           result.add(new Tree.Inheritance(Collections.<Annotation>emptyList(), name, next));
         }
+      }
+      if (at(Type.LBRACE)) {
+        expect(Type.LBRACE);
+        while (hasMore() && !at(Type.RBRACE)) {
+          result.add(parseInnerDefinition(name));
+        }
+        consumeRightBrace();
       }
       result.add(new Tree.Protocol(annots, name));
       requireSemicolon();

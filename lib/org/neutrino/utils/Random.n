@@ -1,32 +1,36 @@
-protocol Random;
-
 def Random.new(seed) -> new MultiplyWithCarry(seed);
 
-def (this is Random).next(limit)
- -> Math.abs(this.next()) % limit;
+protocol Random {
 
-def (this is Random).next_bytes(data) {
-  for (i : 0 .. data.length)
-    data[i] := this.next(256);
+  def this.next(limit)
+   -> Math.abs(this.next()) % limit;
+
+  def this.next_bytes(data) {
+    for (i : 0 .. data.length)
+      data[i] := this.next(256);
+  }
+
 }
-
-/**
- * George Marsaglia's multiply-with-carry pseudo-random generator.
- * See http://www.ms.uky.edu/~mai/RandomNumber.
- */
-protocol MultiplyWithCarry is Random;
 
 def MultiplyWithCarry.new(seed) -> new MultiplyWithCarry {
   low := 362436069 + seed,
   high := 521288629 - seed
 }
 
-def (this is MultiplyWithCarry).next() {
-  def low := this.low;
-  def high := this.high;
-  def new_high := 23163 * (high & 16rFFFF) + (high >> 16);
-  def new_low := 22965 * (low & 16rFFFF) + (low >> 16);
-  this.low := new_low;
-  this.high := new_high;
-  ((new_high & 16rFFFF) << 16) | (low & 16rFFFF);
+/**
+ * George Marsaglia's multiply-with-carry pseudo-random generator.
+ * See http://www.ms.uky.edu/~mai/RandomNumber.
+ */
+protocol MultiplyWithCarry is Random {
+
+  def this.next() {
+    def low := this.low;
+    def high := this.high;
+    def new_high := 23163 * (high & 16rFFFF) + (high >> 16);
+    def new_low := 22965 * (low & 16rFFFF) + (low >> 16);
+    this.low := new_low;
+    this.high := new_high;
+    ((new_high & 16rFFFF) << 16) | (low & 16rFFFF);
+  }
+
 }

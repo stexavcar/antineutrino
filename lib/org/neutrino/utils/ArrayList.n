@@ -1,5 +1,3 @@
-protocol ArrayList is Sequence;
-
 def ArrayList.new() -> new ArrayList(0);
 
 def ArrayList.new(size is Integer) -> new ArrayList {
@@ -21,79 +19,83 @@ def ArrayList.new(seq is Sequence) {
   result;
 }
 
-def (this is ArrayList)[i] -> this.contents[i];
+protocol ArrayList is Sequence {
 
-def (this is ArrayList)[i]:=(value) -> this.contents[i] := value;
+  def this[i] -> this.contents[i];
 
-def (this is ArrayList).to_string() {
-  def out := new StringStream();
-  out.add("[");
-  ref first := true;
-  for (el : this) {
-    if first then first := false;
-    else out.add(", ");
-    out.add(el);
-  }
-  out.add("]");
-  out.to_string();
-}
+  def this[i]:=(value) -> this.contents[i] := value;
 
-def (this is ArrayList).remove_last() {
-  def new_length := this.length - 1;
-  def result := this.contents[new_length];
-  this.length := new_length;
-  result;
-}
-
-def (this is ArrayList)=(that is ArrayList) {
-  if this.length != that.length then {
-    false;
-  } else {
-    with_1cc (return) {
-      for (i : 0 .. this.length) {
-        if this[i] != that[i] then
-          return(false);
-      }
-      true;
+  def this.to_string() {
+    def out := new StringStream();
+    out.add("[");
+    ref first := true;
+    for (el : this) {
+      if first then first := false;
+      else out.add(", ");
+      out.add(el);
     }
-  }   
-}
+    out.add("]");
+    out.to_string();
+  }
 
-def (this is ArrayList)+(that is ArrayList) {
-  def result := new ArrayList(this.length + that.length);
-  for (i : 0 .. this.length)
-    result[i] := this[i];
-  for (i : 0 .. that.length)
-    result[this.length + i] := that[i];
-  result;
-}
+  def this.remove_last() {
+    def new_length := this.length - 1;
+    def result := this.contents[new_length];
+    this.length := new_length;
+    result;
+  }
 
-def (this is ArrayList).add(value) {
-  def new_length := this.length + 1;
-  this.ensure_capacity(new_length);
-  this.contents[this.length] := value;
-  this.length := new_length;
-  value;
-}
+  def this=(that is ArrayList) {
+    if this.length != that.length then {
+      false;
+    } else {
+      with_1cc (return) {
+        for (i : 0 .. this.length) {
+          if this[i] != that[i] then
+            return(false);
+        }
+        true;
+      }
+    }
+  }
 
-def (this is ArrayList).ensure_capacity(capacity) {
-  def old_contents := this.contents;
-  if not capacity < old_contents.length then {
-    def new_contents := new MutablePrimitiveArray(capacity * 2);
+  def this+(that is ArrayList) {
+    def result := new ArrayList(this.length + that.length);
     for (i : 0 .. this.length)
-      new_contents[i] := old_contents[i];
-    this.contents := new_contents;
+      result[i] := this[i];
+    for (i : 0 .. that.length)
+      result[this.length + i] := that[i];
+    result;
   }
-}
 
-def (this is ArrayList).iter {
-  def self := this;
-  def index_itr := (0 .. self.length).iter;
-  new Iter {
-    has_next -> index_itr.has_next,
-    next -> self[index_itr.next]
+  def this.add(value) {
+    def new_length := this.length + 1;
+    this.ensure_capacity(new_length);
+    this.contents[this.length] := value;
+    this.length := new_length;
+    value;
   }
-}
 
-def (this is ArrayList).join(sep)
- -> String.implode(this.contents, this.length, sep);
+  def this.ensure_capacity(capacity) {
+    def old_contents := this.contents;
+    if not capacity < old_contents.length then {
+      def new_contents := new MutablePrimitiveArray(capacity * 2);
+      for (i : 0 .. this.length)
+        new_contents[i] := old_contents[i];
+      this.contents := new_contents;
+    }
+  }
+
+  def this.iter {
+    def self := this;
+    def index_itr := (0 .. self.length).iter;
+    new Iter {
+      has_next -> index_itr.has_next,
+      next -> self[index_itr.next]
+    }
+  }
+
+  def this.join(sep)
+   -> String.implode(this.contents, this.length, sep);
+
+}
