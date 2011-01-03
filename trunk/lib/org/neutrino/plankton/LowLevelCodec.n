@@ -1,69 +1,69 @@
-protocol LowLevelDecoder;
-
 def LowLevelDecoder.new(in) -> new LowLevelDecoder {
   cursor := kMaxByteCount,
   buffer := new ArrayList(kMaxByteCount),
   in := in
 };
 
-def (this is LowLevelDecoder).advance_cursor() {
-  def result := this.cursor;
-  this.cursor := result + 1;
-  result;
-}
+protocol LowLevelDecoder {
 
-def (this is LowLevelDecoder).read() {
-  if this.cursor = kMaxByteCount
-    then this.fill_buffer();
-  this.buffer[this.advance_cursor()];
-}
+  def this.advance_cursor() {
+    def result := this.cursor;
+    this.cursor := result + 1;
+    result;
+  }
 
-def (this is LowLevelDecoder).read_unsigned() -> with_1cc (return) {
-  ref result := 0;
-  Control.repeat(fn {
-    def next := this.read();
-    result := (result << 7) | (next >> 1);
-    if (next & 1) = 1
-      then return(result);
-  });
-}
+  def this.read() {
+    if this.cursor = kMaxByteCount
+      then this.fill_buffer();
+    this.buffer[this.advance_cursor()];
+  }
 
-def (this is LowLevelDecoder).read_signed() {
-  def coded := this.read_unsigned();
-  if (coded & 1) = 0
-    then coded >> 1;
-    else (0-(coded >> 1)) - 1;
-}
+  def this.read_unsigned() -> with_1cc (return) {
+    ref result := 0;
+    Control.repeat(fn {
+      def next := this.read();
+      result := (result << 7) | (next >> 1);
+      if (next & 1) = 1
+        then return(result);
+    });
+  }
 
-def (this is LowLevelDecoder).fill_buffer() {
-  def head := this.in.read();
-  ref current := 0;
-  ref at_half := false;
-  for (i : 0 .. kMaxByteCount) {
-    def is_half := (head & (128 >> i)) = 0;
-    if is_half then {
-      if at_half then {
-        this.buffer[i] := current & 16r0F;
-        at_half := false;
+  def this.read_signed() {
+    def coded := this.read_unsigned();
+    if (coded & 1) = 0
+      then coded >> 1;
+      else (0-(coded >> 1)) - 1;
+  }
+
+  def this.fill_buffer() {
+    def head := this.in.read();
+    ref current := 0;
+    ref at_half := false;
+    for (i : 0 .. kMaxByteCount) {
+      def is_half := (head & (128 >> i)) = 0;
+      if is_half then {
+        if at_half then {
+          this.buffer[i] := current & 16r0F;
+          at_half := false;
+        } else {
+          current := this.in.read();
+          this.buffer[i] := (current >> 4) & 16r0F;
+          at_half := true;
+        }
       } else {
-        current := this.in.read();
-        this.buffer[i] := (current >> 4) & 16r0F;
-        at_half := true;
-      }
-    } else {
-      if at_half then {
-        def value := (current & 16r0F) << 4;
-        current := this.in.read();
-        this.buffer[i] := (value | ((current >> 4) & 16r0F)) + kSmallLimit;
-      } else {
-        this.buffer[i] := this.in.read() + kSmallLimit;
+        if at_half then {
+          def value := (current & 16r0F) << 4;
+          current := this.in.read();
+          this.buffer[i] := (value | ((current >> 4) & 16r0F)) + kSmallLimit;
+        } else {
+          this.buffer[i] := this.in.read() + kSmallLimit;
+        }
       }
     }
+    this.cursor := 0;
   }
-  this.cursor := 0;
+  
 }
-
-protocol LowLevelEncoder;
 
 def kMaxByteCount := 8;
 def kSmallLimit := 16;
@@ -77,76 +77,83 @@ def LowLevelEncoder.new() -> new LowLevelEncoder {
   written_count := 0
 };
 
-def (this is LowLevelEncoder).advance_encoded_cursor
- -> this.encoded_cursor := this.encoded_cursor + 1;
+protocol LowLevelEncoder {
 
-def (this is LowLevelEncoder).write(b) {
-  if this.written_count = kMaxByteCount
-    then this.flush();
-  if b < kSmallLimit then {
-    if this.at_half then {
-      def before := this.encoded[this.encoded_cursor];
-      this.encoded[this.encoded_cursor]  := before | (b & 16r0F);
+  def this.advance_encoded_cursor
+   -> this.encoded_cursor := this.encoded_cursor + 1;
+
+  def this.write(b) {
+    if this.written_count = kMaxByteCount
+      then this.flush();
+    if b < kSmallLimit then {
+      if this.at_half then {
+        def before := this.encoded[this.encoded_cursor];
+        this.encoded[this.encoded_cursor]  := before | (b & 16r0F);
+        this.at_half := false;
+      } else {
+        this.encoded[this.advance_encoded_cursor] := b << 4;
+        this.at_half := true;
+      }
+    } else {
+      def nb := b - kSmallLimit;
+      def toc_before := this.encoded[0];
+      this.encoded[0] := toc_before | (128 >> this.written_count);
+      if this.at_half then {
+        def before_one := this.encoded[this.encoded_cursor];
+        this.encoded[this.encoded_cursor] := before_one | ((nb >> 4) & 16r0F);
+        this.encoded[this.advance_encoded_cursor] := nb << 4;
+      } else {
+        this.encoded[this.advance_encoded_cursor] := nb;
+      }
+    }
+    this.written_count := this.written_count + 1;
+  }
+
+  def this.write_unsigned(val) {
+    assert_true(val >= 0);
+    ref value := val;
+    ref i := 0;
+    with_1cc (break) {
+      Control.repeat(fn {
+        def low := value & 16r7F;
+        value := value >> 7;
+        def part := low << 1;
+        this.long_buffer[i] := part;
+        i := i + 1;
+        if value = 0
+          then break(null);
+      });
+    }
+    for (j : (i - 1) .. 0)
+      this.write(this.long_buffer[j]);
+    this.write(this.long_buffer[0] | 1);
+  }
+
+  def this.write_signed(val) {
+    this.write_unsigned(
+      if val < 0
+        then ((0 - val - 1) << 1) + 1
+        else val << 1);
+  }
+
+  def this.flush() {
+    if this.written_count > 0 then {
+      with_1cc (break) -> Control.repeat(fn {
+        if this.written_count = kMaxByteCount
+          then break(null);
+        this.write(0);
+      });
+      this.out.write_data(this.encoded, 0, this.encoded_cursor + 1);
+      this.encoded[0] := 0;
+      this.encoded_cursor := 0;
       this.at_half := false;
-    } else {
-      this.encoded[this.advance_encoded_cursor] := b << 4;
-      this.at_half := true;
-    }
-  } else {
-    def nb := b - kSmallLimit;
-    def toc_before := this.encoded[0];
-    this.encoded[0] := toc_before | (128 >> this.written_count);
-    if this.at_half then {
-      def before_one := this.encoded[this.encoded_cursor];
-      this.encoded[this.encoded_cursor] := before_one | ((nb >> 4) & 16r0F);
-      this.encoded[this.advance_encoded_cursor] := nb << 4;
-    } else {
-      this.encoded[this.advance_encoded_cursor] := nb;
+      this.written_count := 0;
     }
   }
-  this.written_count := this.written_count + 1;
-}
 
-def (this is LowLevelEncoder).write_unsigned(val) {
-  assert_true(val >= 0);
-  ref value := val;
-  ref i := 0;
-  with_1cc (break) {
-    Control.repeat(fn {
-      def low := value & 16r7F;
-      value := value >> 7;
-      def part := low << 1;
-      this.long_buffer[i] := part;
-      i := i + 1;
-      if value = 0
-        then break(null);
-    });
+  def this.to_blob() {
+    this.flush();
+    this.out.get_blob();
   }
-  for (j : (i - 1) .. 0)
-    this.write(this.long_buffer[j]);
-  this.write(this.long_buffer[0] | 1);
-}
 
-def (this is LowLevelEncoder).write_signed(val) {
-  this.write_unsigned(
-    if val < 0
-      then ((0 - val - 1) << 1) + 1
-      else val << 1);
 }
-
-def (this is LowLevelEncoder).flush() {
-  if this.written_count > 0 then {
-    with_1cc (break) -> Control.repeat(fn {
-      if this.written_count = kMaxByteCount
-        then break(null);
-      this.write(0);
-    });
-    this.out.write_data(this.encoded, 0, this.encoded_cursor + 1);
-    this.encoded[0] := 0;
-    this.encoded_cursor := 0;
-    this.at_half := false;
-    this.written_count := 0;
-  }
-}
-
-def (this is LowLevelEncoder).to_blob() -> { this.flush(); this.out.get_blob(); }

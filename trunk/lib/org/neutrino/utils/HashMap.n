@@ -1,8 +1,3 @@
-/**
- * A simple hash map.
- */
-protocol HashMap;
-
 def HashMap.kInitialCapacity -> 16;
 
 /**
@@ -28,94 +23,104 @@ def HashMap.new(init is PrimitiveCollection) {
   result;
 }
 
-def (this is HashMap).hash(value) -> Math.abs(HashMap.hash(value));
+/**
+ * A simple hash map.
+ */
+protocol HashMap {
 
-def (this is HashMap).capacity -> this.entries.length;
+  def this.hash(value) -> Math.abs(HashMap.hash(value));
 
-def (this is HashMap)[key] {
-  def entry := this.find_entry(key, this.hash(key), false);
-  if entry = null then null; else entry.value;
-}
+  def this.capacity -> this.entries.length;
 
-def (this is HashMap).values -> fn for (fun) {
-  for (key, value : this)
-    fun(value);
-}
-
-def (this is HashMap).keys -> fn for (fun) {
-  for (key, value : this)
-    fun(key);
-}
-
-def (this is HashMap).for(fun) {
-  for (entry : this.entries) {
-    if entry != null then
-      fun(entry.key, entry.value);
+  def this[key] {
+    def entry := this.find_entry(key, this.hash(key), false);
+    if entry = null
+      then null;
+      else entry.value;
   }
-}
 
-def (this is HashMap)[key]:=(value) -> this.insert(key, this.hash(key), value);
-
-def (this is HashMap).insert(key, hash, value) {
-  def entry := this.find_entry(key, hash, true);
-  entry.value := value;
-}
-
-def (this is HashMap).extend_capacity(new_capacity) {
-  def new_entries := new MutablePrimitiveArray(new_capacity);
-  def old_entries := this.entries;
-  this.entries := new_entries;
-  this.size := 0;
-  this.max_load := (new_capacity * 3) / 4;
-  for (entry : old_entries) {
-    if entry != null then
-      this.insert(entry.key, entry.hash, entry.value);
+  def this.values -> fn for (fun) {
+    for (key, value : this)
+      fun(value);
   }
-}
 
-def (this is HashMap).find_entry(key, hash, create_if_missing) {
-  ref offset := hash % this.capacity;
-  with_1cc (return) -> Control.repeat(fn {
-    def entry := this.entries[offset];
-    if entry = null then {
-      if create_if_missing then {
-        if this.size < this.max_load then {
-          def result := new HashMapEntry(key, hash);
-          this.entries[offset] := result;
-          this.size := this.size + 1;
-          return(result);
-        } else {
-          this.extend_capacity(this.capacity * 2);
-          return(this.find_entry(key, hash, create_if_missing));
-        }
-      } else {
-        return(null);
-      }
-    } else if entry.hash = hash and entry.key = key then {
-      return(entry);
-    } else {
-      offset := (offset + 1) % this.capacity;
+  def this.keys -> fn for (fun) {
+    for (key, value : this)
+      fun(key);
+  }
+
+  def this.for(fun) {
+    for (entry : this.entries) {
+      if entry != null then
+        fun(entry.key, entry.value);
     }
-  });
-}
-
-def (this is HashMap).to_string() {
-  def result := new StringStream();
-  result.add("#<a HashMap: {");
-  ref first := true;
-  for (key, value : this) {
-    if first then first := false;
-    else result.add(", ");
-    result.add("${key}: ${value}");
   }
-  result.add("}>");
-  result.to_string();
-}
 
-protocol HashMapEntry;
+  def this[key]:=(value)
+   -> this.insert(key, this.hash(key), value);
+
+  def this.insert(key, hash, value) {
+    def entry := this.find_entry(key, hash, true);
+    entry.value := value;
+  }
+
+  def this.extend_capacity(new_capacity) {
+    def new_entries := new MutablePrimitiveArray(new_capacity);
+    def old_entries := this.entries;
+    this.entries := new_entries;
+    this.size := 0;
+    this.max_load := (new_capacity * 3) / 4;
+    for (entry : old_entries) {
+      if entry != null then
+        this.insert(entry.key, entry.hash, entry.value);
+    }
+  }
+
+  def this.find_entry(key, hash, create_if_missing) {
+    ref offset := hash % this.capacity;
+    with_1cc (return) -> Control.repeat(fn {
+      def entry := this.entries[offset];
+      if entry = null then {
+        if create_if_missing then {
+          if this.size < this.max_load then {
+            def result := new HashMapEntry(key, hash);
+            this.entries[offset] := result;
+            this.size := this.size + 1;
+            return(result);
+          } else {
+            this.extend_capacity(this.capacity * 2);
+            return(this.find_entry(key, hash, create_if_missing));
+          }
+        } else {
+          return(null);
+        }
+      } else if entry.hash = hash and entry.key = key then {
+        return(entry);
+      } else {
+        offset := (offset + 1) % this.capacity;
+      }
+    });
+  }
+
+  def this.to_string() {
+    def result := new StringStream();
+    result.add("#<a HashMap: {");
+    ref first := true;
+    for (key, value : this) {
+      if first then first := false;
+      else result.add(", ");
+      result.add("${key}: ${value}");
+    }
+    result.add("}>");
+    result.to_string();
+  }
+
+}
 
 def HashMapEntry.new(key, hash) -> new HashMapEntry {
   key := key,
   hash := hash,
   value := null
 }
+
+protocol HashMapEntry;
