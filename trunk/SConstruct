@@ -166,7 +166,7 @@ neuneupib = join(pib_path, 'neuneu.pib')
 neuneupib2 = join(pib_path, 'neuneu.pib2')
 bld_neuneupib = BuildPib([neuneupib, neuneupib2], 'lib', MODULES=modules)
 
-neuneuobj = env.NeuObject(join(obj_path, 'neuneu'), [libpib2, neuneupib])
+neuneuobj = env.NeuObject(join(obj_path, 'neuneu'), [libpib2, neuneupib2])
 
 libtest = env.Test('libtest', libpib2)
 

@@ -1,55 +1,128 @@
+protocol PlainCodec;
+
+def PlainCodec.new(type) -> new PlainCodec {
+  type := type
+}
+
+def (this is PlainCodec).is_atomic -> false;
+
+def (this is PlainCodec).new_instance()
+ -> this.type.new_instance();
+
+def (this is PlainCodec).initialize(obj, payload)
+ -> obj.initialize(payload);
+
+protocol GetterCodec;
+
+def GetterCodec.new(name) -> new GetterCodec {
+  name := name
+}
+
+def (this is GetterCodec).is_atomic -> true;
+
+def (this is GetterCodec).new_atomic_instance(payload)
+ -> payload[this.name];
+
+protocol AtomicCodec;
+
+def AtomicCodec.new(type) -> new AtomicCodec {
+  type := type
+}
+
+def (this is AtomicCodec).is_atomic -> true;
+
+def (this is AtomicCodec).new_atomic_instance(payload)
+ -> this.type.new_instance(payload);
+
 def CompilerGrower.new_handler_table() {
   def result := new HashMap();
-  result[CodeBundle.tag] := (fn (payload) -> CodeBundle.grow(payload));
-  result[Parameter.tag] := (fn (payload) -> Parameter.grow(payload));
-  result[TypeId.tag] := (fn (payload) -> TypeId.grow(payload));
-  result[Binding.tag] := (fn (payload) -> Binding.grow(payload));
-  result[Annotation.tag] := (fn (payload) -> Annotation.grow(payload));
-  result[Module.tag] := (fn (payload) -> Module.grow(payload));
-  result[Native.tag] := (fn (payload) -> Native.grow(payload));
-  result[Universe.tag] := (fn (payload) -> Universe.grow(payload));
-  result[ProtocolAst.tag] := (fn (payload) -> ProtocolAst.grow(payload));
-  result[MethodAst.tag] := (fn (payload) -> MethodAst.grow(payload));
-  def getter(name) -> fn (payload) -> payload[name];
-  result["org::neutrino::runtime::RInteger"] := getter("value");
-  result["org::neutrino::runtime::RString"] := getter("value");
+  result[CodeBundle.tag] := new PlainCodec(CodeBundle);
+  result[Parameter.tag] := new PlainCodec(Parameter);
+  result[TypeId.tag] := new AtomicCodec(TypeId);
+  result[Binding.tag] := new PlainCodec(Binding);
+  result[Annotation.tag] := new PlainCodec(Annotation);
+  result[Module.tag] := new PlainCodec(Module);
+  result[Native.tag] := new PlainCodec(Native);
+  result[Universe.tag] := new PlainCodec(Universe);
+  result[ProtocolAst.tag] := new PlainCodec(ProtocolAst);
+  result[MethodAst.tag] := new PlainCodec(MethodAst);
+  result["org.neutrino.runtime.RInteger"] := new GetterCodec("value");
+  result["org.neutrino.runtime.RString"] := new GetterCodec("value");
   result;
 }
 
 protocol CodeBundle;
 
-def CodeBundle.tag -> "org::neutrino::pib::CodeBundle";
+def CodeBundle.tag -> "org.neutrino.pib.CodeBundle";
 
-def CodeBundle.grow(payload) -> new CodeBundle {
-  literals := payload["literals"],
-  local_count := payload["localCount"],
-  filename := payload["fileName"],
-  code := payload["code"],
-  root_offset := payload["rootOffset"]
+def CodeBundle.new_instance() -> new CodeBundle {
+  r_literals := new Ref(null),
+  r_local_count := new Ref(null),
+  r_filename := new Ref(null),
+  r_code := new Ref(null),
+  r_root_offset := new Ref(null)
 }
+
+def (this is CodeBundle).initialize(payload) {
+  this.r_literals.set(payload["literals"]);
+  this.r_local_count.set(payload["localCount"]);
+  this.r_filename.set(payload["fileName"]);
+  this.r_code.set(payload["code"]);
+  this.r_root_offset.set(payload["rootOffset"]);
+}
+
+def (this is CodeBundle).literals -> this.r_literals.get();
+def (this is CodeBundle).local_count -> this.r_local_count.get();
+def (this is CodeBundle).filename -> this.r_filename.get();
+def (this is CodeBundle).code -> this.r_code.get();
+def (this is CodeBundle).root_offset -> this.r_root_offset.get();
 
 protocol Parameter;
 
-def Parameter.tag -> "org::neutrino::pib::Parameter";
+def Parameter.tag -> "org.neutrino.pib.Parameter";
 
-def Parameter.grow(payload) -> new Parameter {
-  type := payload["type"],
-  name := payload["name"],
-  is_protocol := payload["isProtocolMethod"]
+def Parameter.new_instance() -> new Parameter {
+  r_type := new Ref(null),
+  r_name := new Ref(null),
+  r_is_protocol := new Ref(null)
 }
+
+def (this is Parameter).initialize(payload) {
+  this.r_type.set(payload["type"]);
+  this.r_name.set(payload["name"]);
+  this.r_is_protocol.set(payload["isProtocolMethod"]);
+}
+
+def (this is Parameter).type -> this.r_type.get();
+def (this is Parameter).name -> this.r_name.get();
+def (this is Parameter).is_protocol -> this.r_is_protocol.get();
 
 protocol MethodAst;
 
-def MethodAst.tag -> "org::neutrino::runtime::RMethod";
+def MethodAst.tag -> "org.neutrino.runtime.RMethod";
 
-def MethodAst.grow(payload) -> new MethodAst {
-  annots := payload["annots"],
-  params := payload["params"],
-  name := payload["name"],
-  code := payload["code"],
-  syntax_tree := new SyntaxTree(payload["code"]),
+def MethodAst.new_instance() -> new MethodAst {
+  r_annots := new Ref(null),
+  r_params := new Ref(null),
+  r_name := new Ref(null),
+  r_code := new Ref(null),
+  r_syntax_tree := new Ref(null),
   r_has_been_analyzed := new Ref(false)
 }
+
+def (this is MethodAst).initialize(payload) {
+  this.r_annots.set(payload["annots"]);
+  this.r_params.set(payload["params"]);
+  this.r_name.set(payload["name"]);
+  this.r_code.set(payload["code"]);
+  this.r_syntax_tree.set(new SyntaxTree(payload["code"]));
+}
+
+def (this is MethodAst).annots -> this.r_annots.get();
+def (this is MethodAst).params -> this.r_params.get();
+def (this is MethodAst).name -> this.r_name.get();
+def (this is MethodAst).code -> this.r_code.get();
+def (this is MethodAst).syntax_tree -> this.r_syntax_tree.get();
 
 def (this is MethodAst).get_annotation(name) {
   with_1cc (yield) {
@@ -72,21 +145,35 @@ def (this is MethodAst).to_string() -> "#<a Method: ${this.name}>";
 
 protocol TypeId;
 
-def TypeId.tag -> "org::neutrino::runtime::TypeId";
+def TypeId.tag -> "org.neutrino.runtime.TypeId";
 
-def TypeId.grow(payload) -> null;
+def TypeId.new_instance(payload) -> null;
 
 protocol ProtocolAst;
 
-def ProtocolAst.tag -> "org::neutrino::runtime::RProtocol";
+def ProtocolAst.tag -> "org.neutrino.runtime.RProtocol";
 
-def ProtocolAst.grow(payload) -> new ProtocolAst {
-  instance_type_id := payload["instanceTypeId"],
-  protocol_type_id := payload["protocolTypeId"],
-  id := payload["id"],
-  annotations := payload["annotations"],
-  display_name := payload["displayName"]
+def ProtocolAst.new_instance() -> new ProtocolAst {
+  r_instance_type_id := new Ref(null),
+  r_protocol_type_id := new Ref(null),
+  r_id := new Ref(null),
+  r_annotations := new Ref(null),
+  r_display_name := new Ref(null)
 }
+
+def (this is ProtocolAst).initialize(payload) {
+  this.r_instance_type_id.set(payload["instanceTypeId"]);
+  this.r_protocol_type_id.set(payload["protocolTypeId"]);
+  this.r_id.set(payload["id"]);
+  this.r_annotations.set(payload["annotations"]);
+  this.r_display_name.set(payload["displayName"]);
+}
+
+def (this is ProtocolAst).instance_type_id -> this.r_instance_type_id.get();
+def (this is ProtocolAst).protocol_type_id -> this.r_protocol_type_id.get();
+def (this is ProtocolAst).id -> this.r_id.get();
+def (this is ProtocolAst).annotations -> this.r_annotations.get();
+def (this is ProtocolAst).display_name -> this.r_display_name.get();
 
 def (this is ProtocolAst).get_annotation(name) {
   with_1cc (yield) {
@@ -100,12 +187,21 @@ def (this is ProtocolAst).get_annotation(name) {
 
 protocol Binding;
 
-def Binding.tag -> "org::neutrino::pib::Binding";
+def Binding.tag -> "org.neutrino.pib.Binding";
 
-def Binding.grow(payload) -> new Binding {
-  annotations := payload["annotations"],
-  code := payload["code"]
+def Binding.new_instance() -> new Binding {
+  r_annotations := new Ref(null),
+  r_code := new Ref(null)
 }
+
+def (this is Binding).initialize(payload) {
+  this.r_annotations.set(payload["annotations"]);
+  this.r_code.set(payload["code"]);
+}
+
+def (this is Binding).annotations -> this.r_annotations.get();
+
+def (this is Binding).code -> this.r_code.get();
 
 def (this is Binding).get_annotation(name) {
   with_1cc (yield) {
@@ -119,32 +215,52 @@ def (this is Binding).get_annotation(name) {
 
 protocol Annotation;
 
-def Annotation.tag -> "org::neutrino::syntax::Annotation";
+def Annotation.tag -> "org.neutrino.syntax.Annotation";
 
-def Annotation.grow(payload) -> new Annotation {
-  tag := payload["tag"],
-  args := payload["args"]
+def Annotation.new_instance() -> new Annotation {
+  r_tag := new Ref(null),
+  r_args := new Ref(null)
 }
+
+def (this is Annotation).initialize(payload) {
+  this.r_tag.set(payload["tag"]);
+  this.r_args.set(payload["args"]);
+}
+
+def (this is Annotation).tag -> this.r_tag.get();
+def (this is Annotation).args -> this.r_args.get();
 
 def (this is Annotation)[index] -> this.args[index];
 
 protocol Module;
 
-def Module.tag -> "org::neutrino::pib::Module";
+def Module.tag -> "org.neutrino.pib.Module";
 
-def Module.grow(payload) -> new Module {
-  defs := payload["defs"],
-  protos := payload["protos"],
-  supers := payload["rawInheritance"],
-  methods := payload["methods"]
+def Module.new_instance() -> new Module {
+  r_defs := new Ref(null),
+  r_protos := new Ref(null),
+  r_supers := new Ref(null),
+  r_methods := new Ref(null)
 }
+
+def (this is Module).initialize(payload) {
+  this.r_defs.set(payload["defs"]);
+  this.r_protos.set(payload["protos"]);
+  this.r_supers.set(payload["rawInheritance"]);
+  this.r_methods.set(payload["methods"]);
+}
+
+def (this is Module).defs -> this.r_defs.get();
+def (this is Module).protos -> this.r_protos.get();
+def (this is Module).supers -> this.r_supers.get();
+def (this is Module).methods -> this.r_methods.get();
 
 def (this is Module).to_string()
  -> "#<a Module: defs=${this.defs}, protos=${this.protos}, supers=${this.supers}, methods=${this.methods}>";
 
 protocol Native;
 
-def Native.tag -> "org::neutrino::runtime::Native";
+def Native.tag -> "org.neutrino.runtime.Native";
 
 def Native.grow(payload) -> new Native {
   name := payload["name"]
@@ -152,13 +268,19 @@ def Native.grow(payload) -> new Native {
 
 protocol Universe;
 
-def Universe.tag -> "org::neutrino::pib::Universe";
+def Universe.tag -> "org.neutrino.pib.Universe";
 
-def Universe.grow(payload) -> new Universe {
-  modules := payload["modules"],
+def Universe.new_instance() -> new Universe {
+  r_modules := new Ref(null),
   global_cache := new HashMap(),
   super_cache := new HashMap()
 }
+
+def (this is Universe).initialize(payload) {
+  this.r_modules.set(payload["modules"]);
+}
+
+def (this is Universe).modules -> this.r_modules.get();
 
 def (this is Universe).bindings -> fn for (fun) {
   for (module : this.modules.values)
