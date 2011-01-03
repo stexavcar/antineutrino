@@ -7,7 +7,7 @@ def (this is PlanktonTest).code(obj) {
   encoder.write(obj);
   def data := encoder.to_blob();
   def stream := new BlobInputStream(data);
-  def decoder := new PlanktonDecoder(new LowLevelDecoder(stream), null);
+  def decoder := new PlanktonDecoder(stream, null);
   decoder.read();
 }
 

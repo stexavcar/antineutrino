@@ -165,16 +165,17 @@ def CompilerGrower.new() -> new CompilerGrower {
   handler_table := CompilerGrower.new_handler_table()
 }
 
-def (this is CompilerGrower).grow(tag, payload) {
+def (this is CompilerGrower).get_codec(tag) {
   def handler := this.handler_table[tag];
   if handler = null then
-    fail("Don't know how to grow a ${tag}.");
-  handler(payload);
+    fail("Has no codec for ${tag}.");
+  handler;
 }
 
 def (this is NeutrinoCompiler).read_universe(filename) {
   def raw_data := open_file(filename).read_binary();
-  new Plankton(raw_data, new CompilerGrower()).unmarshal();
+  def in := new BlobInputStream(raw_data);
+  new PlanktonDecoder(in, new CompilerGrower()).read();
 }
 
 def (this is NeutrinoCompiler).compile(platform, in_name, out_name) {

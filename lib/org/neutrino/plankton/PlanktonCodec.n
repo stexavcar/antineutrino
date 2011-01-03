@@ -3,6 +3,15 @@ def kPlanktonStringTag := 1;
 def kPlanktonNullTag := 2;
 def kPlanktonTrueTag := 3;
 def kPlanktonFalseTag := 4;
+def kPlanktonMapTag := 6;
+def kPlanktonArrayTag := 8;
+
+def kPlanktonRefTag := 10;
+def kPlanktonScopeTag := 11;
+def kPlanktonTemplateTag := 12;
+def kPlanktonPlaceholderTag := 13;
+def kPlanktonObjectTag := 14;
+def kPlanktonBlobTag := 15;
 
 protocol PlanktonEncoder;
 
@@ -32,14 +41,43 @@ def PlanktonDecoder.new_dispatcher() {
   def result := new HashMap();
   result[kPlanktonStringTag] := (fn (d) -> d.read_string());
   result[kPlanktonIntTag] := (fn (d) -> d.read_int());
+  result[kPlanktonNullTag] := (fn (d) -> null);
+  result[kPlanktonTrueTag] := (fn (d) -> true);
+  result[kPlanktonFalseTag] := (fn (d) -> false);  
+  result[kPlanktonArrayTag] := (fn (d) -> d.read_array());
+  result[kPlanktonMapTag] := (fn (d) -> d.read_map());
+  result[kPlanktonRefTag] := (fn (d) -> d.read_reference());
+  result[kPlanktonScopeTag] := (fn (d) -> d.read_template_scope());
+  result[kPlanktonTemplateTag] := (fn (d) -> d.read_template_instance());
+  result[kPlanktonBlobTag] := (fn (d) -> d.read_blob());
+  result;
+}
+
+def PlanktonDecoder.new_template_dispatcher() {
+  def result := new HashMap();
+  result[kPlanktonObjectTag] := (fn (d) -> d.read_object_template());
+  result[kPlanktonMapTag] := (fn (d) -> d.read_map_template());
+  result[kPlanktonPlaceholderTag] := (fn (d) -> d.read_placeholder());
   result;
 }
 
 def PlanktonDecoder.new(in, class_index) -> new PlanktonDecoder {
-  in := in,
+  in := new LowLevelDecoder(in),
   class_index := class_index,
-  dispatcher := PlanktonDecoder.new_dispatcher()
+  dispatcher := PlanktonDecoder.new_dispatcher(),
+  template_dispatcher := PlanktonDecoder.new_template_dispatcher(),
+  refs := new HashMap(),
+  r_templates := new Ref(null),
+  r_next_index := new Ref(0)
 }
+
+def (this is PlanktonDecoder).current_index
+ -> this.r_next_index.get() - 1;
+
+def (this is PlanktonDecoder).advance_index()
+ -> this.r_next_index.set(this.r_next_index.get() + 1);
+
+def (this is PlanktonDecoder).templates -> this.r_templates.get();
 
 def (this is PlanktonDecoder).read()
  -> this.read(this.in.read());
@@ -47,20 +85,203 @@ def (this is PlanktonDecoder).read()
 def (this is PlanktonDecoder).read(tag) {
   def dispatcher := this.dispatcher[tag];
   if dispatcher = null
-    then fail("Unknown tag %{tag}");
+    then fail("Unknown tag ${tag}");
   dispatcher(this);
 }
 
- def (this is PlanktonDecoder).read_string() {
-   def length := this.in.read_unsigned();
-   def buf := new StringStream();
-   for (i : 0 .. length) {
-     def ord := this.in.read();
-     buf.add(string_from_ordinal(ord));
-   }
-   buf.to_string();
- }
+def (this is PlanktonDecoder).read_template() {
+  def tag := this.in.read();
+  def dispatcher := this.template_dispatcher[tag];
+  if dispatcher = null
+    then this.read_constant_template(tag);
+    else dispatcher(this);
+}
+
+protocol ObjectTemplate;
+
+def ObjectTemplate.new(payload, codec, decoder) -> new ObjectTemplate {
+  payload := payload,
+  codec := codec,
+  decoder := decoder
+}
+
+def (this is ObjectTemplate).on_template_start() {
+  if this.codec.is_atomic
+    then null;
+    else this.codec.new_instance();
+}
+
+def (this is ObjectTemplate).on_template_payload(obj) {
+  def data := this.decoder.instantiate_template(this.payload, false);
+  if this.codec.is_atomic then {
+    this.codec.new_atomic_instance(data);
+  } else {
+    this.codec.initialize(obj, data);
+    null;
+  }
+}
+
+def (this is PlanktonDecoder).read_object_template() {
+  def tag := this.read();
+  def payload_template := this.read_template();
+  def codec := this.class_index.get_codec(tag);
+  new ObjectTemplate(payload_template, codec, this);
+}
+
+protocol MapTemplate;
+
+def MapTemplate.new(length, parts, decoder) -> new MapTemplate {
+  length := length,
+  parts := parts,
+  decoder := decoder
+}
+
+def (this is MapTemplate).on_template_start()
+ -> new HashMap();
+
+def (this is MapTemplate).on_template_payload(map) {
+  for (i : 0 .. this.length) {
+    def key := this.decoder.instantiate_template(this.parts[2 * i], false);
+    def value := this.decoder.instantiate_template(this.parts[(2 * i) + 1], false);
+    map[key] := value;
+  }
+  null;
+}
+
+def (this is PlanktonDecoder).read_map_template() {
+  def length := this.in.read_unsigned();
+  def parts := new ArrayList();
+  for (i : 0 .. length) {
+    parts.add(this.read_template());
+    parts.add(this.read_template());
+  }
+  new MapTemplate(length, parts, this);
+}
+
+protocol ConstantTemplate;
+
+def ConstantTemplate.new(value) -> new ConstantTemplate { value := value }
+
+def (this is ConstantTemplate).on_template_start() -> this.value;
+
+def (this is ConstantTemplate).on_template_payload(obj) -> null;
+
+def (this is PlanktonDecoder).read_constant_template(tag) {
+  def value := this.read(tag);
+  new ConstantTemplate(value);
+}
+
+protocol PlaceholderTemplate;
+
+def PlaceholderTemplate.new(decoder) -> new PlaceholderTemplate { decoder := decoder }
+
+def (this is PlaceholderTemplate).on_template_start()
+ -> this.decoder.read();
+
+def (this is PlaceholderTemplate).on_template_payload(obj)
+ -> null;
+
+def (this is PlanktonDecoder).read_placeholder()
+ -> new PlaceholderTemplate(this);
+
+def (this is PlanktonDecoder).read_string() {
+  def length := this.in.read_unsigned();
+  def buf := new StringStream();
+  for (i : 0 .. length) {
+    def ord := this.in.read();
+    buf.add(string_from_ordinal(ord));
+  }
+  buf.to_string();
+}
+
+def (this is PlanktonDecoder).read_int()
+ -> this.in.read_signed();
  
- def (this is PlanktonDecoder).read_int()
-  -> this.in.read_signed();
- 
+def (this is PlanktonDecoder).read_template_scope() {
+  def start := this.in.read_unsigned();
+  def count := this.in.read_unsigned();
+  def old_scope := this.templates;
+  def new_scope := new TemplateScope(old_scope, start);
+  this.r_templates.set(new_scope);
+  for (i : 0 .. count) {
+    def template := this.read_template();
+    new_scope.add_template(template);
+  }
+  def result := this.read();
+  this.r_templates.set(old_scope);
+  result;
+}
+
+def (this is PlanktonDecoder).instantiate_template(template, store_ref) {
+  def index := this.current_index;
+  ref before_instance := template.on_template_start();
+  if store_ref and before_instance != null
+    then this.refs[index] := before_instance;
+  def after_instance := template.on_template_payload(before_instance);
+  if store_ref and after_instance != null then {
+    this.refs[index] := after_instance;
+    before_instance := after_instance;
+  }
+  before_instance;
+}
+
+def (this is PlanktonDecoder).read_template_instance() {
+  this.advance_index();
+  def index := this.in.read_unsigned();
+  def template := this.templates.get_template(index);
+  this.instantiate_template(template, true);
+}
+
+def (this is PlanktonDecoder).read_map() {
+  this.advance_index();
+  def length := this.in.read_unsigned();
+  def result := new HashMap();
+  this.refs[this.current_index] := result;
+  for (i : 0 .. length) {
+    def key := this.read();
+    def value := this.read();
+    result[key] := value;
+  }
+  result;
+}
+
+def (this is PlanktonDecoder).read_array() {
+  this.advance_index();
+  def length := this.in.read_unsigned();
+  def result := new ArrayList(length);
+  this.refs[this.current_index] := result;
+  for (i : 0 .. length)
+    result[i] := this.read();
+  result;
+}
+
+def (this is PlanktonDecoder).read_blob() {
+  def length := this.in.read_unsigned();
+  def stream := new BlobStream();
+  for (i : 0 .. length)
+    stream.add(this.in.read());
+  stream.get_blob();
+}
+
+def (this is PlanktonDecoder).read_reference() {
+  def index := this.in.read_unsigned();
+  this.refs[index];
+}
+
+protocol TemplateScope;
+
+def TemplateScope.new(parent, start) -> new TemplateScope {
+  parent := parent,
+  start := start,
+  templates := new ArrayList()
+}
+
+def (this is TemplateScope).add_template(value)
+ -> this.templates.add(value); 
+
+def (this is TemplateScope).get_template(index) {
+  def local_index := index - this.start;
+  if 0 <= local_index and local_index < this.templates.length
+    then this.templates[local_index];
+    else this.parent.get_template(index);
+}
