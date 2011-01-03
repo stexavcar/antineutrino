@@ -3,21 +3,17 @@ package org.neutrino.runtime;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.neutrino.oldton.ISeedable;
-import org.neutrino.oldton.annotations.Growable;
-import org.neutrino.oldton.annotations.SeedMember;
 import org.neutrino.plankton.Atomic;
 import org.neutrino.plankton.Generator;
 import org.neutrino.plankton.Store;
 
 @Atomic
-@Growable(TypeId.TAG)
-public class TypeId implements ISeedable {
+public class TypeId {
 
   static final String TAG = "org::neutrino::runtime::TypeId";
   private static Map<String, TypeId> namedTypes = new HashMap<String, TypeId>();
 
-  public final @Store @SeedMember String token;
+  public final @Store String token;
 
   private TypeId(String token) { this.token = token; }
 

@@ -19,7 +19,6 @@ public class Compile {
 
   public static @Flags.Flag("root-path") String rootPath;
   public static @Flags.Flag("outfile") String outputPath = "a.pib";
-  public static @Flags.Flag("outfile2") String outputPath2 = "a.pib2";
 
   public static void main(String[] rawArgs) throws IOException {
     Flags.parseArguments(rawArgs, Compile.class, CompilerModule.class);
@@ -32,11 +31,8 @@ public class Compile {
     if (binary == null)
       System.exit(1);
     FileOutputStream out = new FileOutputStream(outputPath);
-    binary.writeOldton(out);
+    binary.writePlankton(out);
     out.close();
-    FileOutputStream out2 = new FileOutputStream(outputPath2);
-    binary.writePlankton(out2);
-    out2.close();
   }
 
   public static Universe compile(CompilerUniverse top) {

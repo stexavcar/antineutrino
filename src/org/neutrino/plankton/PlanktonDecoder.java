@@ -230,7 +230,7 @@ public class PlanktonDecoder {
       public Object onTemplateStart() {
         return codec.isAtomic() ? null : codec.newInstance();
       }
-      @Override
+      @Override @SuppressWarnings("unchecked")
       public Object onTemplatePayload(Object obj) throws IOException {
         Map<String, Object> fields = (Map<String, Object>) instantiateTemplate(payloadTemplate, false);
         if (codec.isAtomic()) {

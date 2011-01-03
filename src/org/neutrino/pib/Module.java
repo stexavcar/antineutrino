@@ -6,9 +6,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.neutrino.oldton.ISeedable;
-import org.neutrino.oldton.annotations.Growable;
-import org.neutrino.oldton.annotations.SeedMember;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
@@ -19,15 +16,12 @@ import org.neutrino.runtime.RValue;
 import org.neutrino.runtime.TypeId;
 import org.neutrino.syntax.Annotation;
 
-@Growable(Module.TAG)
-public class Module implements ISeedable {
+public class Module {
 
-  public static final String TAG = "org::neutrino::pib::Module";
-
-  public @Store @SeedMember Map<String, Binding> defs;
-  public @Store @SeedMember Map<String, RProtocol> protos;
-  public @Store @SeedMember Map<String, List<String>> rawInheritance;
-  public @Store @SeedMember List<RMethod> methods;
+  public @Store Map<String, Binding> defs;
+  public @Store Map<String, RProtocol> protos;
+  public @Store Map<String, List<String>> rawInheritance;
+  public @Store List<RMethod> methods;
 
   private final Map<TypeId, List<TypeId>> inheritance = new HashMap<TypeId, List<TypeId>>();
   private final Map<String, RValue> globals = new HashMap<String, RValue>();

@@ -1,25 +1,24 @@
 package org.neutrino.main;
 
-import org.neutrino.compiler.CompilerModule;
-import org.neutrino.compiler.CompilerUniverse;
-import org.neutrino.oldton.PSeed;
-import org.neutrino.oldton.PValue;
-import org.neutrino.pib.BinaryBuilder;
-import org.neutrino.pib.Module;
-import org.neutrino.pib.Universe;
-import org.neutrino.runtime.Interpreter;
-import org.neutrino.runtime.RValue;
-import org.neutrino.syntax.Parser;
-import org.neutrino.syntax.Scanner;
-import org.neutrino.syntax.SyntaxError;
-import org.neutrino.syntax.Token;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+
+import org.neutrino.compiler.CompilerModule;
+import org.neutrino.compiler.CompilerUniverse;
+import org.neutrino.pib.BinaryBuilder;
+import org.neutrino.pib.Module;
+import org.neutrino.pib.Universe;
+import org.neutrino.plankton.PlanktonDecoder;
+import org.neutrino.runtime.Interpreter;
+import org.neutrino.runtime.RValue;
+import org.neutrino.syntax.Parser;
+import org.neutrino.syntax.Scanner;
+import org.neutrino.syntax.SyntaxError;
+import org.neutrino.syntax.Token;
 
 public class Shell {
 
@@ -29,8 +28,8 @@ public class Shell {
     Flags.parseArguments(rawArgs, Shell.class);
     assert pibPath != null : "No --pib-path has been specified";
     File file = new File(pibPath);
-    PValue value = Universe.getOldton().read(new FileInputStream(file));
-    Universe universe = ((PSeed) value).grow(Universe.class);
+    Universe universe = (Universe) new PlanktonDecoder(Universe.getClassIndex(),
+        new FileInputStream(file)).read();
     universe.initialize();
     (new Shell(universe)).readEvalPrint();
   }

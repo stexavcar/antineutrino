@@ -2,26 +2,20 @@ package org.neutrino.runtime;
 
 import java.util.List;
 
-import org.neutrino.oldton.ISeedable;
-import org.neutrino.oldton.annotations.Growable;
-import org.neutrino.oldton.annotations.SeedMember;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
 import org.neutrino.plankton.Store;
 import org.neutrino.syntax.Annotation;
 
-@Growable(RMethod.TAG)
-public class RMethod extends RValue implements ISeedable {
+public class RMethod extends RValue {
 
   private static final TypeId TYPE_ID = TypeId.get("Method");
 
-  static final String TAG = "org::neutrino::runtime::RMethod";
-
-  public @Store @SeedMember List<Annotation> annots;
-  public @Store @SeedMember String name;
-  public @Store @SeedMember List<Parameter> params;
-  public @Store @SeedMember CodeBundle code;
+  public @Store List<Annotation> annots;
+  public @Store String name;
+  public @Store List<Parameter> params;
+  public @Store CodeBundle code;
   public Module origin;
 
   public RMethod(List<Annotation> annots, String name, List<Parameter> params,

@@ -1,7 +1,6 @@
 package org.neutrino.pib;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -11,13 +10,6 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.neutrino.compiler.CompilerUniverse;
-import org.neutrino.oldton.ISeedable;
-import org.neutrino.oldton.Oldton;
-import org.neutrino.oldton.OldtonRegistry;
-import org.neutrino.oldton.PSeed;
-import org.neutrino.oldton.PValue;
-import org.neutrino.oldton.annotations.Growable;
-import org.neutrino.oldton.annotations.SeedMember;
 import org.neutrino.plankton.ClassIndex;
 import org.neutrino.plankton.PlanktonEncoder;
 import org.neutrino.plankton.Store;
@@ -39,12 +31,9 @@ import org.neutrino.syntax.Annotation;
  *
  * @author christian.plesner.hansen@gmail.com (Christian Plesner Hansen)
  */
-@Growable(Universe.TAG)
-public class Universe implements ISeedable {
+public class Universe {
 
-  static final String TAG = "org::neutrino::pib::Universe";
-
-  public @Store @SeedMember Map<String, Module> modules;
+  public @Store Map<String, Module> modules;
   private Universe parallelUniverse = null;
   private final MethodLookupHelper methodLookupHelper = new MethodLookupHelper(this);
 
@@ -143,24 +132,11 @@ public class Universe implements ISeedable {
     return methodLookupHelper.lookupLambda(function, args);
   }
 
-  public void writeOldton(OutputStream out) throws IOException {
-    OLDTON.write(out, OLDTON.newSeed(this));
-  }
-
   public void writePlankton(OutputStream out) throws IOException {
-    PlanktonEncoder encoder = new PlanktonEncoder(REGISTRY.getClassIndex());
+    PlanktonEncoder encoder = new PlanktonEncoder(getClassIndex());
     encoder.write(this);
     encoder.flush();
     out.write(encoder.getBytes());
-  }
-
-  public Universe readOldton(InputStream in) throws IOException {
-    PValue value = OLDTON.read(in);
-    return ((PSeed) value).grow(Universe.class);
-  }
-
-  public static Oldton getOldton() {
-    return OLDTON;
   }
 
   public Set<Map.Entry<String, Module>> getModules() {
@@ -177,24 +153,22 @@ public class Universe implements ISeedable {
   }
 
   public static ClassIndex getClassIndex() {
-    return REGISTRY.getClassIndex();
+    return REGISTRY;
   }
 
-  private static final OldtonRegistry REGISTRY = new OldtonRegistry() {{
-    register(Binding.class);
-    register(Universe.class);
-    register(Module.class);
-    register(RProtocol.class);
-    register(CodeBundle.class);
-    register(RMethod.class);
-    register(Parameter.class);
-    register(Annotation.class);
-    register(RString.class);
-    register(Native.class);
-    register(TypeId.class);
-    register(RInteger.class);
+  private static final ClassIndex REGISTRY = new ClassIndex() {{
+	add(Binding.class);
+    add(Universe.class);
+    add(Module.class);
+    add(RProtocol.class);
+    add(CodeBundle.class);
+    add(RMethod.class);
+    add(Parameter.class);
+    add(Annotation.class);
+    add(RString.class);
+    add(Native.class);
+    add(TypeId.class);
+    add(RInteger.class);
   }};
-
-  private static final Oldton OLDTON = new Oldton(REGISTRY);
 
 }
