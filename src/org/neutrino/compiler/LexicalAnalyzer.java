@@ -78,7 +78,7 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
   @Override
   public Void visitIdentifier(Identifier that) {
     String name = that.getName();
-    that.bind(scope.lookup(name));
+    that.bind(scope.lookupResolver(name), scope.lookup(name));
     return null;
   }
 
@@ -86,7 +86,7 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
   public Void visitAssignment(Assignment that) {
     that.getValue().accept(this);
     String name = that.getName();
-    Symbol symbol = scope.lookup(name);
+    ResolverSymbol symbol = scope.lookupResolver(name);
     assert symbol.isReference() : "Cannot assign to " + name;
     that.bind(symbol);
     return null;

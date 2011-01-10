@@ -43,6 +43,10 @@ public class RString extends RValue {
     return (obj instanceof RString) && ((RString) obj).value.equals(this.value);
   }
 
+  public static RString of(String value) {
+    return new RString(value);
+  }
+
   @Override
   public State getState() {
     return State.IMMUTABLE;

@@ -16,6 +16,8 @@ public class Compiler {
     ImplicitDeclarationVisitor implicitor = new ImplicitDeclarationVisitor(module);
     body.accept(implicitor);
     CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
+    ExpressionGenerator exprgen = new ExpressionGenerator();
+    exprgen.generate(body);
     int rootOffset = codegen.generate(body);
     assm.finalize(0, rootOffset);
     return assm.getCode();
@@ -29,6 +31,8 @@ public class Compiler {
     ImplicitDeclarationVisitor implicitor = new ImplicitDeclarationVisitor(module);
     body.accept(implicitor);
     CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
+    ExpressionGenerator exprgen = new ExpressionGenerator();
+    exprgen.generate(body);
     int rootOffset = codegen.generate(body);
     assm.finalize(lexicizer.getLocalCount(), rootOffset);
   }
