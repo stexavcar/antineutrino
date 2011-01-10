@@ -4,7 +4,7 @@ import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.syntax.Tree.Declaration;
 
-public abstract class Symbol {
+public abstract class ResolverSymbol {
 
   public abstract int emitLoad(Assembler assm);
 
@@ -19,7 +19,7 @@ public abstract class Symbol {
     return false;
   }
 
-  private static class GlobalSymbol extends Symbol {
+  private static class GlobalSymbol extends ResolverSymbol {
 
     private final String name;
 
@@ -44,11 +44,11 @@ public abstract class Symbol {
 
   }
 
-  public static Symbol global(String name) {
+  public static ResolverSymbol global(String name) {
     return new GlobalSymbol(name);
   }
 
-  private static class ParameterSymbol extends Symbol {
+  private static class ParameterSymbol extends ResolverSymbol {
 
     private final int index;
     private final int argc;
@@ -70,16 +70,16 @@ public abstract class Symbol {
 
   }
 
-  public static Symbol parameter(int index, int argc) {
+  public static ResolverSymbol parameter(int index, int argc) {
     return new ParameterSymbol(index, argc);
   }
 
-  private static class OuterSymbol extends Symbol {
+  private static class OuterSymbol extends ResolverSymbol {
 
-    private final Symbol outer;
+    private final ResolverSymbol outer;
     private final RFieldKey field;
 
-    public OuterSymbol(Symbol outer, RFieldKey field) {
+    public OuterSymbol(ResolverSymbol outer, RFieldKey field) {
       this.outer = outer;
       this.field = field;
     }
@@ -101,11 +101,11 @@ public abstract class Symbol {
 
   }
 
-  public static Symbol outer(Symbol outerSymbol, RFieldKey field) {
+  public static ResolverSymbol outer(ResolverSymbol outerSymbol, RFieldKey field) {
     return new OuterSymbol(outerSymbol, field);
   }
 
-  public static class LocalSymbol extends Symbol {
+  public static class LocalSymbol extends ResolverSymbol {
 
     private final boolean isReference;
     private final int index;

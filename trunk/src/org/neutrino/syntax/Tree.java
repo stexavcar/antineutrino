@@ -5,10 +5,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.javatrino.ast.Symbol;
 import org.neutrino.compiler.CompilerUniverse;
+import org.neutrino.compiler.ResolverSymbol;
+import org.neutrino.compiler.ResolverSymbol.LocalSymbol;
 import org.neutrino.compiler.Source;
-import org.neutrino.compiler.Symbol;
-import org.neutrino.compiler.Symbol.LocalSymbol;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
@@ -319,6 +320,7 @@ public class Tree {
   public static class Identifier extends Expression {
 
     private final String name;
+    private ResolverSymbol resolverSymbol;
     private Symbol symbol;
 
     public Identifier(String name) {
@@ -327,21 +329,26 @@ public class Tree {
 
     @Override
     public Declaration getStaticValue(CompilerUniverse universe) {
-      return symbol.getStaticValue(universe);
+      return resolverSymbol.getStaticValue(universe);
     }
 
     public String getName() {
       return name;
     }
 
-    public void bind(Symbol symbol) {
-      assert this.symbol == null;
+    public void bind(ResolverSymbol resolverSymbol, Symbol symbol) {
+      assert this.resolverSymbol == null;
+      this.resolverSymbol = resolverSymbol;
       this.symbol = symbol;
     }
 
     public Symbol getSymbol() {
-      assert this.symbol != null;
       return this.symbol;
+    }
+
+    public ResolverSymbol getResolverSymbol() {
+      assert this.resolverSymbol != null;
+      return this.resolverSymbol;
     }
 
     @Override
@@ -368,14 +375,14 @@ public class Tree {
 
     private final String name;
     private final Tree.Expression value;
-    private Symbol symbol;
+    private ResolverSymbol symbol;
 
     public Assignment(String name, Tree.Expression value) {
       this.name = name;
       this.value = value;
     }
 
-    public Symbol getSymbol() {
+    public ResolverSymbol getSymbol() {
       assert symbol != null;
       return symbol;
     }
@@ -388,7 +395,7 @@ public class Tree {
       return this.value;
     }
 
-    public void bind(Symbol symbol) {
+    public void bind(ResolverSymbol symbol) {
       assert this.symbol == null;
       this.symbol = symbol;
     }
@@ -760,7 +767,7 @@ public class Tree {
     private final List<String> protocols;
     private final String displayName;
     private RProtocol protocol;
-    private List<Symbol> captures;
+    private List<ResolverSymbol> captures;
     private List<RFieldKey> captureFields;
 
     public New(Source origin, List<Field> fields, List<String> protocols,
@@ -796,13 +803,13 @@ public class Tree {
       return this.displayName;
     }
 
-    public void setCaptures(List<Symbol> captures, List<RFieldKey> fields) {
+    public void setCaptures(List<ResolverSymbol> captures, List<RFieldKey> fields) {
       assert this.captures == null;
       this.captures = captures;
       this.captureFields = fields;
     }
 
-    public List<Symbol> getCaptures() {
+    public List<ResolverSymbol> getCaptures() {
       assert this.captures != null;
       return this.captures;
     }
@@ -876,7 +883,8 @@ public class Tree {
     private final Expression value;
     private final Expression body;
     private final boolean isReference;
-    private LocalSymbol symbol;
+    private final Symbol symbol;
+    private LocalSymbol resolverSymbol;
 
     public LocalDefinition(List<Annotation> annots, String name,
         Expression value, Expression body, boolean isReference) {
@@ -885,19 +893,24 @@ public class Tree {
       this.value = value;
       this.body = body;
       this.isReference = isReference;
+      this.symbol = new Symbol();
     }
 
-    public void bind(LocalSymbol symbol) {
-      assert this.symbol == null;
-      this.symbol = symbol;
+    public void bind(LocalSymbol resolverSymbol) {
+      assert this.resolverSymbol == null;
+      this.resolverSymbol = resolverSymbol;
     }
 
     public boolean isReference() {
       return this.isReference;
     }
 
-    public LocalSymbol getSymbol() {
-      assert this.symbol != null;
+    public LocalSymbol getResolverSymbol() {
+      assert this.resolverSymbol != null;
+      return this.resolverSymbol;
+    }
+
+    public Symbol getSymbol() {
       return this.symbol;
     }
 

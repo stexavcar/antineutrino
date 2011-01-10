@@ -1,5 +1,6 @@
 package org.neutrino.pib;
 
+import org.javatrino.ast.Symbol;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.TypeId;
@@ -9,6 +10,7 @@ public class Parameter {
   public @Store String name;
   public @Store String type;
   public @Store boolean isProtocolMethod;
+  private final Symbol symbol = new Symbol();
   private TypeId typeId;
 
   public Parameter(String name, String type, boolean isProtocolMethod) {
@@ -39,6 +41,10 @@ public class Parameter {
   public String toString() {
     if ("Object".equals(type)) return name;
     else return "(" + type + " " + name + ")";
+  }
+
+  public Symbol getSymbol() {
+    return symbol;
   }
 
 }

@@ -56,8 +56,8 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
 
   @Override
   public Integer visitIdentifier(Tree.Identifier that) {
-    int result = that.getSymbol().emitLoad(assm);
-    if (that.getSymbol().isReference())
+    int result = that.getResolverSymbol().emitLoad(assm);
+    if (that.getResolverSymbol().isReference())
       result = assm.call("get", Arrays.asList(result));
     return result;
   }
@@ -78,7 +78,7 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
     int valueOffset = that.getValue().accept(this);
     if (that.isReference())
       valueOffset = assm.call("new", Arrays.asList(refOffset, valueOffset));
-    int index = that.getSymbol().getIndex();
+    int index = that.getResolverSymbol().getIndex();
     assm.storeLocal(index);
     int bodyOffset = that.getBody().accept(this);
     return assm.defineLocal(index, valueOffset, bodyOffset);
@@ -166,7 +166,7 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
         outerCount++;
       }
     }
-    List<Symbol> outers = that.getCaptures();
+    List<ResolverSymbol> outers = that.getCaptures();
     List<RFieldKey> outerFields = that.getCaptureFields();
     for (int i = 0; i < outers.size(); i++) {
       keys.add(outerFields.get(i));
