@@ -1,10 +1,10 @@
 package org.neutrino.compiler;
 
+import org.javatrino.ast.Expression;
 import org.neutrino.pib.Assembler;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.ModuleBuilder;
 import org.neutrino.syntax.Tree;
-import org.neutrino.syntax.Tree.Expression;
 import org.neutrino.syntax.Tree.Method;
 
 public class Compiler {
@@ -17,24 +17,24 @@ public class Compiler {
     body.accept(implicitor);
     CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
     ExpressionGenerator exprgen = new ExpressionGenerator();
-    exprgen.generate(body);
+    Expression expr = exprgen.generate(body);
     int rootOffset = codegen.generate(body);
-    assm.finalize(0, rootOffset);
+    assm.finalize(0, rootOffset, expr);
     return assm.getCode();
   }
 
   public static void compileMethod(ModuleBuilder module,
       Assembler assm, Method that) {
-    Expression body = that.getBody();
+    Tree.Expression body = that.getBody();
     LexicalAnalyzer lexicizer = new LexicalAnalyzer(that);
     body.accept(lexicizer);
     ImplicitDeclarationVisitor implicitor = new ImplicitDeclarationVisitor(module);
     body.accept(implicitor);
     CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
     ExpressionGenerator exprgen = new ExpressionGenerator();
-    exprgen.generate(body);
+    Expression expr = exprgen.generate(body);
     int rootOffset = codegen.generate(body);
-    assm.finalize(lexicizer.getLocalCount(), rootOffset);
+    assm.finalize(lexicizer.getLocalCount(), rootOffset, expr);
   }
 
 }

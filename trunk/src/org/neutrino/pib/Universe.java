@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.javatrino.ast.Expression;
 import org.neutrino.compiler.CompilerUniverse;
 import org.neutrino.plankton.ClassIndex;
 import org.neutrino.plankton.PlanktonEncoder;
@@ -171,6 +172,7 @@ public class Universe {
     add(TypeId.class);
     add(RInteger.class);
     add(RFieldKey.class);
+    Expression.register(this);
   }};
 
 }

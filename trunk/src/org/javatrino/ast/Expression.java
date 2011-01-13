@@ -1,14 +1,22 @@
 package org.javatrino.ast;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.List;
 
+import org.neutrino.plankton.ClassIndex;
+import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RProtocol;
-import org.neutrino.runtime.RValue;
 
 
 public abstract class Expression {
 
+  @Skip
+  @Retention(RetentionPolicy.RUNTIME)
+  private @interface Skip { }
+
+  @Skip
   public enum Kind {
     CALL, BLOCK, ADD_INTRINSIC, CONST, DEF, GET_FIELD, SET_FIELD, GLOBAL,
     LOCAL, NEW, TAG_WITH_PROTOCOL
@@ -24,80 +32,106 @@ public abstract class Expression {
 
     public static class Argument {
 
-      private final RValue tag;
-      private final Expression value;
+      public @Store Object tag;
+      public @Store Expression value;
 
-      public Argument(RValue tag, Expression value) {
+      public Argument(Object tag, Expression value) {
         this.tag = tag;
         this.value = value;
       }
 
+      public Argument() { }
+
     }
 
-    private final List<Argument> arguments;
+    public @Store List<Argument> arguments;
 
     public Call(List<Argument> arguments) {
-      super(Kind.CALL);
+      this();
       this.arguments = arguments;
+    }
+
+    public Call() {
+      super(Kind.CALL);
     }
 
   }
 
   public static class Block extends Expression {
 
-    private final List<Expression> values;
+    public @Store List<Expression> values;
 
     public Block(List<Expression> values) {
-      super(Kind.BLOCK);
+      this();
       this.values = values;
+    }
+
+    public Block() {
+      super(Kind.BLOCK);
     }
 
   }
 
   public static class Definition extends Expression {
 
-    private final Symbol symbol;
-    private final Expression value;
-    private final Expression body;
+    public @Store Symbol symbol;
+    public @Store Expression value;
+    public @Store Expression body;
 
     public Definition(Symbol symbol, Expression value, Expression body) {
-      super(Kind.DEF);
+      this();
       this.symbol = symbol;
       this.value = value;
       this.body = body;
+    }
+
+    public Definition() {
+      super(Kind.DEF);
     }
 
   }
 
   public static class Local extends Expression {
 
-    private final Symbol symbol;
+    public @Store Symbol symbol;
 
     public Local(Symbol symbol) {
-      super(Kind.LOCAL);
+      this();
       this.symbol = symbol;
+    }
+
+    public Local() {
+      super(Kind.LOCAL);
     }
 
   }
 
   public static class Global extends Expression {
 
-    private final RValue name;
+    public @Store Object name;
 
-    public Global(RValue name) {
-      super(Kind.GLOBAL);
+    public Global(Object name) {
+      this();
       this.name = name;
+    }
+
+    public Global() {
+      super(Kind.GLOBAL);
     }
 
   }
 
   public static class Constant extends Expression {
 
-    private final RValue value;
+    public @Store Object value;
 
-    public Constant(RValue value) {
-      super(Kind.CONST);
+    public Constant(Object value) {
+      this();
       this.value = value;
+    }
+
+    public Constant() {
+      super(Kind.CONST);
     }
 
   }
@@ -112,56 +146,81 @@ public abstract class Expression {
 
   public static class AddIntrinsics extends Expression {
 
-    private final Expression object;
-    private final List<Method> methods;
+    public @Store Expression object;
+    public @Store List<Method> methods;
 
     public AddIntrinsics(Expression object, List<Method> methods) {
-      super(Kind.ADD_INTRINSIC);
+      this();
       this.object = object;
       this.methods = methods;
+    }
+
+    public AddIntrinsics() {
+      super(Kind.ADD_INTRINSIC);
     }
 
   }
 
   public static class TagWithProtocol extends Expression {
 
-    private final Expression object;
-    private final RProtocol protocol;
+    public @Store Expression object;
+    public @Store RProtocol protocol;
 
     public TagWithProtocol(Expression object, RProtocol protocol) {
-      super(Kind.TAG_WITH_PROTOCOL);
+      this();
       this.object = object;
       this.protocol = protocol;
+    }
+
+    public TagWithProtocol() {
+      super(Kind.TAG_WITH_PROTOCOL);
     }
 
   }
 
   public static class SetField extends Expression {
 
-    private final Expression object;
-    private final RFieldKey field;
-    private final Expression value;
+    public @Store Expression object;
+    public @Store RFieldKey field;
+    public @Store Expression value;
 
     public SetField(Expression object, RFieldKey field, Expression value) {
-      super(Kind.SET_FIELD);
+      this();
       this.object = object;
       this.field = field;
       this.value = value;
+    }
+
+    public SetField() {
+      super(Kind.SET_FIELD);
     }
 
   }
 
   public static class GetField extends Expression {
 
-    private final Expression object;
-    private final RFieldKey field;
+    public @Store Expression object;
+    public @Store RFieldKey field;
 
     public GetField(Expression object, RFieldKey field) {
-      super(Kind.GET_FIELD);
+      this();
       this.object = object;
       this.field = field;
     }
 
+    public GetField() {
+      super(Kind.GET_FIELD);
+    }
+
+  }
+
+  public static void register(ClassIndex index) {
+    index.add(Call.Argument.class);
+    index.add(Symbol.class);
+    for (Class<?> klass : Expression.class.getClasses()) {
+      if (klass.getAnnotation(Skip.class) == null)
+        index.add(klass);
+    }
   }
 
 }

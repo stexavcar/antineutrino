@@ -34,6 +34,16 @@ def (this is AtomicCodec).is_atomic -> true;
 def (this is AtomicCodec).new_atomic_instance(payload)
  -> this.type.new_instance(payload);
 
+protocol NullCodec {
+
+  def this.is_atomic -> true;
+
+  def this.new_atomic_instance(payload) -> null;
+
+}
+
+def NullCodec.new() -> new NullCodec { }
+
 def CompilerGrower.new_handler_table() {
   def result := new HashMap();
   result[CodeBundle.tag] := new PlainCodec(CodeBundle);
@@ -47,6 +57,19 @@ def CompilerGrower.new_handler_table() {
   result[ProtocolAst.tag] := new PlainCodec(ProtocolAst);
   result[MethodAst.tag] := new PlainCodec(MethodAst);
   result[FieldKey.tag] := new PlainCodec(FieldKey);
+  result["org.javatrino.ast.Expression$Call$Argument"] := new NullCodec();
+  result["org.javatrino.ast.Symbol"] := new NullCodec();
+  result["org.javatrino.ast.Expression$GetField"] := new NullCodec();
+  result["org.javatrino.ast.Expression$SetField"] := new NullCodec();
+  result["org.javatrino.ast.Expression$Block"] := new NullCodec();
+  result["org.javatrino.ast.Expression$Call"] := new NullCodec();
+  result["org.javatrino.ast.Expression$NewObject"] := new NullCodec();
+  result["org.javatrino.ast.Expression$Constant"] := new NullCodec();
+  result["org.javatrino.ast.Expression$Local"] := new NullCodec();
+  result["org.javatrino.ast.Expression$Global"] := new NullCodec();
+  result["org.javatrino.ast.Expression$TagWithProtocol"] := new NullCodec();
+  result["org.javatrino.ast.Expression$AddIntrinsics"] := new NullCodec();
+  result["org.javatrino.ast.Expression$Definition"] := new NullCodec();
   result["org.neutrino.runtime.RInteger"] := new GetterCodec("value");
   result["org.neutrino.runtime.RString"] := new GetterCodec("value");
   result;
@@ -61,15 +84,17 @@ def CodeBundle.new_instance() -> new CodeBundle {
   local_count := null,
   filename := null,
   code := null,
-  root_offset := null
+  root_offset := null,
+  body := null
 }
 
 def (this is CodeBundle).initialize(payload) {
   this.literals := payload["literals"];
   this.local_count := payload["localCount"];
   this.filename := payload["fileName"];
-  this.code := payload["code"];
+  this.code := payload["oldCode"];
   this.root_offset := payload["rootOffset"];
+  this.body := payload["body"];
 }
 
 protocol Parameter;
