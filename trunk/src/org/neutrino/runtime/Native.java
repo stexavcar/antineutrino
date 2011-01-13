@@ -9,8 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Stack;
 
+import org.javatrino.bytecode.Opcode;
 import org.neutrino.pib.CodeBundle;
-import org.neutrino.pib.Opcode;
 import org.neutrino.pib.Universe;
 import org.neutrino.plankton.Store;
 

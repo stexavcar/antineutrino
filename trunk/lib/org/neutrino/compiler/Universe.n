@@ -89,7 +89,7 @@ def CodeBundle.new_instance() -> new CodeBundle {
 }
 
 def (this is CodeBundle).initialize(payload) {
-  this.literals := payload["literals"];
+  this.literals := payload["oldLiterals"];
   this.local_count := payload["localCount"];
   this.filename := payload["fileName"];
   this.code := payload["oldCode"];

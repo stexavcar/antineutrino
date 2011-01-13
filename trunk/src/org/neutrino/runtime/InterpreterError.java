@@ -1,9 +1,9 @@
 package org.neutrino.runtime;
 
-import org.neutrino.pib.Opcode;
-
 import java.io.PrintStream;
 import java.util.ArrayList;
+
+import org.javatrino.bytecode.Opcode;
 
 public class InterpreterError extends RuntimeException {
 
@@ -85,9 +85,9 @@ public class InterpreterError extends RuntimeException {
 
   public static class UndefinedGlobal extends InterpreterError {
 
-    private final String name;
+    private final Object name;
 
-    public UndefinedGlobal(String name, Frame frame) {
+    public UndefinedGlobal(Object name, Frame frame) {
       super(frame);
       this.name = name;
     }

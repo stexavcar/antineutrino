@@ -7,9 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.javatrino.bytecode.Opcode;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
-import org.neutrino.pib.Opcode;
 
 public class Interpreter {
 
@@ -144,7 +144,7 @@ public class Interpreter {
       }
       case Opcode.kGlobal: {
         int index = frame.code[frame.pc + 1];
-        String name = (String) frame.getLiteral(index);
+        Object name = frame.getLiteral(index);
         RValue value = frame.module.getUniverse().getGlobal(name, this);
         if (value == null)
           throw new InterpreterError.UndefinedGlobal(name, frame);

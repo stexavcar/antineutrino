@@ -24,7 +24,7 @@ public class Module {
   public @Store List<RMethod> methods;
 
   private final Map<TypeId, List<TypeId>> inheritance = new HashMap<TypeId, List<TypeId>>();
-  private final Map<String, RValue> globals = new HashMap<String, RValue>();
+  private final Map<Object, RValue> globals = new HashMap<Object, RValue>();
   private Universe universe;
 
   public Module(Map<String, Binding> defs, Map<String, RProtocol> protos,
@@ -90,7 +90,7 @@ public class Module {
     return defs.values();
   }
 
-  public RValue getGlobal(String name, Interpreter inter) {
+  public RValue getGlobal(Object name, Interpreter inter) {
     RValue result = globals.get(name);
     if (result == null) {
       Binding binding = defs.get(name);

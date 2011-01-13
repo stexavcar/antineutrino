@@ -10,7 +10,6 @@ import org.javatrino.ast.Expression.Call.Argument;
 import org.javatrino.ast.Expression.Constant;
 import org.javatrino.ast.Expression.Definition;
 import org.javatrino.ast.Expression.Global;
-import org.javatrino.ast.Expression.Local;
 import org.javatrino.ast.Expression.NewObject;
 import org.javatrino.ast.Symbol;
 import org.neutrino.syntax.Tree;
@@ -31,6 +30,8 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitNew(Tree.New that) {
+    if (true)
+      return null;
     return new NewObject();
   }
 
@@ -40,17 +41,22 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     if (symbol == null) {
       return new Global(that.getName());
     } else {
-      return new Local(symbol);
+      return null;
+//      return new Local(symbol);
     }
   }
 
   @Override
   public Expression visitLocalDefinition(Tree.LocalDefinition that) {
+    if (true)
+      return null;
     return new Definition(that.getSymbol(), generate(that.getValue()), generate(that.getBody()));
   }
 
   @Override
   public Expression visitBlock(Tree.Block that) {
+    if (true)
+      return null;
     List<Expression> exprs = new ArrayList<Expression>();
     for (Tree.Expression expr : that.getExpressions())
       exprs.add(generate(expr));
@@ -59,6 +65,8 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitSingleton(Singleton that) {
+    if (true)
+      return null;
     switch (that.getType()) {
     case FALSE:
       return new Constant(true);
@@ -98,11 +106,15 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitNumber(Tree.Number that) {
+    if (true)
+      return null;
     return new Constant(that.toValue());
   }
 
   @Override
   public Expression visitCall(Tree.Call that) {
+    if (true)
+      return null;
     List<Argument> arguments = new ArrayList<Argument>();
     String name = that.getName();
     arguments.add(new Argument("name", new Constant(name)));
