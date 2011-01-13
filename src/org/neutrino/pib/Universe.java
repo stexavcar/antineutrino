@@ -73,7 +73,7 @@ public class Universe {
         : parallelUniverse.getEntryPoint(name);
   }
 
-  public RValue getGlobal(String name, Interpreter inter) {
+  public RValue getGlobal(Object name, Interpreter inter) {
     for (Module module : modules.values()) {
       RValue value = module.getGlobal(name, inter);
       if (value != null)

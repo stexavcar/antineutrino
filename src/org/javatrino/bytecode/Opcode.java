@@ -1,4 +1,4 @@
-package org.neutrino.pib;
+package org.javatrino.bytecode;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

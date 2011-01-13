@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.javatrino.ast.Expression;
+import org.javatrino.bytecode.Opcode;
 import org.neutrino.compiler.Source;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFieldKey;
@@ -115,7 +116,7 @@ public class Assembler {
     return offset;
   }
 
-  public int global(String name) {
+  public int global(Object name) {
     int index = registerLiteral(name);
     int result = getOffset();
     add(Opcode.kGlobal);
@@ -192,6 +193,14 @@ public class Assembler {
 
   private void add(int value) {
     bytes.write(value);
+  }
+
+  public byte[] getBytecode() {
+    return bytes.toByteArray();
+  }
+
+  public List<Object> getLiterals() {
+    return literals;
   }
 
   public CodeBundle getCode() {
