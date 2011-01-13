@@ -1,18 +1,18 @@
 package org.neutrino.pib;
 
-import org.neutrino.compiler.CompilerUniverse;
-import org.neutrino.compiler.Source;
-import org.neutrino.runtime.RMethod;
-import org.neutrino.runtime.RProtocol;
-import org.neutrino.syntax.Annotation;
-import org.neutrino.syntax.Tree;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+
+import org.neutrino.compiler.CompilerUniverse;
+import org.neutrino.compiler.Source;
+import org.neutrino.runtime.RMethod;
+import org.neutrino.runtime.RProtocol;
+import org.neutrino.syntax.Annotation;
+import org.neutrino.syntax.Tree;
 
 
 public class ModuleBuilder {
@@ -77,7 +77,7 @@ public class ModuleBuilder {
     defs.put(id, builder);
     builder.getAssembler().push(proto);
     builder.getAssembler().rethurn();
-    builder.getAssembler().finalize(0, 0);
+    builder.getAssembler().finalize(0, 0, null);
     return proto;
   }
 

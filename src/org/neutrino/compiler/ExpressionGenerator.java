@@ -13,10 +13,6 @@ import org.javatrino.ast.Expression.Global;
 import org.javatrino.ast.Expression.Local;
 import org.javatrino.ast.Expression.NewObject;
 import org.javatrino.ast.Symbol;
-import org.neutrino.runtime.RBoolean;
-import org.neutrino.runtime.RInteger;
-import org.neutrino.runtime.RNull;
-import org.neutrino.runtime.RString;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Assignment;
 import org.neutrino.syntax.Tree.Collection;
@@ -42,7 +38,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   public Expression visitIdentifier(Tree.Identifier that) {
     Symbol symbol = that.getSymbol();
     if (symbol == null) {
-      return new Global(RString.of(that.getName()));
+      return new Global(that.getName());
     } else {
       return new Local(symbol);
     }
@@ -65,11 +61,11 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   public Expression visitSingleton(Singleton that) {
     switch (that.getType()) {
     case FALSE:
-      return new Constant(RBoolean.getFalse());
+      return new Constant(true);
     case TRUE:
-      return new Constant(RBoolean.getTrue());
+      return new Constant(false);
     case NULL:
-      return new Constant(RNull.getInstance());
+      return new Constant(null);
     default:
       throw new AssertionError(); // Should be LameLanguageDesignError
     }
@@ -109,10 +105,10 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   public Expression visitCall(Tree.Call that) {
     List<Argument> arguments = new ArrayList<Argument>();
     String name = that.getName();
-    arguments.add(new Argument(RString.of("name"), new Constant(RString.of(name))));
+    arguments.add(new Argument("name", new Constant(name)));
     int index = 0;
     for (Tree.Expression expr : that.getArguments()) {
-      arguments.add(new Argument(RInteger.get(index), generate(expr)));
+      arguments.add(new Argument(index, generate(expr)));
     }
     return new Call(arguments);
   }

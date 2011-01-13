@@ -18,7 +18,8 @@ public class Interpreter {
       Collections.<Object>emptyList(),
       0,
       null,
-      0);
+      0,
+      null);
 
   private final Native.Arguments arguments = new Native.Arguments();
 
