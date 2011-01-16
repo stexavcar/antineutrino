@@ -44,6 +44,11 @@ public class BytecodeCompiler {
       emitConstant(cons.value);
       break;
     }
+    case BLOCK: {
+      Expression.Block block = (Expression.Block) expr;
+      emitBlock(block.values);
+      break;
+    }
     default:
       throw new AssertionError(expr.kind);
     }
@@ -62,6 +67,19 @@ public class BytecodeCompiler {
       assm.push(RInteger.get((Integer) value));
     } else {
       assert false : value.getClass();
+    }
+  }
+
+  private void emitBlock(List<Expression> values) {
+    assert values.size() > 1;
+    boolean isFirst = true;
+    for (Expression value : values) {
+      if (isFirst) {
+        isFirst = false;
+      } else {
+        assm.pop();
+      }
+      emit(value);
     }
   }
 

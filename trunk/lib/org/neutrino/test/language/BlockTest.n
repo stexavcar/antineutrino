@@ -14,6 +14,7 @@ def (this is LanguageTest).test_statement_blocks() {
   assert_true(11 = block_foo_1());
   assert_true(12 = block_foo_2());
   assert_true(13 = block_foo_3());
+  assert_true(4 = (new X32 { }.y));
 }
 
 def block_foo_1() {
@@ -31,3 +32,7 @@ def block_foo_2() {
 def block_foo_3() {
   { { { 5 + 8; 6 + 7; }; }; };
 }
+
+protocol X32;
+
+def (this is X32).y -> {1; 2; 3; 4;}
