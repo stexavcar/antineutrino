@@ -65,13 +65,11 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitSingleton(Singleton that) {
-    if (true)
-      return null;
     switch (that.getType()) {
     case FALSE:
-      return new Constant(true);
-    case TRUE:
       return new Constant(false);
+    case TRUE:
+      return new Constant(true);
     case NULL:
       return new Constant(null);
     default:
@@ -106,9 +104,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitNumber(Tree.Number that) {
-    if (true)
-      return null;
-    return new Constant(that.toValue());
+    return new Constant(that.getValue());
   }
 
   @Override
