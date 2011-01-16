@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.javatrino.ast.Expression;
 import org.neutrino.pib.Assembler;
+import org.neutrino.runtime.RInteger;
+import org.neutrino.runtime.RString;
 
 public class BytecodeCompiler {
 
@@ -37,8 +39,29 @@ public class BytecodeCompiler {
       assm.global(global.name);
       break;
     }
+    case CONST: {
+      Expression.Constant cons = (Expression.Constant) expr;
+      emitConstant(cons.value);
+      break;
+    }
     default:
       throw new AssertionError(expr.kind);
+    }
+  }
+
+  private void emitConstant(Object value) {
+    if (value == null) {
+      assm.nuhll();
+    } else if (value == Boolean.TRUE) {
+      assm.thrue();
+    } else if (value == Boolean.FALSE) {
+      assm.fahlse();
+    } else if (value instanceof String) {
+      assm.push(RString.of((String) value));
+    } else if (value instanceof Integer) {
+      assm.push(RInteger.get((Integer) value));
+    } else {
+      assert false : value.getClass();
     }
   }
 
