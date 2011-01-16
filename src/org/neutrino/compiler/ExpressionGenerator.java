@@ -22,6 +22,12 @@ import org.neutrino.syntax.Tree.With1Cc;
 
 public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
+  private static final Expression ABORT = null;
+
+  private static boolean isAbort(Expression expr) {
+    return expr == ABORT;
+  }
+
   @Override
   public Expression visitExpression(Tree.Expression that) {
     assert false : that.getClass();
@@ -31,7 +37,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   @Override
   public Expression visitNew(Tree.New that) {
     if (true)
-      return null;
+      return ABORT;
     return new NewObject();
   }
 
@@ -41,7 +47,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     if (symbol == null) {
       return new Global(that.getName());
     } else {
-      return null;
+      return ABORT;
 //      return new Local(symbol);
     }
   }
@@ -49,17 +55,19 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   @Override
   public Expression visitLocalDefinition(Tree.LocalDefinition that) {
     if (true)
-      return null;
+      return ABORT;
     return new Definition(that.getSymbol(), generate(that.getValue()), generate(that.getBody()));
   }
 
   @Override
   public Expression visitBlock(Tree.Block that) {
-    if (true)
-      return null;
     List<Expression> exprs = new ArrayList<Expression>();
-    for (Tree.Expression expr : that.getExpressions())
-      exprs.add(generate(expr));
+    for (Tree.Expression source : that.getExpressions()) {
+      Expression expr = generate(source);
+      if (isAbort(expr))
+        return ABORT;
+      exprs.add(expr);
+    }
     return new Block(exprs);
   }
 
@@ -79,27 +87,27 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitText(Text that) {
-    return null;
+    return ABORT;
   }
 
   @Override
   public Expression visitWith1Cc(With1Cc that) {
-    return null;
+    return ABORT;
   }
 
   @Override
   public Expression visitCollection(Collection that) {
-    return null;
+    return ABORT;
   }
 
   @Override
   public Expression visitInternal(Internal that) {
-    return null;
+    return ABORT;
   }
 
   @Override
   public Expression visitAssignment(Assignment that) {
-    return null;
+    return ABORT;
   }
 
   @Override
@@ -110,7 +118,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   @Override
   public Expression visitCall(Tree.Call that) {
     if (true)
-      return null;
+      return ABORT;
     List<Argument> arguments = new ArrayList<Argument>();
     String name = that.getName();
     arguments.add(new Argument("name", new Constant(name)));
