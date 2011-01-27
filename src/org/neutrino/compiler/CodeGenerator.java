@@ -64,8 +64,8 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
 
   @Override
   public Integer visitAssignment(Tree.Assignment that) {
-    assert that.getSymbol().isReference();
-    int ref = that.getSymbol().emitLoad(assm);
+    assert that.getResolverSymbol().isReference();
+    int ref = that.getResolverSymbol().emitLoad(assm);
     int value = that.getValue().accept(this);
     return assm.call("set", Arrays.asList(ref, value));
   }
