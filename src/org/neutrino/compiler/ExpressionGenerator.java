@@ -165,7 +165,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitText(Text that) {
-    return ABORT;
+    return new Constant(that.getValue());
   }
 
   @Override
