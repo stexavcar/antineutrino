@@ -11,6 +11,7 @@ import org.javatrino.ast.Method;
 import org.javatrino.bytecode.Opcode;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
+import org.neutrino.pib.Universe;
 
 public class Interpreter {
 
@@ -21,6 +22,7 @@ public class Interpreter {
       null,
       0,
       null,
+      null,
       null);
 
   private final Native.Arguments arguments = new Native.Arguments();
@@ -30,7 +32,7 @@ public class Interpreter {
     for (RValue arg : args)
       parent.stack.push(arg);
     Frame frame = new Frame(parent, null, code, module);
-    return interpret(frame);
+    return interpret(module.getUniverse(), frame);
   }
 
   public RValue interpret(Lambda lambda, RValue... args) {
@@ -40,8 +42,9 @@ public class Interpreter {
   static int count = 0;
 
   @SuppressWarnings("unchecked")
-  private RValue interpret(Frame frame) {
+  private RValue interpret(Universe universe, Frame frame) {
     while (true) {
+//      System.out.println(count++);
       int opcode = frame.code[frame.pc];
       switch (opcode) {
       case Opcode.kNull:
@@ -61,9 +64,11 @@ public class Interpreter {
         String name = (String) frame.getLiteral(nameIndex);
         int argc = frame.code[frame.pc + 2];
         RValue self = frame.getArgument(argc, 0);
-        Lambda lambda = frame.lookupMethod(name, argc);
-        if (lambda == null)
-          throw new InterpreterError.MethodNotFound(frame);
+        Lambda lambda = frame.lookupMethod(universe, name, argc);
+        if (lambda == null) {
+          frame.lookupMethod(universe, name, argc);
+          throw new InterpreterError.MethodNotFound(frame, universe);
+        }
         frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
         break;
       }
@@ -73,9 +78,9 @@ public class Interpreter {
         RContinuation cont = new RContinuation();
         frame.stack.push(cont);
         RValue self = frame.getArgument(argc, 0);
-        Lambda lambda = frame.lookupMethod(name, argc);
+        Lambda lambda = frame.lookupMethod(universe, name, argc);
         if (lambda == null)
-          throw new InterpreterError.MethodNotFound(frame);
+          throw new InterpreterError.MethodNotFound(frame, universe);
         frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
         frame.marker = cont;
         break;
@@ -118,6 +123,11 @@ public class Interpreter {
         frame.pc += 1;
         break;
       }
+      case Opcode.kDup: {
+        frame.stack.push(frame.stack.peek());
+        frame.pc += 1;
+        break;
+      }
       case Opcode.kArgument: {
         int index = frame.code[frame.pc + 1];
         RValue value = frame.parent.peekArgument(index);
@@ -136,7 +146,7 @@ public class Interpreter {
         int index = frame.code[frame.pc + 1];
         Native nathive = (Native) frame.getLiteral(index);
         int argc = frame.code[frame.pc + 2];
-        arguments.prepare(frame, argc);
+        arguments.prepare(frame, argc, universe);
         RValue value = nathive.call(arguments);
         frame = arguments.getFrame();
         if (value != null) {
@@ -149,9 +159,9 @@ public class Interpreter {
       case Opcode.kGlobal: {
         int index = frame.code[frame.pc + 1];
         Object name = frame.getLiteral(index);
-        RValue value = frame.module.getUniverse().getGlobal(name, this);
+        RValue value = universe.getGlobal(name, this);
         if (value == null)
-          throw new InterpreterError.UndefinedGlobal(name, frame);
+          throw new InterpreterError.UndefinedGlobal(name, frame, universe);
         frame.stack.push(value);
         frame.pc += 2;
         break;

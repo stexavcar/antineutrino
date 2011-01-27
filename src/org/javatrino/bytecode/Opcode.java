@@ -75,6 +75,7 @@ public class Opcode {
   @Info({ArgType.LIT}) public static final int kSetField = 27;
   @Info({ArgType.NUM}) public static final int kTagWithProtocols = 28;
   @Info({ArgType.LIT}) public static final int kGetField = 29;
+  @Info({}) public static final int kDup = 30;
 
   private static final Map<Integer, OpcodeInfo> infos = new HashMap<Integer, OpcodeInfo>() {{
     try {

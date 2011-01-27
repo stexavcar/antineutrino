@@ -4,6 +4,7 @@ import java.util.Stack;
 
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
+import org.neutrino.pib.Universe;
 
 public class Frame {
 
@@ -11,7 +12,6 @@ public class Frame {
   public Stack<RValue> stack = new Stack<RValue>();
   public final byte[] code;
   public final CodeBundle bundle;
-  public final Module module;
   public final Frame parent;
   public final RValue holder;
   public RContinuation marker;
@@ -21,7 +21,6 @@ public class Frame {
     this.holder = holder;
     this.code = code.getCode();
     this.bundle = code;
-    this.module = module;
     for (int i = 0; i < code.getLocalCount(); i++)
       stack.push(RNull.getInstance());
   }
@@ -34,8 +33,8 @@ public class Frame {
     return stack.get(stack.size() - argc + index);
   }
 
-  public Lambda lookupMethod(String name, int argc) {
-    return module.getUniverse().lookupMethod(name, argc, this.stack);
+  public Lambda lookupMethod(Universe universe, String name, int argc) {
+    return universe.lookupMethod(name, argc, this.stack);
   }
 
   public RValue peekArgument(int index) {

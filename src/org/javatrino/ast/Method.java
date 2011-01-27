@@ -2,6 +2,7 @@ package org.javatrino.ast;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
@@ -12,20 +13,36 @@ public class Method {
   public @Store List<Pattern> signature;
   public @Store boolean acceptsExtraArguments;
   public @Store Expression body;
-  public @Store Module origin;
+  public @Store Map<Symbol, Expression> rewrites;
+
+  public Module origin;
   private CodeBundle bundle;
 
-  public Method(List<Pattern> signature, boolean acceptsExtraArguments, Expression body) {
+  public Method(List<Pattern> signature, boolean acceptsExtraArguments, Expression body,
+      Map<Symbol, Expression> rewrites, Module origin) {
     this.signature = signature;
     this.acceptsExtraArguments = acceptsExtraArguments;
     this.body = body;
+    this.rewrites = rewrites;
+    this.origin = origin;
   }
 
   public Method() { }
 
   @Override
   public String toString() {
-    return "method(" + signature.toString() + ")";
+    return "method(" + signature.toString() + " -> " + body + ")";
+  }
+
+  public Method withRewrites(Map<Symbol, Expression> map) {
+    if (map.isEmpty()) {
+      return this;
+    } else if (this.rewrites == null || this.rewrites.isEmpty()) {
+      return new Method(signature, acceptsExtraArguments, body, map, origin);
+    } else {
+      assert false;
+      return null;
+    }
   }
 
   public CodeBundle getBundle() {
@@ -35,7 +52,8 @@ public class Method {
         if (pattern != null)
           syms.add(pattern.symbol);
       }
-      bundle = new CodeBundle(null, null, -1, null, -1, body, syms);
+      bundle = new CodeBundle(null, null, -1, null, -1, body, syms, rewrites);
+      bundle.initialize(origin);
     }
     return bundle;
   }

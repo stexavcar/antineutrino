@@ -20,6 +20,7 @@ public class Native {
 
     private Frame frame;
     private int argc;
+    private Universe universe;
 
     public RValue getThis() {
       Stack<RValue> stack = frame.parent.stack;
@@ -35,13 +36,18 @@ public class Native {
       return getArgument(index - 1);
     }
 
-    public void prepare(Frame frame, int argc) {
+    public void prepare(Frame frame, int argc, Universe universe) {
       this.frame = frame;
       this.argc = argc;
+      this.universe = universe;
     }
 
     public Frame getFrame() {
       return frame;
+    }
+
+    public Universe getUniverse(){
+      return universe;
     }
 
   }
@@ -153,7 +159,8 @@ public class Native {
       int a = ((RInteger) args.getThis()).getValue();
       int b = ((RInteger) args.getArgument(0)).getValue();
       if (b == 0) {
-        throw new InterpreterError(new ArithmeticException(), args.frame);
+        throw new InterpreterError(new ArithmeticException(), args.frame,
+            args.getUniverse());
       }
       return RInteger.get(a % b);
     }
@@ -303,7 +310,8 @@ public class Native {
       RMutablePrimitiveArray self = (RMutablePrimitiveArray) args.getThis();
       RInteger index = (RInteger) args.getArgument(0);
       if (index.getValue() >= self.getLength()) {
-        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
+        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame,
+            args.getUniverse());
       }
       RValue value = args.getArgument(1);
       self.set(index.getValue(), value);
@@ -317,7 +325,8 @@ public class Native {
       RPrimitiveArray arr = (RPrimitiveArray) args.getThis();
       int index = ((RInteger) args.getArgument(0)).getValue();
       if (index < 0 || index >= arr.getLength()) {
-        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
+        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame,
+            args.getUniverse());
       }
       return arr.get(index);
     }
@@ -337,7 +346,8 @@ public class Native {
       RByteArray arr = (RByteArray) args.getThis();
       int index = ((RInteger) args.getArgument(0)).getValue();
       if (index < 0 || index >= arr.getLength()) {
-        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
+        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame,
+            args.getUniverse());
       }
       return RInteger.get((arr.getByte(index) + 0x100) & 0xFF);
     }
@@ -349,7 +359,8 @@ public class Native {
       RByteArray arr = (RByteArray) args.getThis();
       int index = ((RInteger) args.getArgument(0)).getValue();
       if (index < 0 || index + 3 >= arr.getLength()) {
-        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
+        throw new InterpreterError(new IndexOutOfBoundsException(), args.frame,
+            args.getUniverse());
       }
       byte[] bytes = arr.getBytes();
       int b0 = (bytes[index + 0] + 0x100) & 0xFF;
@@ -411,7 +422,7 @@ public class Native {
     public RValue call(Arguments args) {
       RValue message = args.getFunctionArgument(0);
       throw new InterpreterError.Failure("Fail: " + message.toExternalString(),
-          args.frame);
+          args.frame, args.getUniverse());
     }
   };
 
@@ -479,17 +490,17 @@ public class Native {
     public RValue call(Arguments args) {
       RString name = (RString) args.getFunctionArgument(0);
       RArray values = (RArray) args.getFunctionArgument(1);
-      Universe universe = args.frame.module.getUniverse();
+      Universe universe = args.getUniverse();
       Stack<RValue> stack = new Stack<RValue>();
       int argc = values.getLength();
       for (int i = 0; i < argc; i++)
         stack.push(values.get(i));
       Lambda method = universe.lookupMethod(name.getValue(), argc, stack);
       if (method == null)
-        throw new InterpreterError.MethodNotFound(args.frame);
+        throw new InterpreterError.MethodNotFound(args.frame, args.getUniverse());
       Frame trampoline = new Frame(args.frame, values.get(0),
           new CodeBundle(TRAMPOLINE_CODE, Arrays.<Object>asList(name.getValue()),
-              0, null, 0, null, null),
+              0, null, 0, null, null, null),
           method.getModule());
       trampoline.stack = stack;
       args.frame = new Frame(trampoline, values.get(0), method.getCode(),

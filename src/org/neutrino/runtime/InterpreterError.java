@@ -4,19 +4,23 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 
 import org.javatrino.bytecode.Opcode;
+import org.neutrino.pib.Universe;
 
 public class InterpreterError extends RuntimeException {
 
   private final Frame frame;
+  private final Universe universe;
   private StackTraceElement[] trace;
 
-  public InterpreterError(Throwable cause, Frame frame) {
+  public InterpreterError(Throwable cause, Frame frame, Universe universe) {
     super(cause);
     this.frame = frame;
+    this.universe = universe;
   }
 
-  public InterpreterError(Frame frame) {
+  public InterpreterError(Frame frame, Universe universe) {
     this.frame = frame;
+    this.universe = universe;
   }
 
   @Override
@@ -27,7 +31,7 @@ public class InterpreterError extends RuntimeException {
   }
 
   private String renderValueType(Frame frame, RValue value) {
-    RProtocol proto = frame.module.getUniverse().getProtocol(value.getTypeId());
+    RProtocol proto = universe.getProtocol(value.getTypeId());
     if (proto == null) {
       return value.getTypeId().toString();
     } else {
@@ -87,8 +91,8 @@ public class InterpreterError extends RuntimeException {
 
     private final Object name;
 
-    public UndefinedGlobal(Object name, Frame frame) {
-      super(frame);
+    public UndefinedGlobal(Object name, Frame frame, Universe universe) {
+      super(frame, universe);
       this.name = name;
     }
 
@@ -101,8 +105,8 @@ public class InterpreterError extends RuntimeException {
 
   public static class MethodNotFound extends InterpreterError {
 
-    public MethodNotFound(Frame frame) {
-      super(frame);
+    public MethodNotFound(Frame frame, Universe universe) {
+      super(frame, universe);
     }
 
     @Override
@@ -118,8 +122,8 @@ public class InterpreterError extends RuntimeException {
 
     private final String message;
 
-    public Failure(String message, Frame frame) {
-      super(frame);
+    public Failure(String message, Frame frame, Universe universe) {
+      super(frame, universe);
       this.message = message;
     }
 
