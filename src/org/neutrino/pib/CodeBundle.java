@@ -14,19 +14,21 @@ public class CodeBundle {
 
   public @Store byte[] oldCode;
   public @Store List<Object> oldLiterals;
-  public @Store int localCount;
+  public @Store int oldLocalCount;
   public @Store String fileName;
   public @Store int rootOffset;
   public @Store Expression body;
   public @Store List<Symbol> params;
+  
   private byte[] newCode;
   private List<Object> newLiterals;
+  private int newLocalCount = -1;
 
-  public CodeBundle(byte[] code, List<Object> literals, int localCount,
+  public CodeBundle(byte[] code, List<Object> literals, int oldLocalCount,
       String fileName, int rootOffset, Expression body, List<Symbol> params) {
     this.oldCode = code;
     this.oldLiterals = literals;
-    this.localCount = localCount;
+    this.oldLocalCount = oldLocalCount;
     this.fileName = fileName;
     this.rootOffset = rootOffset;
     this.body = body;
@@ -53,6 +55,18 @@ public class CodeBundle {
       return newCode;
     }
   }
+  
+  public int getLocalCount() {
+    if (newLocalCount != -1) {
+      return newLocalCount;
+    } else if (body == null) {
+      return oldLocalCount;
+    } else {
+      ensureCompiled();
+      return newLocalCount;
+    }
+  }
+
 
   public List<Object> getLiterals() {
     if (newLiterals != null) {
@@ -70,6 +84,7 @@ public class CodeBundle {
       BytecodeCompiler.Result result = BytecodeCompiler.compile(body, params);
       this.newCode = result.code;
       this.newLiterals = result.literals;
+      this.newLocalCount = result.localCount;
     }
   }
 

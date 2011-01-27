@@ -22,12 +22,12 @@ public class Frame {
     this.code = code.getCode();
     this.bundle = code;
     this.module = module;
-    for (int i = 0; i < code.localCount; i++)
+    for (int i = 0; i < code.getLocalCount(); i++)
       stack.push(RNull.getInstance());
   }
 
   public int getLocalCount() {
-    return bundle.localCount;
+    return bundle.getLocalCount();
   }
 
   public RValue getArgument(int argc, int index) {
