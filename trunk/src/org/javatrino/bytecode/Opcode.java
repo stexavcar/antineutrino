@@ -46,14 +46,14 @@ public class Opcode {
     public ArgType[] value();
   }
 
-  public static final int kCallSize = 3;
+  public static final int kCallSize = 4;
 
-  @Info({ArgType.LIT, ArgType.NUM}) public static final int kCall = 3;
+  @Info({ArgType.LIT, ArgType.NUM, ArgType.NUM}) public static final int kCall = 3;
   @Info({}) public static final int kReturn = 4;
   @Info({}) public static final int kNull = 5;
   @Info({}) public static final int kTrue = 6;
   @Info({ArgType.LIT}) public static final int kLiteral = 7;
-  @Info({ArgType.LIT, ArgType.NUM}) public static final int kCallNative = 8;
+  @Info({ArgType.LIT, ArgType.NUM, ArgType.NUM}) public static final int kCallNative = 8;
   @Info({}) public static final int kPop = 9;
   @Info({ArgType.LIT}) public static final int kGlobal = 10;
   @Info({}) public static final int kFalse = 11;

@@ -482,7 +482,7 @@ public class Native {
   };
 
   private static final byte[] TRAMPOLINE_CODE = new byte[] {
-    Opcode.kCall, 0, 0, Opcode.kReturnFromApply
+    Opcode.kCall, 0, 0, 0, Opcode.kReturnFromApply
   };
 
   @Marker("apply") static final Impl APPLY = new Impl() {

@@ -185,6 +185,7 @@ public class Assembler {
     add(Opcode.kCall);
     add(nameIndex);
     add(args.size());
+    add(0xFF);
     for (int arg : args)
       add(arg);
     return result;
@@ -206,6 +207,7 @@ public class Assembler {
     add(2);
     add(0);
     add(0);
+    add(0);
     return result;
   }
 
@@ -214,6 +216,7 @@ public class Assembler {
     add(Opcode.kCallNative);
     add(index);
     add(argc);
+    add(0);
     for (int i = 0; i < argc; i++)
       add(0);
   }
