@@ -85,7 +85,7 @@ public class BytecodeCompiler extends Visitor {
         loaders.put(rewrite.getKey(), new LocalAccess() {
           @Override
           public void load(Assembler assm) {
-            rewrite.getValue().accept(this);
+            rewrite.getValue().accept(BytecodeCompiler.this);
           }
         });
       }

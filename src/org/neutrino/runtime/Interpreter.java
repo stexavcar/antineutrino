@@ -16,7 +16,7 @@ import org.neutrino.pib.Universe;
 public class Interpreter {
 
   private static final CodeBundle BOTTOM_FRAME_CODE = new CodeBundle(
-      new byte[] { Opcode.kCall, 0, 0, Opcode.kTerminate },
+      new byte[] { Opcode.kCall, 0, 0, 0, Opcode.kTerminate },
       Collections.<Object>emptyList(),
       0,
       null,
@@ -152,7 +152,7 @@ public class Interpreter {
         if (value != null) {
           frame.stack.push(value);
           int targargc = frame.code[frame.pc + 2];
-          frame.pc += 3 + targargc;
+          frame.pc += Opcode.kCallSize + targargc;
         }
         break;
       }

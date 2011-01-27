@@ -34,7 +34,7 @@ public class MethodLookupHelper {
     if (!(recv instanceof RObject))
       return null;
     RObject obj = (RObject) recv;
-    List<Method> intrinsics = obj.getIntrinsics();
+    List<Method> intrinsics = obj.getImpl().getIntrinsics();
     for (Method method : intrinsics) {
       List<Pattern> sig = method.signature;
       Pattern namePattern = sig.get(0);

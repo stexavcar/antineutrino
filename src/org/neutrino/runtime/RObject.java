@@ -1,7 +1,5 @@
 package org.neutrino.runtime;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,23 +8,23 @@ import org.javatrino.ast.Method;
 
 public class RObject extends RValue {
 
+  private static final RImpl emptyImpl = new RImpl();
+
   private State state = State.UNDER_CONSTRUCTION;
   private final Map<RFieldKey, RValue> outer;
-  private final List<RProtocol> protos = new ArrayList<RProtocol>();
-  private List<TypeId> typeIds = Collections.<TypeId>emptyList();
-  private final List<Method> intrinsics = new ArrayList<Method>();
+  private RImpl impl = emptyImpl;
 
   public RObject(RProtocol proto, Map<RFieldKey, RValue> outer) {
     this.outer = outer;
-    this.protos.add(proto);
+    this.impl = this.impl.addProtocol(proto);
   }
 
   public RObject() {
     this.outer = new HashMap<RFieldKey, RValue>();
   }
 
-  public List<Method> getIntrinsics() {
-    return this.intrinsics;
+  public RImpl getImpl() {
+    return this.impl;
   }
 
   public RValue getField(RFieldKey field) {
@@ -39,32 +37,26 @@ public class RObject extends RValue {
   }
 
   public void addIntrinsics(List<Method> values) {
-    intrinsics.addAll(values);
+    this.impl = this.impl.addIntrinsics(values);
   }
 
   public void addProtocol(RProtocol proto) {
-    this.typeIds = null;
-    this.protos.add(proto);
+    this.impl = this.impl.addProtocol(proto);
   }
 
   @Override
   public TypeId getTypeId() {
-    return protos.get(0).getInstanceTypeId();
+    return impl.getProtocols().get(0).getInstanceTypeId();
   }
 
   @Override
   public Iterable<TypeId> getTypeIds() {
-    if (this.typeIds == null) {
-      typeIds = new ArrayList<TypeId>();
-      for (RProtocol proto : protos)
-        typeIds.add(proto.getInstanceTypeId());
-    }
-    return this.typeIds;
+    return impl.getTypeIds();
   }
 
   @Override
   public String toString() {
-    return "#<an Object: " + protos + ">";
+    return "#<an Object: " + impl.getProtocols() + ">";
   }
 
   @Override
