@@ -375,16 +375,21 @@ public class Tree {
 
     private final String name;
     private final Tree.Expression value;
-    private ResolverSymbol symbol;
+    private ResolverSymbol resolverSymbol;
+    private Symbol symbol;
 
     public Assignment(String name, Tree.Expression value) {
       this.name = name;
       this.value = value;
     }
 
-    public ResolverSymbol getSymbol() {
-      assert symbol != null;
-      return symbol;
+    public ResolverSymbol getResolverSymbol() {
+      assert resolverSymbol != null;
+      return resolverSymbol;
+    }
+
+    public Symbol getSymbol() {
+      return this.symbol;
     }
 
     public String getName() {
@@ -395,8 +400,9 @@ public class Tree {
       return this.value;
     }
 
-    public void bind(ResolverSymbol symbol) {
-      assert this.symbol == null;
+    public void bind(ResolverSymbol resolverSymbol, Symbol symbol) {
+      assert this.resolverSymbol == null;
+      this.resolverSymbol = resolverSymbol;
       this.symbol = symbol;
     }
 

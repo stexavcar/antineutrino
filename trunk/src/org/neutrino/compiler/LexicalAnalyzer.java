@@ -88,7 +88,7 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
     String name = that.getName();
     ResolverSymbol symbol = scope.lookupResolver(name);
     assert symbol.isReference() : "Cannot assign to " + name;
-    that.bind(symbol);
+    that.bind(symbol, scope.lookup(name));
     return null;
   }
 

@@ -33,12 +33,6 @@ import org.neutrino.syntax.Tree.With1Cc;
 
 public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
-  private static interface IScope {
-
-  }
-
-  private IScope scope;
-
   private static final Expression ABORT = null;
 
   private static boolean isAbort(Expression expr) {
@@ -122,6 +116,17 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   }
 
   @Override
+  public Expression visitAssignment(Assignment that) {
+    Expression value = generate(that.getValue());
+    if (isAbort(value))
+      return ABORT;
+    return new Call(Arrays.<Argument>asList(
+        new Argument("name", new Constant("set")),
+        new Argument(0, new Local(that.getSymbol())),
+        new Argument(1, value)));
+  }
+
+  @Override
   public Expression visitLocalDefinition(Tree.LocalDefinition that) {
     Expression value = generate(that.getValue());
     if (isAbort(value))
@@ -175,11 +180,6 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitInternal(Internal that) {
-    return ABORT;
-  }
-
-  @Override
-  public Expression visitAssignment(Assignment that) {
     return ABORT;
   }
 
