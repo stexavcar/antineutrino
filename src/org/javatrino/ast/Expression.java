@@ -16,74 +16,61 @@ public abstract class Expression {
   private @interface Skip { }
 
   @Skip
-  public static abstract class Visitor<T> {
+  public static abstract class Visitor {
 
-    public T visitExpression(Expression expr) {
+    public void visitExpression(Expression expr) {
       expr.traverse(this);
-      return null;
     }
 
-    public T visitCall(Call that) {
-      return visitExpression(that);
+    public void visitCall(Call that) {
+      visitExpression(that);
     }
 
-    public T visitBlock(Block that) {
-      return visitExpression(that);
+    public void visitBlock(Block that) {
+      visitExpression(that);
     }
 
-    public T visitDefinition(Definition that) {
-      return visitExpression(that);
+    public void visitDefinition(Definition that) {
+      visitExpression(that);
     }
 
-    public T visitLocal(Local that) {
-      return visitExpression(that);
+    public void visitLocal(Local that) {
+      visitExpression(that);
     }
 
-    public T visitGlobal(Global that) {
-      return visitExpression(that);
+    public void visitGlobal(Global that) {
+      visitExpression(that);
     }
 
-    public T visitConstant(Constant that) {
-      return visitExpression(that);
+    public void visitConstant(Constant that) {
+      visitExpression(that);
     }
 
-    public T visitNewObject(NewObject that) {
-      return visitExpression(that);
+    public void visitNewObject(NewObject that) {
+      visitExpression(that);
     }
 
-    public T visitAddIntrinsics(AddIntrinsics that) {
-      return visitExpression(that);
+    public void visitAddIntrinsics(AddIntrinsics that) {
+      visitExpression(that);
     }
 
-    public T visitTagWithProtocol(TagWithProtocol that) {
-      return visitExpression(that);
+    public void visitTagWithProtocol(TagWithProtocol that) {
+      visitExpression(that);
     }
 
-    public T visitSetField(SetField that) {
-      return visitExpression(that);
+    public void visitSetField(SetField that) {
+      visitExpression(that);
     }
 
-    public T visitGetField(GetField that) {
-      return visitExpression(that);
+    public void visitGetField(GetField that) {
+      visitExpression(that);
     }
 
   }
 
-  @Skip
-  public enum Kind {
-    CALL, BLOCK, ADD_INTRINSICS, CONST, DEF, GET_FIELD, SET_FIELD, GLOBAL,
-    LOCAL, NEW, TAG_WITH_PROTOCOL
-  }
+  public abstract void accept(Visitor visitor);
 
-  public final Kind kind;
-
-  public Expression(Kind kind) {
-    this.kind = kind;
-  }
-
-  public abstract <T> T accept(Visitor<T> visitor);
-
-  public abstract void traverse(Visitor<?> visitor);
+  public abstract void traverse(Visitor visitor);
 
   public static class Call extends Expression {
 
@@ -109,21 +96,18 @@ public abstract class Expression {
     public @Store List<Argument> arguments;
 
     public Call(List<Argument> arguments) {
-      this();
       this.arguments = arguments;
     }
 
-    public Call() {
-      super(Kind.CALL);
+    public Call() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitCall(this);
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitCall(this);
-    }
-
-    @Override
-    public void traverse(Visitor<?> visitor) {
+    public void traverse(Visitor visitor) {
       for (Argument arg : arguments)
         arg.value.accept(visitor);
     }
@@ -140,21 +124,18 @@ public abstract class Expression {
     public @Store List<Expression> values;
 
     public Block(List<Expression> values) {
-      this();
       this.values = values;
     }
 
-    public Block() {
-      super(Kind.BLOCK);
+    public Block() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitBlock(this);
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitBlock(this);
-    }
-
-    @Override
-    public void traverse(Visitor<?> visitor) {
+    public void traverse(Visitor visitor) {
       for (Expression value : values)
         value.accept(visitor);
     }
@@ -173,23 +154,20 @@ public abstract class Expression {
     public @Store Expression body;
 
     public Definition(Symbol symbol, Expression value, Expression body) {
-      this();
       this.symbol = symbol;
       this.value = value;
       this.body = body;
     }
 
-    public Definition() {
-      super(Kind.DEF);
+    public Definition() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitDefinition(this);
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitDefinition(this);
-    }
-
-    @Override
-    public void traverse(Visitor<?> visitor) {
+    public void traverse(Visitor visitor) {
       value.accept(visitor);
       body.accept(visitor);
     }
@@ -206,21 +184,18 @@ public abstract class Expression {
     public @Store Symbol symbol;
 
     public Local(Symbol symbol) {
-      this();
       this.symbol = symbol;
     }
 
-    public Local() {
-      super(Kind.LOCAL);
+    public Local() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitLocal(this);
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitLocal(this);
-    }
-
-    @Override
-    public void traverse(Visitor<?> visitor) {
+    public void traverse(Visitor visitor) {
     }
 
     @Override
@@ -235,21 +210,18 @@ public abstract class Expression {
     public @Store Object name;
 
     public Global(Object name) {
-      this();
       this.name = name;
     }
 
-    public Global() {
-      super(Kind.GLOBAL);
+    public Global() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitGlobal(this);
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitGlobal(this);
-    }
-
-    @Override
-    public void traverse(Visitor<?> visitor) {
+    public void traverse(Visitor visitor) {
     }
 
     @Override
@@ -264,13 +236,10 @@ public abstract class Expression {
     public @Store Object value;
 
     public Constant(Object value) {
-      this();
       this.value = value;
     }
 
-    public Constant() {
-      super(Kind.CONST);
-    }
+    public Constant() { }
 
     @Override
     public String toString() {
@@ -278,29 +247,25 @@ public abstract class Expression {
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitConstant(this);
+    public void accept(Visitor visitor) {
+      visitor.visitConstant(this);
     }
 
     @Override
-    public void traverse(Visitor<?> visitor) {
+    public void traverse(Visitor visitor) {
     }
 
   }
 
   public static class NewObject extends Expression {
 
-    public NewObject() {
-      super(Kind.NEW);
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitNewObject(this);
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitNewObject(this);
-    }
-
-    @Override
-    public void traverse(Visitor<?> visitor) {
+    public void traverse(Visitor visitor) {
     }
 
     @Override
@@ -316,22 +281,19 @@ public abstract class Expression {
     public @Store List<Method> methods;
 
     public AddIntrinsics(Expression object, List<Method> methods) {
-      this();
       this.object = object;
       this.methods = methods;
     }
 
-    public AddIntrinsics() {
-      super(Kind.ADD_INTRINSICS);
+    public AddIntrinsics() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitAddIntrinsics(this);
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitAddIntrinsics(this);
-    }
-
-    @Override
-    public void traverse(Visitor<?> visitor) {
+    public void traverse(Visitor visitor) {
       object.accept(visitor);
     }
 
@@ -348,22 +310,19 @@ public abstract class Expression {
     public @Store List<Expression> protocols;
 
     public TagWithProtocol(Expression object, List<Expression> protocols) {
-      this();
       this.object = object;
       this.protocols = protocols;
     }
 
-    public TagWithProtocol() {
-      super(Kind.TAG_WITH_PROTOCOL);
+    public TagWithProtocol() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitTagWithProtocol(this);
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitTagWithProtocol(this);
-    }
-
-    @Override
-    public void traverse(Visitor<?> visitor) {
+    public void traverse(Visitor visitor) {
       object.accept(visitor);
       for (Expression protocol : protocols)
         protocol.accept(visitor);
@@ -378,23 +337,20 @@ public abstract class Expression {
     public @Store Expression value;
 
     public SetField(Expression object, RFieldKey field, Expression value) {
-      this();
       this.object = object;
       this.field = field;
       this.value = value;
     }
 
-    public SetField() {
-      super(Kind.SET_FIELD);
+    public SetField() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitSetField(this);
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitSetField(this);
-    }
-
-    @Override
-    public void traverse(Visitor<?> visitor) {
+    public void traverse(Visitor visitor) {
       object.accept(visitor);
       value.accept(visitor);
     }
@@ -407,22 +363,19 @@ public abstract class Expression {
     public @Store RFieldKey field;
 
     public GetField(Expression object, RFieldKey field) {
-      this();
       this.object = object;
       this.field = field;
     }
 
-    public GetField() {
-      super(Kind.GET_FIELD);
+    public GetField() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitGetField(this);
     }
 
     @Override
-    public <T> T accept(Visitor<T> visitor) {
-      return visitor.visitGetField(this);
-    }
-
-    @Override
-    public void traverse(Visitor<?> visitor) {
+    public void traverse(Visitor visitor) {
       object.accept(visitor);
     }
 

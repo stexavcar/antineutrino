@@ -8,12 +8,17 @@ import java.util.Map;
 
 import org.javatrino.ast.Expression;
 import org.javatrino.ast.Expression.AddIntrinsics;
+import org.javatrino.ast.Expression.Block;
 import org.javatrino.ast.Expression.Call;
 import org.javatrino.ast.Expression.Call.Argument;
 import org.javatrino.ast.Expression.Constant;
 import org.javatrino.ast.Expression.Definition;
 import org.javatrino.ast.Expression.GetField;
+import org.javatrino.ast.Expression.Global;
 import org.javatrino.ast.Expression.Local;
+import org.javatrino.ast.Expression.NewObject;
+import org.javatrino.ast.Expression.SetField;
+import org.javatrino.ast.Expression.TagWithProtocol;
 import org.javatrino.ast.Expression.Visitor;
 import org.javatrino.ast.Method;
 import org.javatrino.ast.Symbol;
@@ -22,7 +27,7 @@ import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RString;
 
-public class BytecodeCompiler {
+public class BytecodeCompiler extends Visitor {
 
   public class Result {
     public final byte[] code;
@@ -80,7 +85,7 @@ public class BytecodeCompiler {
         loaders.put(rewrite.getKey(), new LocalAccess() {
           @Override
           public void load(Assembler assm) {
-            emit(rewrite.getValue());
+            rewrite.getValue().accept(this);
           }
         });
       }
@@ -95,24 +100,24 @@ public class BytecodeCompiler {
     Assembler assm = new Assembler(null);
     BytecodeCompiler compiler = new BytecodeCompiler(assm, params, getLocals(expr),
         rewrites);
-    compiler.emit(expr);
+    expr.accept(compiler);
     assm.rethurn();
     return compiler.getResult();
   }
 
   private static List<Symbol> getLocals(Expression expr) {
     final List<Symbol> result = new ArrayList<Symbol>();
-    expr.accept(new Visitor<Void>() {
+    expr.accept(new Visitor() {
       @Override
-      public Void visitDefinition(Definition that) {
+      public void visitDefinition(Definition that) {
         result.add(that.symbol);
-        return super.visitDefinition(that);
+        super.visitDefinition(that);
       }
     });
     return result;
   }
 
-  private class CapturingRewriter extends Visitor<Void> {
+  class CapturingRewriter extends Visitor {
 
     private final Map<Symbol, RFieldKey> captured;
     private final Map<Symbol, Expression> rewrites = new HashMap<Symbol, Expression>();
@@ -143,21 +148,19 @@ public class BytecodeCompiler {
     }
 
     @Override
-    public Void visitLocal(Local that) {
+    public void visitLocal(Local that) {
       Symbol sym = that.symbol;
       if (shouldCapture(sym)) {
         Symbol self = method.signature.get(1).symbol;
         rewrites.put(sym, new GetField(new Local(self), getFieldKey(sym)));
       }
-      return null;
     }
 
     @Override
-    public Void visitAddIntrinsics(AddIntrinsics that) {
+    public void visitAddIntrinsics(AddIntrinsics that) {
       for (Method method : that.methods) {
         method.body.accept(this);
       }
-      return null;
     }
 
     public Map<Symbol, Expression> getRewrites(Expression expr) {
@@ -167,110 +170,14 @@ public class BytecodeCompiler {
 
   }
 
-  private void emitAddIntrinsics(AddIntrinsics add) {
-    emit(add.object);
-    Map<Symbol, RFieldKey> captured = new HashMap<Symbol, RFieldKey>();
-    List<Method> rewrittenMethods = new ArrayList<Method>();
-    for (final Method method : add.methods) {
-      Map<Symbol, Expression> rewrites =
-          new CapturingRewriter(method, captured).getRewrites(method.body);
-      rewrittenMethods.add(method.withRewrites(rewrites));
-    }
-    for (Map.Entry<Symbol, RFieldKey> entry : captured.entrySet()) {
-      assm.dup();
-      loaders.get(entry.getKey()).load(assm);
-      assm.setField(entry.getValue());
-      assm.pop();
-    }
-    assm.addIntrinsics(rewrittenMethods);
+  @Override
+  public void visitGlobal(Global that) {
+    assm.global(that.name);
   }
 
-  public void emit(Expression expr) {
-    switch (expr.kind) {
-    case GLOBAL: {
-      Expression.Global global = (Expression.Global) expr;
-      assm.global(global.name);
-      break;
-    }
-    case CONST: {
-      Expression.Constant cons = (Expression.Constant) expr;
-      emitConstant(cons.value);
-      break;
-    }
-    case BLOCK: {
-      Expression.Block block = (Expression.Block) expr;
-      emitBlock(block.values);
-      break;
-    }
-    case LOCAL: {
-      Expression.Local local = (Expression.Local) expr;
-      loaders.get(local.symbol).load(assm);
-      break;
-    }
-    case DEF: {
-      Expression.Definition def = (Expression.Definition) expr;
-      emitLocalDefinition(def);
-      break;
-    }
-    case CALL: {
-      Expression.Call call = (Expression.Call) expr;
-      emitCall(call);
-      break;
-    }
-    case ADD_INTRINSICS: {
-      Expression.AddIntrinsics add = (Expression.AddIntrinsics) expr;
-      emitAddIntrinsics(add);
-      break;
-    }
-    case SET_FIELD: {
-      Expression.SetField set = (Expression.SetField) expr;
-      emit(set.object);
-      emit(set.value);
-      assm.setField(set.field);
-      break;
-    }
-    case GET_FIELD: {
-      Expression.GetField get = (Expression.GetField) expr;
-      emit(get.object);
-      assm.getField(get.field);
-      break;
-    }
-    case TAG_WITH_PROTOCOL: {
-      Expression.TagWithProtocol tag = (Expression.TagWithProtocol) expr;
-      emit(tag.object);
-      for (Expression proto : tag.protocols)
-        emit(proto);
-      assm.tagWithProtocols(tag.protocols.size());
-      break;
-    }
-    case NEW: {
-      assm.newObject();
-      break;
-    }
-    default:
-      throw new AssertionError(expr.kind);
-    }
-  }
-  private void emitCall(Call call) {
-    List<Argument> args = call.arguments;
-    Argument nameArg = args.get(0);
-    assert nameArg.tag.equals("name");
-    String name = (String) ((Constant) nameArg.value).value;
-    for (int i = 1; i < args.size(); i++) {
-      Argument arg = args.get(i);
-      assert arg.tag.equals(i - 1);
-      emit(arg.value);
-    }
-    assm.call(name, Collections.nCopies(args.size() - 1, 0));
-  }
-
-  private void emitLocalDefinition(Definition def) {
-    emit(def.value);
-    loaders.get(def.symbol).store(assm);
-    emit(def.body);
-  }
-
-  private void emitConstant(Object value) {
+  @Override
+  public void visitConstant(Constant that) {
+    Object value = that.value;
     if (value == null) {
       assm.nuhll();
     } else if (value == Boolean.TRUE) {
@@ -286,7 +193,9 @@ public class BytecodeCompiler {
     }
   }
 
-  private void emitBlock(List<Expression> values) {
+  @Override
+  public void visitBlock(Block that) {
+    List<Expression> values = that.values;
     assert values.size() > 1;
     boolean isFirst = true;
     for (Expression value : values) {
@@ -295,8 +204,78 @@ public class BytecodeCompiler {
       } else {
         assm.pop();
       }
-      emit(value);
+      value.accept(this);
     }
+  }
+
+  public void visitLocal(Local that) {
+    loaders.get(that.symbol).load(assm);
+  }
+
+  @Override
+  public void visitDefinition(Definition that) {
+    that.value.accept(this);
+    loaders.get(that.symbol).store(assm);
+    that.body.accept(this);
+  }
+
+  @Override
+  public void visitCall(Call that) {
+    List<Argument> args = that.arguments;
+    Argument nameArg = args.get(0);
+    assert nameArg.tag.equals("name");
+    String name = (String) ((Constant) nameArg.value).value;
+    for (int i = 1; i < args.size(); i++) {
+      Argument arg = args.get(i);
+      assert arg.tag.equals(i - 1);
+      arg.value.accept(this);
+    }
+    assm.call(name, Collections.nCopies(args.size() - 1, 0));
+  }
+
+  @Override
+  public void visitAddIntrinsics(AddIntrinsics that) {
+    that.object.accept(this);
+    Map<Symbol, RFieldKey> captured = new HashMap<Symbol, RFieldKey>();
+    List<Method> rewrittenMethods = new ArrayList<Method>();
+    for (final Method method : that.methods) {
+      Map<Symbol, Expression> rewrites =
+          new CapturingRewriter(method, captured).getRewrites(method.body);
+      rewrittenMethods.add(method.withRewrites(rewrites));
+    }
+    for (Map.Entry<Symbol, RFieldKey> entry : captured.entrySet()) {
+      assm.dup();
+      loaders.get(entry.getKey()).load(assm);
+      assm.setField(entry.getValue());
+      assm.pop();
+    }
+    assm.addIntrinsics(rewrittenMethods);
+  }
+
+  @Override
+  public void visitSetField(SetField that) {
+    that.object.accept(this);
+    that.value.accept(this);
+    assm.setField(that.field);
+  }
+
+  @Override
+  public void visitGetField(GetField that) {
+    that.object.accept(this);
+    assm.getField(that.field);
+  }
+
+  @Override
+  public void visitTagWithProtocol(TagWithProtocol that) {
+    that.object.accept(this);
+    for (Expression proto : that.protocols)
+      proto.accept(this);
+    assm.tagWithProtocols(that.protocols.size());
+  }
+
+  @Override
+  public void visitNewObject(NewObject that) {
+    assm.newObject();
   }
 
   public Result getResult() {

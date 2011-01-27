@@ -100,12 +100,12 @@ public class CodeBundle {
   public void initialize(final Module module) {
     this.origin = module;
     if (body != null) {
-      body.accept(new Visitor<Void>() {
+      body.accept(new Visitor() {
         @Override
-        public Void visitAddIntrinsics(AddIntrinsics that) {
+        public void visitAddIntrinsics(AddIntrinsics that) {
           for (Method method : that.methods)
             method.origin = module;
-          return super.visitAddIntrinsics(that);
+          super.visitAddIntrinsics(that);
         }
       });
     }
