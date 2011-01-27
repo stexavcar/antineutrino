@@ -19,6 +19,7 @@ public class Interpreter {
       0,
       null,
       0,
+      null,
       null);
 
   private final Native.Arguments arguments = new Native.Arguments();

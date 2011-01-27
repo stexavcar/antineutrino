@@ -10,13 +10,14 @@ public class Parameter {
   public @Store String name;
   public @Store String type;
   public @Store boolean isProtocolMethod;
-  private final Symbol symbol = new Symbol();
+  public @Store Symbol symbol;
   private TypeId typeId;
 
   public Parameter(String name, String type, boolean isProtocolMethod) {
     this.name = name;
     this.type = type == null ? "Object" : type;
     this.isProtocolMethod = isProtocolMethod;
+    this.symbol = new Symbol(Symbol.kParameterSymbol);
   }
 
   public Parameter() { }

@@ -77,7 +77,7 @@ public class ModuleBuilder {
     defs.put(id, builder);
     builder.getAssembler().push(proto);
     builder.getAssembler().rethurn();
-    builder.getAssembler().finalize(0, 0, null);
+    builder.getAssembler().finalize(0, 0, null, null);
     return proto;
   }
 

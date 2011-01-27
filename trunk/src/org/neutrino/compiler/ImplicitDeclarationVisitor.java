@@ -40,7 +40,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
         Assembler getterAssm = getterBuilder.getAssembler();
         getterAssm.getField(field.getField());
         getterAssm.rethurn();
-        getterAssm.finalize(0, 0, null);
+        getterAssm.finalize(0, 0, null, null);
         // Add setter
         String setterName = field.getName() + ":=";
         CodeBuilder setterBuilder = module.createMethod(
@@ -53,7 +53,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
         Assembler setterAssm = setterBuilder.getAssembler();
         setterAssm.setField(field.getField());
         setterAssm.rethurn();
-        setterAssm.finalize(0, 0, null);
+        setterAssm.finalize(0, 0, null, null);
         eagerFieldCount++;
       }
     }
@@ -72,7 +72,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
         Assembler assm = builder.getAssembler();
         CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
         int rootOffset = codegen.generate(field.getBody());
-        assm.finalize(field.getLocalCount(), rootOffset, null);
+        assm.finalize(field.getLocalCount(), rootOffset, null, null);
       }
     }
     for (String shuper : that.getProtocols())
