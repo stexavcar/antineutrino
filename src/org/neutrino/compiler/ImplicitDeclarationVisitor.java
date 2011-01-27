@@ -38,7 +38,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
             getterName,
             Arrays.asList(new Parameter("this", proto.getId(), false)));
         Assembler getterAssm = getterBuilder.getAssembler();
-        getterAssm.getField(field.getField());
+        getterAssm.doGetter(field.getField());
         getterAssm.rethurn();
         getterAssm.finalize(0, 0, null, null);
         // Add setter
@@ -51,7 +51,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
                 new Parameter("this", proto.getId(), false),
                 new Parameter("v", null, false)));
         Assembler setterAssm = setterBuilder.getAssembler();
-        setterAssm.setField(field.getField());
+        setterAssm.doSetter(field.getField());
         setterAssm.rethurn();
         setterAssm.finalize(0, 0, null, null);
         eagerFieldCount++;
@@ -75,7 +75,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
         assm.finalize(field.getLocalCount(), rootOffset, null, null);
       }
     }
-    for (String shuper : that.getProtocols())
+    for (String shuper : that.getProtocolNames())
       module.declareInheritance(proto.getId(), shuper);
     return null;
   }

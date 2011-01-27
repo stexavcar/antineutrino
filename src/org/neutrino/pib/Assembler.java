@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 
 import org.javatrino.ast.Expression;
+import org.javatrino.ast.Method;
 import org.javatrino.ast.Symbol;
 import org.javatrino.bytecode.Opcode;
 import org.neutrino.compiler.Source;
@@ -70,16 +71,35 @@ public class Assembler {
     return result;
   }
 
-  public void getField(RFieldKey field) {
-    add(Opcode.kGetField);
+  public void doGetter(RFieldKey field) {
+    add(Opcode.kGetter);
+    int index = registerLiteral(field);
+    add(index);
+  }
+
+  public void doSetter(RFieldKey field) {
+    add(Opcode.kSetter);
     int index = registerLiteral(field);
     add(index);
   }
 
   public void setField(RFieldKey field) {
     add(Opcode.kSetField);
-    int index = registerLiteral(field);
-    add(index);
+    add(registerLiteral(field));
+  }
+
+  public void getField(RFieldKey field) {
+    add(Opcode.kGetField);
+    add(registerLiteral(field));
+  }
+
+  public void tagWithProtocols(int count) {
+    add(Opcode.kTagWithProtocols);
+    add(count);
+  }
+
+  public void newObject() {
+    add(Opcode.kNewObject);
   }
 
   public int local(int index) {
@@ -128,6 +148,13 @@ public class Assembler {
     add(index);
     return result;
   }
+
+  public void addIntrinsics(List<Method> methods) {
+    int index = registerLiteral(methods);
+    add(Opcode.kAddIntrinsics);
+    add(index);
+  }
+
 
   public void rethurn() {
     add(Opcode.kReturn);

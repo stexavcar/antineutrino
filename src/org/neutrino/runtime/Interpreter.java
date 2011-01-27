@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.javatrino.ast.Method;
 import org.javatrino.bytecode.Opcode;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
@@ -35,6 +36,8 @@ public class Interpreter {
   public RValue interpret(Lambda lambda, RValue... args) {
     return interpret(lambda.getModule(), lambda.getCode(), args);
   }
+
+  static int count = 0;
 
   @SuppressWarnings("unchecked")
   private RValue interpret(Frame frame) {
@@ -190,7 +193,7 @@ public class Interpreter {
         frame.pc += 2;
         break;
       }
-      case Opcode.kGetField: {
+      case Opcode.kGetter: {
         int index = frame.code[frame.pc + 1];
         RFieldKey field = (RFieldKey) frame.getLiteral(index);
         RObject obj = (RObject) frame.parent.getArgument(1, 0);
@@ -198,13 +201,54 @@ public class Interpreter {
         frame.pc += 2;
         break;
       }
-      case Opcode.kSetField: {
+      case Opcode.kSetter: {
         int index = frame.code[frame.pc + 1];
         RFieldKey field = (RFieldKey) frame.getLiteral(index);
         RObject obj = (RObject) frame.parent.getArgument(2, 0);
         RValue value = frame.parent.getArgument(2, 1);
         obj.setField(field, value);
         frame.stack.push(value);
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kNewObject: {
+        RObject obj = new RObject();
+        frame.stack.push(obj);
+        frame.pc += 1;
+        break;
+      }
+      case Opcode.kSetField: {
+        int index = frame.code[frame.pc + 1];
+        RFieldKey field = (RFieldKey) frame.getLiteral(index);
+        RValue value = (RValue) frame.stack.pop();
+        RObject obj = (RObject) frame.stack.pop();
+        obj.setField(field, value);
+        frame.stack.push(value);
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kGetField: {
+        int index = frame.code[frame.pc + 1];
+        RFieldKey field = (RFieldKey) frame.getLiteral(index);
+        RObject obj = (RObject) frame.stack.pop();
+        RValue value = obj.getField(field);
+        frame.stack.push(value);
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kAddIntrinsics: {
+        int index = frame.code[frame.pc + 1];
+        List<Method> methods = (List<Method>) frame.getLiteral(index);
+        RObject obj = (RObject) frame.stack.peek();
+        obj.addIntrinsics(methods);
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kTagWithProtocols: {
+        int count = frame.code[frame.pc + 1];
+        RObject obj = (RObject) frame.stack.get(frame.stack.size() - 1 - count);
+        for (int i = 0; i < count; i++)
+          obj.addProtocol((RProtocol) frame.stack.pop());
         frame.pc += 2;
         break;
       }

@@ -1,5 +1,6 @@
 package org.javatrino.bytecode;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +11,7 @@ import org.javatrino.ast.Expression.Call;
 import org.javatrino.ast.Expression.Call.Argument;
 import org.javatrino.ast.Expression.Constant;
 import org.javatrino.ast.Expression.Definition;
+import org.javatrino.ast.Expression.Visitor;
 import org.javatrino.ast.Symbol;
 import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.RInteger;
@@ -40,8 +42,10 @@ public class BytecodeCompiler {
 
   private final Map<Symbol, LocalAccess> loaders = new HashMap<Symbol, LocalAccess>();
   private final Assembler assm;
+  private int localCount = -1;
 
-  public BytecodeCompiler(Assembler assm, final List<Symbol> params) {
+  public BytecodeCompiler(Assembler assm, final List<Symbol> params,
+      final List<Symbol> locals) {
     this.assm = assm;
     for (int i = 0; i < params.size(); i++) {
       final int index = i;
@@ -52,14 +56,40 @@ public class BytecodeCompiler {
         }
       });
     }
+    this.localCount = locals.size();
+    for (int i = 0; i < locals.size(); i++) {
+      final int index = i;
+      loaders.put(locals.get(i), new LocalAccess() {
+        @Override
+        public void load(Assembler assm) {
+          assm.local(index);
+        }
+        @Override
+        public void store(Assembler assm) {
+          assm.storeLocal(index);
+        }
+      });
+    }
   }
 
   public static Result compile(Expression expr, List<Symbol> params) {
     Assembler assm = new Assembler(null);
-    BytecodeCompiler compiler = new BytecodeCompiler(assm, params);
+    BytecodeCompiler compiler = new BytecodeCompiler(assm, params, getLocals(expr));
     compiler.emit(expr);
     assm.rethurn();
     return compiler.getResult();
+  }
+
+  private static List<Symbol> getLocals(Expression expr) {
+    final List<Symbol> result = new ArrayList<Symbol>();
+    expr.accept(new Visitor<Void>() {
+      @Override
+      public Void visitDefinition(Definition that) {
+        result.add(that.symbol);
+        return null;
+      }
+    });
+    return result;
   }
 
   public void emit(Expression expr) {
@@ -94,11 +124,41 @@ public class BytecodeCompiler {
       emitCall(call);
       break;
     }
+    case ADD_INTRINSICS: {
+      Expression.AddIntrinsics add = (Expression.AddIntrinsics) expr;
+      emit(add.object);
+      assm.addIntrinsics(add.methods);
+      break;
+    }
+    case SET_FIELD: {
+      Expression.SetField set = (Expression.SetField) expr;
+      emit(set.object);
+      emit(set.value);
+      assm.setField(set.field);
+      break;
+    }
+    case GET_FIELD: {
+      Expression.GetField get = (Expression.GetField) expr;
+      emit(get.object);
+      assm.getField(get.field);
+      break;
+    }
+    case TAG_WITH_PROTOCOL: {
+      Expression.TagWithProtocol tag = (Expression.TagWithProtocol) expr;
+      emit(tag.object);
+      for (Expression proto : tag.protocols)
+        emit(proto);
+      assm.tagWithProtocols(tag.protocols.size());
+      break;
+    }
+    case NEW: {
+      assm.newObject();
+      break;
+    }
     default:
       throw new AssertionError(expr.kind);
     }
   }
-
   private void emitCall(Call call) {
     List<Argument> args = call.arguments;
     Argument nameArg = args.get(0);
@@ -148,7 +208,7 @@ public class BytecodeCompiler {
   }
 
   public Result getResult() {
-    return new Result(assm.getBytecode(), assm.getLiterals(), 0);
+    return new Result(assm.getBytecode(), assm.getLiterals(), localCount);
   }
 
 }

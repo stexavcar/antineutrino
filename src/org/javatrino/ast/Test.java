@@ -1,31 +1,50 @@
 package org.javatrino.ast;
 
+import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RProtocol;
-import org.neutrino.runtime.RValue;
 
 public class Test {
 
   public static class Eq extends Test {
 
-    private final RValue value;
+    public @Store Object value;
 
-    public Eq(RValue value) {
+    public Eq(Object value) {
       this.value = value;
+    }
+
+    public Eq() { }
+
+    @Override
+    public String toString() {
+      return "eq(" + value + ")";
     }
 
   }
 
   public static class Is extends Test {
 
-    private final RProtocol proto;
+    public @Store RProtocol proto;
 
     public Is(RProtocol proto) {
       this.proto = proto;
     }
 
+    public Is() { }
+
+    @Override
+    public String toString() {
+      return "is(" + proto + ")";
+    }
+
   }
 
   public static class Any extends Test {
+
+    @Override
+    public String toString() {
+      return "_";
+    }
 
   }
 
