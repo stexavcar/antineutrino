@@ -10,6 +10,7 @@ import org.javatrino.ast.Expression.Call.Argument;
 import org.javatrino.ast.Expression.Constant;
 import org.javatrino.ast.Expression.Definition;
 import org.javatrino.ast.Expression.Global;
+import org.javatrino.ast.Expression.Local;
 import org.javatrino.ast.Expression.NewObject;
 import org.javatrino.ast.Symbol;
 import org.neutrino.syntax.Tree;
@@ -21,6 +22,12 @@ import org.neutrino.syntax.Tree.Text;
 import org.neutrino.syntax.Tree.With1Cc;
 
 public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
+
+  private static interface IScope {
+
+  }
+
+  private IScope scope;
 
   private static final Expression ABORT = null;
 
@@ -47,8 +54,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     if (symbol == null) {
       return new Global(that.getName());
     } else {
-      return ABORT;
-//      return new Local(symbol);
+      return new Local(symbol);
     }
   }
 
@@ -123,8 +129,11 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     String name = that.getName();
     arguments.add(new Argument("name", new Constant(name)));
     int index = 0;
-    for (Tree.Expression expr : that.getArguments()) {
-      arguments.add(new Argument(index, generate(expr)));
+    for (Tree.Expression source : that.getArguments()) {
+      Expression expr = generate(source);
+      if (isAbort(expr))
+        return ABORT;
+      arguments.add(new Argument(index, expr));
     }
     return new Call(arguments);
   }

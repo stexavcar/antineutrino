@@ -3,6 +3,7 @@ package org.neutrino.pib;
 import java.util.List;
 
 import org.javatrino.ast.Expression;
+import org.javatrino.ast.Symbol;
 import org.javatrino.bytecode.BytecodeCompiler;
 import org.javatrino.bytecode.Opcode;
 import org.javatrino.bytecode.Opcode.ArgType;
@@ -17,17 +18,19 @@ public class CodeBundle {
   public @Store String fileName;
   public @Store int rootOffset;
   public @Store Expression body;
+  public @Store List<Symbol> params;
   private byte[] newCode;
   private List<Object> newLiterals;
 
   public CodeBundle(byte[] code, List<Object> literals, int localCount,
-      String fileName, int rootOffset, Expression body) {
+      String fileName, int rootOffset, Expression body, List<Symbol> params) {
     this.oldCode = code;
     this.oldLiterals = literals;
     this.localCount = localCount;
     this.fileName = fileName;
     this.rootOffset = rootOffset;
     this.body = body;
+    this.params = params;
   }
 
   public CodeBundle() { }
@@ -64,7 +67,7 @@ public class CodeBundle {
 
   private void ensureCompiled() {
     if (newCode == null) {
-      BytecodeCompiler.Result result = BytecodeCompiler.compile(body);
+      BytecodeCompiler.Result result = BytecodeCompiler.compile(body, params);
       this.newCode = result.code;
       this.newLiterals = result.literals;
     }

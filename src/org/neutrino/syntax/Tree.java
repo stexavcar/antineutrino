@@ -893,7 +893,7 @@ public class Tree {
       this.value = value;
       this.body = body;
       this.isReference = isReference;
-      this.symbol = new Symbol();
+      this.symbol = new Symbol(Symbol.kLocalSymbol);
     }
 
     public void bind(LocalSymbol resolverSymbol) {

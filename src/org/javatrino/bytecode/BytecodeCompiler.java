@@ -3,6 +3,7 @@ package org.javatrino.bytecode;
 import java.util.List;
 
 import org.javatrino.ast.Expression;
+import org.javatrino.ast.Symbol;
 import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RString;
@@ -18,15 +19,32 @@ public class BytecodeCompiler {
     }
   }
 
-  private final Assembler assm;
-
-  public BytecodeCompiler(Assembler assm) {
-    this.assm = assm;
+  private interface IScope {
+    public void load(Symbol symbol);
   }
 
-  public static Result compile(Expression expr) {
+  private IScope scope;
+  private final Assembler assm;
+
+  public BytecodeCompiler(Assembler assm, List<Symbol> params) {
+    this.assm = assm;
+    this.scope = newParameterScope(params);
+  }
+
+  private IScope newParameterScope(final List<Symbol> params) {
+    return new IScope() {
+      @Override
+      public void load(Symbol symbol) {
+        int index = params.indexOf(symbol);
+        assert index >= 0;
+        assm.argument(params.size() - index);
+      }
+    };
+  }
+
+  public static Result compile(Expression expr, List<Symbol> params) {
     Assembler assm = new Assembler(null);
-    BytecodeCompiler compiler = new BytecodeCompiler(assm);
+    BytecodeCompiler compiler = new BytecodeCompiler(assm, params);
     compiler.emit(expr);
     assm.rethurn();
     return compiler.getResult();
@@ -47,6 +65,11 @@ public class BytecodeCompiler {
     case BLOCK: {
       Expression.Block block = (Expression.Block) expr;
       emitBlock(block.values);
+      break;
+    }
+    case LOCAL: {
+      Expression.Local local = (Expression.Local) expr;
+      scope.load(local.symbol);
       break;
     }
     default:

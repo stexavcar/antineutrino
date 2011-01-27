@@ -2,9 +2,11 @@ package org.neutrino.pib;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.javatrino.ast.Expression;
+import org.javatrino.ast.Symbol;
 import org.javatrino.bytecode.Opcode;
 import org.neutrino.compiler.Source;
 import org.neutrino.runtime.Native;
@@ -21,17 +23,20 @@ public class Assembler {
   private int localCount = -1;
   private int rootOffset = -1;
   private Expression expr;
+  private List<Symbol> params;
 
   public Assembler(Source origin) {
     this.origin = origin;
   }
 
-  public void finalize(int localCount, int rootOffset, Expression expr) {
+  public void finalize(int localCount, int rootOffset, Expression expr,
+      List<Symbol> params) {
     assert this.localCount == -1;
     assert this.rootOffset == -1;
     this.localCount = localCount;
     this.rootOffset = rootOffset;
     this.expr = expr;
+    this.params = (params == null) ? Collections.<Symbol>emptyList() : params;
   }
 
   private int getOffset() {
@@ -207,7 +212,7 @@ public class Assembler {
     assert localCount >= 0;
     assert rootOffset != -1;
     return new CodeBundle(bytes.toByteArray(), literals, localCount,
-        origin.getName(), rootOffset, expr);
+        origin.getName(), rootOffset, expr, params);
   }
 
 }

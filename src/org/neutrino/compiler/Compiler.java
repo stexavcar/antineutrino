@@ -1,9 +1,14 @@
 package org.neutrino.compiler;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.javatrino.ast.Expression;
+import org.javatrino.ast.Symbol;
 import org.neutrino.pib.Assembler;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.ModuleBuilder;
+import org.neutrino.pib.Parameter;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Method;
 
@@ -19,7 +24,7 @@ public class Compiler {
     ExpressionGenerator exprgen = new ExpressionGenerator();
     Expression expr = exprgen.generate(body);
     int rootOffset = codegen.generate(body);
-    assm.finalize(0, rootOffset, expr);
+    assm.finalize(0, rootOffset, expr, null);
     return assm.getCode();
   }
 
@@ -34,7 +39,10 @@ public class Compiler {
     ExpressionGenerator exprgen = new ExpressionGenerator();
     Expression expr = exprgen.generate(body);
     int rootOffset = codegen.generate(body);
-    assm.finalize(lexicizer.getLocalCount(), rootOffset, expr);
+    List<Symbol> params = new ArrayList<Symbol>();
+    for (Parameter param : that.getParameters())
+      params.add(param.getSymbol());
+    assm.finalize(lexicizer.getLocalCount(), rootOffset, expr, params);
   }
 
 }
