@@ -42,6 +42,11 @@ public abstract class Expression {
 
       public Argument() { }
 
+      @Override
+      public String toString() {
+        return tag + ": " + value;
+      }
+
     }
 
     public @Store List<Argument> arguments;
@@ -53,6 +58,11 @@ public abstract class Expression {
 
     public Call() {
       super(Kind.CALL);
+    }
+
+    @Override
+    public String toString() {
+      return arguments.toString();
     }
 
   }
@@ -132,6 +142,11 @@ public abstract class Expression {
 
     public Constant() {
       super(Kind.CONST);
+    }
+
+    @Override
+    public String toString() {
+      return String.valueOf(value);
     }
 
   }

@@ -1,8 +1,15 @@
 package org.javatrino.bytecode;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.javatrino.ast.Expression;
+import org.javatrino.ast.Expression.Call;
+import org.javatrino.ast.Expression.Call.Argument;
+import org.javatrino.ast.Expression.Constant;
+import org.javatrino.ast.Expression.Definition;
 import org.javatrino.ast.Symbol;
 import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.RInteger;
@@ -13,33 +20,38 @@ public class BytecodeCompiler {
   public class Result {
     public final byte[] code;
     public final List<Object> literals;
-    public Result(byte[] code, List<Object> literals) {
+    public final int localCount;
+    public Result(byte[] code, List<Object> literals, int localCount) {
       this.code = code;
       this.literals = literals;
+      this.localCount = localCount;
     }
   }
 
-  private interface IScope {
-    public void load(Symbol symbol);
+  private abstract class LocalAccess {
+
+    public abstract void load(Assembler assm);
+
+    public void store(Assembler assm) {
+      assert false;
+    }
+
   }
 
-  private IScope scope;
+  private final Map<Symbol, LocalAccess> loaders = new HashMap<Symbol, LocalAccess>();
   private final Assembler assm;
 
-  public BytecodeCompiler(Assembler assm, List<Symbol> params) {
+  public BytecodeCompiler(Assembler assm, final List<Symbol> params) {
     this.assm = assm;
-    this.scope = newParameterScope(params);
-  }
-
-  private IScope newParameterScope(final List<Symbol> params) {
-    return new IScope() {
-      @Override
-      public void load(Symbol symbol) {
-        int index = params.indexOf(symbol);
-        assert index >= 0;
-        assm.argument(params.size() - index);
-      }
-    };
+    for (int i = 0; i < params.size(); i++) {
+      final int index = i;
+      loaders.put(params.get(i), new LocalAccess() {
+        @Override
+        public void load(Assembler assm) {
+          assm.argument(params.size() - index);
+        }
+      });
+    }
   }
 
   public static Result compile(Expression expr, List<Symbol> params) {
@@ -69,12 +81,41 @@ public class BytecodeCompiler {
     }
     case LOCAL: {
       Expression.Local local = (Expression.Local) expr;
-      scope.load(local.symbol);
+      loaders.get(local.symbol).load(assm);
+      break;
+    }
+    case DEF: {
+      Expression.Definition def = (Expression.Definition) expr;
+      emitLocalDefinition(def);
+      break;
+    }
+    case CALL: {
+      Expression.Call call = (Expression.Call) expr;
+      emitCall(call);
       break;
     }
     default:
       throw new AssertionError(expr.kind);
     }
+  }
+
+  private void emitCall(Call call) {
+    List<Argument> args = call.arguments;
+    Argument nameArg = args.get(0);
+    assert nameArg.tag.equals("name");
+    String name = (String) ((Constant) nameArg.value).value;
+    for (int i = 1; i < args.size(); i++) {
+      Argument arg = args.get(i);
+      assert arg.tag.equals(i - 1);
+      emit(arg.value);
+    }
+    assm.call(name, Collections.nCopies(args.size() - 1, 0));
+  }
+
+  private void emitLocalDefinition(Definition def) {
+    emit(def.value);
+    loaders.get(def.symbol).store(assm);
+    emit(def.body);
   }
 
   private void emitConstant(Object value) {
@@ -107,7 +148,7 @@ public class BytecodeCompiler {
   }
 
   public Result getResult() {
-    return new Result(assm.getBytecode(), assm.getLiterals());
+    return new Result(assm.getBytecode(), assm.getLiterals(), 0);
   }
 
 }

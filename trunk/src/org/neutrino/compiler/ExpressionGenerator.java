@@ -60,9 +60,15 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitLocalDefinition(Tree.LocalDefinition that) {
+    Expression value = generate(that.getValue());
+    if (isAbort(value))
+      return ABORT;
+    Expression body = generate(that.getBody());
+    if (isAbort(body))
+      return ABORT;
     if (true)
       return ABORT;
-    return new Definition(that.getSymbol(), generate(that.getValue()), generate(that.getBody()));
+    return new Definition(that.getSymbol(), value, body);
   }
 
   @Override
@@ -123,8 +129,6 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitCall(Tree.Call that) {
-    if (true)
-      return ABORT;
     List<Argument> arguments = new ArrayList<Argument>();
     String name = that.getName();
     arguments.add(new Argument("name", new Constant(name)));
@@ -134,6 +138,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
       if (isAbort(expr))
         return ABORT;
       arguments.add(new Argument(index, expr));
+      index++;
     }
     return new Call(arguments);
   }
