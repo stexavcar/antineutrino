@@ -129,8 +129,6 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Expression body = generate(that.getBody());
     if (isAbort(body))
       return ABORT;
-    if (true)
-      return ABORT;
     return new Definition(that.getSymbol(), value, body);
   }
 

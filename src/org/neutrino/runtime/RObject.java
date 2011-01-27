@@ -1,6 +1,7 @@
 package org.neutrino.runtime;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ public class RObject extends RValue {
   private State state = State.UNDER_CONSTRUCTION;
   private final Map<RFieldKey, RValue> outer;
   private final List<RProtocol> protos = new ArrayList<RProtocol>();
+  private List<TypeId> typeIds = Collections.<TypeId>emptyList();
   private final List<Method> intrinsics = new ArrayList<Method>();
 
   public RObject(RProtocol proto, Map<RFieldKey, RValue> outer) {
@@ -41,12 +43,23 @@ public class RObject extends RValue {
   }
 
   public void addProtocol(RProtocol proto) {
+    this.typeIds = null;
     this.protos.add(proto);
   }
 
   @Override
   public TypeId getTypeId() {
     return protos.get(0).getInstanceTypeId();
+  }
+
+  @Override
+  public Iterable<TypeId> getTypeIds() {
+    if (this.typeIds == null) {
+      typeIds = new ArrayList<TypeId>();
+      for (RProtocol proto : protos)
+        typeIds.add(proto.getInstanceTypeId());
+    }
+    return this.typeIds;
   }
 
   @Override

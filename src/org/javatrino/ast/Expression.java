@@ -130,7 +130,7 @@ public abstract class Expression {
 
     @Override
     public String toString() {
-      return arguments.toString();
+      return "call" + arguments.toString();
     }
 
   }
@@ -189,6 +189,11 @@ public abstract class Expression {
       body.accept(visitor);
     }
 
+    @Override
+    public String toString() {
+      return "def " + symbol + " := " + value + " in " + body;
+    }
+
   }
 
   public static class Local extends Expression {
@@ -213,6 +218,11 @@ public abstract class Expression {
     public void traverse(Visitor<?> visitor) {
     }
 
+    @Override
+    public String toString() {
+      return symbol.toString();
+    }
+
   }
 
   public static class Global extends Expression {
@@ -235,6 +245,11 @@ public abstract class Expression {
 
     @Override
     public void traverse(Visitor<?> visitor) {
+    }
+
+    @Override
+    public String toString() {
+      return "$" + name;
     }
 
   }
