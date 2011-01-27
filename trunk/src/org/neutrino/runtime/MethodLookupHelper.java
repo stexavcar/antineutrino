@@ -6,6 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import org.javatrino.ast.Method;
+import org.javatrino.ast.Pattern;
+import org.javatrino.ast.Test;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
@@ -26,7 +29,26 @@ public class MethodLookupHelper {
     this.universe = universe;
   }
 
+  public Method lookupIntrinsic(String name, int argc, Stack<RValue> stack) {
+    RValue recv = stack.get(stack.size() - argc);
+    if (!(recv instanceof RObject))
+      return null;
+    RObject obj = (RObject) recv;
+    List<Method> intrinsics = obj.getIntrinsics();
+    for (Method method : intrinsics) {
+      List<Pattern> sig = method.signature;
+      Pattern namePattern = sig.get(0);
+      if (name.equals(((Test.Eq) namePattern.test).value)) {
+        return method;
+      }
+    }
+    return null;
+  }
+
   public Lambda lookupMethod(String name, int argc, Stack<RValue> stack) {
+    Method intrinsic = lookupIntrinsic(name, argc, stack);
+    if (intrinsic != null)
+      return new Lambda(intrinsic.origin, intrinsic.getBundle());
     RMethod result = findPerfectMatch(name, argc, stack);
     if (result == null)
       result = findApproximateMatch(name, argc, stack);

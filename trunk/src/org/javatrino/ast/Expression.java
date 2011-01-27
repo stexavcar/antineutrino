@@ -7,7 +7,6 @@ import java.util.List;
 import org.neutrino.plankton.ClassIndex;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RFieldKey;
-import org.neutrino.runtime.RProtocol;
 
 
 public abstract class Expression {
@@ -17,8 +16,62 @@ public abstract class Expression {
   private @interface Skip { }
 
   @Skip
+  public static abstract class Visitor<T> {
+
+    public T visitExpression(Expression expr) {
+      expr.traverse(this);
+      return null;
+    }
+
+    public T visitCall(Call that) {
+      return visitExpression(that);
+    }
+
+    public T visitBlock(Block that) {
+      return visitExpression(that);
+    }
+
+    public T visitDefinition(Definition that) {
+      return visitExpression(that);
+    }
+
+    public T visitLocal(Local that) {
+      return visitExpression(that);
+    }
+
+    public T visitGlobal(Global that) {
+      return visitExpression(that);
+    }
+
+    public T visitConstant(Constant that) {
+      return visitExpression(that);
+    }
+
+    public T visitNewObject(NewObject that) {
+      return visitExpression(that);
+    }
+
+    public T visitAddIntrinsics(AddIntrinsics that) {
+      return visitExpression(that);
+    }
+
+    public T visitTagWithProtocol(TagWithProtocol that) {
+      return visitExpression(that);
+    }
+
+    public T visitSetField(SetField that) {
+      return visitExpression(that);
+    }
+
+    public T visitGetField(GetField that) {
+      return visitExpression(that);
+    }
+
+  }
+
+  @Skip
   public enum Kind {
-    CALL, BLOCK, ADD_INTRINSIC, CONST, DEF, GET_FIELD, SET_FIELD, GLOBAL,
+    CALL, BLOCK, ADD_INTRINSICS, CONST, DEF, GET_FIELD, SET_FIELD, GLOBAL,
     LOCAL, NEW, TAG_WITH_PROTOCOL
   }
 
@@ -27,6 +80,10 @@ public abstract class Expression {
   public Expression(Kind kind) {
     this.kind = kind;
   }
+
+  public abstract <T> T accept(Visitor<T> visitor);
+
+  public abstract void traverse(Visitor<?> visitor);
 
   public static class Call extends Expression {
 
@@ -61,6 +118,17 @@ public abstract class Expression {
     }
 
     @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitCall(this);
+    }
+
+    @Override
+    public void traverse(Visitor<?> visitor) {
+      for (Argument arg : arguments)
+        arg.value.accept(visitor);
+    }
+
+    @Override
     public String toString() {
       return arguments.toString();
     }
@@ -78,6 +146,17 @@ public abstract class Expression {
 
     public Block() {
       super(Kind.BLOCK);
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitBlock(this);
+    }
+
+    @Override
+    public void traverse(Visitor<?> visitor) {
+      for (Expression value : values)
+        value.accept(visitor);
     }
 
   }
@@ -99,6 +178,17 @@ public abstract class Expression {
       super(Kind.DEF);
     }
 
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitDefinition(this);
+    }
+
+    @Override
+    public void traverse(Visitor<?> visitor) {
+      value.accept(visitor);
+      body.accept(visitor);
+    }
+
   }
 
   public static class Local extends Expression {
@@ -114,6 +204,15 @@ public abstract class Expression {
       super(Kind.LOCAL);
     }
 
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitLocal(this);
+    }
+
+    @Override
+    public void traverse(Visitor<?> visitor) {
+    }
+
   }
 
   public static class Global extends Expression {
@@ -127,6 +226,15 @@ public abstract class Expression {
 
     public Global() {
       super(Kind.GLOBAL);
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitGlobal(this);
+    }
+
+    @Override
+    public void traverse(Visitor<?> visitor) {
     }
 
   }
@@ -149,12 +257,30 @@ public abstract class Expression {
       return String.valueOf(value);
     }
 
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitConstant(this);
+    }
+
+    @Override
+    public void traverse(Visitor<?> visitor) {
+    }
+
   }
 
   public static class NewObject extends Expression {
 
     public NewObject() {
       super(Kind.NEW);
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitNewObject(this);
+    }
+
+    @Override
+    public void traverse(Visitor<?> visitor) {
     }
 
   }
@@ -171,7 +297,17 @@ public abstract class Expression {
     }
 
     public AddIntrinsics() {
-      super(Kind.ADD_INTRINSIC);
+      super(Kind.ADD_INTRINSICS);
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitAddIntrinsics(this);
+    }
+
+    @Override
+    public void traverse(Visitor<?> visitor) {
+      object.accept(visitor);
     }
 
   }
@@ -179,16 +315,28 @@ public abstract class Expression {
   public static class TagWithProtocol extends Expression {
 
     public @Store Expression object;
-    public @Store RProtocol protocol;
+    public @Store List<Expression> protocols;
 
-    public TagWithProtocol(Expression object, RProtocol protocol) {
+    public TagWithProtocol(Expression object, List<Expression> protocols) {
       this();
       this.object = object;
-      this.protocol = protocol;
+      this.protocols = protocols;
     }
 
     public TagWithProtocol() {
       super(Kind.TAG_WITH_PROTOCOL);
+    }
+
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitTagWithProtocol(this);
+    }
+
+    @Override
+    public void traverse(Visitor<?> visitor) {
+      object.accept(visitor);
+      for (Expression protocol : protocols)
+        protocol.accept(visitor);
     }
 
   }
@@ -210,6 +358,17 @@ public abstract class Expression {
       super(Kind.SET_FIELD);
     }
 
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitSetField(this);
+    }
+
+    @Override
+    public void traverse(Visitor<?> visitor) {
+      object.accept(visitor);
+      value.accept(visitor);
+    }
+
   }
 
   public static class GetField extends Expression {
@@ -227,6 +386,16 @@ public abstract class Expression {
       super(Kind.GET_FIELD);
     }
 
+    @Override
+    public <T> T accept(Visitor<T> visitor) {
+      return visitor.visitGetField(this);
+    }
+
+    @Override
+    public void traverse(Visitor<?> visitor) {
+      object.accept(visitor);
+    }
+
   }
 
   public static void register(ClassIndex index) {
@@ -236,6 +405,11 @@ public abstract class Expression {
       if (klass.getAnnotation(Skip.class) == null)
         index.add(klass);
     }
+    index.add(Method.class);
+    index.add(Pattern.class);
+    index.add(Test.Any.class);
+    index.add(Test.Eq.class);
+    index.add(Test.Is.class);
   }
 
 }

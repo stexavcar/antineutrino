@@ -2,18 +2,25 @@ package org.javatrino.ast;
 
 import java.util.List;
 
-import org.neutrino.runtime.RValue;
+import org.neutrino.plankton.Store;
 
 public class Pattern {
 
-  private final List<RValue> tags;
-  private final Test test;
-  private final Symbol symbol;
+  public @Store List<Object> tags;
+  public @Store Test test;
+  public @Store Symbol symbol;
 
-  public Pattern(List<RValue> tags, Test test, Symbol symbol) {
+  public Pattern(List<Object> tags, Test test, Symbol symbol) {
     this.tags = tags;
     this.test = test;
     this.symbol = symbol;
+  }
+
+  public Pattern() { }
+
+  @Override
+  public String toString() {
+    return "pattern(" + tags + ": " + test + ")";
   }
 
 }

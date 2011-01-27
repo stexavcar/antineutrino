@@ -764,17 +764,21 @@ public class Tree {
 
     private final Source origin;
     private final List<Field> fields;
-    private final List<String> protocols;
+    private final List<String> protocolNames;
+    private final List<Expression> protocols;
     private final String displayName;
     private RProtocol protocol;
     private List<ResolverSymbol> captures;
     private List<RFieldKey> captureFields;
 
-    public New(Source origin, List<Field> fields, List<String> protocols,
+    public New(Source origin, List<Field> fields, List<String> protocolNames,
         String displayName) {
       this.origin = origin;
       this.fields = fields;
-      this.protocols = protocols;
+      this.protocolNames = protocolNames;
+      this.protocols = new ArrayList<Expression>();
+      for (String name : protocolNames)
+        protocols.add(new Identifier(name));
       this.displayName = displayName;
     }
 
@@ -795,8 +799,12 @@ public class Tree {
       return (type == Type.LAMBDA) && isLambda();
     }
 
-    public List<String> getProtocols() {
-      return protocols;
+    public List<Expression> getProtocols() {
+      return this.protocols;
+    }
+
+    public List<String> getProtocolNames() {
+      return protocolNames;
     }
 
     public String getDisplayName() {
@@ -841,6 +849,8 @@ public class Tree {
     public void traverse(ExpressionVisitor<?> visitor) {
       for (Field field : fields)
         field.getBody().accept(visitor);
+      for (Expression protocol : this.protocols)
+        protocol.accept(visitor);
     }
 
   }
