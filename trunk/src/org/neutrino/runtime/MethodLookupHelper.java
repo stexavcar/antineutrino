@@ -124,8 +124,14 @@ public class MethodLookupHelper {
         if (paramType == null)
           paramType = TypeId.get("Object");
         RValue arg = stack.get(stack.size() - argc + i);
-        TypeId argType = arg.getTypeId();
-        if (argType != paramType)
+        boolean foundIt = false;
+        for (TypeId argType : arg.getTypeIds()) {
+          if (argType == paramType) {
+            foundIt = true;
+            break;
+          }
+        }
+        if (!foundIt)
           continue loop;
       }
       return method;

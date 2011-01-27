@@ -86,6 +86,7 @@ public class BytecodeCompiler {
       @Override
       public Void visitDefinition(Definition that) {
         result.add(that.symbol);
+        super.visitDefinition(that);
         return null;
       }
     });
