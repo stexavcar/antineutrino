@@ -1,8 +1,12 @@
 package org.neutrino.pib;
 
 import java.util.List;
+import java.util.Map;
 
 import org.javatrino.ast.Expression;
+import org.javatrino.ast.Expression.AddIntrinsics;
+import org.javatrino.ast.Expression.Visitor;
+import org.javatrino.ast.Method;
 import org.javatrino.ast.Symbol;
 import org.javatrino.bytecode.BytecodeCompiler;
 import org.javatrino.bytecode.Opcode;
@@ -19,13 +23,16 @@ public class CodeBundle {
   public @Store int rootOffset;
   public @Store Expression body;
   public @Store List<Symbol> params;
-  
+  public @Store Map<Symbol, Expression> rewrites;
+  private Module origin;
+
   private byte[] newCode;
   private List<Object> newLiterals;
   private int newLocalCount = -1;
 
   public CodeBundle(byte[] code, List<Object> literals, int oldLocalCount,
-      String fileName, int rootOffset, Expression body, List<Symbol> params) {
+      String fileName, int rootOffset, Expression body, List<Symbol> params,
+      Map<Symbol, Expression> rewrites) {
     this.oldCode = code;
     this.oldLiterals = literals;
     this.oldLocalCount = oldLocalCount;
@@ -33,6 +40,7 @@ public class CodeBundle {
     this.rootOffset = rootOffset;
     this.body = body;
     this.params = params;
+    this.rewrites = rewrites;
   }
 
   public CodeBundle() { }
@@ -55,7 +63,7 @@ public class CodeBundle {
       return newCode;
     }
   }
-  
+
   public int getLocalCount() {
     if (newLocalCount != -1) {
       return newLocalCount;
@@ -81,10 +89,25 @@ public class CodeBundle {
 
   private void ensureCompiled() {
     if (newCode == null) {
-      BytecodeCompiler.Result result = BytecodeCompiler.compile(body, params);
+      BytecodeCompiler.Result result = BytecodeCompiler.compile(body, params,
+          rewrites);
       this.newCode = result.code;
       this.newLiterals = result.literals;
       this.newLocalCount = result.localCount;
+    }
+  }
+
+  public void initialize(final Module module) {
+    this.origin = module;
+    if (body != null) {
+      body.accept(new Visitor<Void>() {
+        @Override
+        public Void visitAddIntrinsics(AddIntrinsics that) {
+          for (Method method : that.methods)
+            method.origin = module;
+          return super.visitAddIntrinsics(that);
+        }
+      });
     }
   }
 

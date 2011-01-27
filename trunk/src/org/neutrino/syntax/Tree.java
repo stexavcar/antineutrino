@@ -733,7 +733,7 @@ public class Tree {
         this.params = params;
         this.name = name;
         this.body = body;
-        this.field = hasEagerValue ? new RFieldKey() : null;
+        this.field = hasEagerValue ? new RFieldKey(name) : null;
       }
 
       public RFieldKey getField() {

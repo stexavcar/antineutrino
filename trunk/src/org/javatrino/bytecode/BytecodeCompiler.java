@@ -7,13 +7,18 @@ import java.util.List;
 import java.util.Map;
 
 import org.javatrino.ast.Expression;
+import org.javatrino.ast.Expression.AddIntrinsics;
 import org.javatrino.ast.Expression.Call;
 import org.javatrino.ast.Expression.Call.Argument;
 import org.javatrino.ast.Expression.Constant;
 import org.javatrino.ast.Expression.Definition;
+import org.javatrino.ast.Expression.GetField;
+import org.javatrino.ast.Expression.Local;
 import org.javatrino.ast.Expression.Visitor;
+import org.javatrino.ast.Method;
 import org.javatrino.ast.Symbol;
 import org.neutrino.pib.Assembler;
+import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RString;
 
@@ -45,7 +50,7 @@ public class BytecodeCompiler {
   private int localCount = -1;
 
   public BytecodeCompiler(Assembler assm, final List<Symbol> params,
-      final List<Symbol> locals) {
+      final List<Symbol> locals, final Map<Symbol, Expression> rewrites) {
     this.assm = assm;
     for (int i = 0; i < params.size(); i++) {
       final int index = i;
@@ -70,14 +75,26 @@ public class BytecodeCompiler {
         }
       });
     }
+    if (rewrites != null) {
+      for (final Map.Entry<Symbol, Expression> rewrite : rewrites.entrySet()) {
+        loaders.put(rewrite.getKey(), new LocalAccess() {
+          @Override
+          public void load(Assembler assm) {
+            emit(rewrite.getValue());
+          }
+        });
+      }
+    }
   }
 
   public static int compilationCount = 0;
 
-  public static Result compile(Expression expr, List<Symbol> params) {
+  public static Result compile(Expression expr, List<Symbol> params,
+      Map<Symbol, Expression> rewrites) {
     compilationCount++;
     Assembler assm = new Assembler(null);
-    BytecodeCompiler compiler = new BytecodeCompiler(assm, params, getLocals(expr));
+    BytecodeCompiler compiler = new BytecodeCompiler(assm, params, getLocals(expr),
+        rewrites);
     compiler.emit(expr);
     assm.rethurn();
     return compiler.getResult();
@@ -89,11 +106,83 @@ public class BytecodeCompiler {
       @Override
       public Void visitDefinition(Definition that) {
         result.add(that.symbol);
-        super.visitDefinition(that);
-        return null;
+        return super.visitDefinition(that);
       }
     });
     return result;
+  }
+
+  private class CapturingRewriter extends Visitor<Void> {
+
+    private final Map<Symbol, RFieldKey> captured;
+    private final Map<Symbol, Expression> rewrites = new HashMap<Symbol, Expression>();
+    private final Method method;
+
+    public CapturingRewriter(Method method, Map<Symbol, RFieldKey> captured) {
+      this.method = method;
+      this.captured = captured;
+    }
+
+    private RFieldKey getFieldKey(Symbol symbol) {
+      if (!captured.containsKey(symbol)) {
+        captured.put(symbol, new RFieldKey(symbol));
+      }
+      return captured.get(symbol);
+    }
+
+    private boolean inScope(Symbol sym) {
+      return !loaders.containsKey(sym);
+    }
+
+    private boolean hasBeenCaptured(Symbol sym) {
+      return rewrites.containsKey(sym);
+    }
+
+    private boolean shouldCapture(Symbol sym) {
+      return !inScope(sym) && !hasBeenCaptured(sym);
+    }
+
+    @Override
+    public Void visitLocal(Local that) {
+      Symbol sym = that.symbol;
+      if (shouldCapture(sym)) {
+        Symbol self = method.signature.get(1).symbol;
+        rewrites.put(sym, new GetField(new Local(self), getFieldKey(sym)));
+      }
+      return null;
+    }
+
+    @Override
+    public Void visitAddIntrinsics(AddIntrinsics that) {
+      for (Method method : that.methods) {
+        method.body.accept(this);
+      }
+      return null;
+    }
+
+    public Map<Symbol, Expression> getRewrites(Expression expr) {
+      expr.accept(this);
+      return this.rewrites;
+    }
+
+  }
+
+  private void emitAddIntrinsics(AddIntrinsics add) {
+    emit(add.object);
+    Map<Symbol, RFieldKey> captured = new HashMap<Symbol, RFieldKey>();
+    List<Method> rewrittenMethods = new ArrayList<Method>();
+    for (final Method method : add.methods) {
+      Map<Symbol, Expression> rewrites =
+          new CapturingRewriter(method, captured).getRewrites(method.body);
+      rewrittenMethods.add(method.withRewrites(rewrites));
+    }
+    for (Map.Entry<Symbol, RFieldKey> entry : captured.entrySet()) {
+      assm.dup();
+      loaders.get(entry.getKey()).load(assm);
+      assm.setField(entry.getValue());
+      assm.pop();
+    }
+    assm.addIntrinsics(rewrittenMethods);
   }
 
   public void emit(Expression expr) {
@@ -130,8 +219,7 @@ public class BytecodeCompiler {
     }
     case ADD_INTRINSICS: {
       Expression.AddIntrinsics add = (Expression.AddIntrinsics) expr;
-      emit(add.object);
-      assm.addIntrinsics(add.methods);
+      emitAddIntrinsics(add);
       break;
     }
     case SET_FIELD: {

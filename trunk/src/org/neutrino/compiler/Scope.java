@@ -41,7 +41,7 @@ public abstract class Scope {
         return outerResult;
       int index = outerTransient.indexOf(outerResult);
       if (index == -1) {
-        RFieldKey field = new RFieldKey();
+        RFieldKey field = new RFieldKey(null);
         ResolverSymbol capture = ResolverSymbol.outer(outerResult, field);
         outerTransient.add(outerResult);
         outerCaptures.add(capture);

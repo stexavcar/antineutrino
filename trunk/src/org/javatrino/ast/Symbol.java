@@ -7,6 +7,7 @@ public class Symbol {
 
   public static final int kParameterSymbol = 0;
   public static final int kLocalSymbol = 1;
+  public static final int kImplicitThis = 2;
 
   public @Store int type;
   private int id = -1;

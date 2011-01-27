@@ -159,6 +159,11 @@ public abstract class Expression {
         value.accept(visitor);
     }
 
+    @Override
+    public String toString() {
+      return "{" + values + "}";
+    }
+
   }
 
   public static class Definition extends Expression {
@@ -298,6 +303,11 @@ public abstract class Expression {
     public void traverse(Visitor<?> visitor) {
     }
 
+    @Override
+    public String toString() {
+      return "new()";
+    }
+
   }
 
   public static class AddIntrinsics extends Expression {
@@ -323,6 +333,11 @@ public abstract class Expression {
     @Override
     public void traverse(Visitor<?> visitor) {
       object.accept(visitor);
+    }
+
+    @Override
+    public String toString() {
+      return "add_intrinsics(" + object + ", " + methods + ")";
     }
 
   }

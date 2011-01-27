@@ -32,6 +32,7 @@ public class RMethod extends RValue {
     for (Parameter param : params)
       param.initialize(module);
     this.origin = module;
+    code.initialize(module);
   }
 
   public String getName() {

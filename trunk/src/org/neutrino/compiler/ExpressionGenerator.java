@@ -22,6 +22,7 @@ import org.javatrino.ast.Pattern;
 import org.javatrino.ast.Symbol;
 import org.javatrino.ast.Test.Any;
 import org.javatrino.ast.Test.Eq;
+import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Assignment;
@@ -54,7 +55,8 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Symbol self = new Symbol(Symbol.kParameterSymbol);
     Pattern selfPattern = new Pattern(asList(0), new Any(), self);
     Expression body = new GetField(new Local(self), key);
-    return new Method(Arrays.asList(namePattern, selfPattern), false, body);
+    return new Method(Arrays.asList(namePattern, selfPattern), false, body, null,
+        null);
   }
 
   private static Method makeSetter(String name, RFieldKey key) {
@@ -65,7 +67,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Pattern valuePattern = new Pattern(asList(1), new Any(), value);
     Expression body = new SetField(new Local(self), key, new Local(value));
     return new Method(Arrays.asList(namePattern, selfPattern, valuePattern),
-        false, body);
+        false, body, null, null);
   }
 
   @Override
@@ -76,16 +78,28 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     List<Expression> sets = new ArrayList<Expression>();
     List<Expression> protocols = new ArrayList<Expression>();
     for (Tree.New.Field field : fields) {
-      if (!field.hasEagerValue()) {
-        return ABORT;
-      }
-      RFieldKey key = field.getField();
       Expression body = generate(field.getBody());
       if (isAbort(body))
         return ABORT;
-      sets.add(new SetField(new Local(obj), key, body));
-      intrinsics.add(makeGetter(field.getName(), key));
-      intrinsics.add(makeSetter(field.getName() + ":=", key));
+      if (field.hasEagerValue()) {
+        RFieldKey key = field.getField();
+        sets.add(new SetField(new Local(obj), key, body));
+        intrinsics.add(makeGetter(field.getName(), key));
+        intrinsics.add(makeSetter(field.getName() + ":=", key));
+      } else {
+        Pattern namePattern = new Pattern(asList("name"), new Eq(field.getName()), null);
+        Symbol self = new Symbol(Symbol.kImplicitThis);
+        Pattern selfPattern = new Pattern(asList(0), new Any(), self);
+        List<Pattern> patterns = new ArrayList<Pattern>();
+        patterns.add(namePattern);
+        patterns.add(selfPattern);
+        int index = 1;
+        for (Parameter param : field.getParameters()) {
+          return ABORT;
+        }
+        Method method = new Method(patterns, false, body, null, null);
+        intrinsics.add(method);
+      }
     }
     for (Tree.Expression protocol : that.getProtocols()) {
       Expression proto = generate(protocol);
@@ -110,6 +124,10 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Symbol symbol = that.getSymbol();
     if (symbol == null) {
       return new Global(that.getName());
+    } else if (that.getResolverSymbol().isReference()) {
+      return new Call(Arrays.asList(
+          new Argument("name", new Constant("get")),
+          new Argument(0, new Local(symbol))));
     } else {
       return new Local(symbol);
     }
@@ -134,6 +152,12 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Expression body = generate(that.getBody());
     if (isAbort(body))
       return ABORT;
+    if (that.isReference()) {
+      value = new Call(Arrays.<Argument>asList(
+          new Argument("name", new Constant("new")),
+          new Argument(0, new Global("Ref")),
+          new Argument(1, value)));
+    }
     return new Definition(that.getSymbol(), value, body);
   }
 

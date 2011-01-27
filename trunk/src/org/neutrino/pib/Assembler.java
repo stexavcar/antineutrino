@@ -56,6 +56,10 @@ public class Assembler {
     add(Opcode.kPop);
   }
 
+  public void dup() {
+    add(Opcode.kDup);
+  }
+
   public int argument(int index) {
     int result = getOffset();
     add(Opcode.kArgument);
@@ -239,7 +243,7 @@ public class Assembler {
     assert localCount >= 0;
     assert rootOffset != -1;
     return new CodeBundle(bytes.toByteArray(), literals, localCount,
-        origin.getName(), rootOffset, expr, params);
+        origin.getName(), rootOffset, expr, params, null);
   }
 
 }
