@@ -1,7 +1,6 @@
 package org.neutrino.runtime;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 
@@ -11,7 +10,7 @@ public class RImpl {
 
   public final List<RProtocol> protos;
   public final List<Method> intrinsics;
-  public List<TypeId> typeIds = Collections.<TypeId>emptyList();
+  public List<TypeId> typeIds = null;
 
   private final IdentityHashMap<RProtocol, RImpl> addedProtos
       = new IdentityHashMap<RProtocol, RImpl>();

@@ -96,7 +96,7 @@ public class Module {
       Binding binding = defs.get(name);
       if (binding == null)
         return null;
-      result = inter.interpret(this, binding.getCode());
+      result = inter.interpret(universe, binding.getCode());
       globals.put(name, result);
     }
     return result;

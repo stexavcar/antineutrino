@@ -3,7 +3,6 @@ package org.neutrino.runtime;
 import java.util.Stack;
 
 import org.neutrino.pib.CodeBundle;
-import org.neutrino.pib.Module;
 import org.neutrino.pib.Universe;
 
 public class Frame {
@@ -16,7 +15,7 @@ public class Frame {
   public final RValue holder;
   public RContinuation marker;
 
-  public Frame(Frame parent, RValue holder, CodeBundle code, Module module) {
+  public Frame(Frame parent, RValue holder, CodeBundle code) {
     this.parent = parent;
     this.holder = holder;
     this.code = code.getCode();
