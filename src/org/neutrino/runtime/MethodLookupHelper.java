@@ -59,7 +59,7 @@ public class MethodLookupHelper {
   }
 
   public Lambda lookupLambda(RObject holder, RValue... args) {
-    Frame fakeFrame = new Frame(null, null, new CodeBundle(), null);
+    Frame fakeFrame = new Frame(null, null, new CodeBundle());
     fakeFrame.stack.push(holder);
     for (RValue arg : args)
       fakeFrame.stack.push(arg);
@@ -159,8 +159,7 @@ public class MethodLookupHelper {
           score = kUnspecified;
         } else {
           RValue arg = stack.get(stack.size() - argc + i);
-          TypeId argType = arg.getTypeId();
-          score = getScore(paramType, argType);
+          score = getScore(paramType, arg.getTypeIds(), 0);
           if (score == kUnrelated)
             continue loop;
         }
@@ -182,16 +181,20 @@ public class MethodLookupHelper {
     return bestMethod;
   }
 
-  private int getScore(TypeId target, TypeId concrete) {
-    if (target == concrete)
-      return 0;
+  private int getScore(TypeId target, Iterable<TypeId> ids, int dist) {
     int best = kUnrelated;
-    for (TypeId parent : universe.getParents(concrete)) {
-      int score = getScore(target, parent);
-      int value = (score == kUnrelated) ? kUnrelated : score + 1;
-      best = Math.min(value, best);
+    for (TypeId id : ids) {
+      int score = getScore(target, id, dist);
+      best = Math.min(score, best);
     }
     return best;
+  }
+
+  private int getScore(TypeId target, TypeId concrete, int dist) {
+    if (target == concrete)
+      return dist;
+    else
+      return getScore(target, universe.getParents(concrete), dist + 1);
   }
 
 }

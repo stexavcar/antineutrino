@@ -10,7 +10,6 @@ import java.util.Map;
 import org.javatrino.ast.Method;
 import org.javatrino.bytecode.Opcode;
 import org.neutrino.pib.CodeBundle;
-import org.neutrino.pib.Module;
 import org.neutrino.pib.Universe;
 
 public class Interpreter {
@@ -27,16 +26,16 @@ public class Interpreter {
 
   private final Native.Arguments arguments = new Native.Arguments();
 
-  public RValue interpret(Module module, CodeBundle code, RValue... args) {
-    Frame parent = new Frame(null, null, BOTTOM_FRAME_CODE, null);
+  public RValue interpret(Universe universe, CodeBundle code, RValue... args) {
+    Frame parent = new Frame(null, null, BOTTOM_FRAME_CODE);
     for (RValue arg : args)
       parent.stack.push(arg);
-    Frame frame = new Frame(parent, null, code, module);
-    return interpret(module.getUniverse(), frame);
+    Frame frame = new Frame(parent, null, code);
+    return interpret(universe, frame);
   }
 
-  public RValue interpret(Lambda lambda, RValue... args) {
-    return interpret(lambda.getModule(), lambda.getCode(), args);
+  public RValue interpret(Universe universe, Lambda lambda, RValue... args) {
+    return interpret(universe, lambda.getCode(), args);
   }
 
   static int count = 0;
@@ -69,7 +68,7 @@ public class Interpreter {
           frame.lookupMethod(universe, name, argc);
           throw new InterpreterError.MethodNotFound(frame, universe);
         }
-        frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
+        frame = new Frame(frame, self, lambda.getCode());
         break;
       }
       case Opcode.kWith1Cc: {
@@ -81,7 +80,7 @@ public class Interpreter {
         Lambda lambda = frame.lookupMethod(universe, name, argc);
         if (lambda == null)
           throw new InterpreterError.MethodNotFound(frame, universe);
-        frame = new Frame(frame, self, lambda.getCode(), lambda.getModule());
+        frame = new Frame(frame, self, lambda.getCode());
         frame.marker = cont;
         break;
       }

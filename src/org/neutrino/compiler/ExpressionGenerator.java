@@ -95,7 +95,10 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
         patterns.add(selfPattern);
         int index = 1;
         for (Parameter param : field.getParameters()) {
-          return ABORT;
+          if (!"Object".equals(param.type))
+            return ABORT;
+          patterns.add(new Pattern(asList(index), new Any(), param.getSymbol()));
+          index++;
         }
         Method method = new Method(patterns, false, body, null, null);
         intrinsics.add(method);
