@@ -71,12 +71,25 @@ public class Interpreter {
         frame = new Frame(frame, self, lambda.getCode());
         break;
       }
-      case Opcode.kWithEscape: {
+      case Opcode.kWith1cc: {
         String name = "()";
         int argc = frame.code[frame.pc + 2];
         RContinuation cont = new RContinuation();
         frame.stack.push(cont);
         RValue self = frame.getArgument(argc, 0);
+        Lambda lambda = frame.lookupMethod(universe, name, argc);
+        if (lambda == null)
+          throw new InterpreterError.MethodNotFound(frame, universe);
+        frame = new Frame(frame, self, lambda.getCode());
+        frame.marker = cont;
+        break;
+      }
+      case Opcode.kWithEscape: {
+        String name = "()";
+        int argc = frame.code[frame.pc + 2];
+        RContinuation cont = new RContinuation();
+        RValue self = frame.stack.peek();
+        frame.stack.push(cont);
         Lambda lambda = frame.lookupMethod(universe, name, argc);
         if (lambda == null)
           throw new InterpreterError.MethodNotFound(frame, universe);

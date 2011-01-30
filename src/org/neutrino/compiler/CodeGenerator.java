@@ -151,7 +151,7 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
   @Override
   public Integer visitWithEscape(WithEscape that) {
     that.getCallback().accept(this);
-    return assm.withEscape();
+    return assm.with1cc();
   }
 
   @Override
