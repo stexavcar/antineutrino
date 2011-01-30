@@ -66,6 +66,10 @@ public abstract class Expression {
       visitExpression(that);
     }
 
+    public void visitNewArray(NewArray that) {
+      visitExpression(that);
+    }
+
   }
 
   public abstract void accept(Visitor visitor);
@@ -271,6 +275,29 @@ public abstract class Expression {
     @Override
     public String toString() {
       return "new()";
+    }
+
+  }
+
+  public static class NewArray extends Expression {
+
+    public @Store List<Expression> values;
+
+    public NewArray(List<Expression> values) {
+      this.values = values;
+    }
+
+    public NewArray() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitNewArray(this);
+    }
+
+    @Override
+    public void traverse(Visitor visitor) {
+      for (Expression value : values)
+        value.accept(visitor);
     }
 
   }

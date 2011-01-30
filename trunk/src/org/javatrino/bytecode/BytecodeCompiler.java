@@ -16,6 +16,7 @@ import org.javatrino.ast.Expression.Definition;
 import org.javatrino.ast.Expression.GetField;
 import org.javatrino.ast.Expression.Global;
 import org.javatrino.ast.Expression.Local;
+import org.javatrino.ast.Expression.NewArray;
 import org.javatrino.ast.Expression.NewObject;
 import org.javatrino.ast.Expression.SetField;
 import org.javatrino.ast.Expression.TagWithProtocol;
@@ -276,6 +277,13 @@ public class BytecodeCompiler extends Visitor {
   @Override
   public void visitNewObject(NewObject that) {
     assm.newObject();
+  }
+
+  @Override
+  public void visitNewArray(NewArray that) {
+    for (Expression value : that.values)
+      value.accept(this);
+    assm.newArray(that.values.size());
   }
 
   public Result getResult() {
