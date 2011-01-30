@@ -1,23 +1,13 @@
 package org.neutrino.compiler;
 
+import static org.javatrino.ast.Expression.StaticFactory.*;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import org.javatrino.ast.Expression;
-import org.javatrino.ast.Expression.AddIntrinsics;
-import org.javatrino.ast.Expression.Block;
 import org.javatrino.ast.Expression.Call;
-import org.javatrino.ast.Expression.Call.Argument;
-import org.javatrino.ast.Expression.Constant;
-import org.javatrino.ast.Expression.Definition;
-import org.javatrino.ast.Expression.GetField;
-import org.javatrino.ast.Expression.Global;
-import org.javatrino.ast.Expression.Local;
-import org.javatrino.ast.Expression.NewArray;
-import org.javatrino.ast.Expression.NewObject;
-import org.javatrino.ast.Expression.SetField;
-import org.javatrino.ast.Expression.TagWithProtocol;
 import org.javatrino.ast.Method;
 import org.javatrino.ast.Pattern;
 import org.javatrino.ast.Symbol;
@@ -26,12 +16,7 @@ import org.javatrino.ast.Test.Eq;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.syntax.Tree;
-import org.neutrino.syntax.Tree.Assignment;
-import org.neutrino.syntax.Tree.Collection;
 import org.neutrino.syntax.Tree.Internal;
-import org.neutrino.syntax.Tree.Singleton;
-import org.neutrino.syntax.Tree.Text;
-import org.neutrino.syntax.Tree.WithEscape;
 
 public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
@@ -55,7 +40,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Pattern namePattern = new Pattern(asList("name"), new Eq(name), null);
     Symbol self = new Symbol(Symbol.kParameterSymbol);
     Pattern selfPattern = new Pattern(asList(0), new Any(), self);
-    Expression body = new GetField(new Local(self), key);
+    Expression body = eGetField(eLocal(self), key);
     return new Method(Arrays.asList(namePattern, selfPattern), false, body, null,
         null);
   }
@@ -66,7 +51,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Pattern selfPattern = new Pattern(asList(0), new Any(), self);
     Symbol value = new Symbol(Symbol.kParameterSymbol);
     Pattern valuePattern = new Pattern(asList(1), new Any(), value);
-    Expression body = new SetField(new Local(self), key, new Local(value));
+    Expression body = eSetField(eLocal(self), key, eLocal(value));
     return new Method(Arrays.asList(namePattern, selfPattern, valuePattern),
         false, body, null, null);
   }
@@ -84,7 +69,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
         return body;
       if (field.hasEagerValue()) {
         RFieldKey key = field.getField();
-        sets.add(new SetField(new Local(obj), key, body));
+        sets.add(eSetField(eLocal(obj), key, body));
         intrinsics.add(makeGetter(field.getName(), key));
         intrinsics.add(makeSetter(field.getName() + ":=", key));
       } else {
@@ -111,15 +96,15 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
         return proto;
       protocols.add(proto);
     }
-    Expression result = new NewObject();
+    Expression result = eNewObject();
     if (!sets.isEmpty()) {
-      sets.add(new Local(obj));
-      result = new Definition(obj, result, new Block(sets));
+      sets.add(eLocal(obj));
+      result = eDefinition(obj, result, eBlock(sets));
     }
     if (!intrinsics.isEmpty())
-      result = new AddIntrinsics(result, intrinsics);
+      result = eAddIntrinsics(result, intrinsics);
     if (!protocols.isEmpty())
-      result = new TagWithProtocol(result, protocols);
+      result = eTagWithProtocol(result, protocols);
     return result;
   }
 
@@ -127,25 +112,23 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   public Expression visitIdentifier(Tree.Identifier that) {
     Symbol symbol = that.getSymbol();
     if (symbol == null) {
-      return new Global(that.getName());
+      return eGlobal(that.getName());
     } else if (that.getResolverSymbol().isReference()) {
-      return new Call(Arrays.asList(
-          new Argument("name", new Constant("get")),
-          new Argument(0, new Local(symbol))));
+      return eCall(eArgument("name", eConstant("get")),
+          eArgument(0, eLocal(symbol)));
     } else {
-      return new Local(symbol);
+      return eLocal(symbol);
     }
   }
 
   @Override
-  public Expression visitAssignment(Assignment that) {
+  public Expression visitAssignment(Tree.Assignment that) {
     Expression value = generate(that.getValue());
     if (isAbort(value))
       return value;
-    return new Call(Arrays.<Argument>asList(
-        new Argument("name", new Constant("set")),
-        new Argument(0, new Local(that.getSymbol())),
-        new Argument(1, value)));
+    return eCall(eArgument("name", eConstant("set")),
+        eArgument(0, eLocal(that.getSymbol())),
+        eArgument(1, value));
   }
 
   @Override
@@ -157,12 +140,11 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     if (isAbort(body))
       return body;
     if (that.isReference()) {
-      value = new Call(Arrays.<Argument>asList(
-          new Argument("name", new Constant("new")),
-          new Argument(0, new Global("Ref")),
-          new Argument(1, value)));
+      value = eCall(eArgument("name", eConstant("new")),
+          eArgument(0, eGlobal("Ref")),
+          eArgument(1, value));
     }
-    return new Definition(that.getSymbol(), value, body);
+    return eDefinition(that.getSymbol(), value, body);
   }
 
   @Override
@@ -174,35 +156,38 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
         return expr;
       exprs.add(expr);
     }
-    return new Block(exprs);
+    return eBlock(exprs);
   }
 
   @Override
-  public Expression visitSingleton(Singleton that) {
+  public Expression visitSingleton(Tree.Singleton that) {
     switch (that.getType()) {
     case FALSE:
-      return new Constant(false);
+      return eConstant(false);
     case TRUE:
-      return new Constant(true);
+      return eConstant(true);
     case NULL:
-      return new Constant(null);
+      return eConstant(null);
     default:
       throw new AssertionError(); // Should be LameLanguageDesignError
     }
   }
 
   @Override
-  public Expression visitText(Text that) {
-    return new Constant(that.getValue());
+  public Expression visitText(Tree.Text that) {
+    return eConstant(that.getValue());
   }
 
   @Override
-  public Expression visitWithEscape(WithEscape that) {
-    return ABORT;
+  public Expression visitWithEscape(Tree.WithEscape that) {
+    Expression body = that.getBody().accept(this);
+    if (isAbort(body))
+      return body;
+    return eWithEscape(that.getSymbol(), body);
   }
 
   @Override
-  public Expression visitCollection(Collection that) {
+  public Expression visitCollection(Tree.Collection that) {
     List<Expression> elms = new ArrayList<Expression>();
     for (Tree.Expression value : that.getValues()) {
       Expression val = value.accept(this);
@@ -210,7 +195,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
         return val;
       elms.add(val);
     }
-    return new NewArray(elms);
+    return eNewArray(elms);
   }
 
   @Override
@@ -220,23 +205,23 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitNumber(Tree.Number that) {
-    return new Constant(that.getValue());
+    return eConstant(that.getValue());
   }
 
   @Override
   public Expression visitCall(Tree.Call that) {
-    List<Argument> arguments = new ArrayList<Argument>();
+    List<Call.Argument> arguments = new ArrayList<Call.Argument>();
     String name = that.getName();
-    arguments.add(new Argument("name", new Constant(name)));
+    arguments.add(eArgument("name", eConstant(name)));
     int index = 0;
     for (Tree.Expression source : that.getArguments()) {
       Expression expr = generate(source);
       if (isAbort(expr))
         return expr;
-      arguments.add(new Argument(index, expr));
+      arguments.add(eArgument(index, expr));
       index++;
     }
-    return new Call(arguments);
+    return eCall(arguments);
   }
 
   public Expression generate(Tree.Expression that) {

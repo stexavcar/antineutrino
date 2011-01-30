@@ -1,6 +1,12 @@
 package org.javatrino.bytecode;
 
+import static org.javatrino.ast.Expression.StaticFactory.eAddIntrinsics;
+import static org.javatrino.ast.Expression.StaticFactory.eGetField;
+import static org.javatrino.ast.Expression.StaticFactory.eLocal;
+import static org.javatrino.ast.Expression.StaticFactory.eNewObject;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -21,8 +27,11 @@ import org.javatrino.ast.Expression.NewObject;
 import org.javatrino.ast.Expression.SetField;
 import org.javatrino.ast.Expression.TagWithProtocol;
 import org.javatrino.ast.Expression.Visitor;
+import org.javatrino.ast.Expression.WithEscape;
 import org.javatrino.ast.Method;
+import org.javatrino.ast.Pattern;
 import org.javatrino.ast.Symbol;
+import org.javatrino.ast.Test;
 import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
@@ -43,10 +52,21 @@ public class BytecodeCompiler extends Visitor {
 
   private abstract class LocalAccess {
 
+    private final String type;
+
+    public LocalAccess(String type) {
+      this.type = type;
+    }
+
     public abstract void load(Assembler assm);
 
     public void store(Assembler assm) {
       assert false;
+    }
+
+    @Override
+    public String toString() {
+      return type;
     }
 
   }
@@ -55,12 +75,19 @@ public class BytecodeCompiler extends Visitor {
   private final Assembler assm;
   private int localCount = -1;
 
+  private void addLoader(Symbol symbol, LocalAccess loader) {
+    if (symbol == null)
+      return;
+    assert !loaders.containsKey(symbol);
+    loaders.put(symbol, loader);
+  }
+
   public BytecodeCompiler(Assembler assm, final List<Symbol> params,
       final List<Symbol> locals, final Map<Symbol, Expression> rewrites) {
     this.assm = assm;
     for (int i = 0; i < params.size(); i++) {
       final int index = i;
-      loaders.put(params.get(i), new LocalAccess() {
+      addLoader(params.get(i), new LocalAccess("arg " + i) {
         @Override
         public void load(Assembler assm) {
           assm.argument(params.size() - index);
@@ -70,7 +97,7 @@ public class BytecodeCompiler extends Visitor {
     this.localCount = locals.size();
     for (int i = 0; i < locals.size(); i++) {
       final int index = i;
-      loaders.put(locals.get(i), new LocalAccess() {
+      addLoader(locals.get(i), new LocalAccess("local " + i) {
         @Override
         public void load(Assembler assm) {
           assm.local(index);
@@ -83,7 +110,7 @@ public class BytecodeCompiler extends Visitor {
     }
     if (rewrites != null) {
       for (final Map.Entry<Symbol, Expression> rewrite : rewrites.entrySet()) {
-        loaders.put(rewrite.getKey(), new LocalAccess() {
+        addLoader(rewrite.getKey(), new LocalAccess("rewrite") {
           @Override
           public void load(Assembler assm) {
             rewrite.getValue().accept(BytecodeCompiler.this);
@@ -114,6 +141,10 @@ public class BytecodeCompiler extends Visitor {
         result.add(that.symbol);
         super.visitDefinition(that);
       }
+      @Override
+      public void visitWithEscape(WithEscape that) {
+        // Ignore since this will become a separate method.
+      }
     });
     return result;
   }
@@ -138,7 +169,7 @@ public class BytecodeCompiler extends Visitor {
 
     private boolean inScope(Symbol sym) {
       return !loaders.containsKey(sym);
-    }
+   }
 
     private boolean hasBeenCaptured(Symbol sym) {
       return rewrites.containsKey(sym);
@@ -153,7 +184,7 @@ public class BytecodeCompiler extends Visitor {
       Symbol sym = that.symbol;
       if (shouldCapture(sym)) {
         Symbol self = method.signature.get(1).symbol;
-        rewrites.put(sym, new GetField(new Local(self), getFieldKey(sym)));
+        rewrites.put(sym, eGetField(eLocal(self), getFieldKey(sym)));
       }
     }
 
@@ -284,6 +315,31 @@ public class BytecodeCompiler extends Visitor {
     for (Expression value : that.values)
       value.accept(this);
     assm.newArray(that.values.size());
+  }
+
+  @Override
+  public void visitWithEscape(WithEscape that) {
+    Expression lambda = eAddIntrinsics(eNewObject(), Arrays.asList(
+        new Method(
+            Arrays.asList(
+                new Pattern(
+                    Arrays.<Object>asList("name"),
+                    new Test.Eq("()"),
+                    null),
+                new Pattern(
+                    Arrays.<Object>asList(0),
+                    new Test.Any(),
+                    new Symbol()),
+                new Pattern(
+                    Arrays.<Object>asList(1),
+                    new Test.Any(),
+                    that.symbol)),
+            false,
+            that.body,
+            null,
+            null)));
+    lambda.accept(this);
+    assm.withEscape();
   }
 
   public Result getResult() {

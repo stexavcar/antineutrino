@@ -71,6 +71,7 @@ def CompilerGrower.new_handler_table() {
   result["org.javatrino.ast.Expression$TagWithProtocol"] := new NullCodec();
   result["org.javatrino.ast.Expression$AddIntrinsics"] := new NullCodec();
   result["org.javatrino.ast.Expression$Definition"] := new NullCodec();
+  result["org.javatrino.ast.Expression$WithEscape"] := new NullCodec();
   result["org.javatrino.ast.Method"] := new NullCodec();
   result["org.javatrino.ast.Pattern"] := new NullCodec();
   result["org.javatrino.ast.Test$Eq"] := new NullCodec();

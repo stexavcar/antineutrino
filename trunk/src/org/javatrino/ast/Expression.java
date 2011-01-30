@@ -2,6 +2,7 @@ package org.javatrino.ast;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.Arrays;
 import java.util.List;
 
 import org.neutrino.plankton.ClassIndex;
@@ -70,6 +71,10 @@ public abstract class Expression {
       visitExpression(that);
     }
 
+    public void visitWithEscape(WithEscape that) {
+      visitExpression(that);
+    }
+
   }
 
   public abstract void accept(Visitor visitor);
@@ -83,7 +88,7 @@ public abstract class Expression {
       public @Store Object tag;
       public @Store Expression value;
 
-      public Argument(Object tag, Expression value) {
+      private Argument(Object tag, Expression value) {
         this.tag = tag;
         this.value = value;
       }
@@ -99,7 +104,7 @@ public abstract class Expression {
 
     public @Store List<Argument> arguments;
 
-    public Call(List<Argument> arguments) {
+    private Call(List<Argument> arguments) {
       this.arguments = arguments;
     }
 
@@ -127,7 +132,7 @@ public abstract class Expression {
 
     public @Store List<Expression> values;
 
-    public Block(List<Expression> values) {
+    private Block(List<Expression> values) {
       this.values = values;
     }
 
@@ -157,7 +162,7 @@ public abstract class Expression {
     public @Store Expression value;
     public @Store Expression body;
 
-    public Definition(Symbol symbol, Expression value, Expression body) {
+    private Definition(Symbol symbol, Expression value, Expression body) {
       this.symbol = symbol;
       this.value = value;
       this.body = body;
@@ -187,7 +192,8 @@ public abstract class Expression {
 
     public @Store Symbol symbol;
 
-    public Local(Symbol symbol) {
+    private Local(Symbol symbol) {
+      assert symbol != null;
       this.symbol = symbol;
     }
 
@@ -213,7 +219,7 @@ public abstract class Expression {
 
     public @Store Object name;
 
-    public Global(Object name) {
+    private Global(Object name) {
       this.name = name;
     }
 
@@ -239,7 +245,7 @@ public abstract class Expression {
 
     public @Store Object value;
 
-    public Constant(Object value) {
+    private Constant(Object value) {
       this.value = value;
     }
 
@@ -263,6 +269,8 @@ public abstract class Expression {
 
   public static class NewObject extends Expression {
 
+    public NewObject() { }
+
     @Override
     public void accept(Visitor visitor) {
       visitor.visitNewObject(this);
@@ -283,7 +291,7 @@ public abstract class Expression {
 
     public @Store List<Expression> values;
 
-    public NewArray(List<Expression> values) {
+    private NewArray(List<Expression> values) {
       this.values = values;
     }
 
@@ -302,12 +310,36 @@ public abstract class Expression {
 
   }
 
+  public static class WithEscape extends Expression {
+
+    public @Store Expression body;
+    public @Store Symbol symbol;
+
+    private WithEscape(Expression body, Symbol symbol) {
+      this.body = body;
+      this.symbol = symbol;
+    }
+
+    public WithEscape() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitWithEscape(this);
+    }
+
+    @Override
+    public void traverse(Visitor visitor) {
+      body.accept(visitor);
+    }
+
+  }
+
   public static class AddIntrinsics extends Expression {
 
     public @Store Expression object;
     public @Store List<Method> methods;
 
-    public AddIntrinsics(Expression object, List<Method> methods) {
+    private AddIntrinsics(Expression object, List<Method> methods) {
       this.object = object;
       this.methods = methods;
     }
@@ -336,7 +368,7 @@ public abstract class Expression {
     public @Store Expression object;
     public @Store List<Expression> protocols;
 
-    public TagWithProtocol(Expression object, List<Expression> protocols) {
+    private TagWithProtocol(Expression object, List<Expression> protocols) {
       this.object = object;
       this.protocols = protocols;
     }
@@ -363,7 +395,7 @@ public abstract class Expression {
     public @Store RFieldKey field;
     public @Store Expression value;
 
-    public SetField(Expression object, RFieldKey field, Expression value) {
+    private SetField(Expression object, RFieldKey field, Expression value) {
       this.object = object;
       this.field = field;
       this.value = value;
@@ -389,7 +421,7 @@ public abstract class Expression {
     public @Store Expression object;
     public @Store RFieldKey field;
 
-    public GetField(Expression object, RFieldKey field) {
+    private GetField(Expression object, RFieldKey field) {
       this.object = object;
       this.field = field;
     }
@@ -420,6 +452,71 @@ public abstract class Expression {
     index.add(Test.Any.class);
     index.add(Test.Eq.class);
     index.add(Test.Is.class);
+  }
+
+  @Skip
+  public static class StaticFactory {
+
+    public static NewObject eNewObject() {
+      return new NewObject();
+    }
+
+    public static Local eLocal(Symbol symbol) {
+      return new Local(symbol);
+    }
+
+    public static GetField eGetField(Expression obj, RFieldKey field) {
+      return new GetField(obj, field);
+    }
+
+    public static NewArray eNewArray(List<Expression> exprs) {
+      return new NewArray(exprs);
+    }
+
+    public static SetField eSetField(Expression obj, RFieldKey field, Expression value) {
+      return new SetField(obj, field, value);
+    }
+
+    public static AddIntrinsics eAddIntrinsics(Expression obj, List<Method> methods) {
+      return new AddIntrinsics(obj, methods);
+    }
+
+    public static Block eBlock(List<Expression> values) {
+      return new Block(values);
+    }
+
+    public static Call.Argument eArgument(Object tag, Expression value) {
+      return new Call.Argument(tag, value);
+    }
+
+    public static Call eCall(List<Call.Argument> args) {
+      return new Call(args);
+    }
+
+    public static Call eCall(Call.Argument... args) {
+      return new Call(Arrays.asList(args));
+    }
+
+    public static Constant eConstant(Object value) {
+      return new Constant(value);
+    }
+
+    public static Definition eDefinition(Symbol symbol, Expression value, Expression body) {
+      return new Definition(symbol, value, body);
+    }
+
+    public static Global eGlobal(Object name) {
+      return new Global(name);
+    }
+
+    public static TagWithProtocol eTagWithProtocol(Expression obj, List<Expression> protos) {
+      return new TagWithProtocol(obj, protos);
+    }
+
+    public static WithEscape eWithEscape(Symbol symbol, Expression body) {
+      return new WithEscape(body, symbol);
+    }
+
   }
 
 }

@@ -582,9 +582,13 @@ public class Tree {
   public static class WithEscape extends Expression {
 
     private final Expression callback;
+    private final Expression body;
+    private final Symbol symbol;
 
-    private WithEscape(Expression callback) {
+    private WithEscape(Expression body, Expression callback, Symbol symbol) {
       this.callback = callback;
+      this.body = body;
+      this.symbol = symbol;
     }
 
     public Expression getCallback() {
@@ -596,6 +600,14 @@ public class Tree {
       return visitor.visitWithEscape(this);
     }
 
+    public Expression getBody() {
+      return body;
+    }
+
+    public Symbol getSymbol() {
+      return symbol;
+    }
+
     @Override
     public void traverse(ExpressionVisitor<?> visitor) {
       callback.accept(visitor);
@@ -605,7 +617,7 @@ public class Tree {
       Parameter param = new Parameter(name, null, false);
       Expression lambda = Lambda.create(source, Collections.singletonList(param),
           body, "with_escape");
-      return new WithEscape(lambda);
+      return new WithEscape(body, lambda, param.getSymbol());
     }
 
   }

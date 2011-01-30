@@ -200,6 +200,17 @@ public class Assembler {
     return result;
   }
 
+  public int with1cc() {
+    int result = getOffset();
+    add(Opcode.kWith1cc);
+    add(0);
+    add(2);
+    add(0);
+    add(0);
+    add(0);
+    return result;
+  }
+
   public int withEscape() {
     int result = getOffset();
     add(Opcode.kWithEscape);
@@ -210,6 +221,7 @@ public class Assembler {
     add(0);
     return result;
   }
+
 
   public void callNative(Native method, int argc) {
     int index = registerLiteral(method);
