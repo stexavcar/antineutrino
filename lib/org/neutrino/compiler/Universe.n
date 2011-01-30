@@ -64,6 +64,7 @@ def CompilerGrower.new_handler_table() {
   result["org.javatrino.ast.Expression$Block"] := new NullCodec();
   result["org.javatrino.ast.Expression$Call"] := new NullCodec();
   result["org.javatrino.ast.Expression$NewObject"] := new NullCodec();
+  result["org.javatrino.ast.Expression$NewArray"] := new NullCodec();
   result["org.javatrino.ast.Expression$Constant"] := new NullCodec();
   result["org.javatrino.ast.Expression$Local"] := new NullCodec();
   result["org.javatrino.ast.Expression$Global"] := new NullCodec();

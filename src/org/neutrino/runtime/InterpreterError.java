@@ -31,12 +31,13 @@ public class InterpreterError extends RuntimeException {
   }
 
   private String renderValueType(Frame frame, RValue value) {
-    RProtocol proto = universe.getProtocol(value.getTypeId());
-    if (proto == null) {
-      return value.getTypeId().toString();
-    } else {
-      return proto.getName();
+    for (TypeId typeId : value.getTypeIds()) {
+      RProtocol proto = universe.getProtocol(typeId);
+      if (proto != null) {
+        return proto.getName();
+      }
     }
+    return "?";
   }
 
   private StackTraceElement[] buildStackTrace() {

@@ -14,6 +14,7 @@ import org.javatrino.ast.Expression.Definition;
 import org.javatrino.ast.Expression.GetField;
 import org.javatrino.ast.Expression.Global;
 import org.javatrino.ast.Expression.Local;
+import org.javatrino.ast.Expression.NewArray;
 import org.javatrino.ast.Expression.NewObject;
 import org.javatrino.ast.Expression.SetField;
 import org.javatrino.ast.Expression.TagWithProtocol;
@@ -80,7 +81,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     for (Tree.New.Field field : fields) {
       Expression body = generate(field.getBody());
       if (isAbort(body))
-        return ABORT;
+        return body;
       if (field.hasEagerValue()) {
         RFieldKey key = field.getField();
         sets.add(new SetField(new Local(obj), key, body));
@@ -107,7 +108,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     for (Tree.Expression protocol : that.getProtocols()) {
       Expression proto = generate(protocol);
       if (isAbort(proto))
-        return ABORT;
+        return proto;
       protocols.add(proto);
     }
     Expression result = new NewObject();
@@ -140,7 +141,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   public Expression visitAssignment(Assignment that) {
     Expression value = generate(that.getValue());
     if (isAbort(value))
-      return ABORT;
+      return value;
     return new Call(Arrays.<Argument>asList(
         new Argument("name", new Constant("set")),
         new Argument(0, new Local(that.getSymbol())),
@@ -151,10 +152,10 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   public Expression visitLocalDefinition(Tree.LocalDefinition that) {
     Expression value = generate(that.getValue());
     if (isAbort(value))
-      return ABORT;
+      return value;
     Expression body = generate(that.getBody());
     if (isAbort(body))
-      return ABORT;
+      return body;
     if (that.isReference()) {
       value = new Call(Arrays.<Argument>asList(
           new Argument("name", new Constant("new")),
@@ -170,7 +171,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     for (Tree.Expression source : that.getExpressions()) {
       Expression expr = generate(source);
       if (isAbort(expr))
-        return ABORT;
+        return expr;
       exprs.add(expr);
     }
     return new Block(exprs);
@@ -202,7 +203,14 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitCollection(Collection that) {
-    return ABORT;
+    List<Expression> elms = new ArrayList<Expression>();
+    for (Tree.Expression value : that.getValues()) {
+      Expression val = value.accept(this);
+      if (isAbort(val))
+        return val;
+      elms.add(val);
+    }
+    return new NewArray(elms);
   }
 
   @Override
@@ -224,7 +232,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     for (Tree.Expression source : that.getArguments()) {
       Expression expr = generate(source);
       if (isAbort(expr))
-        return ABORT;
+        return expr;
       arguments.add(new Argument(index, expr));
       index++;
     }
