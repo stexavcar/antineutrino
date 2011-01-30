@@ -63,7 +63,7 @@ def (this is Elf).calculate_layout() {
 }
 
 def (this is Elf).section_index(section) {
-  with_1cc (return) {
+  with_escape (return) {
     for (i : 0 .. this.sections.length) {
       if this.sections[i] = section
         then return(i);
@@ -378,7 +378,7 @@ def (this is ElfSymbolTable).encode(out, elf) {
 
 def (this is ElfSymbolTable).code_block_offset(name) {
   def name_index := this.strtab[name];
-  with_1cc (yield) {
+  with_escape (yield) {
     for (entry : this.entries) {
       if entry.name_index = name_index
         then yield(entry.offset);

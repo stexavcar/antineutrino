@@ -16,7 +16,7 @@ import org.neutrino.syntax.Tree.Internal;
 import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.New;
 import org.neutrino.syntax.Tree.Text;
-import org.neutrino.syntax.Tree.With1Cc;
+import org.neutrino.syntax.Tree.WithEscape;
 
 /**
  * Expression visitor that generates platform independent bytecode for
@@ -149,9 +149,9 @@ public class CodeGenerator extends Tree.ExpressionVisitor<Integer> {
   }
 
   @Override
-  public Integer visitWith1Cc(With1Cc that) {
+  public Integer visitWithEscape(WithEscape that) {
     that.getCallback().accept(this);
-    return assm.with1Cc();
+    return assm.withEscape();
   }
 
   @Override

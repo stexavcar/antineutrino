@@ -118,7 +118,7 @@ def (this is NeutrinoCompiler).ensure_generated(method) {
 }
 
 def (this is NeutrinoCompiler).emit_methods(universe, binary) {
-  with_1cc (done) {
+  with_escape (done) {
     Control.repeat(fn {
       if this.method_worklist.length = 0
         then done(null);
@@ -141,7 +141,7 @@ def (this is NeutrinoCompiler).emit_data(binary) {
 def (this is NeutrinoCompiler).build_binary(platform, universe) {
   def binary := new Binary(platform.architecture, platform.object_format);
   // Locate entry point
-  def entry_point_method := with_1cc (yield) {
+  def entry_point_method := with_escape (yield) {
     for (method : universe.methods) {
       if method.get_annotation("neuneu_entry_point") != null
         then yield(method);

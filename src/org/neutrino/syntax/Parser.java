@@ -591,13 +591,13 @@ public class Parser {
               body,
               "for")
           ));
-    } else if (at(Type.WITH_1CC)) {
-      expect(Type.WITH_1CC);
+    } else if (at(Type.WITH_ESCAPE)) {
+      expect(Type.WITH_ESCAPE);
       expect(Type.LPAREN);
       String name = expect(Type.IDENT);
       expect(Type.RPAREN);
       Tree.Expression value = parseFunctionBody(isStatement);
-      return Tree.With1Cc.create(source, name, value);
+      return Tree.WithEscape.create(source, name, value);
     } else {
       Tree.Expression result = parseLogicalExpression();
       checkSemicolon(isStatement);

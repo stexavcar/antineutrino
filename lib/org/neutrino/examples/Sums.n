@@ -5,7 +5,7 @@ def sum(n) -> if n = 1 then 1 else n + sum(n-1);
 def isum(n) {
   ref n := n;
   ref s := 0;
-  with_1cc (break) -> Control.repeat(fn() {
+  with_escape (break) -> Control.repeat(fn() {
     if n < 1 then {
       break(null);
     } else {
@@ -42,7 +42,7 @@ def ifib(n) {
   ref n := n - 1;
   ref s1 := 0;
   ref s2 := 1;
-  with_1cc (break) -> Control.repeat(fn() {
+  with_escape (break) -> Control.repeat(fn() {
     if n < 1 then {
       break(null);
     } else {

@@ -686,7 +686,7 @@ def (this is MachO).encode_sections(out) {
 
 def (this is MachO).index_of(target) {
   ref offset := 1;
-  with_1cc (yield) {
+  with_escape (yield) {
     for (section : this.all_sections) {
       if section = target
         then yield(offset);

@@ -200,9 +200,9 @@ public class Assembler {
     return result;
   }
 
-  public int with1Cc() {
+  public int withEscape() {
     int result = getOffset();
-    add(Opcode.kWith1Cc);
+    add(Opcode.kWithEscape);
     add(0);
     add(2);
     add(0);

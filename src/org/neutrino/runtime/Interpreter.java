@@ -71,7 +71,7 @@ public class Interpreter {
         frame = new Frame(frame, self, lambda.getCode());
         break;
       }
-      case Opcode.kWith1Cc: {
+      case Opcode.kWithEscape: {
         String name = "()";
         int argc = frame.code[frame.pc + 2];
         RContinuation cont = new RContinuation();

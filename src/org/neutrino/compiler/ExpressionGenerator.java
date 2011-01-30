@@ -31,7 +31,7 @@ import org.neutrino.syntax.Tree.Collection;
 import org.neutrino.syntax.Tree.Internal;
 import org.neutrino.syntax.Tree.Singleton;
 import org.neutrino.syntax.Tree.Text;
-import org.neutrino.syntax.Tree.With1Cc;
+import org.neutrino.syntax.Tree.WithEscape;
 
 public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
@@ -197,7 +197,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   }
 
   @Override
-  public Expression visitWith1Cc(With1Cc that) {
+  public Expression visitWithEscape(WithEscape that) {
     return ABORT;
   }
 

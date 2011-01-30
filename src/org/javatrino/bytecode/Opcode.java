@@ -64,7 +64,7 @@ public class Opcode {
   @Info({}) public static final int kTerminate = 16;
   @Info({ArgType.LIT, ArgType.NUM}) public static final int kNew = 17;
   @Info({ArgType.NUM}) public static final int kGetter = 18;
-  @Info({ArgType.NUM, ArgType.NUM}) public static final int kWith1Cc = 19;
+  @Info({ArgType.NUM, ArgType.NUM}) public static final int kWithEscape = 19;
   @Info({ArgType.NUM}) public static final int kNewArray = 20;
   @Info({}) public static final int kReturnFromApply = 21;
   @Info({ArgType.NUM}) public static final int kBlock = 22;

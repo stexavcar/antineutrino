@@ -24,7 +24,7 @@ def (this is TypeAnalysis).pop_local_scope() {
 
 def (this is TypeAnalysis).local_type(index) {
   ref current := this.scope_chain;
-  with_1cc (yield) -> Control.repeat(fn () {
+  with_escape (yield) -> Control.repeat(fn () {
     if current = null
       then yield(null);
     if current.guide.index(current.node) = index then {
@@ -53,7 +53,7 @@ def (this is Universe).is_static_subtype(expected, found) {
     def proto := this.lookup_static_global(found);
     def check_supers := proto != null and proto.get_annotation("no_override") != null;
     if check_supers then {
-      with_1cc (yield) {
+      with_escape (yield) {
         for (super : this.supers(found)) {
           if this.is_static_subtype(expected, super)
             then yield(true);
@@ -73,12 +73,12 @@ def (this is Universe).is_matching_argument(param, type_found) {
 }
 
 def (this is Universe).find_method(name, types) {
-  with_1cc (return) {
+  with_escape (return) {
     for (method : this.methods) {
       if method.name = name then {
         def params := method.params;
         if params.length = types.length then {
-          with_1cc (break) {
+          with_escape (break) {
             for (i : 0 .. params.length) {
               if not this.is_matching_argument(params[i], types[i])
                 then break(null);

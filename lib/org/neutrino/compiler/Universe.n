@@ -141,7 +141,7 @@ def (this is MethodAst).initialize(payload) {
 }
 
 def (this is MethodAst).get_annotation(name) {
-  with_1cc (yield) {
+  with_escape (yield) {
     for (annot : this.annots) {
       if annot.tag = name
         then yield(annot);
@@ -186,7 +186,7 @@ def (this is ProtocolAst).initialize(payload) {
 }
 
 def (this is ProtocolAst).get_annotation(name) {
-  with_1cc (yield) {
+  with_escape (yield) {
     for (annot : this.annotations) {
       if annot.tag = name
         then yield(annot);
@@ -210,7 +210,7 @@ def (this is Binding).initialize(payload) {
 }
 
 def (this is Binding).get_annotation(name) {
-  with_1cc (yield) {
+  with_escape (yield) {
     for (annot : this.annotations) {
       if annot.tag = name
         then yield(annot);
@@ -327,7 +327,7 @@ def (this is Universe).supers(name) {
 def (this is Universe).lookup_static_global(name) {
   def cached := this.global_cache[name];
   if cached = null then {
-    with_1cc (return) {
+    with_escape (return) {
       for (proto_name, proto : this.protocols) {
         if name = proto_name then {
           this.global_cache[name] := proto;

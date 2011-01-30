@@ -167,7 +167,7 @@ def (this is AssemblerIa386).bind(label) {
   // Traverse the chain of targets and rewrite them to jump to the
   // current offset.
   ref cursor := label.offset;
-  with_1cc (break) -> Control.repeat(fn () {
+  with_escape (break) -> Control.repeat(fn () {
     if cursor = 0
       then break(null);
     def next_cursor := this.out.read_int32(cursor);
