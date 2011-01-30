@@ -61,7 +61,7 @@ public class Token {
     REF("ref", Category.KEYWORD),
     IS("is", Category.KEYWORD),
     INTERNAL("internal", Category.KEYWORD),
-    WITH_1CC("with_1cc", Category.KEYWORD),
+    WITH_ESCAPE("with_escape", Category.KEYWORD),
     PROTOCOL("protocol", Category.KEYWORD);
 
     private final String name;

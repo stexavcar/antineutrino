@@ -18,7 +18,7 @@ protocol LowLevelDecoder {
     this.buffer[this.advance_cursor()];
   }
 
-  def this.read_unsigned() -> with_1cc (return) {
+  def this.read_unsigned() -> with_escape (return) {
     ref result := 0;
     Control.repeat(fn {
       def next := this.read();
@@ -113,7 +113,7 @@ protocol LowLevelEncoder {
     assert_true(val >= 0);
     ref value := val;
     ref i := 0;
-    with_1cc (break) {
+    with_escape (break) {
       Control.repeat(fn {
         def low := value & 16r7F;
         value := value >> 7;
@@ -138,7 +138,7 @@ protocol LowLevelEncoder {
 
   def this.flush() {
     if this.written_count > 0 then {
-      with_1cc (break) -> Control.repeat(fn {
+      with_escape (break) -> Control.repeat(fn {
         if this.written_count = kMaxByteCount
           then break(null);
         this.write(0);

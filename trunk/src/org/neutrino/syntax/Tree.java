@@ -303,7 +303,7 @@ public class Tree {
       return visitExpression(that);
     }
 
-    public T visitWith1Cc(With1Cc that) {
+    public T visitWithEscape(WithEscape that) {
       return visitExpression(that);
     }
 
@@ -579,11 +579,11 @@ public class Tree {
 
   }
 
-  public static class With1Cc extends Expression {
+  public static class WithEscape extends Expression {
 
     private final Expression callback;
 
-    private With1Cc(Expression callback) {
+    private WithEscape(Expression callback) {
       this.callback = callback;
     }
 
@@ -593,7 +593,7 @@ public class Tree {
 
     @Override
     public <T> T accept(ExpressionVisitor<T> visitor) {
-      return visitor.visitWith1Cc(this);
+      return visitor.visitWithEscape(this);
     }
 
     @Override
@@ -604,8 +604,8 @@ public class Tree {
     public static Expression create(Source source, String name, Expression body) {
       Parameter param = new Parameter(name, null, false);
       Expression lambda = Lambda.create(source, Collections.singletonList(param),
-          body, "with_1cc");
-      return new With1Cc(lambda);
+          body, "with_escape");
+      return new WithEscape(lambda);
     }
 
   }

@@ -16,7 +16,7 @@ def (this is PrimitiveArray)+(that is PrimitiveArray) {
 }
 
 def (this is PrimitiveArray)=(that is PrimitiveArray)
- -> (this.length = that.length) and (with_1cc (yield) {
+ -> (this.length = that.length) and (with_escape (yield) {
    for (i : 0 .. this.length) {
      if this[i] != that[i]
        then yield(false);

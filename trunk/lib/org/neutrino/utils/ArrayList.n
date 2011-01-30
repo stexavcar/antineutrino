@@ -49,7 +49,7 @@ protocol ArrayList is Sequence {
     if this.length != that.length then {
       false;
     } else {
-      with_1cc (return) {
+      with_escape (return) {
         for (i : 0 .. this.length) {
           if this[i] != that[i] then
             return(false);
