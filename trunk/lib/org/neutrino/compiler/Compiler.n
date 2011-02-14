@@ -58,7 +58,7 @@ def (this is NeutrinoCompiler).emit_method(universe, method, assm) {
 def (this is NeutrinoCompiler).emit_plain_method(universe, method, assm) {
   def should_print := (method.get_annotation("print") != null);
   method.ensure_analyzed(universe);
-  assm.enter_frame(4 * method.code.local_count);
+  assm.enter_frame(4 * method.local_count);
   new CodeGenerator(universe, assm, this, method).generate(method.body);
   assm.pop(rEax);
 }

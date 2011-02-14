@@ -129,12 +129,16 @@ def (this is NewMethod).ensure_analyzed(universe) {
   }
 }
 
-
 protocol Expr {
 
   def this.info {
-    if this.info_cache = null
-      then this.info_cache := new NodeInfo();
+    if this.info_cache = null then {
+      this.info_cache := new {
+        type := null,
+        intrinsic := null,
+        c_call := null
+      }
+    }
     this.info_cache;
   }
 
@@ -312,8 +316,6 @@ protocol CodeBundle;
 def CodeBundle.tag -> "org.neutrino.pib.CodeBundle";
 
 def CodeBundle.new_instance() -> new CodeBundle {
-  literals := null,
-  local_count := null,
   filename := null,
   code := null,
   root_offset := null,
@@ -321,8 +323,6 @@ def CodeBundle.new_instance() -> new CodeBundle {
 }
 
 def (this is CodeBundle).initialize(payload) {
-  this.literals := payload["oldLiterals"];
-  this.local_count := payload["oldLocalCount"];
   this.filename := payload["fileName"];
   this.code := payload["oldCode"];
   this.root_offset := payload["rootOffset"];
@@ -356,8 +356,8 @@ def MethodAst.new_instance() -> new MethodAst {
   params := null,
   name := null,
   code := null,
-  syntax_tree := null,
-  has_been_analyzed := false
+  has_been_analyzed := false,
+  local_count := null
 }
 
 def (this is MethodAst).initialize(payload) {
@@ -382,9 +382,20 @@ def (this is MethodAst).get_annotation(name) {
 def (this is MethodAst).ensure_analyzed(universe) {
   if not this.has_been_analyzed then {
     new TypeAnalysis(universe, this).analyze(this.body);
+    this.local_count := this.count_locals(this.body);
     this.has_been_analyzed := true;
   }
 }
+
+def (this is MethodAst).count_locals(expr) {
+  ref result := 0;
+  for (child : expr)
+    result := result + this.count_locals(child);
+  result;
+}
+
+def (this is MethodAst).count_locals(expr is DefExpr)
+ -> 1 + this.count_locals(expr.value) + this.count_locals(expr.body);
 
 def (this is MethodAst).to_string() -> "#<a Method: ${this.name}>";
 

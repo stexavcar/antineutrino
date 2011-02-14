@@ -42,10 +42,6 @@ def (this is CodeGenerator).resolve_static_value(node is GlobalExpr) {
 def (this is CodeGenerator).resolve_method(holder, method)
  -> this.universe.lookup_method(holder, method);
 
-def (this is CodeGenerator).emit(guide is LiteralGuide, node) {
-  this.assm.push(guide.value(node));
-}
-
 def (this is CodeGenerator).emit(node is CallExpr) {
   def info := node.info;
   def intrinsic := info.intrinsic;
@@ -61,13 +57,6 @@ def (this is CodeGenerator).emit(node is CallExpr) {
     this.compiler.ensure_generated(c_call);
     this.emit_c_call(node, get_binary_name(c_call));
   }
-}
-
-def (this is CodeGenerator).emit(guide is ArgumentGuide, node) {
-  def index := guide.index(node);
-  // The arguments are just below EBP, the last one at offset 8, the previous
-  // at 12, etc.
-  this.assm.push(Memory.at_disp(rEbp, 4 + (4 * index)));
 }
 
 def (this is CodeGenerator).emit_c_call(node, target) {
