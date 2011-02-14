@@ -3,15 +3,39 @@ protocol TypeAnalysis;
 def TypeAnalysis.new(universe, method) -> new TypeAnalysis {
   universe := universe,
   method := method,
-  scope_chain := null
+  scope_chain := new ArgumentScope(method)
 }
 
-protocol ScopeChainLink;
+protocol ArgumentScope;
 
-def (this is TypeAnalysis).push_local_scope(guide, node) {
+def ArgumentScope.new(method) -> new ArgumentScope {
+  method := method
+}
+
+def (this is ArgumentScope).lookup(symbol) {
+  with_escape (return) -> {
+    for (param : this.method.params) {
+      if param.symbol = symbol
+        then return(param.type);
+    }
+    null;
+  }
+}
+
+protocol DefScope;
+
+def (this is DefScope).lookup(symbol) {
+  if this.node.symbol = symbol then
+    this.node.value.info.type;
+  else if this.prev = null then
+    null;
+  else
+    this.prev.lookup(symbol);
+}
+
+def (this is TypeAnalysis).push_local_scope(node) {
   def prev := this.scope_chain;
-  def next := new ScopeChainLink {
-    guide := guide,
+  def next := new DefScope {
     node := node,
     prev := prev
   }
@@ -22,27 +46,15 @@ def (this is TypeAnalysis).pop_local_scope() {
   this.scope_chain := this.scope_chain.prev;
 }
 
-def (this is TypeAnalysis).local_type(index) {
-  ref current := this.scope_chain;
-  with_escape (yield) -> Control.repeat(fn () {
-    if current = null
-      then yield(null);
-    if current.guide.index(current.node) = index then {
-      def value := current.guide.value(current.node);
-      yield(current.guide.info(value).type);
-    } else {
-      current := current.prev;
-    }
-  });
-}
+def (this is TypeAnalysis).local_type(symbol)
+ -> if this.scope_chain = null
+      then null
+      else this.scope_chain.lookup(symbol);
 
-def (this is TypeAnalysis).analyze(tree)
- -> this.analyze(tree.root_guide, tree.root_node);
-
-def (this is TypeAnalysis).analyze(guide, node) {
-  def type := this.do_analyze(guide, node);
+def (this is TypeAnalysis).analyze(node) {
+  def type := this.do_analyze(node);
   if type != null then
-    guide.ensure_info(node).type := type;
+    node.info.type := type;
   type;
 }
 
@@ -92,57 +104,62 @@ def (this is Universe).find_method(name, types) {
   }
 }
 
-def (this is TypeAnalysis).do_analyze(guide is CallGuide, node) {
+def (this is TypeAnalysis).do_analyze(node is CallExpr) {
   def types := new ArrayList();
-  for (arg_guide, arg_node : guide.arguments(node)) {
-    def type := this.analyze(arg_guide, arg_node);
+  for (arg : node.arguments) {
+    def type := this.analyze(arg);
     types.add(type);
   }
-  def method := this.universe.find_method(guide.name(node), types);
+  def method := this.universe.find_method(node.name, types);
   if method != null then {
     if method.get_annotation("inline") != null then {
       def intrinsic := method.get_annotation("intrinsic");
-      guide.ensure_info(node).intrinsic := intrinsic[0];
+      node.info.intrinsic := intrinsic[0];
     }
-    guide.ensure_info(node).c_call := method;
+    node.info.c_call := method;
     def annot := method.get_annotation("type");
     if annot != null
       then annot[0];
   }
 }
 
-def (this is TypeAnalysis).do_analyze(guide is LiteralGuide, node)
- -> this.value_type(guide.value(node));
+def (this is TypeAnalysis).do_analyze(node is ConstantExpr)
+ -> this.value_type(node.value);
 
-def (this is TypeAnalysis).do_analyze(guide is GlobalGuide, node) {
-  def name := guide.name(node);
+def (this is TypeAnalysis).do_analyze(node is GlobalExpr) {
+  def name := node.name;
   def value := this.universe.lookup_static_global(name);
   if value = null
     then null;
     else this.value_type(value);
 }
 
-def (this is TypeAnalysis).do_analyze(guide is LocalGuide, node)
- -> this.local_type(guide.index(node));
+def (this is TypeAnalysis).do_analyze(node is String) {
+  fail("Improperly deserialized type '${node}'.");
+}
 
-def (this is TypeAnalysis).do_analyze(guide is BlockGuide, node) {
+def (this is TypeAnalysis).do_analyze(node is LocalExpr)
+ -> this.local_type(node.symbol);
+
+def (this is TypeAnalysis).do_analyze(node is BlockExpr) {
   ref last := null;
-  for (elm_guide, elm_node : guide.elements(node))
-    last := this.analyze(elm_guide, elm_node);
+  for (value : node.values)
+    last := this.analyze(value);
   last;
 }
 
-def (this is TypeAnalysis).do_analyze(guide is LocalDefGuide, node) {
-  def value := guide.value(node);
-  this.analyze(guide.resolve(value), value);
-  this.push_local_scope(guide, node);
-  def body := guide.body(node);
-  def result := this.analyze(guide.resolve(body), body);
+def (this is TypeAnalysis).do_analyze(node is DefExpr) {
+  this.analyze(node.value);
+  this.push_local_scope(node);
+  def result := this.analyze(node.body);
   this.pop_local_scope();
   result;
 }
 
-def (this is TypeAnalysis).do_analyze(guide is NewGuide, node)
+def (this is TypeAnalysis).do_analyze(node is AddIntrinsics)
+ -> this.analyze(node.object);
+
+def (this is TypeAnalysis).do_analyze(node is NewObject)
  -> "Object";
 
 def (this is TypeAnalysis).do_analyze(guide is ArgumentGuide, node) {

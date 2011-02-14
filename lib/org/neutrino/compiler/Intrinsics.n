@@ -3,41 +3,37 @@ protocol IntrinsicManager;
 def IntrinsicManager.new() {
   def map := new HashMap();
   // Int32
-  map["int32.cast"] := (fn (g, n, c) -> g.int32_cast(n, c));
-  map["add_int32"] := (fn (g, n, c) -> g.add_int32(n, c));
-  map["and_int32"] := (fn (g, n, c) -> g.and_int32(n, c));
-  map["sar_int32"] := (fn (g, n, c) -> g.sar_int32(n, c));
-  map["shl_int32"] := (fn (g, n, c) -> g.shl_int32(n, c));
-  map["eq_int32"] := (fn (g, n, c) -> g.eq_int32(n, c));
-  map["neq_int32"] := (fn (g, n, c) -> g.neq_int32(n, c));
+  map["int32.cast"] := (fn (g, n) -> g.int32_cast(n));
+  map["add_int32"] := (fn (g, n) -> g.add_int32(n));
+  map["and_int32"] := (fn (g, n) -> g.and_int32(n));
+  map["sar_int32"] := (fn (g, n) -> g.sar_int32(n));
+  map["shl_int32"] := (fn (g, n) -> g.shl_int32(n));
+  map["eq_int32"] := (fn (g, n) -> g.eq_int32(n));
+  map["neq_int32"] := (fn (g, n) -> g.neq_int32(n));
   // Strings
-  map["char_ptr.cast"] := (fn (g, n, c) -> g.cast_char_ptr(n, c));
+  map["char_ptr.cast"] := (fn (g, n) -> g.cast_char_ptr(n));
   // Address
-  map["read_int32"] := (fn (g, n, c) -> g.read_int32(n, c));
-  map["write_int32"] := (fn (g, n, c) -> g.write_int32(n, c));
-  map["static_data_ptr"] := (fn (g, n, c) -> g.static_data_ptr(n, c));
+  map["read_int32"] := (fn (g, n) -> g.read_int32(n));
+  map["write_int32"] := (fn (g, n) -> g.write_int32(n));
+  map["static_data_ptr"] := (fn (g, n) -> g.static_data_ptr(n));
   // Control
-  map["if_else"] := (fn (g, n, c) -> g.if_else(n, c));
+  map["if_else"] := (fn (g, n) -> g.if_else(n));
   // Misc
-  map["debug_interrupt"] := (fn (g, n, c) -> g.debug_interrupt(n, c));
+  map["debug_interrupt"] := (fn (g, n) -> g.debug_interrupt(n));
   new IntrinsicManager { handlers := map };
 }
 
 def (this is IntrinsicManager)[name] -> this.handlers[name];
 
-def (this is CodeGenerator).int32_cast(guide, node) {
-  def arg_node := guide.argument(node, 1);
-  def arg_guide := guide.resolve(arg_node);
-  def value := this.static_value(arg_guide, arg_node);
+def (this is CodeGenerator).int32_cast(node) {
+  def value := this.static_value(node.arguments[1]);
   // If we have a static integer value we just push it onto the stack as a
   // raw int32.
   this.assm.push(value);
 }
 
-def (this is CodeGenerator).cast_char_ptr(guide, node) {
-  def arg_node := guide.argument(node, 1);
-  def arg_guide := guide.resolve(arg_node);
-  def value := this.static_value(arg_guide, arg_node);
+def (this is CodeGenerator).cast_char_ptr(node) {
+  def value := this.static_value(node.arguments[1]);
   this.assm.push(Symbol.string(value));
 }
 
@@ -45,11 +41,9 @@ def (this is CodeGenerator).cast_char_ptr(guide, node) {
 // be passed the source and destination registers and must emit the
 // appropriate operations to perform the appropriate arithmetic and
 // leave the result in the destination register.
-def (this is CodeGenerator).int32_binary(guide, node, do_op) {
-  def left_node := guide.argument(node, 0);
-  this.emit(guide.resolve(left_node), left_node);
-  def right_node := guide.argument(node, 1);
-  this.emit(guide.resolve(right_node), right_node);
+def (this is CodeGenerator).int32_binary(node, do_op) {
+  this.emit(node.arguments[0]);
+  this.emit(node.arguments[1]);
   // Push the arguments from the stack into two scratch registers.
   this.assm.pop(rEax);
   this.assm.pop(rEbx);
@@ -59,24 +53,22 @@ def (this is CodeGenerator).int32_binary(guide, node, do_op) {
   this.assm.push(rEax);  
 }
 
-def (this is CodeGenerator).add_int32(guide, node) {
-  this.int32_binary(guide, node, fn (dest, src) {
+def (this is CodeGenerator).add_int32(node) {
+  this.int32_binary(node, fn (dest, src) {
     this.assm.add(dest, src);
   });
 }
 
-def (this is CodeGenerator).and_int32(guide, node) {
-  this.int32_binary(guide, node, fn (dest, src) {
+def (this is CodeGenerator).and_int32(node) {
+  this.int32_binary(node, fn (dest, src) {
     this.assm.ahnd(dest, src);
   });
 }
 
 // Emits an int32 shift operation.
-def (this is CodeGenerator).int32_shift(guide, node, do_op) {
-  def left_node := guide.argument(node, 0);
-  this.emit(guide.resolve(left_node), left_node);
-  def right_node := guide.argument(node, 1);
-  this.emit(guide.resolve(right_node), right_node);
+def (this is CodeGenerator).int32_shift(node, do_op) {
+  this.emit(node.arguments[0]);
+  this.emit(node.arguments[1]);
   // Push the arguments from the stack into two scratch registers.
   this.assm.pop(rEcx);
   this.assm.pop(rEax);
@@ -86,14 +78,14 @@ def (this is CodeGenerator).int32_shift(guide, node, do_op) {
   this.assm.push(rEax);  
 }
 
-def (this is CodeGenerator).sar_int32(guide, node) {
-  this.int32_shift(guide, node, fn (dest) {
+def (this is CodeGenerator).sar_int32(node) {
+  this.int32_shift(node, fn (dest) {
     this.assm.sar(dest);
   });
 }
 
-def (this is CodeGenerator).shl_int32(guide, node) {
-  this.int32_shift(guide, node, fn (dest) {
+def (this is CodeGenerator).shl_int32(node) {
+  this.int32_shift(node, fn (dest) {
     this.assm.shl(dest);
   });
 }
@@ -104,11 +96,9 @@ def kFalse := 16r00;
 // Perform a comparison of two arguments.  The actual comparison must be
 // performed by the given thunk which is given the register and operand
 // to compare and a label to jump to if the comparison yields true.
-def (this is CodeGenerator).compare_int32s(guide, node, jump_if_set) {
-  def left_node := guide.argument(node, 0);
-  this.emit(guide.resolve(left_node), left_node);
-  def right_node := guide.argument(node, 1);
-  this.emit(guide.resolve(right_node), right_node);
+def (this is CodeGenerator).compare_int32s(node, jump_if_set) {
+  this.emit(node.arguments[0]);
+  this.emit(node.arguments[1]);
   // Push the arguments from the stack into two scratch registers.
   this.assm.pop(rEax);
   this.assm.pop(rEbx);
@@ -123,75 +113,69 @@ def (this is CodeGenerator).compare_int32s(guide, node, jump_if_set) {
   this.assm.bind(bottom);
 }
 
-def (this is CodeGenerator).eq_int32(guide, node) {
-  this.compare_int32s(guide, node, fn (reg, oper, on_true) {
+def (this is CodeGenerator).eq_int32(node) {
+  this.compare_int32s(node, fn (reg, oper, on_true) {
     this.assm.cmp(reg, oper);
     this.assm.je(on_true);
   });
 }
 
-def (this is CodeGenerator).neq_int32(guide, node) {
-  this.compare_int32s(guide, node, fn (reg, oper, on_true) {
+def (this is CodeGenerator).neq_int32(node) {
+  this.compare_int32s(node, fn (reg, oper, on_true) {
     this.assm.cmp(reg, oper);
     this.assm.jne(on_true);
   });
 }
 
-def (this is CodeGenerator).read_int32(guide, node) {
-  def addr_node := guide.argument(node, 0);
-  this.emit(guide.resolve(addr_node), addr_node);
+def (this is CodeGenerator).read_int32(node) {
+  this.emit(node.arguments[0]);
   this.assm.pop(rEax);
   this.assm.push(Memory.at(rEax));
 }
 
-def (this is CodeGenerator).write_int32(guide, node) {
-  def addr_node := guide.argument(node, 0);
-  this.emit(guide.resolve(addr_node), addr_node);
-  def value_node := guide.argument(node, 1);
-  this.emit(guide.resolve(value_node), value_node);
+def (this is CodeGenerator).write_int32(node) {
+  this.emit(node.arguments[0]);
+  this.emit(node.arguments[1]);
   this.assm.pop(rEax);
   this.assm.pop(rEbx);
   this.assm.mov(Memory.at(rEbx), rEax);
   this.assm.push(rEax);
 }
 
-def (this is CodeGenerator).emit_thunk_body(guide, node) {
-  def proto := guide.proto(node);
-  def method := this.universe.find_method("()", #[proto.id]);
+def (this is CodeGenerator).emit_thunk_body(node) {
+  def method := with_escape (yield) {
+    for (method : node.methods) {
+      def name := method.signature[0].test.value;
+      if name = "()"
+        then yield(method);
+    }
+    null;
+  }
   method.ensure_analyzed(this.universe);
-  def syntax_tree := method.syntax_tree;
-  def root_guide := syntax_tree.root_guide;
-  def root_node := syntax_tree.root_node;
-  this.emit(root_guide, root_node);
+  this.emit(method.body);
 }
 
-def (this is CodeGenerator).if_else(guide, node) {
-  def cond_node := guide.argument(node, 1);
-  this.emit(guide.resolve(cond_node), cond_node);
+def (this is CodeGenerator).if_else(node) {
+  this.emit(node.arguments[1]);
   def else_label := this.assm.label();
   def bottom := this.assm.label();
   this.assm.pop(rEax);
   this.assm.cmp(rEax, 0);
   this.assm.je(else_label);
-  def then_node := guide.argument(node, 2);
-  this.emit_thunk_body(guide.resolve(then_node), then_node);
+  this.emit_thunk_body(node.arguments[2]);
   this.assm.jmp(bottom);
   this.assm.bind(else_label);
-  def else_node := guide.argument(node, 3);
-  this.emit_thunk_body(guide.resolve(else_node), else_node);  
+  this.emit_thunk_body(node.arguments[3]);  
   this.assm.bind(bottom);
 }
 
-def (this is CodeGenerator).static_data_ptr(guide, node) {
-  def arg_node := guide.argument(node, 1);
-  def arg_guide := guide.resolve(arg_node);
-  def value := this.static_value(arg_guide, arg_node);
+def (this is CodeGenerator).static_data_ptr(node) {
+  def value := this.static_value(node.arguments[1]);
   this.assm.mov(rEax, Symbol.local(value));
   this.assm.push(Memory.at(rEax));
 }
 
-def (this is CodeGenerator).debug_interrupt(guide, node) {
-  def recv_node := guide.argument(node, 0);
-  this.emit(guide.resolve(recv_node), recv_node);
+def (this is CodeGenerator).debug_interrupt(node) {
+  this.emit(node.arguments[0]);
   this.assm.int3();
 }

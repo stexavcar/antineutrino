@@ -7,18 +7,36 @@
  */
 protocol CodeGenerator;
 
-def CodeGenerator.new(universe, assm, compiler) -> new CodeGenerator {
+def CodeGenerator.new(universe, assm, compiler, method) -> new CodeGenerator {
   universe := universe,
   assm := assm,
   compiler := compiler,
-  intrinsics := new IntrinsicManager()
+  intrinsics := new IntrinsicManager(),
+  locals := new HashMap(),
+  method := method
 }
 
-def (this is CodeGenerator).resolve_static_value(guide, node) -> null;
+def (this is CodeGenerator).generate(node) {
+  this.add_locals(node);
+  this.emit(node);
+}
 
-def (this is CodeGenerator).resolve_static_value(guide is GlobalGuide, node) {
-  def name := guide.name(node);
-  this.universe.lookup_static_global(name);
+def (this is CodeGenerator).add_locals(node) {
+  for (child : node)
+    this.add_locals(child);
+}
+
+def (this is CodeGenerator).add_locals(node is DefExpr) {
+  def index := this.locals.size;
+  this.locals[node.symbol] := index;
+  for (child : node)
+    this.add_locals(child);
+}
+
+def (this is CodeGenerator).resolve_static_value(node) -> null;
+
+def (this is CodeGenerator).resolve_static_value(node is GlobalExpr) {
+  this.universe.lookup_static_global(node.name);
 }
 
 def (this is CodeGenerator).resolve_method(holder, method)
@@ -28,20 +46,20 @@ def (this is CodeGenerator).emit(guide is LiteralGuide, node) {
   this.assm.push(guide.value(node));
 }
 
-def (this is CodeGenerator).emit(guide is CallGuide, node) {
-  def info := guide.info(node);
+def (this is CodeGenerator).emit(node is CallExpr) {
+  def info := node.info;
   def intrinsic := info.intrinsic;
   if intrinsic != null then {
     def handler := this.intrinsics[intrinsic];
     if handler = null
       then fail("Unimplemented intrinsic ${intrinsic}.");
-    handler(this, guide, node);
+    handler(this, node);
   } else {
     def c_call := info.c_call;
     if c_call = null
-      then fail("Illegal plain call ${Unparser.unparse(guide, node)}");
+      then fail("Illegal plain call ${node}");
     this.compiler.ensure_generated(c_call);
-    this.emit_c_call(guide, node, get_binary_name(c_call));
+    this.emit_c_call(node, get_binary_name(c_call));
   }
 }
 
@@ -52,13 +70,11 @@ def (this is CodeGenerator).emit(guide is ArgumentGuide, node) {
   this.assm.push(Memory.at_disp(rEbp, 4 + (4 * index)));
 }
 
-def (this is CodeGenerator).emit_c_call(guide, node, target) {
-  def argc := guide.argc(node);
+def (this is CodeGenerator).emit_c_call(node, target) {
+  def argc := node.arguments.length;
   // Push arguments onto the stack
-  for (i : 0 .. argc) {
-    def arg := guide.argument(node, i);
-    this.emit(guide.resolve(arg), arg);
-  }
+  for (i : 0 .. argc)
+    this.emit(node.arguments[i]);
   // Call the function
   this.assm.call(Symbol.local(target));
   // Pop the arguments off.
@@ -67,21 +83,21 @@ def (this is CodeGenerator).emit_c_call(guide, node, target) {
   this.assm.push(rEax);
 }
 
-def (this is CodeGenerator).static_value(guide is LiteralGuide, node)
- -> guide.value(node);
+def (this is CodeGenerator).static_value(node is ConstantExpr)
+ -> node.value;
 
-def (this is CodeGenerator).emit(guide is GlobalGuide, node) {
+def (this is CodeGenerator).emit(node is GlobalExpr) {
   // We don't support globals yet but we need something to take up
   // space on the stack so we push a marker in place of the value.
   this.assm.push(16rBEEFFACE);
 }
 
-def (this is CodeGenerator).emit(guide is BlockGuide, node) {
+def (this is CodeGenerator).emit(node is BlockExpr) {
   ref has_prev := false;
-  for (elm_guide, elm_node : guide.elements(node)) {
+  for (value : node.values) {
     if has_prev
       then this.assm.pop(rEbx);
-    this.emit(elm_guide, elm_node);
+    this.emit(value);
     has_prev := true;
   }
 }
@@ -108,16 +124,31 @@ def (this is CodeGenerator).emit(guide is BlockGuide, node) {
 
 def local_address(index) -> (0 - 4) * (index + 1);
 
-def (this is CodeGenerator).emit(guide is LocalDefGuide, node) {
-  def value := guide.value(node);
-  this.emit(guide.resolve(value), value);
-  this.assm.pop(Memory.at_disp(rEbp, local_address(guide.index(node))));
-  def body := guide.body(node);
-  this.emit(guide.resolve(body), body);
+def (this is CodeGenerator).emit(node is DefExpr) {
+  def index := this.locals[node.symbol];
+  this.emit(node.value);
+  this.assm.pop(Memory.at_disp(rEbp, local_address(index)));
+  this.emit(node.body);
 }
 
-def (this is CodeGenerator).emit(guide is LocalGuide, node) {
-  this.assm.push(Memory.at_disp(rEbp, local_address(guide.index(node))));
+def (this is CodeGenerator).emit(node is LocalExpr) {
+  def local_index := this.locals[node.symbol];
+  if local_index != null then {
+    this.assm.push(Memory.at_disp(rEbp, local_address(local_index)));
+  } else {
+    def arg_index := with_escape (yield) {
+      ref index := this.method.params.length;
+      for (param : this.method.params) {
+        if param.symbol = node.symbol
+          then yield(index);
+        index := index - 1;
+      }
+      null;
+    }
+    // The arguments are just below EBP, the last one at offset 8, the previous
+    // at 12, etc.
+    this.assm.push(Memory.at_disp(rEbp, 4 + (4 * arg_index)));
+  }
 }
 
 def (this is CodeGenerator).is_intrinsic_protocol(value) -> false;

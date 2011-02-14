@@ -34,15 +34,15 @@ def (this is AtomicCodec).is_atomic -> true;
 def (this is AtomicCodec).new_atomic_instance(payload)
  -> this.type.new_instance(payload);
 
-protocol NullCodec {
+protocol DummyCodec {
 
   def this.is_atomic -> true;
 
-  def this.new_atomic_instance(payload) -> null;
+  def this.new_atomic_instance(payload) -> this.value;
 
 }
 
-def NullCodec.new() -> new NullCodec { }
+def DummyCodec.new(value) -> new DummyCodec { value := value };
 
 def CompilerGrower.new_handler_table() {
   def result := new HashMap();
@@ -57,94 +57,254 @@ def CompilerGrower.new_handler_table() {
   result[ProtocolAst.tag] := new PlainCodec(ProtocolAst);
   result[MethodAst.tag] := new PlainCodec(MethodAst);
   result[FieldKey.tag] := new PlainCodec(FieldKey);
-  result["org.javatrino.ast.Expression$Call$Argument"] := new NullCodec();
-  result["org.javatrino.ast.Symbol"] := new NullCodec();
-  result["org.javatrino.ast.Expression$GetField"] := new NullCodec();
-  result["org.javatrino.ast.Expression$SetField"] := new NullCodec();
-  result["org.javatrino.ast.Expression$Block"] := new NullCodec();
-  result["org.javatrino.ast.Expression$NewObject"] := new NullCodec();
-  result["org.javatrino.ast.Expression$NewArray"] := new NullCodec();
-  result["org.javatrino.ast.Expression$TagWithProtocol"] := new NullCodec();
-  result["org.javatrino.ast.Expression$AddIntrinsics"] := new NullCodec();
-  result["org.javatrino.ast.Expression$WithEscape"] := new NullCodec();
+  result["org.javatrino.ast.Expression$Call$Argument"] := new PlainCodec(CallArgument);
+  result["org.javatrino.ast.Symbol"] := new PlainCodec(SymbolToken);
+  result["org.javatrino.ast.Expression$GetField"] := new DummyCodec("get_field");
+  result["org.javatrino.ast.Expression$SetField"] := new DummyCodec("set_field");
+  result["org.javatrino.ast.Expression$Block"] := new PlainCodec(BlockExpr);
+  result["org.javatrino.ast.Expression$NewObject"] := new PlainCodec(NewObject);
+  result["org.javatrino.ast.Expression$NewArray"] := new DummyCodec("new_array");
+  result["org.javatrino.ast.Expression$TagWithProtocol"] := new DummyCodec("tag_with_protocol");
+  result["org.javatrino.ast.Expression$AddIntrinsics"] := new PlainCodec(AddIntrinsics);
+  result["org.javatrino.ast.Expression$WithEscape"] := new DummyCodec("with_escape");
   result["org.javatrino.ast.Expression$Call"] := new PlainCodec(CallExpr);
   result["org.javatrino.ast.Expression$Constant"] := new PlainCodec(ConstantExpr);
   result["org.javatrino.ast.Expression$Local"] := new PlainCodec(LocalExpr);
   result["org.javatrino.ast.Expression$Global"] := new PlainCodec(GlobalExpr);
   result["org.javatrino.ast.Expression$Definition"] := new PlainCodec(DefExpr);
-  result["org.javatrino.ast.Method"] := new NullCodec();
-  result["org.javatrino.ast.Pattern"] := new NullCodec();
-  result["org.javatrino.ast.Test$Eq"] := new NullCodec();
-  result["org.javatrino.ast.Test$Is"] := new NullCodec();
-  result["org.javatrino.ast.Test$Any"] := new NullCodec();
-  result["org.javatrino.ast.Expression$Internal"] := new NullCodec();
+  result["org.javatrino.ast.Method"] := new PlainCodec(NewMethod);
+  result["org.javatrino.ast.Pattern"] := new PlainCodec(Pattern);
+  result["org.javatrino.ast.Test$Eq"] := new PlainCodec(EqTest);
+  result["org.javatrino.ast.Test$Is"] := new DummyCodec("is");
+  result["org.javatrino.ast.Test$Any"] := new DummyCodec("?");
+  result["org.javatrino.ast.Expression$Internal"] := new DummyCodec("i");
   result["org.neutrino.runtime.RInteger"] := new GetterCodec("value");
   result["org.neutrino.runtime.RString"] := new GetterCodec("value");
   result;
 }
 
-protocol ConstantExpr;
+protocol SymbolToken {
 
-def ConstantExpr.new_instance() -> new ConstantExpr {
+  def this.initialize(payload);
+
+}
+
+def SymbolToken.new_instance() -> new SymbolToken { }
+
+protocol EqTest {
+
+  def this.initialize(payload) {
+    this.value := payload["value"];
+  }
+
+}
+
+def EqTest.new_instance() -> new EqTest {
   value := null
 }
 
-def (this is ConstantExpr).initialize(payload) {
-  this.value := payload["value"];
+protocol NewMethod {
+
+  def this.initialize(payload) {
+    this.signature := payload["signature"];
+    this.accepts_extra_arguments := payload["acceptsExtraArguments"];
+    this.body := payload["body"];
+    this.rewrites := payload["rewrites"];
+  }
+
 }
 
-protocol CallExpr;
-
-def CallExpr.new_instance() -> new CallExpr {
-  args := null
+def NewMethod.new_instance() -> new NewMethod {
+  signature := null,
+  accepts_extra_arguments := null,
+  body := null,
+  rewrites := null,
+  has_been_analyzed := false
 }
 
-def (this is CallExpr).initialize(payload) {
-  this.args := payload["arguments"];
+def (this is NewMethod).ensure_analyzed(universe) {
+  if not this.has_been_analyzed then {
+    new TypeAnalysis(universe, this).analyze(this.body);
+    this.has_been_analyzed := true;
+  }
 }
 
-protocol GlobalExpr;
 
-def GlobalExpr.new_instance() -> new GlobalExpr {
-  name := null
+protocol Expr {
+
+  def this.info {
+    if this.info_cache = null
+      then this.info_cache := new NodeInfo();
+    this.info_cache;
+  }
+
+  def this.for(fun);
+
 }
 
-def (this is GlobalExpr).initialize(payload) {
-  this.name := payload["name"];
+protocol NewObject is Expr {
+
+  def this.initialize(payload);
+
 }
 
-protocol BlockExpr;
-
-def BlockExpr.new_instance() -> new BlockExpr {
-  values := null
+def NewObject.new_instance() -> new NewObject {
+  info_cache := null
 }
 
-def (this is BlockExpr).initialize(payload) {
-  this.values := payload["values"];
+protocol AddIntrinsics is Expr {
+
+  def this.initialize(payload) {
+    this.object := payload["object"];
+    this.methods := payload["methods"];
+  }
+  
+  def this.for(fun) -> fun(this.object);
+
 }
 
-protocol LocalExpr;
+def AddIntrinsics.new_instance() -> new AddIntrinsics {
+  object := null,
+  methods := null,
+  info_cache := null
+}
 
-def LocalExpr.new_instance() -> new LocalExpr {
+protocol CallArgument is Expr {
+
+  def this.initialize(payload) {
+    this.tag := payload["tag"];
+    this.value := payload["value"];
+  }
+  
+  def this.to_string() -> "${this.tag}: ${this.value}";
+
+}
+
+def CallArgument.new_instance() -> new CallArgument {
+  tag := null,
+  value := null,
+  info_cache := null
+}
+
+protocol Pattern {
+
+  def this.initialize(payload) {
+    this.tags := payload["tags"];
+    this.test := payload["test"];
+    this.symbol := payload["symbol"];
+  }
+  
+}
+
+def Pattern.new_instance() -> new Pattern {
+  tags := null,
+  test := null,
   symbol := null
 }
 
-def (this is LocalExpr).initialize(payload) {
-  this.symbol := payload["symbol"];
+protocol ConstantExpr is Expr {
+
+  def this.initialize(payload) {
+    this.value := payload["value"];
+  }
+
 }
 
-protocol DefExpr;
+def ConstantExpr.new_instance() -> new ConstantExpr {
+  value := null,
+  info_cache := null
+}
+
+protocol CallExpr is Expr {
+
+  def this.initialize(payload) {
+    def raw_args := payload["arguments"];
+    def args := new ArrayList();
+    for (i : 1 .. raw_args.length)
+      args.add(raw_args[i].value);
+    this.arguments := args;
+    this.name := raw_args[0].value.value;
+  }
+  
+  def this.for(fun) -> this.arguments.for(fun);
+
+  def this.to_string() -> "${this.name}(${this.arguments})";
+
+}
+
+def CallExpr.new_instance() -> new CallExpr {
+  arguments := null,
+  name := null,
+  info_cache := null
+}
+
+protocol GlobalExpr is Expr {
+
+  def this.initialize(payload) {
+    this.name := payload["name"];
+  }
+
+}
+
+def GlobalExpr.new_instance() -> new GlobalExpr {
+  name := null,
+  info_cache := null
+}
+
+protocol BlockExpr is Expr {
+
+  def this.initialize(payload) {
+    this.values := payload["values"];
+  }
+  
+  def this.for(fun) -> this.values.for(fun);
+  
+  def this.to_string() -> "{${this.values}}";
+
+}
+
+def BlockExpr.new_instance() -> new BlockExpr {
+  values := null,
+  info_cache := null
+}
+
+protocol LocalExpr is Expr {
+
+  def this.initialize(payload) {
+    this.symbol := payload["symbol"];
+  }
+  
+  def this.to_string() -> "#";
+
+}
+
+def LocalExpr.new_instance() -> new LocalExpr {
+  symbol := null,
+  info_cache := null
+}
+
+protocol DefExpr is Expr {
+
+  def this.initialize(payload) {
+    this.symbol := payload["symbol"];
+    this.value := payload["value"];
+    this.body := payload["body"];
+  }
+  
+  def this.for(fun) {
+    fun(this.value);
+    fun(this.body);
+  }
+  
+  def this.to_string() -> "def ${this.symbol} := ${this.value} in ${this.body}";
+
+}
 
 def DefExpr.new_instance() -> new DefExpr {
   symbol := null,
   value := null,
-  body := null
-}
-
-def (this is DefExpr).initialize(payload) {
-  this.symbol := payload["symbol"];
-  this.value := payload["value"];
-  this.body := payload["body"];
+  body := null,
+  info_cache := null
 }
 
 protocol CodeBundle;
@@ -176,12 +336,14 @@ def Parameter.tag -> "org.neutrino.pib.Parameter";
 def Parameter.new_instance() -> new Parameter {
   type := null,
   name := null,
-  is_protocol := null
+  is_protocol := null,
+  symbol := null
 }
 
 def (this is Parameter).initialize(payload) {
   this.type := payload["type"];
   this.name := payload["name"];
+  this.symbol := payload["symbol"];
   this.is_protocol := payload["isProtocolMethod"];
 }
 
@@ -203,8 +365,9 @@ def (this is MethodAst).initialize(payload) {
   this.params := payload["params"];
   this.name := payload["name"];
   this.code := payload["code"];
-  this.syntax_tree := new SyntaxTree(payload["code"]);
 }
+
+def (this is MethodAst).body -> this.code.body;
 
 def (this is MethodAst).get_annotation(name) {
   with_escape (yield) {
@@ -218,7 +381,7 @@ def (this is MethodAst).get_annotation(name) {
 
 def (this is MethodAst).ensure_analyzed(universe) {
   if not this.has_been_analyzed then {
-    new TypeAnalysis(universe, this).analyze(this.syntax_tree);
+    new TypeAnalysis(universe, this).analyze(this.body);
     this.has_been_analyzed := true;
   }
 }

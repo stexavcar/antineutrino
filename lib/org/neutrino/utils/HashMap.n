@@ -38,6 +38,8 @@ protocol HashMap {
       then null;
       else entry.value;
   }
+  
+  def this.contains(key) -> this.find_entry(key, this.hash(key), false) != null;
 
   def this.values -> fn for (fun) {
     for (key, value : this)
