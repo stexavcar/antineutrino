@@ -75,6 +75,10 @@ public abstract class Expression {
       visitExpression(that);
     }
 
+    public void visitInternal(Internal that) {
+      visitExpression(that);
+    }
+
   }
 
   public abstract void accept(Visitor visitor);
@@ -259,6 +263,29 @@ public abstract class Expression {
     @Override
     public void accept(Visitor visitor) {
       visitor.visitConstant(this);
+    }
+
+    @Override
+    public void traverse(Visitor visitor) {
+    }
+
+  }
+
+  public static class Internal extends Expression {
+
+    public @Store Object name;
+    public @Store int argc;
+
+    private Internal(Object name, int argc) {
+      this.name = name;
+      this.argc = argc;
+    }
+
+    public Internal() { }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitInternal(this);
     }
 
     @Override
@@ -499,6 +526,10 @@ public abstract class Expression {
 
     public static Constant eConstant(Object value) {
       return new Constant(value);
+    }
+
+    public static Internal eInternal(Object name, int argc) {
+      return new Internal(name, argc);
     }
 
     public static Definition eDefinition(Symbol symbol, Expression value, Expression body) {
