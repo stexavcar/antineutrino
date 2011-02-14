@@ -162,22 +162,6 @@ def (this is TypeAnalysis).do_analyze(node is AddIntrinsics)
 def (this is TypeAnalysis).do_analyze(node is NewObject)
  -> "Object";
 
-def (this is TypeAnalysis).do_analyze(guide is ArgumentGuide, node) {
-  def index := guide.index(node);
-  def params := this.method.params;
-  def argc := params.length;
-  def param := params[argc - index];
-  def type := param.type;
-  def value := this.universe.lookup_static_global(type);
-  // For types that don't allow overriding we're safe to assume that the
-  // concrete type of an argument is that class, since for any method we
-  // might call directly as a consequence will not have been overridden and
-  // so will be correct.
-  if value != null and value.get_annotation("no_override") != null
-    then type;
-    else null;
-}
-
 def (this is TypeAnalysis).value_type(obj is Integer) -> "Integer";
 
 def (this is TypeAnalysis).value_type(obj is String) -> "String";
