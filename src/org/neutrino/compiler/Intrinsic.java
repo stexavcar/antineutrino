@@ -1,15 +1,12 @@
 package org.neutrino.compiler;
 
-import org.neutrino.syntax.Tree;
-import org.neutrino.syntax.Tree.Call;
-import org.neutrino.syntax.Tree.Expression.Type;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+
+import org.neutrino.syntax.Tree.Call;
 
 public abstract class Intrinsic {
 
@@ -32,12 +29,7 @@ public abstract class Intrinsic {
 
     @Override
     public boolean isApplicable(Call that) {
-      if (true)
-        return false;
-      List<Tree.Expression> args = that.getArguments();
-      if (args.size() != 4)
-        return false;
-      return args.get(2).is(Type.LAMBDA) && args.get(3).is(Type.LAMBDA);
+      return false;
     }
 
     @Override
@@ -65,6 +57,7 @@ public abstract class Intrinsic {
 
   };
 
+  @SuppressWarnings("serial")
   private static final Map<String, Intrinsic> INTRINSICS = new HashMap<String, Intrinsic>() {{
     try {
       for (Field field : Intrinsic.class.getDeclaredFields()) {

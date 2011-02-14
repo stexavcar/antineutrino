@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import org.javatrino.bytecode.Opcode;
 import org.neutrino.pib.Universe;
 
+@SuppressWarnings("serial")
 public class InterpreterError extends RuntimeException {
 
   private final Frame frame;

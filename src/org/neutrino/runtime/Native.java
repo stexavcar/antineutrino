@@ -507,6 +507,7 @@ public class Native {
     }
   };
 
+  @SuppressWarnings("serial")
   private static final Map<String, Impl> IMPLS = new HashMap<String, Impl>() {{
     try {
       for (Field field : Native.class.getDeclaredFields()) {
