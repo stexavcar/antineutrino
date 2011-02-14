@@ -44,55 +44,38 @@ public class CodeBundle {
 
   public CodeBundle() { }
 
-  public byte[] getOldCode() {
-    return this.oldCode;
-  }
-
-  public List<Object> getOldLiterals() {
-    return this.oldLiterals;
-  }
-
   public byte[] getCode() {
-    if (newCode != null) {
-      return newCode;
-    } else if (body == null) {
-      return oldCode;
-    } else {
+    if (newCode == null)
       ensureCompiled();
-      return newCode;
-    }
+    return newCode;
   }
 
   public int getLocalCount() {
-    if (newLocalCount != -1) {
-      return newLocalCount;
-    } else if (body == null) {
-      return oldLocalCount;
-    } else {
+    if (newLocalCount == -1)
       ensureCompiled();
-      return newLocalCount;
-    }
+    return newLocalCount;
   }
 
 
   public List<Object> getLiterals() {
-    if (newLiterals != null) {
-      return newLiterals;
-    } else if (body == null) {
-      return oldLiterals;
-    } else {
+    if (newLiterals == null)
       ensureCompiled();
-      return newLiterals;
-    }
+    return newLiterals;
   }
 
   private void ensureCompiled() {
     if (newCode == null) {
-      BytecodeCompiler.Result result = BytecodeCompiler.compile(body, params,
-          rewrites);
-      this.newCode = result.code;
-      this.newLiterals = result.literals;
-      this.newLocalCount = result.localCount;
+      if (body == null) {
+        this.newCode = this.oldCode;
+        this.newLiterals = this.oldLiterals;
+        this.newLocalCount = this.oldLocalCount;
+      } else {
+        BytecodeCompiler.Result result = BytecodeCompiler.compile(body, params,
+            rewrites);
+        this.newCode = result.code;
+        this.newLiterals = result.literals;
+        this.newLocalCount = result.localCount;
+      }
     }
   }
 

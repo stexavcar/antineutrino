@@ -62,16 +62,16 @@ def CompilerGrower.new_handler_table() {
   result["org.javatrino.ast.Expression$GetField"] := new NullCodec();
   result["org.javatrino.ast.Expression$SetField"] := new NullCodec();
   result["org.javatrino.ast.Expression$Block"] := new NullCodec();
-  result["org.javatrino.ast.Expression$Call"] := new NullCodec();
   result["org.javatrino.ast.Expression$NewObject"] := new NullCodec();
   result["org.javatrino.ast.Expression$NewArray"] := new NullCodec();
-  result["org.javatrino.ast.Expression$Constant"] := new NullCodec();
-  result["org.javatrino.ast.Expression$Local"] := new NullCodec();
-  result["org.javatrino.ast.Expression$Global"] := new NullCodec();
   result["org.javatrino.ast.Expression$TagWithProtocol"] := new NullCodec();
   result["org.javatrino.ast.Expression$AddIntrinsics"] := new NullCodec();
-  result["org.javatrino.ast.Expression$Definition"] := new NullCodec();
   result["org.javatrino.ast.Expression$WithEscape"] := new NullCodec();
+  result["org.javatrino.ast.Expression$Call"] := new PlainCodec(CallExpr);
+  result["org.javatrino.ast.Expression$Constant"] := new PlainCodec(ConstantExpr);
+  result["org.javatrino.ast.Expression$Local"] := new PlainCodec(LocalExpr);
+  result["org.javatrino.ast.Expression$Global"] := new PlainCodec(GlobalExpr);
+  result["org.javatrino.ast.Expression$Definition"] := new PlainCodec(DefExpr);
   result["org.javatrino.ast.Method"] := new NullCodec();
   result["org.javatrino.ast.Pattern"] := new NullCodec();
   result["org.javatrino.ast.Test$Eq"] := new NullCodec();
@@ -81,6 +81,70 @@ def CompilerGrower.new_handler_table() {
   result["org.neutrino.runtime.RInteger"] := new GetterCodec("value");
   result["org.neutrino.runtime.RString"] := new GetterCodec("value");
   result;
+}
+
+protocol ConstantExpr;
+
+def ConstantExpr.new_instance() -> new ConstantExpr {
+  value := null
+}
+
+def (this is ConstantExpr).initialize(payload) {
+  this.value := payload["value"];
+}
+
+protocol CallExpr;
+
+def CallExpr.new_instance() -> new CallExpr {
+  args := null
+}
+
+def (this is CallExpr).initialize(payload) {
+  this.args := payload["arguments"];
+}
+
+protocol GlobalExpr;
+
+def GlobalExpr.new_instance() -> new GlobalExpr {
+  name := null
+}
+
+def (this is GlobalExpr).initialize(payload) {
+  this.name := payload["name"];
+}
+
+protocol BlockExpr;
+
+def BlockExpr.new_instance() -> new BlockExpr {
+  values := null
+}
+
+def (this is BlockExpr).initialize(payload) {
+  this.values := payload["values"];
+}
+
+protocol LocalExpr;
+
+def LocalExpr.new_instance() -> new LocalExpr {
+  symbol := null
+}
+
+def (this is LocalExpr).initialize(payload) {
+  this.symbol := payload["symbol"];
+}
+
+protocol DefExpr;
+
+def DefExpr.new_instance() -> new DefExpr {
+  symbol := null,
+  value := null,
+  body := null
+}
+
+def (this is DefExpr).initialize(payload) {
+  this.symbol := payload["symbol"];
+  this.value := payload["value"];
+  this.body := payload["body"];
 }
 
 protocol CodeBundle;
