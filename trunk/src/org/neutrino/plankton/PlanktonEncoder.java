@@ -31,10 +31,8 @@ public class PlanktonEncoder {
 
   private static class EncoderRecord {
     private final int index;
-    private final int offset;
-    public EncoderRecord(int index, int offset) {
+    public EncoderRecord(int index) {
       this.index = index;
-      this.offset = offset;
     }
   }
 
@@ -189,9 +187,9 @@ public class PlanktonEncoder {
   }
 
   public void writeObject(ObjectEncoder encoder, Object obj, int index) throws IOException {
-    int offset = out.write(kTemplateTag);
+    out.write(kTemplateTag);
     int objIndex = getCurrentIndex();
-    seen.put(obj, new EncoderRecord(objIndex, offset));
+    seen.put(obj, new EncoderRecord(objIndex));
     out.writeUnsigned(index);
     for (Field field : encoder.fields) {
       Object value;
@@ -212,18 +210,18 @@ public class PlanktonEncoder {
   }
 
   private void writeList(List<?> obj) throws IOException {
-    int offset = out.write(kArrayTag);
+    out.write(kArrayTag);
     int index = getCurrentIndex();
-    seen.put(obj, new EncoderRecord(index, offset));
+    seen.put(obj, new EncoderRecord(index));
     out.writeUnsigned(obj.size());
     for (Object elm : obj)
       internalWrite(elm);
   }
 
   private void writeMap(Map<?, ?> obj) throws IOException {
-    int offset = out.write(kMapTag);
+    out.write(kMapTag);
     int index = getCurrentIndex();
-    seen.put(obj, new EncoderRecord(index, offset));
+    seen.put(obj, new EncoderRecord(index));
     out.writeUnsigned(obj.size());
     for (Map.Entry<?, ?> entry : obj.entrySet()) {
       internalWrite(entry.getKey());

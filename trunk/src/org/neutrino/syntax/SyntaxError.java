@@ -3,6 +3,7 @@ package org.neutrino.syntax;
 import org.neutrino.compiler.Source;
 
 
+@SuppressWarnings("serial")
 public class SyntaxError extends Exception {
 
   private final Source origin;

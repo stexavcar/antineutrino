@@ -78,7 +78,8 @@ public class Opcode {
   @Info({}) public static final int kDup = 30;
   @Info({ArgType.NUM, ArgType.NUM}) public static final int kWithEscape = 31;
 
-  private static final Map<Integer, OpcodeInfo> infos = new HashMap<Integer, OpcodeInfo>() {{
+  @SuppressWarnings("serial")
+  private static final Map<Integer, OpcodeInfo> INFOS = new HashMap<Integer, OpcodeInfo>() {{
     try {
       for (Field field : Opcode.class.getFields()) {
         Info info = field.getAnnotation(Info.class);
@@ -93,7 +94,7 @@ public class Opcode {
   }};
 
   public static OpcodeInfo getInfo(int code) {
-    return infos.get(code);
+    return INFOS.get(code);
   }
 
 }

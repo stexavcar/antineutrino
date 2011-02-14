@@ -906,7 +906,6 @@ public class Tree {
 
   public static class LocalDefinition extends Expression {
 
-    private final List<Annotation> annots;
     private final String name;
     private final Expression value;
     private final Expression body;
@@ -916,7 +915,6 @@ public class Tree {
 
     public LocalDefinition(List<Annotation> annots, String name,
         Expression value, Expression body, boolean isReference) {
-      this.annots = annots;
       this.name = name;
       this.value = value;
       this.body = body;

@@ -93,6 +93,7 @@ public class Token {
       return (this.name == null) ? super.toString() : this.name;
     }
 
+    @SuppressWarnings("serial")
     public static final Map<String, Type> KEYWORD_MAP = new HashMap<String, Type>() {{
       for (Type type : Type.values()) {
         if (type.category.isKeyword)
@@ -100,6 +101,7 @@ public class Token {
       }
     }};
 
+    @SuppressWarnings("serial")
     public static final Map<String, Type> RESERVED_OPERATOR_MAP = new HashMap<String, Type>() {{
       for (Type type : Type.values()) {
         if (type.getName() != null && type.category.isOperator)
