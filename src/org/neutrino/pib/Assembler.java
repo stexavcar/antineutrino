@@ -21,8 +21,6 @@ public class Assembler {
   private final Source origin;
   private final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
   private final List<Object> literals = new ArrayList<Object>();
-  private int localCount = -1;
-  private int rootOffset = -1;
   private Expression expr;
   private List<Symbol> params;
 
@@ -30,12 +28,8 @@ public class Assembler {
     this.origin = origin;
   }
 
-  public void finalize(int localCount, int rootOffset, Expression expr,
-      List<Symbol> params) {
-    assert this.localCount == -1;
-    assert this.rootOffset == -1;
-    this.localCount = localCount;
-    this.rootOffset = rootOffset;
+  public void finalize(Expression expr, List<Symbol> params) {
+    assert expr != null;
     this.expr = expr;
     this.params = (params == null) ? Collections.<Symbol>emptyList() : params;
   }
@@ -60,11 +54,9 @@ public class Assembler {
     add(Opcode.kDup);
   }
 
-  public int argument(int index) {
-    int result = getOffset();
+  public void argument(int index) {
     add(Opcode.kArgument);
     add(index);
-    return result;
   }
 
   public int outer(RFieldKey field) {
@@ -73,18 +65,6 @@ public class Assembler {
     add(Opcode.kOuter);
     add(index);
     return result;
-  }
-
-  public void doGetter(RFieldKey field) {
-    add(Opcode.kGetter);
-    int index = registerLiteral(field);
-    add(index);
-  }
-
-  public void doSetter(RFieldKey field) {
-    add(Opcode.kSetter);
-    int index = registerLiteral(field);
-    add(index);
   }
 
   public void setField(RFieldKey field) {
@@ -255,10 +235,7 @@ public class Assembler {
   }
 
   public CodeBundle getCode() {
-    assert localCount >= 0;
-    assert rootOffset != -1;
-    return new CodeBundle(bytes.toByteArray(), literals, localCount,
-        origin.getName(), rootOffset, expr, params, null);
+    return new CodeBundle(origin.getName(), expr, params, null);
   }
 
 }

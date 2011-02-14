@@ -11,14 +11,20 @@ import org.neutrino.syntax.Tree.LocalDefinition;
 
 public abstract class Scope {
 
-  public abstract ResolverSymbol lookupResolver(String name);
+  public static class LookupResult {
+    public final Symbol symbol;
+    public final boolean isReference;
+    public LookupResult(Symbol symbol, boolean isReference) {
+      this.symbol = symbol;
+      this.isReference = isReference;
+    }
+  }
 
-  public abstract Symbol lookup(String name);
+  public abstract LookupResult lookup(String name);
 
   public static class CapturingScope extends Scope {
 
     private final List<ResolverSymbol> outerTransient = new ArrayList<ResolverSymbol>();
-    private final List<ResolverSymbol> outerCaptures = new ArrayList<ResolverSymbol>();
     private final List<RFieldKey> outerCaptureFields = new ArrayList<RFieldKey>();
     private final Scope outerScope;
 
@@ -35,28 +41,7 @@ public abstract class Scope {
     }
 
     @Override
-    public ResolverSymbol lookupResolver(String name) {
-      ResolverSymbol outerResult = outerScope.lookupResolver(name);
-      if (!outerResult.isTransient())
-        return outerResult;
-      int index = outerTransient.indexOf(outerResult);
-      if (index == -1) {
-        RFieldKey field = new RFieldKey(null);
-        ResolverSymbol capture = ResolverSymbol.outer(outerResult, field);
-        outerTransient.add(outerResult);
-        outerCaptures.add(capture);
-        outerCaptureFields.add(field);
-        return capture;
-      } else {
-        if (index >= outerCaptures.size()) {
-          throw new RuntimeException("Failed lookup for " + name);
-        }
-        return outerCaptures.get(index);
-      }
-    }
-
-    @Override
-    public Symbol lookup(String name) {
+    public LookupResult lookup(String name) {
       return outerScope.lookup(name);
     }
 
@@ -90,19 +75,10 @@ public abstract class Scope {
     }
 
     @Override
-    public ResolverSymbol lookupResolver(String name) {
-      for (int i = 0; i < params.size(); i++) {
-        if (params.get(i).getName().equals(name))
-          return symbols.get(i);
-      }
-      return outerScope.lookupResolver(name);
-    }
-
-    @Override
-    public Symbol lookup(String name) {
+    public LookupResult lookup(String name) {
       for (Parameter param : params) {
         if (param.getName().equals(name))
-          return param.getSymbol();
+          return new LookupResult(param.getSymbol(), false);
       }
       return outerScope.lookup(name);
     }
@@ -114,12 +90,7 @@ public abstract class Scope {
     private static final GlobalScope INSTANCE = new GlobalScope();
 
     @Override
-    public ResolverSymbol lookupResolver(String name) {
-      return ResolverSymbol.global(name);
-    }
-
-    @Override
-    public Symbol lookup(String name) {
+    public LookupResult lookup(String name) {
       return null;
     }
 
@@ -148,16 +119,9 @@ public abstract class Scope {
     }
 
     @Override
-    public ResolverSymbol lookupResolver(String name) {
+    public LookupResult lookup(String name) {
       if (name.equals(this.name))
-        return resolverSymbol;
-      return outer.lookupResolver(name);
-    }
-
-     @Override
-    public Symbol lookup(String name) {
-      if (name.equals(this.name))
-        return this.symbol;
+        return new LookupResult(this.symbol, resolverSymbol.isReference());
       return outer.lookup(name);
     }
 

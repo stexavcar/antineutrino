@@ -109,7 +109,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Symbol symbol = that.getSymbol();
     if (symbol == null) {
       return eGlobal(that.getName());
-    } else if (that.getResolverSymbol().isReference()) {
+    } else if (that.isReference()) {
       return eCall(eArgument("name", eConstant("get")),
           eArgument(0, eLocal(symbol)));
     } else {

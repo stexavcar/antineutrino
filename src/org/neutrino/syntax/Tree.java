@@ -228,14 +228,17 @@ public class Tree {
     @Override
     public String toString() {
       String an = annotationsToString(this.annots);
-      return "(method " + an + Tree.toString(this.name, params) + " " + body + ")";
+      return "(method " + an + Tree.toString(this.name, params) + " " + body
+          + ")";
     }
 
   }
 
   public static abstract class Expression extends Tree {
 
-    public enum Type { LAMBDA };
+    public enum Type {
+      LAMBDA
+    };
 
     public abstract <T> T accept(ExpressionVisitor<T> visitor);
 
@@ -320,35 +323,28 @@ public class Tree {
   public static class Identifier extends Expression {
 
     private final String name;
-    private ResolverSymbol resolverSymbol;
+    private boolean isReference;
     private Symbol symbol;
 
     public Identifier(String name) {
       this.name = name;
     }
 
-    @Override
-    public Declaration getStaticValue(CompilerUniverse universe) {
-      return resolverSymbol.getStaticValue(universe);
-    }
-
     public String getName() {
       return name;
     }
 
-    public void bind(ResolverSymbol resolverSymbol, Symbol symbol) {
-      assert this.resolverSymbol == null;
-      this.resolverSymbol = resolverSymbol;
+    public void bind(Symbol symbol, boolean isRef) {
       this.symbol = symbol;
+      this.isReference = isRef;
     }
 
     public Symbol getSymbol() {
       return this.symbol;
     }
 
-    public ResolverSymbol getResolverSymbol() {
-      assert this.resolverSymbol != null;
-      return this.resolverSymbol;
+    public boolean isReference() {
+      return this.isReference;
     }
 
     @Override
@@ -362,7 +358,8 @@ public class Tree {
     }
 
     @Override
-    public void traverse(ExpressionVisitor<?> visitor) { }
+    public void traverse(ExpressionVisitor<?> visitor) {
+    }
 
     @Override
     public <T> T accept(ExpressionVisitor<T> visitor) {
@@ -375,17 +372,11 @@ public class Tree {
 
     private final String name;
     private final Tree.Expression value;
-    private ResolverSymbol resolverSymbol;
     private Symbol symbol;
 
     public Assignment(String name, Tree.Expression value) {
       this.name = name;
       this.value = value;
-    }
-
-    public ResolverSymbol getResolverSymbol() {
-      assert resolverSymbol != null;
-      return resolverSymbol;
     }
 
     public Symbol getSymbol() {
@@ -400,9 +391,7 @@ public class Tree {
       return this.value;
     }
 
-    public void bind(ResolverSymbol resolverSymbol, Symbol symbol) {
-      assert this.resolverSymbol == null;
-      this.resolverSymbol = resolverSymbol;
+    public void bind(Symbol symbol) {
       this.symbol = symbol;
     }
 
@@ -441,7 +430,8 @@ public class Tree {
     }
 
     @Override
-    public void traverse(ExpressionVisitor<?> visitor) { }
+    public void traverse(ExpressionVisitor<?> visitor) {
+    }
 
     @Override
     public <T> T accept(ExpressionVisitor<T> visitor) {
@@ -466,12 +456,12 @@ public class Tree {
           i++;
           char n = str.charAt(i);
           switch (n) {
-            case 'n':
-              buf.append('\n');
-              break;
-            default:
-              buf.append(n);
-              break;
+          case 'n':
+            buf.append('\n');
+            break;
+          default:
+            buf.append(n);
+            break;
           }
         } else {
           buf.append(c);
@@ -485,7 +475,8 @@ public class Tree {
     }
 
     @Override
-    public void traverse(ExpressionVisitor<?> visitor) { }
+    public void traverse(ExpressionVisitor<?> visitor) {
+    }
 
     @Override
     public <T> T accept(ExpressionVisitor<T> visitor) {
@@ -543,11 +534,11 @@ public class Tree {
 
     public static final String NAME = "()";
 
-    public static Expression create(Source source, String methodName, List<Parameter> params,
-        Expression body, String functionName) {
+    public static Expression create(Source source, String methodName,
+        List<Parameter> params, Expression body, String functionName) {
       New.Field call = new New.Field(params, methodName, body, false);
       return new New(source, Collections.singletonList(call),
-          Collections.<String>emptyList(), functionName);
+          Collections.<String> emptyList(), functionName);
     }
 
     public static Expression create(Source source, List<Parameter> params,
@@ -568,13 +559,10 @@ public class Tree {
 
     public static Expression create(Source source, Expression cond,
         Expression thenPart, Tree.Expression elsePart) {
-      return new Call("if", Arrays.asList(
-              new Identifier("Control"),
-              cond,
-              Lambda.create(source, Collections.<Parameter>emptyList(),
-                  thenPart, "then"),
-              Lambda.create(source ,Collections.<Parameter>emptyList(),
-                  elsePart, "else")));
+      return new Call("if", Arrays.asList(new Identifier("Control"), cond,
+          Lambda.create(source, Collections.<Parameter> emptyList(), thenPart,
+              "then"), Lambda.create(source,
+              Collections.<Parameter> emptyList(), elsePart, "else")));
     }
 
   }
@@ -615,8 +603,8 @@ public class Tree {
 
     public static Expression create(Source source, String name, Expression body) {
       Parameter param = new Parameter(name, null, false);
-      Expression lambda = Lambda.create(source, Collections.singletonList(param),
-          body, "with_escape");
+      Expression lambda = Lambda.create(source,
+          Collections.singletonList(param), body, "with_escape");
       return new WithEscape(body, lambda, param.getSymbol());
     }
 
@@ -676,8 +664,15 @@ public class Tree {
     public enum Type {
       NULL("#n"), TRUE("#t"), FALSE("#f");
       private final String name;
-      private Type(String name) { this.name = name; }
-      @Override public String toString() { return this.name; }
+
+      private Type(String name) {
+        this.name = name;
+      }
+
+      @Override
+      public String toString() {
+        return this.name;
+      }
     }
 
     private final Type type;
@@ -696,7 +691,8 @@ public class Tree {
     }
 
     @Override
-    public void traverse(ExpressionVisitor<?> visitor) { }
+    public void traverse(ExpressionVisitor<?> visitor) {
+    }
 
     @Override
     public <T> T accept(ExpressionVisitor<T> visitor) {
@@ -829,7 +825,8 @@ public class Tree {
       return this.displayName;
     }
 
-    public void setCaptures(List<ResolverSymbol> captures, List<RFieldKey> fields) {
+    public void setCaptures(List<ResolverSymbol> captures,
+        List<RFieldKey> fields) {
       assert this.captures == null;
       this.captures = captures;
       this.captureFields = fields;

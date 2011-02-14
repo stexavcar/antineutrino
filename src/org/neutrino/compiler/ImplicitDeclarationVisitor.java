@@ -1,10 +1,15 @@
 package org.neutrino.compiler;
 
+import static org.javatrino.ast.Expression.StaticFactory.eGetField;
+import static org.javatrino.ast.Expression.StaticFactory.eLocal;
+import static org.javatrino.ast.Expression.StaticFactory.eSetField;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import org.javatrino.ast.Expression;
 import org.neutrino.pib.Assembler;
 import org.neutrino.pib.CodeBuilder;
 import org.neutrino.pib.ModuleBuilder;
@@ -32,28 +37,26 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
       if (field.hasEagerValue()) {
         // Add getter
         String getterName = field.getName();
+        Parameter getSelf = new Parameter("this", proto.getId(), false);
         CodeBuilder getterBuilder = module.createMethod(
             that.getOrigin(),
             Collections.<Annotation>emptyList(),
             getterName,
-            Arrays.asList(new Parameter("this", proto.getId(), false)));
+            Arrays.asList(getSelf));
         Assembler getterAssm = getterBuilder.getAssembler();
-        getterAssm.doGetter(field.getField());
-        getterAssm.rethurn();
-        getterAssm.finalize(0, 0, null, null);
+        getterAssm.finalize(eGetField(eLocal(getSelf.getSymbol()), field.getField()), null);
         // Add setter
         String setterName = field.getName() + ":=";
+        Parameter setSelf = new Parameter("this", proto.getId(), false);
+        Parameter setValue = new Parameter("v", null, false);
         CodeBuilder setterBuilder = module.createMethod(
             that.getOrigin(),
             Collections.<Annotation>emptyList(),
             setterName,
-            Arrays.asList(
-                new Parameter("this", proto.getId(), false),
-                new Parameter("v", null, false)));
+            Arrays.asList(setSelf, setValue));
         Assembler setterAssm = setterBuilder.getAssembler();
-        setterAssm.doSetter(field.getField());
-        setterAssm.rethurn();
-        setterAssm.finalize(0, 0, null, null);
+        setterAssm.finalize(eSetField(eLocal(setSelf.getSymbol()),
+            field.getField(), eLocal(setValue.getSymbol())), null);
         eagerFieldCount++;
       }
     }
@@ -70,9 +73,8 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
             name,
             allParams);
         Assembler assm = builder.getAssembler();
-        CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
-        int rootOffset = codegen.generate(field.getBody());
-        assm.finalize(field.getLocalCount(), rootOffset, null, null);
+        Expression body = new ExpressionGenerator().generate(field.getBody());
+        assm.finalize(body, null);
       }
     }
     for (String shuper : that.getProtocolNames())
