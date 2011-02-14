@@ -1,10 +1,10 @@
 package org.neutrino.syntax;
 
-import org.neutrino.compiler.Source;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+
+import org.neutrino.compiler.Source;
 
 /**
  * A simple scanner that turns a flat string into a list of neutrino
@@ -34,7 +34,9 @@ public class Scanner {
     contexts.push(type);
   }
 
-  private ContextType getContext() {
+  private ContextType getContext() throws SyntaxError {
+    if (contexts.isEmpty())
+      fail();
     return contexts.peek();
   }
 
