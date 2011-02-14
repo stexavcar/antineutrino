@@ -24,7 +24,6 @@ public class CodeBundle {
   public @Store Expression body;
   public @Store List<Symbol> params;
   public @Store Map<Symbol, Expression> rewrites;
-  private Module origin;
 
   private byte[] newCode;
   private List<Object> newLiterals;
@@ -98,7 +97,6 @@ public class CodeBundle {
   }
 
   public void initialize(final Module module) {
-    this.origin = module;
     if (body != null) {
       body.accept(new Visitor() {
         @Override

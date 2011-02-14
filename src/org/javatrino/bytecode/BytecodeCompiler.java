@@ -21,6 +21,7 @@ import org.javatrino.ast.Expression.Constant;
 import org.javatrino.ast.Expression.Definition;
 import org.javatrino.ast.Expression.GetField;
 import org.javatrino.ast.Expression.Global;
+import org.javatrino.ast.Expression.Internal;
 import org.javatrino.ast.Expression.Local;
 import org.javatrino.ast.Expression.NewArray;
 import org.javatrino.ast.Expression.NewObject;
@@ -33,6 +34,7 @@ import org.javatrino.ast.Pattern;
 import org.javatrino.ast.Symbol;
 import org.javatrino.ast.Test;
 import org.neutrino.pib.Assembler;
+import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RString;
@@ -303,6 +305,11 @@ public class BytecodeCompiler extends Visitor {
     for (Expression proto : that.protocols)
       proto.accept(this);
     assm.tagWithProtocols(that.protocols.size());
+  }
+
+  @Override
+  public void visitInternal(Internal that) {
+    assm.callNative(new Native((String) that.name), that.argc);
   }
 
   @Override

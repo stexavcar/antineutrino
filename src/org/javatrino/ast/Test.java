@@ -1,7 +1,7 @@
 package org.javatrino.ast;
 
 import org.neutrino.plankton.Store;
-import org.neutrino.runtime.RProtocol;
+import org.neutrino.runtime.TypeId;
 
 public class Test {
 
@@ -24,17 +24,17 @@ public class Test {
 
   public static class Is extends Test {
 
-    public @Store RProtocol proto;
+    public @Store TypeId type;
 
-    public Is(RProtocol proto) {
-      this.proto = proto;
+    public Is(TypeId type) {
+      this.type = type;
     }
 
     public Is() { }
 
     @Override
     public String toString() {
-      return "is(" + proto + ")";
+      return "is(" + type + ")";
     }
 
   }

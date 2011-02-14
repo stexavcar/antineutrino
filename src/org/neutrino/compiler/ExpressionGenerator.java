@@ -11,20 +11,16 @@ import org.javatrino.ast.Expression.Call;
 import org.javatrino.ast.Method;
 import org.javatrino.ast.Pattern;
 import org.javatrino.ast.Symbol;
+import org.javatrino.ast.Test;
 import org.javatrino.ast.Test.Any;
 import org.javatrino.ast.Test.Eq;
+import org.javatrino.ast.Test.Is;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Internal;
 
 public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
-
-  private static final Expression ABORT = null;
-
-  private static boolean isAbort(Expression expr) {
-    return expr == ABORT;
-  }
 
   @Override
   public Expression visitExpression(Tree.Expression that) {
@@ -65,8 +61,6 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     List<Expression> protocols = new ArrayList<Expression>();
     for (Tree.New.Field field : fields) {
       Expression body = generate(field.getBody());
-      if (isAbort(body))
-        return body;
       if (field.hasEagerValue()) {
         RFieldKey key = field.getField();
         sets.add(eSetField(eLocal(obj), key, body));
@@ -81,9 +75,13 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
         patterns.add(selfPattern);
         int index = 1;
         for (Parameter param : field.getParameters()) {
-          if (!"Object".equals(param.type))
-            return ABORT;
-          patterns.add(new Pattern(asList(index), new Any(), param.getSymbol()));
+          Test test;
+          if ("Object".equals(param.type)) {
+            test = new Any();
+          } else {
+            test = new Is(param.getTypeId());
+          }
+          patterns.add(new Pattern(asList(index), test, param.getSymbol()));
           index++;
         }
         Method method = new Method(patterns, false, body, null, null);
@@ -92,8 +90,6 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     }
     for (Tree.Expression protocol : that.getProtocols()) {
       Expression proto = generate(protocol);
-      if (isAbort(proto))
-        return proto;
       protocols.add(proto);
     }
     Expression result = eNewObject();
@@ -124,8 +120,6 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   @Override
   public Expression visitAssignment(Tree.Assignment that) {
     Expression value = generate(that.getValue());
-    if (isAbort(value))
-      return value;
     return eCall(eArgument("name", eConstant("set")),
         eArgument(0, eLocal(that.getSymbol())),
         eArgument(1, value));
@@ -134,11 +128,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   @Override
   public Expression visitLocalDefinition(Tree.LocalDefinition that) {
     Expression value = generate(that.getValue());
-    if (isAbort(value))
-      return value;
     Expression body = generate(that.getBody());
-    if (isAbort(body))
-      return body;
     if (that.isReference()) {
       value = eCall(eArgument("name", eConstant("new")),
           eArgument(0, eGlobal("Ref")),
@@ -152,8 +142,6 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     List<Expression> exprs = new ArrayList<Expression>();
     for (Tree.Expression source : that.getExpressions()) {
       Expression expr = generate(source);
-      if (isAbort(expr))
-        return expr;
       exprs.add(expr);
     }
     return eBlock(exprs);
@@ -181,8 +169,6 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   @Override
   public Expression visitWithEscape(Tree.WithEscape that) {
     Expression body = that.getBody().accept(this);
-    if (isAbort(body))
-      return body;
     return eWithEscape(that.getSymbol(), body);
   }
 
@@ -191,8 +177,6 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     List<Expression> elms = new ArrayList<Expression>();
     for (Tree.Expression value : that.getValues()) {
       Expression val = value.accept(this);
-      if (isAbort(val))
-        return val;
       elms.add(val);
     }
     return eNewArray(elms);
@@ -200,7 +184,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitInternal(Internal that) {
-    return ABORT;
+    return eInternal(that.getName(), that.getArgumentCount());
   }
 
   @Override
@@ -216,8 +200,6 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     int index = 0;
     for (Tree.Expression source : that.getArguments()) {
       Expression expr = generate(source);
-      if (isAbort(expr))
-        return expr;
       arguments.add(eArgument(index, expr));
       index++;
     }
