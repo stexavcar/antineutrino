@@ -1,5 +1,7 @@
 package org.neutrino.pib;
 
+import static org.javatrino.ast.Expression.StaticFactory.eConstant;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -77,7 +79,7 @@ public class ModuleBuilder {
     defs.put(id, builder);
     builder.getAssembler().push(proto);
     builder.getAssembler().rethurn();
-    builder.getAssembler().finalize(0, 0, null, null);
+    builder.getAssembler().finalize(eConstant(proto), null);
     return proto;
   }
 

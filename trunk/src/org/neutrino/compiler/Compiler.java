@@ -20,11 +20,9 @@ public class Compiler {
     body.accept(lexicizer);
     ImplicitDeclarationVisitor implicitor = new ImplicitDeclarationVisitor(module);
     body.accept(implicitor);
-    CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
     ExpressionGenerator exprgen = new ExpressionGenerator();
     Expression expr = exprgen.generate(body);
-    int rootOffset = codegen.generate(body);
-    assm.finalize(0, rootOffset, expr, null);
+    assm.finalize(expr, null);
     return assm.getCode();
   }
 
@@ -35,14 +33,12 @@ public class Compiler {
     body.accept(lexicizer);
     ImplicitDeclarationVisitor implicitor = new ImplicitDeclarationVisitor(module);
     body.accept(implicitor);
-    CodeGenerator codegen = new CodeGenerator(module.getUniverse(), assm);
     ExpressionGenerator exprgen = new ExpressionGenerator();
     Expression expr = exprgen.generate(body);
-    int rootOffset = codegen.generate(body);
     List<Symbol> params = new ArrayList<Symbol>();
     for (Parameter param : that.getParameters())
       params.add(param.getSymbol());
-    assm.finalize(lexicizer.getLocalCount(), rootOffset, expr, params);
+    assm.finalize(expr, params);
   }
 
 }

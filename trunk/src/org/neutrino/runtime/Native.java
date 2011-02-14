@@ -500,7 +500,7 @@ public class Native {
         throw new InterpreterError.MethodNotFound(args.frame, args.getUniverse());
       Frame trampoline = new Frame(args.frame, values.get(0),
           new CodeBundle(TRAMPOLINE_CODE, Arrays.<Object>asList(name.getValue()),
-              0, null, 0, null, null, null));
+              0));
       trampoline.stack = stack;
       args.frame = new Frame(trampoline, values.get(0), method.getCode());
       return null;

@@ -1,12 +1,9 @@
 package org.neutrino.compiler;
 
-import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.syntax.Tree.Declaration;
 
 public abstract class ResolverSymbol {
-
-  public abstract int emitLoad(Assembler assm);
 
   /**
    * Is this symbol transient, that is, if an inner scope accesses
@@ -33,11 +30,6 @@ public abstract class ResolverSymbol {
     }
 
     @Override
-    public int emitLoad(Assembler assm) {
-      return assm.global(name);
-    }
-
-    @Override
     public boolean isTransient() {
       return false;
     }
@@ -50,17 +42,7 @@ public abstract class ResolverSymbol {
 
   private static class ParameterSymbol extends ResolverSymbol {
 
-    private final int index;
-    private final int argc;
-
-    public ParameterSymbol(int index, int argc) {
-      this.index = index;
-      this.argc = argc;
-    }
-
-    @Override
-    public int emitLoad(Assembler assm) {
-      return assm.argument(argc - index);
+    public ParameterSymbol(int index) {
     }
 
     @Override
@@ -71,22 +53,15 @@ public abstract class ResolverSymbol {
   }
 
   public static ResolverSymbol parameter(int index, int argc) {
-    return new ParameterSymbol(index, argc);
+    return new ParameterSymbol(index);
   }
 
   private static class OuterSymbol extends ResolverSymbol {
 
     private final ResolverSymbol outer;
-    private final RFieldKey field;
 
-    public OuterSymbol(ResolverSymbol outer, RFieldKey field) {
+    public OuterSymbol(ResolverSymbol outer) {
       this.outer = outer;
-      this.field = field;
-    }
-
-    @Override
-    public int emitLoad(Assembler assm) {
-      return assm.outer(field);
     }
 
     @Override
@@ -102,7 +77,7 @@ public abstract class ResolverSymbol {
   }
 
   public static ResolverSymbol outer(ResolverSymbol outerSymbol, RFieldKey field) {
-    return new OuterSymbol(outerSymbol, field);
+    return new OuterSymbol(outerSymbol);
   }
 
   public static class LocalSymbol extends ResolverSymbol {
@@ -117,11 +92,6 @@ public abstract class ResolverSymbol {
 
     public int getIndex() {
       return index;
-    }
-
-    @Override
-    public int emitLoad(Assembler assm) {
-      return assm.local(index);
     }
 
     @Override

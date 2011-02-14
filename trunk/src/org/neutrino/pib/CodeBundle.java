@@ -9,34 +9,28 @@ import org.javatrino.ast.Expression.Visitor;
 import org.javatrino.ast.Method;
 import org.javatrino.ast.Symbol;
 import org.javatrino.bytecode.BytecodeCompiler;
-import org.javatrino.bytecode.Opcode;
-import org.javatrino.bytecode.Opcode.ArgType;
-import org.javatrino.bytecode.Opcode.OpcodeInfo;
 import org.neutrino.plankton.Store;
 
 public class CodeBundle {
 
-  public @Store byte[] oldCode;
-  public @Store List<Object> oldLiterals;
-  public @Store int oldLocalCount;
   public @Store String fileName;
-  public @Store int rootOffset;
   public @Store Expression body;
   public @Store List<Symbol> params;
   public @Store Map<Symbol, Expression> rewrites;
 
-  private byte[] newCode;
-  private List<Object> newLiterals;
-  private int newLocalCount = -1;
+  private byte[] code;
+  private List<Object> literals;
+  private int localCount = -1;
 
-  public CodeBundle(byte[] code, List<Object> literals, int oldLocalCount,
-      String fileName, int rootOffset, Expression body, List<Symbol> params,
+  public CodeBundle(byte[] code, List<Object> literals, int localCount) {
+    this.code = code;
+    this.literals = literals;
+    this.localCount = localCount;
+  }
+
+  public CodeBundle(String fileName, Expression body, List<Symbol> params,
       Map<Symbol, Expression> rewrites) {
-    this.oldCode = code;
-    this.oldLiterals = literals;
-    this.oldLocalCount = oldLocalCount;
     this.fileName = fileName;
-    this.rootOffset = rootOffset;
     this.body = body;
     this.params = params;
     this.rewrites = rewrites;
@@ -45,37 +39,31 @@ public class CodeBundle {
   public CodeBundle() { }
 
   public byte[] getCode() {
-    if (newCode == null)
+    if (code == null)
       ensureCompiled();
-    return newCode;
+    return code;
   }
 
   public int getLocalCount() {
-    if (newLocalCount == -1)
+    if (localCount == -1)
       ensureCompiled();
-    return newLocalCount;
+    return localCount;
   }
 
 
   public List<Object> getLiterals() {
-    if (newLiterals == null)
+    if (literals == null)
       ensureCompiled();
-    return newLiterals;
+    return literals;
   }
 
   private void ensureCompiled() {
-    if (newCode == null) {
-      if (body == null) {
-        this.newCode = this.oldCode;
-        this.newLiterals = this.oldLiterals;
-        this.newLocalCount = this.oldLocalCount;
-      } else {
-        BytecodeCompiler.Result result = BytecodeCompiler.compile(body, params,
-            rewrites);
-        this.newCode = result.code;
-        this.newLiterals = result.literals;
-        this.newLocalCount = result.localCount;
-      }
+    if (code == null) {
+      BytecodeCompiler.Result result = BytecodeCompiler.compile(body, params,
+          rewrites);
+      this.code = result.code;
+      this.literals = result.literals;
+      this.localCount = result.localCount;
     }
   }
 
@@ -90,37 +78,6 @@ public class CodeBundle {
         }
       });
     }
-  }
-
-  @Override
-  public String toString() {
-    StringBuilder buf = new StringBuilder().append("[");
-    for (int pc = 0; pc < oldCode.length;) {
-      if (pc > 0)
-        buf.append(" ");
-      int op = oldCode[pc];
-      OpcodeInfo info = Opcode.getInfo(op);
-      assert info != null : "Unknown opcode " + op;
-      buf.append(info.getName()).append("(");
-      ArgType[] args = info.getArguments();
-      for (int i = 0; i < args.length; i++) {
-        if (i > 0)
-          buf.append(", ");
-        int value = oldCode[pc + 1 + i];
-        ArgType type = args[i];
-        switch (type) {
-        case LIT:
-          buf.append(oldLiterals.get(value));
-          break;
-        default:
-          buf.append(Integer.toString(value));
-          break;
-        }
-      }
-      buf.append(")");
-      pc += info.getSize();
-    }
-    return buf.append("]").toString();
   }
 
 }

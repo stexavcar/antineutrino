@@ -2,6 +2,7 @@ package org.neutrino.compiler;
 
 import org.neutrino.compiler.Scope.CapturingScope;
 import org.neutrino.compiler.Scope.LocalScope;
+import org.neutrino.compiler.Scope.LookupResult;
 import org.neutrino.compiler.Scope.MethodScope;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Assignment;
@@ -78,7 +79,9 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
   @Override
   public Void visitIdentifier(Identifier that) {
     String name = that.getName();
-    that.bind(scope.lookupResolver(name), scope.lookup(name));
+    LookupResult result = scope.lookup(name);
+    if (result != null)
+      that.bind(result.symbol, result.isReference);
     return null;
   }
 
@@ -86,9 +89,9 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
   public Void visitAssignment(Assignment that) {
     that.getValue().accept(this);
     String name = that.getName();
-    ResolverSymbol symbol = scope.lookupResolver(name);
-    assert symbol.isReference() : "Cannot assign to " + name;
-    that.bind(symbol, scope.lookup(name));
+    LookupResult result = scope.lookup(name);
+    assert result.isReference : "Cannot assign to " + name;
+    that.bind(result.symbol);
     return null;
   }
 

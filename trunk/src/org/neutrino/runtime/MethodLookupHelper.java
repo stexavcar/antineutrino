@@ -1,6 +1,7 @@
 package org.neutrino.runtime;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +60,7 @@ public class MethodLookupHelper {
   }
 
   public Lambda lookupLambda(RObject holder, RValue... args) {
-    Frame fakeFrame = new Frame(null, null, new CodeBundle());
+    Frame fakeFrame = new Frame(null, null, new CodeBundle(new byte[0], Arrays.asList(), 0));
     fakeFrame.stack.push(holder);
     for (RValue arg : args)
       fakeFrame.stack.push(arg);

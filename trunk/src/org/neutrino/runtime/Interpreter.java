@@ -17,12 +17,7 @@ public class Interpreter {
   private static final CodeBundle BOTTOM_FRAME_CODE = new CodeBundle(
       new byte[] { Opcode.kCall, 0, 0, 0, Opcode.kTerminate },
       Collections.<Object>emptyList(),
-      0,
-      null,
-      0,
-      null,
-      null,
-      null);
+      0);
 
   private final Native.Arguments arguments = new Native.Arguments();
 

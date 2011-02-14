@@ -52,7 +52,7 @@ public class Method {
         if (pattern != null)
           syms.add(pattern.symbol);
       }
-      bundle = new CodeBundle(null, null, -1, null, -1, body, syms, rewrites);
+      bundle = new CodeBundle(null, body, syms, rewrites);
       bundle.initialize(origin);
     }
     return bundle;

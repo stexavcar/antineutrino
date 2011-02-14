@@ -38,6 +38,7 @@ import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RString;
+import org.neutrino.runtime.RValue;
 
 public class BytecodeCompiler extends Visitor {
 
@@ -222,6 +223,8 @@ public class BytecodeCompiler extends Visitor {
       assm.push(RString.of((String) value));
     } else if (value instanceof Integer) {
       assm.push(RInteger.get((Integer) value));
+    } else if (value instanceof RValue) {
+      assm.push((RValue) value);
     } else {
       assert false : value.getClass();
     }
