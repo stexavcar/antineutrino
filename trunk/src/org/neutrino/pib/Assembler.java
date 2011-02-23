@@ -28,6 +28,10 @@ public class Assembler {
     this.origin = origin;
   }
 
+  public Source getOrigin() {
+    return origin;
+  }
+
   public void finalize(Expression expr, List<Symbol> params) {
     assert expr != null;
     this.expr = expr;
