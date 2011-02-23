@@ -1,5 +1,6 @@
 package org.neutrino.pib;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -32,7 +33,7 @@ public class CodeBundle {
       Map<Symbol, Expression> rewrites) {
     this.fileName = fileName;
     this.body = body;
-    this.params = params;
+    this.params = params == null ? Collections.<Symbol>emptyList() : params;
     this.rewrites = rewrites;
   }
 
