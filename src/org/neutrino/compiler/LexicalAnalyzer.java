@@ -1,15 +1,17 @@
 package org.neutrino.compiler;
 
+import java.util.List;
+
 import org.neutrino.compiler.Scope.CapturingScope;
 import org.neutrino.compiler.Scope.LocalScope;
 import org.neutrino.compiler.Scope.LookupResult;
 import org.neutrino.compiler.Scope.MethodScope;
+import org.neutrino.pib.Parameter;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Assignment;
 import org.neutrino.syntax.Tree.Identifier;
 import org.neutrino.syntax.Tree.Internal;
 import org.neutrino.syntax.Tree.LocalDefinition;
-import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.New;
 
 public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
@@ -17,11 +19,11 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
   private Scope scope = Scope.globalScope();
   private MethodScope methodScope = null;
 
-  public LexicalAnalyzer() { }
-
-  public LexicalAnalyzer(Method method) {
-    methodScope = new Scope.MethodScope(method.getParameters(), scope);
-    scope = methodScope;
+  public LexicalAnalyzer(List<Parameter> params) {
+    if (params != null) {
+      methodScope = new Scope.MethodScope(params, scope);
+      scope = methodScope;
+    }
   }
 
   public int getLocalCount() {

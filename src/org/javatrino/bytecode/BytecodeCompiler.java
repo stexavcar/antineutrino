@@ -123,11 +123,8 @@ public class BytecodeCompiler extends Visitor {
     }
   }
 
-  public static int compilationCount = 0;
-
   public static Result compile(Expression expr, List<Symbol> params,
       Map<Symbol, Expression> rewrites) {
-    compilationCount++;
     Assembler assm = new Assembler(null);
     BytecodeCompiler compiler = new BytecodeCompiler(assm, params, getLocals(expr),
         rewrites);

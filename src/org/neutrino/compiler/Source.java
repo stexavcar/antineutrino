@@ -1,8 +1,15 @@
 package org.neutrino.compiler;
 
-import org.neutrino.pib.CodeBuilder;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.List;
+
+import org.neutrino.pib.Binding;
+import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.ModuleBuilder;
 import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RMethod;
 import org.neutrino.syntax.Parser;
 import org.neutrino.syntax.Scanner;
 import org.neutrino.syntax.SyntaxError;
@@ -12,11 +19,6 @@ import org.neutrino.syntax.Tree.Definition;
 import org.neutrino.syntax.Tree.Inheritance;
 import org.neutrino.syntax.Tree.Method;
 import org.neutrino.syntax.Tree.Protocol;
-
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.List;
 
 /**
  * A single source file in a module.
@@ -119,8 +121,10 @@ public class Source {
     }
 
     public void visitDefinition(Definition that) {
-      CodeBuilder builder = module.createDefinition(Source.this, that);
-      Compiler.compile(module, builder.getAssembler(), that.getValue());
+      CodeBundle bundle = Compiler.compile(module, Source.this, that.getValue(),
+          null);
+      Binding binding = new Binding(that.getAnnotations(), bundle);
+      module.createDefinition(that.getName(), binding);
     }
 
     public void visitProtocol(Protocol that) {
@@ -129,9 +133,10 @@ public class Source {
     }
 
     public void visitMethodDefinition(Method that) {
-      CodeBuilder builder = module.createMethod(Source.this, that.getAnnotations(),
-          that.getMethodName(), that.getParameters());
-      Compiler.compileMethod(module, builder.getAssembler(), that);
+      CodeBundle bundle = Compiler.compile(module, Source.this, that.getBody(),
+          that.getParameters());
+      module.createMethod(new RMethod(that.getAnnotations(), that.getMethodName(),
+          that.getParameters(), bundle));
     }
 
     public void visitInheritance(Inheritance that) {

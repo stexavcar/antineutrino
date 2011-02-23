@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.javatrino.bytecode.BytecodeCompiler;
 import org.neutrino.pib.Universe;
 import org.neutrino.plankton.PlanktonDecoder;
 import org.neutrino.runtime.Interpreter;
@@ -46,7 +45,6 @@ public class Run {
     if (entryPointLambda == null)
       entryPointLambda = universe.getLambda((RObject) entryPointValue);
     inter.interpret(universe, entryPointLambda, argsObject);
-    System.out.println("Compiled " + BytecodeCompiler.compilationCount + " methods.");
   }
 
 }

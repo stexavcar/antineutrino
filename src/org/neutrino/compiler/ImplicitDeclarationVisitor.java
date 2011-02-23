@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 
 import org.javatrino.ast.Expression;
-import org.neutrino.pib.Assembler;
 import org.neutrino.pib.CodeBuilder;
 import org.neutrino.pib.ModuleBuilder;
 import org.neutrino.pib.Parameter;
@@ -43,8 +42,8 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
             Collections.<Annotation>emptyList(),
             getterName,
             Arrays.asList(getSelf));
-        Assembler getterAssm = getterBuilder.getAssembler();
-        getterAssm.finalize(eGetField(eLocal(getSelf.getSymbol()), field.getField()), null);
+        getterBuilder.getAssembler(eGetField(eLocal(getSelf.getSymbol()), field.getField()),
+            null);
         // Add setter
         String setterName = field.getName() + ":=";
         Parameter setSelf = new Parameter("this", proto.getId(), false);
@@ -54,8 +53,7 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
             Collections.<Annotation>emptyList(),
             setterName,
             Arrays.asList(setSelf, setValue));
-        Assembler setterAssm = setterBuilder.getAssembler();
-        setterAssm.finalize(eSetField(eLocal(setSelf.getSymbol()),
+        setterBuilder.getAssembler(eSetField(eLocal(setSelf.getSymbol()),
             field.getField(), eLocal(setValue.getSymbol())), null);
         eagerFieldCount++;
       }
@@ -72,9 +70,8 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
             Collections.<Annotation>emptyList(),
             name,
             allParams);
-        Assembler assm = builder.getAssembler();
         Expression body = new ExpressionGenerator().generate(field.getBody());
-        assm.finalize(body, null);
+        builder.getAssembler(body, null);
       }
     }
     for (String shuper : that.getProtocolNames())
