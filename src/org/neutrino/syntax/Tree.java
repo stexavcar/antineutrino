@@ -14,7 +14,6 @@ import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
-import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 
@@ -781,7 +780,7 @@ public class Tree {
     private final List<String> protocolNames;
     private final List<Expression> protocols;
     private final String displayName;
-    private RProtocol protocol;
+
     private List<ResolverSymbol> captures;
     private List<RFieldKey> captureFields;
 
@@ -841,18 +840,8 @@ public class Tree {
       return this.captureFields;
     }
 
-    public RProtocol getProtocol() {
-      assert protocol != null;
-      return protocol;
-    }
-
     public List<Field> getFields() {
       return fields;
-    }
-
-    public void bind(RProtocol proto) {
-      assert protocol == null;
-      this.protocol = proto;
     }
 
     @Override
