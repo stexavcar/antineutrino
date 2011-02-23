@@ -24,7 +24,6 @@ public class ModuleBuilder {
   private final Map<String, List<String>> rawInheritance = new HashMap<String, List<String>>();
 
   private final CompilerUniverse universe;
-  private static int nextImplicitProtocolIndex = 0;
 
   public ModuleBuilder(CompilerUniverse universe) {
     this.universe = universe;
@@ -66,13 +65,6 @@ public class ModuleBuilder {
             null,
             null)));
     return proto;
-  }
-
-  public RProtocol createImplicitProtocol(Source origin, String displayName) {
-    int index = nextImplicitProtocolIndex++;
-    String id = "implicit-" + index;
-    return createProtocol(origin, Collections.<Annotation>emptyList(), id,
-        displayName);
   }
 
   public Module getResult() {

@@ -16,8 +16,6 @@ public class Compiler {
       Tree.Expression body, List<Parameter> params) {
     LexicalAnalyzer lexicizer = new LexicalAnalyzer(params);
     body.accept(lexicizer);
-    ImplicitDeclarationVisitor implicitor = new ImplicitDeclarationVisitor(module);
-    body.accept(implicitor);
     ExpressionGenerator exprgen = new ExpressionGenerator();
     Expression expr = exprgen.generate(body);
     List<Symbol> paramSyms = null;
