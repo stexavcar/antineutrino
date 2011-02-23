@@ -10,9 +10,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.javatrino.ast.Expression;
-import org.neutrino.pib.CodeBuilder;
+import org.javatrino.ast.Symbol;
+import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.ModuleBuilder;
 import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Tree;
@@ -37,41 +39,46 @@ public class ImplicitDeclarationVisitor extends Tree.ExpressionVisitor<Void> {
         // Add getter
         String getterName = field.getName();
         Parameter getSelf = new Parameter("this", proto.getId(), false);
-        CodeBuilder getterBuilder = module.createMethod(
-            that.getOrigin(),
-            Collections.<Annotation>emptyList(),
-            getterName,
-            Arrays.asList(getSelf));
-        getterBuilder.getAssembler(eGetField(eLocal(getSelf.getSymbol()), field.getField()),
+        CodeBundle getterCode = new CodeBundle(that.getOrigin().getName(),
+            eGetField(eLocal(getSelf.getSymbol()), field.getField()), null,
             null);
+        module.createMethod(new RMethod(Collections.<Annotation>emptyList(),
+            getterName, Arrays.asList(getSelf), getterCode));
         // Add setter
         String setterName = field.getName() + ":=";
         Parameter setSelf = new Parameter("this", proto.getId(), false);
         Parameter setValue = new Parameter("v", null, false);
-        CodeBuilder setterBuilder = module.createMethod(
-            that.getOrigin(),
+        CodeBundle setterCode = new CodeBundle(that.getOrigin().getName(),
+            eSetField(eLocal(setSelf.getSymbol()),
+                field.getField(), eLocal(setValue.getSymbol())),
+            null,
+            null);
+        module.createMethod(new RMethod(
             Collections.<Annotation>emptyList(),
             setterName,
-            Arrays.asList(setSelf, setValue));
-        setterBuilder.getAssembler(eSetField(eLocal(setSelf.getSymbol()),
-            field.getField(), eLocal(setValue.getSymbol())), null);
+            Arrays.asList(setSelf, setValue),
+            setterCode));
         eagerFieldCount++;
       }
     }
     for (Tree.New.Field field : that.getFields()) {
       if (!field.hasEagerValue()) {
         String name = field.getName();
-        Parameter param = new Parameter("this", proto.getId(), false);
+        Parameter self = new Parameter("this", proto.getId(), false);
         List<Parameter> allParams = new ArrayList<Parameter>();
-        allParams.add(param);
+        allParams.add(self);
         allParams.addAll(field.getParameters());
-        CodeBuilder builder = module.createMethod(
-            that.getOrigin(),
+        List<Symbol> symbols = new ArrayList<Symbol>();
+        for (Parameter param : allParams)
+          symbols.add(param.getSymbol());
+        Expression body = new ExpressionGenerator().generate(field.getBody());
+        CodeBundle code = new CodeBundle(that.getOrigin().getName(), body, symbols,
+            null);
+        module.createMethod(new RMethod(
             Collections.<Annotation>emptyList(),
             name,
-            allParams);
-        Expression body = new ExpressionGenerator().generate(field.getBody());
-        builder.getAssembler(body, null);
+            allParams,
+            code));
       }
     }
     for (String shuper : that.getProtocolNames())

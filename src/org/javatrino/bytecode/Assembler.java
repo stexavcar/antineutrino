@@ -1,15 +1,10 @@
-package org.neutrino.pib;
+package org.javatrino.bytecode;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
-import org.javatrino.ast.Expression;
 import org.javatrino.ast.Method;
-import org.javatrino.ast.Symbol;
-import org.javatrino.bytecode.Opcode;
-import org.neutrino.compiler.Source;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RProtocol;
@@ -18,25 +13,8 @@ import org.neutrino.runtime.RValue;
 
 public class Assembler {
 
-  private final Source origin;
   private final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
   private final List<Object> literals = new ArrayList<Object>();
-  private Expression expr;
-  private List<Symbol> params;
-
-  public Assembler(Source origin) {
-    this.origin = origin;
-  }
-
-  public Source getOrigin() {
-    return origin;
-  }
-
-  public void finalize(Expression expr, List<Symbol> params) {
-    assert expr != null;
-    this.expr = expr;
-    this.params = (params == null) ? Collections.<Symbol>emptyList() : params;
-  }
 
   private int getOffset() {
     return bytes.size();
@@ -236,10 +214,6 @@ public class Assembler {
 
   public List<Object> getLiterals() {
     return literals;
-  }
-
-  public CodeBundle getCode() {
-    return new CodeBundle(origin.getName(), expr, params, null);
   }
 
 }

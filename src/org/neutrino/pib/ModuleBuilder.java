@@ -18,32 +18,19 @@ import org.neutrino.syntax.Annotation;
 
 public class ModuleBuilder {
 
+  private final Map<String, RProtocol> protos;
+  private final Map<String, Binding> defs;
+  private final List<RMethod> methods;
+  private final Map<String, List<String>> rawInheritance = new HashMap<String, List<String>>();
+
   private final CompilerUniverse universe;
   private static int nextImplicitProtocolIndex = 0;
-  private final Map<String, CodeBuilder> defs = new TreeMap<String, CodeBuilder>();
-  private final Map<String, Binding> newDefs = new TreeMap<String, Binding>();
-  private final List<RMethod> newMethods = new ArrayList<RMethod>();
-  private final Map<String, RProtocol> protos = new HashMap<String, RProtocol>();
-  private final List<MethodInfo> methods = new ArrayList<MethodInfo>();
-  private final Map<String, List<String>> inheritance = new HashMap<String, List<String>>();
-
-  private static class MethodInfo {
-
-    public final String name;
-    public final List<Parameter> params;
-    public final CodeBuilder builder;
-
-    public MethodInfo(String name, List<Parameter> params,
-        CodeBuilder builder) {
-      this.name = name;
-      this.params = params;
-      this.builder = builder;
-    }
-
-  }
 
   public ModuleBuilder(CompilerUniverse universe) {
     this.universe = universe;
+    this.methods = new ArrayList<RMethod>();
+    this.protos = new HashMap<String, RProtocol>();
+    this.defs = new TreeMap<String, Binding>();
   }
 
   public CompilerUniverse getUniverse() {
@@ -51,36 +38,33 @@ public class ModuleBuilder {
   }
 
   public void declareInheritance(String sub, String shuper) {
-    List<String> locals = inheritance.get(sub);
+    List<String> locals = rawInheritance.get(sub);
     if (locals == null) {
       locals = new ArrayList<String>();
-      inheritance.put(sub, locals);
+      rawInheritance.put(sub, locals);
     }
     locals.add(shuper);
   }
 
   public void createDefinition(String name, Binding binding) {
-    newDefs.put(name, binding);
-  }
-
-  public CodeBuilder createMethod(Source origin, List<Annotation> annots, String name,
-      List<Parameter> params) {
-    CodeBuilder result = new CodeBuilder(origin, annots);
-    methods.add(new MethodInfo(name, params, result));
-    return result;
+    defs.put(name, binding);
   }
 
   public void createMethod(RMethod method) {
-    newMethods.add(method);
+    methods.add(method);
   }
 
   public RProtocol createProtocol(Source origin, List<Annotation> annots, String id,
       String displayName) {
     RProtocol proto = new RProtocol(annots, id, displayName);
     protos.put(id, proto);
-    CodeBuilder builder = new CodeBuilder(origin, Collections.<Annotation>emptyList());
-    defs.put(id, builder);
-    builder.getAssembler(eConstant(proto), null);
+    defs.put(id, new Binding(
+        Collections.<Annotation>emptyList(),
+        new CodeBundle(
+            origin.getName(),
+            eConstant(proto),
+            null,
+            null)));
     return proto;
   }
 
@@ -92,22 +76,7 @@ public class ModuleBuilder {
   }
 
   public Module getResult() {
-    Map<String, Binding> elms = new HashMap<String, Binding>();
-    for (Map.Entry<String, CodeBuilder> entry : defs.entrySet()) {
-      CodeBuilder builder = entry.getValue();
-      Binding binding = builder.getBinding();
-      elms.put(entry.getKey(), binding);
-    }
-    elms.putAll(newDefs);
-    List<RMethod> methods = new ArrayList<RMethod>();
-    for (MethodInfo info : this.methods) {
-      CodeBuilder builder = info.builder;
-      CodeBundle bundle = builder.getAssembler().getCode();
-      methods.add(new RMethod(builder.getAnnotations(), info.name,
-          info.params, bundle));
-    }
-    methods.addAll(newMethods);
-    return new Module(elms, protos, methods, inheritance);
+    return new Module(defs, protos, methods, rawInheritance);
   }
 
 }

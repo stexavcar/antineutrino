@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.javatrino.ast.Expression;
 import org.javatrino.ast.Symbol;
-import org.neutrino.pib.Assembler;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.ModuleBuilder;
 import org.neutrino.pib.Parameter;
@@ -21,15 +20,13 @@ public class Compiler {
     body.accept(implicitor);
     ExpressionGenerator exprgen = new ExpressionGenerator();
     Expression expr = exprgen.generate(body);
-    Assembler assm = new Assembler(origin);
     List<Symbol> paramSyms = null;
     if (params != null) {
       paramSyms = new ArrayList<Symbol>();
       for (Parameter param : params)
         paramSyms.add(param.getSymbol());
     }
-    assm.finalize(expr, paramSyms);
-    return assm.getCode();
+    return new CodeBundle(origin.getName(), expr, paramSyms, null);
   }
 
 }

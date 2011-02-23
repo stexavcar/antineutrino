@@ -33,7 +33,6 @@ import org.javatrino.ast.Method;
 import org.javatrino.ast.Pattern;
 import org.javatrino.ast.Symbol;
 import org.javatrino.ast.Test;
-import org.neutrino.pib.Assembler;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
@@ -125,7 +124,7 @@ public class BytecodeCompiler extends Visitor {
 
   public static Result compile(Expression expr, List<Symbol> params,
       Map<Symbol, Expression> rewrites) {
-    Assembler assm = new Assembler(null);
+    Assembler assm = new Assembler();
     BytecodeCompiler compiler = new BytecodeCompiler(assm, params, getLocals(expr),
         rewrites);
     expr.accept(compiler);
