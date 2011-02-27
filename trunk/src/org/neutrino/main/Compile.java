@@ -6,7 +6,6 @@ import java.io.IOException;
 
 import org.neutrino.compiler.CompilerModule;
 import org.neutrino.compiler.CompilerUniverse;
-import org.neutrino.pib.BinaryBuilder;
 import org.neutrino.pib.Universe;
 import org.neutrino.syntax.SyntaxError;
 
@@ -36,6 +35,7 @@ public class Compile {
   }
 
   public static Universe compile(CompilerUniverse top) {
+    Universe universe = Universe.newEmpty();
     try {
       top.parseAll();
     } catch (SyntaxError se) {
@@ -45,9 +45,8 @@ public class Compile {
         System.out.println(line);
       return null;
     }
-    BinaryBuilder builder = Universe.builder(top);
-    top.writeToBinary(builder);
-    return builder.getResult();
+    top.writeTo(universe);
+    return universe;
   }
 
 }

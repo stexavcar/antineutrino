@@ -10,7 +10,6 @@ import java.util.Set;
 import java.util.Stack;
 
 import org.javatrino.ast.Expression;
-import org.neutrino.compiler.CompilerUniverse;
 import org.neutrino.plankton.ClassIndex;
 import org.neutrino.plankton.PlanktonEncoder;
 import org.neutrino.plankton.Store;
@@ -36,7 +35,6 @@ import org.neutrino.syntax.Annotation;
 public class Universe {
 
   public @Store Map<String, Module> modules;
-  private Universe parallelUniverse = null;
   private final MethodLookupHelper methodLookupHelper = new MethodLookupHelper(this);
 
   public Universe(Map<String, Module> modules) {
@@ -45,21 +43,19 @@ public class Universe {
 
   public Universe() { }
 
-  public static BinaryBuilder builder(CompilerUniverse universe) {
-    return new BinaryBuilder(universe);
-  }
-
-  public void setParallelUniverse(Universe universe) {
-    this.parallelUniverse = universe;
-  }
-
-  public Universe getParallelUniverse() {
-    return this.parallelUniverse;
+  public static Universe newEmpty() {
+    return new Universe(new HashMap<String, Module>());
   }
 
   public void initialize() {
     for (Module module : modules.values())
       module.initialize(this);
+  }
+
+  public Module createModule(String name) {
+    Module result = Module.newEmpty();
+    modules.put(name, result);
+    return result;
   }
 
   public Lambda getEntryPoint(String name) {
@@ -68,9 +64,7 @@ public class Universe {
       if (value != null)
         return value;
     }
-    return (parallelUniverse == null)
-        ? null
-        : parallelUniverse.getEntryPoint(name);
+    return null;
   }
 
   public RValue getGlobal(Object name, Interpreter inter) {
@@ -79,9 +73,7 @@ public class Universe {
       if (value != null)
         return value;
     }
-    return (parallelUniverse == null)
-        ? null
-        : parallelUniverse.getGlobal(name, inter);
+    return null;
   }
 
   public RProtocol getProtocol(String name) {
@@ -90,9 +82,7 @@ public class Universe {
       if (value != null)
         return value;
     }
-    return (parallelUniverse == null)
-        ? null
-        : parallelUniverse.getProtocol(name);
+    return null;
   }
 
   public RProtocol getProtocol(TypeId typeId) {
@@ -102,9 +92,7 @@ public class Universe {
           return proto;
       }
     }
-    return (parallelUniverse == null)
-      ? null
-      : parallelUniverse.getProtocol(typeId);
+    return null;
   }
 
   private final Map<TypeId, List<TypeId>> parentCache = new HashMap<TypeId, List<TypeId>>();
@@ -122,8 +110,6 @@ public class Universe {
   private void addParents(List<TypeId> out, TypeId id) {
     for (Module module : this.modules.values())
       module.addParents(out, id);
-    if (parallelUniverse != null)
-      parallelUniverse.addParents(out, id);
   }
 
   public Lambda lookupMethod(String name, int argc, Stack<RValue> stack) {

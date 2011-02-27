@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.TreeMap;
 
 import org.neutrino.main.Flags;
-import org.neutrino.pib.BinaryBuilder;
-import org.neutrino.pib.ModuleBuilder;
+import org.neutrino.pib.Module;
+import org.neutrino.pib.Universe;
 import org.neutrino.syntax.SyntaxError;
 import org.neutrino.syntax.Tree;
 
@@ -105,14 +105,14 @@ public class CompilerModule {
       child.parseAll();
   }
 
-  public void writeToBinary(BinaryBuilder builder) {
+  public void writeTo(Universe universe) {
     if (!isToplevel()) {
-      ModuleBuilder module = builder.createModule(name);
+      Module module = universe.createModule(name);
       for (Source source : sources.values())
         source.writeToBinary(module);
     }
     for (CompilerModule child : modules.values())
-      child.writeToBinary(builder);
+      child.writeTo(universe);
   }
 
   public static CompilerModule createToplevel() {

@@ -1,11 +1,15 @@
 package org.neutrino.pib;
 
+import static org.javatrino.ast.Expression.StaticFactory.eConstant;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.neutrino.compiler.Source;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
@@ -39,6 +43,11 @@ public class Module {
 
   public Universe getUniverse() {
     return universe;
+  }
+
+  public static Module newEmpty() {
+    return new Module(new HashMap<String, Binding>(), new HashMap<String, RProtocol>(),
+        new ArrayList<RMethod>(), new HashMap<String, List<String>>());
   }
 
   public void initialize(Universe universe) {
@@ -108,6 +117,37 @@ public class Module {
       for (TypeId parent : parents)
         out.add(parent);
     }
+  }
+
+  public void declareInheritance(String sub, String shuper) {
+    List<String> locals = rawInheritance.get(sub);
+    if (locals == null) {
+      locals = new ArrayList<String>();
+      rawInheritance.put(sub, locals);
+    }
+    locals.add(shuper);
+  }
+
+  public void createDefinition(String name, Binding binding) {
+    defs.put(name, binding);
+  }
+
+  public void createMethod(RMethod method) {
+    methods.add(method);
+  }
+
+  public RProtocol createProtocol(Source origin, List<Annotation> annots, String id,
+      String displayName) {
+    RProtocol proto = new RProtocol(annots, id, displayName);
+    protos.put(id, proto);
+    defs.put(id, new Binding(
+        Collections.<Annotation>emptyList(),
+        new CodeBundle(
+            origin.getName(),
+            eConstant(proto),
+            null,
+            null)));
+    return proto;
   }
 
 }

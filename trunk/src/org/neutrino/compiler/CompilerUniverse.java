@@ -1,6 +1,6 @@
 package org.neutrino.compiler;
 
-import org.neutrino.pib.BinaryBuilder;
+import org.neutrino.pib.Universe;
 import org.neutrino.syntax.SyntaxError;
 import org.neutrino.syntax.Tree.Declaration;
 import org.neutrino.syntax.Tree.Method;
@@ -18,8 +18,8 @@ public class CompilerUniverse {
     root.parseAll();
   }
 
-  public void writeToBinary(BinaryBuilder builder) {
-    root.writeToBinary(builder);
+  public void writeTo(Universe universe) {
+    root.writeTo(universe);
   }
 
   public Declaration findDeclaration(String name) {

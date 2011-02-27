@@ -111,9 +111,6 @@ public class MethodLookupHelper {
           methods.add(method);
       }
     }
-    Universe parallel = universe.getParallelUniverse();
-    if (parallel != null)
-      addMethods(methods, name, argc, parallel);
   }
 
   private RMethod findPerfectMatch(String name, int argc,
