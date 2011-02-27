@@ -136,13 +136,6 @@ public class Interpreter {
         frame.pc += 2;
         break;
       }
-      case Opcode.kOuter: {
-        int index = code[frame.pc + 1];
-        RFieldKey field = (RFieldKey) frame.getLiteral(index);
-        frame.stack.push(((RObject) frame.holder).getField(field));
-        frame.pc += 2;
-        break;
-      }
       case Opcode.kCallNative: {
         int index = code[frame.pc + 1];
         Native nathive = (Native) frame.getLiteral(index);

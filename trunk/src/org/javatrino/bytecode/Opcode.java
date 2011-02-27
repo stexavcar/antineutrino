@@ -58,7 +58,6 @@ public class Opcode {
   @Info({ArgType.LIT}) public static final int kGlobal = 10;
   @Info({}) public static final int kFalse = 11;
   @Info({ArgType.NUM}) public static final int kArgument = 12;
-  @Info({ArgType.NUM}) public static final int kOuter = 13;
   @Info({ArgType.NUM}) public static final int kLocal = 14;
   @Info({ArgType.NUM}) public static final int kStoreLocal = 15;
   @Info({}) public static final int kTerminate = 16;

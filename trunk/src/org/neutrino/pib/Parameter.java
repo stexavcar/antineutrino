@@ -27,7 +27,7 @@ public class Parameter {
       return;
     RProtocol proto = module.getProtocol(type);
     assert proto != null : "Undefined protocol " + type;
-    this.typeId = isProtocolMethod ? proto.getTypeId() : proto.getInstanceTypeId();
+    this.typeId = isProtocolMethod ? proto.getProtocolTypeId() : proto.getInstanceTypeId();
   }
 
   public TypeId getTypeId() {

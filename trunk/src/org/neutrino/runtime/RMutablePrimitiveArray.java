@@ -6,7 +6,7 @@ import java.util.List;
 
 public class RMutablePrimitiveArray extends RPrimitiveArray {
 
-  private static final TypeId TYPE_ID = TypeId.get("mutarr");
+  private static final List<TypeId> TYPE_IDS = TypeId.getIds("mutarr");
 
   public RMutablePrimitiveArray(int size) {
     super(createBackingStore(size));
@@ -24,8 +24,8 @@ public class RMutablePrimitiveArray extends RPrimitiveArray {
   }
 
   @Override
-  public TypeId getTypeId() {
-    return TYPE_ID;
+  public List<TypeId> getTypeIds() {
+    return TYPE_IDS;
   }
 
 }

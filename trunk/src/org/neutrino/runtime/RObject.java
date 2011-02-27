@@ -11,16 +11,16 @@ public class RObject extends RValue {
   private static final RImpl emptyImpl = new RImpl();
 
   private State state = State.UNDER_CONSTRUCTION;
-  private final Map<RFieldKey, RValue> outer;
+  private final Map<RFieldKey, RValue> fields;
   private RImpl impl = emptyImpl;
 
   public RObject(RProtocol proto, Map<RFieldKey, RValue> outer) {
-    this.outer = outer;
+    this.fields = outer;
     this.impl = this.impl.addProtocol(proto);
   }
 
   public RObject() {
-    this.outer = new HashMap<RFieldKey, RValue>();
+    this.fields = new HashMap<RFieldKey, RValue>();
   }
 
   public RImpl getImpl() {
@@ -28,12 +28,12 @@ public class RObject extends RValue {
   }
 
   public RValue getField(RFieldKey field) {
-    return outer.get(field);
+    return fields.get(field);
   }
 
   public void setField(RFieldKey field, RValue value) {
     assert state != State.IMMUTABLE;
-    outer.put(field, value);
+    fields.put(field, value);
   }
 
   public void addIntrinsics(List<Method> values) {
@@ -42,11 +42,6 @@ public class RObject extends RValue {
 
   public void addProtocol(RProtocol proto) {
     this.impl = this.impl.addProtocol(proto);
-  }
-
-  @Override
-  public TypeId getTypeId() {
-    return impl.getProtocols().get(0).getInstanceTypeId();
   }
 
   @Override

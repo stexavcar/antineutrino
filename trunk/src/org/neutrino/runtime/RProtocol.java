@@ -1,5 +1,6 @@
 package org.neutrino.runtime;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.neutrino.plankton.Store;
@@ -47,9 +48,13 @@ public class RProtocol extends RValue {
     return this.instanceTypeId;
   }
 
-  @Override
-  public TypeId getTypeId() {
+  public TypeId getProtocolTypeId() {
     return this.protocolTypeId;
+  }
+
+  @Override
+  public List<TypeId> getTypeIds() {
+    return Collections.singletonList(protocolTypeId);
   }
 
   @Override

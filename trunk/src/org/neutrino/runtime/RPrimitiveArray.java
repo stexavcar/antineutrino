@@ -4,7 +4,7 @@ import java.util.List;
 
 public class RPrimitiveArray extends RArray {
 
-  private static final TypeId TYPE_ID = TypeId.get("array");
+  private static final List<TypeId> TYPE_IDS = TypeId.getIds("array");
 
   private final List<RValue> elements;
 
@@ -13,8 +13,8 @@ public class RPrimitiveArray extends RArray {
   }
 
   @Override
-  public TypeId getTypeId() {
-    return TYPE_ID;
+  public List<TypeId> getTypeIds() {
+    return TYPE_IDS;
   }
 
   public RValue get(int index) {
