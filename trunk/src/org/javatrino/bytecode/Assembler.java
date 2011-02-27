@@ -141,15 +141,13 @@ public class Assembler {
     add(elmc);
   }
 
-  public int call(String name, List<Integer> args) {
+  public int call(String name, int argc) {
     int nameIndex = registerLiteral(name);
     int result = getOffset();
     add(Opcode.kCall);
     add(nameIndex);
-    add(args.size());
+    add(argc);
     add(0xFF);
-    for (int arg : args)
-      add(arg);
     return result;
   }
 
@@ -162,24 +160,11 @@ public class Assembler {
     return result;
   }
 
-  public int with1cc() {
-    int result = getOffset();
-    add(Opcode.kWith1cc);
-    add(0);
-    add(2);
-    add(0);
-    add(0);
-    add(0);
-    return result;
-  }
-
   public int withEscape() {
     int result = getOffset();
     add(Opcode.kWithEscape);
     add(0);
     add(2);
-    add(0);
-    add(0);
     add(0);
     return result;
   }
@@ -191,8 +176,6 @@ public class Assembler {
     add(index);
     add(argc);
     add(0);
-    for (int i = 0; i < argc; i++)
-      add(0);
   }
 
   public int registerLiteral(Object obj) {
