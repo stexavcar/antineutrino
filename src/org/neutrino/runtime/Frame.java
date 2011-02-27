@@ -9,7 +9,6 @@ public class Frame {
 
   public int pc = 0;
   public Stack<RValue> stack = new Stack<RValue>();
-  public final byte[] code;
   public final CodeBundle bundle;
   public final Frame parent;
   public final RValue holder;
@@ -18,7 +17,6 @@ public class Frame {
   public Frame(Frame parent, RValue holder, CodeBundle code) {
     this.parent = parent;
     this.holder = holder;
-    this.code = code.getCode();
     this.bundle = code;
     for (int i = 0; i < code.getLocalCount(); i++)
       stack.push(RNull.getInstance());

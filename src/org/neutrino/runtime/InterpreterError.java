@@ -45,10 +45,10 @@ public class InterpreterError extends RuntimeException {
     ArrayList<StackTraceElement> trace = new ArrayList<StackTraceElement>();
     Frame current = frame;
     while (current.parent != null) {
-      int opcode = current.code[current.pc];
+      int opcode = current.bundle.getCode()[current.pc];
       if (opcode == Opcode.kCall) {
-        int index = current.code[current.pc + 1];
-        int argc = current.code[current.pc + 2];
+        int index = current.bundle.getCode()[current.pc + 1];
+        int argc = current.bundle.getCode()[current.pc + 2];
         Object name = current.getLiteral(index);
         RValue self = current.getArgument(argc, 0);
         String recvType = renderValueType(current, self);

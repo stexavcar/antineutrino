@@ -49,7 +49,7 @@ public class MethodLookupHelper {
   public Lambda lookupMethod(String name, int argc, Stack<RValue> stack) {
     Method intrinsic = lookupIntrinsic(name, argc, stack);
     if (intrinsic != null)
-      return new Lambda(intrinsic.origin, intrinsic.getBundle());
+      return new Lambda(intrinsic.module, intrinsic.getBundle());
     RMethod result = findPerfectMatch(name, argc, stack);
     if (result == null)
       result = findApproximateMatch(name, argc, stack);

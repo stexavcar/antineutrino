@@ -15,12 +15,19 @@ import org.javatrino.ast.Test;
 import org.javatrino.ast.Test.Any;
 import org.javatrino.ast.Test.Eq;
 import org.javatrino.ast.Test.Is;
+import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Internal;
 
 public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
+
+  private final Module module;
+
+  public ExpressionGenerator(Module module) {
+    this.module = module;
+  }
 
   @Override
   public Expression visitExpression(Tree.Expression that) {
@@ -32,16 +39,16 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     return Arrays.asList(args);
   }
 
-  private static Method makeGetter(String name, RFieldKey key) {
+  private Method makeGetter(String name, RFieldKey key) {
     Pattern namePattern = new Pattern(asList("name"), new Eq(name), null);
     Symbol self = new Symbol(Symbol.kParameterSymbol);
     Pattern selfPattern = new Pattern(asList(0), new Any(), self);
     Expression body = eGetField(eLocal(self), key);
     return new Method(Arrays.asList(namePattern, selfPattern), false, body, null,
-        null);
+        module);
   }
 
-  private static Method makeSetter(String name, RFieldKey key) {
+  private Method makeSetter(String name, RFieldKey key) {
     Pattern namePattern = new Pattern(asList("name"), new Eq(name), null);
     Symbol self = new Symbol(Symbol.kParameterSymbol);
     Pattern selfPattern = new Pattern(asList(0), new Any(), self);
@@ -49,7 +56,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Pattern valuePattern = new Pattern(asList(1), new Any(), value);
     Expression body = eSetField(eLocal(self), key, eLocal(value));
     return new Method(Arrays.asList(namePattern, selfPattern, valuePattern),
-        false, body, null, null);
+        false, body, null, module);
   }
 
   @Override
@@ -84,7 +91,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
           patterns.add(new Pattern(asList(index), test, param.getSymbol()));
           index++;
         }
-        Method method = new Method(patterns, false, body, null, null);
+        Method method = new Method(patterns, false, body, null, module);
         intrinsics.add(method);
       }
     }
