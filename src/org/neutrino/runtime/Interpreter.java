@@ -39,8 +39,9 @@ public class Interpreter {
   private RValue interpret(Universe universe, Frame frame) {
     byte[] code = frame.bundle.getCode();
     while (true) {
-//      System.out.println(count++);
       int opcode = code[frame.pc];
+      count++;
+//       System.out.println(count++ + " " + opcode);
       switch (opcode) {
       case Opcode.kNull:
         frame.stack.push(RNull.getInstance());
@@ -69,21 +70,6 @@ public class Interpreter {
         code = bundle.getCode();
         break;
       }
-      case Opcode.kWith1cc: {
-        String name = "()";
-        int argc = code[frame.pc + 2];
-        RContinuation cont = new RContinuation();
-        frame.stack.push(cont);
-        RValue self = frame.getArgument(argc, 0);
-        Lambda lambda = frame.lookupMethod(universe, name, argc);
-        if (lambda == null)
-          throw new InterpreterError.MethodNotFound(frame, universe);
-        CodeBundle bundle = lambda.getCode();
-        frame = new Frame(frame, self, bundle);
-        frame.marker = cont;
-        code = bundle.getCode();
-        break;
-      }
       case Opcode.kWithEscape: {
         String name = "()";
         int argc = code[frame.pc + 2];
@@ -108,7 +94,7 @@ public class Interpreter {
         for (int i = 0; i < argc; i++)
           frame.stack.pop();
         frame.stack.push(value);
-        frame.pc += Opcode.kCallSize + argc;
+        frame.pc += Opcode.kCallSize;
         break;
       }
       case Opcode.kReturnFromApply: {
@@ -119,8 +105,7 @@ public class Interpreter {
         frame.stack.pop();
         frame.stack.pop();
         frame.stack.push(value);
-        int argc = code[frame.pc + 2];
-        frame.pc += Opcode.kCallSize + argc;
+        frame.pc += Opcode.kCallSize;
         break;
       }
       case Opcode.kTerminate: {
@@ -168,8 +153,7 @@ public class Interpreter {
         code = frame.bundle.getCode();
         if (value != null) {
           frame.stack.push(value);
-          int targargc = code[frame.pc + 2];
-          frame.pc += Opcode.kCallSize + targargc;
+          frame.pc += Opcode.kCallSize;
         }
         break;
       }

@@ -7,7 +7,6 @@ import static org.javatrino.ast.Expression.StaticFactory.eNewObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -266,7 +265,7 @@ public class BytecodeCompiler extends Visitor {
       assert arg.tag.equals(i - 1);
       arg.value.accept(this);
     }
-    assm.call(name, Collections.nCopies(args.size() - 1, 0));
+    assm.call(name, args.size() - 1);
   }
 
   @Override
