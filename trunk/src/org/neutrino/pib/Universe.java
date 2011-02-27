@@ -95,13 +95,14 @@ public class Universe {
     return null;
   }
 
-  private final Map<TypeId, List<TypeId>> parentCache = new HashMap<TypeId, List<TypeId>>();
+  private final Map<TypeId, TypeId[]> parentCache = new HashMap<TypeId, TypeId[]>();
 
-  public List<TypeId> getParents(TypeId id) {
-    List<TypeId> result = parentCache.get(id);
+  public TypeId[] getParents(TypeId id) {
+    TypeId[] result = parentCache.get(id);
     if (result == null) {
-      result = new ArrayList<TypeId>();
-      addParents(result, id);
+      List<TypeId> elms = new ArrayList<TypeId>();
+      addParents(elms, id);
+      result = elms.toArray(new TypeId[elms.size()]);
       parentCache.put(id, result);
     }
     return result;

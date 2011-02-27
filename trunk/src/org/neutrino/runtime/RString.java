@@ -1,12 +1,10 @@
 package org.neutrino.runtime;
 
-import java.util.List;
-
 import org.neutrino.plankton.Store;
 
 public class RString extends RValue {
 
-  private static final List<TypeId> TYPE_IDS = TypeId.getIds("str");
+  private static final TypeId[] TYPE_IDS = TypeId.getIds("str");
 
   public @Store String value;
 
@@ -21,7 +19,7 @@ public class RString extends RValue {
   }
 
   @Override
-  public List<TypeId> getTypeIds() {
+  public TypeId[] getTypeIds() {
     return TYPE_IDS;
   }
 

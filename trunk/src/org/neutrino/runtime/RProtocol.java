@@ -1,6 +1,5 @@
 package org.neutrino.runtime;
 
-import java.util.Collections;
 import java.util.List;
 
 import org.neutrino.plankton.Store;
@@ -52,9 +51,12 @@ public class RProtocol extends RValue {
     return this.protocolTypeId;
   }
 
+  private TypeId[] typeIdCache = null;
   @Override
-  public List<TypeId> getTypeIds() {
-    return Collections.singletonList(protocolTypeId);
+  public TypeId[] getTypeIds() {
+    if (typeIdCache == null)
+      typeIdCache = new TypeId[] { protocolTypeId };
+    return typeIdCache;
   }
 
   @Override

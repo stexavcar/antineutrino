@@ -7,7 +7,7 @@ public abstract class RValue {
     UNDER_CONSTRUCTION, MUTABLE, IMMUTABLE
   }
 
-  public abstract Iterable<TypeId> getTypeIds();
+  public abstract TypeId[] getTypeIds();
 
   public abstract State getState();
 
