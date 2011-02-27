@@ -1,8 +1,10 @@
 package org.neutrino.runtime;
 
+import java.util.List;
+
 public class RByteArray extends RArray {
 
-  private static final TypeId TYPE_ID = TypeId.get("byte_array");
+  private static final List<TypeId> TYPE_IDS = TypeId.getIds("byte_array");
 
   private final byte[] data;
 
@@ -11,8 +13,8 @@ public class RByteArray extends RArray {
   }
 
   @Override
-  public TypeId getTypeId() {
-    return TYPE_ID;
+  public List<TypeId> getTypeIds() {
+    return TYPE_IDS;
   }
 
   public RValue get(int index) {

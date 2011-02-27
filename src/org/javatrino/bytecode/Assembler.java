@@ -41,14 +41,6 @@ public class Assembler {
     add(index);
   }
 
-  public int outer(RFieldKey field) {
-    int index = registerLiteral(field);
-    int result = getOffset();
-    add(Opcode.kOuter);
-    add(index);
-    return result;
-  }
-
   public void setField(RFieldKey field) {
     add(Opcode.kSetField);
     add(registerLiteral(field));

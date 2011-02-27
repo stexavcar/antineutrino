@@ -1,9 +1,11 @@
 package org.neutrino.runtime;
 
+import java.util.List;
+
 import org.neutrino.plankton.Store;
 public class RInteger extends RValue {
 
-  private static final TypeId TYPE_ID = TypeId.get("int");
+  private static final List<TypeId> TYPE_IDS = TypeId.getIds("int");
 
   private static final int kCachedCount = 1024;
   private static final RInteger[] kCache = new RInteger[kCachedCount];
@@ -31,8 +33,8 @@ public class RInteger extends RValue {
   }
 
   @Override
-  public TypeId getTypeId() {
-    return TYPE_ID;
+  public List<TypeId> getTypeIds() {
+    return TYPE_IDS;
   }
 
   @Override

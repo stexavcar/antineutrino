@@ -1,16 +1,18 @@
 package org.neutrino.runtime;
 
+import java.util.List;
+
 public class RMutableByteArray extends RByteArray {
 
-  private static final TypeId TYPE_ID = TypeId.get("mutbytarr");
+  private static final List<TypeId> TYPE_IDS = TypeId.getIds("mutbytarr");
 
   public RMutableByteArray(int size) {
     super(new byte[size]);
   }
 
   @Override
-  public TypeId getTypeId() {
-    return TYPE_ID;
+  public List<TypeId> getTypeIds() {
+    return TYPE_IDS;
   }
 
   public void set(int key, int value) {

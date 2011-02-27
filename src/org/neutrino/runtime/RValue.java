@@ -1,6 +1,5 @@
 package org.neutrino.runtime;
 
-import java.util.Collections;
 
 public abstract class RValue {
 
@@ -8,11 +7,7 @@ public abstract class RValue {
     UNDER_CONSTRUCTION, MUTABLE, IMMUTABLE
   }
 
-  public abstract TypeId getTypeId();
-
-  public Iterable<TypeId> getTypeIds() {
-    return Collections.singleton(getTypeId());
-  }
+  public abstract Iterable<TypeId> getTypeIds();
 
   public abstract State getState();
 

@@ -10,7 +10,7 @@ import org.neutrino.syntax.Annotation;
 
 public class RMethod extends RValue {
 
-  private static final TypeId TYPE_ID = TypeId.get("Method");
+  private static final List<TypeId> TYPE_IDS = TypeId.getIds("Method");
 
   public @Store List<Annotation> annots;
   public @Store String name;
@@ -51,8 +51,8 @@ public class RMethod extends RValue {
   }
 
   @Override
-  public TypeId getTypeId() {
-    return TYPE_ID;
+  public List<TypeId> getTypeIds() {
+    return TYPE_IDS;
   }
 
   @Override

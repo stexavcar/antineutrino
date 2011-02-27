@@ -1,15 +1,17 @@
 package org.neutrino.runtime;
 
+import java.util.List;
+
 public class RBoolean extends RValue {
 
-  private static final RBoolean TRUE = new RBoolean(TypeId.get("true"), true);
-  private static final RBoolean FALSE = new RBoolean(TypeId.get("false"), false);
+  private static final RBoolean TRUE = new RBoolean(TypeId.getIds("true"), true);
+  private static final RBoolean FALSE = new RBoolean(TypeId.getIds("false"), false);
 
-  private final TypeId typeId;
+  private final List<TypeId> typeIds;
   private final boolean value;
 
-  private RBoolean(TypeId typeId, boolean value) {
-    this.typeId = typeId;
+  private RBoolean(List<TypeId> typeIds, boolean value) {
+    this.typeIds = typeIds;
     this.value = value;
   }
 
@@ -30,8 +32,8 @@ public class RBoolean extends RValue {
   }
 
   @Override
-  public TypeId getTypeId() {
-    return typeId;
+  public List<TypeId> getTypeIds() {
+    return typeIds;
   }
 
   @Override
