@@ -33,8 +33,6 @@ public class RProtocol extends RValue {
     return id;
   }
 
-  public void initialize() { }
-
   public String getId() {
     return id;
   }

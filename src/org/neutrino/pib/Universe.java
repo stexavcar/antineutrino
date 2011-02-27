@@ -49,11 +49,11 @@ public class Universe {
 
   public void initialize() {
     for (Module module : modules.values())
-      module.initialize(this);
+      module.initialize();
   }
 
   public Module createModule(String name) {
-    Module result = Module.newEmpty();
+    Module result = Module.newEmpty(this);
     modules.put(name, result);
     return result;
   }
@@ -69,7 +69,7 @@ public class Universe {
 
   public RValue getGlobal(Object name, Interpreter inter) {
     for (Module module : modules.values()) {
-      RValue value = module.getGlobal(name, inter);
+      RValue value = module.lookupGlobal(name, inter);
       if (value != null)
         return value;
     }

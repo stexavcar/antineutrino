@@ -3,7 +3,6 @@ package org.neutrino.runtime;
 import java.util.Stack;
 
 import org.neutrino.pib.CodeBundle;
-import org.neutrino.pib.Universe;
 
 public class Frame {
 
@@ -30,8 +29,8 @@ public class Frame {
     return stack.get(stack.size() - argc + index);
   }
 
-  public Lambda lookupMethod(Universe universe, String name, int argc) {
-    return universe.lookupMethod(name, argc, this.stack);
+  public Lambda lookupMethod(String name, int argc) {
+    return bundle.module.universe.lookupMethod(name, argc, this.stack);
   }
 
   public RValue peekArgument(int index) {

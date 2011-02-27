@@ -26,17 +26,18 @@ public class Module {
   public @Store Map<String, RProtocol> protos;
   public @Store Map<String, List<String>> rawInheritance;
   public @Store List<RMethod> methods;
+  public @Store Universe universe;
 
   private final Map<TypeId, List<TypeId>> inheritance = new HashMap<TypeId, List<TypeId>>();
   private final Map<Object, RValue> globals = new HashMap<Object, RValue>();
-  private Universe universe;
 
-  public Module(Map<String, Binding> defs, Map<String, RProtocol> protos,
-      List<RMethod> methods, Map<String, List<String>> inheritance) {
+  public Module(Universe universe, Map<String, Binding> defs, Map<String,
+      RProtocol> protos, List<RMethod> methods, Map<String, List<String>> inheritance) {
     this.defs = defs;
     this.protos = protos;
     this.methods = methods;
     this.rawInheritance = inheritance;
+    this.universe = universe;
   }
 
   public Module() { }
@@ -45,15 +46,13 @@ public class Module {
     return universe;
   }
 
-  public static Module newEmpty() {
-    return new Module(new HashMap<String, Binding>(), new HashMap<String, RProtocol>(),
-        new ArrayList<RMethod>(), new HashMap<String, List<String>>());
+  public static Module newEmpty(Universe universe) {
+    return new Module(universe, new HashMap<String, Binding>(),
+        new HashMap<String, RProtocol>(), new ArrayList<RMethod>(),
+        new HashMap<String, List<String>>());
   }
 
-  public void initialize(Universe universe) {
-    this.universe = universe;
-    for (RProtocol proto : protos.values())
-      proto.initialize();
+  public void initialize() {
     for (RMethod method : methods)
       method.initialize(this);
     for (Map.Entry<String, List<String>> entry : rawInheritance.entrySet()) {
@@ -99,16 +98,20 @@ public class Module {
     return defs.values();
   }
 
-  public RValue getGlobal(Object name, Interpreter inter) {
+  public RValue lookupGlobal(Object name, Interpreter inter) {
     RValue result = globals.get(name);
     if (result == null) {
       Binding binding = defs.get(name);
       if (binding == null)
         return null;
-      result = inter.interpret(universe, binding.getCode());
+      result = inter.interpret(binding.getCode());
       globals.put(name, result);
     }
     return result;
+  }
+
+  public RValue getGlobal(Object name, Interpreter inter) {
+    return universe.getGlobal(name, inter);
   }
 
   public void addParents(List<TypeId> out, TypeId id) {
