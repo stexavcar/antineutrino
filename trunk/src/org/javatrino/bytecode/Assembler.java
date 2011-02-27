@@ -80,15 +80,6 @@ public class Assembler {
     add(index);
   }
 
-  public int defineLocal(int index, int value, int body) {
-    int result = getOffset();
-    add(Opcode.kDefineLocal);
-    add(index);
-    add(value);
-    add(body);
-    return result;
-  }
-
   public int nuhll() {
     int offset = getOffset();
     add(Opcode.kNull);
@@ -148,15 +139,6 @@ public class Assembler {
     add(nameIndex);
     add(argc);
     add(0xFF);
-    return result;
-  }
-
-  public int block(List<Integer> elm) {
-    int result = getOffset();
-    add(Opcode.kBlock);
-    add(elm.size());
-    for (int arg : elm)
-      add(arg);
     return result;
   }
 

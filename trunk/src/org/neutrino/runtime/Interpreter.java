@@ -204,24 +204,6 @@ public class Interpreter {
         frame.pc += 2;
         break;
       }
-      case Opcode.kGetter: {
-        int index = code[frame.pc + 1];
-        RFieldKey field = (RFieldKey) frame.getLiteral(index);
-        RObject obj = (RObject) frame.parent.getArgument(1, 0);
-        frame.stack.push(obj.getField(field));
-        frame.pc += 2;
-        break;
-      }
-      case Opcode.kSetter: {
-        int index = code[frame.pc + 1];
-        RFieldKey field = (RFieldKey) frame.getLiteral(index);
-        RObject obj = (RObject) frame.parent.getArgument(2, 0);
-        RValue value = frame.parent.getArgument(2, 1);
-        obj.setField(field, value);
-        frame.stack.push(value);
-        frame.pc += 2;
-        break;
-      }
       case Opcode.kNewObject: {
         RObject obj = new RObject();
         frame.stack.push(obj);
@@ -261,16 +243,6 @@ public class Interpreter {
         for (int i = 0; i < count; i++)
           obj.addProtocol((RProtocol) frame.stack.pop());
         frame.pc += 2;
-        break;
-      }
-      // Structural opcodes without execution semantics.
-      case Opcode.kDefineLocal: {
-        frame.pc += 4;
-        break;
-      }
-      case Opcode.kBlock: {
-        int argc = code[frame.pc + 1];
-        frame.pc += 2 + argc;
         break;
       }
       default:

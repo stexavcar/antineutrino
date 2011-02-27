@@ -63,12 +63,8 @@ public class Opcode {
   @Info({ArgType.NUM}) public static final int kStoreLocal = 15;
   @Info({}) public static final int kTerminate = 16;
   @Info({ArgType.LIT, ArgType.NUM}) public static final int kNew = 17;
-  @Info({ArgType.NUM}) public static final int kGetter = 18;
   @Info({ArgType.NUM}) public static final int kNewArray = 20;
   @Info({}) public static final int kReturnFromApply = 21;
-  @Info({ArgType.NUM}) public static final int kBlock = 22;
-  @Info({ArgType.NUM, ArgType.NUM, ArgType.NUM}) public static final int kDefineLocal = 23;
-  @Info({ArgType.NUM}) public static final int kSetter = 24;
   @Info({ArgType.LIT}) public static final int kAddIntrinsics = 25;
   @Info({}) public static final int kNewObject = 26;
   @Info({ArgType.LIT}) public static final int kSetField = 27;
