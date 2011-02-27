@@ -16,7 +16,7 @@ public class Compiler {
       Tree.Expression body, List<Parameter> params) {
     LexicalAnalyzer lexicizer = new LexicalAnalyzer(params);
     body.accept(lexicizer);
-    ExpressionGenerator exprgen = new ExpressionGenerator();
+    ExpressionGenerator exprgen = new ExpressionGenerator(module);
     Expression expr = exprgen.generate(body);
     List<Symbol> paramSyms = null;
     if (params != null) {
@@ -24,7 +24,7 @@ public class Compiler {
       for (Parameter param : params)
         paramSyms.add(param.getSymbol());
     }
-    return new CodeBundle(origin.getName(), expr, paramSyms, null);
+    return new CodeBundle(module, origin.getName(), expr, paramSyms, null);
   }
 
 }

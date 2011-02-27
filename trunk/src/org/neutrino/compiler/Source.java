@@ -135,7 +135,7 @@ public class Source {
     public void visitMethodDefinition(Method that) {
       CodeBundle bundle = Compiler.compile(module, Source.this, that.getBody(),
           that.getParameters());
-      module.createMethod(new RMethod(that.getAnnotations(), that.getMethodName(),
+      module.createMethod(new RMethod(module, that.getAnnotations(), that.getMethodName(),
           that.getParameters(), bundle));
     }
 

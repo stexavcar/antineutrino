@@ -143,6 +143,7 @@ public class Module {
     defs.put(id, new Binding(
         Collections.<Annotation>emptyList(),
         new CodeBundle(
+            this,
             origin.getName(),
             eConstant(proto),
             null,

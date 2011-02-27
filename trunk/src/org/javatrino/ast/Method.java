@@ -14,17 +14,18 @@ public class Method {
   public @Store boolean acceptsExtraArguments;
   public @Store Expression body;
   public @Store Map<Symbol, Expression> rewrites;
+  public @Store Module module;
 
-  public Module origin;
   private CodeBundle bundle;
 
   public Method(List<Pattern> signature, boolean acceptsExtraArguments, Expression body,
-      Map<Symbol, Expression> rewrites, Module origin) {
+      Map<Symbol, Expression> rewrites, Module module) {
+    assert module != null;
     this.signature = signature;
     this.acceptsExtraArguments = acceptsExtraArguments;
     this.body = body;
     this.rewrites = rewrites;
-    this.origin = origin;
+    this.module = module;
   }
 
   public Method() { }
@@ -38,7 +39,7 @@ public class Method {
     if (map.isEmpty()) {
       return this;
     } else if (this.rewrites == null || this.rewrites.isEmpty()) {
-      return new Method(signature, acceptsExtraArguments, body, map, origin);
+      return new Method(signature, acceptsExtraArguments, body, map, module);
     } else {
       assert false;
       return null;
@@ -52,8 +53,7 @@ public class Method {
         if (pattern != null)
           syms.add(pattern.symbol);
       }
-      bundle = new CodeBundle(null, body, syms, rewrites);
-      bundle.initialize(origin);
+      bundle = new CodeBundle(module, null, body, syms, rewrites);
     }
     return bundle;
   }

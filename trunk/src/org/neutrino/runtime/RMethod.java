@@ -16,10 +16,11 @@ public class RMethod extends RValue {
   public @Store String name;
   public @Store List<Parameter> params;
   public @Store CodeBundle code;
-  public Module origin;
+  public @Store Module module;
 
-  public RMethod(List<Annotation> annots, String name, List<Parameter> params,
+  public RMethod(Module module, List<Annotation> annots, String name, List<Parameter> params,
       CodeBundle code) {
+    this.module = module;
     this.annots = annots;
     this.name = name;
     this.params = params;
@@ -31,8 +32,6 @@ public class RMethod extends RValue {
   public void initialize(Module module) {
     for (Parameter param : params)
       param.initialize(module);
-    this.origin = module;
-    code.initialize(module);
   }
 
   public String getName() {
@@ -48,7 +47,7 @@ public class RMethod extends RValue {
   }
 
   public Module getOrigin() {
-    return origin;
+    return module;
   }
 
   @Override

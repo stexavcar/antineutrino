@@ -5,9 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.javatrino.ast.Expression;
-import org.javatrino.ast.Expression.AddIntrinsics;
-import org.javatrino.ast.Expression.Visitor;
-import org.javatrino.ast.Method;
 import org.javatrino.ast.Symbol;
 import org.javatrino.bytecode.BytecodeCompiler;
 import org.neutrino.plankton.Store;
@@ -18,6 +15,7 @@ public class CodeBundle {
   public @Store Expression body;
   public @Store List<Symbol> params;
   public @Store Map<Symbol, Expression> rewrites;
+  public @Store Module module;
 
   private byte[] code;
   private List<Object> literals;
@@ -29,12 +27,14 @@ public class CodeBundle {
     this.localCount = localCount;
   }
 
-  public CodeBundle(String fileName, Expression body, List<Symbol> params,
+  public CodeBundle(Module module, String fileName, Expression body, List<Symbol> params,
       Map<Symbol, Expression> rewrites) {
+    assert module != null;
     this.fileName = fileName;
     this.body = body;
     this.params = params == null ? Collections.<Symbol>emptyList() : params;
     this.rewrites = rewrites;
+    this.module = module;
   }
 
   public CodeBundle() { }
@@ -60,24 +60,11 @@ public class CodeBundle {
 
   private void ensureCompiled() {
     if (code == null) {
-      BytecodeCompiler.Result result = BytecodeCompiler.compile(body, params,
+      BytecodeCompiler.Result result = BytecodeCompiler.compile(module, body, params,
           rewrites);
       this.code = result.code;
       this.literals = result.literals;
       this.localCount = result.localCount;
-    }
-  }
-
-  public void initialize(final Module module) {
-    if (body != null) {
-      body.accept(new Visitor() {
-        @Override
-        public void visitAddIntrinsics(AddIntrinsics that) {
-          for (Method method : that.methods)
-            method.origin = module;
-          super.visitAddIntrinsics(that);
-        }
-      });
     }
   }
 

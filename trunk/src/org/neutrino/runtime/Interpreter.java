@@ -37,9 +37,10 @@ public class Interpreter {
 
   @SuppressWarnings("unchecked")
   private RValue interpret(Universe universe, Frame frame) {
+    byte[] code = frame.bundle.getCode();
     while (true) {
 //      System.out.println(count++);
-      int opcode = frame.code[frame.pc];
+      int opcode = code[frame.pc];
       switch (opcode) {
       case Opcode.kNull:
         frame.stack.push(RNull.getInstance());
@@ -54,41 +55,47 @@ public class Interpreter {
         frame.pc += 1;
         break;
       case Opcode.kCall: {
-        int nameIndex = frame.code[frame.pc + 1];
+        int nameIndex = code[frame.pc + 1];
         String name = (String) frame.getLiteral(nameIndex);
-        int argc = frame.code[frame.pc + 2];
+        int argc = code[frame.pc + 2];
         RValue self = frame.getArgument(argc, 0);
         Lambda lambda = frame.lookupMethod(universe, name, argc);
         if (lambda == null) {
           frame.lookupMethod(universe, name, argc);
           throw new InterpreterError.MethodNotFound(frame, universe);
         }
-        frame = new Frame(frame, self, lambda.getCode());
+        CodeBundle bundle = lambda.getCode();
+        frame = new Frame(frame, self, bundle);
+        code = bundle.getCode();
         break;
       }
       case Opcode.kWith1cc: {
         String name = "()";
-        int argc = frame.code[frame.pc + 2];
+        int argc = code[frame.pc + 2];
         RContinuation cont = new RContinuation();
         frame.stack.push(cont);
         RValue self = frame.getArgument(argc, 0);
         Lambda lambda = frame.lookupMethod(universe, name, argc);
         if (lambda == null)
           throw new InterpreterError.MethodNotFound(frame, universe);
-        frame = new Frame(frame, self, lambda.getCode());
+        CodeBundle bundle = lambda.getCode();
+        frame = new Frame(frame, self, bundle);
         frame.marker = cont;
+        code = bundle.getCode();
         break;
       }
       case Opcode.kWithEscape: {
         String name = "()";
-        int argc = frame.code[frame.pc + 2];
+        int argc = code[frame.pc + 2];
         RContinuation cont = new RContinuation();
         RValue self = frame.stack.peek();
         frame.stack.push(cont);
         Lambda lambda = frame.lookupMethod(universe, name, argc);
         if (lambda == null)
           throw new InterpreterError.MethodNotFound(frame, universe);
-        frame = new Frame(frame, self, lambda.getCode());
+        CodeBundle bundle = lambda.getCode();
+        frame = new Frame(frame, self, bundle);
+        code = bundle.getCode();
         frame.marker = cont;
         break;
       }
@@ -96,7 +103,8 @@ public class Interpreter {
         RValue value = frame.stack.pop();
         assert frame.stack.size() == frame.getLocalCount();
         frame = frame.parent;
-        int argc = frame.code[frame.pc + 2];
+        code = frame.bundle.getCode();
+        int argc = code[frame.pc + 2];
         for (int i = 0; i < argc; i++)
           frame.stack.pop();
         frame.stack.push(value);
@@ -106,11 +114,12 @@ public class Interpreter {
       case Opcode.kReturnFromApply: {
         RValue value = frame.stack.pop();
         frame = frame.parent.parent;
+        code = frame.bundle.getCode();
         frame.stack.pop();
         frame.stack.pop();
         frame.stack.pop();
         frame.stack.push(value);
-        int argc = frame.code[frame.pc + 2];
+        int argc = code[frame.pc + 2];
         frame.pc += Opcode.kCallSize + argc;
         break;
       }
@@ -119,7 +128,7 @@ public class Interpreter {
         return value;
       }
       case Opcode.kLiteral: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         RValue value = (RValue) frame.getLiteral(index);
         frame.stack.push(value);
         frame.pc += 2;
@@ -136,35 +145,36 @@ public class Interpreter {
         break;
       }
       case Opcode.kArgument: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         RValue value = frame.parent.peekArgument(index);
         frame.stack.push(value);
         frame.pc += 2;
         break;
       }
       case Opcode.kOuter: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         RFieldKey field = (RFieldKey) frame.getLiteral(index);
         frame.stack.push(((RObject) frame.holder).getField(field));
         frame.pc += 2;
         break;
       }
       case Opcode.kCallNative: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         Native nathive = (Native) frame.getLiteral(index);
-        int argc = frame.code[frame.pc + 2];
+        int argc = code[frame.pc + 2];
         arguments.prepare(frame, argc, universe);
         RValue value = nathive.call(arguments);
         frame = arguments.getFrame();
+        code = frame.bundle.getCode();
         if (value != null) {
           frame.stack.push(value);
-          int targargc = frame.code[frame.pc + 2];
+          int targargc = code[frame.pc + 2];
           frame.pc += Opcode.kCallSize + targargc;
         }
         break;
       }
       case Opcode.kGlobal: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         Object name = frame.getLiteral(index);
         RValue value = universe.getGlobal(name, this);
         if (value == null)
@@ -174,22 +184,22 @@ public class Interpreter {
         break;
       }
       case Opcode.kStoreLocal: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         frame.setLocal(index, frame.stack.pop());
         frame.pc += 2;
         break;
       }
       case Opcode.kLocal: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         RValue value = frame.getLocal(index);
         frame.stack.push(value);
         frame.pc += 2;
         break;
       }
       case Opcode.kNew: {
-        int protoIndex = frame.code[frame.pc + 1];
+        int protoIndex = code[frame.pc + 1];
         RProtocol proto = (RProtocol) frame.getLiteral(protoIndex);
-        int fieldIndex = frame.code[frame.pc + 2];
+        int fieldIndex = code[frame.pc + 2];
         List<RFieldKey> fields = (List<RFieldKey>) frame.getLiteral(fieldIndex);
         Map<RFieldKey, RValue> outer = Collections.<RFieldKey, RValue>emptyMap();
         if (fields.size() > 0) {
@@ -202,7 +212,7 @@ public class Interpreter {
         break;
       }
       case Opcode.kNewArray: {
-        int elmc = frame.code[frame.pc + 1];
+        int elmc = code[frame.pc + 1];
         RValue[] elms = new RValue[elmc];
         for (int i = 0; i < elmc; i++)
           elms[elmc - i - 1] = frame.stack.pop();
@@ -211,7 +221,7 @@ public class Interpreter {
         break;
       }
       case Opcode.kGetter: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         RFieldKey field = (RFieldKey) frame.getLiteral(index);
         RObject obj = (RObject) frame.parent.getArgument(1, 0);
         frame.stack.push(obj.getField(field));
@@ -219,7 +229,7 @@ public class Interpreter {
         break;
       }
       case Opcode.kSetter: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         RFieldKey field = (RFieldKey) frame.getLiteral(index);
         RObject obj = (RObject) frame.parent.getArgument(2, 0);
         RValue value = frame.parent.getArgument(2, 1);
@@ -235,7 +245,7 @@ public class Interpreter {
         break;
       }
       case Opcode.kSetField: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         RFieldKey field = (RFieldKey) frame.getLiteral(index);
         RValue value = (RValue) frame.stack.pop();
         RObject obj = (RObject) frame.stack.pop();
@@ -245,7 +255,7 @@ public class Interpreter {
         break;
       }
       case Opcode.kGetField: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         RFieldKey field = (RFieldKey) frame.getLiteral(index);
         RObject obj = (RObject) frame.stack.pop();
         RValue value = obj.getField(field);
@@ -254,7 +264,7 @@ public class Interpreter {
         break;
       }
       case Opcode.kAddIntrinsics: {
-        int index = frame.code[frame.pc + 1];
+        int index = code[frame.pc + 1];
         List<Method> methods = (List<Method>) frame.getLiteral(index);
         RObject obj = (RObject) frame.stack.peek();
         obj.addIntrinsics(methods);
@@ -262,7 +272,7 @@ public class Interpreter {
         break;
       }
       case Opcode.kTagWithProtocols: {
-        int count = frame.code[frame.pc + 1];
+        int count = code[frame.pc + 1];
         RObject obj = (RObject) frame.stack.get(frame.stack.size() - 1 - count);
         for (int i = 0; i < count; i++)
           obj.addProtocol((RProtocol) frame.stack.pop());
@@ -275,7 +285,7 @@ public class Interpreter {
         break;
       }
       case Opcode.kBlock: {
-        int argc = frame.code[frame.pc + 1];
+        int argc = code[frame.pc + 1];
         frame.pc += 2 + argc;
         break;
       }

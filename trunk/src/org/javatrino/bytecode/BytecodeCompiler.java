@@ -33,6 +33,7 @@ import org.javatrino.ast.Method;
 import org.javatrino.ast.Pattern;
 import org.javatrino.ast.Symbol;
 import org.javatrino.ast.Test;
+import org.neutrino.pib.Module;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
@@ -76,6 +77,7 @@ public class BytecodeCompiler extends Visitor {
   private final Map<Symbol, LocalAccess> loaders = new HashMap<Symbol, LocalAccess>();
   private final Assembler assm;
   private int localCount = -1;
+  private final Module module;
 
   private void addLoader(Symbol symbol, LocalAccess loader) {
     if (symbol == null)
@@ -84,9 +86,10 @@ public class BytecodeCompiler extends Visitor {
     loaders.put(symbol, loader);
   }
 
-  public BytecodeCompiler(Assembler assm, final List<Symbol> params,
+  public BytecodeCompiler(Assembler assm, Module module, final List<Symbol> params,
       final List<Symbol> locals, final Map<Symbol, Expression> rewrites) {
     this.assm = assm;
+    this.module = module;
     for (int i = 0; i < params.size(); i++) {
       final int index = i;
       addLoader(params.get(i), new LocalAccess("arg " + i) {
@@ -122,11 +125,11 @@ public class BytecodeCompiler extends Visitor {
     }
   }
 
-  public static Result compile(Expression expr, List<Symbol> params,
+  public static Result compile(Module module, Expression expr, List<Symbol> params,
       Map<Symbol, Expression> rewrites) {
     Assembler assm = new Assembler();
-    BytecodeCompiler compiler = new BytecodeCompiler(assm, params, getLocals(expr),
-        rewrites);
+    BytecodeCompiler compiler = new BytecodeCompiler(assm, module, params,
+        getLocals(expr), rewrites);
     expr.accept(compiler);
     assm.rethurn();
     return compiler.getResult();
@@ -343,7 +346,7 @@ public class BytecodeCompiler extends Visitor {
             false,
             that.body,
             null,
-            null)));
+            module)));
     lambda.accept(this);
     assm.withEscape();
   }
