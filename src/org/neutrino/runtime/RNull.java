@@ -1,10 +1,9 @@
 package org.neutrino.runtime;
 
-import java.util.List;
 
 public class RNull extends RValue {
 
-  private static final List<TypeId> TYPE_IDS = TypeId.getIds("null");
+  private static final TypeId[] TYPE_IDS = TypeId.getIds("null");
   private static final RNull INSTANCE = new RNull();
 
   private RNull() { }
@@ -14,7 +13,7 @@ public class RNull extends RValue {
   }
 
   @Override
-  public List<TypeId> getTypeIds() {
+  public TypeId[] getTypeIds() {
     return TYPE_IDS;
   }
 

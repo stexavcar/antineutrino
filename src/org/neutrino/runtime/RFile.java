@@ -5,11 +5,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.List;
 
 public class RFile extends RValue {
 
-  private static final List<TypeId> TYPE_IDS = TypeId.getIds("file");
+  private static final TypeId[] TYPE_IDS = TypeId.getIds("file");
 
   private final File file;
 
@@ -18,7 +17,7 @@ public class RFile extends RValue {
   }
 
   @Override
-  public List<TypeId> getTypeIds() {
+  public TypeId[] getTypeIds() {
     return TYPE_IDS;
   }
 

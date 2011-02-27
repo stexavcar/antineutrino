@@ -1,10 +1,9 @@
 package org.neutrino.runtime;
 
-import java.util.List;
 
 public class RByteArray extends RArray {
 
-  private static final List<TypeId> TYPE_IDS = TypeId.getIds("byte_array");
+  private static final TypeId[] TYPE_IDS = TypeId.getIds("byte_array");
 
   private final byte[] data;
 
@@ -13,7 +12,7 @@ public class RByteArray extends RArray {
   }
 
   @Override
-  public List<TypeId> getTypeIds() {
+  public TypeId[] getTypeIds() {
     return TYPE_IDS;
   }
 

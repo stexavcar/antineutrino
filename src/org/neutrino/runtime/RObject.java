@@ -45,7 +45,7 @@ public class RObject extends RValue {
   }
 
   @Override
-  public Iterable<TypeId> getTypeIds() {
+  public TypeId[] getTypeIds() {
     return impl.getTypeIds();
   }
 

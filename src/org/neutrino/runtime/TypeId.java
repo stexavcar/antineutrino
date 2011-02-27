@@ -1,8 +1,6 @@
 package org.neutrino.runtime;
 
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.neutrino.plankton.Atomic;
@@ -42,8 +40,8 @@ public class TypeId {
     }
   }
 
-  public static List<TypeId> getIds(String name) {
-    return Collections.singletonList(get(name));
+  public static TypeId[] getIds(String name) {
+    return new TypeId[] { get(name) };
   }
 
 }

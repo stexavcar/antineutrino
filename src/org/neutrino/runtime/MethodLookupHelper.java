@@ -179,7 +179,7 @@ public class MethodLookupHelper {
     return bestMethod;
   }
 
-  private int getScore(TypeId target, Iterable<TypeId> ids, int dist) {
+  private int getScore(TypeId target, TypeId[] ids, int dist) {
     int best = kUnrelated;
     for (TypeId id : ids) {
       int score = getScore(target, id, dist);

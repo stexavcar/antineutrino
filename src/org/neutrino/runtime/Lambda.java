@@ -1,13 +1,11 @@
 package org.neutrino.runtime;
 
-import java.util.List;
-
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 
 public class Lambda extends RValue {
 
-  private static final List<TypeId> TYPE_IDS = TypeId.getIds("Lambda");
+  private static final TypeId[] TYPE_IDS = TypeId.getIds("Lambda");
 
   private final Module module;
   private final CodeBundle bundle;
@@ -26,7 +24,7 @@ public class Lambda extends RValue {
   }
 
   @Override
-  public List<TypeId> getTypeIds() {
+  public TypeId[] getTypeIds() {
     return TYPE_IDS;
   }
 
