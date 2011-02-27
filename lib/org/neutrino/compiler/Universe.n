@@ -39,10 +39,10 @@ protocol DummyCodec {
   def this.is_atomic -> true;
 
   def this.new_atomic_instance(payload) -> this.value;
+  
+  @static def this.new(value) -> new DummyCodec { value := value };
 
 }
-
-def DummyCodec.new(value) -> new DummyCodec { value := value };
 
 def CompilerGrower.new_handler_table() {
   def result := new HashMap();

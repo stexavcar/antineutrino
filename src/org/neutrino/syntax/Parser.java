@@ -289,7 +289,8 @@ public class Parser {
     List<Annotation> annots = parseAnnotations();
     expect(Type.DEF);
     String self = expect(Type.IDENT);
-    return parseMethodTail(annots, new Parameter(self, name, false));
+    boolean isProtocol = (Annotation.get("static", annots) != null);
+    return parseMethodTail(annots, new Parameter(self, name, isProtocol));
   }
 
   /**

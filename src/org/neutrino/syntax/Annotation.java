@@ -34,4 +34,12 @@ public class Annotation {
     return tag + args;
   }
 
+  public static Annotation get(String name, List<Annotation> annots) {
+    for (Annotation annot : annots) {
+      if (annot.tag.equals(name))
+        return annot;
+    }
+    return null;
+  }
+
 }
