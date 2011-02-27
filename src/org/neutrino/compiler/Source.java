@@ -7,7 +7,7 @@ import java.util.List;
 
 import org.neutrino.pib.Binding;
 import org.neutrino.pib.CodeBundle;
-import org.neutrino.pib.ModuleBuilder;
+import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RMethod;
 import org.neutrino.syntax.Parser;
@@ -114,9 +114,9 @@ public class Source {
 
   private class BuildingVisitor implements Tree.DeclarationVisitor {
 
-    private final ModuleBuilder module;
+    private final Module module;
 
-    public BuildingVisitor(ModuleBuilder module) {
+    public BuildingVisitor(Module module) {
       this.module = module;
     }
 
@@ -145,7 +145,7 @@ public class Source {
 
   }
 
-  public void writeToBinary(ModuleBuilder module) {
+  public void writeToBinary(Module module) {
     BuildingVisitor visitor = new BuildingVisitor(module);
     for (Tree.Declaration decl : code.getDeclarations())
       decl.accept(visitor);
