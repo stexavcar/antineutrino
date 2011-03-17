@@ -3,7 +3,8 @@ protocol TypeAnalysis;
 def TypeAnalysis.new(universe, method) -> new TypeAnalysis {
   universe := universe,
   method := method,
-  scope_chain := new ArgumentScope(method)
+  scope_chain := new ArgumentScope(method),
+  local_count := 0
 }
 
 protocol ArgumentScope;
@@ -14,9 +15,9 @@ def ArgumentScope.new(method) -> new ArgumentScope {
 
 def (this is ArgumentScope).lookup(symbol) {
   with_escape (return) -> {
-    for (param : this.method.params) {
+    for (param : this.method.signature) {
       if param.symbol = symbol
-        then return(param.type);
+        then return(param.test.name);
     }
     null;
   }
@@ -78,21 +79,24 @@ def (this is Universe).is_static_subtype(expected, found) {
   }
 }
 
-def (this is Universe).is_matching_argument(param, type_found) {
-  if param.is_protocol
-    then type_found = "${param.type}.protocol";
-    else this.is_static_subtype(param.type, type_found);
-}
+def (this is Universe).is_matching_argument(param is EqTest, type_found)
+ -> param.value.token = type_found;
+
+def (this is Universe).is_matching_argument(param is IsTest, type_found)
+ -> this.is_static_subtype(param.type.token, type_found);
+
+def (this is Universe).is_matching_argument(param is AnyTest, type_found)
+ -> true;
 
 def (this is Universe).find_method(name, types) {
   with_escape (return) {
     for (method : this.methods) {
       if method.name = name then {
-        def params := method.params;
-        if params.length = types.length then {
+        def signature := method.signature;
+        if signature.length = (types.length + 1) then {
           with_escape (break) {
-            for (i : 0 .. params.length) {
-              if not this.is_matching_argument(params[i], types[i])
+            for (i : 1 .. signature.length) {
+              if not this.is_matching_argument(signature[i].test, types[i - 1])
                 then break(null);
             }
             return(method);
@@ -150,6 +154,7 @@ def (this is TypeAnalysis).do_analyze(node is BlockExpr) {
 
 def (this is TypeAnalysis).do_analyze(node is DefExpr) {
   this.analyze(node.value);
+  this.local_count := this.local_count + 1;
   this.push_local_scope(node);
   def result := this.analyze(node.body);
   this.pop_local_scope();

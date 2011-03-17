@@ -48,7 +48,7 @@ public class CompilerModule {
         else fullName = name + "::" + shortName;
         CompilerModule child = ensureModule(shortName, fullName);
         child.includeFromPath(file);
-      } else if (module.isEmpty() || module.contains(name)) {
+      } else {
         Source source = Source.create(file);
         if (source != null)
           sources.put(source.getName(), source);
@@ -105,11 +105,21 @@ public class CompilerModule {
       child.parseAll();
   }
 
-  public void writeTo(Universe universe) {
+  public void writeStatics(Universe universe) {
     if (!isToplevel()) {
       Module module = universe.createModule(name);
       for (Source source : sources.values())
-        source.writeToBinary(module);
+        source.writeStatics(module);
+    }
+    for (CompilerModule child : modules.values())
+      child.writeStatics(universe);
+  }
+
+  public void writeTo(Universe universe) {
+    if (!isToplevel()) {
+      Module module = universe.getModule(name);
+      for (Source source : sources.values())
+        source.writeTo(module);
     }
     for (CompilerModule child : modules.values())
       child.writeTo(universe);

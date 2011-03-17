@@ -126,8 +126,8 @@ def (this is CodeGenerator).emit(node is LocalExpr) {
     this.assm.push(Memory.at_disp(rEbp, local_address(local_index)));
   } else {
     def arg_index := with_escape (yield) {
-      ref index := this.method.params.length;
-      for (param : this.method.params) {
+      ref index := this.method.signature.length;
+      for (param : this.method.signature) {
         if param.symbol = node.symbol
           then yield(index);
         index := index - 1;

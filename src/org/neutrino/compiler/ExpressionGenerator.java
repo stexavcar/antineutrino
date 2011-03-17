@@ -44,8 +44,8 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Symbol self = new Symbol(Symbol.kParameterSymbol);
     Pattern selfPattern = new Pattern(asList(0), new Any(), self);
     Expression body = eGetField(eLocal(self), key);
-    return new Method(Arrays.asList(namePattern, selfPattern), false, body, null,
-        module);
+    return new Method(null, Arrays.asList(namePattern, selfPattern), false, body,
+        null, module);
   }
 
   private Method makeSetter(String name, RFieldKey key) {
@@ -55,7 +55,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Symbol value = new Symbol(Symbol.kParameterSymbol);
     Pattern valuePattern = new Pattern(asList(1), new Any(), value);
     Expression body = eSetField(eLocal(self), key, eLocal(value));
-    return new Method(Arrays.asList(namePattern, selfPattern, valuePattern),
+    return new Method(null, Arrays.asList(namePattern, selfPattern, valuePattern),
         false, body, null, module);
   }
 
@@ -91,7 +91,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
           patterns.add(new Pattern(asList(index), test, param.getSymbol()));
           index++;
         }
-        Method method = new Method(patterns, false, body, null, module);
+        Method method = new Method(null, patterns, false, body, null, module);
         intrinsics.add(method);
       }
     }

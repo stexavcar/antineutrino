@@ -19,6 +19,7 @@ public class CompilerUniverse {
   }
 
   public void writeTo(Universe universe) {
+    root.writeStatics(universe);
     root.writeTo(universe);
   }
 

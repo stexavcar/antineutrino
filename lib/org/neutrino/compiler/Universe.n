@@ -75,8 +75,8 @@ def CompilerGrower.new_handler_table() {
   result["org.javatrino.ast.Method"] := new PlainCodec(NewMethod);
   result["org.javatrino.ast.Pattern"] := new PlainCodec(Pattern);
   result["org.javatrino.ast.Test$Eq"] := new PlainCodec(EqTest);
-  result["org.javatrino.ast.Test$Is"] := new DummyCodec("is");
-  result["org.javatrino.ast.Test$Any"] := new DummyCodec("?");
+  result["org.javatrino.ast.Test$Is"] := new PlainCodec(IsTest);
+  result["org.javatrino.ast.Test$Any"] := new PlainCodec(AnyTest);
   result["org.javatrino.ast.Expression$Internal"] := new DummyCodec("i");
   result["org.neutrino.runtime.RInteger"] := new GetterCodec("value");
   result["org.neutrino.runtime.RString"] := new GetterCodec("value");
@@ -97,34 +97,79 @@ protocol EqTest {
     this.value := payload["value"];
   }
 
+  def this.to_string() -> "eq(${this.value})";
+
+  def this.name -> this.value.token;
+
+  @static def proto.new_instance() -> new EqTest { value := null };
+
 }
 
-def EqTest.new_instance() -> new EqTest {
-  value := null
+protocol AnyTest {
+
+  def this.initialize(payload);
+
+  def this.to_string() -> "any";
+
+  @static def proto.new_instance() -> new AnyTest { };
+	
+}
+
+protocol IsTest {
+
+  def this.initialize(payload) {
+    this.type := payload["type"];
+  }
+
+  def this.to_string() -> "is(${this.type})";
+
+  def this.name -> this.type.token;
+
+  @static def proto.new_instance() -> new IsTest { type := null };
+
 }
 
 protocol NewMethod {
 
   def this.initialize(payload) {
+    this.annots := payload["annotations"];
     this.signature := payload["signature"];
     this.accepts_extra_arguments := payload["acceptsExtraArguments"];
     this.body := payload["body"];
     this.rewrites := payload["rewrites"];
   }
 
-}
+  def this.get_annotation(name) {
+    with_escape (yield) {
+      for (annot : this.annots) {
+        if annot.tag = name
+          then yield(annot);
+      }
+      null;
+    }
+  }
 
-def NewMethod.new_instance() -> new NewMethod {
-  signature := null,
-  accepts_extra_arguments := null,
-  body := null,
-  rewrites := null,
-  has_been_analyzed := false
+  def this.name -> this.signature[0].test.value;
+
+  def this.to_string() -> "${this.name}${this.signature}";
+
+  @static def proto.new_instance() -> new NewMethod {
+    annots := null,
+    signature := null,
+    accepts_extra_arguments := null,
+    body := null,
+    rewrites := null,
+    has_been_analyzed := false,
+    local_count := 0
+  }
+
 }
 
 def (this is NewMethod).ensure_analyzed(universe) {
   if not this.has_been_analyzed then {
-    new TypeAnalysis(universe, this).analyze(this.body);
+    def analysis := new TypeAnalysis(universe, this);
+    analysis.analyze(this.body);
+    this.local_count := analysis.local_count;
     this.has_been_analyzed := true;
   }
 }
@@ -197,6 +242,8 @@ protocol Pattern {
     this.test := payload["test"];
     this.symbol := payload["symbol"];
   }
+
+  def this.to_string() -> "${this.tags}: ${this.test}";
   
 }
 
@@ -211,6 +258,8 @@ protocol ConstantExpr is Expr {
   def this.initialize(payload) {
     this.value := payload["value"];
   }
+
+  def this.to_string() -> "${this.value}";
 
 }
 
@@ -247,6 +296,8 @@ protocol GlobalExpr is Expr {
   def this.initialize(payload) {
     this.name := payload["name"];
   }
+
+  def this.to_string() -> "%${this.name}";
 
 }
 
@@ -399,11 +450,19 @@ def (this is MethodAst).count_locals(expr is DefExpr)
 
 def (this is MethodAst).to_string() -> "#<a Method: ${this.name}>";
 
-protocol TypeId;
+protocol TypeId {
 
-def TypeId.tag -> "org.neutrino.runtime.TypeId";
+  def this=(that is TypeId) -> this.token = that.token;
 
-def TypeId.new_instance(payload) -> null;
+  @static def proto.tag -> "org.neutrino.runtime.TypeId";
+
+  @static def proto.new_instance(payload) -> new TypeId {
+    token := payload["token"]
+  }
+
+  def this.to_string() -> "type id '${this.token}'";
+
+}
 
 protocol ProtocolAst;
 

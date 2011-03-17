@@ -12,7 +12,6 @@ import org.javatrino.ast.Pattern;
 import org.javatrino.ast.Test;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
-import org.neutrino.pib.Parameter;
 import org.neutrino.pib.Universe;
 
 public class MethodLookupHelper {
@@ -23,7 +22,7 @@ public class MethodLookupHelper {
   private final Universe universe;
   private int[] bestScore = new int[kInitialScoreVectorSize];
   private int[] candidateScore = new int[kInitialScoreVectorSize];
-  private RMethod bestMethod;
+  private Method bestMethod;
   private int scoreVectorSize = kInitialScoreVectorSize;
 
   public MethodLookupHelper(Universe universe) {
@@ -50,11 +49,11 @@ public class MethodLookupHelper {
     Method intrinsic = lookupIntrinsic(name, argc, stack);
     if (intrinsic != null)
       return new Lambda(intrinsic.module, intrinsic.getBundle());
-    RMethod result = findPerfectMatch(name, argc, stack);
+    Method result = findPerfectMatch(name, argc, stack);
     if (result == null)
       result = findApproximateMatch(name, argc, stack);
     if (result != null)
-      return new Lambda(result.getOrigin(), result.getCode());
+      return new Lambda(result.module, result.getBundle());
     else
       return null;
   }
@@ -70,13 +69,13 @@ public class MethodLookupHelper {
   private static class MethodCache {
 
     private int maxArgc = 0;
-    private final List<List<RMethod>> methodsByArgc = new ArrayList<List<RMethod>>();
+    private final List<List<Method>> methodsByArgc = new ArrayList<List<Method>>();
 
-    public List<RMethod> get(int argc) {
+    public List<Method> get(int argc) {
       return (maxArgc <= argc) ? null : methodsByArgc.get(argc);
     }
 
-    public void put(int argc, List<RMethod> values) {
+    public void put(int argc, List<Method> values) {
       while (maxArgc <= argc) {
         maxArgc++;
         methodsByArgc.add(null);
@@ -88,56 +87,39 @@ public class MethodLookupHelper {
 
   private final Map<String, MethodCache> methodCache = new HashMap<String, MethodCache>();
 
-  private List<RMethod> getAllMethods(String name, int argc) {
+  private List<Method> getAllMethods(String name, int argc) {
     MethodCache cache = methodCache.get(name);
     if (cache == null) {
       cache = new MethodCache();
       methodCache.put(name, cache);
     }
-    List<RMethod> result = cache.get(argc);
+    List<Method> result = cache.get(argc);
     if (result == null) {
-      result = new ArrayList<RMethod>();
+      result = new ArrayList<Method>();
       addMethods(result, name, argc, universe);
       cache.put(argc, result);
     }
     return result;
   }
 
-  private void addMethods(List<RMethod> methods, String name,
+  private void addMethods(List<Method> methods, String name,
       int argc, Universe universe) {
     for (Module module : universe.modules.values()) {
-      for (RMethod method : module.methods) {
-        if (method.name.equals(name) && method.getParameters().size() == argc)
+      for (Method method : module.methods) {
+        Test.Eq test = (Test.Eq) method.signature.get(0).test;
+        String methodName = (String) test.value;
+        if (methodName.equals(name) && (method.signature.size() - 1) == argc)
           methods.add(method);
       }
     }
   }
 
-  private RMethod findPerfectMatch(String name, int argc,
+  private Method findPerfectMatch(String name, int argc,
       Stack<RValue> stack) {
-    loop: for (RMethod method : getAllMethods(name, argc)) {
-      List<Parameter> params = method.getParameters();
-      for (int i = 0; i < argc; i++) {
-        TypeId paramType = params.get(i).getTypeId();
-        if (paramType == null)
-          paramType = TypeId.get("Object");
-        RValue arg = stack.get(stack.size() - argc + i);
-        boolean foundIt = false;
-        for (TypeId argType : arg.getTypeIds()) {
-          if (argType == paramType) {
-            foundIt = true;
-            break;
-          }
-        }
-        if (!foundIt)
-          continue loop;
-      }
-      return method;
-    }
     return null;
   }
 
-  private RMethod findApproximateMatch(String name, int argc,
+  private Method findApproximateMatch(String name, int argc,
       Stack<RValue> stack) {
     bestMethod = null;
     if (scoreVectorSize < argc) {
@@ -147,19 +129,34 @@ public class MethodLookupHelper {
     }
     for (int i = 0; i < argc; i++)
       bestScore[i] = Integer.MAX_VALUE;
-    loop: for (RMethod method : getAllMethods(name, argc)) {
-      List<Parameter> params = method.getParameters();
+    loop: for (Method method : getAllMethods(name, argc)) {
+      List<Pattern> params = method.signature;
       boolean isBetter = false;
       for (int i = 0; i < argc; i++) {
-        TypeId paramType = params.get(i).getTypeId();
+        RValue arg = stack.get(stack.size() - argc + i);
+        Test test = params.get(i + 1).test;
         int score;
-        if (paramType == null) {
-          score = kUnspecified;
-        } else {
-          RValue arg = stack.get(stack.size() - argc + i);
-          score = getScore(paramType, arg.getTypeIds(), 0);
-          if (score == kUnrelated)
-            continue loop;
+        switch (test.getType()) {
+          case ANY: {
+            score = kUnspecified;
+            break;
+          }
+          case EQ: {
+            TypeId typeId = (TypeId) ((Test.Eq) test).value;
+            if (isMatchingProtocol(arg, typeId))
+              score = 0;
+            else
+              continue loop;
+            break;
+          }
+          case IS: {
+            score = getScore(((Test.Is) test).type, arg.getTypeIds(), 0);
+            if (score == kUnrelated)
+              continue loop;
+            break;
+          }
+          default:
+            throw new RuntimeException();
         }
         int prevScore = bestScore[i];
         if (prevScore > score) {
@@ -177,6 +174,10 @@ public class MethodLookupHelper {
       }
     }
     return bestMethod;
+  }
+
+  private static boolean isMatchingProtocol(RValue arg, TypeId typeId) {
+    return (arg instanceof RProtocol) && ((RProtocol) arg).getProtocolTypeId() == typeId;
   }
 
   private int getScore(TypeId target, TypeId[] ids, int dist) {

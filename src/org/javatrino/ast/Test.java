@@ -3,7 +3,13 @@ package org.javatrino.ast;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.TypeId;
 
-public class Test {
+public abstract class Test {
+
+  public enum Type {
+    EQ, IS, ANY
+  }
+
+  public abstract Type getType();
 
   public static class Eq extends Test {
 
@@ -18,6 +24,11 @@ public class Test {
     @Override
     public String toString() {
       return "eq(" + value + ")";
+    }
+
+    @Override
+    public Type getType() {
+      return Type.EQ;
     }
 
   }
@@ -37,6 +48,11 @@ public class Test {
       return "is(" + type + ")";
     }
 
+    @Override
+    public Type getType() {
+      return Type.IS;
+    }
+
   }
 
   public static class Any extends Test {
@@ -44,6 +60,11 @@ public class Test {
     @Override
     public String toString() {
       return "_";
+    }
+
+    @Override
+    public Type getType() {
+      return Type.ANY;
     }
 
   }

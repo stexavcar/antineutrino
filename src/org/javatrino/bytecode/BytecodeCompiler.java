@@ -329,6 +329,7 @@ public class BytecodeCompiler extends Visitor {
   public void visitWithEscape(WithEscape that) {
     Expression lambda = eAddIntrinsics(eNewObject(), Arrays.asList(
         new Method(
+            null,
             Arrays.asList(
                 new Pattern(
                     Arrays.<Object>asList("name"),

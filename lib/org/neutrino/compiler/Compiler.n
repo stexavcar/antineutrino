@@ -65,7 +65,7 @@ def (this is NeutrinoCompiler).emit_plain_method(universe, method, assm) {
 
 def (this is NeutrinoCompiler).emit_libc_method(universe, method, assm) {
   def libc_name := method.get_annotation("libc")[0];
-  def argc := method.params.length - 1; // discount the receiver
+  def argc := method.signature.length - 2; // discount the receiver and name
   assm.enter_frame(4 * argc);
   // Align ESP to a 16-byte boundary.  Since the stack grows down this
   // will cause the stack to grow.
@@ -87,18 +87,15 @@ def (this is NeutrinoCompiler).emit_boilerplate(binary, entry_point) {
 
 def get_binary_name(method) {
   def result := new StringStream();
-  result.add(method.name);
-  result.add("(");
+  result.add("[");
   ref first := true;
-  for (param : method.params) {
+  for (part : method.signature) {
     if first
       then first := false;
       else result.add(",");
-    if param.is_protocol
-      then result.add("%");
-    result.add(param.type);
+    result.add(part.test);
   }
-  result.add(")");  
+  result.add("]");
   result.to_string();
 }
 
