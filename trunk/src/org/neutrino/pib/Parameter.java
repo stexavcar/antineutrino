@@ -22,12 +22,18 @@ public class Parameter {
 
   public Parameter() { }
 
-  public void initialize(Module module) {
-    if ("Object".equals(type))
-      return;
-    RProtocol proto = module.getProtocol(type);
-    assert proto != null : "Undefined protocol " + type;
-    this.typeId = isProtocolMethod ? proto.getProtocolTypeId() : proto.getInstanceTypeId();
+  public TypeId ensureTypeId(Module module) {
+    if (this.typeId == null) {
+      if ("Object".equals(type))
+        return null;
+      RProtocol proto = module.getProtocol(type);
+      if (proto == null) {
+        module.getProtocol(type);
+        assert false : "Undefined protocol " + type;
+      }
+      this.typeId = isProtocolMethod ? proto.getProtocolTypeId() : proto.getInstanceTypeId();
+    }
+    return this.typeId;
   }
 
   public TypeId getTypeId() {

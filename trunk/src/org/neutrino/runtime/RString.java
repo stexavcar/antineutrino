@@ -4,7 +4,7 @@ import org.neutrino.plankton.Store;
 
 public class RString extends RValue {
 
-  private static final TypeId[] TYPE_IDS = TypeId.getIds("str");
+  private static final TypeId[] TYPE_IDS = TypeId.getIds("String");
 
   public @Store String value;
 

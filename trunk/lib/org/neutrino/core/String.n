@@ -1,7 +1,7 @@
 /*
  * Plain text strings.
  */
-@native("str") protocol String;
+@native("String") protocol String;
 
 def (this is String)+(that is String) -> internal "str+str";
 

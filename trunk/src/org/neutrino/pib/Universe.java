@@ -19,7 +19,6 @@ import org.neutrino.runtime.MethodLookupHelper;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
-import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RObject;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
@@ -151,7 +150,6 @@ public class Universe {
     add(Module.class);
     add(RProtocol.class);
     add(CodeBundle.class);
-    add(RMethod.class);
     add(Parameter.class);
     add(Annotation.class);
     add(RString.class);

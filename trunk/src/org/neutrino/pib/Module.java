@@ -9,11 +9,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.javatrino.ast.Method;
 import org.neutrino.compiler.Source;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
-import org.neutrino.runtime.RMethod;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
@@ -25,14 +25,14 @@ public class Module {
   public @Store Map<String, Binding> defs;
   public @Store Map<String, RProtocol> protos;
   public @Store Map<String, List<String>> rawInheritance;
-  public @Store List<RMethod> methods;
+  public @Store List<Method> methods;
   public @Store Universe universe;
 
   private final Map<TypeId, List<TypeId>> inheritance = new HashMap<TypeId, List<TypeId>>();
   private final Map<Object, RValue> globals = new HashMap<Object, RValue>();
 
   public Module(Universe universe, Map<String, Binding> defs, Map<String,
-      RProtocol> protos, List<RMethod> methods, Map<String, List<String>> inheritance) {
+      RProtocol> protos, List<Method> methods, Map<String, List<String>> inheritance) {
     this.defs = defs;
     this.protos = protos;
     this.methods = methods;
@@ -48,13 +48,11 @@ public class Module {
 
   public static Module newEmpty(Universe universe) {
     return new Module(universe, new HashMap<String, Binding>(),
-        new HashMap<String, RProtocol>(), new ArrayList<RMethod>(),
+        new HashMap<String, RProtocol>(), new ArrayList<Method>(),
         new HashMap<String, List<String>>());
   }
 
   public void initialize() {
-    for (RMethod method : methods)
-      method.initialize(this);
     for (Map.Entry<String, List<String>> entry : rawInheritance.entrySet()) {
       String name = entry.getKey();
       RProtocol proto = getProtocol(name);
@@ -135,7 +133,7 @@ public class Module {
     defs.put(name, binding);
   }
 
-  public void createMethod(RMethod method) {
+  public void createMethod(Method method) {
     methods.add(method);
   }
 

@@ -1,15 +1,18 @@
 package org.javatrino.ast;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.plankton.Store;
+import org.neutrino.syntax.Annotation;
 
 public class Method {
 
+  public @Store List<Annotation> annotations;
   public @Store List<Pattern> signature;
   public @Store boolean acceptsExtraArguments;
   public @Store Expression body;
@@ -18,9 +21,13 @@ public class Method {
 
   private CodeBundle bundle;
 
-  public Method(List<Pattern> signature, boolean acceptsExtraArguments, Expression body,
-      Map<Symbol, Expression> rewrites, Module module) {
+  public Method(List<Annotation> annotations, List<Pattern> signature,
+      boolean acceptsExtraArguments, Expression body, Map<Symbol, Expression> rewrites,
+      Module module) {
     assert module != null;
+    this.annotations = (annotations == null)
+        ? Collections.<Annotation>emptyList()
+        : annotations;
     this.signature = signature;
     this.acceptsExtraArguments = acceptsExtraArguments;
     this.body = body;
@@ -39,7 +46,7 @@ public class Method {
     if (map.isEmpty()) {
       return this;
     } else if (this.rewrites == null || this.rewrites.isEmpty()) {
-      return new Method(signature, acceptsExtraArguments, body, map, module);
+      return new Method(annotations, signature, acceptsExtraArguments, body, map, module);
     } else {
       assert false;
       return null;
