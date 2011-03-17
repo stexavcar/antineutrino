@@ -2,12 +2,9 @@ package org.neutrino.compiler;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
-import org.neutrino.main.Flags;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Universe;
 import org.neutrino.syntax.SyntaxError;
@@ -19,8 +16,6 @@ import org.neutrino.syntax.Tree;
  * @author christian.plesner.hansen@gmail.com (Christian Plesner Hansen)
  */
 public class CompilerModule {
-
-  public static @Flags.Flag("module") List<String> module = new ArrayList<String>();
 
   private final String name;
   private final Map<String, CompilerModule> modules = new TreeMap<String, CompilerModule>();

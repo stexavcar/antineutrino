@@ -3,6 +3,8 @@ package org.neutrino.main;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.neutrino.compiler.CompilerModule;
 import org.neutrino.compiler.CompilerUniverse;
@@ -18,9 +20,10 @@ public class Compile {
 
   public static @Flags.Flag("root-path") String rootPath;
   public static @Flags.Flag("outfile") String outputPath = "a.pib";
+  public static @Flags.Flag("module") List<String> modules = new ArrayList<String>();
 
   public static void main(String[] rawArgs) throws IOException {
-    Flags.parseArguments(rawArgs, Compile.class, CompilerModule.class);
+    Flags.parseArguments(rawArgs, Compile.class);
     assert rootPath != null: "No --root-path specified.";
     CompilerModule top = CompilerModule.createToplevel();
     CompilerUniverse universe = new CompilerUniverse(top);
@@ -29,6 +32,7 @@ public class Compile {
     Universe binary = compile(universe);
     if (binary == null)
       System.exit(1);
+    binary.retainModules(modules);
     FileOutputStream out = new FileOutputStream(outputPath);
     binary.writePlankton(out);
     out.close();
