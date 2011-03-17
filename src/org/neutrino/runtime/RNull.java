@@ -3,7 +3,7 @@ package org.neutrino.runtime;
 
 public class RNull extends RValue {
 
-  private static final TypeId[] TYPE_IDS = TypeId.getIds("null");
+  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("null");
   private static final RNull INSTANCE = new RNull();
 
   private RNull() { }
@@ -13,8 +13,8 @@ public class RNull extends RValue {
   }
 
   @Override
-  public TypeId[] getTypeIds() {
-    return TYPE_IDS;
+  public RProtocol[] getTypeIds() {
+    return PROTOS;
   }
 
   @Override

@@ -28,13 +28,16 @@ public class InterpreterError extends RuntimeException {
   }
 
   private String renderValueType(Frame frame, RValue value) {
-    for (TypeId typeId : value.getTypeIds()) {
-      RProtocol proto = frame.bundle.module.universe.getProtocol(typeId);
-      if (proto != null) {
-        return proto.getName();
+    if (value instanceof RProtocol) {
+      return "%" + ((RProtocol) value).getName();
+    } else {
+      for (RProtocol proto : value.getTypeIds()) {
+        if (proto != null) {
+          return proto.getName();
+        }
       }
+      return "?";
     }
-    return "?";
   }
 
   private StackTraceElement[] buildStackTrace() {

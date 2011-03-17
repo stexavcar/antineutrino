@@ -25,7 +25,8 @@ public class Dump {
       File file = new File(name);
       InputStream in = new FileInputStream(file);
       PlanktonDecoder plankton =
-        new PlanktonDecoder(raw ? new ClassIndex() : Universe.getClassIndex(), in);
+        new PlanktonDecoder(raw ? new ClassIndex() : Universe.getClassIndex(),
+            Universe.getBuiltinIndex(), in);
       Object value = plankton.read();
       System.out.println(value);
     }

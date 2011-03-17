@@ -3,15 +3,15 @@ package org.neutrino.runtime;
 
 public class RMutableByteArray extends RByteArray {
 
-  private static final TypeId[] TYPE_IDS = TypeId.getIds("mutbytarr");
+  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("mutbytarr");
 
   public RMutableByteArray(int size) {
     super(new byte[size]);
   }
 
   @Override
-  public TypeId[] getTypeIds() {
-    return TYPE_IDS;
+  public RProtocol[] getTypeIds() {
+    return PROTOS;
   }
 
   public void set(int key, int value) {

@@ -3,7 +3,10 @@ package org.neutrino.pib;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,6 +14,7 @@ import java.util.Stack;
 
 import org.javatrino.ast.Expression;
 import org.neutrino.plankton.ClassIndex;
+import org.neutrino.plankton.IBuiltinObjectIndex;
 import org.neutrino.plankton.PlanktonEncoder;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.Interpreter;
@@ -23,7 +27,6 @@ import org.neutrino.runtime.RObject;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
-import org.neutrino.runtime.TypeId;
 import org.neutrino.syntax.Annotation;
 
 /**
@@ -90,30 +93,20 @@ public class Universe {
     return null;
   }
 
-  public RProtocol getProtocol(TypeId typeId) {
-    for (Module module : modules.values()) {
-      for (RProtocol proto : module.protos.values()) {
-        if (proto.getInstanceTypeId() == typeId)
-          return proto;
-      }
-    }
-    return null;
-  }
+  private final Map<RProtocol, RProtocol[]> parentCache = new HashMap<RProtocol, RProtocol[]>();
 
-  private final Map<TypeId, TypeId[]> parentCache = new HashMap<TypeId, TypeId[]>();
-
-  public TypeId[] getParents(TypeId id) {
-    TypeId[] result = parentCache.get(id);
+  public RProtocol[] getParents(RProtocol id) {
+    RProtocol[] result = parentCache.get(id);
     if (result == null) {
-      List<TypeId> elms = new ArrayList<TypeId>();
+      List<RProtocol> elms = new ArrayList<RProtocol>();
       addParents(elms, id);
-      result = elms.toArray(new TypeId[elms.size()]);
+      result = elms.toArray(new RProtocol[elms.size()]);
       parentCache.put(id, result);
     }
     return result;
   }
 
-  private void addParents(List<TypeId> out, TypeId id) {
+  private void addParents(List<RProtocol> out, RProtocol id) {
     for (Module module : this.modules.values())
       module.addParents(out, id);
   }
@@ -127,7 +120,7 @@ public class Universe {
   }
 
   public void writePlankton(OutputStream out) throws IOException {
-    PlanktonEncoder encoder = new PlanktonEncoder(getClassIndex());
+    PlanktonEncoder encoder = new PlanktonEncoder(getClassIndex(), getBuiltinIndex());
     encoder.write(this);
     encoder.flush();
     out.write(encoder.getBytes());
@@ -160,10 +153,45 @@ public class Universe {
     add(Annotation.class);
     add(RString.class);
     add(Native.class);
-    add(TypeId.class);
     add(RInteger.class);
     add(RFieldKey.class);
     Expression.register(this);
   }};
+
+  public static final IBuiltinObjectIndex getBuiltinIndex() {
+    return BUILT_IN_INDEX;
+  }
+
+  private static final Map<Object, RValue> BUILTINS_BY_KEY = new HashMap<Object, RValue>();
+  private static final Map<RValue, Object> KEYS_BY_BUILTIN = new IdentityHashMap<RValue, Object>();
+
+  private static void addBuiltin(Object key, RValue value) {
+    BUILTINS_BY_KEY.put(key, value);
+    KEYS_BY_BUILTIN.put(value, key);
+  }
+
+  private static final IBuiltinObjectIndex BUILT_IN_INDEX = new IBuiltinObjectIndex() {
+
+    @Override
+    public RValue getValue(Object key) {
+      return BUILTINS_BY_KEY.get(key);
+    }
+
+    @Override
+    public Object getKey(RValue value) {
+      return KEYS_BY_BUILTIN.get(value);
+    }
+  };
+
+  private static final List<String> PROTOCOLS = Arrays.asList(
+      "Protocol", "FieldKey", "String", "Integer", "array", "mutarr", "byte_array",
+      "mutbytarr", "True", "False", "continuation", "file", "null", "ref", "Lambda");
+
+  static {
+    for (String name : PROTOCOLS) {
+      addBuiltin(name, new RProtocol(Collections.<Annotation>emptyList(), name, name));
+    }
+  }
+
 
 }

@@ -1,7 +1,7 @@
 package org.javatrino.ast;
 
 import org.neutrino.plankton.Store;
-import org.neutrino.runtime.TypeId;
+import org.neutrino.runtime.RProtocol;
 
 public abstract class Test {
 
@@ -16,6 +16,7 @@ public abstract class Test {
     public @Store Object value;
 
     public Eq(Object value) {
+      assert value != null;
       this.value = value;
     }
 
@@ -35,9 +36,10 @@ public abstract class Test {
 
   public static class Is extends Test {
 
-    public @Store TypeId type;
+    public @Store RProtocol type;
 
-    public Is(TypeId type) {
+    public Is(RProtocol type) {
+      assert type != null;
       this.type = type;
     }
 

@@ -2,6 +2,7 @@ package org.neutrino.syntax;
 
 import java.util.List;
 
+import org.neutrino.pib.Module;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RValue;
 
@@ -13,6 +14,10 @@ public class Annotation {
   public Annotation(String tag, List<RValue> args) {
     this.tag = tag;
     this.args = args;
+  }
+
+  public void resolve(Module module) {
+
   }
 
   public Annotation() { }
@@ -41,5 +46,14 @@ public class Annotation {
     }
     return null;
   }
+
+  public static Tree.Annotation get(String name, Iterable<Tree.Annotation> annots) {
+    for (Tree.Annotation annot : annots) {
+      if (annot.getTag().equals(name))
+        return annot;
+    }
+    return null;
+  }
+
 
 }

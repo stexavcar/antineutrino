@@ -5,6 +5,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import org.javatrino.ast.Method;
@@ -17,7 +18,9 @@ import org.neutrino.pib.Binding;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
-import org.neutrino.runtime.TypeId;
+import org.neutrino.runtime.RProtocol;
+import org.neutrino.runtime.RValue;
+import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Parser;
 import org.neutrino.syntax.Scanner;
 import org.neutrino.syntax.SyntaxError;
@@ -128,8 +131,9 @@ public class Source {
     }
 
     public void visitProtocol(Protocol that) {
-      module.createProtocol(Source.this, that.getAnnotations(),
+      RProtocol proto = module.createProtocol(Source.this, that.getAnnotations(),
           that.getName(), that.getName());
+      that.setMaterialized(proto);
     }
 
     @Override
@@ -157,15 +161,54 @@ public class Source {
       this.module = module;
     }
 
+    private List<Annotation> resolveAnnotations(List<Tree.Annotation> annots) {
+      if (annots.isEmpty()) {
+        return Collections.emptyList();
+      } else {
+        List<Annotation> result = new ArrayList<Annotation>();
+        for (Tree.Annotation annot : annots) {
+          List<RValue> args;
+          if (annot.getArguments().isEmpty()) {
+            args = Collections.emptyList();
+          } else {
+            args = new ArrayList<RValue>();
+            for (Tree.Expression value : annot.getArguments()) {
+              RValue obj = value.getValue(module);
+              assert obj != null;
+              args.add(obj);
+            }
+          }
+          result.add(new Annotation(annot.getTag(), args));
+        }
+        return result;
+      }
+    }
+
     public void visitDefinition(Definition that) {
       CodeBundle bundle = Compiler.compile(module, Source.this, that.getValue(),
           null);
-      Binding binding = new Binding(that.getAnnotations(), bundle);
+      Binding binding = new Binding(resolveAnnotations(that.getAnnotations()), bundle);
       module.createDefinition(that.getName(), binding);
     }
 
     public void visitProtocol(Protocol that) {
-      // ignore
+      RProtocol proto = that.getMaterialized();
+      for (int i = 0; i < proto.getAnnotations().size(); i++) {
+        Annotation target = proto.getAnnotations().get(i);
+        Tree.Annotation source = that.getAnnotations().get(i);
+        List<RValue> args;
+        if (source.getArguments().isEmpty()) {
+          args = Collections.emptyList();
+        } else {
+          args = new ArrayList<RValue>();
+          for (Tree.Expression expr : source.getArguments()) {
+            RValue obj = expr.getValue(module);
+            assert obj != null;
+            args.add(obj);
+          }
+        }
+        target.args = args;
+      }
     }
 
     public void visitMethodDefinition(Tree.Method that) {
@@ -182,21 +225,20 @@ public class Source {
         if ("Object".equals(param.type)) {
           test = new Any();
         } else if (param.isProtocolMethod) {
-          TypeId type = param.ensureTypeId(module);
-          test = new Eq(type);
+          test = new Eq(param.ensureProtocol(module));
         } else {
-          TypeId type = param.ensureTypeId(module);
-          test = new Is(type);
+          test = new Is(param.ensureProtocol(module));
         }
         signature.add(new Pattern(Arrays.<Object>asList(index), test, param.getSymbol()));
         index++;
       }
-      module.createMethod(new Method(that.getAnnotations(),signature, false,
-          bundle.body, bundle.rewrites, module));
+      module.createMethod(new Method(resolveAnnotations(that.getAnnotations()),
+          signature, false, bundle.body, bundle.rewrites, module));
     }
 
     public void visitInheritance(Inheritance that) {
-      module.declareInheritance(that.getSub(), that.getSuper());
+      module.declareInheritance(module.getProtocol(that.getSub()),
+          module.getProtocol(that.getSuper()));
     }
 
   }

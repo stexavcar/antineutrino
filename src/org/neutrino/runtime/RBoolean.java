@@ -3,14 +3,14 @@ package org.neutrino.runtime;
 
 public class RBoolean extends RValue {
 
-  private static final RBoolean TRUE = new RBoolean(TypeId.getIds("true"), true);
-  private static final RBoolean FALSE = new RBoolean(TypeId.getIds("false"), false);
+  private static final RBoolean TRUE = new RBoolean(RProtocol.getCanonicals("True"), true);
+  private static final RBoolean FALSE = new RBoolean(RProtocol.getCanonicals("False"), false);
 
-  private final TypeId[] typeIds;
+  private final RProtocol[] protos;
   private final boolean value;
 
-  private RBoolean(TypeId[] typeIds, boolean value) {
-    this.typeIds = typeIds;
+  private RBoolean(RProtocol[] protos, boolean value) {
+    this.protos = protos;
     this.value = value;
   }
 
@@ -31,8 +31,8 @@ public class RBoolean extends RValue {
   }
 
   @Override
-  public TypeId[] getTypeIds() {
-    return typeIds;
+  public RProtocol[] getTypeIds() {
+    return protos;
   }
 
   @Override

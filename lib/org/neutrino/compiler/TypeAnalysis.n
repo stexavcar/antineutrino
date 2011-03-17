@@ -17,7 +17,7 @@ def (this is ArgumentScope).lookup(symbol) {
   with_escape (return) -> {
     for (param : this.method.signature) {
       if param.symbol = symbol
-        then return(param.test.name);
+        then return(param.test.upper_bound);
     }
     null;
   }
@@ -59,16 +59,15 @@ def (this is TypeAnalysis).analyze(node) {
   type;
 }
 
-def (this is Universe).is_static_subtype(expected, found) {
-  if expected = found then {
+def (this is Universe).is_static_subtype(proto, found) {
+  if proto = found then {
     true;
   } else {
-    def proto := this.lookup_static_global(found);
     def check_supers := proto != null and proto.get_annotation("no_override") != null;
     if check_supers then {
       with_escape (yield) {
         for (super : this.supers(found)) {
-          if this.is_static_subtype(expected, super)
+          if this.is_static_subtype(proto, super)
             then yield(true);
         }
         false;
@@ -80,10 +79,10 @@ def (this is Universe).is_static_subtype(expected, found) {
 }
 
 def (this is Universe).is_matching_argument(param is EqTest, type_found)
- -> param.value.token = type_found;
+ -> param.value = type_found;
 
 def (this is Universe).is_matching_argument(param is IsTest, type_found)
- -> this.is_static_subtype(param.type.token, type_found);
+ -> this.is_static_subtype(param.type, type_found);
 
 def (this is Universe).is_matching_argument(param is AnyTest, type_found)
  -> true;
@@ -167,11 +166,11 @@ def (this is TypeAnalysis).do_analyze(node is AddIntrinsics)
 def (this is TypeAnalysis).do_analyze(node is NewObject)
  -> "Object";
 
-def (this is TypeAnalysis).value_type(obj is Integer) -> "Integer";
+def (this is TypeAnalysis).value_type(obj is Integer) -> BuiltinCodec.get("Integer");
 
-def (this is TypeAnalysis).value_type(obj is String) -> "String";
+def (this is TypeAnalysis).value_type(obj is String) -> BuiltinCodec.get("String");
 
 def (this is TypeAnalysis).value_type(obj is ProtocolAst)
- -> "${obj.id}.protocol";
+ -> obj;
 
 def (this is TypeAnalysis).value_type(obj) -> null;

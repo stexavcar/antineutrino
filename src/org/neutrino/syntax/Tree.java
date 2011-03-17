@@ -10,10 +10,12 @@ import org.neutrino.compiler.CompilerUniverse;
 import org.neutrino.compiler.ResolverSymbol;
 import org.neutrino.compiler.ResolverSymbol.LocalSymbol;
 import org.neutrino.compiler.Source;
+import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
+import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 
@@ -52,6 +54,26 @@ public class Tree {
     void visitMethodDefinition(Method that);
 
     void visitInheritance(Inheritance that);
+
+  }
+
+  public static class Annotation {
+
+    private final String tag;
+    private final List<Expression> args;
+
+    public Annotation(String tag, List<Expression> args) {
+      this.tag = tag;
+      this.args = args;
+    }
+
+    public String getTag() {
+      return this.tag;
+    }
+
+    public List<Expression> getArguments() {
+      return this.args;
+    }
 
   }
 
@@ -116,10 +138,21 @@ public class Tree {
 
     private final List<Annotation> annots;
     private final String name;
+    private RProtocol materialized;
 
     public Protocol(List<Annotation> annots, String name) {
       this.annots = annots;
       this.name = name;
+    }
+
+    public RProtocol getMaterialized() {
+      assert materialized != null;
+      return materialized;
+    }
+
+    public void setMaterialized(RProtocol value) {
+      assert materialized == null;
+      this.materialized = value;
     }
 
     @Override
@@ -184,12 +217,12 @@ public class Tree {
 
   public static class Method extends Declaration {
 
-    private final List<Annotation> annots;
+    private final List<Tree.Annotation> annots;
     private final String name;
     private final List<Parameter> params;
     private final Expression body;
 
-    public Method(List<Annotation> annots, String name, List<Parameter> params,
+    public Method(List<Tree.Annotation> annots, String name, List<Parameter> params,
         Expression body) {
       this.annots = annots;
       this.name = name;
@@ -216,7 +249,7 @@ public class Tree {
     }
 
     @Override
-    public List<Annotation> getAnnotations() {
+    public List<Tree.Annotation> getAnnotations() {
       return this.annots;
     }
 
@@ -258,6 +291,10 @@ public class Tree {
 
     public boolean is(Type type) {
       return false;
+    }
+
+    public RValue getValue(Module module) {
+      return null;
     }
 
   }
@@ -365,6 +402,11 @@ public class Tree {
       return visitor.visitIdentifier(this);
     }
 
+    @Override
+    public RValue getValue(Module module) {
+      return module.getProtocol(this.name);
+    }
+
   }
 
   public static class Assignment extends Expression {
@@ -445,6 +487,11 @@ public class Tree {
 
     public Text(String value) {
       this.value = unescape(value);
+    }
+
+    @Override
+    public RValue getValue(Module module) {
+      return new RString(value);
     }
 
     private static final String unescape(String str) {
@@ -964,20 +1011,20 @@ public class Tree {
     return buf.append(")").toString();
   }
 
-  private static String annotationsToString(List<Annotation> annots) {
+  private static String annotationsToString(List<Tree.Annotation> annots) {
     if (annots.isEmpty()) {
       return "";
     } else {
       StringBuilder result = new StringBuilder();
       result.append("(@");
       for (Annotation annot : annots) {
-        List<RValue> args = annot.getArguments();
+        List<Tree.Expression> args = annot.getArguments();
         result.append(" ");
         if (args.size() == 0) {
           result.append(annot.getTag());
         } else {
           result.append("(").append(annot.getTag());
-          for (RValue arg : args) {
+          for (Tree.Expression arg : args) {
             result.append(" ").append(arg);
           }
           result.append(")");

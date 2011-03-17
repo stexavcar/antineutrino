@@ -86,7 +86,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
           if ("Object".equals(param.type)) {
             test = new Any();
           } else {
-            test = new Is(param.getTypeId());
+            test = new Is(param.ensureProtocol(module));
           }
           patterns.add(new Pattern(asList(index), test, param.getSymbol()));
           index++;

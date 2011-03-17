@@ -4,7 +4,7 @@ import org.neutrino.plankton.Store;
 
 public class RFieldKey extends RValue {
 
-  private static final TypeId[] TYPE_IDS = TypeId.getIds("FieldKey");
+  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("FieldKey");
   public @Store Object id;
 
   public RFieldKey(Object id) {
@@ -14,8 +14,8 @@ public class RFieldKey extends RValue {
   public RFieldKey() { }
 
   @Override
-  public TypeId[] getTypeIds() {
-    return TYPE_IDS;
+  public RProtocol[] getTypeIds() {
+    return PROTOS;
   }
 
   @Override

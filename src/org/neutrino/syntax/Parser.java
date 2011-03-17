@@ -7,7 +7,6 @@ import java.util.List;
 
 import org.neutrino.compiler.Source;
 import org.neutrino.pib.Parameter;
-import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Token.Type;
 import org.neutrino.syntax.Tree.If;
 import org.neutrino.syntax.Tree.Lambda;
@@ -101,7 +100,7 @@ public class Parser {
    * <statement>
    */
   private Tree.Expression parseStatement() throws SyntaxError {
-    List<Annotation> annots = parseAnnotations();
+    List<Tree.Annotation> annots = parseAnnotations();
     if (atDefinitionStart()) {
       boolean isReference = consumeDefinitionStart();
       String name = expect(Type.IDENT);
@@ -224,27 +223,27 @@ public class Parser {
    * <annots>
    *   -> ("@" <ident>)*
    */
-  private List<Annotation> parseAnnotations() throws SyntaxError {
-    List<Annotation> annots = new ArrayList<Annotation>();
+  private List<Tree.Annotation> parseAnnotations() throws SyntaxError {
+    List<Tree.Annotation> annots = new ArrayList<Tree.Annotation>();
     while (at(Type.AT)) {
       expect(Type.AT);
       String name = expect(Type.IDENT);
-      List<RValue> args = Collections.emptyList();
+      List<Tree.Expression> args = Collections.emptyList();
       if (at(Type.LPAREN)) {
         expect(Type.LPAREN);
         if (!at(Type.RPAREN)) {
-          args = new ArrayList<RValue>();
+          args = new ArrayList<Tree.Expression>();
           Tree.Expression first = parseExpression(false);
-          args.add(first.toValue());
+          args.add(first);
           while (at(Type.COMMA)) {
             expect(Type.COMMA);
             Tree.Expression next = parseExpression(false);
-            args.add(next.toValue());
+            args.add(next);
           }
         }
         expect(Type.RPAREN);
       }
-      annots.add(new Annotation(name, args));
+      annots.add(new Tree.Annotation(name, args));
     }
     return annots;
   }
@@ -272,7 +271,7 @@ public class Parser {
     return at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE) || at(Type.LBRACK);
   }
 
-  private Tree.Method parseMethodTail(List<Annotation> annots,
+  private Tree.Method parseMethodTail(List<Tree.Annotation> annots,
       Parameter self) throws SyntaxError {
     if (at(Type.DOT))
       expect(Type.DOT);
@@ -286,7 +285,7 @@ public class Parser {
   }
 
   private Tree.Declaration parseInnerDefinition(String name) throws SyntaxError {
-    List<Annotation> annots = parseAnnotations();
+    List<Tree.Annotation> annots = parseAnnotations();
     expect(Type.DEF);
     String self = expect(Type.IDENT);
     boolean isProtocol = (Annotation.get("static", annots) != null);
@@ -301,7 +300,7 @@ public class Parser {
    *   -> <annots> "protocol" <ident> ";"
    */
   private List<Tree.Declaration> parseDeclaration() throws SyntaxError {
-    List<Annotation> annots = parseAnnotations();
+    List<Tree.Annotation> annots = parseAnnotations();
     if (at(Type.DEF)) {
       expect(Type.DEF);
       if (at(Type.LPAREN)) {
@@ -348,11 +347,11 @@ public class Parser {
       if (at(Type.IS)) {
         expect(Type.IS);
         String first = expect(Type.IDENT);
-        result.add(new Tree.Inheritance(Collections.<Annotation>emptyList(), name, first));
+        result.add(new Tree.Inheritance(Collections.<Tree.Annotation>emptyList(), name, first));
         while (at(Type.COMMA)) {
           expect(Type.COMMA);
           String next = expect(Type.IDENT);
-          result.add(new Tree.Inheritance(Collections.<Annotation>emptyList(), name, next));
+          result.add(new Tree.Inheritance(Collections.<Tree.Annotation>emptyList(), name, next));
         }
       }
       if (at(Type.LBRACE)) {

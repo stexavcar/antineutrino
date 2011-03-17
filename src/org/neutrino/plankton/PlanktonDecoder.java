@@ -7,11 +7,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.neutrino.plankton.PlanktonEncoder.ObjectEncoder;
+import org.neutrino.plankton.PlanktonEncoder.BuiltinObjectEncoder;
+import org.neutrino.plankton.PlanktonEncoder.IObjectEncoder;
 
 public class PlanktonDecoder {
 
-  private abstract class Template<T> {
+  public abstract class Template<T> {
 
     /**
      * Called when the beginning of the template is encountered but
@@ -57,8 +58,10 @@ public class PlanktonDecoder {
   private final ClassIndex classes;
   private int nextIndex = 0;
 
-  public PlanktonDecoder(ClassIndex classes, InputStream in) {
-    this.classes = classes;
+  public PlanktonDecoder(ClassIndex classes, IBuiltinObjectIndex builtins, InputStream in) {
+    this.classes = new ClassIndex();
+    this.classes.addEncoder(BuiltinObjectEncoder.ID, new BuiltinObjectEncoder(builtins));
+    this.classes.addAll(classes);
     this.in = new LowLevelDecoder(in);
   }
 
@@ -121,7 +124,7 @@ public class PlanktonDecoder {
     return result;
   }
 
-  private <T> T instantiateTemplate(Template<T> template, boolean storeRef) throws IOException {
+  public <T> T instantiateTemplate(Template<T> template, boolean storeRef) throws IOException {
     int index = getCurrentIndex();
     T beforeInstance = template.onTemplateStart();
     if (storeRef && beforeInstance != null)
@@ -223,24 +226,16 @@ public class PlanktonDecoder {
 
   private Template<?> parseObjectTemplate() throws IOException {
     String tag = (String) read();
-    final Template<?> payloadTemplate = readTemplate();
-    final ObjectEncoder codec = classes.getEncoder(tag);
+    final Template<?> template = readTemplate();
+    final IObjectEncoder codec = classes.getEncoder(tag);
     return new Template<Object>() {
       @Override
       public Object onTemplateStart() {
-        return codec.isAtomic() ? null : codec.newInstance();
+        return codec.onTemplateStart();
       }
-      @Override @SuppressWarnings("unchecked")
+      @Override
       public Object onTemplatePayload(Object obj) throws IOException {
-        Map<String, Object> fields = (Map<String, Object>) instantiateTemplate(payloadTemplate, false);
-        if (codec.isAtomic()) {
-          Object arg = fields.values().iterator().next();
-          return codec.newAtomicInstance(arg);
-        } else {
-          for (Map.Entry<String, Object> entry : fields.entrySet())
-            codec.set(obj, entry.getKey(), entry.getValue());
-          return null;
-        }
+        return codec.onTemplatePayload(template, obj, PlanktonDecoder.this);
       }
     };
   }

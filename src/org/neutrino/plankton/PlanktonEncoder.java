@@ -10,6 +10,9 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.neutrino.plankton.PlanktonDecoder.Template;
+import org.neutrino.runtime.RValue;
+
 public class PlanktonEncoder {
 
   public static final int kIntTag = 0;
@@ -36,7 +39,22 @@ public class PlanktonEncoder {
     }
   }
 
-  public static class ObjectEncoder {
+  public static interface IObjectEncoder {
+
+    public void writeTemplate(PlanktonEncoder encoder) throws IOException;
+
+    public boolean canHandle(Object obj);
+
+    public void writeObject(Object obj, PlanktonEncoder encoder) throws IOException;
+
+    public Object onTemplateStart();
+
+    public Object onTemplatePayload(Template<?> template, Object obj,
+        PlanktonDecoder decoder) throws IOException;
+
+  }
+
+  public static class ObjectEncoder implements IObjectEncoder {
 
     private final Class<?> klass;
     private final Map<String, Field> fieldMap = new HashMap<String, Field>();
@@ -105,6 +123,93 @@ public class PlanktonEncoder {
       }
     }
 
+    @Override
+    public void writeTemplate(PlanktonEncoder encoder) throws IOException {
+      encoder.out.write(kObjectTag);
+      encoder.writeString(klass.getName());
+      encoder.out.write(kMapTag);
+      encoder.out.writeUnsigned(fields.size());
+      for (Field field : fields) {
+        encoder.writeString(field.getName());
+        encoder.out.write(kPlaceholderTag);
+      }
+    }
+
+    @Override
+    public void writeObject(Object obj, PlanktonEncoder encoder) throws IOException {
+      for (Field field : fields) {
+        Object value;
+        try {
+          value = field.get(obj);
+        } catch (IllegalArgumentException e) {
+          throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+          throw new RuntimeException(e);
+        }
+        encoder.internalWrite(value);
+      }
+    }
+
+    @Override
+    public Object onTemplateStart() {
+      return isAtomic() ? null : newInstance();
+    }
+
+    @Override
+    public Object onTemplatePayload(Template<?> template, Object obj, PlanktonDecoder decoder)
+        throws IOException {
+      @SuppressWarnings("unchecked")
+      Map<String, Object> fields = (Map<String, Object>) decoder.instantiateTemplate(template, false);
+      if (isAtomic()) {
+        Object arg = fields.values().iterator().next();
+        return newAtomicInstance(arg);
+      } else {
+        for (Map.Entry<String, Object> entry : fields.entrySet())
+          set(obj, entry.getKey(), entry.getValue());
+        return null;
+      }
+    }
+  }
+
+  public static class BuiltinObjectEncoder implements IObjectEncoder {
+
+    public static final String ID = "built-in";
+    private final IBuiltinObjectIndex builtins;
+
+    public BuiltinObjectEncoder(IBuiltinObjectIndex builtins) {
+      this.builtins = builtins;
+    }
+
+    @Override
+    public void writeTemplate(PlanktonEncoder encoder) throws IOException {
+      encoder.out.write(kObjectTag);
+      encoder.writeString(ID);
+      encoder.out.write(kPlaceholderTag);
+    }
+
+    @Override
+    public void writeObject(Object obj, PlanktonEncoder encoder)
+        throws IOException {
+      encoder.internalWrite(builtins.getKey((RValue) obj));
+    }
+
+    @Override
+    public boolean canHandle(Object obj) {
+      return obj instanceof RValue && builtins.getKey((RValue) obj) != null;
+    }
+
+    @Override
+    public Object onTemplatePayload(Template<?> template, Object obj,
+        PlanktonDecoder decoder) throws IOException {
+      Object key = decoder.instantiateTemplate(template, false);
+      return builtins.getValue(key);
+    }
+
+    @Override
+    public Object onTemplateStart() {
+      return null;
+    }
+
   }
 
   private final Map<Object, EncoderRecord> seen = new IdentityHashMap<Object, EncoderRecord>();
@@ -112,33 +217,26 @@ public class PlanktonEncoder {
   private final ClassIndex klasses;
   private int nextIndex = 0;
 
-  public PlanktonEncoder(ClassIndex klasses) {
+  public PlanktonEncoder(ClassIndex klasses, IBuiltinObjectIndex builtins) {
     this.out = new LowLevelEncoder();
-    this.klasses = klasses;
+    this.klasses = new ClassIndex();
+    this.klasses.addEncoder(BuiltinObjectEncoder.ID, new BuiltinObjectEncoder(builtins));
+    this.klasses.addAll(klasses);
   }
 
   public void write(Object obj) throws IOException {
-    if (!klasses.getEncoders().isEmpty()) {
-      writeTemplates(klasses.getEncoders());
-    }
+    writeTemplates(klasses.getEncoders());
     internalWrite(obj);
     out.flush();
   }
 
 
-  private void writeTemplates(List<ObjectEncoder> encoders) throws IOException {
+  private void writeTemplates(List<IObjectEncoder> encoders) throws IOException {
     out.write(kScopeTag);
     out.writeUnsigned(0);
     out.writeUnsigned(encoders.size());
-    for (ObjectEncoder encoder : encoders) {
-      out.write(kObjectTag);
-      writeString(encoder.klass.getName());
-      out.write(kMapTag);
-      out.writeUnsigned(encoder.fields.size());
-      for (Field field : encoder.fields) {
-        writeString(field.getName());
-        out.write(kPlaceholderTag);
-      }
+    for (IObjectEncoder encoder : encoders) {
+      encoder.writeTemplate(this);
     }
   }
 
@@ -173,35 +271,29 @@ public class PlanktonEncoder {
       nextIndex++;
       this.writeList((List<?>) obj);
     } else {
-      int index = 0;
-      for (ObjectEncoder encoder : klasses.getEncoders()) {
-        if (encoder.canHandle(obj)) {
-          nextIndex++;
-          this.writeObject(encoder, obj, index);
-          return;
-        }
-        index++;
-      }
-      assert false : obj.getClass();
+      writeObject(obj);
     }
   }
 
-  public void writeObject(ObjectEncoder encoder, Object obj, int index) throws IOException {
+  private void writeObject(Object obj) throws IOException {
+    int index = 0;
+    for (IObjectEncoder encoder : klasses.getEncoders()) {
+      if (encoder.canHandle(obj)) {
+        nextIndex++;
+        this.writeObject(encoder, obj, index);
+        return;
+      }
+      index++;
+    }
+    assert false : obj.getClass();
+  }
+
+  public void writeObject(IObjectEncoder encoder, Object obj, int index) throws IOException {
     out.write(kTemplateTag);
     int objIndex = getCurrentIndex();
     seen.put(obj, new EncoderRecord(objIndex));
     out.writeUnsigned(index);
-    for (Field field : encoder.fields) {
-      Object value;
-      try {
-        value = field.get(obj);
-      } catch (IllegalArgumentException e) {
-        throw new RuntimeException(e);
-      } catch (IllegalAccessException e) {
-        throw new RuntimeException(e);
-      }
-      internalWrite(value);
-    }
+    encoder.writeObject(obj, this);
   }
 
   private void writeReference(EncoderRecord record) throws IOException {
