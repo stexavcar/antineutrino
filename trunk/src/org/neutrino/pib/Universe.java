@@ -51,6 +51,12 @@ public class Universe {
       module.initialize();
   }
 
+  public void retainModules(List<String> values) {
+    if (values.isEmpty())
+      return;
+    modules.keySet().retainAll(values);
+  }
+
   public Module createModule(String name) {
     Module result = Module.newEmpty(this);
     modules.put(name, result);
