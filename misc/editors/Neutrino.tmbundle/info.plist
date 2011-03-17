@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>name</key>
+	<string>Neutrino</string>
+	<key>ordering</key>
+	<array>
+		<string>E9BE656A-A392-424F-AC5D-51829F230FB4</string>
+	</array>
+	<key>uuid</key>
+	<string>48E6561A-F6FE-4CB2-965C-C3EC714EF206</string>
+</dict>
+</plist>
