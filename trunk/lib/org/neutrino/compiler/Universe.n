@@ -44,11 +44,22 @@ protocol DummyCodec {
 
 }
 
+protocol BuiltinCodec {
+
+  def this.is_atomic -> true;
+
+  def this.new_atomic_instance(payload) -> BuiltinCodec.get(payload);
+
+  @static def proto.get(payload) -> internal "get-builtin";
+
+  @static def this.new() -> new BuiltinCodec { };
+  
+}
+
 def CompilerGrower.new_handler_table() {
   def result := new HashMap();
   result[CodeBundle.tag] := new PlainCodec(CodeBundle);
   result[Parameter.tag] := new PlainCodec(Parameter);
-  result[TypeId.tag] := new AtomicCodec(TypeId);
   result[Binding.tag] := new PlainCodec(Binding);
   result[Annotation.tag] := new PlainCodec(Annotation);
   result[Module.tag] := new PlainCodec(Module);
@@ -80,6 +91,7 @@ def CompilerGrower.new_handler_table() {
   result["org.javatrino.ast.Expression$Internal"] := new DummyCodec("i");
   result["org.neutrino.runtime.RInteger"] := new GetterCodec("value");
   result["org.neutrino.runtime.RString"] := new GetterCodec("value");
+  result["built-in"] := new BuiltinCodec();
   result;
 }
 
@@ -98,8 +110,8 @@ protocol EqTest {
   }
 
   def this.to_string() -> "eq(${this.value})";
-
-  def this.name -> this.value.token;
+  
+  def this.upper_bound -> this.value;
 
   @static def proto.new_instance() -> new EqTest { value := null };
 
@@ -122,8 +134,8 @@ protocol IsTest {
   }
 
   def this.to_string() -> "is(${this.type})";
-
-  def this.name -> this.type.token;
+  
+  def this.upper_bound -> this.type;
 
   @static def proto.new_instance() -> new IsTest { type := null };
 
@@ -450,39 +462,23 @@ def (this is MethodAst).count_locals(expr is DefExpr)
 
 def (this is MethodAst).to_string() -> "#<a Method: ${this.name}>";
 
-protocol TypeId {
-
-  def this=(that is TypeId) -> this.token = that.token;
-
-  @static def proto.tag -> "org.neutrino.runtime.TypeId";
-
-  @static def proto.new_instance(payload) -> new TypeId {
-    token := payload["token"]
-  }
-
-  def this.to_string() -> "type id '${this.token}'";
-
-}
-
 protocol ProtocolAst;
 
 def ProtocolAst.tag -> "org.neutrino.runtime.RProtocol";
 
 def ProtocolAst.new_instance() -> new ProtocolAst {
-  instance_type_id := null,
-  protocol_type_id := null,
   id := null,
   annotations := null,
   display_name := null
 }
 
 def (this is ProtocolAst).initialize(payload) {
-  this.instance_type_id := payload["instanceTypeId"];
-  this.protocol_type_id := payload["protocolTypeId"];
   this.id := payload["id"];
   this.annotations := payload["annotations"];
   this.display_name := payload["displayName"];
 }
+
+def (this is ProtocolAst).to_string() -> "protocol ${this.id}";
 
 def (this is ProtocolAst).get_annotation(name) {
   with_escape (yield) {
@@ -548,7 +544,7 @@ def Module.new_instance() -> new Module {
 def (this is Module).initialize(payload) {
   this.defs := payload["defs"];
   this.protos := payload["protos"];
-  this.supers := payload["rawInheritance"];
+  this.supers := payload["inheritance"];
   this.methods := payload["methods"];
 }
 

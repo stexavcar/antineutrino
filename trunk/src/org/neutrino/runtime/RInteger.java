@@ -3,7 +3,7 @@ package org.neutrino.runtime;
 import org.neutrino.plankton.Store;
 public class RInteger extends RValue {
 
-  private static final TypeId[] TYPE_IDS = TypeId.getIds("Integer");
+  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("Integer");
 
   private static final int kCachedCount = 1024;
   private static final RInteger[] kCache = new RInteger[kCachedCount];
@@ -31,8 +31,8 @@ public class RInteger extends RValue {
   }
 
   @Override
-  public TypeId[] getTypeIds() {
-    return TYPE_IDS;
+  public RProtocol[] getTypeIds() {
+    return PROTOS;
   }
 
   @Override

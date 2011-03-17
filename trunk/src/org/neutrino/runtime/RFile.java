@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public class RFile extends RValue {
 
-  private static final TypeId[] TYPE_IDS = TypeId.getIds("file");
+  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("file");
 
   private final File file;
 
@@ -17,8 +17,8 @@ public class RFile extends RValue {
   }
 
   @Override
-  public TypeId[] getTypeIds() {
-    return TYPE_IDS;
+  public RProtocol[] getTypeIds() {
+    return PROTOS;
   }
 
   @Override

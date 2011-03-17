@@ -10,7 +10,7 @@ def Boot.entry_point() {
 
 protocol Boot;
 
-@type("int32_t")
+@type(int32_t)
 def Boot.boot() {
   def tests := new neu_neu_tests_t();
   def result := tests.run();

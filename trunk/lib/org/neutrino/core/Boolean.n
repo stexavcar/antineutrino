@@ -1,11 +1,11 @@
 protocol Bool;
 
-@native("true")
+@native("True")
 protocol True is Bool;
 
 def (this is True).negate() -> false;
 
-@native("false")
+@native("False")
 protocol False is Bool;
 
 def (this is False).negate() -> true;

@@ -142,8 +142,8 @@ public class MethodLookupHelper {
             break;
           }
           case EQ: {
-            TypeId typeId = (TypeId) ((Test.Eq) test).value;
-            if (isMatchingProtocol(arg, typeId))
+            RProtocol protocol = (RProtocol) ((Test.Eq) test).value;
+            if (arg == protocol)
               score = 0;
             else
               continue loop;
@@ -176,20 +176,16 @@ public class MethodLookupHelper {
     return bestMethod;
   }
 
-  private static boolean isMatchingProtocol(RValue arg, TypeId typeId) {
-    return (arg instanceof RProtocol) && ((RProtocol) arg).getProtocolTypeId() == typeId;
-  }
-
-  private int getScore(TypeId target, TypeId[] ids, int dist) {
+  private int getScore(RProtocol target, RProtocol[] ids, int dist) {
     int best = kUnrelated;
-    for (TypeId id : ids) {
+    for (RProtocol id : ids) {
       int score = getScore(target, id, dist);
       best = Math.min(score, best);
     }
     return best;
   }
 
-  private int getScore(TypeId target, TypeId concrete, int dist) {
+  private int getScore(RProtocol target, RProtocol concrete, int dist) {
     if (target == concrete)
       return dist;
     else

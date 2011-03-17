@@ -33,7 +33,7 @@ public class Run {
     Interpreter inter = new Interpreter();
     File file = new File(pibPath);
     PlanktonDecoder decoder = new PlanktonDecoder(Universe.getClassIndex(),
-        new FileInputStream(file));
+        Universe.getBuiltinIndex(), new FileInputStream(file));
     Universe universe = (Universe) decoder.read();
     universe.initialize();
     Lambda entryPointBinding = universe.getEntryPoint(entryPoint);

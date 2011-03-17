@@ -5,7 +5,7 @@ import org.neutrino.pib.Module;
 
 public class Lambda extends RValue {
 
-  private static final TypeId[] TYPE_IDS = TypeId.getIds("Lambda");
+  private static final RProtocol[] TYPE_IDS = RProtocol.getCanonicals("Lambda");
 
   private final Module module;
   private final CodeBundle bundle;
@@ -24,7 +24,7 @@ public class Lambda extends RValue {
   }
 
   @Override
-  public TypeId[] getTypeIds() {
+  public RProtocol[] getTypeIds() {
     return TYPE_IDS;
   }
 

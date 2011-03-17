@@ -3,7 +3,7 @@ package org.neutrino.runtime;
 
 public class RReference extends RValue {
 
-  private static final TypeId[] TYPE_IDS = TypeId.getIds("ref");
+  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("ref");
 
   private State state = State.MUTABLE;
   private RValue value;
@@ -13,8 +13,8 @@ public class RReference extends RValue {
   }
 
   @Override
-  public TypeId[] getTypeIds() {
-    return TYPE_IDS;
+  public RProtocol[] getTypeIds() {
+    return PROTOS;
   }
 
   public RValue getValue() {

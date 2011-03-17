@@ -45,8 +45,8 @@ public class RObject extends RValue {
   }
 
   @Override
-  public TypeId[] getTypeIds() {
-    return impl.getTypeIds();
+  public RProtocol[] getTypeIds() {
+    return impl.getProtocolArray();
   }
 
   @Override

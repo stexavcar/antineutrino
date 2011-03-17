@@ -7,12 +7,16 @@ public abstract class RValue {
     UNDER_CONSTRUCTION, MUTABLE, IMMUTABLE
   }
 
-  public abstract TypeId[] getTypeIds();
+  public abstract RProtocol[] getTypeIds();
 
   public abstract State getState();
 
   public String toExternalString() {
     return toString();
+  }
+
+  public Object toObject() {
+    return null;
   }
 
 }

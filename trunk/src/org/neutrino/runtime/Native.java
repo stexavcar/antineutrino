@@ -500,6 +500,21 @@ public class Native {
     }
   };
 
+  @Marker("get-builtin") static final Impl GET_BUILTIN = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RValue name = args.getArgument(0);
+      return (RValue) Universe.getBuiltinIndex().getValue(name.toObject());
+    }
+  };
+
+  @Marker("proto-id") static final Impl PROTO_ID = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      return new RString(((RProtocol) args.getThis()).getId());
+    }
+  };
+
   @SuppressWarnings("serial")
   private static final Map<String, Impl> IMPLS = new HashMap<String, Impl>() {{
     try {

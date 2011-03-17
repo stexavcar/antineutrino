@@ -10,7 +10,7 @@ public class RImpl {
 
   public final List<RProtocol> protos;
   public final List<Method> intrinsics;
-  public TypeId[] typeIds = null;
+  public RProtocol[] protoArray = null;
 
   private final IdentityHashMap<RProtocol, RImpl> addedProtos
       = new IdentityHashMap<RProtocol, RImpl>();
@@ -58,14 +58,14 @@ public class RImpl {
     return intrinsics;
   }
 
-  public TypeId[] getTypeIds() {
-    if (this.typeIds == null) {
-      List<TypeId> ids = new ArrayList<TypeId>();
+  public RProtocol[] getProtocolArray() {
+    if (this.protoArray == null) {
+      List<RProtocol> ids = new ArrayList<RProtocol>();
       for (RProtocol proto : protos)
-        ids.add(proto.getInstanceTypeId());
-      typeIds = ids.toArray(new TypeId[ids.size()]);
+        ids.add(proto);
+      protoArray = ids.toArray(new RProtocol[ids.size()]);
     }
-    return this.typeIds;
+    return this.protoArray;
   }
 
 }

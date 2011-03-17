@@ -3,11 +3,11 @@ package org.neutrino.runtime;
 
 public class RContinuation extends RValue {
 
-  private static final TypeId[] TYPE_IDS = TypeId.getIds("continuation");
+  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("continuation");
 
   @Override
-  public TypeId[] getTypeIds() {
-    return TYPE_IDS;
+  public RProtocol[] getTypeIds() {
+    return PROTOS;
   }
 
   @Override

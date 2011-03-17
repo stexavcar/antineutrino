@@ -14,30 +14,30 @@ import org.neutrino.compiler.Source;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
+import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
-import org.neutrino.runtime.TypeId;
 import org.neutrino.syntax.Annotation;
+import org.neutrino.syntax.Tree;
 
 public class Module {
 
   public @Store Map<String, Binding> defs;
   public @Store Map<String, RProtocol> protos;
-  public @Store Map<String, List<String>> rawInheritance;
   public @Store List<Method> methods;
   public @Store Universe universe;
+  public @Store Map<RProtocol, List<RProtocol>> inheritance = new HashMap<RProtocol, List<RProtocol>>();
 
-  private final Map<TypeId, List<TypeId>> inheritance = new HashMap<TypeId, List<TypeId>>();
   private final Map<Object, RValue> globals = new HashMap<Object, RValue>();
 
   public Module(Universe universe, Map<String, Binding> defs, Map<String,
-      RProtocol> protos, List<Method> methods, Map<String, List<String>> inheritance) {
+      RProtocol> protos, List<Method> methods, Map<RProtocol, List<RProtocol>> inheritance) {
     this.defs = defs;
     this.protos = protos;
     this.methods = methods;
-    this.rawInheritance = inheritance;
     this.universe = universe;
+    this.inheritance = inheritance;
   }
 
   public Module() { }
@@ -49,23 +49,10 @@ public class Module {
   public static Module newEmpty(Universe universe) {
     return new Module(universe, new HashMap<String, Binding>(),
         new HashMap<String, RProtocol>(), new ArrayList<Method>(),
-        new HashMap<String, List<String>>());
+        new HashMap<RProtocol, List<RProtocol>>());
   }
 
   public void initialize() {
-    for (Map.Entry<String, List<String>> entry : rawInheritance.entrySet()) {
-      String name = entry.getKey();
-      RProtocol proto = getProtocol(name);
-      assert proto != null : "Protocol " + name + " not found.";
-      List<String> rawParents = entry.getValue();
-      List<TypeId> parents = new ArrayList<TypeId>();
-      for (String rawParent : rawParents) {
-        RProtocol parentProto = getProtocol(rawParent);
-        assert parentProto != null : "Protocol " + rawParent + " not found.";
-        parents.add(parentProto.getInstanceTypeId());
-      }
-      inheritance.put(proto.getInstanceTypeId(), parents);
-    }
   }
 
   public RProtocol getProtocol(String name) {
@@ -112,19 +99,19 @@ public class Module {
     return universe.getGlobal(name, inter);
   }
 
-  public void addParents(List<TypeId> out, TypeId id) {
-    List<TypeId> parents = inheritance.get(id);
+  public void addParents(List<RProtocol> out, RProtocol id) {
+    List<RProtocol> parents = inheritance.get(id);
     if (parents != null) {
-      for (TypeId parent : parents)
+      for (RProtocol parent : parents)
         out.add(parent);
     }
   }
 
-  public void declareInheritance(String sub, String shuper) {
-    List<String> locals = rawInheritance.get(sub);
+  public void declareInheritance(RProtocol sub, RProtocol shuper) {
+    List<RProtocol> locals = inheritance.get(sub);
     if (locals == null) {
-      locals = new ArrayList<String>();
-      rawInheritance.put(sub, locals);
+      locals = new ArrayList<RProtocol>();
+      inheritance.put(sub, locals);
     }
     locals.add(shuper);
   }
@@ -137,9 +124,25 @@ public class Module {
     methods.add(method);
   }
 
-  public RProtocol createProtocol(Source origin, List<Annotation> annots, String id,
+  public RProtocol createProtocol(Source origin, List<Tree.Annotation> annots, String id,
       String displayName) {
-    RProtocol proto = new RProtocol(annots, id, displayName);
+    RProtocol proto = null;
+    for (Tree.Annotation annot : annots) {
+      if (annot.getTag().equals(Native.ANNOTATION)) {
+        proto = RProtocol.getCanonical(((RString) annot.getArguments().get(0).getValue(this)).getValue());
+      }
+    }
+    if (proto == null) {
+      List<Annotation> newAnnots;
+      if (annots.isEmpty()) {
+        newAnnots = Collections.emptyList();
+      } else {
+        newAnnots = new ArrayList<Annotation>();
+        for (Tree.Annotation annot : annots)
+          newAnnots.add(new Annotation(annot.getTag(), null));
+      }
+      proto = new RProtocol(newAnnots, id, displayName);
+    }
     protos.put(id, proto);
     defs.put(id, new Binding(
         Collections.<Annotation>emptyList(),

@@ -4,7 +4,7 @@ import java.util.List;
 
 public class RPrimitiveArray extends RArray {
 
-  private static final TypeId[] TYPE_IDS = TypeId.getIds("array");
+  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("array");
 
   private final List<RValue> elements;
 
@@ -13,8 +13,8 @@ public class RPrimitiveArray extends RArray {
   }
 
   @Override
-  public TypeId[] getTypeIds() {
-    return TYPE_IDS;
+  public RProtocol[] getTypeIds() {
+    return PROTOS;
   }
 
   public RValue get(int index) {

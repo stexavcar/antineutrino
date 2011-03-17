@@ -3,7 +3,6 @@ package org.neutrino.pib;
 import org.javatrino.ast.Symbol;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RProtocol;
-import org.neutrino.runtime.TypeId;
 
 public class Parameter {
 
@@ -11,7 +10,7 @@ public class Parameter {
   public @Store String type;
   public @Store boolean isProtocolMethod;
   public @Store Symbol symbol;
-  private TypeId typeId;
+  private RProtocol protocol;
 
   public Parameter(String name, String type, boolean isProtocolMethod) {
     this.name = name;
@@ -22,22 +21,16 @@ public class Parameter {
 
   public Parameter() { }
 
-  public TypeId ensureTypeId(Module module) {
-    if (this.typeId == null) {
+  public RProtocol ensureProtocol(Module module) {
+    if (this.protocol == null) {
       if ("Object".equals(type))
         return null;
-      RProtocol proto = module.getProtocol(type);
-      if (proto == null) {
-        module.getProtocol(type);
+      this.protocol = module.getProtocol(type);
+      if (this.protocol == null) {
         assert false : "Undefined protocol " + type;
       }
-      this.typeId = isProtocolMethod ? proto.getProtocolTypeId() : proto.getInstanceTypeId();
     }
-    return this.typeId;
-  }
-
-  public TypeId getTypeId() {
-    return this.typeId;
+    return this.protocol;
   }
 
   public String getName() {

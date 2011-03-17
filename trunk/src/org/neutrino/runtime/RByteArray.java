@@ -3,7 +3,7 @@ package org.neutrino.runtime;
 
 public class RByteArray extends RArray {
 
-  private static final TypeId[] TYPE_IDS = TypeId.getIds("byte_array");
+  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("byte_array");
 
   private final byte[] data;
 
@@ -12,8 +12,8 @@ public class RByteArray extends RArray {
   }
 
   @Override
-  public TypeId[] getTypeIds() {
-    return TYPE_IDS;
+  public RProtocol[] getTypeIds() {
+    return PROTOS;
   }
 
   public RValue get(int index) {
