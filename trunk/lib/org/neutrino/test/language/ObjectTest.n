@@ -19,13 +19,13 @@ def (this is LanguageTest).test_records() {
 def (this is LanguageTest).test_record_methods() {
   this.on_start("record methods");
   ref cnt := 0;
-  def inc := fn () -> cnt := cnt + 1;
+  def inc := fn () => cnt := cnt + 1;
   assert_equal(0, cnt);
   def ov := new { aa := inc(), bb := inc() };
   assert_equal(2, cnt);
   assert_equal(1, ov.aa);
   assert_equal(2, ov.bb);
-  def om := new { cc -> inc(), dd -> inc() };
+  def om := new { cc => inc(), dd => inc() };
   assert_equal(2, cnt);
   assert_equal(3, om.cc);
   assert_equal(3, cnt);

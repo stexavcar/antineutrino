@@ -1,6 +1,6 @@
 protocol PlanktonTest is Test;
 
-def PlanktonTest.new(counter) -> new PlanktonTest { count := counter };
+def PlanktonTest.new(counter) => new PlanktonTest { count := counter };
 
 def (this is PlanktonTest).run() {
   this.test_low_level_codec();

@@ -1,9 +1,9 @@
-def Random.new(seed) -> new MultiplyWithCarry(seed);
+def Random.new(seed) => new MultiplyWithCarry(seed);
 
 protocol Random {
 
   def this.next(limit)
-   -> Math.abs(this.next()) % limit;
+   => Math.abs(this.next()) % limit;
 
   def this.next_bytes(data) {
     for (i : 0 .. data.length)
@@ -12,7 +12,7 @@ protocol Random {
 
 }
 
-def MultiplyWithCarry.new(seed) -> new MultiplyWithCarry {
+def MultiplyWithCarry.new(seed) => new MultiplyWithCarry {
   low := 362436069 + seed,
   high := 521288629 - seed
 }

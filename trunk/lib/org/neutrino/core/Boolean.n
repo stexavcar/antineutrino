@@ -3,9 +3,9 @@ protocol Bool;
 @native("True")
 protocol True is Bool;
 
-def (this is True).negate() -> false;
+def (this is True).negate() => false;
 
 @native("False")
 protocol False is Bool;
 
-def (this is False).negate() -> true;
+def (this is False).negate() => true;

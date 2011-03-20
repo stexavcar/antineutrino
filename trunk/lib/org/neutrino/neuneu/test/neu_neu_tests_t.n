@@ -10,10 +10,10 @@ def neu_neu_tests_t.new() {
 
 @type(int32_t)
 def (this is neu_neu_tests_t).count
- -> this.addr[int32_t.of(0)];
+ => this.addr[int32_t.of(0)];
 
 def (this is neu_neu_tests_t).count:=(v is int32_t)
- -> this.addr[int32_t.of(0)] := v;
+ => this.addr[int32_t.of(0)] := v;
 
 def (this is neu_neu_tests_t).on_start(name is char_ptr_t) {
   libc.puts(name);
@@ -26,7 +26,7 @@ def (this is neu_neu_tests_t).on_start(name is char_ptr_t) {
 def neu_neu_tests_t.fail();
 
 @type(address_t)
-def (this is neu_neu_tests_t).addr -> this;
+def (this is neu_neu_tests_t).addr => this;
 
 def (this is neu_neu_tests_t).assert_true(arg is bool_t) {
   if arg
@@ -35,9 +35,9 @@ def (this is neu_neu_tests_t).assert_true(arg is bool_t) {
 }
 
 def (this is neu_neu_tests_t).assert_equal(a is int32_t, b is int32_t)
- -> this.assert_true(a = b);
+ => this.assert_true(a = b);
 
-def (this is neu_neu_tests_t).free() -> libc.free(this.addr);
+def (this is neu_neu_tests_t).free() => libc.free(this.addr);
 
 @type(int32_t)
 def (this is neu_neu_tests_t).run() {

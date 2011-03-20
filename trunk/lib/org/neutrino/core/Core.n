@@ -1,10 +1,10 @@
-def print_string(obj is String) -> internal "print";
+def print_string(obj is String) => internal "print";
 
 def print(obj) {
   print_string(obj.to_string());
   obj;
 }
 
-def fail(message is String) -> internal "fail";
+def fail(message is String) => internal "fail";
 
-def apply(name is String, args is PrimitiveArray) -> internal "apply";
+def apply(name is String, args is PrimitiveArray) => internal "apply";

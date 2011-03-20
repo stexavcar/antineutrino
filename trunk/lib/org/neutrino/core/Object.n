@@ -1,11 +1,11 @@
-def are_identical(a, b) -> internal "are_identical";
+def are_identical(a, b) => internal "are_identical";
 
 protocol Object {
 
-  def this=(that) -> are_identical(this, that);
+  def this=(that) => are_identical(this, that);
 
-  def this!=(that) -> not this = that;
+  def this!=(that) => not this = that;
 
-  def this.to_string() -> internal "obj.to_string";
+  def this.to_string() => internal "obj.to_string";
 
 }

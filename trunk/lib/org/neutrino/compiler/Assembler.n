@@ -4,9 +4,9 @@ protocol Register is Operand;
 
 protocol Memory is Operand;
 
-def Memory.at(base) -> new Memory(base, 0);
+def Memory.at(base) => new Memory(base, 0);
 
-def Memory.at_disp(base, disp) -> new Memory(base, disp);
+def Memory.at_disp(base, disp) => new Memory(base, disp);
 
 protocol Immediate;
 
@@ -16,12 +16,12 @@ protocol Symbol is Immediate;
 
 protocol LocalSymbol is Symbol;
 
-def Symbol.local(name) -> new LocalSymbol { name := name };
+def Symbol.local(name) => new LocalSymbol { name := name };
 
 protocol DylibSymbol is Symbol;
 
-def Symbol.dylib(name) -> new DylibSymbol { name := name };
+def Symbol.dylib(name) => new DylibSymbol { name := name };
 
 protocol StringSymbol is Symbol;
 
-def Symbol.string(value) -> new StringSymbol { value := value };
+def Symbol.string(value) => new StringSymbol { value := value };

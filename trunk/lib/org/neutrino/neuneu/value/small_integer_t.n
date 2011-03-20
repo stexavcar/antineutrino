@@ -3,19 +3,19 @@ protocol small_integer_t is value_t;
 
 @type(small_integer_t)
 def small_integer_t.cast(arg is value_t)
- -> arg;
+ => arg;
 
 @type(small_integer_t)
 def small_integer_t.of(arg is int32_t)
- -> arg << int32_t.of(2);
+ => arg << int32_t.of(2);
 
 def small_integer_t.of(arg is Integer)
- -> new small_integer_t { value := arg };
+ => new small_integer_t { value := arg };
 
 @type(int32_t)
 def (this is small_integer_t).value
- -> this.id >> int32_t.of(2);
+ => this.id >> int32_t.of(2);
 
 @type(small_integer_t)
 def (this is small_integer_t)+(that is small_integer_t)
- -> this.id + that.id;
+ => this.id + that.id;

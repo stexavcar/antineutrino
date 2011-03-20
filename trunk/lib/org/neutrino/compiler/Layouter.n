@@ -9,7 +9,7 @@
  */
 protocol Layouter;
 
-def Layouter.new() -> new Layouter {
+def Layouter.new() => new Layouter {
   sections := new ArrayList(),
   section_map := new HashMap(),
   last_name := null
@@ -26,23 +26,23 @@ def align(value, factor) {
     value + (factor - (value % factor));
 }
 
-def (this is Layouter).info(name) -> this.section_map[name].info;
+def (this is Layouter).info(name) => this.section_map[name].info;
 
 protocol LayoutInfo;
 
-def LayoutInfo.new(section, start, size) -> new LayoutInfo {
+def LayoutInfo.new(section, start, size) => new LayoutInfo {
   section := section,
   start := start,
   size := size
 }
 
-def (this is LayoutInfo).end -> this.start + this.size;
+def (this is LayoutInfo).end => this.start + this.size;
 
-def (this is LayoutInfo).unaligned_size -> this.section.size;
+def (this is LayoutInfo).unaligned_size => this.section.size;
 
 protocol LayoutSection;
 
-def LayoutSection.new(id, prev, size, alignment) -> new LayoutSection {
+def LayoutSection.new(id, prev, size, alignment) => new LayoutSection {
   id := id,
   prev := prev,
   size := size,
@@ -86,7 +86,7 @@ def (this is Layouter).visit_section(sect, visited, fun) {
 
 // Generates all sections on an order which obeys the relationship
 // specified by the individual sections.
-def (this is Layouter).ordered_sections -> fn for (fun) {
+def (this is Layouter).ordered_sections => fn for (fun) {
   def visited := new HashMap();
   for (root : this.roots)
     this.visit_section(root, visited, fun);
@@ -108,6 +108,6 @@ def (this is Layouter).dump() {
     def info := sect.info;
     if info = null
       then print("${sect.id}[${sect.size}]");
-      else print("${info.start} .. ${info.end}: ${sect.id}[${sect.size} -> ${info.size}]");
+      else print("${info.start} .. ${info.end}: ${sect.id}[${sect.size} => ${info.size}]");
   }
 }

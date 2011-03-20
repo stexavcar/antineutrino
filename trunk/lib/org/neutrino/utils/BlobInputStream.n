@@ -1,6 +1,6 @@
 protocol BlobInputStream {
 
-  @static def proto.new(data) -> new BlobInputStream {
+  @static def proto.new(data) => new BlobInputStream {
     cursor := 0,
     data := data
   }

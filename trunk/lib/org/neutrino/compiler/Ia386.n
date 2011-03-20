@@ -1,11 +1,11 @@
-def Register.new(index, name) -> new Register {
+def Register.new(index, name) => new Register {
   index := index,
   name := name
 }
 
-def (this is Register).to_string() -> "%${this.name}";
+def (this is Register).to_string() => "%${this.name}";
 
-def Memory.new(base is Register, disp is Integer) -> new Memory {
+def Memory.new(base is Register, disp is Integer) => new Memory {
   base := base,
   disp := disp
 }
@@ -19,13 +19,13 @@ def rEbp := new Register(5, "ebp");
 def rEsi := new Register(6, "esi");
 def rEdi := new Register(7, "edi");
 
-def (this is Register)=(that is Register) -> this.index = that.index;
+def (this is Register)=(that is Register) => this.index = that.index;
 
-def (this is Register)!=(that is Register) -> this.index != that.index;
+def (this is Register)!=(that is Register) => this.index != that.index;
 
 protocol AssemblerIa386;
 
-def AssemblerIa386.new(binary, name) -> new AssemblerIa386 {
+def AssemblerIa386.new(binary, name) => new AssemblerIa386 {
   binary := binary,
   name := name,
   out := new BlobStream()
@@ -40,7 +40,7 @@ def kScaleTwo := 2r01;
 def kScaleFour := 2r10;
 def kScaleEight := 2r11;
 
-def (this is AssemblerIa386).cursor -> this.out.length;
+def (this is AssemblerIa386).cursor => this.out.length;
 
 // --- Low-level encoding ---
 
@@ -148,16 +148,16 @@ def (this is AssemblerIa386).write_jump_target(target) {
 
 protocol Label;
 
-def Label.new(offset, is_bound) -> new Label {
+def Label.new(offset, is_bound) => new Label {
   offset := offset,
   is_bound := is_bound
 }
 
 def (this is AssemblerIa386).here()
- -> new Label(this.cursor, true);
+ => new Label(this.cursor, true);
 
 def (this is AssemblerIa386).label()
- -> new Label(0, false);
+ => new Label(0, false);
 
 def (this is AssemblerIa386).bind(label) {
   assert_true(not label.is_bound);
@@ -167,7 +167,7 @@ def (this is AssemblerIa386).bind(label) {
   // Traverse the chain of targets and rewrite them to jump to the
   // current offset.
   ref cursor := label.offset;
-  with_escape (break) -> Control.repeat(fn () {
+  with_escape (break) => Control.repeat(fn () {
     if cursor = 0
       then break(null);
     def next_cursor := this.out.read_int32(cursor);
@@ -179,70 +179,70 @@ def (this is AssemblerIa386).bind(label) {
 
 // --- Instructions ---
 
-// B8 +rd -> MOV r32, imm32
+// B8 +rd => MOV r32, imm32
 def (this is AssemblerIa386).mov(imm32 is Immediate, dest is Register) {
   this.write_opcode(16rB8 + dest.index);
   this.write_imm32(imm32);
 }
 
-// C7 /0 -> MOV r/m32, imm32
+// C7 /0 => MOV r/m32, imm32
 def (this is AssemblerIa386).mov(dest is Operand, imm32 is Immediate) {
   this.write_opcode(16rC7);
   this.write_operand(0, dest);
   this.write_imm32(imm32);
 }
 
-// 89 /r -> MOV r/m32, r32
+// 89 /r => MOV r/m32, r32
 def (this is AssemblerIa386).mov(dest is Operand, src is Register) {
   this.write_opcode(16r89);
   this.write_operands(dest, src);
 }
 
-// 8B /r -> MOV r32, r/m32
+// 8B /r => MOV r32, r/m32
 def (this is AssemblerIa386).mov(dest is Register, src is Operand) {
   this.write_opcode(16r8B);
   this.write_operands(src, dest);
 }
 
-// 01 /r -> ADD r/m32, r32
+// 01 /r => ADD r/m32, r32
 def (this is AssemblerIa386).add(dest is Register, src is Operand) {
   this.write_opcode(16r03);
   this.write_operands(src, dest);
 }
 
-// 03 /r -> ADD r32, r/m32
+// 03 /r => ADD r32, r/m32
 def (this is AssemblerIa386).add(dest is Operand, src is Register) {
   this.write_opcode(16r01);
   this.write_operands(dest, src);
 }
 
-// 81 /0 id -> ADD r/m32, imm32
+// 81 /0 id => ADD r/m32, imm32
 def (this is AssemblerIa386).add(dest is Operand, imm32 is Immediate) {
   this.write_opcode(16r81);
   this.write_operand(0, dest);
   this.write_imm32(imm32);
 }
 
-// 2B /r -> SUB r32, r/m32
+// 2B /r => SUB r32, r/m32
 def (this is AssemblerIa386).sub(dest is Register, src is Operand) {
   this.write_opcode(16r2B);
   this.write_operands(src, dest);
 }
 
-// 29 /r -> SUB r/m32, r32
+// 29 /r => SUB r/m32, r32
 def (this is AssemblerIa386).sub(dest is Operand, src is Register) {
   this.write_opcode(16r29);
   this.write_operands(dest, src);
 }
 
-// 81 /5 id -> SUB r/m32, imm32
+// 81 /5 id => SUB r/m32, imm32
 def (this is AssemblerIa386).sub(dest is Operand, imm32 is Immediate) {
   this.write_opcode(16r81);
   this.write_operand(5, dest);
   this.write_imm32(imm32);
 }
 
-// 21 /r -> AND r/m32, r32
+// 21 /r => AND r/m32, r32
 def (this is AssemblerIa386).ahnd(dest is Operand, src is Register) {
   this.write_opcode(16r21);
   this.write_operands(dest, src);
@@ -254,179 +254,179 @@ def (this is AssemblerIa386).ahnd(dest is Register, src is Operand) {
   this.write_operands(src, dest);
 }
 
-// 81 /4 id -> AND r/m32, imm32 
+// 81 /4 id => AND r/m32, imm32 
 def (this is AssemblerIa386).ahnd(dest is Operand, imm32 is Immediate) {
   this.write_opcode(16r81);
   this.write_operand(4, dest);
   this.write_imm32(imm32);
 }
 
-// D3 /4 -> SHL r/m32, CL
+// D3 /4 => SHL r/m32, CL
 def (this is AssemblerIa386).shl(dest is Operand) {
   this.write_opcode(16rD3);
   this.write_operand(4, dest);
 }
 
-// D3 /5 -> SHR r/m32, CL
+// D3 /5 => SHR r/m32, CL
 def (this is AssemblerIa386).shl(dest is Operand) {
   this.write_opcode(16rD3);
   this.write_operand(5, dest);
 }
 
-// D3 /7 -> SAR r/m32, CL
+// D3 /7 => SAR r/m32, CL
 def (this is AssemblerIa386).sar(dest is Operand) {
   this.write_opcode(16rD3);
   this.write_operand(7, dest);
 }
 
-// 50 +rd -> PUSH r32
+// 50 +rd => PUSH r32
 def (this is AssemblerIa386).push(reg is Register) {
   this.write_opcode(16r50 + reg.index);
 }
 
-// FF /6 -> PUSH r/m32
+// FF /6 => PUSH r/m32
 def (this is AssemblerIa386).push(mem is Operand) {
   this.write_opcode(16rFF);
   this.write_operand(6, mem);
 }
 
-// 68 -> PUSH imm32
+// 68 => PUSH imm32
 def (this is AssemblerIa386).push(imm32 is Immediate) {
   this.write_opcode(16r68);
   this.write_imm32(imm32);
 }
 
-// 58 +rd -> POP r32
+// 58 +rd => POP r32
 def (this is AssemblerIa386).pop(reg is Register) {
   this.write_opcode(16r58 + reg.index);
 }
 
-// FF /2 -> CALL r/m32
+// FF /2 => CALL r/m32
 def (this is AssemblerIa386).call(target is Operand) {
   this.write_opcode(16rFF);
   this.write_operand(2, target);
 }
 
-// E8 cd -> CALL rel32
+// E8 cd => CALL rel32
 def (this is AssemblerIa386).call(target is Symbol) {
   this.write_opcode(16rE8);
   this.write_relative_operand(target);
 }
 
-// 8F /0 -> POP r/m32
+// 8F /0 => POP r/m32
 def (this is AssemblerIa386).pop(mem is Operand) {
   this.write_opcode(16r8F);
   this.write_operand(0, mem);
 }
 
-// C3 -> RET
+// C3 => RET
 def (this is AssemblerIa386).ret() {
   this.write_opcode(16rC3);
 }
 
-// C8 iw 00 -> ENTER imm16, 0
+// C8 iw 00 => ENTER imm16, 0
 def (this is AssemblerIa386).enter(imm16) {
   this.write_opcode(16rC8);
   this.write_imm16(imm16);
   this.write_int8(16r00);
 }
 
-// C9 -> LEAVE
+// C9 => LEAVE
 def (this is AssemblerIa386).leave() {
   this.write_opcode(16rC9);
 }
 
-// CC -> INT 3
+// CC => INT 3
 def (this is AssemblerIa386).int3() {
   this.write_opcode(16rCC);
 }
 
-// E9 cd -> JMP rel32
+// E9 cd => JMP rel32
 def (this is AssemblerIa386).jmp(target) {
   this.write_opcode(16rE9);
   this.write_jump_target(target);
 }
 
-// 0F 87 cd -> JA rel32 (jump if above)
+// 0F 87 cd => JA rel32 (jump if above)
 def (this is AssemblerIa386).ja(target) {
   this.write_opcode(16r0F, 16r87);
   this.write_jump_target(target);
 }
 
-// 0F 83 cd -> JAE rel32 (jump if above or equal)
+// 0F 83 cd => JAE rel32 (jump if above or equal)
 def (this is AssemblerIa386).jae(target) {
   this.write_opcode(16r0F, 16r83);
   this.write_jump_target(target);
 }
 
-// 0F 82 cd -> JB rel32 (jump if below)
+// 0F 82 cd => JB rel32 (jump if below)
 def (this is AssemblerIa386).jb(target) {
   this.write_opcode(16r0F, 16r82);
   this.write_jump_target(target);
 }
 
-// 0F 86 cd -> JBE rel32 (jump if below or equal)
+// 0F 86 cd => JBE rel32 (jump if below or equal)
 def (this is AssemblerIa386).jbe(target) {
   this.write_opcode(16r0F, 16r86);
   this.write_jump_target(target);
 }
 
-// 0F 84 cd -> JE rel32 (jump if equal)
+// 0F 84 cd => JE rel32 (jump if equal)
 def (this is AssemblerIa386).je(target) {
   this.write_opcode(16r0F, 16r84);
   this.write_jump_target(target);
 }
 
-// 0F 85 cd -> JNE rel32 (jump if not equal)
+// 0F 85 cd => JNE rel32 (jump if not equal)
 def (this is AssemblerIa386).jne(target) {
   this.write_opcode(16r0F, 16r85);
   this.write_jump_target(target);
 }
 
-// 0F 8F cd -> JG rel32 (jump if greater)
+// 0F 8F cd => JG rel32 (jump if greater)
 def (this is AssemblerIa386).jg(target) {
   this.write_opcode(16r0F, 16r8F);
   this.write_jump_target(target);
 }
 
-// 0F 8D cd -> JGE rel32 (jump if greater or equal)
+// 0F 8D cd => JGE rel32 (jump if greater or equal)
 def (this is AssemblerIa386).jge(target) {
   this.write_opcode(16r0F, 16r8D);
   this.write_jump_target(target);
 }
 
-// 0F 8C cd -> JL rel32 (jump if less)
+// 0F 8C cd => JL rel32 (jump if less)
 def (this is AssemblerIa386).jl(target) {
   this.write_opcode(16r0F, 16r8C);
   this.write_jump_target(target);
 }
 
-// 0F 8E cd -> JLE rel32 (jump if less or equal)
+// 0F 8E cd => JLE rel32 (jump if less or equal)
 def (this is AssemblerIa386).jle(target) {
   this.write_opcode(16r0F, 16r8E);
   this.write_jump_target(target);
 }
 
-// 85 /r -> TEST r/m32, r32
+// 85 /r => TEST r/m32, r32
 def (this is AssemblerIa386).test(a is Register, b is Operand) {
   this.write_opcode(16r85);
   this.write_operands(b, a);
 }
 
-// 39 /r -> CMP r/m32, r32
+// 39 /r => CMP r/m32, r32
 def (this is AssemblerIa386).cmp(a is Register, b is Operand) {
   this.write_opcode(16r39);
   this.write_operands(b, a);
 }
 
-// 81 /7 id -> CMP r/m32, imm32
+// 81 /7 id => CMP r/m32, imm32
 def (this is AssemblerIa386).cmp(a is Operand, i is Immediate) {
   this.write_opcode(16r81);
   this.write_operand(7, a);
   this.write_imm32(i);
 }
 
-// F7 /0 id -> TEST r/m32, imm32
+// F7 /0 id => TEST r/m32, imm32
 def (this is AssemblerIa386).test(a is Operand, i is Immediate) {
   this.write_opcode(16rF7);
   this.write_operand(0, a);
@@ -444,13 +444,13 @@ def (this is AssemblerIa386).exit_frame() {
   this.ret();
 }
 
-def (this is AssemblerIa386).length -> this.out.length;
+def (this is AssemblerIa386).length => this.out.length;
 
-def (this is AssemblerIa386).code -> this.out.get_blob();
+def (this is AssemblerIa386).code => this.out.get_blob();
 
 protocol Ia386;
 
-def Ia386.new() -> new Ia386 { };
+def Ia386.new() => new Ia386 { };
 
 def (this is Ia386).new_assembler(binary, name)
- -> new AssemblerIa386(binary, name);
+ => new AssemblerIa386(binary, name);

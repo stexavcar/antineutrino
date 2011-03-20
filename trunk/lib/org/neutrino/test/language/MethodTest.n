@@ -10,10 +10,10 @@ def (this is LanguageTest).test_simple_multimethods() {
   assert_true(("1" + "1") = "11");
 }
 
-def id(x) -> x;
-def first(x, y) -> x;
-def second(x, y) -> y;
-def third(x, y, z) -> z;
+def id(x) => x;
+def first(x, y) => x;
+def second(x, y) => y;
+def third(x, y, z) => z;
 
 def (this is LanguageTest).test_first_level_arguments() {
   this.on_start("first level arguments");
@@ -26,11 +26,11 @@ def (this is LanguageTest).test_first_level_arguments() {
   assert_true(third(10, 11, 12) = 12);
 }
 
-def minus(a) -> fn (b) -> a - b;
+def minus(a) => fn (b) => a - b;
 
-def minus2(a, b) -> fn () -> a - b;
+def minus2(a, b) => fn () => a - b;
 
-def minus3(a) -> fn() -> fn (b) -> a - b;
+def minus3(a) => fn() => fn (b) => a - b;
 
 def (this is LanguageTest).test_higher_level_arguments() {
   this.on_start("second level arguments");

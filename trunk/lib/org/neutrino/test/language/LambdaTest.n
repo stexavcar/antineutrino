@@ -1,5 +1,5 @@
 protocol LamFoo;
-def (this is LamFoo).m() -> (fn () -> this);
+def (this is LamFoo).m() => (fn () => this);
 
 def (this is LanguageTest).test_lambdas() {
   this.on_start("lambdas");

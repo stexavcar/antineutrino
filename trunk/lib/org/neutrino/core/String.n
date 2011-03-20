@@ -3,28 +3,28 @@
  */
 @native("String") protocol String {
 
-  def this+(that is String) -> internal "str+str";
+  def this+(that is String) => internal "str+str";
 
-  def this=(that is String) -> internal "str=str";
+  def this=(that is String) => internal "str=str";
 
-  def this.length -> internal "str.len";
+  def this.length => internal "str.len";
 
   /*
    * Returns an enumeration of the ascii characters in this string.
    * This is a temporary method that will eventually be removed.
    */
-  def this.ascii_characters -> fn for (fun) {
+  def this.ascii_characters => fn for (fun) {
     for (i : 0 .. this.length) {
       fun(this._get_ascii_character(i));
     }
   }
 
   @static def proto.implode(elms is PrimitiveArray, count is Integer, sep is String)
-   -> internal "str.implode";
+   => internal "str.implode";
 
   // Temporary method.  Don't use under any circumstances.
-  def this._get_ascii_character(i) -> internal "str[ascii]";
+  def this._get_ascii_character(i) => internal "str[ascii]";
 
 }
 
-def string_from_ordinal(value) -> internal "ord2str";
+def string_from_ordinal(value) => internal "ord2str";

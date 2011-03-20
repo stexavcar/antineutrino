@@ -2,9 +2,9 @@ protocol PrimitiveCollection;
 
 @native("array") protocol PrimitiveArray is Sequence, PrimitiveCollection;
 
-def (this is PrimitiveArray)[index is Integer] -> internal "array[]";
+def (this is PrimitiveArray)[index is Integer] => internal "array[]";
 
-def (this is PrimitiveArray).length -> internal "array.length";
+def (this is PrimitiveArray).length => internal "array.length";
 
 def (this is PrimitiveArray)+(that is PrimitiveArray) {
   def result := new MutablePrimitiveArray(this.length + that.length);
@@ -16,7 +16,7 @@ def (this is PrimitiveArray)+(that is PrimitiveArray) {
 }
 
 def (this is PrimitiveArray)=(that is PrimitiveArray)
- -> (this.length = that.length) and (with_escape (yield) {
+ => (this.length = that.length) and (with_escape (yield) {
    for (i : 0 .. this.length) {
      if this[i] != that[i]
        then yield(false);
@@ -41,21 +41,21 @@ def (this is PrimitiveArray)[slice is Interval] {
 
 @native("mutarr") protocol MutablePrimitiveArray is PrimitiveArray;
 
-def MutablePrimitiveArray.new(size is Integer) -> internal "mutprimarr";
+def MutablePrimitiveArray.new(size is Integer) => internal "mutprimarr";
 
-def (this is MutablePrimitiveArray)[i is Integer]:=(value) -> internal "mutarr.set";
+def (this is MutablePrimitiveArray)[i is Integer]:=(value) => internal "mutarr.set";
 
 @native("byte_array") protocol ByteArray is PrimitiveArray;
 
-def (this is ByteArray)[index is Integer] -> internal "byte_array[1]";
+def (this is ByteArray)[index is Integer] => internal "byte_array[1]";
 
-def (this is ByteArray).int32_at(index is Integer) -> internal "byte_array[4]";
+def (this is ByteArray).int32_at(index is Integer) => internal "byte_array[4]";
 
-def (this is ByteArray).length -> internal "byte_array.length";
+def (this is ByteArray).length => internal "byte_array.length";
 
 @native("mutbytarr") protocol MutablePrimitiveByteArray is ByteArray;
 
-def MutablePrimitiveByteArray.new(size is Integer) -> internal "mutprimbytarr";
+def MutablePrimitiveByteArray.new(size is Integer) => internal "mutprimbytarr";
 
-def (this is MutablePrimitiveByteArray)[i is Integer]:=(value is Integer) -> internal "mutbytarr.set";
+def (this is MutablePrimitiveByteArray)[i is Integer]:=(value is Integer) => internal "mutbytarr.set";
 

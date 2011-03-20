@@ -8,11 +8,11 @@
 
 protocol ElfFormat;
 
-def ElfFormat.new() -> new ElfFormat { };
+def ElfFormat.new() => new ElfFormat { };
 
-def (this is ElfFormat).entry_point_name -> "main";
+def (this is ElfFormat).entry_point_name => "main";
 
-def (this is ElfFormat).builder(binary) -> new Elf(binary);
+def (this is ElfFormat).builder(binary) => new Elf(binary);
 
 protocol Elf is ObjectFormat;
 
@@ -148,11 +148,11 @@ def (this is Elf).encode_sections(out) {
   }
 }
 
-def Elf.header_size -> 13 * WORD_SIZE;
+def Elf.header_size => 13 * WORD_SIZE;
 
-def Elf.header_name -> "Elf32_Ehdr";
+def Elf.header_name => "Elf32_Ehdr";
 
-def Elf.section_header_start_name -> "Elf32_Shdr.start";
+def Elf.section_header_start_name => "Elf32_Shdr.start";
 
 /*
  * typedef struct Elf32_Shdr {
@@ -199,37 +199,37 @@ def (this is Elf).process_relocation(relocation) {
   }
 }
 
-def (this is Elf).symbol_address(symbol) -> 0;
+def (this is Elf).symbol_address(symbol) => 0;
 
 def (this is Elf).symbol_address(symbol is LocalSymbol)
- -> this.symtab.code_block_offset(symbol.name);
+ => this.symtab.code_block_offset(symbol.name);
 
 protocol ElfSection;
 
-def (this is ElfSection).header_name -> "${this.name}.header";
+def (this is ElfSection).header_name => "${this.name}.header";
 
 def (this is ElfSection).finalize(elf) {
   elf.strtab.ensure(this.name);
 }
 
-def ElfSection.header_size -> 10 * WORD_SIZE;
+def ElfSection.header_size => 10 * WORD_SIZE;
 
-def (this is ElfSection).entry_size -> 0;
+def (this is ElfSection).entry_size => 0;
 
-def (this is ElfSection).info(elf) -> 0;
+def (this is ElfSection).info(elf) => 0;
 
-def (this is ElfSection).link(elf) -> 0;
+def (this is ElfSection).link(elf) => 0;
 
-def (this is ElfSection).alignment -> WORD_SIZE;
+def (this is ElfSection).alignment => WORD_SIZE;
 
-def (this is ElfSection).is_allocated -> false;
+def (this is ElfSection).is_allocated => false;
 
-def (this is ElfSection).is_writable -> false;
+def (this is ElfSection).is_writable => false;
 
-def (this is ElfSection).is_executable -> false;
+def (this is ElfSection).is_executable => false;
 
 def (this is ElfSection).flags
- -> (if this.is_writable then 16r01 else 0)
+ => (if this.is_writable then 16r01 else 0)
   | (if this.is_allocated then 16r02 else 0)
   | (if this.is_executable then 16r04 else 0);
 
@@ -250,16 +250,16 @@ def ElfStringTable.new() {
   result;
 }
 
-def (this is ElfStringTable).alignment -> 1;
+def (this is ElfStringTable).alignment => 1;
 
-def (this is ElfStringTable).size -> this.r_size.get();
+def (this is ElfStringTable).size => this.r_size.get();
 
-def (this is ElfStringTable).name -> ".strtab";
+def (this is ElfStringTable).name => ".strtab";
 
-def (this is ElfStringTable).type -> 3; // SHT_STRTAB
+def (this is ElfStringTable).type => 3; // SHT_STRTAB
 
 def (this is ElfStringTable)[key]
- -> this.table[key];
+ => this.table[key];
 
 def (this is ElfStringTable).ensure(key) {
   def prev := this.table[key];
@@ -289,15 +289,15 @@ def (this is ElfStringTable).encode(out, elf) {
  */
 protocol ElfNullSection is ElfSection;
 
-def ElfNullSection.new() -> new ElfNullSection { };
+def ElfNullSection.new() => new ElfNullSection { };
 
-def (this is ElfNullSection).name -> "";
+def (this is ElfNullSection).name => "";
 
-def (this is ElfNullSection).size -> 0;
+def (this is ElfNullSection).size => 0;
 
-def (this is ElfNullSection).type -> 0; // SHT_NULL
+def (this is ElfNullSection).type => 0; // SHT_NULL
 
-def (this is ElfNullSection).alignment -> 0;
+def (this is ElfNullSection).alignment => 0;
 
 def (this is ElfNullSection).encode(out, elf);
 
@@ -307,7 +307,7 @@ def (this is ElfNullSection).encode(out, elf);
  */
 protocol ElfTextSection is ElfSection;
 
-def ElfTextSection.new() -> new ElfTextSection {
+def ElfTextSection.new() => new ElfTextSection {
   data := new BlobStream()
 }
 
@@ -321,15 +321,15 @@ def (this is ElfTextSection).rewrite_int32(offset, value) {
   this.data.rewrite_int32(offset, value);
 }
 
-def (this is ElfTextSection).name -> ".text";
+def (this is ElfTextSection).name => ".text";
 
-def (this is ElfTextSection).size -> this.data.length;
+def (this is ElfTextSection).size => this.data.length;
 
-def (this is ElfTextSection).type -> 1; // SHT_PROGBITS
+def (this is ElfTextSection).type => 1; // SHT_PROGBITS
 
-def (this is ElfTextSection).is_executable -> true;
+def (this is ElfTextSection).is_executable => true;
 
-def (this is ElfTextSection).is_allocated -> true;
+def (this is ElfTextSection).is_allocated => true;
 
 def (this is ElfTextSection).encode(out, elf) {
   out.write_data(this.data.get_blob());
@@ -359,17 +359,17 @@ def (this is ElfSymbolTable).add_section_entry(index) {
   this.entries.add(new ElfSymbolTableSectionEntry(index));
 }
 
-def (this is ElfSymbolTable).info(elf) -> this.entries.length;
+def (this is ElfSymbolTable).info(elf) => this.entries.length;
 
-def (this is ElfSymbolTable).link(elf) -> elf.section_index(elf.strtab);
+def (this is ElfSymbolTable).link(elf) => elf.section_index(elf.strtab);
 
-def (this is ElfSymbolTable).type -> 2; // SHT_SYMTAB
+def (this is ElfSymbolTable).type => 2; // SHT_SYMTAB
 
-def (this is ElfSymbolTable).name -> ".symtab";
+def (this is ElfSymbolTable).name => ".symtab";
 
-def (this is ElfSymbolTable).size -> this.entries.length * this.entry_size;
+def (this is ElfSymbolTable).size => this.entries.length * this.entry_size;
 
-def (this is ElfSymbolTable).entry_size -> ElfSymbolTableEntry.size;
+def (this is ElfSymbolTable).entry_size => ElfSymbolTableEntry.size;
 
 def (this is ElfSymbolTable).encode(out, elf) {
   for (entry : this.entries)
@@ -393,9 +393,9 @@ def (this is ElfSymbolTable).code_block_offset(name) {
  */
 protocol ElfSymbolTableEntry;
 
-def ElfSymbolTableEntry.size -> 4 * WORD_SIZE;
+def ElfSymbolTableEntry.size => 4 * WORD_SIZE;
 
-def ElfSymbolTableEntry.new(name_index, offset, size) -> new ElfSymbolTableEntry {
+def ElfSymbolTableEntry.new(name_index, offset, size) => new ElfSymbolTableEntry {
   name_index := name_index,
   offset := offset,
   size := size
@@ -423,9 +423,9 @@ def (this is ElfSymbolTableEntry).encode(out, elf) {
 
 protocol ElfSymbolTableNullEntry is ElfSymbolTableEntry;
 
-def ElfSymbolTableNullEntry.new() -> new ElfSymbolTableNullEntry { }
+def ElfSymbolTableNullEntry.new() => new ElfSymbolTableNullEntry { }
 
-def (this is ElfSymbolTableNullEntry).name_index -> 0;
+def (this is ElfSymbolTableNullEntry).name_index => 0;
 
 def (this is ElfSymbolTableNullEntry).encode(out, elf) {
   out.write_int32(this.name_index);
@@ -438,11 +438,11 @@ def (this is ElfSymbolTableNullEntry).encode(out, elf) {
 
 protocol ElfSymbolTableSectionEntry is ElfSymbolTableEntry;
 
-def ElfSymbolTableSectionEntry.new(index) -> new ElfSymbolTableSectionEntry {
+def ElfSymbolTableSectionEntry.new(index) => new ElfSymbolTableSectionEntry {
   index := index
 }
 
-def (this is ElfSymbolTableSectionEntry).name_index -> 0;
+def (this is ElfSymbolTableSectionEntry).name_index => 0;
 
 def (this is ElfSymbolTableSectionEntry).encode(out, elf) {
   out.write_int32(this.name_index);
@@ -458,19 +458,19 @@ def (this is ElfSymbolTableSectionEntry).encode(out, elf) {
  */
 protocol ElfRelocationSection is ElfSection;
 
-def ElfRelocationSection.new() -> new ElfRelocationSection { }
+def ElfRelocationSection.new() => new ElfRelocationSection { }
 
-def (this is ElfRelocationSection).name -> ".rel.text";
+def (this is ElfRelocationSection).name => ".rel.text";
 
-def (this is ElfRelocationSection).size -> 0;
+def (this is ElfRelocationSection).size => 0;
 
-def (this is ElfRelocationSection).entry_size -> ElfRelocationEntry.size;
+def (this is ElfRelocationSection).entry_size => ElfRelocationEntry.size;
 
-def (this is ElfRelocationSection).info(elf) -> elf.section_index(elf.text);
+def (this is ElfRelocationSection).info(elf) => elf.section_index(elf.text);
 
-def (this is ElfRelocationSection).link(elf) -> elf.section_index(elf.symtab);
+def (this is ElfRelocationSection).link(elf) => elf.section_index(elf.symtab);
 
-def (this is ElfRelocationSection).type -> 9; // SHT_REL
+def (this is ElfRelocationSection).type => 9; // SHT_REL
 
 def (this is ElfRelocationSection).encode(out, elf) {
 
@@ -478,34 +478,34 @@ def (this is ElfRelocationSection).encode(out, elf) {
 
 protocol ElfRelocationEntry;
 
-def ElfRelocationEntry.size -> 2 * WORD_SIZE;
+def ElfRelocationEntry.size => 2 * WORD_SIZE;
 
 protocol ElfBssSection is ElfSection;
 
-def ElfBssSection.new() -> new ElfBssSection { }
+def ElfBssSection.new() => new ElfBssSection { }
 
-def (this is ElfBssSection).name -> ".bss";
+def (this is ElfBssSection).name => ".bss";
 
-def (this is ElfBssSection).type -> 8; // SHT_NOBITS
+def (this is ElfBssSection).type => 8; // SHT_NOBITS
 
-def (this is ElfBssSection).size -> 0;
+def (this is ElfBssSection).size => 0;
 
-def (this is ElfBssSection).is_writable -> true;
+def (this is ElfBssSection).is_writable => true;
 
-def (this is ElfBssSection).is_allocated -> true;
+def (this is ElfBssSection).is_allocated => true;
 
 def (this is ElfBssSection).encode(out, elf);
 
 protocol ElfDataSection is ElfSection;
 
-def ElfDataSection.new(name) -> new ElfDataSection { name := name }
+def ElfDataSection.new(name) => new ElfDataSection { name := name }
 
-def (this is ElfDataSection).type -> 1; // SHT_PROGBITS
+def (this is ElfDataSection).type => 1; // SHT_PROGBITS
 
-def (this is ElfDataSection).size -> 0;
+def (this is ElfDataSection).size => 0;
 
-def (this is ElfDataSection).is_writable -> true;
+def (this is ElfDataSection).is_writable => true;
 
-def (this is ElfDataSection).is_allocated -> true;
+def (this is ElfDataSection).is_allocated => true;
 
 def (this is ElfDataSection).encode(out, elf);

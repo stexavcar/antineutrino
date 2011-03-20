@@ -24,22 +24,22 @@ def point_t.new(x is int32_t, y is int32_t) {
   addr;
 }
 
-def (this is point_t).free() -> libc.free(this.addr);
+def (this is point_t).free() => libc.free(this.addr);
 
 @type(address_t)
-def (this is point_t).addr -> this;
+def (this is point_t).addr => this;
 
 @type(int32_t)
-def (this is point_t).x -> this.addr[int32_t.of(0)];
+def (this is point_t).x => this.addr[int32_t.of(0)];
 
 @type(int32_t)
-def (this is point_t).x:=(v is int32_t) -> this.addr[int32_t.of(0)] := v;
+def (this is point_t).x:=(v is int32_t) => this.addr[int32_t.of(0)] := v;
 
 @type(int32_t)
-def (this is point_t).y -> this.addr[int32_t.of(4)];
+def (this is point_t).y => this.addr[int32_t.of(4)];
 
 @type(int32_t)
-def (this is point_t).y:=(v is int32_t) -> this.addr[int32_t.of(4)] := v;
+def (this is point_t).y:=(v is int32_t) => this.addr[int32_t.of(4)] := v;
 
 def (this is neu_neu_tests_t).test_struct_malloc() {
   this.on_start(char_ptr_t.of("struct malloc"));

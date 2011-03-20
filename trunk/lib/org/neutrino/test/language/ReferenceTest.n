@@ -15,7 +15,7 @@ def (this is LanguageTest).test_simple_ref_syntax() {
   this.on_start("simple ref syntax");
   ref i := 0;
   assert_equal(0, i);
-  def inc -> i := i + 1;
+  def inc => i := i + 1;
   inc();
   assert_equal(1, i);
   inc();

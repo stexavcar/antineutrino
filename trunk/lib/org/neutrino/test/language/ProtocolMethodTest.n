@@ -1,12 +1,12 @@
 protocol ProtMethTester;
 
-def ProtMethTester.foo -> 4;
+def ProtMethTester.foo => 4;
 
-def (this is ProtMethTester).bar -> 6;
+def (this is ProtMethTester).bar => 6;
 
-def ProtMethTester.new() -> new ProtMethTester { };
+def ProtMethTester.new() => new ProtMethTester { };
 
-def ProtMethTester.new(bar) -> new ProtMethTester { bar := bar };
+def ProtMethTester.new(bar) => new ProtMethTester { bar := bar };
 
 def (this is LanguageTest).test_protocol_methods() {
   this.on_start("protocol methods");

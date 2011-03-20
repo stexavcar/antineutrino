@@ -2,20 +2,20 @@
 protocol value_t;
 
 @type(int32_t)
-def (this is value_t).id -> this;
+def (this is value_t).id => this;
 
 @type(value_t)
 def value_t.from_id(arg is int32_t)
- -> arg;
+ => arg;
 
 @type(bool_t)
 def (this is value_t).is_small_integer
- -> (this.id & int32_t.of(3)) = int32_t.of(0);
+ => (this.id & int32_t.of(3)) = int32_t.of(0);
 
 @type(bool_t)
 def (this is value_t).is_object
- -> (this.id & int32_t.of(3)) = int32_t.of(1);
+ => (this.id & int32_t.of(3)) = int32_t.of(1);
 
 @type(bool_t)
 def (this is value_t)=(that is value_t)
- -> this.id = that.id;
+ => this.id = that.id;

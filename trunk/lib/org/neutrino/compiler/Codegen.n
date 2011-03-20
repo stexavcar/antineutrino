@@ -7,7 +7,7 @@
  */
 protocol CodeGenerator;
 
-def CodeGenerator.new(universe, assm, compiler, method) -> new CodeGenerator {
+def CodeGenerator.new(universe, assm, compiler, method) => new CodeGenerator {
   universe := universe,
   assm := assm,
   compiler := compiler,
@@ -33,14 +33,14 @@ def (this is CodeGenerator).add_locals(node is DefExpr) {
     this.add_locals(child);
 }
 
-def (this is CodeGenerator).resolve_static_value(node) -> null;
+def (this is CodeGenerator).resolve_static_value(node) => null;
 
 def (this is CodeGenerator).resolve_static_value(node is GlobalExpr) {
   this.universe.lookup_static_global(node.name);
 }
 
 def (this is CodeGenerator).resolve_method(holder, method)
- -> this.universe.lookup_method(holder, method);
+ => this.universe.lookup_method(holder, method);
 
 def (this is CodeGenerator).emit(node is CallExpr) {
   def info := node.info;
@@ -73,7 +73,7 @@ def (this is CodeGenerator).emit_c_call(node, target) {
 }
 
 def (this is CodeGenerator).static_value(node is ConstantExpr)
- -> node.value;
+ => node.value;
 
 def (this is CodeGenerator).emit(node is GlobalExpr) {
   // We don't support globals yet but we need something to take up
@@ -111,7 +111,7 @@ def (this is CodeGenerator).emit(node is BlockExpr) {
  * +----------------+  <-  ESP
  */
 
-def local_address(index) -> (0 - 4) * (index + 1);
+def local_address(index) => (0 - 4) * (index + 1);
 
 def (this is CodeGenerator).emit(node is DefExpr) {
   def index := this.locals[node.symbol];
@@ -140,6 +140,6 @@ def (this is CodeGenerator).emit(node is LocalExpr) {
   }
 }
 
-def (this is CodeGenerator).is_intrinsic_protocol(value) -> false;
+def (this is CodeGenerator).is_intrinsic_protocol(value) => false;
 def (this is CodeGenerator).is_intrinsic_protocol(p is ProtocolAst)
- -> p.get_annotation("intrinsic") != null;
+ => p.get_annotation("intrinsic") != null;

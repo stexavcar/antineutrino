@@ -19,8 +19,8 @@ def (this is address_t).value:=(val is int32_t);
 def (this is address_t)+(this is int32_t);
 
 @type(int32_t)
-def (this is address_t)[index is int32_t] -> (this + index).value;
+def (this is address_t)[index is int32_t] => (this + index).value;
 
 @type(int32_t)
 def (this is address_t)[index is int32_t]:=(value is int32_t)
- -> (this + index).value := value;
+ => (this + index).value := value;

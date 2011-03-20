@@ -5,28 +5,28 @@
 
 protocol List is Sequence {
 
-  def this.is_empty() -> false;
-  def this=(other is Empty) -> false;
-  def this=(other is List) -> this.head = other.head and this.tail = other.tail;
-  def this.to_string() -> "L[" + this.head.to_string() + this.tail.continue_string();
-  def this.continue_string() -> ", " + this.head.to_string() + this.tail.continue_string();
+  def this.is_empty() => false;
+  def this=(other is Empty) => false;
+  def this=(other is List) => this.head = other.head and this.tail = other.tail;
+  def this.to_string() => "L[" + this.head.to_string() + this.tail.continue_string();
+  def this.continue_string() => ", " + this.head.to_string() + this.tail.continue_string();
 
   def this.reverse_with_accumulator(accum)
-   -> this.tail.reverse_with_accumulator(List.cons(this.head, accum));
+   => this.tail.reverse_with_accumulator(List.cons(this.head, accum));
 
   def this.for(fun) {
     fun(this.head);
     this.tail.for(fun);
   }
 
-  @static def proto.empty -> new Empty { };
+  @static def proto.empty => new Empty { };
 
-  @static def proto.cons(el, list) -> new List {
+  @static def proto.cons(el, list) => new List {
     head := el,
     tail := list
   };
 
-  @static def proto.new() -> List.empty;
+  @static def proto.new() => List.empty;
 
   @static def List.new(coll is Sequence) {
     ref result := List.empty;
@@ -39,44 +39,44 @@ protocol List is Sequence {
 
 protocol Empty is List {
 
-  def this.is_empty() -> true;
+  def this.is_empty() => true;
 
-  def this=(other is Empty) -> true;
+  def this=(other is Empty) => true;
 
-  def this=(other is List) -> other = this;
+  def this=(other is List) => other = this;
 
-  def this.to_string() -> "L[]";
+  def this.to_string() => "L[]";
 
-  def this.continue_string() -> "]";
+  def this.continue_string() => "]";
 
-  def this.for(fun) -> null;
+  def this.for(fun) => null;
 
-  def this.reverse_with_accumulator(accum) -> accum;
+  def this.reverse_with_accumulator(accum) => accum;
   
 }
 
 // HOFs
-def (this is List).reverse() -> this.reverse_with_accumulator(List.empty);
+def (this is List).reverse() => this.reverse_with_accumulator(List.empty);
 
-def (this is Empty).size -> 0;
-def (this is List).size -> 1 + this.tail.size;
+def (this is Empty).size => 0;
+def (this is List).size => 1 + this.tail.size;
 
-def (this is Empty).foldl(f, v) -> v;
-def (this is List).foldl(f, v) -> this.tail.foldl(f, f(v, this.head));
+def (this is Empty).foldl(f, v) => v;
+def (this is List).foldl(f, v) => this.tail.foldl(f, f(v, this.head));
 
-def (this is Empty).foldr(f, v) -> v;
-def (this is List).foldr(f, v) -> f(this.head, this.tail.foldr(f, v));
+def (this is Empty).foldr(f, v) => v;
+def (this is List).foldr(f, v) => f(this.head, this.tail.foldr(f, v));
 
-def (this is Empty).map(f) -> List.empty;
-def (this is List).map(f) -> List.cons(f(this.head), this.tail.map(f));
+def (this is Empty).map(f) => List.empty;
+def (this is List).map(f) => List.cons(f(this.head), this.tail.map(f));
 
-def (this is Empty).take(n) -> List.empty;
-def (this is List).take(n) -> if n = 0 then List.empty else List.cons(this.head, this.tail.take(n-1));
+def (this is Empty).take(n) => List.empty;
+def (this is List).take(n) => if n = 0 then List.empty else List.cons(this.head, this.tail.take(n-1));
 
-def (this is Empty).drop(n) -> List.empty;
-def (this is List).drop(n) -> if n = 0 then this else this.tail.drop(n-1);
+def (this is Empty).drop(n) => List.empty;
+def (this is List).drop(n) => if n = 0 then this else this.tail.drop(n-1);
 
-def (this is Empty).filter(p) -> List.empty;
-def (this is List).filter(p) -> 
+def (this is Empty).filter(p) => List.empty;
+def (this is List).filter(p) => 
   if p(this.head) then List.cons(this.head, this.tail.filter(p))
   else this.tail.filter(p);
