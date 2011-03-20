@@ -15,13 +15,13 @@ def kPlanktonBlobTag := 15;
 
 protocol PlanktonEncoder;
 
-def PlanktonEncoder.new(class_index) -> new PlanktonEncoder {
+def PlanktonEncoder.new(class_index) => new PlanktonEncoder {
   class_index := class_index,
   out := new LowLevelEncoder()
 }
 
 def (this is PlanktonEncoder).to_blob()
- -> this.out.to_blob();
+ => this.out.to_blob();
 
 def (this is PlanktonEncoder).write(str is String) {
   this.out.write(kPlanktonStringTag);
@@ -39,29 +39,29 @@ protocol PlanktonDecoder;
 
 def PlanktonDecoder.new_dispatcher() {
   def result := new HashMap();
-  result[kPlanktonStringTag] := (fn (d) -> d.read_string());
-  result[kPlanktonIntTag] := (fn (d) -> d.read_int());
-  result[kPlanktonNullTag] := (fn (d) -> null);
-  result[kPlanktonTrueTag] := (fn (d) -> true);
-  result[kPlanktonFalseTag] := (fn (d) -> false);  
-  result[kPlanktonArrayTag] := (fn (d) -> d.read_array());
-  result[kPlanktonMapTag] := (fn (d) -> d.read_map());
-  result[kPlanktonRefTag] := (fn (d) -> d.read_reference());
-  result[kPlanktonScopeTag] := (fn (d) -> d.read_template_scope());
-  result[kPlanktonTemplateTag] := (fn (d) -> d.read_template_instance());
-  result[kPlanktonBlobTag] := (fn (d) -> d.read_blob());
+  result[kPlanktonStringTag] := (fn (d) => d.read_string());
+  result[kPlanktonIntTag] := (fn (d) => d.read_int());
+  result[kPlanktonNullTag] := (fn (d) => null);
+  result[kPlanktonTrueTag] := (fn (d) => true);
+  result[kPlanktonFalseTag] := (fn (d) => false);  
+  result[kPlanktonArrayTag] := (fn (d) => d.read_array());
+  result[kPlanktonMapTag] := (fn (d) => d.read_map());
+  result[kPlanktonRefTag] := (fn (d) => d.read_reference());
+  result[kPlanktonScopeTag] := (fn (d) => d.read_template_scope());
+  result[kPlanktonTemplateTag] := (fn (d) => d.read_template_instance());
+  result[kPlanktonBlobTag] := (fn (d) => d.read_blob());
   result;
 }
 
 def PlanktonDecoder.new_template_dispatcher() {
   def result := new HashMap();
-  result[kPlanktonObjectTag] := (fn (d) -> d.read_object_template());
-  result[kPlanktonMapTag] := (fn (d) -> d.read_map_template());
-  result[kPlanktonPlaceholderTag] := (fn (d) -> d.read_placeholder());
+  result[kPlanktonObjectTag] := (fn (d) => d.read_object_template());
+  result[kPlanktonMapTag] := (fn (d) => d.read_map_template());
+  result[kPlanktonPlaceholderTag] := (fn (d) => d.read_placeholder());
   result;
 }
 
-def PlanktonDecoder.new(in, class_index) -> new PlanktonDecoder {
+def PlanktonDecoder.new(in, class_index) => new PlanktonDecoder {
   in := new LowLevelDecoder(in),
   class_index := class_index,
   dispatcher := PlanktonDecoder.new_dispatcher(),
@@ -72,13 +72,13 @@ def PlanktonDecoder.new(in, class_index) -> new PlanktonDecoder {
 }
 
 def (this is PlanktonDecoder).current_index
- -> this.next_index - 1;
+ => this.next_index - 1;
 
 def (this is PlanktonDecoder).advance_index()
- -> this.next_index := (this.next_index + 1);
+ => this.next_index := (this.next_index + 1);
 
 def (this is PlanktonDecoder).read()
- -> this.read(this.in.read());
+ => this.read(this.in.read());
 
 def (this is PlanktonDecoder).read(tag) {
   def dispatcher := this.dispatcher[tag];
@@ -97,7 +97,7 @@ def (this is PlanktonDecoder).read_template() {
 
 protocol ObjectTemplate;
 
-def ObjectTemplate.new(payload, codec, decoder) -> new ObjectTemplate {
+def ObjectTemplate.new(payload, codec, decoder) => new ObjectTemplate {
   payload := payload,
   codec := codec,
   decoder := decoder
@@ -128,14 +128,14 @@ def (this is PlanktonDecoder).read_object_template() {
 
 protocol MapTemplate;
 
-def MapTemplate.new(length, parts, decoder) -> new MapTemplate {
+def MapTemplate.new(length, parts, decoder) => new MapTemplate {
   length := length,
   parts := parts,
   decoder := decoder
 }
 
 def (this is MapTemplate).on_template_start()
- -> new HashMap();
+ => new HashMap();
 
 def (this is MapTemplate).on_template_payload(map) {
   for (i : 0 .. this.length) {
@@ -158,11 +158,11 @@ def (this is PlanktonDecoder).read_map_template() {
 
 protocol ConstantTemplate;
 
-def ConstantTemplate.new(value) -> new ConstantTemplate { value := value }
+def ConstantTemplate.new(value) => new ConstantTemplate { value := value }
 
-def (this is ConstantTemplate).on_template_start() -> this.value;
+def (this is ConstantTemplate).on_template_start() => this.value;
 
-def (this is ConstantTemplate).on_template_payload(obj) -> null;
+def (this is ConstantTemplate).on_template_payload(obj) => null;
 
 def (this is PlanktonDecoder).read_constant_template(tag) {
   def value := this.read(tag);
@@ -171,16 +171,16 @@ def (this is PlanktonDecoder).read_constant_template(tag) {
 
 protocol PlaceholderTemplate;
 
-def PlaceholderTemplate.new(decoder) -> new PlaceholderTemplate { decoder := decoder }
+def PlaceholderTemplate.new(decoder) => new PlaceholderTemplate { decoder := decoder }
 
 def (this is PlaceholderTemplate).on_template_start()
- -> this.decoder.read();
+ => this.decoder.read();
 
 def (this is PlaceholderTemplate).on_template_payload(obj)
- -> null;
+ => null;
 
 def (this is PlanktonDecoder).read_placeholder()
- -> new PlaceholderTemplate(this);
+ => new PlaceholderTemplate(this);
 
 def (this is PlanktonDecoder).read_string() {
   def length := this.in.read_unsigned();
@@ -193,7 +193,7 @@ def (this is PlanktonDecoder).read_string() {
 }
 
 def (this is PlanktonDecoder).read_int()
- -> this.in.read_signed();
+ => this.in.read_signed();
  
 def (this is PlanktonDecoder).read_template_scope() {
   def start := this.in.read_unsigned();
@@ -268,14 +268,14 @@ def (this is PlanktonDecoder).read_reference() {
 
 protocol TemplateScope;
 
-def TemplateScope.new(parent, start) -> new TemplateScope {
+def TemplateScope.new(parent, start) => new TemplateScope {
   parent := parent,
   start := start,
   templates := new ArrayList()
 }
 
 def (this is TemplateScope).add_template(value)
- -> this.templates.add(value); 
+ => this.templates.add(value); 
 
 def (this is TemplateScope).get_template(index) {
   def local_index := index - this.start;

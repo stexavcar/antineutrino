@@ -8,7 +8,7 @@ def (this is UtilsTest).test_simple_delegates() {
   assert_equal(5, op("+")(2, 3));
   assert_equal(3, op(".length")("foo"));
   assert_equal(7, op("+").bind(4)(3));
-  assert_equal(9, op("()").bind(fn (a, b, c) -> a + b + c).bind(2).bind(3).bind(4)());
+  assert_equal(9, op("()").bind(fn (a, b, c) => a + b + c).bind(2).bind(3).bind(4)());
 }
 
 def (this is UtilsTest).test_higher_order_functions() {

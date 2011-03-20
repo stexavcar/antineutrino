@@ -1,10 +1,10 @@
-def (this is True).if(then_part, else_part) -> then_part();
+def (this is True).if(then_part, else_part) => then_part();
 
-def (this is False).if(then_part, else_part) -> else_part();
+def (this is False).if(then_part, else_part) => else_part();
 
 @intrinsic("repeat")
 def Control.repeat(f) { f(); Control.repeat(f); }
 
 @intrinsic("if")
 def Control.if(cond, then_part, else_part)
- -> cond.if(then_part, else_part);
+ => cond.if(then_part, else_part);

@@ -222,13 +222,6 @@ public class Scanner {
     case ',':
       advance();
       return Token.Type.COMMA;
-    case '-':
-      advance();
-      if (hasMore() && getCurrent() == '>') {
-        advance();
-        return Token.Type.ARROW;
-      }
-      return Token.Type.OPERATOR;
     case ':':
       advance();
       if (hasMore()) {

@@ -203,8 +203,8 @@ public class Parser {
    *   -> <block>
    */
   private Tree.Expression parseFunctionBody(boolean isStatement) throws SyntaxError {
-    if (at(Type.ARROW)) {
-      expect(Type.ARROW);
+    if (at(Type.FAT_ARROW)) {
+      expect(Type.FAT_ARROW);
       Tree.Expression body = parseExpression(false);
       checkSemicolon(isStatement);
       return body;
@@ -268,7 +268,7 @@ public class Parser {
   }
 
   private boolean atFunctionDefinitionMarker() {
-    return at(Type.ARROW) || at(Type.LPAREN) || at(Type.LBRACE) || at(Type.LBRACK);
+    return at(Type.FAT_ARROW) || at(Type.LPAREN) || at(Type.LBRACE) || at(Type.LBRACK);
   }
 
   private Tree.Method parseMethodTail(List<Tree.Annotation> annots,
@@ -627,7 +627,7 @@ public class Parser {
       body = parseExpression(false);
       params = Collections.<Parameter>emptyList();
       hasEagerValue = true;
-    } else if (at(Type.ARROW)) {
+    } else if (at(Type.FAT_ARROW)) {
       params = new ArrayList<Parameter>();
       body = parseFunctionBody(false);
       hasEagerValue = false;

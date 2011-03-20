@@ -30,7 +30,7 @@ def (this is ExampleTest).test_eq() {
 
 def (this is ExampleTest).test_iter() {
   ref sum := 0;
-  def acc(n) -> sum := sum + n;
+  def acc(n) => sum := sum + n;
   new List(0..5).for(acc);
   assert_equal(10, sum);
 }
@@ -43,9 +43,9 @@ def (this is ExampleTest).test_size() {
 }
 
 def (this is ExampleTest).test_folds() {
-  def add(a, b) -> a + b;
-  def sub(a, b) -> a - b;
-  def max(a, b) -> if a > b then a else b;
+  def add(a, b) => a + b;
+  def sub(a, b) => a - b;
+  def max(a, b) => if a > b then a else b;
 
   assert_equal(10, new List(0..5).foldl(add, 0));
   assert_equal(0-10, new List(0..5).foldl(sub, 0));
@@ -59,8 +59,8 @@ def (this is ExampleTest).test_folds() {
 }
 
 def (this is ExampleTest).test_map() {
-  def id(x) -> x;
-  def inc(x) -> x + 1;
+  def id(x) => x;
+  def inc(x) => x + 1;
 
   assert_equal(new List(0..5), new List(0..5).map(id));
   assert_equal(new List(1..6), new List(0..5).map(inc));
@@ -79,9 +79,9 @@ def (this is ExampleTest).test_take_drop() {
 }
 
 def (this is ExampleTest).test_filter() {
-  def tautology(x) -> true;
-  def fallacy(n) -> false;
-  def lt(a) -> fn(b) -> b < a;
+  def tautology(x) => true;
+  def fallacy(n) => false;
+  def lt(a) => fn(b) => b < a;
   assert_equal(new List(0..5), new List(0..5).filter(tautology));
   assert_equal(List.empty, new List(0..5).filter(fallacy));
   assert_equal(new List(0..2), new List(0..5).filter(lt(2)));

@@ -3,27 +3,27 @@ protocol IntrinsicManager;
 def IntrinsicManager.new() {
   def map := new HashMap();
   // Int32
-  map["int32.cast"] := (fn (g, n) -> g.int32_cast(n));
-  map["add_int32"] := (fn (g, n) -> g.add_int32(n));
-  map["and_int32"] := (fn (g, n) -> g.and_int32(n));
-  map["sar_int32"] := (fn (g, n) -> g.sar_int32(n));
-  map["shl_int32"] := (fn (g, n) -> g.shl_int32(n));
-  map["eq_int32"] := (fn (g, n) -> g.eq_int32(n));
-  map["neq_int32"] := (fn (g, n) -> g.neq_int32(n));
+  map["int32.cast"] := (fn (g, n) => g.int32_cast(n));
+  map["add_int32"] := (fn (g, n) => g.add_int32(n));
+  map["and_int32"] := (fn (g, n) => g.and_int32(n));
+  map["sar_int32"] := (fn (g, n) => g.sar_int32(n));
+  map["shl_int32"] := (fn (g, n) => g.shl_int32(n));
+  map["eq_int32"] := (fn (g, n) => g.eq_int32(n));
+  map["neq_int32"] := (fn (g, n) => g.neq_int32(n));
   // Strings
-  map["char_ptr.cast"] := (fn (g, n) -> g.cast_char_ptr(n));
+  map["char_ptr.cast"] := (fn (g, n) => g.cast_char_ptr(n));
   // Address
-  map["read_int32"] := (fn (g, n) -> g.read_int32(n));
-  map["write_int32"] := (fn (g, n) -> g.write_int32(n));
-  map["static_data_ptr"] := (fn (g, n) -> g.static_data_ptr(n));
+  map["read_int32"] := (fn (g, n) => g.read_int32(n));
+  map["write_int32"] := (fn (g, n) => g.write_int32(n));
+  map["static_data_ptr"] := (fn (g, n) => g.static_data_ptr(n));
   // Control
-  map["if_else"] := (fn (g, n) -> g.if_else(n));
+  map["if_else"] := (fn (g, n) => g.if_else(n));
   // Misc
-  map["debug_interrupt"] := (fn (g, n) -> g.debug_interrupt(n));
+  map["debug_interrupt"] := (fn (g, n) => g.debug_interrupt(n));
   new IntrinsicManager { handlers := map };
 }
 
-def (this is IntrinsicManager)[name] -> this.handlers[name];
+def (this is IntrinsicManager)[name] => this.handlers[name];
 
 def (this is CodeGenerator).int32_cast(node) {
   def value := this.static_value(node.arguments[1]);

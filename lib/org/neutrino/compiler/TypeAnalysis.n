@@ -1,6 +1,6 @@
 protocol TypeAnalysis;
 
-def TypeAnalysis.new(universe, method) -> new TypeAnalysis {
+def TypeAnalysis.new(universe, method) => new TypeAnalysis {
   universe := universe,
   method := method,
   scope_chain := new ArgumentScope(method),
@@ -9,12 +9,12 @@ def TypeAnalysis.new(universe, method) -> new TypeAnalysis {
 
 protocol ArgumentScope;
 
-def ArgumentScope.new(method) -> new ArgumentScope {
+def ArgumentScope.new(method) => new ArgumentScope {
   method := method
 }
 
 def (this is ArgumentScope).lookup(symbol) {
-  with_escape (return) -> {
+  with_escape (return) => {
     for (param : this.method.signature) {
       if param.symbol = symbol
         then return(param.test.upper_bound);
@@ -48,7 +48,7 @@ def (this is TypeAnalysis).pop_local_scope() {
 }
 
 def (this is TypeAnalysis).local_type(symbol)
- -> if this.scope_chain = null
+ => if this.scope_chain = null
       then null
       else this.scope_chain.lookup(symbol);
 
@@ -79,13 +79,13 @@ def (this is Universe).is_static_subtype(proto, found) {
 }
 
 def (this is Universe).is_matching_argument(param is EqTest, type_found)
- -> param.value = type_found;
+ => param.value = type_found;
 
 def (this is Universe).is_matching_argument(param is IsTest, type_found)
- -> this.is_static_subtype(param.type, type_found);
+ => this.is_static_subtype(param.type, type_found);
 
 def (this is Universe).is_matching_argument(param is AnyTest, type_found)
- -> true;
+ => true;
 
 def (this is Universe).find_method(name, types) {
   with_escape (return) {
@@ -127,7 +127,7 @@ def (this is TypeAnalysis).do_analyze(node is CallExpr) {
 }
 
 def (this is TypeAnalysis).do_analyze(node is ConstantExpr)
- -> this.value_type(node.value);
+ => this.value_type(node.value);
 
 def (this is TypeAnalysis).do_analyze(node is GlobalExpr) {
   def name := node.name;
@@ -142,7 +142,7 @@ def (this is TypeAnalysis).do_analyze(node is String) {
 }
 
 def (this is TypeAnalysis).do_analyze(node is LocalExpr)
- -> this.local_type(node.symbol);
+ => this.local_type(node.symbol);
 
 def (this is TypeAnalysis).do_analyze(node is BlockExpr) {
   ref last := null;
@@ -161,16 +161,16 @@ def (this is TypeAnalysis).do_analyze(node is DefExpr) {
 }
 
 def (this is TypeAnalysis).do_analyze(node is AddIntrinsics)
- -> this.analyze(node.object);
+ => this.analyze(node.object);
 
 def (this is TypeAnalysis).do_analyze(node is NewObject)
- -> "Object";
+ => "Object";
 
-def (this is TypeAnalysis).value_type(obj is Integer) -> BuiltinCodec.get("Integer");
+def (this is TypeAnalysis).value_type(obj is Integer) => BuiltinCodec.get("Integer");
 
-def (this is TypeAnalysis).value_type(obj is String) -> BuiltinCodec.get("String");
+def (this is TypeAnalysis).value_type(obj is String) => BuiltinCodec.get("String");
 
 def (this is TypeAnalysis).value_type(obj is ProtocolAst)
- -> obj;
+ => obj;
 
-def (this is TypeAnalysis).value_type(obj) -> null;
+def (this is TypeAnalysis).value_type(obj) => null;

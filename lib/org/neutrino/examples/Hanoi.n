@@ -1,13 +1,13 @@
 protocol HanoiDisk;
 
-def HanoiDisk.new(size) -> new HanoiDisk {
+def HanoiDisk.new(size) => new HanoiDisk {
   size := size,
   next := null
 }
 
 protocol Hanoi;
 
-def Hanoi.new() -> new Hanoi {
+def Hanoi.new() => new Hanoi {
   piles := new ArrayList [null, null, null],
   moves := 0
 }
@@ -55,7 +55,7 @@ def (this is Hanoi).pop(pile) {
   top;
 }
 
-def run_hanoi(size) -> new Hanoi().run(size);
+def run_hanoi(size) => new Hanoi().run(size);
 
 @entry_point("hanoi")
 def hanoi() {

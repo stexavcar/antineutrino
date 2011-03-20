@@ -35,4 +35,4 @@ def block_foo_3() {
 
 protocol X32;
 
-def (this is X32).y -> {1; 2; 3; 4;}
+def (this is X32).y => {1; 2; 3; 4;}

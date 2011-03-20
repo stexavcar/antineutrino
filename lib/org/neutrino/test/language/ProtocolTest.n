@@ -5,12 +5,12 @@ def (this is LanguageTest).test_protocols() {
 }
 
 protocol A;
-def (this is A).foo -> 1;
-def (this is A).bar -> 3;
+def (this is A).foo => 1;
+def (this is A).bar => 3;
 
 protocol B;
 def B is A;
-def (this is B).foo -> 2;
+def (this is B).foo => 2;
 
 def (this is LanguageTest).test_simple_inheritance() {
   this.on_start("simple inheritance");
@@ -27,7 +27,7 @@ def (this is LanguageTest).test_simple_inheritance() {
 }
 
 protocol Point;
-def (this is Point).size -> (this.x * this.x) + (this.y * this.y);
+def (this is Point).size => (this.x * this.x) + (this.y * this.y);
 
 def (this is LanguageTest).test_this() {
   this.on_start("this");

@@ -1,6 +1,6 @@
 protocol Relocation;
 
-def Relocation.new(assm, offset, target, is_relative) -> new Relocation {
+def Relocation.new(assm, offset, target, is_relative) => new Relocation {
   assm := assm,
   offset := offset,
   target := target,
@@ -9,7 +9,7 @@ def Relocation.new(assm, offset, target, is_relative) -> new Relocation {
 
 protocol Binary;
 
-def Binary.new(arch, file_format) -> new Binary {
+def Binary.new(arch, file_format) => new Binary {
   arch := arch,
   file_format := file_format,
   code_entries := new ArrayList(),
@@ -19,13 +19,13 @@ def Binary.new(arch, file_format) -> new Binary {
 
 protocol CodeBlock;
 
-def CodeBlock.new(name, code) -> new CodeBlock {
+def CodeBlock.new(name, code) => new CodeBlock {
   name := name,
   code := code
 }
 
 def (this is Binary).add_relocation(reloc)
- -> this.relocs.add(reloc);
+ => this.relocs.add(reloc);
 
 def (this is Binary).add_code_block(name) {
   def assm := this.arch.new_assembler(this, name);

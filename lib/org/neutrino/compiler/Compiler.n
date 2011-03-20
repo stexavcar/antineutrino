@@ -1,6 +1,6 @@
 protocol Platform;
 
-def Platform.new(object_format, architecture) -> new Platform {
+def Platform.new(object_format, architecture) => new Platform {
   object_format_name := object_format,
   architecture_name := architecture
 }
@@ -24,7 +24,7 @@ def (this is Platform).object_format {
 
 protocol NeutrinoCompiler;
 
-def NeutrinoCompiler.new() -> new NeutrinoCompiler {
+def NeutrinoCompiler.new() => new NeutrinoCompiler {
   methods_seen := new HashMap(),
   method_worklist := new ArrayList()
 };
@@ -151,7 +151,7 @@ def (this is NeutrinoCompiler).build_binary(platform, universe) {
 
 protocol CompilerGrower;
 
-def CompilerGrower.new() -> new CompilerGrower {
+def CompilerGrower.new() => new CompilerGrower {
   handler_table := CompilerGrower.new_handler_table()
 }
 

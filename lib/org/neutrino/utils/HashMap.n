@@ -1,16 +1,16 @@
-def HashMap.kInitialCapacity -> 16;
+def HashMap.kInitialCapacity => 16;
 
 /**
  * Default implementation of the object hash function.  Add your own
  * HashMap.hash for your type to provide custom hashing for a
  * particular type of object.
  */
-def HashMap.hash(value) -> internal "obj.hash";
+def HashMap.hash(value) => internal "obj.hash";
 
 /**
  * Creates a new empty hash map.
  */
-def HashMap.new() -> new HashMap {
+def HashMap.new() => new HashMap {
   entries := new MutablePrimitiveArray(HashMap.kInitialCapacity),
   size := 0,
   max_load := (HashMap.kInitialCapacity * 3) / 4
@@ -28,9 +28,9 @@ def HashMap.new(init is PrimitiveCollection) {
  */
 protocol HashMap {
 
-  def this.hash(value) -> Math.abs(HashMap.hash(value));
+  def this.hash(value) => Math.abs(HashMap.hash(value));
 
-  def this.capacity -> this.entries.length;
+  def this.capacity => this.entries.length;
 
   def this[key] {
     def entry := this.find_entry(key, this.hash(key), false);
@@ -39,14 +39,14 @@ protocol HashMap {
       else entry.value;
   }
   
-  def this.contains(key) -> this.find_entry(key, this.hash(key), false) != null;
+  def this.contains(key) => this.find_entry(key, this.hash(key), false) != null;
 
-  def this.values -> fn for (fun) {
+  def this.values => fn for (fun) {
     for (key, value : this)
       fun(value);
   }
 
-  def this.keys -> fn for (fun) {
+  def this.keys => fn for (fun) {
     for (key, value : this)
       fun(key);
   }
@@ -59,7 +59,7 @@ protocol HashMap {
   }
 
   def this[key]:=(value)
-   -> this.insert(key, this.hash(key), value);
+   => this.insert(key, this.hash(key), value);
 
   def this.insert(key, hash, value) {
     def entry := this.find_entry(key, hash, true);
@@ -80,7 +80,7 @@ protocol HashMap {
 
   def this.find_entry(key, hash, create_if_missing) {
     ref offset := hash % this.capacity;
-    with_escape (return) -> Control.repeat(fn {
+    with_escape (return) => Control.repeat(fn {
       def entry := this.entries[offset];
       if entry = null then {
         if create_if_missing then {
@@ -119,7 +119,7 @@ protocol HashMap {
 
 }
 
-def HashMapEntry.new(key, hash) -> new HashMapEntry {
+def HashMapEntry.new(key, hash) => new HashMapEntry {
   key := key,
   hash := hash,
   value := null

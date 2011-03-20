@@ -1,9 +1,9 @@
 
 protocol ArrayList is Sequence {
 
-  @static def proto.new() -> new ArrayList(0);
+  @static def proto.new() => new ArrayList(0);
 
-  @static def proto.new(size is Integer) -> new ArrayList {
+  @static def proto.new(size is Integer) => new ArrayList {
     contents := new MutablePrimitiveArray(size),
     length := size
   };
@@ -22,9 +22,9 @@ protocol ArrayList is Sequence {
     result;
   }
 
-  def this[i] -> this.contents[i];
+  def this[i] => this.contents[i];
 
-  def this[i]:=(value) -> this.contents[i] := value;
+  def this[i]:=(value) => this.contents[i] := value;
 
   def this.to_string() {
     def out := new StringStream();
@@ -93,6 +93,6 @@ protocol ArrayList is Sequence {
   }
 
   def this.join(sep)
-   -> String.implode(this.contents, this.length, sep);
+   => String.implode(this.contents, this.length, sep);
 
 }

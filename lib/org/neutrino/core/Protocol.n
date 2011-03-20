@@ -1,5 +1,5 @@
 @native("Protocol") protocol Protocol {
   
-  def this.id -> internal "proto-id";
+  def this.id => internal "proto-id";
   
 }

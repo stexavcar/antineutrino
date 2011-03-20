@@ -1,4 +1,4 @@
-def LowLevelDecoder.new(in) -> new LowLevelDecoder {
+def LowLevelDecoder.new(in) => new LowLevelDecoder {
   cursor := kMaxByteCount,
   buffer := new ArrayList(kMaxByteCount),
   in := in
@@ -18,7 +18,7 @@ protocol LowLevelDecoder {
     this.buffer[this.advance_cursor()];
   }
 
-  def this.read_unsigned() -> with_escape (return) {
+  def this.read_unsigned() => with_escape (return) {
     ref result := 0;
     Control.repeat(fn {
       def next := this.read();
@@ -68,7 +68,7 @@ protocol LowLevelDecoder {
 def kMaxByteCount := 8;
 def kSmallLimit := 16;
 
-def LowLevelEncoder.new() -> new LowLevelEncoder {
+def LowLevelEncoder.new() => new LowLevelEncoder {
   out := new BlobStream(),
   at_half := false,
   encoded_cursor := 0,
@@ -80,7 +80,7 @@ def LowLevelEncoder.new() -> new LowLevelEncoder {
 protocol LowLevelEncoder {
 
   def this.advance_encoded_cursor
-   -> this.encoded_cursor := this.encoded_cursor + 1;
+   => this.encoded_cursor := this.encoded_cursor + 1;
 
   def this.write(b) {
     if this.written_count = kMaxByteCount
@@ -138,7 +138,7 @@ protocol LowLevelEncoder {
 
   def this.flush() {
     if this.written_count > 0 then {
-      with_escape (break) -> Control.repeat(fn {
+      with_escape (break) => Control.repeat(fn {
         if this.written_count = kMaxByteCount
           then break(null);
         this.write(0);

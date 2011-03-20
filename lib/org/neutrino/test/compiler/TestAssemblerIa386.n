@@ -25,11 +25,11 @@ def int32_to_hex(value) {
   "${byte_3}${byte_2}${byte_1}${byte_0}";
 }
 
-def to_hex32(value) -> "0x${int32_to_hex(value)}";
+def to_hex32(value) => "0x${int32_to_hex(value)}";
 
-def to_hex16(value) -> "0x${int16_to_hex(value)}";
+def to_hex16(value) => "0x${int16_to_hex(value)}";
 
-def to_hex8(value) -> "0x${int8_to_hex(value)}";
+def to_hex8(value) => "0x${int8_to_hex(value)}";
 
 def (this is Memory).to_string() {
   if this.disp != 0 or this.base = rEbp then {
@@ -46,15 +46,15 @@ def kRegisters := new ArrayList [
 def kImmediates := new ArrayList [ 0-1, 0, 10, 5 << 28 ];
 
 def kMakers := #[
-  fn (reg) -> reg,
-  fn (reg) -> Memory.at(reg),
-  fn (reg) -> Memory.at_disp(reg, 4),
-  fn (reg) -> Memory.at_disp(reg, 0-4)
+  fn (reg) => reg,
+  fn (reg) => Memory.at(reg),
+  fn (reg) => Memory.at_disp(reg, 4),
+  fn (reg) => Memory.at_disp(reg, 0-4)
 ];
 
 protocol TestData;
 
-def (this is TestData).add_expected(str) -> this.expected.add(str);
+def (this is TestData).add_expected(str) => this.expected.add(str);
 
 @entry_point("test_ia386")
 def test_ia386(args) {
@@ -82,26 +82,26 @@ def test_ia386(args) {
   open_file(exp_name).write_string("${expected}\n");
 }
 
-def (this is Ia386Test).operands -> fn for (fun) {
+def (this is Ia386Test).operands => fn for (fun) {
   for (reg : this.registers) for (maker : kMakers) {
     fun(maker(reg));
   }
 }
 
-def (this is Ia386Test).operand_pairs -> fn for (fun) {
+def (this is Ia386Test).operand_pairs => fn for (fun) {
   for (src : this.operands) for (dest : this.operands) {
     if this.is_valid(src, dest)
       then fun(src, dest);
   }
 }
 
-def (this is Ia386Test).registers -> kRegisters;
+def (this is Ia386Test).registers => kRegisters;
 
-def (this is Ia386Test).immediates -> kImmediates;
+def (this is Ia386Test).immediates => kImmediates;
 
-def (this is Ia386Test).is_valid(a, b) -> true;
+def (this is Ia386Test).is_valid(a, b) => true;
 
-def (this is Ia386Test).is_valid(a is Memory, b is Memory) -> false;
+def (this is Ia386Test).is_valid(a is Memory, b is Memory) => false;
 
 def (this is Ia386Test).run_tests(new_data) {
   // These should be first because their expectations encode absolute
@@ -209,10 +209,10 @@ def (this is Ia386Test).simple(data) {
 }
 
 def (this is Ia386Test).call_expectation(dest)
- -> "call *${dest}";
+ => "call *${dest}";
 
 def (this is Ia386Test).call_expectation(dest is Memory)
- -> if dest.disp = 0 and dest.base != rEbp and dest.base != rEsp
+ => if dest.disp = 0 and dest.base != rEbp and dest.base != rEsp
       then "call ${dest}"
       else "call *${dest}";
 

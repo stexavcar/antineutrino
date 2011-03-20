@@ -11,12 +11,17 @@ import java.util.Map;
 public class Token {
 
   private enum Category {
-    KEYWORD(true, false), OPERATOR(false, true), NONE(false, false);
+    KEYWORD(true, false, false),
+    OPERATOR(false, true, false),
+    RESERVED_OPERATOR(false, false, true),
+    NONE(false, false, false);
     private boolean isKeyword;
     private boolean isOperator;
-    private Category(boolean isKeyword, boolean isOperator) {
+    private boolean reserveOperator;
+    private Category(boolean isKeyword, boolean isOperator, boolean reserveOperator) {
       this.isKeyword = isKeyword;
       this.isOperator = isOperator;
+      this.reserveOperator = reserveOperator;
     }
   }
 
@@ -42,9 +47,10 @@ public class Token {
     COLON(":"),
     COOLON("::"),
     COLON_EQ(":="),
-    ARROW("->"),
-    AT("@", Category.OPERATOR),
-    DOT(".", Category.OPERATOR),
+    ARROW("->", Category.RESERVED_OPERATOR),
+    FAT_ARROW("=>", Category.RESERVED_OPERATOR),
+    AT("@", Category.RESERVED_OPERATOR),
+    DOT(".", Category.RESERVED_OPERATOR),
     DEF("def", Category.KEYWORD),
     FN("fn", Category.KEYWORD),
     NEW("new", Category.KEYWORD),
@@ -104,7 +110,7 @@ public class Token {
     @SuppressWarnings("serial")
     public static final Map<String, Type> RESERVED_OPERATOR_MAP = new HashMap<String, Type>() {{
       for (Type type : Type.values()) {
-        if (type.getName() != null && type.category.isOperator)
+        if (type.getName() != null && type.category.reserveOperator)
           put(type.getName(), type);
       }
     }};

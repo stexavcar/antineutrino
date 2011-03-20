@@ -1,8 +1,8 @@
 protocol ApplyTestProto;
 
-def (this is ApplyTestProto).one -> 1;
-def (this is ApplyTestProto).two(obj is Integer) -> obj + 2;
-def (this is ApplyTestProto).two(obj is String) -> obj + "2";
+def (this is ApplyTestProto).one => 1;
+def (this is ApplyTestProto).two(obj is Integer) => obj + 2;
+def (this is ApplyTestProto).two(obj is String) => obj + "2";
 
 def (this is LanguageTest).test_apply() {
   this.on_start("apply");
@@ -11,7 +11,7 @@ def (this is LanguageTest).test_apply() {
   assert_equal(8, apply("two", #[obj, 6]));
   assert_equal("32", apply("two", #[obj, "3"]));
   assert_equal(15, apply("+", #[7, 8]));
-  def add(x) -> fn (y) -> x + y;
+  def add(x) => fn (y) => x + y;
   assert_equal(6, apply("()", #[add(5), 1]));
   assert_equal(7, apply("()", #[apply, "+", #[3, 4]]));
 }

@@ -4,15 +4,15 @@ protocol char_ptr_t;
 @inline
 @type(char_ptr_t)
 @intrinsic("char_ptr.cast")
-def char_ptr_t.of(x is String) -> new char_ptr_t(x);
+def char_ptr_t.of(x is String) => new char_ptr_t(x);
 
 @type(int32_t)
-def (this is char_ptr_t).length -> libc.strlen(this);
+def (this is char_ptr_t).length => libc.strlen(this);
 
 @type(bool_t)
 def (this is char_ptr_t)=(that is char_ptr_t)
- -> libc.strcmp(this, that) = int32_t.of(0);
+ => libc.strcmp(this, that) = int32_t.of(0);
 
 @type(bool_t)
 def (this is char_ptr_t)!=(that is char_ptr_t)
- -> libc.strcmp(this, that) != int32_t.of(0);
+ => libc.strcmp(this, that) != int32_t.of(0);

@@ -1,6 +1,6 @@
 protocol ArrayBackedStream {
 
-  def this.capacity -> this.data.length;
+  def this.capacity => this.data.length;
 
   def this.extend_capacity(capacity) {
     def old_contents := this.data;
@@ -10,7 +10,7 @@ protocol ArrayBackedStream {
     this.data := new_contents;
   }
 
-  def this.add(obj) -> this.add_to_stream(obj);
+  def this.add(obj) => this.add_to_stream(obj);
 
   def this.add_to_stream(byte) {
     if this.length >= this.capacity then
@@ -20,6 +20,6 @@ protocol ArrayBackedStream {
     this.length := index + 1;
   }
 
-  def this[index] -> this.data[index];
+  def this[index] => this.data[index];
 
 }
