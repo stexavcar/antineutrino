@@ -1,79 +1,81 @@
 /*
  * A stream of bytes.
  */
-protocol BlobStream is ArrayBackedStream;
+protocol BlobStream is ArrayBackedStream {
 
-def BlobStream.new() -> new BlobStream(256);
+  @static def proto.new() -> new BlobStream(256);
 
-def BlobStream.new(size) -> new BlobStream {
-  data := new MutablePrimitiveByteArray(size),
-  length := 0
-}
-
-def (this is BlobStream).new_backing_array(size) -> new MutablePrimitiveByteArray(size);
-
-def (this is BlobStream).rewrite_int32(index, word) {
-  this.data[index] := (word & 16rFF);
-  this.data[index + 1] := ((word >> 8) & 16rFF);
-  this.data[index + 2] := ((word >> 16) & 16rFF);
-  this.data[index + 3] := ((word >> 24) & 16rFF);
-}
-
-def (this is BlobStream).read_int32(offset)
- -> this.data[offset]
-  | (this.data[offset + 1] << 8)
-  | (this.data[offset + 2] << 16)
-  | (this.data[offset + 3] << 24);
-
-def (this is BlobStream).write_int32(word) {
-  this.add(word & 16rFF);
-  this.add((word >> 8) & 16rFF);
-  this.add((word >> 16) & 16rFF);
-  this.add((word >> 24) & 16rFF);
-}
-
-def (this is BlobStream).write_int16(word) {
-  this.add(word & 16rFF);
-  this.add((word >> 8) & 16rFF);
-}
-
-def (this is BlobStream).write_int8(word) {
-  this.add(word & 16rFF);
-}
-
-def (this is BlobStream).write_data(data, from, to) {
-  for (i : from .. to)
-    this.add(data[i]);
-}
-
-def (this is BlobStream).write_data(data) -> this.write_data(data, 0, data.length);
-
-def (this is BlobStream).write_c_string(str, length) {
-  ref pos := 0;
-  for (c : str.ascii_characters) {
-    this.add(c);
-    pos := pos + 1;
+  @static def proto.new(size) -> new BlobStream {
+    data := new MutablePrimitiveByteArray(size),
+    length := 0
   }
-  if pos < length then {
-    for (i : pos .. length)
-      this.add(0);
+
+  def this.new_backing_array(size) -> new MutablePrimitiveByteArray(size);
+
+  def this.rewrite_int32(index, word) {
+    this.data[index] := (word & 16rFF);
+    this.data[index + 1] := ((word >> 8) & 16rFF);
+    this.data[index + 2] := ((word >> 16) & 16rFF);
+    this.data[index + 3] := ((word >> 24) & 16rFF);
   }
-}
 
-def (this is BlobStream).write_c_string(str) -> this.write_c_string(str, str.length + 1);
+  def this.read_int32(offset)
+   -> this.data[offset]
+    | (this.data[offset + 1] << 8)
+    | (this.data[offset + 2] << 16)
+    | (this.data[offset + 3] << 24);
 
-def (this is BlobStream).pad_to(offset) {
-  if this.length < offset then {
-    for (i : this.length .. offset)
-      this.add(0);
+  def this.write_int32(word) {
+    this.add(word & 16rFF);
+    this.add((word >> 8) & 16rFF);
+    this.add((word >> 16) & 16rFF);
+    this.add((word >> 24) & 16rFF);
   }
-}
 
-def (this is BlobStream).get_blob() {
-  def result := new MutablePrimitiveByteArray(this.length);
-  for (i : 0 .. this.length)
-    result[i] := this.data[i];
-  result;
-}
+  def this.write_int16(word) {
+    this.add(word & 16rFF);
+    this.add((word >> 8) & 16rFF);
+  }
 
-def (this is BlobStream).to_string() -> "#<a BlobStream: ${this.length}>";
+  def this.write_int8(word) {
+    this.add(word & 16rFF);
+  }
+
+  def this.write_data(data, from, to) {
+    for (i : from .. to)
+      this.add(data[i]);
+  }
+
+  def this.write_data(data) -> this.write_data(data, 0, data.length);
+
+  def this.write_c_string(str, length) {
+    ref pos := 0;
+    for (c : str.ascii_characters) {
+      this.add(c);
+      pos := pos + 1;
+    }
+    if pos < length then {
+      for (i : pos .. length)
+        this.add(0);
+    }
+  }
+
+  def this.write_c_string(str) -> this.write_c_string(str, str.length + 1);
+
+  def this.pad_to(offset) {
+    if this.length < offset then {
+      for (i : this.length .. offset)
+        this.add(0);
+    }
+  }
+
+  def this.get_blob() {
+    def result := new MutablePrimitiveByteArray(this.length);
+    for (i : 0 .. this.length)
+      result[i] := this.data[i];
+    result;
+  }
+
+  def this.to_string() -> "#<a BlobStream: ${this.length}>";
+
+}

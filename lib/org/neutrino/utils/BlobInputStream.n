@@ -1,12 +1,14 @@
-protocol BlobInputStream;
+protocol BlobInputStream {
 
-def BlobInputStream.new(data) -> new BlobInputStream {
-  cursor := 0,
-  data := data
-}
+  @static def proto.new(data) -> new BlobInputStream {
+    cursor := 0,
+    data := data
+  }
 
-def (this is BlobInputStream).read() {
-  def cursor := this.cursor;
-  this.cursor := cursor + 1;
-  this.data[cursor];
+  def this.read() {
+    def cursor := this.cursor;
+    this.cursor := cursor + 1;
+    this.data[cursor];
+  }
+
 }
