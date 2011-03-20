@@ -1,25 +1,26 @@
-def ArrayList.new() -> new ArrayList(0);
-
-def ArrayList.new(size is Integer) -> new ArrayList {
-  contents := new MutablePrimitiveArray(size),
-  length := size
-}
-
-def ArrayList.new(elms is PrimitiveArray) {
-  def result := new ArrayList(elms.length);
-  for (i : 0 .. elms.length)
-    result[i] := elms[i];
-  result;
-}
-
-def ArrayList.new(seq is Sequence) {
-  def result := new ArrayList(0);
-  for (elm : seq)
-    result.add(elm);
-  result;
-}
 
 protocol ArrayList is Sequence {
+
+  @static def proto.new() -> new ArrayList(0);
+
+  @static def proto.new(size is Integer) -> new ArrayList {
+    contents := new MutablePrimitiveArray(size),
+    length := size
+  };
+
+  @static def proto.new(elms is PrimitiveArray) {
+    def result := new ArrayList(elms.length);
+    for (i : 0 .. elms.length)
+      result[i] := elms[i];
+    result;
+  }
+
+  @static def proto.new(seq is Sequence) {
+    def result := new ArrayList(0);
+    for (elm : seq)
+      result.add(elm);
+    result;
+  }
 
   def this[i] -> this.contents[i];
 
@@ -86,13 +87,9 @@ protocol ArrayList is Sequence {
     }
   }
 
-  def this.iter {
-    def self := this;
-    def index_itr := (0 .. self.length).iter;
-    new Iter {
-      has_next -> index_itr.has_next,
-      next -> self[index_itr.next]
-    }
+  def this.for(fun) {
+    for (i : 0 .. this.length)
+      fun(this[i]);
   }
 
   def this.join(sep)

@@ -17,8 +17,8 @@ def (this is ExampleTest).test_new() {
 }
 
 def (this is ExampleTest).test_isempty() {
-  assert_true(List.empty.isEmpty());
-  assert_true(not new List(0..1).isEmpty());
+  assert_true(List.empty.is_empty());
+  assert_true(not new List(0..1).is_empty());
 }
 
 def (this is ExampleTest).test_eq() {

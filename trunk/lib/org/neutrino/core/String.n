@@ -1,28 +1,30 @@
 /*
  * Plain text strings.
  */
-@native("String") protocol String;
+@native("String") protocol String {
 
-def (this is String)+(that is String) -> internal "str+str";
+  def this+(that is String) -> internal "str+str";
 
-def (this is String)=(that is String) -> internal "str=str";
+  def this=(that is String) -> internal "str=str";
 
-def (this is String).length -> internal "str.len";
+  def this.length -> internal "str.len";
 
-/*
- * Returns an enumeration of the ascii characters in this string.
- * This is a temporary method that will eventually be removed.
- */
-def (this is String).ascii_characters -> fn for (fun) {
-  for (i : 0 .. this.length) {
-    fun(this._get_ascii_character(i));
+  /*
+   * Returns an enumeration of the ascii characters in this string.
+   * This is a temporary method that will eventually be removed.
+   */
+  def this.ascii_characters -> fn for (fun) {
+    for (i : 0 .. this.length) {
+      fun(this._get_ascii_character(i));
+    }
   }
+
+  @static def proto.implode(elms is PrimitiveArray, count is Integer, sep is String)
+   -> internal "str.implode";
+
+  // Temporary method.  Don't use under any circumstances.
+  def this._get_ascii_character(i) -> internal "str[ascii]";
+
 }
-
-def String.implode(elms is PrimitiveArray, count is Integer, sep is String)
- -> internal "str.implode";
-
-// Temporary method.  Don't use under any circumstances.
-def (this is String)._get_ascii_character(i) -> internal "str[ascii]";
 
 def string_from_ordinal(value) -> internal "ord2str";
