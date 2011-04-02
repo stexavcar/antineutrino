@@ -10,7 +10,6 @@ import org.neutrino.pib.Universe;
 import org.neutrino.plankton.PlanktonDecoder;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
-import org.neutrino.runtime.RObject;
 import org.neutrino.runtime.RPrimitiveArray;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
@@ -38,10 +37,10 @@ public class Run {
     assert entryPointBinding != null : "No entry point found.";
     RValue entryPointValue = Interpreter.run(entryPointBinding);
     RPrimitiveArray argsObject = buildStringList(args);
-    Lambda entryPointLambda = universe.getLambda((RObject) entryPointValue,
+    Lambda entryPointLambda = universe.getLambda(entryPointValue,
         argsObject);
     if (entryPointLambda == null)
-      entryPointLambda = universe.getLambda((RObject) entryPointValue);
+      entryPointLambda = universe.getLambda(entryPointValue);
     Interpreter.run(entryPointLambda, argsObject);
   }
 

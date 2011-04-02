@@ -15,6 +15,7 @@ import org.neutrino.plankton.Store;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RFunction;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
@@ -92,6 +93,10 @@ public class Module {
     return result;
   }
 
+  public Binding getDefinition(String name) {
+    return defs.get(name);
+  }
+
   public RValue getGlobal(Object name) {
     return universe.getGlobal(name);
   }
@@ -121,6 +126,23 @@ public class Module {
     methods.add(method);
   }
 
+  public RFunction getOrCreateFunction(Source origin, List<Tree.Annotation> annots,
+      String name) {
+    if (!globals.containsKey(name)) {
+      RFunction result = new RFunction();
+      globals.put(name, result);
+      defs.put(name, new Binding(
+          processAnnotations(annots),
+          new CodeBundle(
+              this,
+              origin.getName(),
+              eConstant(result),
+              null,
+              null)));
+    }
+    return (RFunction) globals.get(name);
+  }
+
   public RProtocol createProtocol(Source origin, List<Tree.Annotation> annots, String id,
       String displayName) {
     RProtocol proto = null;
@@ -129,17 +151,8 @@ public class Module {
         proto = RProtocol.getCanonical(((RString) annot.getArguments().get(0).getValue(this)).getValue());
       }
     }
-    if (proto == null) {
-      List<Annotation> newAnnots;
-      if (annots.isEmpty()) {
-        newAnnots = Collections.emptyList();
-      } else {
-        newAnnots = new ArrayList<Annotation>();
-        for (Tree.Annotation annot : annots)
-          newAnnots.add(new Annotation(annot.getTag(), null));
-      }
-      proto = new RProtocol(newAnnots, id, displayName);
-    }
+    if (proto == null)
+      proto = new RProtocol(processAnnotations(annots), id, displayName);
     protos.put(id, proto);
     defs.put(id, new Binding(
         Collections.<Annotation>emptyList(),
@@ -150,6 +163,18 @@ public class Module {
             null,
             null)));
     return proto;
+  }
+
+  private List<Annotation> processAnnotations(List<Tree.Annotation> annots) {
+    List<Annotation> newAnnots;
+    if (annots.isEmpty()) {
+      newAnnots = Collections.emptyList();
+    } else {
+      newAnnots = new ArrayList<Annotation>();
+      for (Tree.Annotation annot : annots)
+        newAnnots.add(new Annotation(annot.getTag(), null));
+    }
+    return newAnnots;
   }
 
 }

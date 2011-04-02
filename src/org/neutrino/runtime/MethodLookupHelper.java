@@ -58,7 +58,7 @@ public class MethodLookupHelper {
       return null;
   }
 
-  public Lambda lookupLambda(RObject holder, RValue... args) {
+  public Lambda lookupLambda(RValue holder, RValue... args) {
     Frame fakeFrame = new Frame(null, null, new CodeBundle(new byte[0], Arrays.asList(), 0));
     fakeFrame.stack.push(holder);
     for (RValue arg : args)
@@ -142,8 +142,8 @@ public class MethodLookupHelper {
             break;
           }
           case EQ: {
-            RProtocol protocol = (RProtocol) ((Test.Eq) test).value;
-            if (arg == protocol)
+            RValue expected = (RValue) ((Test.Eq) test).value;
+            if (arg == expected)
               score = 0;
             else
               continue loop;

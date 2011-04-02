@@ -18,6 +18,7 @@ import org.neutrino.pib.Binding;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RFunction;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Annotation;
@@ -27,6 +28,7 @@ import org.neutrino.syntax.SyntaxError;
 import org.neutrino.syntax.Token;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Definition;
+import org.neutrino.syntax.Tree.Function;
 import org.neutrino.syntax.Tree.Inheritance;
 import org.neutrino.syntax.Tree.Protocol;
 
@@ -137,6 +139,13 @@ public class Source {
     }
 
     @Override
+    public void visitFunction(Function that) {
+      RFunction fun = module.getOrCreateFunction(Source.this, that.getAnnotations(),
+          that.getName());
+      that.setMaterialized(fun);
+    }
+
+    @Override
     public void visitDefinition(Definition that) {
       // ignore -- for now
     }
@@ -193,9 +202,14 @@ public class Source {
 
     public void visitProtocol(Protocol that) {
       RProtocol proto = that.getMaterialized();
-      for (int i = 0; i < proto.getAnnotations().size(); i++) {
-        Annotation target = proto.getAnnotations().get(i);
-        Tree.Annotation source = that.getAnnotations().get(i);
+      List<Annotation> annots = proto.getAnnotations();
+      resolveAnnotations(that.getAnnotations(), annots);
+    }
+
+    private void resolveAnnotations(List<Tree.Annotation> trees, List<Annotation> annots) {
+      for (int i = 0; i < annots.size(); i++) {
+        Annotation target = annots.get(i);
+        Tree.Annotation source = trees.get(i);
         List<RValue> args;
         if (source.getArguments().isEmpty()) {
           args = Collections.emptyList();
@@ -211,25 +225,50 @@ public class Source {
       }
     }
 
+    private Pattern getNamePattern(String name) {
+      return new Pattern(Arrays.<Object>asList("name"), new Test.Eq(name), null);
+    }
+
+    private Pattern getParameterPattern(int index, Parameter param) {
+      Test test;
+      if ("Object".equals(param.type)) {
+        test = new Any();
+      } else if (param.isProtocolMethod) {
+        test = new Eq(param.ensureProtocol(module));
+      } else {
+        test = new Is(param.ensureProtocol(module));
+      }
+      Pattern pattern = new Pattern(Arrays.<Object>asList(index), test, param.getSymbol());
+      return pattern;
+    }
+
+    @Override
+    public void visitFunction(Function that) {
+      resolveAnnotations(that.getAnnotations(), module.getDefinition(that.getName()).annots);
+      List<Pattern> signature = new ArrayList<Pattern>();
+      signature.add(getNamePattern(that.getMethodName()));
+      signature.add(new Pattern(Arrays.<Object>asList(0),
+          new Eq(that.getMaterialized()),
+          null));
+      int index = 1;
+      for (Parameter param : that.getParameters()) {
+        signature.add(getParameterPattern(index, param));
+        index++;
+      }
+      CodeBundle bundle = Compiler.compile(module, Source.this, that.getBody(),
+          that.getParameters());
+      module.createMethod(new Method(resolveAnnotations(that.getAnnotations()),
+          signature, false, bundle.body, bundle.rewrites, module));
+    }
+
     public void visitMethodDefinition(Tree.Method that) {
       CodeBundle bundle = Compiler.compile(module, Source.this, that.getBody(),
           that.getParameters());
       List<Pattern> signature = new ArrayList<Pattern>();
-      signature.add(new Pattern(
-          Arrays.<Object>asList("name"),
-          new Test.Eq(that.getMethodName()),
-          null));
+      signature.add(getNamePattern(that.getMethodName()));
       int index = 0;
       for (Parameter param : that.getParameters()) {
-        Test test;
-        if ("Object".equals(param.type)) {
-          test = new Any();
-        } else if (param.isProtocolMethod) {
-          test = new Eq(param.ensureProtocol(module));
-        } else {
-          test = new Is(param.ensureProtocol(module));
-        }
-        signature.add(new Pattern(Arrays.<Object>asList(index), test, param.getSymbol()));
+        signature.add(getParameterPattern(index, param));
         index++;
       }
       module.createMethod(new Method(resolveAnnotations(that.getAnnotations()),
