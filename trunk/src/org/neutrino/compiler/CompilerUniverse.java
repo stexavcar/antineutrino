@@ -3,7 +3,6 @@ package org.neutrino.compiler;
 import org.neutrino.pib.Universe;
 import org.neutrino.syntax.SyntaxError;
 import org.neutrino.syntax.Tree.Declaration;
-import org.neutrino.syntax.Tree.Method;
 
 
 public class CompilerUniverse {
@@ -25,10 +24,6 @@ public class CompilerUniverse {
 
   public Declaration findDeclaration(String name) {
     return root.findDeclaration(name);
-  }
-
-  public Method findMethod(String holder, String name) {
-    return root.findMethod(holder, name);
   }
 
 }

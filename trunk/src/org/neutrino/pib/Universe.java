@@ -21,8 +21,8 @@ import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.MethodLookupHelper;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFieldKey;
+import org.neutrino.runtime.RFunction;
 import org.neutrino.runtime.RInteger;
-import org.neutrino.runtime.RObject;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
@@ -109,7 +109,7 @@ public class Universe {
     return methodLookupHelper.lookupMethod(name, argc, stack);
   }
 
-  public Lambda getLambda(RObject function, RValue... args) {
+  public Lambda getLambda(RValue function, RValue... args) {
     return methodLookupHelper.lookupLambda(function, args);
   }
 
@@ -149,6 +149,7 @@ public class Universe {
     add(Native.class);
     add(RInteger.class);
     add(RFieldKey.class);
+    add(RFunction.class);
     Expression.register(this);
   }};
 
@@ -179,7 +180,8 @@ public class Universe {
 
   private static final List<String> PROTOCOLS = Arrays.asList(
       "Protocol", "FieldKey", "String", "Integer", "array", "mutarr", "byte_array",
-      "mutbytarr", "True", "False", "continuation", "file", "null", "ref", "Lambda");
+      "mutbytarr", "True", "False", "continuation", "file", "null", "ref", "Lambda",
+      "Function");
 
   static {
     for (String name : PROTOCOLS) {

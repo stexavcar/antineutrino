@@ -330,9 +330,7 @@ public class Parser {
           List<Parameter> params = new ArrayList<Parameter>();
           String methodName = parseParameters("()", params, false);
           Tree.Expression body = parseFunctionBody(true);
-          Tree.Expression lambda = Tree.Lambda.create(source, methodName,
-              params, body, name);
-          Tree.Declaration result = new Tree.Definition(annots, name, lambda);
+          Tree.Declaration result = new Tree.Function(annots, name, methodName, params, body);
           return Collections.singletonList(result);
         } else {
           throw currentSyntaxError();

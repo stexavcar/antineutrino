@@ -13,6 +13,7 @@ import org.neutrino.compiler.Source;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFieldKey;
+import org.neutrino.runtime.RFunction;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RProtocol;
@@ -54,6 +55,8 @@ public class Tree {
     void visitMethodDefinition(Method that);
 
     void visitInheritance(Inheritance that);
+
+    void visitFunction(Function that);
 
   }
 
@@ -130,6 +133,62 @@ public class Tree {
     public String toString() {
       String an = annotationsToString(getAnnotations());
       return "(def " + an + name + " " + value + ")";
+    }
+
+  }
+
+  public static class Function extends Declaration {
+
+    private final List<Annotation> annots;
+    private final String name;
+    private final String methodName;
+    private final List<Parameter> params;
+    private final Expression body;
+    private RFunction materialized;
+
+    public Function(List<Annotation> annots, String name, String methodName,
+        List<Parameter> params, Expression body) {
+      this.annots = annots;
+      this.name = name;
+      this.methodName = methodName;
+      this.params = params;
+      this.body = body;
+    }
+
+    @Override
+    public void accept(DeclarationVisitor visitor) {
+      visitor.visitFunction(this);
+    }
+
+    @Override
+    public List<Annotation> getAnnotations() {
+      return annots;
+    }
+
+    @Override
+    public String getName() {
+      return name;
+    }
+
+    public String getMethodName() {
+      return methodName;
+    }
+
+    public void setMaterialized(RFunction value) {
+      assert this.materialized == null;
+      this.materialized = value;
+    }
+
+    public RFunction getMaterialized() {
+      return this.materialized;
+    }
+
+    public List<Parameter> getParameters() {
+      return this.params;
+    }
+
+    public Expression getBody() {
+      return this.body;
     }
 
   }
