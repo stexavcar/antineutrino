@@ -17,7 +17,6 @@ import org.neutrino.plankton.ClassIndex;
 import org.neutrino.plankton.IBuiltinObjectIndex;
 import org.neutrino.plankton.PlanktonEncoder;
 import org.neutrino.plankton.Store;
-import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.MethodLookupHelper;
 import org.neutrino.runtime.Native;
@@ -49,11 +48,6 @@ public class Universe {
     return new Universe(new HashMap<String, Module>());
   }
 
-  public void initialize() {
-    for (Module module : modules.values())
-      module.initialize();
-  }
-
   public void retainModules(List<String> values) {
     if (values.isEmpty())
       return;
@@ -75,9 +69,9 @@ public class Universe {
     return null;
   }
 
-  public RValue getGlobal(Object name, Interpreter inter) {
+  public RValue getGlobal(Object name) {
     for (Module module : modules.values()) {
-      RValue value = module.lookupGlobal(name, inter);
+      RValue value = module.lookupGlobal(name);
       if (value != null)
         return value;
     }

@@ -31,7 +31,7 @@ public class Module {
 
   private final Map<Object, RValue> globals = new HashMap<Object, RValue>();
 
-  public Module(Universe universe, Map<String, Binding> defs, Map<String,
+  private Module(Universe universe, Map<String, Binding> defs, Map<String,
       RProtocol> protos, List<Method> methods, Map<RProtocol, List<RProtocol>> inheritance) {
     this.defs = defs;
     this.protos = protos;
@@ -50,9 +50,6 @@ public class Module {
     return new Module(universe, new HashMap<String, Binding>(),
         new HashMap<String, RProtocol>(), new ArrayList<Method>(),
         new HashMap<RProtocol, List<RProtocol>>());
-  }
-
-  public void initialize() {
   }
 
   public RProtocol getProtocol(String name) {
@@ -83,20 +80,20 @@ public class Module {
     return defs.values();
   }
 
-  public RValue lookupGlobal(Object name, Interpreter inter) {
+  public RValue lookupGlobal(Object name) {
     RValue result = globals.get(name);
     if (result == null) {
       Binding binding = defs.get(name);
       if (binding == null)
         return null;
-      result = inter.interpret(binding.getCode());
+      result = Interpreter.run(binding.getCode());
       globals.put(name, result);
     }
     return result;
   }
 
-  public RValue getGlobal(Object name, Interpreter inter) {
-    return universe.getGlobal(name, inter);
+  public RValue getGlobal(Object name) {
+    return universe.getGlobal(name);
   }
 
   public void addParents(List<RProtocol> out, RProtocol id) {

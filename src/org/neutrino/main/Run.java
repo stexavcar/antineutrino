@@ -30,21 +30,19 @@ public class Run {
 
   public static void main(String[] rawArgs) throws IOException {
     List<String> args = Flags.parseArguments(rawArgs, Run.class);
-    Interpreter inter = new Interpreter();
     File file = new File(pibPath);
     PlanktonDecoder decoder = new PlanktonDecoder(Universe.getClassIndex(),
         Universe.getBuiltinIndex(), new FileInputStream(file));
     Universe universe = (Universe) decoder.read();
-    universe.initialize();
     Lambda entryPointBinding = universe.getEntryPoint(entryPoint);
     assert entryPointBinding != null : "No entry point found.";
-    RValue entryPointValue = inter.interpret(entryPointBinding);
+    RValue entryPointValue = Interpreter.run(entryPointBinding);
     RPrimitiveArray argsObject = buildStringList(args);
     Lambda entryPointLambda = universe.getLambda((RObject) entryPointValue,
         argsObject);
     if (entryPointLambda == null)
       entryPointLambda = universe.getLambda((RObject) entryPointValue);
-    inter.interpret(entryPointLambda, argsObject);
+    Interpreter.run(entryPointLambda, argsObject);
   }
 
 }
