@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.javatrino.ast.Method;
 import org.javatrino.bytecode.Opcode;
@@ -18,9 +19,31 @@ public class Interpreter {
       Collections.<Object>emptyList(),
       0);
 
+  private Interpreter() { }
+
   private final Native.Arguments arguments = new Native.Arguments();
 
-  public RValue interpret(CodeBundle code, RValue... args) {
+  private static final ConcurrentLinkedQueue<Interpreter> pool = new ConcurrentLinkedQueue<Interpreter>();
+
+  public static RValue run(Lambda lambda, RValue... args) {
+    Interpreter inter = pool.poll();
+    if (inter == null)
+      inter = new Interpreter();
+    RValue result = inter.interpret(lambda, args);
+    pool.offer(inter);
+    return result;
+  }
+
+  public static RValue run(CodeBundle code, RValue... args) {
+    Interpreter inter = pool.poll();
+    if (inter == null)
+      inter = new Interpreter();
+    RValue result = inter.interpret(code, args);
+    pool.offer(inter);
+    return result;
+  }
+
+  private RValue interpret(CodeBundle code, RValue... args) {
     Frame parent = new Frame(null, null, BOTTOM_FRAME_CODE);
     for (RValue arg : args)
       parent.stack.push(arg);
@@ -28,19 +51,15 @@ public class Interpreter {
     return interpret(frame);
   }
 
-  public RValue interpret(Lambda lambda, RValue... args) {
+  private RValue interpret(Lambda lambda, RValue... args) {
     return interpret(lambda.getCode(), args);
   }
-
-  static int count = 0;
 
   @SuppressWarnings("unchecked")
   private RValue interpret(Frame frame) {
     byte[] code = frame.bundle.getCode();
     while (true) {
       int opcode = code[frame.pc];
-      count++;
-//       System.out.println(count++ + " " + opcode);
       switch (opcode) {
       case Opcode.kNull:
         frame.stack.push(RNull.getInstance());
@@ -152,7 +171,7 @@ public class Interpreter {
       case Opcode.kGlobal: {
         int index = code[frame.pc + 1];
         Object name = frame.getLiteral(index);
-        RValue value = frame.bundle.module.getGlobal(name, this);
+        RValue value = frame.bundle.module.getGlobal(name);
         if (value == null)
           throw new InterpreterError.UndefinedGlobal(name, frame);
         frame.stack.push(value);
