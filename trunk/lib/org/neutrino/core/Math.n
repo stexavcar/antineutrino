@@ -1,5 +1,9 @@
-protocol Math;
+protocol Math {
 
-def Math.max(a, b) => if a > b then a else b;
-def Math.min(a, b) => if a < b then a else b;
-def Math.abs(a) => if a >= 0 then a else 0-a;
+  @static def proto.max(a, b) => if a > b then a else b;
+  
+  @static def proto.min(a, b) => if a < b then a else b;
+
+  @static def proto.abs(a) => if a >= 0 then a else 0-a;
+
+}

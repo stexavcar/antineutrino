@@ -406,7 +406,7 @@ public class Native {
     public RValue call(Arguments args) {
       RString value = (RString) args.getFunctionArgument(0);
       System.out.println(value.getValue());
-      return RNull.getInstance();
+      return value;
     }
   };
 

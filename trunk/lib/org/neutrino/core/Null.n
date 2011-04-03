@@ -1,3 +1,5 @@
-@native("null") protocol Null;
+@native("null") protocol Null {
 
-def (this is Null)=(that is Null) => true;
+  def this=(that is Null) => true;
+
+}
