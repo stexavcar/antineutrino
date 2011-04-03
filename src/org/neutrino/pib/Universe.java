@@ -60,16 +60,16 @@ public class Universe {
     return result;
   }
 
-  public Lambda getEntryPoint(String name) {
+  public RValue getEntryPoint(RValue name) {
     for (Module module : modules.values()) {
-      Lambda value = module.getEntryPoint(name);
+      RValue value = module.getEntryPoint(name);
       if (value != null)
         return value;
     }
     return null;
   }
 
-  public RValue getGlobal(Object name) {
+  public RValue getGlobal(RValue name) {
     for (Module module : modules.values()) {
       RValue value = module.lookupGlobal(name);
       if (value != null)
@@ -78,7 +78,7 @@ public class Universe {
     return null;
   }
 
-  public RProtocol getProtocol(String name) {
+  public RProtocol getProtocol(RValue name) {
     for (Module module : modules.values()) {
       RProtocol value = module.protos.get(name);
       if (value != null)
@@ -185,7 +185,8 @@ public class Universe {
 
   static {
     for (String name : PROTOCOLS) {
-      addBuiltin(name, new RProtocol(Collections.<Annotation>emptyList(), name, name));
+      RValue key = RString.of(name);
+      addBuiltin(name, new RProtocol(Collections.<Annotation>emptyList(), key, key));
     }
   }
 

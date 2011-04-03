@@ -11,11 +11,11 @@ import org.neutrino.syntax.Annotation;
 public class RProtocol extends RValue {
 
   public @Store List<Annotation> annotations;
-  public @Store String id;
-  public @Store String displayName;
+  public @Store RValue id;
+  public @Store RValue displayName;
 
-  public RProtocol(List<Annotation> annotations, String id,
-      String displayName) {
+  public RProtocol(List<Annotation> annotations, RValue id,
+      RValue displayName) {
     this.annotations = annotations;
     this.id = id;
     this.displayName = displayName;
@@ -23,11 +23,11 @@ public class RProtocol extends RValue {
 
   public RProtocol() { }
 
-  public String getId() {
+  public RValue getId() {
     return id;
   }
 
-  public String getName() {
+  public RValue getName() {
     return displayName;
   }
 

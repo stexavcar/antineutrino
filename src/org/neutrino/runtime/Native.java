@@ -511,7 +511,7 @@ public class Native {
   @Marker("proto-id") static final Impl PROTO_ID = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      return new RString(((RProtocol) args.getThis()).getId());
+      return ((RProtocol) args.getThis()).getId();
     }
   };
 

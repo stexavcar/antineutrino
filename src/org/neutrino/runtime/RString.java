@@ -4,8 +4,7 @@ import org.neutrino.plankton.Store;
 
 public class RString extends RValue {
 
-  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("String");
-
+  private static RProtocol[] PROTOS;
   public @Store String value;
 
   public RString(String value) {
@@ -20,6 +19,8 @@ public class RString extends RValue {
 
   @Override
   public RProtocol[] getTypeIds() {
+    if (PROTOS == null)
+      PROTOS = RProtocol.getCanonicals("String");
     return PROTOS;
   }
 

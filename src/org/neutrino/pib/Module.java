@@ -1,7 +1,5 @@
 package org.neutrino.pib;
 
-import static org.javatrino.ast.Expression.StaticFactory.eConstant;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,7 +11,6 @@ import org.javatrino.ast.Method;
 import org.neutrino.compiler.Source;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.Interpreter;
-import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFunction;
 import org.neutrino.runtime.RProtocol;
@@ -24,21 +21,25 @@ import org.neutrino.syntax.Tree;
 
 public class Module {
 
-  public @Store Map<String, Binding> defs;
-  public @Store Map<String, RProtocol> protos;
+  public @Store Map<RValue, Binding> defs;
+  public @Store Map<RValue, RProtocol> protos;
   public @Store List<Method> methods;
   public @Store Universe universe;
   public @Store Map<RProtocol, List<RProtocol>> inheritance = new HashMap<RProtocol, List<RProtocol>>();
 
-  private final Map<Object, RValue> globals = new HashMap<Object, RValue>();
+  public @Store Map<RValue, List<Annotation>> globalAnnots;
+  public @Store Map<RValue, RValue> globals;
 
-  private Module(Universe universe, Map<String, Binding> defs, Map<String,
-      RProtocol> protos, List<Method> methods, Map<RProtocol, List<RProtocol>> inheritance) {
+  private Module(Universe universe, Map<RValue, Binding> defs, Map<RValue,
+      RProtocol> protos, List<Method> methods, Map<RProtocol, List<RProtocol>> inheritance,
+      Map<RValue, List<Annotation>> globalAnnots, Map<RValue, RValue> globals) {
     this.defs = defs;
     this.protos = protos;
     this.methods = methods;
     this.universe = universe;
     this.inheritance = inheritance;
+    this.globalAnnots = globalAnnots;
+    this.globals = globals;
   }
 
   public Module() { }
@@ -48,24 +49,26 @@ public class Module {
   }
 
   public static Module newEmpty(Universe universe) {
-    return new Module(universe, new HashMap<String, Binding>(),
-        new HashMap<String, RProtocol>(), new ArrayList<Method>(),
-        new HashMap<RProtocol, List<RProtocol>>());
+    return new Module(universe,
+        new HashMap<RValue, Binding>(),
+        new HashMap<RValue, RProtocol>(),
+        new ArrayList<Method>(),
+        new HashMap<RProtocol, List<RProtocol>>(),
+        new HashMap<RValue, List<Annotation>>(),
+        new HashMap<RValue, RValue>());
   }
 
-  public RProtocol getProtocol(String name) {
+  public RProtocol getProtocol(RValue name) {
     RProtocol result = protos.get(name);
     return result == null ? universe.getProtocol(name) : result;
   }
 
-  public Lambda getEntryPoint(String name) {
-    for (Map.Entry<String, Binding> entry : defs.entrySet()) {
-      Binding binding = entry.getValue();
-      Annotation annot = binding.getAnnotation("entry_point");
-      if (annot != null) {
-        RValue value = annot.getArgument(0);
-        if (((RString) value).getValue().equals(name))
-          return new Lambda(this, binding.getCode());
+  public RValue getEntryPoint(RValue name) {
+    for (Map.Entry<RValue, List<Annotation>> entry : globalAnnots.entrySet()) {
+      for (Annotation annot : entry.getValue()) {
+        if (annot.tag.equals("entry_point") && annot.args.get(0).equals(name)) {
+          return globals.get(entry.getKey());
+        }
       }
     }
     return null;
@@ -81,7 +84,7 @@ public class Module {
     return defs.values();
   }
 
-  public RValue lookupGlobal(Object name) {
+  public RValue lookupGlobal(RValue name) {
     RValue result = globals.get(name);
     if (result == null) {
       Binding binding = defs.get(name);
@@ -97,7 +100,7 @@ public class Module {
     return defs.get(name);
   }
 
-  public RValue getGlobal(Object name) {
+  public RValue getGlobal(RValue name) {
     return universe.getGlobal(name);
   }
 
@@ -118,7 +121,7 @@ public class Module {
     locals.add(shuper);
   }
 
-  public void createDefinition(String name, Binding binding) {
+  public void createDefinition(RValue name, Binding binding) {
     defs.put(name, binding);
   }
 
@@ -127,24 +130,17 @@ public class Module {
   }
 
   public RFunction getOrCreateFunction(Source origin, List<Tree.Annotation> annots,
-      String name) {
+      RValue name) {
     if (!globals.containsKey(name)) {
       RFunction result = new RFunction();
       globals.put(name, result);
-      defs.put(name, new Binding(
-          processAnnotations(annots),
-          new CodeBundle(
-              this,
-              origin.getName(),
-              eConstant(result),
-              null,
-              null)));
+      globalAnnots.put(name, processAnnotations(annots));
     }
     return (RFunction) globals.get(name);
   }
 
-  public RProtocol createProtocol(Source origin, List<Tree.Annotation> annots, String id,
-      String displayName) {
+  public RProtocol createProtocol(Source origin, List<Tree.Annotation> annots,
+      RValue id, RValue displayName) {
     RProtocol proto = null;
     for (Tree.Annotation annot : annots) {
       if (annot.getTag().equals(Native.ANNOTATION)) {
@@ -154,14 +150,8 @@ public class Module {
     if (proto == null)
       proto = new RProtocol(processAnnotations(annots), id, displayName);
     protos.put(id, proto);
-    defs.put(id, new Binding(
-        Collections.<Annotation>emptyList(),
-        new CodeBundle(
-            this,
-            origin.getName(),
-            eConstant(proto),
-            null,
-            null)));
+    globals.put(id, proto);
+    globalAnnots.put(id, Collections.<Annotation>emptyList());
     return proto;
   }
 
@@ -175,6 +165,10 @@ public class Module {
         newAnnots.add(new Annotation(annot.getTag(), null));
     }
     return newAnnots;
+  }
+
+  public List<Annotation> getAnnotations(Object id) {
+    return globalAnnots.get(id);
   }
 
 }

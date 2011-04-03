@@ -7,6 +7,8 @@ import org.neutrino.compiler.Scope.LocalScope;
 import org.neutrino.compiler.Scope.LookupResult;
 import org.neutrino.compiler.Scope.MethodScope;
 import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RString;
+import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Assignment;
 import org.neutrino.syntax.Tree.Identifier;
@@ -80,8 +82,8 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
 
   @Override
   public Void visitIdentifier(Identifier that) {
-    String name = that.getName();
-    LookupResult result = scope.lookup(name);
+    RValue name = that.getName();
+    LookupResult result = scope.lookup(((RString) name).value);
     if (result != null)
       that.bind(result.symbol, result.isReference);
     return null;
@@ -90,8 +92,8 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
   @Override
   public Void visitAssignment(Assignment that) {
     that.getValue().accept(this);
-    String name = that.getName();
-    LookupResult result = scope.lookup(name);
+    RValue name = that.getName();
+    LookupResult result = scope.lookup(((RString) name).value);
     assert result.isReference : "Cannot assign to " + name;
     that.bind(result.symbol);
     return null;
