@@ -1,11 +1,17 @@
-protocol Bool;
+protocol Bool {
+  
+}
 
 @native("True")
-protocol True is Bool;
+protocol True is Bool {
 
-def (this is True).negate() => false;
+  def this.negate() => false;
+
+}
 
 @native("False")
-protocol False is Bool;
+protocol False is Bool {
 
-def (this is False).negate() => true;
+  def this.negate() => true;
+
+}

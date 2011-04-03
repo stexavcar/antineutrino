@@ -7,7 +7,7 @@ protocol Sequence {
   def this.is_empty => with_escape (yield) {
     for (elm : this)
       yield(false);
-      yield(true);
+    yield(true);
   }
 
 }
