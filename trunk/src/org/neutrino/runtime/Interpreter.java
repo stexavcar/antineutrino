@@ -170,10 +170,12 @@ public class Interpreter {
       }
       case Opcode.kGlobal: {
         int index = code[frame.pc + 1];
-        Object name = frame.getLiteral(index);
+        RValue name = (RValue) frame.getLiteral(index);
         RValue value = frame.bundle.module.getGlobal(name);
-        if (value == null)
+        if (value == null) {
+          frame.bundle.module.getGlobal(name);
           throw new InterpreterError.UndefinedGlobal(name, frame);
+        }
         frame.stack.push(value);
         frame.pc += 2;
         break;

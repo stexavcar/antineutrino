@@ -3,6 +3,7 @@ package org.neutrino.pib;
 import org.javatrino.ast.Symbol;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RProtocol;
+import org.neutrino.runtime.RString;
 
 public class Parameter {
 
@@ -25,7 +26,7 @@ public class Parameter {
     if (this.protocol == null) {
       if ("Object".equals(type))
         return null;
-      this.protocol = module.getProtocol(type);
+      this.protocol = module.getProtocol(RString.of(type));
       if (this.protocol == null) {
         assert false : "Undefined protocol " + type;
       }

@@ -18,6 +18,7 @@ import org.javatrino.ast.Test.Is;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFieldKey;
+import org.neutrino.runtime.RString;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Internal;
 
@@ -138,7 +139,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Expression body = generate(that.getBody());
     if (that.isReference()) {
       value = eCall(eArgument("name", eConstant("new")),
-          eArgument(0, eGlobal("Ref")),
+          eArgument(0, eGlobal(RString.of("Ref"))),
           eArgument(1, value));
     }
     return eDefinition(that.getSymbol(), value, body);

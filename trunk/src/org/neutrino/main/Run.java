@@ -33,9 +33,8 @@ public class Run {
     PlanktonDecoder decoder = new PlanktonDecoder(Universe.getClassIndex(),
         Universe.getBuiltinIndex(), new FileInputStream(file));
     Universe universe = (Universe) decoder.read();
-    Lambda entryPointBinding = universe.getEntryPoint(entryPoint);
-    assert entryPointBinding != null : "No entry point found.";
-    RValue entryPointValue = Interpreter.run(entryPointBinding);
+    RValue entryPointValue = universe.getEntryPoint(RString.of(entryPoint));
+    assert entryPointValue != null : "No entry point found.";
     RPrimitiveArray argsObject = buildStringList(args);
     Lambda entryPointLambda = universe.getLambda(entryPointValue,
         argsObject);

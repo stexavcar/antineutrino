@@ -33,7 +33,7 @@ public class InterpreterError extends RuntimeException {
     } else {
       for (RProtocol proto : value.getTypeIds()) {
         if (proto != null) {
-          return proto.getName();
+          return proto.getName().toExternalString();
         }
       }
       return "?";

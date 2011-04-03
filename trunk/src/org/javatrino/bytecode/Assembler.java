@@ -90,7 +90,7 @@ public class Assembler {
     return offset;
   }
 
-  public int global(Object name) {
+  public int global(RValue name) {
     int index = registerLiteral(name);
     int result = getOffset();
     add(Opcode.kGlobal);

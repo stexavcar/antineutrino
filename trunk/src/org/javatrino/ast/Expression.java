@@ -8,6 +8,7 @@ import java.util.List;
 import org.neutrino.plankton.ClassIndex;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RFieldKey;
+import org.neutrino.runtime.RValue;
 
 
 public abstract class Expression {
@@ -221,9 +222,9 @@ public abstract class Expression {
 
   public static class Global extends Expression {
 
-    public @Store Object name;
+    public @Store RValue name;
 
-    private Global(Object name) {
+    private Global(RValue name) {
       this.name = name;
     }
 
@@ -536,7 +537,7 @@ public abstract class Expression {
       return new Definition(symbol, value, body);
     }
 
-    public static Global eGlobal(Object name) {
+    public static Global eGlobal(RValue name) {
       return new Global(name);
     }
 

@@ -20,6 +20,7 @@ import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFunction;
 import org.neutrino.runtime.RProtocol;
+import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Parser;
@@ -244,7 +245,7 @@ public class Source {
 
     @Override
     public void visitFunction(Function that) {
-      resolveAnnotations(that.getAnnotations(), module.getDefinition(that.getName()).annots);
+      resolveAnnotations(that.getAnnotations(), module.getAnnotations(that.getName()));
       List<Pattern> signature = new ArrayList<Pattern>();
       signature.add(getNamePattern(that.getMethodName()));
       signature.add(new Pattern(Arrays.<Object>asList(0),
@@ -276,8 +277,8 @@ public class Source {
     }
 
     public void visitInheritance(Inheritance that) {
-      module.declareInheritance(module.getProtocol(that.getSub()),
-          module.getProtocol(that.getSuper()));
+      module.declareInheritance(module.getProtocol(RString.of(that.getSub())),
+          module.getProtocol(RString.of(that.getSuper())));
     }
 
   }

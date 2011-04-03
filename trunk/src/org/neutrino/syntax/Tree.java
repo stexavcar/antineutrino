@@ -86,7 +86,7 @@ public class Tree {
 
     public abstract List<Annotation> getAnnotations();
 
-    public abstract String getName();
+    public abstract RValue getName();
 
     public Annotation getAnnotation(String tag) {
       for (Annotation annot : getAnnotations()) {
@@ -101,17 +101,17 @@ public class Tree {
   public static class Definition extends Declaration {
 
     private final List<Annotation> annots;
-    private final String name;
+    private final RValue name;
     private final Expression value;
 
-    public Definition(List<Annotation> annots, String name, Expression value) {
+    public Definition(List<Annotation> annots, RValue name, Expression value) {
       this.annots = annots;
       this.name = name;
       this.value = value;
     }
 
     @Override
-    public String getName() {
+    public RValue getName() {
       return this.name;
     }
 
@@ -140,13 +140,13 @@ public class Tree {
   public static class Function extends Declaration {
 
     private final List<Annotation> annots;
-    private final String name;
+    private final RValue name;
     private final String methodName;
     private final List<Parameter> params;
     private final Expression body;
     private RFunction materialized;
 
-    public Function(List<Annotation> annots, String name, String methodName,
+    public Function(List<Annotation> annots, RValue name, String methodName,
         List<Parameter> params, Expression body) {
       this.annots = annots;
       this.name = name;
@@ -166,7 +166,7 @@ public class Tree {
     }
 
     @Override
-    public String getName() {
+    public RValue getName() {
       return name;
     }
 
@@ -196,10 +196,10 @@ public class Tree {
   public static class Protocol extends Declaration {
 
     private final List<Annotation> annots;
-    private final String name;
+    private final RValue name;
     private RProtocol materialized;
 
-    public Protocol(List<Annotation> annots, String name) {
+    public Protocol(List<Annotation> annots, RValue name) {
       this.annots = annots;
       this.name = name;
     }
@@ -215,7 +215,7 @@ public class Tree {
     }
 
     @Override
-    public String getName() {
+    public RValue getName() {
       return this.name;
     }
 
@@ -250,7 +250,7 @@ public class Tree {
     }
 
     @Override
-    public String getName() {
+    public RValue getName() {
       return null;
     }
 
@@ -294,7 +294,7 @@ public class Tree {
     }
 
     @Override
-    public String getName() {
+    public RValue getName() {
       return null;
     }
 
@@ -417,15 +417,15 @@ public class Tree {
 
   public static class Identifier extends Expression {
 
-    private final String name;
+    private final RValue name;
     private boolean isReference;
     private Symbol symbol;
 
-    public Identifier(String name) {
+    public Identifier(RValue name) {
       this.name = name;
     }
 
-    public String getName() {
+    public RValue getName() {
       return name;
     }
 
@@ -470,11 +470,11 @@ public class Tree {
 
   public static class Assignment extends Expression {
 
-    private final String name;
+    private final RValue name;
     private final Tree.Expression value;
     private Symbol symbol;
 
-    public Assignment(String name, Tree.Expression value) {
+    public Assignment(RValue name, Tree.Expression value) {
       this.name = name;
       this.value = value;
     }
@@ -483,7 +483,7 @@ public class Tree {
       return this.symbol;
     }
 
-    public String getName() {
+    public RValue getName() {
       return this.name;
     }
 
@@ -664,7 +664,7 @@ public class Tree {
 
     public static Expression create(Source source, Expression cond,
         Expression thenPart, Tree.Expression elsePart) {
-      return new Call("if", Arrays.asList(new Identifier("Control"), cond,
+      return new Call("if", Arrays.asList(new Identifier(RString.of("Control")), cond,
           Lambda.create(source, Collections.<Parameter> emptyList(), thenPart,
               "then"), Lambda.create(source,
               Collections.<Parameter> emptyList(), elsePart, "else")));
@@ -897,7 +897,7 @@ public class Tree {
       this.protocolNames = protocolNames;
       this.protocols = new ArrayList<Expression>();
       for (String name : protocolNames)
-        protocols.add(new Identifier(name));
+        protocols.add(new Identifier(RString.of(name)));
       this.displayName = displayName;
     }
 

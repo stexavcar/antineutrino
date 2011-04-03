@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.neutrino.compiler.Source;
 import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RString;
 import org.neutrino.syntax.Token.Type;
 import org.neutrino.syntax.Tree.If;
 import org.neutrino.syntax.Tree.Lambda;
@@ -315,7 +316,7 @@ public class Parser {
           expect(Type.COLON_EQ);
           Tree.Expression value = parseExpression(false);
           requireSemicolon();
-          Tree.Declaration result = new Tree.Definition(annots, name, value);
+          Tree.Declaration result = new Tree.Definition(annots, RString.of(name), value);
           return Collections.singletonList(result);
         } else if (at(Type.DOT)) {
           Tree.Declaration result = parseMethodTail(annots, new Parameter("this", name, true));
@@ -330,7 +331,7 @@ public class Parser {
           List<Parameter> params = new ArrayList<Parameter>();
           String methodName = parseParameters("()", params, false);
           Tree.Expression body = parseFunctionBody(true);
-          Tree.Declaration result = new Tree.Function(annots, name, methodName, params, body);
+          Tree.Declaration result = new Tree.Function(annots, RString.of(name), methodName, params, body);
           return Collections.singletonList(result);
         } else {
           throw currentSyntaxError();
@@ -359,7 +360,7 @@ public class Parser {
         }
         consumeRightBrace();
       }
-      result.add(new Tree.Protocol(annots, name));
+      result.add(new Tree.Protocol(annots, RString.of(name)));
       requireSemicolon();
       return result;
     }
@@ -672,7 +673,7 @@ public class Parser {
     }
     assert protocols.size() == 1;
     List<Tree.Expression> args = new ArrayList<Tree.Expression>();
-    args.add(new Tree.Identifier(protocols.get(0)));
+    args.add(new Tree.Identifier(RString.of(protocols.get(0))));
     if (at(Type.LPAREN)) {
       expect(Type.LPAREN);
       args.addAll(parseArguments(Type.RPAREN));
@@ -762,7 +763,7 @@ public class Parser {
     switch (current.getType()) {
     case IDENT: {
       String value = expect(Type.IDENT);
-      return new Tree.Identifier(value);
+      return new Tree.Identifier(RString.of(value));
     }
     case NUMBER: {
       String str = expect(Type.NUMBER);
