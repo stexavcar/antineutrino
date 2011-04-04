@@ -6,11 +6,11 @@ protocol BlobStream is ArrayBackedStream {
   @static def proto.new() => new BlobStream(256);
 
   @static def proto.new(size) => new BlobStream {
-    data := new MutablePrimitiveByteArray(size),
+    data := new PrimitiveByteArray(size),
     length := 0
   }
 
-  def this.new_backing_array(size) => new MutablePrimitiveByteArray(size);
+  def this.new_backing_array(size) => new PrimitiveByteArray(size);
 
   def this.rewrite_int32(index, word) {
     this.data[index] := (word & 16rFF);
@@ -70,7 +70,7 @@ protocol BlobStream is ArrayBackedStream {
   }
 
   def this.get_blob() {
-    def result := new MutablePrimitiveByteArray(this.length);
+    def result := new PrimitiveByteArray(this.length);
     for (i : 0 .. this.length)
       result[i] := this.data[i];
     result;

@@ -37,7 +37,7 @@ def (this is LanguageTest).test_array_slice() {
 def (this is LanguageTest).test_mutable_arrays() {
   this.on_start("mutable arrays");
   def kSize := 10;
-  def arr := new MutablePrimitiveArray(kSize);
+  def arr := new PrimitiveArray(kSize);
   assert_equal(kSize, arr.length);
   for (i : 0 .. kSize)
     assert_equal(null, arr[i]);

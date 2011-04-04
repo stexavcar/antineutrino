@@ -1,14 +1,19 @@
 package org.neutrino.runtime;
 
 
-public class RByteArray extends RArray {
+public class RPrimitiveByteArray extends RArray {
 
   private static final RProtocol[] PROTOS = RProtocol.getCanonicals("byte_array");
 
+  private State state = State.MUTABLE;
   private final byte[] data;
 
-  public RByteArray(byte[] data) {
+  public RPrimitiveByteArray(byte[] data) {
     this.data = data;
+  }
+
+  public RPrimitiveByteArray(int size) {
+    this.data = new byte[size];
   }
 
   @Override
@@ -18,6 +23,11 @@ public class RByteArray extends RArray {
 
   public RValue get(int index) {
     return RInteger.get(data[index]);
+  }
+
+  public void set(int key, int value) {
+    assert state.allowMutation();
+    data[key] = (byte) value;
   }
 
   public int getByte(int value) {
@@ -46,7 +56,7 @@ public class RByteArray extends RArray {
 
   @Override
   public State getState() {
-    return State.IMMUTABLE;
+    return state;
   }
 
 }

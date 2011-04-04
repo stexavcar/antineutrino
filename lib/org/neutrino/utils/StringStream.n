@@ -3,12 +3,12 @@ protocol StringStream is ArrayBackedStream;
 def StringStream.new() => new StringStream(16);
 
 def StringStream.new(size) => new StringStream {
-  data := new MutablePrimitiveArray(size),
+  data := new PrimitiveArray(size),
   length := 0
 }
 
 def (this is StringStream).new_backing_array(size)
- => new MutablePrimitiveArray(size);
+ => new PrimitiveArray(size);
 
 def (this is StringStream).add(obj) => this.add_to_stream(obj.to_string());
 
