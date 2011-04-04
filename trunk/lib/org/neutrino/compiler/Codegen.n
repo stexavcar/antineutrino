@@ -5,91 +5,102 @@
  * not transferred in registers between operations, through functions return
  * their values in EAX.
  */
-protocol CodeGenerator;
+protocol CodeGenerator {
 
-def CodeGenerator.new(universe, assm, compiler, method) => new CodeGenerator {
-  universe := universe,
-  assm := assm,
-  compiler := compiler,
-  intrinsics := new IntrinsicManager(),
-  locals := new HashMap(),
-  method := method
-}
-
-def (this is CodeGenerator).generate(node) {
-  this.add_locals(node);
-  this.emit(node);
-}
-
-def (this is CodeGenerator).add_locals(node) {
-  for (child : node)
-    this.add_locals(child);
-}
-
-def (this is CodeGenerator).add_locals(node is DefExpr) {
-  def index := this.locals.size;
-  this.locals[node.symbol] := index;
-  for (child : node)
-    this.add_locals(child);
-}
-
-def (this is CodeGenerator).resolve_static_value(node) => null;
-
-def (this is CodeGenerator).resolve_static_value(node is GlobalExpr) {
-  this.universe.lookup_static_global(node.name);
-}
-
-def (this is CodeGenerator).resolve_method(holder, method)
- => this.universe.lookup_method(holder, method);
-
-def (this is CodeGenerator).emit(node is CallExpr) {
-  def info := node.info;
-  def intrinsic := info.intrinsic;
-  if intrinsic != null then {
-    def handler := this.intrinsics[intrinsic];
-    if handler = null
-      then fail("Unimplemented intrinsic ${intrinsic}.");
-    handler(this, node);
-  } else {
-    def c_call := info.c_call;
-    if c_call = null
-      then fail("Illegal plain call ${node}");
-    this.compiler.ensure_generated(c_call);
-    this.emit_c_call(node, get_binary_name(c_call));
+  @static def proto.new(universe, assm, compiler, method) => new CodeGenerator {
+    universe := universe,
+    assm := assm,
+    compiler := compiler,
+    intrinsics := new IntrinsicManager(),
+    locals := new HashMap(),
+    method := method
   }
-}
 
-def (this is CodeGenerator).emit_c_call(node, target) {
-  def argc := node.arguments.length;
-  // Push arguments onto the stack
-  for (i : 0 .. argc)
-    this.emit(node.arguments[i]);
-  // Call the function
-  this.assm.call(Symbol.local(target));
-  // Pop the arguments off.
-  this.assm.add(rEsp, 4 * argc);
-  // Push the result in EAX onto the stack
-  this.assm.push(rEax);
-}
-
-def (this is CodeGenerator).static_value(node is ConstantExpr)
- => node.value;
-
-def (this is CodeGenerator).emit(node is GlobalExpr) {
-  // We don't support globals yet but we need something to take up
-  // space on the stack so we push a marker in place of the value.
-  this.assm.push(16rBEEFFACE);
-}
-
-def (this is CodeGenerator).emit(node is BlockExpr) {
-  ref has_prev := false;
-  for (value : node.values) {
-    if has_prev
-      then this.assm.pop(rEbx);
-    this.emit(value);
-    has_prev := true;
+  def this.generate(node) {
+    this.add_locals(node);
+    this.emit(node);
   }
-}
+
+  /**
+   * For most expressions add_locals does nothing.
+   */
+  def this.add_locals(node) {
+    for (child : node)
+      this.add_locals(child);
+  }
+
+  /**
+   * For definitions they result in one local.
+   */
+  def this.add_locals(node is DefExpr) {
+    def index := this.locals.size;
+    this.locals[node.symbol] := index;
+    for (child : node)
+      this.add_locals(child);
+  }
+
+  /**
+   * For any types we don't know what to do for return null.
+   */
+  def this.resolve_static_value(node) => null;
+
+  /**
+   * Globals we can look up statically.
+   */
+  def this.resolve_static_value(node is GlobalExpr)
+   => this.universe.lookup_static_global(node.name);
+   
+  def this.resolve_static_value(node is ConstantExpr)
+   => node.value;
+
+  def this.resolve_method(holder, method)
+   => this.universe.lookup_method(holder, method);
+
+  def this.emit(node is CallExpr) {
+    def info := node.info;
+    def intrinsic := info.intrinsic;
+    if intrinsic != null then {
+      def handler := this.intrinsics[intrinsic];
+      if handler = null
+        then fail("Unimplemented intrinsic ${intrinsic}.");
+      handler(this, node);
+    } else {
+      def c_call := info.c_call;
+      if c_call = null
+        then fail("Illegal plain call ${node}");
+      this.compiler.ensure_generated(c_call);
+      this.emit_c_call(node, get_binary_name(c_call));
+    }
+  }
+
+  def this.emit_c_call(node, target) {
+    def argc := node.arguments.length;
+    // Push arguments onto the stack
+    for (i : 0 .. argc)
+      this.emit(node.arguments[i]);
+    // Call the function
+    this.assm.call(Symbol.local(target));
+    // Pop the arguments off.
+    this.assm.add(rEsp, 4 * argc);
+    // Push the result in EAX onto the stack
+    this.assm.push(rEax);
+  }
+
+  def this.emit(node is GlobalExpr) {
+    // We don't support globals yet but we need something to take up
+    // space on the stack so we push a marker in place of the value.
+    this.assm.push(16rBEEFFACE);
+  }
+
+  def this.emit(node is BlockExpr) {
+    ref has_prev := false;
+    for (value : node.values) {
+      if has_prev
+        then this.assm.pop(rEbx);
+      this.emit(value);
+      has_prev := true;
+    }
+  }
 
 /* |      ...       |     ^
  * +----------------+     |
@@ -111,35 +122,38 @@ def (this is CodeGenerator).emit(node is BlockExpr) {
  * +----------------+  <-  ESP
  */
 
-def local_address(index) => (0 - 4) * (index + 1);
-
-def (this is CodeGenerator).emit(node is DefExpr) {
-  def index := this.locals[node.symbol];
-  this.emit(node.value);
-  this.assm.pop(Memory.at_disp(rEbp, local_address(index)));
-  this.emit(node.body);
-}
-
-def (this is CodeGenerator).emit(node is LocalExpr) {
-  def local_index := this.locals[node.symbol];
-  if local_index != null then {
-    this.assm.push(Memory.at_disp(rEbp, local_address(local_index)));
-  } else {
-    def arg_index := with_escape (yield) {
-      ref index := this.method.signature.length;
-      for (param : this.method.signature) {
-        if param.symbol = node.symbol
-          then yield(index);
-        index := index - 1;
-      }
-      null;
-    }
-    // The arguments are just below EBP, the last one at offset 8, the previous
-    // at 12, etc.
-    this.assm.push(Memory.at_disp(rEbp, 4 + (4 * arg_index)));
+  def this.emit(node is DefExpr) {
+    def index := this.locals[node.symbol];
+    this.emit(node.value);
+    this.assm.pop(Memory.at_disp(rEbp, local_address(index)));
+    this.emit(node.body);
   }
+
+  def this.emit(node is LocalExpr) {
+    def local_index := this.locals[node.symbol];
+    if local_index != null then {
+      this.assm.push(Memory.at_disp(rEbp, local_address(local_index)));
+    } else {
+      def arg_index := with_escape (yield) {
+        ref index := this.method.signature.length;
+        for (param : this.method.signature) {
+          if param.symbol = node.symbol
+            then yield(index);
+          index := index - 1;
+        }
+        null;
+      }
+      // The arguments are just below EBP, the last one at offset 8, the previous
+      // at 12, etc.
+      this.assm.push(Memory.at_disp(rEbp, 4 + (4 * arg_index)));
+    }
+  }
+
+  def this.is_intrinsic_protocol(value) => false;
+
+  def this.is_intrinsic_protocol(p is ProtocolAst)
+   => p.get_annotation("intrinsic") != null;
+ 
 }
 
-def (this is CodeGenerator).is_intrinsic_protocol(value) => false;
-def (this is CodeGenerator).is_intrinsic_protocol(p is ProtocolAst)
- => p.get_annotation("intrinsic") != null;
+def local_address(index) => (0 - 4) * (index + 1);

@@ -1,0 +1,24 @@
+@no_override
+protocol ControlTestHelper {
+  
+  @static
+  @type(int32_t)
+  def proto.select_simple(arg is bool_t)
+   => if arg then int32_t.of(5) else int32_t.of(6);
+
+  @static
+  @type(int32_t)
+  def proto.select(arg is bool_t, one is int32_t, two is int32_t)
+   => if arg then one else two;
+  
+}
+
+def (this is neu_neu_tests_t).test_control() {
+  this.on_start(char_ptr_t.of("control"));
+  this.assert_equal(int32_t.of(5), ControlTestHelper.select_simple(bool_t.yes));
+  this.assert_equal(int32_t.of(6), ControlTestHelper.select_simple(bool_t.no));
+  this.assert_equal(int32_t.of(9), ControlTestHelper.select(bool_t.yes,
+    int32_t.of(9), int32_t.of(11)));
+  this.assert_equal(int32_t.of(15), ControlTestHelper.select(bool_t.no,
+    int32_t.of(13), int32_t.of(15)));
+}

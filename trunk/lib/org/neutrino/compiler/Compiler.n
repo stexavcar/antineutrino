@@ -1,25 +1,34 @@
-protocol Platform;
+/**
+ * Defines a platform by returning platform-specific implementation of various
+ * code generator utilities.
+ */
+protocol Platform {
 
-def Platform.new(object_format, architecture) => new Platform {
-  object_format_name := object_format,
-  architecture_name := architecture
-}
+  @static def proto.new(object_format, architecture) => new Platform {
+    object_format_name := object_format,
+    architecture_name := architecture
+  }
 
-def (this is Platform).architecture {
-  def name := this.architecture_name;
-  if name = "ia386"
-    then new Ia386();
-    else null;
-}
+  /**
+   * Returns the appropriate architecture for this platform
+   */
+  def this.architecture {
+    def name := this.architecture_name;
+    if name = "ia386"
+      then new Ia386();
+      else null;
+  }
 
-def (this is Platform).object_format {
-  def name := this.object_format_name;
-  if name = "elf" then
-    new ElfFormat();
-  else if name = "mach-o" then
-    new MachOFormat();
-  else
-    null;
+  def this.object_format {
+    def name := this.object_format_name;
+    if name = "elf" then
+      new ElfFormat();
+    else if name = "mach-o" then
+      new MachOFormat();
+    else
+      null;
+  }
+
 }
 
 protocol NeutrinoCompiler;

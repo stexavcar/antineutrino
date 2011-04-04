@@ -26,14 +26,14 @@ def IntrinsicManager.new() {
 def (this is IntrinsicManager)[name] => this.handlers[name];
 
 def (this is CodeGenerator).int32_cast(node) {
-  def value := this.static_value(node.arguments[1]);
+  def value := this.resolve_static_value(node.arguments[1]);
   // If we have a static integer value we just push it onto the stack as a
   // raw int32.
   this.assm.push(value);
 }
 
 def (this is CodeGenerator).cast_char_ptr(node) {
-  def value := this.static_value(node.arguments[1]);
+  def value := this.resolve_static_value(node.arguments[1]);
   this.assm.push(Symbol.string(value));
 }
 
@@ -170,7 +170,7 @@ def (this is CodeGenerator).if_else(node) {
 }
 
 def (this is CodeGenerator).static_data_ptr(node) {
-  def value := this.static_value(node.arguments[1]);
+  def value := this.resolve_static_value(node.arguments[1]);
   this.assm.mov(rEax, Symbol.local(value));
   this.assm.push(Memory.at(rEax));
 }
