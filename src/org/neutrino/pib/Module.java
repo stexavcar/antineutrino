@@ -23,7 +23,6 @@ public class Module {
 
   public Map<RValue, Binding> defs;
 
-  public @Store Map<RValue, RProtocol> protos;
   public @Store List<Method> methods;
   public @Store Universe universe;
   public @Store Map<RProtocol, List<RProtocol>> inheritance = new HashMap<RProtocol, List<RProtocol>>();
@@ -31,11 +30,10 @@ public class Module {
   public @Store Map<RValue, List<Annotation>> globalAnnots;
   public @Store Map<RValue, RValue> globals;
 
-  private Module(Universe universe, Map<RValue, Binding> defs, Map<RValue,
-      RProtocol> protos, List<Method> methods, Map<RProtocol, List<RProtocol>> inheritance,
+  private Module(Universe universe, Map<RValue, Binding> defs, List<Method> methods,
+      Map<RProtocol, List<RProtocol>> inheritance,
       Map<RValue, List<Annotation>> globalAnnots, Map<RValue, RValue> globals) {
     this.defs = defs;
-    this.protos = protos;
     this.methods = methods;
     this.universe = universe;
     this.inheritance = inheritance;
@@ -52,16 +50,10 @@ public class Module {
   public static Module newEmpty(Universe universe) {
     return new Module(universe,
         new HashMap<RValue, Binding>(),
-        new HashMap<RValue, RProtocol>(),
         new ArrayList<Method>(),
         new HashMap<RProtocol, List<RProtocol>>(),
         new HashMap<RValue, List<Annotation>>(),
         new HashMap<RValue, RValue>());
-  }
-
-  public RProtocol getProtocol(RValue name) {
-    RProtocol result = protos.get(name);
-    return result == null ? universe.getProtocol(name) : result;
   }
 
   public RValue getEntryPoint(RValue name) {
@@ -77,8 +69,7 @@ public class Module {
 
   @Override
   public String toString() {
-    return "a Module {defs: " + defs + ", protos: " + protos + ", methods: "
-        + methods + "}";
+    return "a Module {globals: " + globals + ", methods: " + methods + "}";
   }
 
   public RValue lookupGlobal(RValue name) {
@@ -153,7 +144,6 @@ public class Module {
     }
     if (proto == null)
       proto = new RProtocol(processAnnotations(annots), id, displayName);
-    protos.put(id, proto);
     globals.put(id, proto);
     globalAnnots.put(id, Collections.<Annotation>emptyList());
     return proto;

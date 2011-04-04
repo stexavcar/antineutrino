@@ -26,7 +26,7 @@ public class Parameter {
     if (this.protocol == null) {
       if ("Object".equals(type))
         return null;
-      this.protocol = module.getProtocol(RString.of(type));
+      this.protocol = (RProtocol) module.getGlobal(RString.of(type));
       if (this.protocol == null) {
         assert false : "Undefined protocol " + type;
       }

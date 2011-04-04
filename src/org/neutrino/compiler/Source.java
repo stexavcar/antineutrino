@@ -277,8 +277,8 @@ public class Source {
     }
 
     public void visitInheritance(Inheritance that) {
-      module.declareInheritance(module.getProtocol(RString.of(that.getSub())),
-          module.getProtocol(RString.of(that.getSuper())));
+      module.declareInheritance((RProtocol) module.getGlobal(RString.of(that.getSub())),
+          (RProtocol) module.getGlobal(RString.of(that.getSuper())));
     }
 
   }

@@ -83,12 +83,7 @@ public class Universe {
   }
 
   public RProtocol getProtocol(RValue name) {
-    for (Module module : modules.values()) {
-      RProtocol value = module.protos.get(name);
-      if (value != null)
-        return value;
-    }
-    return null;
+    return (RProtocol) getGlobal(name);
   }
 
   private final Map<RProtocol, RProtocol[]> parentCache = new HashMap<RProtocol, RProtocol[]>();

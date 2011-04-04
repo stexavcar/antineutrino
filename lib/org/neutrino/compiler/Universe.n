@@ -541,21 +541,19 @@ protocol Module;
 def Module.tag => "org.neutrino.pib.Module";
 
 def Module.new_instance() => new Module {
-  defs := null,
-  protos := null,
+  globals := null,
   supers := null,
   methods := null
 }
 
 def (this is Module).initialize(payload) {
-  this.defs := payload["defs"];
-  this.protos := payload["protos"];
+  this.globals := payload["globals"];
   this.supers := payload["inheritance"];
   this.methods := payload["methods"];
 }
 
 def (this is Module).to_string()
- => "#<a Module: defs=${this.defs}, protos=${this.protos}, supers=${this.supers}, methods=${this.methods}>";
+ => "#<a Module: globals=${this.globals}, protos=${this.protos}, supers=${this.supers}, methods=${this.methods}>";
 
 protocol Native;
 
@@ -589,19 +587,14 @@ def (this is Universe).initialize(payload) {
 
 def (this is Universe).modules => this.r_modules.get();
 
-def (this is Universe).bindings => fn for (fun) {
-  for (module : this.modules.values)
-    module.defs.for(fun);
-}
-
 def (this is Universe).methods => fn for (fun) {
   for (module : this.modules.values)
     module.methods.for(fun);
 }
 
-def (this is Universe).protocols => fn for (fun) {
+def (this is Universe).globals => fn for (fun) {
   for (module : this.modules.values)
-    module.protos.for(fun);
+    module.globals.for(fun);
 }
 
 def (this is Universe).supers => fn for (fun) {
@@ -629,10 +622,10 @@ def (this is Universe).lookup_static_global(name) {
   def cached := this.global_cache[name];
   if cached = null then {
     with_escape (return) {
-      for (proto_name, proto : this.protocols) {
-        if name = proto_name then {
-          this.global_cache[name] := proto;
-          return(proto);
+      for (global_name, global : this.globals) {
+        if name = global_name then {
+          this.global_cache[name] := global;
+          return(global);
         }
       }
       null;
