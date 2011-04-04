@@ -4,6 +4,6 @@ def open_file(name) => internal "open_file";
 
 def (this is File).read_binary() => internal "file.read";
 
-def (this is File).write_binary(data is ByteArray) => internal "file.write";
+def (this is File).write_binary(data is PrimitiveByteArray) => internal "file.write";
 
 def (this is File).write_string(data is String) => internal "file.writestring";

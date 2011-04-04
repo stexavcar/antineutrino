@@ -11,7 +11,7 @@ def HashMap.hash(value) => internal "obj.hash";
  * Creates a new empty hash map.
  */
 def HashMap.new() => new HashMap {
-  entries := new MutablePrimitiveArray(HashMap.kInitialCapacity),
+  entries := new PrimitiveArray(HashMap.kInitialCapacity),
   size := 0,
   max_load := (HashMap.kInitialCapacity * 3) / 4
 }
@@ -67,7 +67,7 @@ protocol HashMap {
   }
 
   def this.extend_capacity(new_capacity) {
-    def new_entries := new MutablePrimitiveArray(new_capacity);
+    def new_entries := new PrimitiveArray(new_capacity);
     def old_entries := this.entries;
     this.entries := new_entries;
     this.size := 0;

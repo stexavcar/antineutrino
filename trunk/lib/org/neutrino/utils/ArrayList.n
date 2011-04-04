@@ -4,7 +4,7 @@ protocol ArrayList is Sequence {
   @static def proto.new() => new ArrayList(0);
 
   @static def proto.new(size is Integer) => new ArrayList {
-    contents := new MutablePrimitiveArray(size),
+    contents := new PrimitiveArray(size),
     length := size
   };
 
@@ -80,7 +80,7 @@ protocol ArrayList is Sequence {
   def this.ensure_capacity(capacity) {
     def old_contents := this.contents;
     if not capacity < old_contents.length then {
-      def new_contents := new MutablePrimitiveArray(capacity * 2);
+      def new_contents := new PrimitiveArray(capacity * 2);
       for (i : 0 .. this.length)
         new_contents[i] := old_contents[i];
       this.contents := new_contents;
