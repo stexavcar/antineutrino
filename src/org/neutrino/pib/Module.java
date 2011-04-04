@@ -1,7 +1,6 @@
 package org.neutrino.pib;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -13,6 +12,7 @@ import org.neutrino.plankton.Store;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFunction;
+import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
@@ -21,7 +21,8 @@ import org.neutrino.syntax.Tree;
 
 public class Module {
 
-  public @Store Map<RValue, Binding> defs;
+  public Map<RValue, Binding> defs;
+
   public @Store Map<RValue, RProtocol> protos;
   public @Store List<Method> methods;
   public @Store Universe universe;
@@ -80,24 +81,27 @@ public class Module {
         + methods + "}";
   }
 
-  public Collection<Binding> getDefinitions() {
-    return defs.values();
+  public RValue lookupGlobal(RValue name) {
+    return globals.get(name);
   }
 
-  public RValue lookupGlobal(RValue name) {
-    RValue result = globals.get(name);
-    if (result == null) {
+  public RValue ensureGlobal(RValue name) {
+    if (!globals.containsKey(name)) {
       Binding binding = defs.get(name);
       if (binding == null)
         return null;
-      result = Interpreter.run(binding.getCode());
+      globalAnnots.put(name, binding.annots);
+      globals.put(name, RNull.getInstance());
+      RValue result = Interpreter.run(binding.getCode());
       globals.put(name, result);
     }
-    return result;
+    return globals.get(name);
   }
 
-  public Binding getDefinition(String name) {
-    return defs.get(name);
+  public void evaluateStatics() {
+    for (RValue name : defs.keySet())
+      this.ensureGlobal(name);
+    defs = null;
   }
 
   public RValue getGlobal(RValue name) {

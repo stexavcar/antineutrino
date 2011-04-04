@@ -5,11 +5,12 @@ import java.util.IdentityHashMap;
 import java.util.List;
 
 import org.javatrino.ast.Method;
+import org.neutrino.plankton.Store;
 
 public class RImpl {
 
-  public final List<RProtocol> protos;
-  public final List<Method> intrinsics;
+  public @Store List<RProtocol> protos;
+  public @Store List<Method> intrinsics;
   public RProtocol[] protoArray = null;
 
   private final IdentityHashMap<RProtocol, RImpl> addedProtos

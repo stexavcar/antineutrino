@@ -100,14 +100,14 @@ public class CompilerModule {
       child.parseAll();
   }
 
-  public void writeStatics(Universe universe) {
+  public void buildSkeleton(Universe universe) {
     if (!isToplevel()) {
       Module module = universe.createModule(name);
       for (Source source : sources.values())
-        source.writeStatics(module);
+        source.buildSkeleton(module);
     }
     for (CompilerModule child : modules.values())
-      child.writeStatics(universe);
+      child.buildSkeleton(universe);
   }
 
   public void writeTo(Universe universe) {

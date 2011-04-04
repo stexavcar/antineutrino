@@ -12,6 +12,8 @@ public class RMutablePrimitiveArray extends RPrimitiveArray {
     super(createBackingStore(size));
   }
 
+  public RMutablePrimitiveArray() { }
+
   private static List<RValue> createBackingStore(int size) {
     List<RValue> result = new ArrayList<RValue>();
     for (int i = 0; i < size; i++)

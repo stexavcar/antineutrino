@@ -20,9 +20,14 @@ import org.neutrino.plankton.Store;
 import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.MethodLookupHelper;
 import org.neutrino.runtime.Native;
+import org.neutrino.runtime.RBoolean;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RFunction;
+import org.neutrino.runtime.RImpl;
 import org.neutrino.runtime.RInteger;
+import org.neutrino.runtime.RMutablePrimitiveArray;
+import org.neutrino.runtime.RObject;
+import org.neutrino.runtime.RPrimitiveArray;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
@@ -120,6 +125,11 @@ public class Universe {
     out.write(encoder.getBytes());
   }
 
+  public void evaluateStatics() {
+    for (Module module : modules.values())
+      module.evaluateStatics();
+  }
+
   public Set<Map.Entry<String, Module>> getModules() {
     return modules.entrySet();
   }
@@ -149,7 +159,13 @@ public class Universe {
     add(Native.class);
     add(RInteger.class);
     add(RFieldKey.class);
+    add(RObject.class);
     add(RFunction.class);
+    add(RValue.State.class);
+    add(RImpl.class);
+    add(RMutablePrimitiveArray.class);
+    add(RPrimitiveArray.class);
+    add(RBoolean.class);
     Expression.register(this);
   }};
 
@@ -189,6 +205,5 @@ public class Universe {
       addBuiltin(name, new RProtocol(Collections.<Annotation>emptyList(), key, key));
     }
   }
-
 
 }

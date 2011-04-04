@@ -50,6 +50,7 @@ public class Compile {
       return null;
     }
     top.writeTo(universe);
+    universe.evaluateStatics();
     return universe;
   }
 

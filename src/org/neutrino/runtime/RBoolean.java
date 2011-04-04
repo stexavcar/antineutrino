@@ -1,13 +1,17 @@
 package org.neutrino.runtime;
 
+import org.neutrino.plankton.Atomic;
+import org.neutrino.plankton.Generator;
+import org.neutrino.plankton.Store;
 
+@Atomic
 public class RBoolean extends RValue {
 
   private static final RBoolean TRUE = new RBoolean(RProtocol.getCanonicals("True"), true);
   private static final RBoolean FALSE = new RBoolean(RProtocol.getCanonicals("False"), false);
 
   private final RProtocol[] protos;
-  private final boolean value;
+  public @Store boolean value;
 
   private RBoolean(RProtocol[] protos, boolean value) {
     this.protos = protos;
@@ -26,6 +30,7 @@ public class RBoolean extends RValue {
     return value;
   }
 
+  @Generator
   public static RValue get(boolean b) {
     return b ? TRUE : FALSE;
   }
