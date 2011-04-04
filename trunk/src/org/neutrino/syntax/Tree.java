@@ -463,7 +463,7 @@ public class Tree {
 
     @Override
     public RValue getValue(Module module) {
-      return module.getProtocol(this.name);
+      return module.getGlobal(this.name);
     }
 
   }
