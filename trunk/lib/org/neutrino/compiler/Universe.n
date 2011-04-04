@@ -91,6 +91,12 @@ def CompilerGrower.new_handler_table() {
   result["org.javatrino.ast.Expression$Internal"] := new DummyCodec("i");
   result["org.neutrino.runtime.RInteger"] := new GetterCodec("value");
   result["org.neutrino.runtime.RString"] := new GetterCodec("value");
+  result["org.neutrino.runtime.RBoolean"] := new GetterCodec("value");
+  result["org.neutrino.runtime.RObject"] := new DummyCodec("o");
+  result["org.neutrino.runtime.RImpl"] := new DummyCodec("i");
+  result["org.neutrino.runtime.RMutablePrimitiveArray"] := new DummyCodec("m");
+  result["org.neutrino.runtime.RPrimitiveArray"] := new DummyCodec("a");
+  result["org.neutrino.runtime.RValue$State"] := new DummyCodec("s");
   result["org.neutrino.runtime.RFunction"] := new DummyCodec("f");
   result["built-in"] := new BuiltinCodec();
   result;

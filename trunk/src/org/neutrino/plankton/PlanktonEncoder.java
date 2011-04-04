@@ -54,14 +54,55 @@ public class PlanktonEncoder {
 
   }
 
-  public static class ObjectEncoder implements IObjectEncoder {
+  public static class EnumEncoder implements IObjectEncoder {
+
+    private final Class<? extends Enum<?>> klass;
+
+    public EnumEncoder(Class<? extends Enum<?>> klass) {
+      this.klass = klass;
+    }
+
+    @Override
+    public boolean canHandle(Object obj) {
+      return klass.isInstance(obj);
+    }
+
+    @Override
+    public Object onTemplateStart() {
+      return null;
+    }
+
+    @Override
+    public Object onTemplatePayload(Template<?> template, Object obj,
+        PlanktonDecoder decoder) throws IOException {
+      int index = (Integer) decoder.instantiateTemplate(template, false);
+      return klass.getEnumConstants()[index];
+    }
+
+    @Override
+    public void writeTemplate(PlanktonEncoder encoder) throws IOException {
+      encoder.out.write(kObjectTag);
+      encoder.writeString(klass.getName());
+      encoder.out.write(kPlaceholderTag);
+    }
+
+    @Override
+    public void writeObject(Object obj, PlanktonEncoder encoder)
+        throws IOException {
+      encoder.internalWrite(klass.cast(obj).ordinal());
+    }
+
+  }
+
+  public static class PojoEncoder implements IObjectEncoder {
 
     private final Class<?> klass;
     private final Map<String, Field> fieldMap = new HashMap<String, Field>();
     private final List<Field> fields = new ArrayList<Field>();
     private final Method atomicFactory;
 
-    public ObjectEncoder(Class<?> klass) {
+    public PojoEncoder(Class<?> klass) {
+      assert !klass.isEnum();
       this.klass = klass;
       for (Field field : klass.getDeclaredFields()) {
         if (field.getAnnotation(Store.class) != null) {

@@ -125,11 +125,11 @@ public class Source {
     return "source " + name;
   }
 
-  private class StaticBuildingVisitor implements Tree.DeclarationVisitor {
+  private class SkeletonBuildingVisitor implements Tree.DeclarationVisitor {
 
     private final Module module;
 
-    public StaticBuildingVisitor(Module module) {
+    public SkeletonBuildingVisitor(Module module) {
       this.module = module;
     }
 
@@ -289,8 +289,8 @@ public class Source {
       decl.accept(visitor);
   }
 
-  public void writeStatics(Module module) {
-    StaticBuildingVisitor visitor = new StaticBuildingVisitor(module);
+  public void buildSkeleton(Module module) {
+    SkeletonBuildingVisitor visitor = new SkeletonBuildingVisitor(module);
     for (Tree.Declaration decl : code.getDeclarations())
       decl.accept(visitor);
   }

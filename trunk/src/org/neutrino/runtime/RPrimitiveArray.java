@@ -2,15 +2,19 @@ package org.neutrino.runtime;
 
 import java.util.List;
 
+import org.neutrino.plankton.Store;
+
 public class RPrimitiveArray extends RArray {
 
   private static final RProtocol[] PROTOS = RProtocol.getCanonicals("array");
 
-  private final List<RValue> elements;
+  public @Store List<RValue> elements;
 
   public RPrimitiveArray(List<RValue> elements) {
     this.elements = elements;
   }
+
+  public RPrimitiveArray() { }
 
   @Override
   public RProtocol[] getTypeIds() {

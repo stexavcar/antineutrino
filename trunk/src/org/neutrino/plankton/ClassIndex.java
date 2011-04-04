@@ -5,8 +5,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.neutrino.plankton.PlanktonEncoder.EnumEncoder;
 import org.neutrino.plankton.PlanktonEncoder.IObjectEncoder;
-import org.neutrino.plankton.PlanktonEncoder.ObjectEncoder;
+import org.neutrino.plankton.PlanktonEncoder.PojoEncoder;
 
 public class ClassIndex {
 
@@ -14,7 +15,10 @@ public class ClassIndex {
   private final List<IObjectEncoder> encoders = new ArrayList<IObjectEncoder>();
 
   public void add(Class<?> klass) {
-    ObjectEncoder encoder = new ObjectEncoder(klass);
+    @SuppressWarnings("unchecked")
+    IObjectEncoder encoder = klass.isEnum()
+        ? new EnumEncoder((Class<? extends Enum<?>>) klass)
+        : new PojoEncoder(klass);
     encoders.add(encoder);
     map.put(klass.getName(), encoder);
   }
