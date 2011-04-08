@@ -2,6 +2,7 @@ package org.javatrino.ast;
 
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RProtocol;
+import org.neutrino.runtime.RValue;
 
 public abstract class Test {
 
@@ -13,9 +14,9 @@ public abstract class Test {
 
   public static class Eq extends Test {
 
-    public @Store Object value;
+    public @Store RValue value;
 
-    public Eq(Object value) {
+    public Eq(RValue value) {
       assert value != null;
       this.value = value;
     }

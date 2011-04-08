@@ -226,7 +226,7 @@ public class Source {
       }
     }
 
-    private Pattern getNamePattern(String name) {
+    private Pattern getNamePattern(RValue name) {
       return new Pattern(Arrays.<Object>asList("name"), new Test.Eq(name), null);
     }
 
@@ -266,7 +266,7 @@ public class Source {
       CodeBundle bundle = Compiler.compile(module, Source.this, that.getBody(),
           that.getParameters());
       List<Pattern> signature = new ArrayList<Pattern>();
-      signature.add(getNamePattern(that.getMethodName()));
+      signature.add(getNamePattern(RString.of(that.getMethodName())));
       int index = 0;
       for (Parameter param : that.getParameters()) {
         signature.add(getParameterPattern(index, param));

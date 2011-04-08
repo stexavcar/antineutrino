@@ -141,12 +141,12 @@ public class Tree {
 
     private final List<Annotation> annots;
     private final RValue name;
-    private final String methodName;
+    private final RValue methodName;
     private final List<Parameter> params;
     private final Expression body;
     private RFunction materialized;
 
-    public Function(List<Annotation> annots, RValue name, String methodName,
+    public Function(List<Annotation> annots, RValue name, RValue methodName,
         List<Parameter> params, Expression body) {
       this.annots = annots;
       this.name = name;
@@ -170,7 +170,7 @@ public class Tree {
       return name;
     }
 
-    public String getMethodName() {
+    public RValue getMethodName() {
       return methodName;
     }
 
@@ -189,6 +189,11 @@ public class Tree {
 
     public Expression getBody() {
       return this.body;
+    }
+
+    @Override
+    public String toString() {
+      return "(fn " + getName() + " " + getMethodName() + " " + toString(this.params) + " " + this.body + ")";
     }
 
   }
@@ -1067,6 +1072,18 @@ public class Tree {
     buf.append("(").append(tag);
     for (Object obj : elms)
       buf.append(" ").append(obj);
+    return buf.append(")").toString();
+  }
+
+  static String toString(List<?> elms) {
+    StringBuilder buf = new StringBuilder();
+    buf.append("(");
+    boolean first = true;
+    for (Object obj : elms) {
+      if (first) first = false;
+      else buf.append(" ");
+      buf.append(obj);
+    }
     return buf.append(")").toString();
   }
 

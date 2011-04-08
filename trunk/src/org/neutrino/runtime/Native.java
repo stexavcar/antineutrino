@@ -481,18 +481,18 @@ public class Native {
   @Marker("apply") static final Impl APPLY = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RString name = (RString) args.getFunctionArgument(0);
+      RValue name = args.getFunctionArgument(0);
       RArray values = (RArray) args.getFunctionArgument(1);
       Universe universe = args.getUniverse();
       Stack<RValue> stack = new Stack<RValue>();
       int argc = values.getLength();
       for (int i = 0; i < argc; i++)
         stack.push(values.get(i));
-      Lambda method = universe.lookupMethod(name.getValue(), argc, stack);
+      Lambda method = universe.lookupMethod(name, argc, stack);
       if (method == null)
         throw new InterpreterError.MethodNotFound(args.frame);
       Frame trampoline = new Frame(args.frame, values.get(0),
-          new CodeBundle(TRAMPOLINE_CODE, Arrays.<Object>asList(name.getValue()),
+          new CodeBundle(TRAMPOLINE_CODE, Arrays.<Object>asList(name),
               0));
       trampoline.stack = stack;
       args.frame = new Frame(trampoline, values.get(0), method.getCode());

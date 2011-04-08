@@ -265,7 +265,7 @@ public class BytecodeCompiler extends Visitor {
       assert arg.tag.equals(i - 1);
       arg.value.accept(this);
     }
-    assm.call(name, args.size() - 1);
+    assm.call(RString.of(name), args.size() - 1);
   }
 
   @Override
@@ -333,7 +333,7 @@ public class BytecodeCompiler extends Visitor {
             Arrays.asList(
                 new Pattern(
                     Arrays.<Object>asList("name"),
-                    new Test.Eq("()"),
+                    new Test.Eq(RString.of("()")),
                     null),
                 new Pattern(
                     Arrays.<Object>asList(0),
