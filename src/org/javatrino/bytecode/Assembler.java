@@ -9,6 +9,7 @@ import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RValue;
+import org.neutrino.runtime.lookup.CallInfo;
 
 
 public class Assembler {
@@ -124,12 +125,12 @@ public class Assembler {
     add(elmc);
   }
 
-  public int call(RValue name, int argc) {
-    int nameIndex = registerLiteral(name);
+  public int call(CallInfo info) {
+    int infoIndex = registerLiteral(info);
     int result = getOffset();
     add(Opcode.kCall);
-    add(nameIndex);
-    add(argc);
+    add(infoIndex);
+    add(info.getArgumentCount());
     add(0xFF);
     return result;
   }
@@ -158,6 +159,7 @@ public class Assembler {
       index = literals.size();
       literals.add(obj);
     }
+    assert index < 128;
     return index;
   }
 

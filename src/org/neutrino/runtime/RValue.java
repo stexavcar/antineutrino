@@ -1,7 +1,7 @@
 package org.neutrino.runtime;
 
 
-public abstract class RValue {
+public abstract class RValue implements Comparable<RValue> {
 
   public enum State {
 
@@ -19,6 +19,13 @@ public abstract class RValue {
 
   }
 
+  /**
+   * This enum defines the sort order between values of different types.
+   */
+  public enum Kind {
+    INTEGER, STRING;
+  }
+
   public abstract RProtocol[] getTypeIds();
 
   public abstract State getState();
@@ -29,6 +36,15 @@ public abstract class RValue {
 
   public Object toObject() {
     return null;
+  }
+
+  public Kind getKind() {
+    return null;
+  }
+
+  @Override
+  public int compareTo(RValue that) {
+    throw new UnsupportedOperationException(this.getClass().getSimpleName());
   }
 
 }

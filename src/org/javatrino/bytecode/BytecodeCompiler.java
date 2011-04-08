@@ -7,6 +7,7 @@ import static org.javatrino.ast.Expression.StaticFactory.eNewObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
+import org.neutrino.runtime.lookup.CallInfo;
 
 public class BytecodeCompiler extends Visitor {
 
@@ -257,15 +259,17 @@ public class BytecodeCompiler extends Visitor {
   @Override
   public void visitCall(Call that) {
     List<Argument> args = that.arguments;
-    Argument nameArg = args.get(0);
-    assert nameArg.tag.equals("name");
-    String name = (String) ((Constant) nameArg.value).value;
-    for (int i = 1; i < args.size(); i++) {
+    List<CallInfo.ArgumentEntry> entries = new ArrayList<CallInfo.ArgumentEntry>(args.size());
+    for (int i = 0; i < args.size(); i++) {
       Argument arg = args.get(i);
-      assert arg.tag.equals(i - 1);
+      entries.add(new CallInfo.ArgumentEntry(arg.tag, null, i));
+    }
+    Collections.sort(entries);
+    for (int i = 0; i < args.size(); i++) {
+      Argument arg = args.get(i);
       arg.value.accept(this);
     }
-    assm.call(RString.of(name), args.size() - 1);
+    assm.call(new CallInfo(1, entries));
   }
 
   @Override
@@ -332,15 +336,15 @@ public class BytecodeCompiler extends Visitor {
             null,
             Arrays.asList(
                 new Pattern(
-                    Arrays.<Object>asList("name"),
+                    Arrays.<RValue>asList(RString.of("name")),
                     new Test.Eq(RString.of("()")),
                     null),
                 new Pattern(
-                    Arrays.<Object>asList(0),
+                    Arrays.<RValue>asList(RInteger.get(0)),
                     new Test.Any(),
                     new Symbol()),
                 new Pattern(
-                    Arrays.<Object>asList(1),
+                    Arrays.<RValue>asList(RInteger.get(1)),
                     new Test.Any(),
                     that.symbol)),
             false,

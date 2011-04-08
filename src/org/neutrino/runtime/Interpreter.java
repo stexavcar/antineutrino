@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.javatrino.ast.Method;
 import org.javatrino.bytecode.Opcode;
 import org.neutrino.pib.CodeBundle;
+import org.neutrino.runtime.lookup.CallInfo;
 
 public class Interpreter {
 
@@ -46,10 +47,10 @@ public class Interpreter {
   }
 
   private RValue interpret(CodeBundle code, RValue... args) {
-    Frame parent = new Frame(null, null, BOTTOM_FRAME_CODE);
+    Frame parent = new Frame(null, BOTTOM_FRAME_CODE);
     for (RValue arg : args)
       parent.stack.push(arg);
-    Frame frame = new Frame(parent, null, code);
+    Frame frame = new Frame(parent, code);
     return interpret(frame);
   }
 
@@ -57,11 +58,14 @@ public class Interpreter {
     return interpret(lambda.getCode(), args);
   }
 
+  private int count = 0;
   @SuppressWarnings("unchecked")
   private RValue interpret(Frame frame) {
     byte[] code = frame.bundle.getCode();
     while (true) {
       int opcode = code[frame.pc];
+      // System.out.println(count);
+      count++;
       switch (opcode) {
       case Opcode.kNull:
         frame.stack.push(RNull.getInstance());
@@ -76,30 +80,27 @@ public class Interpreter {
         frame.pc += 1;
         break;
       case Opcode.kCall: {
-        int nameIndex = code[frame.pc + 1];
-        RValue name = (RValue) frame.getLiteral(nameIndex);
-        int argc = code[frame.pc + 2];
-        RValue self = frame.getArgument(argc, 0);
-        Lambda lambda = frame.lookupMethod(name, argc);
+        int infoIndex = code[frame.pc + 1];
+        CallInfo info = (CallInfo) frame.getLiteral(infoIndex);
+        Lambda lambda = frame.lookupMethod(info);
         if (lambda == null) {
-          frame.lookupMethod(name, argc);
+          frame.lookupMethod(info);
           throw new InterpreterError.MethodNotFound(frame);
         }
         CodeBundle bundle = lambda.getCode();
-        frame = new Frame(frame, self, bundle);
+        frame = new Frame(frame, bundle);
         code = bundle.getCode();
         break;
       }
       case Opcode.kWithEscape: {
         int argc = code[frame.pc + 2];
         RContinuation cont = new RContinuation();
-        RValue self = frame.stack.peek();
         frame.stack.push(cont);
         Lambda lambda = frame.lookupMethod(CALL_NAME, argc);
         if (lambda == null)
           throw new InterpreterError.MethodNotFound(frame);
         CodeBundle bundle = lambda.getCode();
-        frame = new Frame(frame, self, bundle);
+        frame = new Frame(frame, bundle);
         code = bundle.getCode();
         frame.marker = cont;
         break;
@@ -120,6 +121,7 @@ public class Interpreter {
         RValue value = frame.stack.pop();
         frame = frame.parent.parent;
         code = frame.bundle.getCode();
+        frame.stack.pop();
         frame.stack.pop();
         frame.stack.pop();
         frame.stack.pop();
