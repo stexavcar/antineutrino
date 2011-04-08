@@ -19,6 +19,7 @@ import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFunction;
+import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
@@ -227,7 +228,7 @@ public class Source {
     }
 
     private Pattern getNamePattern(RValue name) {
-      return new Pattern(Arrays.<Object>asList("name"), new Test.Eq(name), null);
+      return new Pattern(Arrays.<RValue>asList(RString.of("name")), new Test.Eq(name), null);
     }
 
     private Pattern getParameterPattern(int index, Parameter param) {
@@ -239,7 +240,8 @@ public class Source {
       } else {
         test = new Is(param.ensureProtocol(module));
       }
-      Pattern pattern = new Pattern(Arrays.<Object>asList(index), test, param.getSymbol());
+      Pattern pattern = new Pattern(Arrays.<RValue>asList(RInteger.get(index)),
+          test, param.getSymbol());
       return pattern;
     }
 
@@ -248,7 +250,7 @@ public class Source {
       resolveAnnotations(that.getAnnotations(), module.getAnnotations(that.getName()));
       List<Pattern> signature = new ArrayList<Pattern>();
       signature.add(getNamePattern(that.getMethodName()));
-      signature.add(new Pattern(Arrays.<Object>asList(0),
+      signature.add(new Pattern(Arrays.<RValue>asList(RInteger.get(0)),
           new Eq(that.getMaterialized()),
           null));
       int index = 1;

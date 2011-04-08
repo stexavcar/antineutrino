@@ -18,7 +18,9 @@ import org.javatrino.ast.Test.Is;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFieldKey;
+import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RString;
+import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Internal;
 
@@ -36,25 +38,27 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     return null;
   }
 
-  private static List<Object> asList(Object... args) {
+  private static List<RValue> asList(RValue... args) {
     return Arrays.asList(args);
   }
 
   private Method makeGetter(String name, RFieldKey key) {
-    Pattern namePattern = new Pattern(asList("name"), new Eq(RString.of(name)), null);
+    Pattern namePattern = new Pattern(asList(RString.of("name")),
+        new Eq(RString.of(name)), null);
     Symbol self = new Symbol(Symbol.kParameterSymbol);
-    Pattern selfPattern = new Pattern(asList(0), new Any(), self);
+    Pattern selfPattern = new Pattern(asList(RInteger.get(0)), new Any(), self);
     Expression body = eGetField(eLocal(self), key);
     return new Method(null, Arrays.asList(namePattern, selfPattern), false, body,
         null, module);
   }
 
   private Method makeSetter(String name, RFieldKey key) {
-    Pattern namePattern = new Pattern(asList("name"), new Eq(RString.of(name)), null);
+    Pattern namePattern = new Pattern(asList(RString.of("name")),
+        new Eq(RString.of(name)), null);
     Symbol self = new Symbol(Symbol.kParameterSymbol);
-    Pattern selfPattern = new Pattern(asList(0), new Any(), self);
+    Pattern selfPattern = new Pattern(asList(RInteger.get(0)), new Any(), self);
     Symbol value = new Symbol(Symbol.kParameterSymbol);
-    Pattern valuePattern = new Pattern(asList(1), new Any(), value);
+    Pattern valuePattern = new Pattern(asList(RInteger.get(1)), new Any(), value);
     Expression body = eSetField(eLocal(self), key, eLocal(value));
     return new Method(null, Arrays.asList(namePattern, selfPattern, valuePattern),
         false, body, null, module);
@@ -75,9 +79,9 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
         intrinsics.add(makeGetter(field.getName(), key));
         intrinsics.add(makeSetter(field.getName() + ":=", key));
       } else {
-        Pattern namePattern = new Pattern(asList("name"), new Eq(RString.of(field.getName())), null);
+        Pattern namePattern = new Pattern(asList(RString.of("name")), new Eq(RString.of(field.getName())), null);
         Symbol self = new Symbol(Symbol.kImplicitThis);
-        Pattern selfPattern = new Pattern(asList(0), new Any(), self);
+        Pattern selfPattern = new Pattern(asList(RInteger.get(0)), new Any(), self);
         List<Pattern> patterns = new ArrayList<Pattern>();
         patterns.add(namePattern);
         patterns.add(selfPattern);
@@ -89,7 +93,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
           } else {
             test = new Is(param.ensureProtocol(module));
           }
-          patterns.add(new Pattern(asList(index), test, param.getSymbol()));
+          patterns.add(new Pattern(asList(RInteger.get(index)), test, param.getSymbol()));
           index++;
         }
         Method method = new Method(null, patterns, false, body, null, module);
@@ -118,8 +122,8 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     if (symbol == null) {
       return eGlobal(that.getName());
     } else if (that.isReference()) {
-      return eCall(eArgument("name", eConstant("get")),
-          eArgument(0, eLocal(symbol)));
+      return eCall(eArgument(RString.of("name"), eConstant("get")),
+          eArgument(RInteger.get(0), eLocal(symbol)));
     } else {
       return eLocal(symbol);
     }
@@ -128,9 +132,9 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   @Override
   public Expression visitAssignment(Tree.Assignment that) {
     Expression value = generate(that.getValue());
-    return eCall(eArgument("name", eConstant("set")),
-        eArgument(0, eLocal(that.getSymbol())),
-        eArgument(1, value));
+    return eCall(eArgument(RString.of("name"), eConstant("set")),
+        eArgument(RInteger.get(0), eLocal(that.getSymbol())),
+        eArgument(RInteger.get(1), value));
   }
 
   @Override
@@ -138,9 +142,9 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Expression value = generate(that.getValue());
     Expression body = generate(that.getBody());
     if (that.isReference()) {
-      value = eCall(eArgument("name", eConstant("new")),
-          eArgument(0, eGlobal(RString.of("Ref"))),
-          eArgument(1, value));
+      value = eCall(eArgument(RString.of("name"), eConstant("new")),
+          eArgument(RInteger.get(0), eGlobal(RString.of("Ref"))),
+          eArgument(RInteger.get(1), value));
     }
     return eDefinition(that.getSymbol(), value, body);
   }
@@ -204,11 +208,11 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   public Expression visitCall(Tree.Call that) {
     List<Call.Argument> arguments = new ArrayList<Call.Argument>();
     String name = that.getName();
-    arguments.add(eArgument("name", eConstant(name)));
+    arguments.add(eArgument(RString.of("name"), eConstant(name)));
     int index = 0;
     for (Tree.Expression source : that.getArguments()) {
       Expression expr = generate(source);
-      arguments.add(eArgument(index, expr));
+      arguments.add(eArgument(RInteger.get(index), expr));
       index++;
     }
     return eCall(arguments);

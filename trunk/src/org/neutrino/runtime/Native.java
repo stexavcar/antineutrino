@@ -4,8 +4,11 @@ import java.io.File;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
@@ -13,6 +16,7 @@ import org.javatrino.bytecode.Opcode;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Universe;
 import org.neutrino.plankton.Store;
+import org.neutrino.runtime.lookup.CallInfo;
 
 public class Native {
 
@@ -483,19 +487,28 @@ public class Native {
     public RValue call(Arguments args) {
       RValue name = args.getFunctionArgument(0);
       RArray values = (RArray) args.getFunctionArgument(1);
+      int argc = values.getLength();
+      List<CallInfo.ArgumentEntry> entries = new ArrayList<CallInfo.ArgumentEntry>();
+      entries.add(new CallInfo.ArgumentEntry(RString.of("name"), null,
+          0));
+      for (int i = 0; i < argc; i++) {
+        entries.add(new CallInfo.ArgumentEntry(RInteger.get(i), null, i + 1));
+      }
+      Collections.sort(entries);
+      CallInfo info = new CallInfo(1, entries);
       Universe universe = args.getUniverse();
       Stack<RValue> stack = new Stack<RValue>();
-      int argc = values.getLength();
+      stack.push(name);
       for (int i = 0; i < argc; i++)
         stack.push(values.get(i));
-      Lambda method = universe.lookupMethod(name, argc, stack);
+      Lambda method = universe.lookupMethod(info, stack);
       if (method == null)
         throw new InterpreterError.MethodNotFound(args.frame);
-      Frame trampoline = new Frame(args.frame, values.get(0),
+      Frame trampoline = new Frame(args.frame,
           new CodeBundle(TRAMPOLINE_CODE, Arrays.<Object>asList(name),
               0));
       trampoline.stack = stack;
-      args.frame = new Frame(trampoline, values.get(0), method.getCode());
+      args.frame = new Frame(trampoline, method.getCode());
       return null;
     }
   };

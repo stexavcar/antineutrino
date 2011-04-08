@@ -30,6 +30,7 @@ import org.neutrino.runtime.RPrimitiveArray;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
+import org.neutrino.runtime.lookup.CallInfo;
 import org.neutrino.syntax.Annotation;
 
 /**
@@ -107,6 +108,11 @@ public class Universe {
   public Lambda lookupMethod(RValue name, int argc, Stack<RValue> stack) {
     return methodLookupHelper.lookupMethod(name, argc, stack);
   }
+
+  public Lambda lookupMethod(CallInfo info, Stack<RValue> stack) {
+    return methodLookupHelper.lookupMethod(info, stack);
+  }
+
 
   public Lambda getLambda(RValue function, RValue... args) {
     return methodLookupHelper.lookupLambda(function, args);

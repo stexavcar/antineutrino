@@ -90,10 +90,10 @@ public abstract class Expression {
 
     public static class Argument {
 
-      public @Store Object tag;
+      public @Store RValue tag;
       public @Store Expression value;
 
-      private Argument(Object tag, Expression value) {
+      private Argument(RValue tag, Expression value) {
         this.tag = tag;
         this.value = value;
       }
@@ -513,7 +513,7 @@ public abstract class Expression {
       return new Block(values);
     }
 
-    public static Call.Argument eArgument(Object tag, Expression value) {
+    public static Call.Argument eArgument(RValue tag, Expression value) {
       return new Call.Argument(tag, value);
     }
 

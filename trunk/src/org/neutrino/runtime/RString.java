@@ -58,4 +58,18 @@ public class RString extends RValue {
     return State.IMMUTABLE;
   }
 
+  @Override
+  public Kind getKind() {
+    return Kind.STRING;
+  }
+
+  @Override
+  public int compareTo(RValue that) {
+    if (that instanceof RString) {
+      return this.value.compareTo(((RString) that).value);
+    } else {
+      return this.getKind().compareTo(that.getKind());
+    }
+  }
+
 }

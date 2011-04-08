@@ -55,4 +55,18 @@ public class RInteger extends RValue {
     return State.IMMUTABLE;
   }
 
+  @Override
+  public Kind getKind() {
+    return Kind.INTEGER;
+  }
+
+  @Override
+  public int compareTo(RValue that) {
+    if (that instanceof RInteger) {
+      return this.value - ((RInteger) that).value;
+    } else {
+      return this.getKind().compareTo(that.getKind());
+    }
+  }
+
 }

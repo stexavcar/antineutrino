@@ -3,6 +3,7 @@ package org.neutrino.runtime;
 import java.util.Stack;
 
 import org.neutrino.pib.CodeBundle;
+import org.neutrino.runtime.lookup.CallInfo;
 
 public class Frame {
 
@@ -10,12 +11,10 @@ public class Frame {
   public Stack<RValue> stack = new Stack<RValue>();
   public final CodeBundle bundle;
   public final Frame parent;
-  public final RValue holder;
   public RContinuation marker;
 
-  public Frame(Frame parent, RValue holder, CodeBundle code) {
+  public Frame(Frame parent, CodeBundle code) {
     this.parent = parent;
-    this.holder = holder;
     this.bundle = code;
     for (int i = 0; i < code.getLocalCount(); i++)
       stack.push(RNull.getInstance());
@@ -31,6 +30,10 @@ public class Frame {
 
   public Lambda lookupMethod(RValue name, int argc) {
     return bundle.module.universe.lookupMethod(name, argc, this.stack);
+  }
+
+  public Lambda lookupMethod(CallInfo info) {
+    return bundle.module.universe.lookupMethod(info, this.stack);
   }
 
   public RValue peekArgument(int index) {
