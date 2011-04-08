@@ -90,6 +90,7 @@ public class PlanktonTest extends TestCase {
       this.y = y;
     }
 
+    @SuppressWarnings("unused")
     public Point() { }
 
   }
@@ -104,6 +105,7 @@ public class PlanktonTest extends TestCase {
       this.bottom_right = bottom_right;
     }
 
+    @SuppressWarnings("unused")
     public Rect() { }
 
   }

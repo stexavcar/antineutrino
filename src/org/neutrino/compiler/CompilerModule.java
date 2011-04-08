@@ -20,7 +20,6 @@ public class CompilerModule {
   private final String name;
   private final Map<String, CompilerModule> modules = new TreeMap<String, CompilerModule>();
   private final Map<String, Source> sources = new TreeMap<String, Source>();
-  private Source manifest;
 
   private CompilerModule(String name) {
     this.name = name;
