@@ -124,7 +124,7 @@ public class Assembler {
     add(elmc);
   }
 
-  public int call(String name, int argc) {
+  public int call(RValue name, int argc) {
     int nameIndex = registerLiteral(name);
     int result = getOffset();
     add(Opcode.kCall);

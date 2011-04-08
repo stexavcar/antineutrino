@@ -11,6 +11,8 @@ import java.util.Map;
 
 import junit.framework.TestCase;
 
+import org.neutrino.pib.Universe;
+
 public class PlanktonTest extends TestCase {
 
   private class PlanktonHelper {
@@ -20,7 +22,7 @@ public class PlanktonTest extends TestCase {
 
     public PlanktonHelper(ClassIndex index) {
       this.index = index;
-      this.out = new PlanktonEncoder(index);
+      this.out = new PlanktonEncoder(index, Universe.getBuiltinIndex());
     }
 
     public PlanktonHelper() {
@@ -29,13 +31,11 @@ public class PlanktonTest extends TestCase {
 
     public Object readBack() throws IOException {
       InputStream in = new ByteArrayInputStream(out.getBytes());
-      return new PlanktonDecoder(index, in).read();
+      return new PlanktonDecoder(index, Universe.getBuiltinIndex(), in).read();
     }
 
     private Object encdec(Object value) throws IOException {
       out.write(value);
-      byte[] bytes = out.getBytes();
-      System.out.println(value + ": " + bytes.length);
       return readBack();
     }
 

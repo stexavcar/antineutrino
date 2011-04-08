@@ -14,6 +14,8 @@ import org.neutrino.pib.CodeBundle;
 
 public class Interpreter {
 
+  private static final RString CALL_NAME = RString.of("()");
+
   private static final CodeBundle BOTTOM_FRAME_CODE = new CodeBundle(
       new byte[] { Opcode.kCall, 0, 0, 0, Opcode.kTerminate },
       Collections.<Object>emptyList(),
@@ -75,7 +77,7 @@ public class Interpreter {
         break;
       case Opcode.kCall: {
         int nameIndex = code[frame.pc + 1];
-        String name = (String) frame.getLiteral(nameIndex);
+        RValue name = (RValue) frame.getLiteral(nameIndex);
         int argc = code[frame.pc + 2];
         RValue self = frame.getArgument(argc, 0);
         Lambda lambda = frame.lookupMethod(name, argc);
@@ -89,12 +91,11 @@ public class Interpreter {
         break;
       }
       case Opcode.kWithEscape: {
-        String name = "()";
         int argc = code[frame.pc + 2];
         RContinuation cont = new RContinuation();
         RValue self = frame.stack.peek();
         frame.stack.push(cont);
-        Lambda lambda = frame.lookupMethod(name, argc);
+        Lambda lambda = frame.lookupMethod(CALL_NAME, argc);
         if (lambda == null)
           throw new InterpreterError.MethodNotFound(frame);
         CodeBundle bundle = lambda.getCode();

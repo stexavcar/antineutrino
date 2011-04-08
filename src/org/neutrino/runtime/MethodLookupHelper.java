@@ -29,7 +29,7 @@ public class MethodLookupHelper {
     this.universe = universe;
   }
 
-  public Method lookupIntrinsic(String name, int argc, Stack<RValue> stack) {
+  public Method lookupIntrinsic(RValue name, int argc, Stack<RValue> stack) {
     RValue recv = stack.get(stack.size() - argc);
     if (!(recv instanceof RObject))
       return null;
@@ -45,7 +45,7 @@ public class MethodLookupHelper {
     return null;
   }
 
-  public Lambda lookupMethod(String name, int argc, Stack<RValue> stack) {
+  public Lambda lookupMethod(RValue name, int argc, Stack<RValue> stack) {
     Method intrinsic = lookupIntrinsic(name, argc, stack);
     if (intrinsic != null)
       return new Lambda(intrinsic.module, intrinsic.getBundle());
@@ -63,7 +63,7 @@ public class MethodLookupHelper {
     fakeFrame.stack.push(holder);
     for (RValue arg : args)
       fakeFrame.stack.push(arg);
-    return lookupMethod("()", 1 + args.length, fakeFrame.stack);
+    return lookupMethod(RString.of("()"), 1 + args.length, fakeFrame.stack);
   }
 
   private static class MethodCache {
@@ -85,9 +85,9 @@ public class MethodLookupHelper {
 
   }
 
-  private final Map<String, MethodCache> methodCache = new HashMap<String, MethodCache>();
+  private final Map<RValue, MethodCache> methodCache = new HashMap<RValue, MethodCache>();
 
-  private List<Method> getAllMethods(String name, int argc) {
+  private List<Method> getAllMethods(RValue name, int argc) {
     MethodCache cache = methodCache.get(name);
     if (cache == null) {
       cache = new MethodCache();
@@ -102,24 +102,24 @@ public class MethodLookupHelper {
     return result;
   }
 
-  private void addMethods(List<Method> methods, String name,
+  private void addMethods(List<Method> methods, RValue name,
       int argc, Universe universe) {
     for (Module module : universe.modules.values()) {
       for (Method method : module.methods) {
         Test.Eq test = (Test.Eq) method.signature.get(0).test;
-        String methodName = (String) test.value;
+        RValue methodName = test.value;
         if (methodName.equals(name) && (method.signature.size() - 1) == argc)
           methods.add(method);
       }
     }
   }
 
-  private Method findPerfectMatch(String name, int argc,
+  private Method findPerfectMatch(RValue name, int argc,
       Stack<RValue> stack) {
     return null;
   }
 
-  private Method findApproximateMatch(String name, int argc,
+  private Method findApproximateMatch(RValue name, int argc,
       Stack<RValue> stack) {
     bestMethod = null;
     if (scoreVectorSize < argc) {

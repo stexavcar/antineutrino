@@ -104,7 +104,7 @@ public class Universe {
       module.addParents(out, id);
   }
 
-  public Lambda lookupMethod(String name, int argc, Stack<RValue> stack) {
+  public Lambda lookupMethod(RValue name, int argc, Stack<RValue> stack) {
     return methodLookupHelper.lookupMethod(name, argc, stack);
   }
 

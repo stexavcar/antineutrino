@@ -90,13 +90,12 @@ public class ScannerTest extends TestCase {
   }
 
   public void testComments() {
-    scannerTest("(* foo *) + (* bar *) - (* baz *)", op("+"), op("-"));
-    scannerTest("foo (*) bar", ident("foo"), ident("bar"));
-    scannerTest("((", LPAREN, LPAREN);
-    scannerTest("(", LPAREN);
-    scannerTest("(*");
-    scannerTest("(**");
-    scannerTest("(**)");
+    scannerTest("/* foo */ + /* bar */ - /* baz */", op("+"), op("-"));
+    scannerTest("foo /*/ bar", ident("foo"), ident("bar"));
+    scannerTest("/", op("/"));
+    scannerTest("/*");
+    scannerTest("/**");
+    scannerTest("/**/");
   }
 
 }

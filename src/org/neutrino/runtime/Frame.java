@@ -29,7 +29,7 @@ public class Frame {
     return stack.get(stack.size() - argc + index);
   }
 
-  public Lambda lookupMethod(String name, int argc) {
+  public Lambda lookupMethod(RValue name, int argc) {
     return bundle.module.universe.lookupMethod(name, argc, this.stack);
   }
 
