@@ -22,10 +22,10 @@ def (this is CompilerTest).test_cascade_layout() {
   this.on_start("cascade layout");
   def layout := new Layouter();
   layout.add_section("s0", null, 1, 64);
-  for (i : 16 .. 0)
+  for (i in 16 .. 0)
     layout.add_section("s${i}", "s${i-1}", 1, 64);
   layout.calculate();
-  for (i : 0 .. 17) {
+  for (i in 0 .. 17) {
     def info := layout.info("s${i}");
     assert_equal(i * 64, info.start);
     assert_equal(64, info.size);

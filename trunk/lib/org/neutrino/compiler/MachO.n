@@ -102,7 +102,7 @@ def (this is MachO).calculate_layout() {
   layout.next_section(MachO.commands_start_marker, 0, 1);
   layout.next_section(MachO.segment_command_name,
       MachO.sizeof_segment_command, WORD_SIZE);
-  for (section : this.sections) {
+  for (section in this.sections) {
     layout.next_section(section.header_name,
         MachO.section_header_size, WORD_SIZE);
   }
@@ -114,7 +114,7 @@ def (this is MachO).calculate_layout() {
   layout.next_section(MachO.commands_end_marker, 0, 1);
   // Add sections
   layout.next_section(MachO.segments_start_marker, 0, 1);
-  for (section : this.all_sections) {
+  for (section in this.all_sections) {
     def name := section.name;
     def alignment := 1 << section.align;
     layout.next_section(section.name, section.size, alignment);
@@ -188,13 +188,13 @@ def (this is MachORelocationTable).add_entry(entry) {
 }
 
 def (this is MachORelocationTable).encode(out, macho) {
-  for (entry : this.entries)
+  for (entry in this.entries)
     entry.encode(out, macho);
 }
 
 def (this is MachORelocationTable).count_for(section) {
   ref result := 0;
-  for (entry : this.entries) {
+  for (entry in this.entries) {
     if entry.affects(section)
       then result := result + 1;
   }
@@ -238,7 +238,7 @@ def (this is MachOJumpTable).align => 0;
 def (this is MachOJumpTable).nreloc => 0;
 
 def (this is MachOJumpTable).encode(out, macho) {
-  for (i : 0 .. this.size)
+  for (i in 0 .. this.size)
     out.write_int8(16rF4); // HLT
 }
 
@@ -355,7 +355,7 @@ def (this is MachOCStringSection).ensure(str) {
 }
 
 def (this is MachOCStringSection).encode(out, macho) {
-  for (str : this.order)
+  for (str in this.order)
     out.write_c_string(str);
 }
 
@@ -391,13 +391,13 @@ def (this is MachOStringTable).ensure(name) {
 def (this is MachOStringTable)[name] => this.string_map[name];
 
 def (this is MachOStringTable).encode(out, macho) {
-  for (str : this.strings)
+  for (str in this.strings)
     out.write_c_string(str);
 }
 
 def (this is MachOStringTable).size {
   ref result := 0;
-  for (str : this.strings)
+  for (str in this.strings)
     result := result + str.length + 1;
   result;
 }
@@ -421,7 +421,7 @@ def (this is IndirectSymbols).align => WORD_ALIGN;
 def (this is IndirectSymbols).add() => this.count := (this.count + 1);
 
 def (this is IndirectSymbols).encode(out, macho) {
-  for (i : 0 .. this.count)
+  for (i in 0 .. this.count)
     out.write_int32(i);
 }
 
@@ -471,7 +471,7 @@ def (this is MachOSymbolTable).length => this.symbols.length;
 def (this is MachOSymbolTable).symbols => this.locals + this.externs;
 
 def (this is MachOSymbolTable).encode(out, macho) {
-  for (symbol : this.externs + this.locals)
+  for (symbol in this.externs + this.locals)
     symbol.encode(out, macho);
 }
 
@@ -640,7 +640,7 @@ def (this is MachO).encode_segment_command(out) {
  * }
  */
 def (this is MachO).encode_section_headers(out) {
-  for (section : this.sections) {
+  for (section in this.sections) {
     def header_info := this.layout.info(section.header_name);
     def section_info := this.layout.info(section.name);
     assert_equal(header_info.start, out.length);
@@ -665,7 +665,7 @@ def (this is MachO).encode_section_headers(out) {
 def (this is MachO).all_sections => this.sections + this.dark_sections;
 
 def (this is MachO).encode_sections(out) {
-  for (section : this.all_sections) {
+  for (section in this.all_sections) {
     def info := this.layout.info(section.name);
     assert_true(out.length <= info.start);
     out.pad_to(info.start);
@@ -678,7 +678,7 @@ def (this is MachO).encode_sections(out) {
 def (this is MachO).index_of(target) {
   ref offset := 1;
   with_escape (yield) {
-    for (section : this.all_sections) {
+    for (section in this.all_sections) {
       if section = target
         then yield(offset);
       offset := offset + 1;

@@ -20,7 +20,7 @@ def test_main() {
     new CompilerTest(counter),
     new PlanktonTest(counter)
   ];
-  for (i : 0 .. suites.length)
+  for (i in 0 .. suites.length)
     suites[i].run();
   print("Ran ${counter.get()} tests.");
 }

@@ -4,7 +4,7 @@ protocol Random {
    => Math.abs(this.next()) % limit;
 
   def this.next_bytes(data) {
-    for (i : 0 .. data.length)
+    for (i in 0 .. data.length)
       data[i] := this.next(256);
   }
   

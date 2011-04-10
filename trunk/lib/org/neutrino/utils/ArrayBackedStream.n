@@ -5,7 +5,7 @@ protocol ArrayBackedStream {
   def this.extend_capacity(capacity) {
     def old_contents := this.data;
     def new_contents := this.new_backing_array(capacity * 2);
-    for (i : 0 .. this.length)
+    for (i in 0 .. this.length)
       new_contents[i] := old_contents[i];
     this.data := new_contents;
   }

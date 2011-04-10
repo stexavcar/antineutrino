@@ -30,7 +30,7 @@ protocol List is Sequence {
 
   @static def List.new(coll is Sequence) {
     ref result := List.empty;
-    for (elm : coll)
+    for (elm in coll)
       result := List.cons(elm, result);
     result.reverse();
   }

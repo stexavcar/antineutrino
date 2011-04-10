@@ -25,7 +25,7 @@ protocol CodeGenerator {
    * For most expressions add_locals does nothing.
    */
   def this.add_locals(node) {
-    for (child : node)
+    for (child in node)
       this.add_locals(child);
   }
 
@@ -35,7 +35,7 @@ protocol CodeGenerator {
   def this.add_locals(node is DefExpr) {
     def index := this.locals.size;
     this.locals[node.symbol] := index;
-    for (child : node)
+    for (child in node)
       this.add_locals(child);
   }
 
@@ -76,7 +76,7 @@ protocol CodeGenerator {
   def this.emit_c_call(node, target) {
     def argc := node.arguments.length;
     // Push arguments onto the stack
-    for (i : 0 .. argc)
+    for (i in 0 .. argc)
       this.emit(node.arguments[i]);
     // Call the function
     this.assm.call(Symbol.local(target));
@@ -94,7 +94,7 @@ protocol CodeGenerator {
 
   def this.emit(node is BlockExpr) {
     ref has_prev := false;
-    for (value : node.values) {
+    for (value in node.values) {
       if has_prev
         then this.assm.pop(rEbx);
       this.emit(value);
@@ -136,7 +136,7 @@ protocol CodeGenerator {
     } else {
       def arg_index := with_escape (yield) {
         ref index := this.method.signature.length;
-        for (param : this.method.signature) {
+        for (param in this.method.signature) {
           if param.symbol = node.symbol
             then yield(index);
           index := index - 1;

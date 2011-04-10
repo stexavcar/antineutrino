@@ -6,7 +6,7 @@ def (this is PlanktonTest).test_low_level_codec() {
 }
 
 def (this is LowLevelEncoder).write(elms is PrimitiveArray) {
-  for (elm : elms)
+  for (elm in elms)
     this.write(elm);
 }
 
@@ -33,15 +33,15 @@ def (this is PlanktonTest).test_random_byte_encoding() {
   def value_count := 64;
   def iteration_count := 8;
   def data := new PrimitiveByteArray(value_count);
-  for (i : 0 .. iteration_count) {
+  for (i in 0 .. iteration_count) {
     def encoder := new LowLevelEncoder();
     random.next_bytes(data);
-    for (j : 0 .. value_count)
+    for (j in 0 .. value_count)
       encoder.write(data[j]);
     def result := encoder.to_blob();
     def decoder := new LowLevelDecoder(new BlobInputStream(result));
     def found := new PrimitiveByteArray(value_count);
-    for (j : 0 .. value_count) {
+    for (j in 0 .. value_count) {
       found[j] := decoder.read();
     }
     assert_equal(data, found);
@@ -53,14 +53,14 @@ def (this is PlanktonTest).test_unsigned_long_encoding() {
   def random := new Random(1129);
   def encoder := new LowLevelEncoder();
   def numbers := new ArrayList();
-  for (i : 0 .. 64) {
+  for (i in 0 .. 64) {
     def value := Math.abs(random.next());
     numbers.add(value);
     encoder.write_unsigned(value);
   }
   def result := encoder.to_blob();
   def decoder := new LowLevelDecoder(new BlobInputStream(result));
-  for (i : 0 .. 64) {
+  for (i in 0 .. 64) {
     assert_equal(numbers[i], decoder.read_unsigned());
   }
 }
@@ -70,14 +70,14 @@ def (this is PlanktonTest).test_signed_long_encoding() {
   def random := new Random(1129);
   def encoder := new LowLevelEncoder();
   def numbers := new ArrayList();
-  for (i : 0 .. 64) {
+  for (i in 0 .. 64) {
     def value := random.next() >> 1;
     numbers.add(value);
     encoder.write_signed(value);
   }
   def result := encoder.to_blob();
   def decoder := new LowLevelDecoder(new BlobInputStream(result));
-  for (i : 0 .. 64) {
+  for (i in 0 .. 64) {
     assert_equal(numbers[i], decoder.read_signed());
   }
 }

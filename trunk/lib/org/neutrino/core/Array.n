@@ -14,16 +14,16 @@ protocol PrimitiveCollection {
 
   def this+(that is PrimitiveArray) {
     def result := new PrimitiveArray(this.length + that.length);
-    for (i : 0 .. this.length)
+    for (i in 0 .. this.length)
       result[i] := this[i];
-    for (i : 0 .. that.length)
+    for (i in 0 .. that.length)
       result[this.length + i] := that[i];
     result;
   }
 
   def this=(that is PrimitiveArray)
    => (this.length = that.length) and (with_escape (yield) {
-     for (i : 0 .. this.length) {
+     for (i in 0 .. this.length) {
        if this[i] != that[i]
          then yield(false);
      }
@@ -31,14 +31,14 @@ protocol PrimitiveCollection {
    });
 
   def this.for(fun) {
-    for (i : 0 .. this.length)
+    for (i in 0 .. this.length)
       fun(this[i]);
   }
 
   def this[slice is Interval] {
     def a := new PrimitiveArray(Math.abs(slice.to - slice.from));
     ref i := 0;
-    for (idx : slice) {
+    for (idx in slice) {
       a[i] := this[idx];
       i := i + 1;
     }

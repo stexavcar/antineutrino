@@ -66,7 +66,7 @@ def (this is Layouter).next_section(id, size, alignment) {
 
 def (this is Layouter).roots {
   def roots := new ArrayList();
-  for (section : this.sections) {
+  for (section in this.sections) {
     if section.prev = null
       then roots.add(section);
   }
@@ -77,7 +77,7 @@ def (this is Layouter).visit_section(sect, visited, fun) {
   if visited[sect.id] = null then {
     visited[sect.id] = true;
     fun(sect);
-    for (candidate : this.sections) {
+    for (candidate in this.sections) {
       if candidate.prev = sect.id
         then this.visit_section(candidate, visited, fun);
     }
@@ -88,14 +88,14 @@ def (this is Layouter).visit_section(sect, visited, fun) {
 // specified by the individual sections.
 def (this is Layouter).ordered_sections => fn for (fun) {
   def visited := new HashMap();
-  for (root : this.roots)
+  for (root in this.roots)
     this.visit_section(root, visited, fun);
 }
 
 // Calculate layout information for all the registered sections.
 def (this is Layouter).calculate() {
   ref offset := 0;
-  for (section : this.ordered_sections) {
+  for (section in this.ordered_sections) {
     def aligned_offset := align(offset, section.alignment);
     def aligned_size := align(section.size, section.alignment);
     section.info := new LayoutInfo(section, aligned_offset, aligned_size);
@@ -104,7 +104,7 @@ def (this is Layouter).calculate() {
 }
 
 def (this is Layouter).dump() {
-  for (sect : this.ordered_sections) {
+  for (sect in this.ordered_sections) {
     def info := sect.info;
     if info = null
       then print("${sect.id}[${sect.size}]");

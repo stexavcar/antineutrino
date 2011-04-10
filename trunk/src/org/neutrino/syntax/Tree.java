@@ -656,23 +656,19 @@ public class Tree {
       return create(source, NAME, params, body, functionName);
     }
 
-    public static Expression createCall(Expression fun, List<Expression> args) {
-      List<Expression> allArgs = new ArrayList<Expression>();
-      allArgs.add(fun);
-      allArgs.addAll(args);
-      return new Call(NAME, allArgs);
-    }
-
   }
 
   public static class If {
 
     public static Expression create(Source source, Expression cond,
         Expression thenPart, Tree.Expression elsePart) {
-      return new Call("if", Arrays.asList(new Identifier(RString.of("Control")), cond,
-          Lambda.create(source, Collections.<Parameter> emptyList(), thenPart,
-              "then"), Lambda.create(source,
-              Collections.<Parameter> emptyList(), elsePart, "else")));
+      return new Call("if", Arrays.asList(
+          new Argument(RInteger.get(0), new Identifier(RString.of("Control"))),
+          new Argument(RInteger.get(1), cond),
+          new Argument(RInteger.get(2),
+              Lambda.create(source, Collections.<Parameter> emptyList(), thenPart, "then")),
+          new Argument(RInteger.get(3), Lambda.create(source,
+              Collections.<Parameter> emptyList(), elsePart, "else"))));
     }
 
   }
@@ -712,7 +708,7 @@ public class Tree {
     }
 
     public static Expression create(Source source, String name, Expression body) {
-      Parameter param = new Parameter(name, null, false);
+      Parameter param = new Parameter(name, RInteger.get(0), null, false);
       Expression lambda = Lambda.create(source,
           Collections.singletonList(param), body, "with_escape");
       return new WithEscape(body, lambda, param.getSymbol());
@@ -720,20 +716,40 @@ public class Tree {
 
   }
 
+  public static class Argument {
+
+    private final RValue keyword;
+    private final Expression value;
+
+    public Argument(RValue keyword, Expression value) {
+      this.keyword = keyword;
+      this.value = value;
+    }
+
+    public RValue getKeyword() {
+      return keyword;
+    }
+
+    public Expression getValue() {
+      return value;
+    }
+
+  }
+
   public static class Call extends Expression {
 
     private final String name;
-    private final List<Expression> args;
+    private final List<Argument> args;
 
-    public Call(String name, List<Expression> args) {
+    public Call(String name, List<Argument> args) {
       this.name = name;
       this.args = args;
     }
 
     @Override
     public void traverse(ExpressionVisitor<?> visitor) {
-      for (Expression arg : args)
-        arg.accept(visitor);
+      for (Argument arg : args)
+        arg.value.accept(visitor);
     }
 
     @Override
@@ -741,7 +757,7 @@ public class Tree {
       return visitor.visitCall(this);
     }
 
-    public List<Expression> getArguments() {
+    public List<Argument> getArguments() {
       return this.args;
     }
 
@@ -751,9 +767,9 @@ public class Tree {
 
     @Override
     public Expression getAssignment(Expression value) {
-      List<Expression> newArgs = new ArrayList<Expression>();
+      List<Argument> newArgs = new ArrayList<Argument>();
       newArgs.addAll(getArguments());
-      newArgs.add(value);
+      newArgs.add(new Argument(RInteger.get(newArgs.size()), value));
       String newName = name + ":=";
       return new Call(newName, newArgs);
     }
@@ -762,7 +778,7 @@ public class Tree {
     public String toString() {
       StringBuilder result = new StringBuilder();
       result.append("(.").append(name);
-      for (Expression arg : args)
+      for (Argument arg : args)
         result.append(" ").append(arg);
       return result.append(")").toString();
     }

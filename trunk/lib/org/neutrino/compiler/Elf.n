@@ -49,13 +49,13 @@ def (this is Elf).calculate_layout() {
   def header_name := Elf.header_name;
   layout.add_section(header_name, null, Elf.header_size, 1);
   // Add the actual sections
-  for (section : this.sections) {
+  for (section in this.sections) {
     def name := section.name;
     layout.next_section(name, section.size, section.alignment);
   }
   // Add the section headers
   layout.next_section(Elf.section_header_start_name, 0, WORD_SIZE);
-  for (section : this.sections) {
+  for (section in this.sections) {
     def name := section.header_name;
     layout.next_section(name, ElfSection.header_size, WORD_SIZE);
   }
@@ -64,7 +64,7 @@ def (this is Elf).calculate_layout() {
 
 def (this is Elf).section_index(section) {
   with_escape (return) {
-    for (i : 0 .. this.sections.length) {
+    for (i in 0 .. this.sections.length) {
       if this.sections[i] = section
         then return(i);
     }
@@ -129,7 +129,7 @@ def (this is Elf).encode_identification(out) {
 def (this is Elf).encode_section_headers(out) {
   def start_info := this.layout.info(Elf.section_header_start_name);
   out.pad_to(start_info.start);
-  for (section : this.sections) {
+  for (section in this.sections) {
     def info := this.layout.info(section.header_name);
     assert_equal(info.start, out.length);
     this.encode_section_header(out, section);
@@ -138,7 +138,7 @@ def (this is Elf).encode_section_headers(out) {
 }
 
 def (this is Elf).encode_sections(out) {
-  for (section : this.sections) {
+  for (section in this.sections) {
     def info := this.layout.info(section.name);
     assert_true(out.length <= info.start);
     out.pad_to(info.start);
@@ -277,7 +277,7 @@ def (this is ElfStringTable).ensure(key) {
 def (this is ElfStringTable).encode(out, elf) {
   def info := elf.layout.info(this.name);
   assert_equal(info.start, out.length);
-  for (str : this.strings)
+  for (str in this.strings)
     out.write_c_string(str);
   assert_equal(info.end, out.length);
 }
@@ -372,14 +372,14 @@ def (this is ElfSymbolTable).size => this.entries.length * this.entry_size;
 def (this is ElfSymbolTable).entry_size => ElfSymbolTableEntry.size;
 
 def (this is ElfSymbolTable).encode(out, elf) {
-  for (entry : this.entries)
+  for (entry in this.entries)
     entry.encode(out, elf);
 }
 
 def (this is ElfSymbolTable).code_block_offset(name) {
   def name_index := this.strtab[name];
   with_escape (yield) {
-    for (entry : this.entries) {
+    for (entry in this.entries) {
       if entry.name_index = name_index
         then yield(entry.offset);
     }

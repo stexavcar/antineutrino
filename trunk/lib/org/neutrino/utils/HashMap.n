@@ -18,7 +18,7 @@ def HashMap.new() => new HashMap {
 
 def HashMap.new(init is PrimitiveCollection) {
   def result := new HashMap();
-  for (i : 0 .. init.length)
+  for (i in 0 .. init.length)
     result[i] := init[i];
   result;
 }
@@ -42,17 +42,17 @@ protocol HashMap {
   def this.contains(key) => this.find_entry(key, this.hash(key), false) != null;
 
   def this.values => fn for (fun) {
-    for (key, value : this)
+    for (key, value in this)
       fun(value);
   }
 
   def this.keys => fn for (fun) {
-    for (key, value : this)
+    for (key, value in this)
       fun(key);
   }
 
   def this.for(fun) {
-    for (entry : this.entries) {
+    for (entry in this.entries) {
       if entry != null then
         fun(entry.key, entry.value);
     }
@@ -72,7 +72,7 @@ protocol HashMap {
     this.entries := new_entries;
     this.size := 0;
     this.max_load := (new_capacity * 3) / 4;
-    for (entry : old_entries) {
+    for (entry in old_entries) {
       if entry != null then
         this.insert(entry.key, entry.hash, entry.value);
     }
@@ -108,7 +108,7 @@ protocol HashMap {
     def result := new StringStream();
     result.add("#<a HashMap: {");
     ref first := true;
-    for (key, value : this) {
+    for (key, value in this) {
       if first then first := false;
       else result.add(", ");
       result.add("${key}: ${value}");

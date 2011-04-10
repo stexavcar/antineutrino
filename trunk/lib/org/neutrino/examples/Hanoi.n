@@ -35,7 +35,7 @@ def (this is Hanoi).move_top(from, to) {
 }
 
 def (this is Hanoi).build(pile, disks) {
-  for (i : disks .. 0)
+  for (i in disks .. 0)
     this.push(pile, new HanoiDisk(i));
 }
 

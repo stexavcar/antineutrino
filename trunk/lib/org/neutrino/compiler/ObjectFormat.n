@@ -5,15 +5,15 @@ protocol ObjectFormat;
  */
 def (this is ObjectFormat).finalize() {
   // First allow all sections to finalize themselves.
-  for (section : this.sections)
+  for (section in this.sections)
     section.finalize(this);
   // Preprocess relocations, if necessary
-  for (reloc : this.binary.relocs)
+  for (reloc in this.binary.relocs)
     this.preprocess_relocation(reloc);
   // All data must have been written by now.  Calculate layout.
   this.calculate_layout();
   // Now actually process the relocations.
-  for (reloc : this.binary.relocs)
+  for (reloc in this.binary.relocs)
     this.process_relocation(reloc);
 }
 

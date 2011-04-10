@@ -144,7 +144,7 @@ def (this is CodeGenerator).write_int32(node) {
 
 def (this is CodeGenerator).emit_thunk_body(node) {
   def method := with_escape (yield) {
-    for (method : node.methods) {
+    for (method in node.methods) {
       def name := method.signature[0].test.value;
       if name = "()"
         then yield(method);
