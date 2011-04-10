@@ -385,19 +385,19 @@ public class Parser {
   private Parameter parseParameter(int index) throws SyntaxError {
     String name = expect(Type.IDENT);
     boolean isKeyword = at(Type.COLON);
-    RValue keyword;
+    List<RValue> keywords;
     if (isKeyword) {
       expect(Type.COLON);
-      keyword = RString.of(name);
+      keywords = Arrays.asList(RInteger.get(index), RString.of(name));
     } else {
-      keyword = RInteger.get(index);
+      keywords = Collections.<RValue>singletonList(RInteger.get(index));
     }
     String type = null;
     if (at(Type.IS)) {
       expect(Type.IS);
       type = expect(Type.IDENT);
     }
-    return new Parameter(name, keyword, type, false);
+    return new Parameter(name, keywords, type, false);
   }
 
   private void parseNakedParameters(int offset, List<Parameter> params) throws SyntaxError {

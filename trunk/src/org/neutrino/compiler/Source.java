@@ -240,8 +240,7 @@ public class Source {
       } else {
         test = new Is(param.ensureProtocol(module));
       }
-      Pattern pattern = new Pattern(Arrays.<RValue>asList(param.getKeyword()),
-          test, param.getSymbol());
+      Pattern pattern = new Pattern(param.getKeywords(), test, param.getSymbol());
       return pattern;
     }
 

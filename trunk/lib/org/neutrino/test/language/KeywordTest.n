@@ -1,5 +1,7 @@
-def test_fun(a:) => 0;
-def test_fun(b:) => 1;
+def test_fun(a:) => 26;
+def test_fun(b:) => 29;
+
+def test_fun_two(x:) => 23;
 
 def (this is LanguageTest).test_keywords() {
   this.test_simple_functions();
@@ -7,6 +9,8 @@ def (this is LanguageTest).test_keywords() {
 
 def (this is LanguageTest).test_simple_functions() {
   this.on_start("simple functions");
-  assert_equal(0, test_fun(a: 1));
-  assert_equal(1, test_fun(b: 2));
+  assert_equal(26, test_fun(a: 1));
+  assert_equal(29, test_fun(b: 2));
+  assert_equal(23, test_fun_two(x: 0));
+  assert_equal(23, test_fun_two(0));
 }

@@ -138,7 +138,7 @@ def (this is CodeGenerator).write_int32(node) {
   this.emit(node.arguments[1]);
   this.assm.pop(rEax);
   this.assm.pop(rEbx);
-  this.assm.mov(Memory.at(rEbx), rEax);
+  this.assm.mov(dest: Memory.at(rEbx), src: rEax);
   this.assm.push(rEax);
 }
 
@@ -171,7 +171,7 @@ def (this is CodeGenerator).if_else(node) {
 
 def (this is CodeGenerator).static_data_ptr(node) {
   def value := this.resolve_static_value(node.arguments[1]);
-  this.assm.mov(rEax, Symbol.local(value));
+  this.assm.mov(dest: rEax, src: Symbol.local(value));
   this.assm.push(Memory.at(rEax));
 }
 

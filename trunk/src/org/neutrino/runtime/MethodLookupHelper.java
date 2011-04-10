@@ -167,13 +167,14 @@ public class MethodLookupHelper {
             return;
           }
           candidateScore[entry.index] = score;
-          sigOffset++;
           break;
         } else if ((cmp > 0) && (sigOffset < tags.size() - 1)) {
           sigOffset++;
         } else {
           return;
         }
+        if (sigOffset == tags.size())
+          return;
       }
     }
     if (isBetter) {
