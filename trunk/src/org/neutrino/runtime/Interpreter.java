@@ -15,7 +15,11 @@ import org.neutrino.runtime.lookup.CallInfo;
 
 public class Interpreter {
 
-  private static final RString CALL_NAME = RString.of("()");
+  private static final CallInfo TWO_ARG_CALL = new CallInfo(
+      1, Arrays.asList(
+          new CallInfo.ArgumentEntry(RInteger.get(0), null, 1),
+          new CallInfo.ArgumentEntry(RInteger.get(1), null, 2),
+          new CallInfo.ArgumentEntry(RString.of("name"), RString.of("()"), 0)));
 
   private static final CodeBundle BOTTOM_FRAME_CODE = new CodeBundle(
       new byte[] { Opcode.kCall, 0, 0, 0, Opcode.kTerminate },
@@ -93,10 +97,9 @@ public class Interpreter {
         break;
       }
       case Opcode.kWithEscape: {
-        int argc = code[frame.pc + 2];
         RContinuation cont = new RContinuation();
         frame.stack.push(cont);
-        Lambda lambda = frame.lookupMethod(CALL_NAME, argc);
+        Lambda lambda = frame.lookupMethod(TWO_ARG_CALL);
         if (lambda == null)
           throw new InterpreterError.MethodNotFound(frame);
         CodeBundle bundle = lambda.getCode();

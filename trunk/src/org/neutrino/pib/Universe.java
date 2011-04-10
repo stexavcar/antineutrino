@@ -25,6 +25,7 @@ import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RFunction;
 import org.neutrino.runtime.RImpl;
 import org.neutrino.runtime.RInteger;
+import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RObject;
 import org.neutrino.runtime.RPrimitiveArray;
 import org.neutrino.runtime.RProtocol;
@@ -105,17 +106,12 @@ public class Universe {
       module.addParents(out, id);
   }
 
-  public Lambda lookupMethod(RValue name, int argc, Stack<RValue> stack) {
-    return methodLookupHelper.lookupMethod(name, argc, stack);
-  }
-
   public Lambda lookupMethod(CallInfo info, Stack<RValue> stack) {
     return methodLookupHelper.lookupMethod(info, stack);
   }
 
-
-  public Lambda getLambda(RValue function, RValue... args) {
-    return methodLookupHelper.lookupLambda(function, args);
+  public Lambda getLambda(RValue... args) {
+    return methodLookupHelper.lookupLambda(args);
   }
 
   public void writePlankton(OutputStream out) throws IOException {
@@ -165,6 +161,7 @@ public class Universe {
     add(RImpl.class);
     add(RPrimitiveArray.class);
     add(RBoolean.class);
+    add(RNull.class);
     Expression.register(this);
   }};
 

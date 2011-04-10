@@ -92,6 +92,7 @@ def CompilerGrower.new_handler_table() {
   result["org.neutrino.runtime.RInteger"] := new GetterCodec("value");
   result["org.neutrino.runtime.RString"] := new GetterCodec("value");
   result["org.neutrino.runtime.RBoolean"] := new GetterCodec("value");
+  result["org.neutrino.runtime.RNull"] := new DummyCodec(null);
   result["org.neutrino.runtime.RObject"] := new DummyCodec("o");
   result["org.neutrino.runtime.RImpl"] := new DummyCodec("i");
   result["org.neutrino.runtime.RPrimitiveArray"] := new DummyCodec("a");
