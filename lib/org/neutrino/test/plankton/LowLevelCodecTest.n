@@ -29,7 +29,7 @@ def (this is PlanktonTest).test_encoding() {
 
 def (this is PlanktonTest).test_random_byte_encoding() {
   this.on_start("random byte encoding");
-  def random := new Random(1105);
+  def random := new Random(seed: 1105);
   def value_count := 64;
   def iteration_count := 8;
   def data := new PrimitiveByteArray(value_count);
@@ -50,7 +50,7 @@ def (this is PlanktonTest).test_random_byte_encoding() {
 
 def (this is PlanktonTest).test_unsigned_long_encoding() {
   this.on_start("unsigned long encoding");
-  def random := new Random(1129);
+  def random := new Random(seed: 1129);
   def encoder := new LowLevelEncoder();
   def numbers := new ArrayList();
   for (i in 0 .. 64) {
@@ -67,7 +67,7 @@ def (this is PlanktonTest).test_unsigned_long_encoding() {
 
 def (this is PlanktonTest).test_signed_long_encoding() {
   this.on_start("signed long encoding");
-  def random := new Random(1129);
+  def random := new Random(seed: 1129);
   def encoder := new LowLevelEncoder();
   def numbers := new ArrayList();
   for (i in 0 .. 64) {

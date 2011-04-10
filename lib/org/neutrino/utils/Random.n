@@ -8,7 +8,7 @@ protocol Random {
       data[i] := this.next(256);
   }
   
-  @static def proto.new(seed) => new MultiplyWithCarry(seed);
+  @static def proto.new(seed:) => new MultiplyWithCarry(seed);
 
 }
 
@@ -28,7 +28,7 @@ protocol MultiplyWithCarry is Random {
     ((new_high & 16rFFFF) << 16) | (low & 16rFFFF);
   }
   
-  @static def proto.new(seed) => new MultiplyWithCarry {
+  @static def proto.new(seed:) => new MultiplyWithCarry {
     low := 362436069 + seed,
     high := 521288629 - seed
   }
