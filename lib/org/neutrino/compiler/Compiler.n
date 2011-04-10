@@ -51,7 +51,7 @@ def compiler_entry_point(args) {
 def (this is NeutrinoCompiler).add_dylib_bridge(binary, name, argc) {
   def bridge := binary.add_code_block(name);
   bridge.enter_frame(0);
-  bridge.mov(Memory.at(rEsp), rEax);
+  bridge.mov(dest: Memory.at(rEsp), src: rEax);
   bridge.call(CallTarget.extern("_" + name));
   bridge.exit_frame();  
 }
@@ -81,8 +81,8 @@ def (this is NeutrinoCompiler).emit_libc_method(universe, method, assm) {
   assm.ahnd(rEsp, 16rFFFFFFF0);
   for (i in 0 .. argc) {
     def index := argc - i - 1;
-    assm.mov(rEax, Memory.at_disp(rEbp, 8 + (4 * index)));
-    assm.mov(Memory.at_disp(rEsp, 4 * index), rEax);
+    assm.mov(dest: rEax, src: Memory.at_disp(rEbp, 8 + (4 * index)));
+    assm.mov(dest: Memory.at_disp(rEsp, 4 * index), src: rEax);
   }
   assm.call(Symbol.dylib(libc_name));
 }
