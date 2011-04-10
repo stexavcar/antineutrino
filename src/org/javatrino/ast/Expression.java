@@ -5,6 +5,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Arrays;
 import java.util.List;
 
+import org.neutrino.pib.Module;
 import org.neutrino.plankton.ClassIndex;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RFieldKey;
@@ -89,8 +90,7 @@ public abstract class Expression {
   /**
    * Returns the compile-time known static value of this expression.
    */
-  public RValue getStaticValue() {
-    // TODO Auto-generated method stub
+  public RValue getStaticValue(Module module) {
     return null;
   }
 
@@ -248,6 +248,13 @@ public abstract class Expression {
     }
 
     @Override
+    public RValue getStaticValue(Module module) {
+      RValue result = module.getGlobal(name);
+      assert result != null;
+      return result;
+    }
+
+    @Override
     public String toString() {
       return "$" + name;
     }
@@ -270,7 +277,7 @@ public abstract class Expression {
     }
 
     @Override
-    public RValue getStaticValue() {
+    public RValue getStaticValue(Module module) {
       return value;
     }
 
