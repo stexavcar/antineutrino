@@ -2,7 +2,9 @@ package org.neutrino.runtime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Stack;
 
 import org.javatrino.ast.Method;
@@ -28,16 +30,6 @@ public class MethodLookupHelper {
     this.universe = universe;
   }
 
-  public void searchIntrinsics(CallInfo info, Stack<RValue> stack) {
-    RValue recv = stack.get(stack.size() - info.getArgumentCount() + info.primaryArgument);
-    if (!(recv instanceof RObject))
-      return;
-    RObject obj = (RObject) recv;
-    for (Method method : obj.getImpl().getIntrinsics()) {
-      tryCandidate(method, info, stack);
-    }
-  }
-
   public void clearTemporaries(CallInfo info) {
     bestMethod = null;
     int argc = info.getArgumentCount();
@@ -50,11 +42,32 @@ public class MethodLookupHelper {
       bestScore[i] = Integer.MAX_VALUE;
   }
 
+  /**
+   * Looks for the best method among intrinsics.
+   */
+  public void searchIntrinsics(CallInfo info, Stack<RValue> stack) {
+    RValue recv = stack.get(stack.size() - info.getArgumentCount() + info.primaryArgument);
+    if (!(recv instanceof RObject))
+      return;
+    RObject obj = (RObject) recv;
+    for (Method method : obj.getImpl().getIntrinsics()) {
+      tryCandidate(method, info, stack, 0);
+    }
+  }
+
+  /**
+   * Looks for the best method in the context.
+   */
+  private void searchContext(CallInfo info, Stack<RValue> stack) {
+    for (Method method : getApplicableMethods(info.getArgumentCount())) {
+      tryCandidate(method, info, stack, 1);
+    }
+  }
+
   public Lambda lookupMethod(CallInfo info, Stack<RValue> stack) {
     clearTemporaries(info);
     searchIntrinsics(info, stack);
-    if (bestMethod == null)
-      searchApproximateMatches(info, stack);
+    searchContext(info, stack);
     if (bestMethod == null) {
       return null;
     } else {
@@ -74,15 +87,29 @@ public class MethodLookupHelper {
     return lookupMethod(new CallInfo(0, entries), fakeFrame.stack);
   }
 
-  private void searchApproximateMatches(CallInfo info, Stack<RValue> stack) {
-    for (Module module : universe.modules.values()) {
-      for (Method method : module.methods) {
-        tryCandidate(method, info, stack);
+  private final Map<Integer, List<Method>> applicable = new HashMap<Integer, List<Method>>();
+
+  /**
+   * Returns a list of all methods that will accept the given number of arguments.
+   */
+  private List<Method> getApplicableMethods(int argc) {
+    List<Method> result = applicable.get(argc);
+    if (result == null) {
+      result = new ArrayList<Method>();
+      for (Module module : universe.modules.values()) {
+        for (Method method : module.methods) {
+          if (method.isApplicable(argc)) {
+            result.add(method);
+          }
+        }
       }
+      applicable.put(argc, result);
     }
+    return result;
   }
 
-  private void tryCandidate(Method method, CallInfo info, Stack<RValue> stack) {
+  private void tryCandidate(Method method, CallInfo info, Stack<RValue> stack,
+      int dist) {
     int argc = info.getArgumentCount();
     boolean isBetter = false;
     DigestedSignature sig = method.getDigestedSignature();
@@ -96,7 +123,7 @@ public class MethodLookupHelper {
         if (cmp == 0) {
           RValue value = stack.get(stack.size() - argc + entry.index);
           Test test = method.signature.get(tag.index).test;
-          int score = getScore(test, value);
+          int score = getScore(test, value, dist);
           if (score == kUnrelated)
             return;
           int prevScore = bestScore[entry.index];
@@ -123,14 +150,14 @@ public class MethodLookupHelper {
     }
   }
 
-  private int getScore(Test test, RValue value) {
+  private int getScore(Test test, RValue value, int dist) {
     switch (test.getType()) {
     case ANY:
       return kUnspecified;
     case EQ:
-      return ((Test.Eq) test).value.equals(value) ? 0 : kUnrelated;
+      return ((Test.Eq) test).value.equals(value) ? dist : kUnrelated;
     case IS:
-      return getScore(((Test.Is) test).type, value.getTypeIds(), 0);
+      return getScore(((Test.Is) test).type, value.getTypeIds(), dist);
     default:
       return kUnrelated;
     }

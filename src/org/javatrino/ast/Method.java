@@ -62,6 +62,10 @@ public class Method {
     }
   }
 
+  public boolean isApplicable(int argc) {
+    return signature.size() == argc;
+  }
+
   public CodeBundle getBundle() {
     if (bundle == null) {
       List<Symbol> syms = new ArrayList<Symbol>();
