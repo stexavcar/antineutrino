@@ -1,63 +1,67 @@
-protocol HanoiDisk;
+protocol HanoiDisk {
 
-def HanoiDisk.new(size) => new HanoiDisk {
-  size := size,
-  next := null
-}
-
-protocol Hanoi;
-
-def Hanoi.new() => new Hanoi {
-  piles := new ArrayList [null, null, null],
-  moves := 0
-}
-
-def (this is Hanoi).run(size) {
-  this.build(0, size);
-  this.move(0, 1, size);
-  this.moves;
-}
-
-def (this is Hanoi).move(from, to, disks) {
-  if disks = 1 then {
-    this.move_top(from, to);
-  } else {
-    def other := (3 - from) - to;
-    this.move(from, other, disks - 1);
-    this.move_top(from, to);
-    this.move(other, to, disks - 1);
+  @static def proto.new(size:) => new HanoiDisk {
+    size := size,
+    next := null
   }
+
 }
 
-def (this is Hanoi).move_top(from, to) {
-  this.push(to, this.pop(from));
-  this.moves := this.moves + 1;
+protocol Hanoi {
+
+  @static def proto.new() => new Hanoi {
+    piles := new ArrayList [null, null, null],
+    moves := 0
+  }
+
+  def this.run(size:) {
+    this.build(pile: 0, disks: size);
+    this.move(from: 0, to: 1, disks: size);
+    this.moves;
+  }
+
+  def this.move(from:, to:, disks:) {
+    if disks = 1 then {
+      this.move_top(from, to);
+    } else {
+      def other := (3 - from) - to;
+      this.move(from, other, disks - 1);
+      this.move_top(from, to);
+      this.move(other, to, disks - 1);
+    }
+  }
+
+  def this.move_top(from, to) {
+    this.push(to, this.pop(from));
+    this.moves := this.moves + 1;
+  }
+
+  def this.build(pile:, disks:) {
+    for (i in disks .. 0)
+      this.push(pile, new HanoiDisk(i));
+  }
+
+  def this.push(pile, disk) {
+    def top := this.piles[pile];
+    if (top != null) and (disk.size >= top.size) then
+      fail();
+    disk.next := top;
+    this.piles[pile] := disk;
+  }
+
+  def this.pop(pile) {
+    def top := this.piles[pile];
+    if top = null then fail();
+    this.piles[pile] := top.next;
+    top.next := null;
+    top;
+  }
+
 }
 
-def (this is Hanoi).build(pile, disks) {
-  for (i in disks .. 0)
-    this.push(pile, new HanoiDisk(i));
-}
-
-def (this is Hanoi).push(pile, disk) {
-  def top := this.piles[pile];
-  if (top != null) and (disk.size >= top.size) then
-    fail();
-  disk.next := top;
-  this.piles[pile] := disk;
-}
-
-def (this is Hanoi).pop(pile) {
-  def top := this.piles[pile];
-  if top = null then fail();
-  this.piles[pile] := top.next;
-  top.next := null;
-  top;
-}
-
-def run_hanoi(size) => new Hanoi().run(size);
+def run_hanoi(size:) => new Hanoi().run(size);
 
 @entry_point("hanoi")
 def hanoi() {
-  print(run_hanoi(7));
+  print(run_hanoi(size: 7));
 }
