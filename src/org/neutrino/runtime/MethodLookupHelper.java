@@ -2,6 +2,7 @@ package org.neutrino.runtime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,7 @@ public class MethodLookupHelper {
   private final Universe universe;
   private int[] bestScore = new int[kInitialScoreVectorSize];
   private int[] candidateScore = new int[kInitialScoreVectorSize];
-  private Method bestMethod;
+  private final List<Method> bestMethods = new ArrayList<Method>();
   private int scoreVectorSize = kInitialScoreVectorSize;
 
   public MethodLookupHelper(Universe universe) {
@@ -31,7 +32,7 @@ public class MethodLookupHelper {
   }
 
   public void clearTemporaries(CallInfo info) {
-    bestMethod = null;
+    bestMethods.clear();
     int argc = info.getArgumentCount();
     if (scoreVectorSize < argc) {
       scoreVectorSize = argc;
@@ -51,7 +52,32 @@ public class MethodLookupHelper {
       return;
     RObject obj = (RObject) recv;
     for (Method method : obj.getImpl().getIntrinsics()) {
-      tryCandidate(method, info, stack, 0);
+      tryCandidate(method, info, stack, 0, info.getArgumentCount(), true);
+    }
+  }
+
+  private List<Method> partialSearch(CallInfo info) {
+    List<CallInfo.ArgumentEntry> entries = Collections.emptyList();
+    Stack<RValue> stack = null;
+    for (CallInfo.ArgumentEntry entry : info.entries) {
+      if (entry.staticValue != null) {
+        if (entries.isEmpty()) {
+          stack = new Stack<RValue>();
+          stack.setSize(info.getArgumentCount());
+          entries = new ArrayList<CallInfo.ArgumentEntry>();
+        }
+        entries.add(entry);
+        stack.set(entry.index, entry.staticValue);
+      }
+    }
+    if (entries.isEmpty()) {
+      return this.getApplicableMethods(info.getArgumentCount());
+    } else {
+      CallInfo staticInfo = new CallInfo(info.primaryArgument, entries);
+      for (Method method : this.getApplicableMethods(info.getArgumentCount())) {
+        tryCandidate(method, staticInfo, stack, 1, info.getArgumentCount(), false);
+      }
+      return new ArrayList<Method>(bestMethods);
     }
   }
 
@@ -59,18 +85,28 @@ public class MethodLookupHelper {
    * Looks for the best method in the context.
    */
   private void searchContext(CallInfo info, Stack<RValue> stack) {
-    for (Method method : getApplicableMethods(info.getArgumentCount())) {
-      tryCandidate(method, info, stack, 1);
+    for (Method method : info.candidates) {
+      tryCandidate(method, info, stack, 1, info.getArgumentCount(), true);
     }
   }
 
   public Lambda lookupMethod(CallInfo info, Stack<RValue> stack) {
     clearTemporaries(info);
+    if (info.candidates == null) {
+      info.candidates = this.partialSearch(info);
+      clearTemporaries(info);
+    }
     searchIntrinsics(info, stack);
     searchContext(info, stack);
-    if (bestMethod == null) {
+    if (bestMethods.isEmpty()) {
+      return null;
+    } else if (bestMethods.size() > 1) {
+      clearTemporaries(info);
+      searchIntrinsics(info, stack);
+      searchContext(info, stack);
       return null;
     } else {
+      Method bestMethod = bestMethods.get(0);
       return new Lambda(bestMethod.module, bestMethod.getBundle());
     }
   }
@@ -109,19 +145,17 @@ public class MethodLookupHelper {
   }
 
   private void tryCandidate(Method method, CallInfo info, Stack<RValue> stack,
-      int dist) {
-    int argc = info.getArgumentCount();
+      int dist, int fullArgc, boolean yieldOnlyBest) {
     boolean isBetter = false;
     DigestedSignature sig = method.getDigestedSignature();
     List<DigestedSignature.ParameterTag> tags = sig.getEntries();
     int sigOffset = 0;
-    for (int i = 0; i < argc; i++) {
-      CallInfo.ArgumentEntry entry = info.entries.get(i);
+    for (CallInfo.ArgumentEntry entry : info.entries) {
       while (true) {
         DigestedSignature.ParameterTag tag = tags.get(sigOffset);
         int cmp = entry.tag.compareTo(tag.name);
         if (cmp == 0) {
-          RValue value = stack.get(stack.size() - argc + entry.index);
+          RValue value = stack.get(stack.size() - fullArgc + entry.index);
           Test test = method.signature.get(tag.index).test;
           int score = getScore(test, value, dist);
           if (score == kUnrelated)
@@ -129,13 +163,13 @@ public class MethodLookupHelper {
           int prevScore = bestScore[entry.index];
           if (prevScore > score) {
             isBetter = true;
-          } else if (prevScore < score) {
+          } else if (prevScore < score && yieldOnlyBest) {
             return;
           }
           candidateScore[entry.index] = score;
           sigOffset++;
           break;
-        } else if ((cmp < 0) && (sigOffset < tags.size() - 1)) {
+        } else if ((cmp > 0) && (sigOffset < tags.size() - 1)) {
           sigOffset++;
         } else {
           return;
@@ -146,8 +180,11 @@ public class MethodLookupHelper {
       int[] temp = bestScore;
       bestScore = candidateScore;
       candidateScore = temp;
-      bestMethod = method;
+      if (yieldOnlyBest) {
+        bestMethods.clear();
+      }
     }
+    bestMethods.add(method);
   }
 
   private int getScore(Test test, RValue value, int dist) {

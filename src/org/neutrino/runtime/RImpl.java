@@ -44,7 +44,6 @@ public class RImpl {
     RImpl next = addedIntrinsics.get(values);
     if (next == null) {
       List<Method> newIntrinsics = new ArrayList<Method>(values);
-      newIntrinsics.addAll(values);
       next = new RImpl(protos, newIntrinsics);
       addedIntrinsics.put(values, next);
     }

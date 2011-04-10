@@ -88,6 +88,7 @@ public class Interpreter {
         CallInfo info = (CallInfo) frame.getLiteral(infoIndex);
         Lambda lambda = frame.lookupMethod(info);
         if (lambda == null) {
+          info.candidates = null;
           frame.lookupMethod(info);
           throw new InterpreterError.MethodNotFound(frame);
         }
