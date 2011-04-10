@@ -262,7 +262,7 @@ public class BytecodeCompiler extends Visitor {
     List<CallInfo.ArgumentEntry> entries = new ArrayList<CallInfo.ArgumentEntry>(args.size());
     for (int i = 0; i < args.size(); i++) {
       Argument arg = args.get(i);
-      RValue staticValue = arg.value.getStaticValue();
+      RValue staticValue = arg.value.getStaticValue(module);
       entries.add(new CallInfo.ArgumentEntry(arg.tag, staticValue, i));
     }
     Collections.sort(entries);
