@@ -100,6 +100,9 @@ public class Assembler {
   }
 
   public void addIntrinsics(List<Method> methods) {
+    if (methods.size() == 2 && methods.get(0).signature.toString().equals(methods.get(1).signature.toString())) {
+      System.out.println("!!!");
+    }
     int index = registerLiteral(methods);
     add(Opcode.kAddIntrinsics);
     add(index);

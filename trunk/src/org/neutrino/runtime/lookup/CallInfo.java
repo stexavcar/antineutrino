@@ -2,6 +2,7 @@ package org.neutrino.runtime.lookup;
 
 import java.util.List;
 
+import org.javatrino.ast.Method;
 import org.neutrino.runtime.RValue;
 /**
  * Information about a call site.  Used for doing method lookup.
@@ -72,6 +73,7 @@ public class CallInfo {
 
   public final int primaryArgument;
   public final List<ArgumentEntry> entries;
+  public List<Method> candidates;
 
   public CallInfo(int primaryArgument, List<ArgumentEntry> entries) {
     this.primaryArgument = primaryArgument;

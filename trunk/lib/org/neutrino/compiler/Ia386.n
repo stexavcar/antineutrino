@@ -256,7 +256,7 @@ protocol AssemblerIa386 {
   }
 
   // D3 /5 => SHR r/m32, CL
-  def this.shl(dest is Operand) {
+  def this.shr(dest is Operand) {
     this.write_opcode(16rD3);
     this.write_operand(5, dest);
   }
