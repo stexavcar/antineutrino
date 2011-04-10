@@ -451,6 +451,7 @@ public class Native {
       args.frame = args.frame.parent;
       args.frame.stack.pop();
       args.frame.stack.pop();
+      args.frame.stack.pop();
       return value;
     }
   };

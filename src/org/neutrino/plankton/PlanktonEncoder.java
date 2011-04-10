@@ -132,9 +132,9 @@ public class PlanktonEncoder {
       return atomicFactory != null;
     }
 
-    public Object newAtomicInstance(Object arg) {
+    public Object newAtomicInstance(Object... args) {
       try {
-        return atomicFactory.invoke(null, arg);
+        return atomicFactory.invoke(null, args);
       } catch (IllegalArgumentException e) {
         throw new RuntimeException(e);
       } catch (IllegalAccessException e) {
@@ -202,8 +202,12 @@ public class PlanktonEncoder {
       @SuppressWarnings("unchecked")
       Map<String, Object> fields = (Map<String, Object>) decoder.instantiateTemplate(template, false);
       if (isAtomic()) {
-        Object arg = fields.values().iterator().next();
-        return newAtomicInstance(arg);
+        if (fields.isEmpty()) {
+          return newAtomicInstance();
+        } else {
+          Object arg = fields.values().iterator().next();
+          return newAtomicInstance(arg);
+        }
       } else {
         for (Map.Entry<String, Object> entry : fields.entrySet())
           set(obj, entry.getKey(), entry.getValue());

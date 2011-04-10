@@ -14,7 +14,7 @@ public class CallInfo {
   public static class ArgumentEntry implements Comparable<ArgumentEntry>{
 
     public final RValue tag;
-    private final RValue staticValue;
+    public final RValue staticValue;
     public final int index;
 
     public ArgumentEntry(RValue tag, RValue staticValue, int index) {
@@ -25,7 +25,23 @@ public class CallInfo {
 
     @Override
     public int compareTo(ArgumentEntry that) {
-      return tag.compareTo(that.tag);
+      int tagDiff = tag.compareTo(that.tag);
+      if (tagDiff != 0)
+        return tagDiff;
+      int indexDiff = this.index - that.index;
+      if (indexDiff != 0)
+        return indexDiff;
+      if (staticValue != that.staticValue) {
+        if (staticValue == null) {
+          return 1;
+        } else if (that.staticValue == null) {
+          return -1;
+        } else {
+          return this.staticValue.compareTo(that.staticValue);
+        }
+      } else {
+        return 0;
+      }
     }
 
     @Override

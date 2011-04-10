@@ -139,7 +139,7 @@ public class Assembler {
     int result = getOffset();
     add(Opcode.kWithEscape);
     add(0);
-    add(2);
+    add(3);
     add(0);
     return result;
   }
@@ -159,7 +159,7 @@ public class Assembler {
       index = literals.size();
       literals.add(obj);
     }
-    assert index < 128;
+    assert index < 256;
     return index;
   }
 

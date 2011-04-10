@@ -17,8 +17,10 @@ import org.javatrino.ast.Test.Eq;
 import org.javatrino.ast.Test.Is;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
+import org.neutrino.runtime.RBoolean;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RInteger;
+import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Tree;
@@ -122,7 +124,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     if (symbol == null) {
       return eGlobal(that.getName());
     } else if (that.isReference()) {
-      return eCall(eArgument(RString.of("name"), eConstant("get")),
+      return eCall(eArgument(RString.of("name"), eConstant(RString.of("get"))),
           eArgument(RInteger.get(0), eLocal(symbol)));
     } else {
       return eLocal(symbol);
@@ -132,7 +134,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   @Override
   public Expression visitAssignment(Tree.Assignment that) {
     Expression value = generate(that.getValue());
-    return eCall(eArgument(RString.of("name"), eConstant("set")),
+    return eCall(eArgument(RString.of("name"), eConstant(RString.of("set"))),
         eArgument(RInteger.get(0), eLocal(that.getSymbol())),
         eArgument(RInteger.get(1), value));
   }
@@ -142,7 +144,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Expression value = generate(that.getValue());
     Expression body = generate(that.getBody());
     if (that.isReference()) {
-      value = eCall(eArgument(RString.of("name"), eConstant("new")),
+      value = eCall(eArgument(RString.of("name"), eConstant(RString.of("new"))),
           eArgument(RInteger.get(0), eGlobal(RString.of("Ref"))),
           eArgument(RInteger.get(1), value));
     }
@@ -163,11 +165,11 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
   public Expression visitSingleton(Tree.Singleton that) {
     switch (that.getType()) {
     case FALSE:
-      return eConstant(false);
+      return eConstant(RBoolean.getFalse());
     case TRUE:
-      return eConstant(true);
+      return eConstant(RBoolean.getTrue());
     case NULL:
-      return eConstant(null);
+      return eConstant(RNull.getInstance());
     default:
       throw new AssertionError(); // Should be LameLanguageDesignError
     }
@@ -175,7 +177,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitText(Tree.Text that) {
-    return eConstant(that.getValue());
+    return eConstant(RString.of(that.getValue()));
   }
 
   @Override
@@ -201,14 +203,14 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitNumber(Tree.Number that) {
-    return eConstant(that.getValue());
+    return eConstant(RInteger.get(that.getValue()));
   }
 
   @Override
   public Expression visitCall(Tree.Call that) {
     List<Call.Argument> arguments = new ArrayList<Call.Argument>();
     String name = that.getName();
-    arguments.add(eArgument(RString.of("name"), eConstant(name)));
+    arguments.add(eArgument(RString.of("name"), eConstant(RString.of(name))));
     int index = 0;
     for (Tree.Expression source : that.getArguments()) {
       Expression expr = generate(source);

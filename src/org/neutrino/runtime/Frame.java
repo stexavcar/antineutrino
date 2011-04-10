@@ -28,10 +28,6 @@ public class Frame {
     return stack.get(stack.size() - argc + index);
   }
 
-  public Lambda lookupMethod(RValue name, int argc) {
-    return bundle.module.universe.lookupMethod(name, argc, this.stack);
-  }
-
   public Lambda lookupMethod(CallInfo info) {
     return bundle.module.universe.lookupMethod(info, this.stack);
   }
@@ -41,7 +37,7 @@ public class Frame {
   }
 
   public Object getLiteral(int index) {
-    return bundle.getLiterals().get(index);
+    return bundle.getLiterals().get(index & 0xFF);
   }
 
   public void setLocal(int index, RValue value) {

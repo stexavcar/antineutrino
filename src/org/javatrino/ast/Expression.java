@@ -86,6 +86,14 @@ public abstract class Expression {
 
   public abstract void traverse(Visitor visitor);
 
+  /**
+   * Returns the compile-time known static value of this expression.
+   */
+  public RValue getStaticValue() {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
   public static class Call extends Expression {
 
     public static class Argument {
@@ -248,9 +256,9 @@ public abstract class Expression {
 
   public static class Constant extends Expression {
 
-    public @Store Object value;
+    public @Store RValue value;
 
-    private Constant(Object value) {
+    private Constant(RValue value) {
       this.value = value;
     }
 
@@ -259,6 +267,11 @@ public abstract class Expression {
     @Override
     public String toString() {
       return String.valueOf(value);
+    }
+
+    @Override
+    public RValue getStaticValue() {
+      return value;
     }
 
     @Override
@@ -525,7 +538,7 @@ public abstract class Expression {
       return new Call(Arrays.asList(args));
     }
 
-    public static Constant eConstant(Object value) {
+    public static Constant eConstant(RValue value) {
       return new Constant(value);
     }
 
