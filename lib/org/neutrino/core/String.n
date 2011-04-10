@@ -14,7 +14,7 @@
    * This is a temporary method that will eventually be removed.
    */
   def this.ascii_characters => fn for (fun) {
-    for (i : 0 .. this.length) {
+    for (i in 0 .. this.length) {
       fun(this._get_ascii_character(i));
     }
   }

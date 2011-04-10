@@ -160,7 +160,7 @@ protocol NewMethod {
 
   def this.get_annotation(name) {
     with_escape (yield) {
-      for (annot : this.annots) {
+      for (annot in this.annots) {
         if annot.tag = name
           then yield(annot);
       }
@@ -292,7 +292,7 @@ protocol CallExpr is Expr {
   def this.initialize(payload) {
     def raw_args := payload["arguments"];
     def args := new ArrayList();
-    for (i : 1 .. raw_args.length)
+    for (i in 1 .. raw_args.length)
       args.add(raw_args[i].value);
     this.arguments := args;
     this.name := raw_args[0].value.value;
@@ -441,7 +441,7 @@ def (this is MethodAst).body => this.code.body;
 
 def (this is MethodAst).get_annotation(name) {
   with_escape (yield) {
-    for (annot : this.annots) {
+    for (annot in this.annots) {
       if annot.tag = name
         then yield(annot);
     }
@@ -459,7 +459,7 @@ def (this is MethodAst).ensure_analyzed(universe) {
 
 def (this is MethodAst).count_locals(expr) {
   ref result := 0;
-  for (child : expr)
+  for (child in expr)
     result := result + this.count_locals(child);
   result;
 }
@@ -489,7 +489,7 @@ def (this is ProtocolAst).to_string() => "protocol ${this.id}";
 
 def (this is ProtocolAst).get_annotation(name) {
   with_escape (yield) {
-    for (annot : this.annotations) {
+    for (annot in this.annotations) {
       if annot.tag = name
         then yield(annot);
     }
@@ -513,7 +513,7 @@ def (this is Binding).initialize(payload) {
 
 def (this is Binding).get_annotation(name) {
   with_escape (yield) {
-    for (annot : this.annotations) {
+    for (annot in this.annotations) {
       if annot.tag = name
         then yield(annot);
     }
@@ -589,17 +589,17 @@ def (this is Universe).initialize(payload) {
 def (this is Universe).modules => this.r_modules.get();
 
 def (this is Universe).methods => fn for (fun) {
-  for (module : this.modules.values)
+  for (module in this.modules.values)
     module.methods.for(fun);
 }
 
 def (this is Universe).globals => fn for (fun) {
-  for (module : this.modules.values)
+  for (module in this.modules.values)
     module.globals.for(fun);
 }
 
 def (this is Universe).supers => fn for (fun) {
-  for (module : this.modules.values)
+  for (module in this.modules.values)
     module.supers.for(fun);
 }
 
@@ -607,9 +607,9 @@ def (this is Universe).supers(name) {
   def cached := this.super_cache[name];
   if cached = null then {
     def result := new ArrayList();
-    for (found_name, found_supers : this.supers) {
+    for (found_name, found_supers in this.supers) {
       if found_name = name then {
-        for (super : found_supers)
+        for (super in found_supers)
           result.add(super);
       }
     }
@@ -623,7 +623,7 @@ def (this is Universe).lookup_static_global(name) {
   def cached := this.global_cache[name];
   if cached = null then {
     with_escape (return) {
-      for (global_name, global : this.globals) {
+      for (global_name, global in this.globals) {
         if name = global_name then {
           this.global_cache[name] := global;
           return(global);

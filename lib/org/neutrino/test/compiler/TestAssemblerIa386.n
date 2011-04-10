@@ -75,7 +75,7 @@ def test_ia386(args) {
   open_file(bin_name).write_binary(binary.encode);
   
   def blocks := new ArrayList();
-  for (data : datas)
+  for (data in datas)
     blocks.add("${data.name}:\n${data.expected.join("\n")}");
   def expected := blocks.join("\n");
   def exp_name := args[1];
@@ -83,13 +83,13 @@ def test_ia386(args) {
 }
 
 def (this is Ia386Test).operands => fn for (fun) {
-  for (reg : this.registers) for (maker : kMakers) {
+  for (reg in this.registers) for (maker in kMakers) {
     fun(maker(reg));
   }
 }
 
 def (this is Ia386Test).operand_pairs => fn for (fun) {
-  for (src : this.operands) for (dest : this.operands) {
+  for (src in this.operands) for (dest in this.operands) {
     if this.is_valid(src, dest)
       then fun(src, dest);
   }
@@ -128,70 +128,70 @@ def (this is Ia386Test).run_tests(new_data) {
 }
 
 def (this is Ia386Test).mov(data) {
-  for (src, dest : this.operand_pairs) {
+  for (src, dest in this.operand_pairs) {
     data.assm.mov(dest, src);
     data.add_expected("movl ${src},${dest}");
   }
 }
 
 def (this is Ia386Test).add(data) {
-  for (src, dest : this.operand_pairs) {
+  for (src, dest in this.operand_pairs) {
     data.assm.add(dest, src);
     data.add_expected("addl ${src},${dest}");
   }
 }
 
 def (this is Ia386Test).add_imm(data) {
-  for (dest : this.operands) for (imm : this.immediates) {
+  for (dest in this.operands) for (imm in this.immediates) {
     data.assm.add(dest, imm);
     data.add_expected("addl $${to_hex32(imm)},${dest}");
   }
 }
 
 def (this is Ia386Test).sub(data) {
-  for (src, dest : this.operand_pairs) {
+  for (src, dest in this.operand_pairs) {
     data.assm.sub(dest, src);
     data.add_expected("subl ${src},${dest}");
   }
 }
 
 def (this is Ia386Test).sub_imm(data) {
-  for (dest : this.operands) for (imm : this.immediates) {
+  for (dest in this.operands) for (imm in this.immediates) {
     data.assm.sub(dest, imm);
     data.add_expected("subl $${to_hex32(imm)},${dest}");
   }
 }
 
 def (this is Ia386Test).ahnd(data) {
-  for (src, dest : this.operand_pairs) {
+  for (src, dest in this.operand_pairs) {
     data.assm.ahnd(dest, src);
     data.add_expected("andl ${src},${dest}");
   }
 }
 
 def (this is Ia386Test).and_imm(data) {
-  for (dest : this.operands) for (imm : this.immediates) {
+  for (dest in this.operands) for (imm in this.immediates) {
     data.assm.ahnd(dest, imm);
     data.add_expected("andl $${to_hex32(imm)},${dest}");
   }
 }
 
 def (this is Ia386Test).mov_imm(data) {
-  for (dest : this.operands) for (imm : this.immediates) {
+  for (dest in this.operands) for (imm in this.immediates) {
     data.assm.mov(dest, imm);
     data.add_expected("movl $${to_hex32(imm)},${dest}");
   }
 }
 
 def (this is Ia386Test).push(data) {
-  for (src : this.operands) {
+  for (src in this.operands) {
     data.assm.push(src);
     data.add_expected("pushl ${src}");
   }
 }
 
 def (this is Ia386Test).pop(data) {
-  for (dest : this.operands) {
+  for (dest in this.operands) {
     data.assm.pop(dest);
     data.add_expected("popl ${dest}");
   }  
@@ -217,7 +217,7 @@ def (this is Ia386Test).call_expectation(dest is Memory)
       else "call *${dest}";
 
 def (this is Ia386Test).call(data) {
-  for (dest : this.operands) {
+  for (dest in this.operands) {
     data.assm.call(dest);
     data.add_expected(this.call_expectation(dest));
   }  
@@ -289,14 +289,14 @@ def (this is Ia386Test).branch(data) {
 }  
 
 def (this is Ia386Test).test(data) {
-  for (a : this.operands) for (b : this.registers) {
+  for (a in this.operands) for (b in this.registers) {
     data.assm.test(b, a);
     data.add_expected("testl ${a},${b}");
   }
 }
 
 def (this is Ia386Test).test_imm(data) {
-  for (a : this.operands) for (b : this.immediates) {
+  for (a in this.operands) for (b in this.immediates) {
     data.assm.test(a, b);
     data.add_expected("testl $${to_hex32(b)},${a}");
   }

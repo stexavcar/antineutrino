@@ -39,10 +39,10 @@ def (this is LanguageTest).test_mutable_arrays() {
   def kSize := 10;
   def arr := new PrimitiveArray(kSize);
   assert_equal(kSize, arr.length);
-  for (i : 0 .. kSize)
+  for (i in 0 .. kSize)
     assert_equal(null, arr[i]);
-  for (i : 0 .. kSize)
+  for (i in 0 .. kSize)
     arr[i] := i * 3;
-  for (i : 0 .. kSize)
+  for (i in 0 .. kSize)
     assert_equal(i * 3, arr[i]);
 }

@@ -10,14 +10,14 @@ protocol ArrayList is Sequence {
 
   @static def proto.new(elms is PrimitiveArray) {
     def result := new ArrayList(elms.length);
-    for (i : 0 .. elms.length)
+    for (i in 0 .. elms.length)
       result[i] := elms[i];
     result;
   }
 
   @static def proto.new(seq is Sequence) {
     def result := new ArrayList(0);
-    for (elm : seq)
+    for (elm in seq)
       result.add(elm);
     result;
   }
@@ -30,7 +30,7 @@ protocol ArrayList is Sequence {
     def out := new StringStream();
     out.add("[");
     ref first := true;
-    for (el : this) {
+    for (el in this) {
       if first then first := false;
       else out.add(", ");
       out.add(el);
@@ -51,7 +51,7 @@ protocol ArrayList is Sequence {
       false;
     } else {
       with_escape (return) {
-        for (i : 0 .. this.length) {
+        for (i in 0 .. this.length) {
           if this[i] != that[i] then
             return(false);
         }
@@ -62,9 +62,9 @@ protocol ArrayList is Sequence {
 
   def this+(that is ArrayList) {
     def result := new ArrayList(this.length + that.length);
-    for (i : 0 .. this.length)
+    for (i in 0 .. this.length)
       result[i] := this[i];
-    for (i : 0 .. that.length)
+    for (i in 0 .. that.length)
       result[this.length + i] := that[i];
     result;
   }
@@ -81,14 +81,14 @@ protocol ArrayList is Sequence {
     def old_contents := this.contents;
     if not capacity < old_contents.length then {
       def new_contents := new PrimitiveArray(capacity * 2);
-      for (i : 0 .. this.length)
+      for (i in 0 .. this.length)
         new_contents[i] := old_contents[i];
       this.contents := new_contents;
     }
   }
 
   def this.for(fun) {
-    for (i : 0 .. this.length)
+    for (i in 0 .. this.length)
       fun(this[i]);
   }
 

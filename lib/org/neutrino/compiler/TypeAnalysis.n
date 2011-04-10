@@ -15,7 +15,7 @@ def ArgumentScope.new(method) => new ArgumentScope {
 
 def (this is ArgumentScope).lookup(symbol) {
   with_escape (return) => {
-    for (param : this.method.signature) {
+    for (param in this.method.signature) {
       if param.symbol = symbol
         then return(param.test.upper_bound);
     }
@@ -66,7 +66,7 @@ def (this is Universe).is_static_subtype(proto, found) {
     def check_supers := proto != null and proto.get_annotation("no_override") != null;
     if check_supers then {
       with_escape (yield) {
-        for (super : this.supers(found)) {
+        for (super in this.supers(found)) {
           if this.is_static_subtype(proto, super)
             then yield(true);
         }
@@ -89,12 +89,12 @@ def (this is Universe).is_matching_argument(param is AnyTest, type_found)
 
 def (this is Universe).find_method(name, types) {
   with_escape (return) {
-    for (method : this.methods) {
+    for (method in this.methods) {
       if method.name = name then {
         def signature := method.signature;
         if signature.length = (types.length + 1) then {
           with_escape (break) {
-            for (i : 1 .. signature.length) {
+            for (i in 1 .. signature.length) {
               if not this.is_matching_argument(signature[i].test, types[i - 1])
                 then break(null);
             }
@@ -109,7 +109,7 @@ def (this is Universe).find_method(name, types) {
 
 def (this is TypeAnalysis).do_analyze(node is CallExpr) {
   def types := new ArrayList();
-  for (arg : node.arguments) {
+  for (arg in node.arguments) {
     def type := this.analyze(arg);
     types.add(type);
   }
@@ -146,7 +146,7 @@ def (this is TypeAnalysis).do_analyze(node is LocalExpr)
 
 def (this is TypeAnalysis).do_analyze(node is BlockExpr) {
   ref last := null;
-  for (value : node.values)
+  for (value in node.values)
     last := this.analyze(value);
   last;
 }

@@ -212,9 +212,9 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     String name = that.getName();
     arguments.add(eArgument(RString.of("name"), eConstant(RString.of(name))));
     int index = 0;
-    for (Tree.Expression source : that.getArguments()) {
-      Expression expr = generate(source);
-      arguments.add(eArgument(RInteger.get(index), expr));
+    for (Tree.Argument source : that.getArguments()) {
+      Expression expr = generate(source.getValue());
+      arguments.add(eArgument(source.getKeyword(), expr));
       index++;
     }
     return eCall(arguments);

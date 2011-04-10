@@ -66,6 +66,7 @@ public class Token {
     NOT("not", Category.KEYWORD),
     REF("ref", Category.KEYWORD),
     IS("is", Category.KEYWORD),
+    IN("in", Category.KEYWORD),
     INTERNAL("internal", Category.KEYWORD),
     WITH_ESCAPE("with_escape", Category.KEYWORD),
     PROTOCOL("protocol", Category.KEYWORD);

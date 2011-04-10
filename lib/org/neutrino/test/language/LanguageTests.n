@@ -22,4 +22,5 @@ def (this is LanguageTest).run() {
   this.test_for();
   this.test_with_escape();
   this.test_interpolation();
+  this.test_keywords();
 }

@@ -1,0 +1,12 @@
+def test_fun(a:) => 0;
+def test_fun(b:) => 1;
+
+def (this is LanguageTest).test_keywords() {
+  this.test_simple_functions();
+}
+
+def (this is LanguageTest).test_simple_functions() {
+  this.on_start("simple functions");
+  assert_equal(0, test_fun(a: 1));
+  assert_equal(1, test_fun(b: 2));
+}

@@ -53,9 +53,9 @@ def (this is Binary).encode {
 
 def (this is Binary).encode_file_format() {
   def result := this.file_format.builder(this);
-  for (code_entry : this.code_entries)
+  for (code_entry in this.code_entries)
     result.add_code_block(code_entry.name, code_entry.assm.code);
-  for (data_entry : this.data_entries)
+  for (data_entry in this.data_entries)
     result.add_data_block(data_entry.name, data_entry.assm.data);
   result.finalize();
   result;

@@ -42,7 +42,7 @@ protocol BlobStream is ArrayBackedStream {
   }
 
   def this.write_data(data, from, to) {
-    for (i : from .. to)
+    for (i in from .. to)
       this.add(data[i]);
   }
 
@@ -50,12 +50,12 @@ protocol BlobStream is ArrayBackedStream {
 
   def this.write_c_string(str, length) {
     ref pos := 0;
-    for (c : str.ascii_characters) {
+    for (c in str.ascii_characters) {
       this.add(c);
       pos := pos + 1;
     }
     if pos < length then {
-      for (i : pos .. length)
+      for (i in pos .. length)
         this.add(0);
     }
   }
@@ -64,14 +64,14 @@ protocol BlobStream is ArrayBackedStream {
 
   def this.pad_to(offset) {
     if this.length < offset then {
-      for (i : this.length .. offset)
+      for (i in this.length .. offset)
         this.add(0);
     }
   }
 
   def this.get_blob() {
     def result := new PrimitiveByteArray(this.length);
-    for (i : 0 .. this.length)
+    for (i in 0 .. this.length)
       result[i] := this.data[i];
     result;
   }

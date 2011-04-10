@@ -26,7 +26,7 @@ def (this is PlanktonEncoder).to_blob()
 def (this is PlanktonEncoder).write(str is String) {
   this.out.write(kPlanktonStringTag);
   this.out.write_unsigned(str.length);
-  for (chr : str.ascii_characters)
+  for (chr in str.ascii_characters)
     this.out.write(chr);
 }
 
@@ -61,8 +61,8 @@ def PlanktonDecoder.new_template_dispatcher() {
   result;
 }
 
-def PlanktonDecoder.new(in, class_index) => new PlanktonDecoder {
-  in := new LowLevelDecoder(in),
+def PlanktonDecoder.new(input, class_index) => new PlanktonDecoder {
+  input := new LowLevelDecoder(input),
   class_index := class_index,
   dispatcher := PlanktonDecoder.new_dispatcher(),
   template_dispatcher := PlanktonDecoder.new_template_dispatcher(),
@@ -78,7 +78,7 @@ def (this is PlanktonDecoder).advance_index()
  => this.next_index := (this.next_index + 1);
 
 def (this is PlanktonDecoder).read()
- => this.read(this.in.read());
+ => this.read(this.input.read());
 
 def (this is PlanktonDecoder).read(tag) {
   def dispatcher := this.dispatcher[tag];
@@ -88,7 +88,7 @@ def (this is PlanktonDecoder).read(tag) {
 }
 
 def (this is PlanktonDecoder).read_template() {
-  def tag := this.in.read();
+  def tag := this.input.read();
   def dispatcher := this.template_dispatcher[tag];
   if dispatcher = null
     then this.read_constant_template(tag);
@@ -138,7 +138,7 @@ def (this is MapTemplate).on_template_start()
  => new HashMap();
 
 def (this is MapTemplate).on_template_payload(map) {
-  for (i : 0 .. this.length) {
+  for (i in 0 .. this.length) {
     def key := this.decoder.instantiate_template(this.parts[2 * i], false);
     def value := this.decoder.instantiate_template(this.parts[(2 * i) + 1], false);
     map[key] := value;
@@ -147,9 +147,9 @@ def (this is MapTemplate).on_template_payload(map) {
 }
 
 def (this is PlanktonDecoder).read_map_template() {
-  def length := this.in.read_unsigned();
+  def length := this.input.read_unsigned();
   def parts := new ArrayList();
-  for (i : 0 .. length) {
+  for (i in 0 .. length) {
     parts.add(this.read_template());
     parts.add(this.read_template());
   }
@@ -183,25 +183,25 @@ def (this is PlanktonDecoder).read_placeholder()
  => new PlaceholderTemplate(this);
 
 def (this is PlanktonDecoder).read_string() {
-  def length := this.in.read_unsigned();
+  def length := this.input.read_unsigned();
   def buf := new StringStream();
-  for (i : 0 .. length) {
-    def ord := this.in.read();
+  for (i in 0 .. length) {
+    def ord := this.input.read();
     buf.add(string_from_ordinal(ord));
   }
   buf.to_string();
 }
 
 def (this is PlanktonDecoder).read_int()
- => this.in.read_signed();
+ => this.input.read_signed();
  
 def (this is PlanktonDecoder).read_template_scope() {
-  def start := this.in.read_unsigned();
-  def count := this.in.read_unsigned();
+  def start := this.input.read_unsigned();
+  def count := this.input.read_unsigned();
   def old_scope := this.templates;
   def new_scope := new TemplateScope(old_scope, start);
   this.templates := new_scope;
-  for (i : 0 .. count) {
+  for (i in 0 .. count) {
     def template := this.read_template();
     new_scope.add_template(template);
   }
@@ -225,17 +225,17 @@ def (this is PlanktonDecoder).instantiate_template(template, store_ref) {
 
 def (this is PlanktonDecoder).read_template_instance() {
   this.advance_index();
-  def index := this.in.read_unsigned();
+  def index := this.input.read_unsigned();
   def template := this.templates.get_template(index);
   this.instantiate_template(template, true);
 }
 
 def (this is PlanktonDecoder).read_map() {
   this.advance_index();
-  def length := this.in.read_unsigned();
+  def length := this.input.read_unsigned();
   def result := new HashMap();
   this.refs[this.current_index] := result;
-  for (i : 0 .. length) {
+  for (i in 0 .. length) {
     def key := this.read();
     def value := this.read();
     result[key] := value;
@@ -245,24 +245,24 @@ def (this is PlanktonDecoder).read_map() {
 
 def (this is PlanktonDecoder).read_array() {
   this.advance_index();
-  def length := this.in.read_unsigned();
+  def length := this.input.read_unsigned();
   def result := new ArrayList(length);
   this.refs[this.current_index] := result;
-  for (i : 0 .. length)
+  for (i in 0 .. length)
     result[i] := this.read();
   result;
 }
 
 def (this is PlanktonDecoder).read_blob() {
-  def length := this.in.read_unsigned();
+  def length := this.input.read_unsigned();
   def stream := new BlobStream();
-  for (i : 0 .. length)
-    stream.add(this.in.read());
+  for (i in 0 .. length)
+    stream.add(this.input.read());
   stream.get_blob();
 }
 
 def (this is PlanktonDecoder).read_reference() {
-  def index := this.in.read_unsigned();
+  def index := this.input.read_unsigned();
   this.refs[index];
 }
 
