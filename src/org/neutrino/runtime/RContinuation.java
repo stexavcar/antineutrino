@@ -1,7 +1,7 @@
 package org.neutrino.runtime;
 
 
-public class RContinuation extends RValue {
+public class RContinuation extends RAbstractValue {
 
   private static final RProtocol[] PROTOS = RProtocol.getCanonicals("continuation");
 

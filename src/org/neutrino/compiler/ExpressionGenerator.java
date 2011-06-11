@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.javatrino.ast.Expression;
 import org.javatrino.ast.Expression.Call;
+import org.javatrino.ast.Expression.NewDictionary;
 import org.javatrino.ast.Method;
 import org.javatrino.ast.Pattern;
 import org.javatrino.ast.Symbol;
@@ -24,6 +25,8 @@ import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Tree;
+import org.neutrino.syntax.Tree.Collection;
+import org.neutrino.syntax.Tree.Collection.Flavor;
 import org.neutrino.syntax.Tree.Internal;
 
 public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
@@ -188,12 +191,22 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
 
   @Override
   public Expression visitCollection(Tree.Collection that) {
-    List<Expression> elms = new ArrayList<Expression>();
-    for (Tree.Expression value : that.getValues()) {
-      Expression val = value.accept(this);
-      elms.add(val);
+    if (that.getFlavor() == Flavor.DICTIONARY) {
+      List<NewDictionary.Entry> elms = new ArrayList<NewDictionary.Entry>();
+      for (Collection.Entry entry : that.getEntries()) {
+        Expression key = entry.key.accept(this);
+        Expression value = entry.value.accept(this);
+        elms.add(new NewDictionary.Entry(key, value));
+      }
+      return eNewDictionary(elms);
+    } else {
+      List<Expression> elms = new ArrayList<Expression>();
+      for (Collection.Entry entry : that.getEntries()) {
+        Expression value = entry.value.accept(this);
+        elms.add(value);
+      }
+      return eNewObjectArray(elms);
     }
-    return eNewArray(elms);
   }
 
   @Override

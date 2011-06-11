@@ -1,8 +1,12 @@
-protocol PrimitiveCollection {
+@native("PrimitiveMap")
+protocol PrimitiveMap {
+  
+  def this[key] => internal "PrimitiveMap[]";
   
 }
 
-@native("array") protocol PrimitiveArray is Sequence, PrimitiveCollection {
+@native("ObjectArray")
+protocol PrimitiveArray is Sequence, PrimitiveMap {
 
   @static def proto.new(size is Integer) => internal "mutprimarr";
 
@@ -47,7 +51,8 @@ protocol PrimitiveCollection {
 
 }
 
-@native("byte_array") protocol PrimitiveByteArray is PrimitiveArray {
+@native("ByteArray")
+protocol PrimitiveByteArray is PrimitiveArray {
 
   def this[index is Integer] => internal "byte_array[1]";
 

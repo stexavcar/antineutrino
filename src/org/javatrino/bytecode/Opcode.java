@@ -62,7 +62,7 @@ public class Opcode {
   @Info({ArgType.NUM}) public static final int kStoreLocal = 15;
   @Info({}) public static final int kTerminate = 16;
   @Info({ArgType.LIT, ArgType.NUM}) public static final int kNew = 17;
-  @Info({ArgType.NUM}) public static final int kNewArray = 20;
+  @Info({ArgType.NUM}) public static final int kNewObjectArray = 20;
   @Info({}) public static final int kReturnFromApply = 21;
   @Info({ArgType.LIT}) public static final int kAddIntrinsics = 25;
   @Info({}) public static final int kNewObject = 26;
@@ -71,6 +71,7 @@ public class Opcode {
   @Info({ArgType.LIT}) public static final int kGetField = 29;
   @Info({}) public static final int kDup = 30;
   @Info({ArgType.NUM, ArgType.NUM}) public static final int kWithEscape = 31;
+  @Info({ArgType.NUM}) public static final int kNewDictionary = 32;
 
   @SuppressWarnings("serial")
   private static final Map<Integer, OpcodeInfo> INFOS = new HashMap<Integer, OpcodeInfo>() {{

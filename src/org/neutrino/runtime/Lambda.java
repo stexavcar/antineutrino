@@ -3,7 +3,7 @@ package org.neutrino.runtime;
 import org.neutrino.pib.CodeBundle;
 import org.neutrino.pib.Module;
 
-public class Lambda extends RValue {
+public class Lambda extends RAbstractValue {
 
   private static final RProtocol[] TYPE_IDS = RProtocol.getCanonicals("Lambda");
 

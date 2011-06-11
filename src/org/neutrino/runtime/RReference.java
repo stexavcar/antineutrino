@@ -1,7 +1,7 @@
 package org.neutrino.runtime;
 
 
-public class RReference extends RValue {
+public class RReference extends RAbstractValue {
 
   private static final RProtocol[] PROTOS = RProtocol.getCanonicals("ref");
 

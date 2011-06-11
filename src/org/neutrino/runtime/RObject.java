@@ -7,7 +7,7 @@ import java.util.Map;
 import org.javatrino.ast.Method;
 import org.neutrino.plankton.Store;
 
-public class RObject extends RValue {
+public class RObject extends RAbstractValue {
 
   private static final RImpl emptyImpl = new RImpl();
 

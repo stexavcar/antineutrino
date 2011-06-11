@@ -2,7 +2,7 @@ package org.neutrino.runtime;
 
 import org.neutrino.plankton.Store;
 
-public class RFieldKey extends RValue {
+public class RFieldKey extends RAbstractValue {
 
   private static final RProtocol[] PROTOS = RProtocol.getCanonicals("FieldKey");
   public @Store Object id;
