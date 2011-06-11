@@ -215,12 +215,24 @@ public class Interpreter {
         frame.pc += 3;
         break;
       }
-      case Opcode.kNewArray: {
+      case Opcode.kNewObjectArray: {
         int elmc = code[frame.pc + 1];
         RValue[] elms = new RValue[elmc];
         for (int i = 0; i < elmc; i++)
           elms[elmc - i - 1] = frame.stack.pop();
-        frame.stack.push(new RPrimitiveArray(Arrays.asList(elms)));
+        frame.stack.push(new RObjectArray(Arrays.asList(elms)));
+        frame.pc += 2;
+        break;
+      }
+      case Opcode.kNewDictionary: {
+        int elmc = code[frame.pc + 1];
+        Map<RValue, RValue> map = new HashMap<RValue, RValue>();
+        for (int i = 0; i < elmc; i++) {
+          RValue value = frame.stack.pop();
+          RValue key = frame.stack.pop();
+          map.put(key, value);
+        }
+        frame.stack.push(new RDictionary(map));
         frame.pc += 2;
         break;
       }

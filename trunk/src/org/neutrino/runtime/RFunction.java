@@ -1,6 +1,6 @@
 package org.neutrino.runtime;
 
-public class RFunction extends RValue {
+public class RFunction extends RAbstractValue {
 
   private static final RProtocol[] PROTOS = RProtocol.getCanonicals("Function");
 

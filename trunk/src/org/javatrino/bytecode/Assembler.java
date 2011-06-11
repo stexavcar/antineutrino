@@ -123,8 +123,13 @@ public class Assembler {
     return result;
   }
 
-  public void newArray(int elmc) {
-    add(Opcode.kNewArray);
+  public void newObjectArray(int elmc) {
+    add(Opcode.kNewObjectArray);
+    add(elmc);
+  }
+
+  public void newDictionary(int elmc) {
+    add(Opcode.kNewDictionary);
     add(elmc);
   }
 

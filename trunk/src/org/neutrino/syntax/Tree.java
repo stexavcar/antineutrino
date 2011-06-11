@@ -829,14 +829,30 @@ public class Tree {
 
   public static class Collection extends Expression {
 
-    private final List<Expression> values;
+    public static class Entry {
 
-    public Collection(List<Expression> values) {
-      this.values = values;
+      public Tree.Expression key;
+      public Tree.Expression value;
+
+      public Entry(Tree.Expression key, Tree.Expression value) {
+        this.key = key;
+        this.value = value;
+      }
+
     }
 
-    public List<Expression> getValues() {
-      return values;
+    public enum Flavor {
+      DICTIONARY, OBJECT_ARRAY, BYTE_ARRAY
+    }
+
+    private final List<Entry> entries;
+
+    public Collection(List<Entry> values) {
+      this.entries = values;
+    }
+
+    public List<Entry> getEntries() {
+      return entries;
     }
 
     @Override
@@ -846,8 +862,22 @@ public class Tree {
 
     @Override
     public void traverse(ExpressionVisitor<?> visitor) {
-      for (Expression value : values)
-        value.accept(visitor);
+      for (Collection.Entry entry : entries) {
+        entry.key.accept(visitor);
+        entry.value.accept(visitor);
+      }
+    }
+
+    public Flavor getFlavor() {
+      int expectedIndex = 0;
+      for (Entry entry : entries) {
+        Tree.Expression key = entry.key;
+        if (!(key instanceof Number) || ((Number) key).value != expectedIndex) {
+          return Flavor.DICTIONARY;
+        }
+        expectedIndex++;
+      }
+      return Flavor.OBJECT_ARRAY;
     }
 
   }

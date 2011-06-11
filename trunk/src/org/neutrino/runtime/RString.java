@@ -2,7 +2,7 @@ package org.neutrino.runtime;
 
 import org.neutrino.plankton.Store;
 
-public class RString extends RValue {
+public class RString extends RAbstractValue {
 
   private static RProtocol[] PROTOS;
   public @Store String value;

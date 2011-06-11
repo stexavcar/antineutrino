@@ -69,7 +69,7 @@ public abstract class Expression {
       visitExpression(that);
     }
 
-    public void visitNewArray(NewArray that) {
+    public void visitNewObjectArray(NewObjectArray that) {
       visitExpression(that);
     }
 
@@ -78,6 +78,10 @@ public abstract class Expression {
     }
 
     public void visitInternal(Internal that) {
+      visitExpression(that);
+    }
+
+    public void visitNewDictionary(NewDictionary that) {
       visitExpression(that);
     }
 
@@ -335,25 +339,63 @@ public abstract class Expression {
 
   }
 
-  public static class NewArray extends Expression {
+  public static class NewObjectArray extends Expression {
 
     public @Store List<Expression> values;
 
-    private NewArray(List<Expression> values) {
+    private NewObjectArray(List<Expression> values) {
       this.values = values;
     }
 
-    public NewArray() { }
+    public NewObjectArray() { }
 
     @Override
     public void accept(Visitor visitor) {
-      visitor.visitNewArray(this);
+      visitor.visitNewObjectArray(this);
     }
 
     @Override
     public void traverse(Visitor visitor) {
       for (Expression value : values)
         value.accept(visitor);
+    }
+
+  }
+
+  public static class NewDictionary extends Expression {
+
+    public static class Entry {
+
+      public @Store Expression key;
+      public @Store Expression value;
+
+      public Entry() { }
+
+      public Entry(Expression key, Expression value) {
+        this.key = key;
+        this.value = value;
+      }
+
+    }
+
+    public @Store List<Entry> entries;
+
+    public NewDictionary() { }
+
+    public NewDictionary(List<Entry> entries) {
+      this.entries = entries;
+    }
+
+    @Override
+    public void accept(Visitor visitor) {
+      visitor.visitNewDictionary(this);
+    }
+
+    public void traverse(Visitor visitor) {
+      for (Entry entry : entries) {
+        entry.key.accept(visitor);
+        entry.value.accept(visitor);
+      }
     }
 
   }
@@ -490,6 +532,7 @@ public abstract class Expression {
 
   public static void register(ClassIndex index) {
     index.add(Call.Argument.class);
+    index.add(NewDictionary.Entry.class);
     index.add(Symbol.class);
     for (Class<?> klass : Expression.class.getClasses()) {
       if (klass.getAnnotation(Skip.class) == null)
@@ -517,8 +560,12 @@ public abstract class Expression {
       return new GetField(obj, field);
     }
 
-    public static NewArray eNewArray(List<Expression> exprs) {
-      return new NewArray(exprs);
+    public static NewObjectArray eNewObjectArray(List<Expression> exprs) {
+      return new NewObjectArray(exprs);
+    }
+
+    public static NewDictionary eNewDictionary(List<NewDictionary.Entry> exprs) {
+      return new NewDictionary(exprs);
     }
 
     public static SetField eSetField(Expression obj, RFieldKey field, Expression value) {

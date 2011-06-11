@@ -1,19 +1,28 @@
 package org.neutrino.runtime;
 
 
-public class RPrimitiveByteArray extends RArray {
+public class RByteArray extends RAbstractValue implements RPrimitiveArray {
 
-  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("byte_array");
+  private static final RProtocol[] PROTOS = RProtocol.getCanonicals("ByteArray");
 
   private State state = State.MUTABLE;
   private final byte[] data;
 
-  public RPrimitiveByteArray(byte[] data) {
+  public RByteArray(byte[] data) {
     this.data = data;
   }
 
-  public RPrimitiveByteArray(int size) {
+  public RByteArray(int size) {
     this.data = new byte[size];
+  }
+
+  @Override
+  public RValue get(RValue key) {
+    if (key instanceof RInteger) {
+      return get(((RInteger) key).value);
+    } else {
+      return RNull.getInstance();
+    }
   }
 
   @Override

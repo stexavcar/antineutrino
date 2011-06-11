@@ -6,7 +6,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-public class RFile extends RValue {
+public class RFile extends RAbstractValue {
 
   private static final RProtocol[] PROTOS = RProtocol.getCanonicals("file");
 

@@ -16,7 +16,7 @@ def HashMap.new() => new HashMap {
   max_load := (HashMap.kInitialCapacity * 3) / 4
 }
 
-def HashMap.new(init is PrimitiveCollection) {
+def HashMap.new(init is PrimitiveMap) {
   def result := new HashMap();
   for (i in 0 .. init.length)
     result[i] := init[i];

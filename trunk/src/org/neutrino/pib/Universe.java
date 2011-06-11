@@ -27,7 +27,7 @@ import org.neutrino.runtime.RImpl;
 import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RObject;
-import org.neutrino.runtime.RPrimitiveArray;
+import org.neutrino.runtime.RObjectArray;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
@@ -159,7 +159,7 @@ public class Universe {
     add(RFunction.class);
     add(RValue.State.class);
     add(RImpl.class);
-    add(RPrimitiveArray.class);
+    add(RObjectArray.class);
     add(RBoolean.class);
     add(RNull.class);
     Expression.register(this);
@@ -191,9 +191,9 @@ public class Universe {
   };
 
   private static final List<String> PROTOCOLS = Arrays.asList(
-      "Protocol", "FieldKey", "String", "Integer", "array", "byte_array",
-      "mutbytarr", "True", "False", "continuation", "file", "null", "ref", "Lambda",
-      "Function");
+      "Protocol", "FieldKey", "String", "Integer", "ObjectArray", "ByteArray",
+      "True", "False", "continuation", "file", "null", "ref", "Lambda",
+      "Function", "PrimitiveMap");
 
   static {
     for (String name : PROTOCOLS) {

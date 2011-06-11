@@ -8,7 +8,7 @@ import org.neutrino.pib.Universe;
 import org.neutrino.plankton.Store;
 import org.neutrino.syntax.Annotation;
 
-public class RProtocol extends RValue {
+public class RProtocol extends RAbstractValue {
 
   public @Store List<Annotation> annotations;
   public @Store RValue id;

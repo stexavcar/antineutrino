@@ -1,7 +1,7 @@
 package org.neutrino.runtime;
 
 import org.neutrino.plankton.Store;
-public class RInteger extends RValue {
+public class RInteger extends RAbstractValue {
 
   private static final RProtocol[] PROTOS = RProtocol.getCanonicals("Integer");
 

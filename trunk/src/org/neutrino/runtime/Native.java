@@ -231,7 +231,7 @@ public class Native {
   @Marker("str.implode") static final Impl STRING_IMPLODE = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RArray elms = (RArray) args.getArgument(0);
+      RPrimitiveArray elms = (RPrimitiveArray) args.getArgument(0);
       int length = ((RInteger) args.getArgument(1)).getValue();
       String sep = ((RString) args.getArgument(2)).getValue();
       StringBuilder buf = new StringBuilder();
@@ -282,7 +282,7 @@ public class Native {
     @Override
     public RValue call(Arguments args) {
       RInteger size = (RInteger) args.getArgument(0);
-      return new RPrimitiveArray(size.getValue());
+      return new RObjectArray(size.getValue());
     }
   };
 
@@ -290,14 +290,14 @@ public class Native {
     @Override
     public RValue call(Arguments args) {
       RInteger size = (RInteger) args.getArgument(0);
-      return new RPrimitiveByteArray(size.getValue());
+      return new RByteArray(size.getValue());
     }
   };
 
   @Marker("mutbytarr.set") static final Impl MUTBYTARR_SET = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RPrimitiveByteArray self = (RPrimitiveByteArray) args.getThis();
+      RByteArray self = (RByteArray) args.getThis();
       RInteger index = (RInteger) args.getArgument(0);
       RInteger value = (RInteger) args.getArgument(1);
       self.set(index.getValue(), value.getValue());
@@ -308,7 +308,7 @@ public class Native {
   @Marker("mutarr.set") static final Impl MUTARR_SET = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RPrimitiveArray self = (RPrimitiveArray) args.getThis();
+      RObjectArray self = (RObjectArray) args.getThis();
       RInteger index = (RInteger) args.getArgument(0);
       if (index.getValue() >= self.getLength()) {
         throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
@@ -322,7 +322,7 @@ public class Native {
   @Marker("array[]") static final Impl ARRAY_GET = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RPrimitiveArray arr = (RPrimitiveArray) args.getThis();
+      RObjectArray arr = (RObjectArray) args.getThis();
       int index = ((RInteger) args.getArgument(0)).getValue();
       if (index < 0 || index >= arr.getLength()) {
         throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
@@ -331,10 +331,19 @@ public class Native {
     }
   };
 
+  @Marker("PrimitiveMap[]") static final Impl PRIMITIVE_MAP_GET = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RPrimitiveMap map = (RPrimitiveMap) args.getThis();
+      RValue key = (RValue) args.getArgument(0);
+      return map.get(key);
+    }
+  };
+
   @Marker("array.length") static final Impl ARRAY_LENGTH = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RPrimitiveArray arr = (RPrimitiveArray) args.getThis();
+      RObjectArray arr = (RObjectArray) args.getThis();
       return RInteger.get(arr.getLength());
     }
   };
@@ -342,7 +351,7 @@ public class Native {
   @Marker("byte_array[1]") static final Impl BYTE_ARRAY_GET_1 = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RPrimitiveByteArray arr = (RPrimitiveByteArray) args.getThis();
+      RByteArray arr = (RByteArray) args.getThis();
       int index = ((RInteger) args.getArgument(0)).getValue();
       if (index < 0 || index >= arr.getLength()) {
         throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
@@ -354,7 +363,7 @@ public class Native {
   @Marker("byte_array[4]") static final Impl BYTE_ARRAY_GET_4 = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RPrimitiveByteArray arr = (RPrimitiveByteArray) args.getThis();
+      RByteArray arr = (RByteArray) args.getThis();
       int index = ((RInteger) args.getArgument(0)).getValue();
       if (index < 0 || index + 3 >= arr.getLength()) {
         throw new InterpreterError(new IndexOutOfBoundsException(), args.frame);
@@ -371,7 +380,7 @@ public class Native {
   @Marker("byte_array.length") static final Impl BYTE_ARRAY_LENGTH = new Impl() {
     @Override
     public RValue call(Arguments args) {
-      RPrimitiveByteArray arr = (RPrimitiveByteArray) args.getThis();
+      RByteArray arr = (RByteArray) args.getThis();
       return RInteger.get(arr.getLength());
     }
   };
@@ -381,7 +390,7 @@ public class Native {
     public RValue call(Arguments args) {
       RFile file = (RFile) args.getThis();
       byte[] data = file.read();
-      return new RPrimitiveByteArray(data);
+      return new RByteArray(data);
     }
   };
 
@@ -389,7 +398,7 @@ public class Native {
     @Override
     public RValue call(Arguments args) {
       RFile file = (RFile) args.getThis();
-      RPrimitiveByteArray data = (RPrimitiveByteArray) args.getArgument(0);
+      RByteArray data = (RByteArray) args.getArgument(0);
       file.write(data.getBytes());
       return RNull.getInstance();
     }
@@ -487,7 +496,7 @@ public class Native {
     @Override
     public RValue call(Arguments args) {
       RValue name = args.getFunctionArgument(0);
-      RArray values = (RArray) args.getFunctionArgument(1);
+      RPrimitiveArray values = (RPrimitiveArray) args.getFunctionArgument(1);
       int argc = values.getLength();
       List<CallInfo.ArgumentEntry> entries = new ArrayList<CallInfo.ArgumentEntry>();
       entries.add(new CallInfo.ArgumentEntry(RString.of("name"), null,

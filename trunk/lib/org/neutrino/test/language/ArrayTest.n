@@ -2,6 +2,7 @@ def (this is LanguageTest).test_arrays() {
   this.test_simple_arrays();
   this.test_array_slice();
   this.test_mutable_arrays();
+  this.test_maps();
 }
 
 def (this is LanguageTest).test_simple_arrays() {
@@ -45,4 +46,14 @@ def (this is LanguageTest).test_mutable_arrays() {
     arr[i] := i * 3;
   for (i in 0 .. kSize)
     assert_equal(i * 3, arr[i]);
+}
+
+def (this is LanguageTest).test_maps() {
+  this.on_start("maps");
+  def m0 := #[0: "a", 1: "b"];
+  assert_equal("a", m0[0]);
+  assert_equal("b", m0[1]);
+  def m1 := #["a": 0, "b": 1];
+  assert_equal(0, m1["a"]);
+  assert_equal(1, m1["b"]);
 }

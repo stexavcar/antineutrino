@@ -4,7 +4,7 @@ import org.neutrino.plankton.Atomic;
 import org.neutrino.plankton.Generator;
 
 @Atomic
-public class RNull extends RValue {
+public class RNull extends RAbstractValue {
 
   private static final RProtocol[] PROTOS = RProtocol.getCanonicals("null");
   private static final RNull INSTANCE = new RNull();

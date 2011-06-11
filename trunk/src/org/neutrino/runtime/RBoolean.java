@@ -5,7 +5,7 @@ import org.neutrino.plankton.Generator;
 import org.neutrino.plankton.Store;
 
 @Atomic
-public class RBoolean extends RValue {
+public class RBoolean extends RAbstractValue {
 
   private static final RBoolean TRUE = new RBoolean(RProtocol.getCanonicals("True"), true);
   private static final RBoolean FALSE = new RBoolean(RProtocol.getCanonicals("False"), false);

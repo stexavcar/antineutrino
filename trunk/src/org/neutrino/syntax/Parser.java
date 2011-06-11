@@ -11,6 +11,7 @@ import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
 import org.neutrino.syntax.Token.Type;
+import org.neutrino.syntax.Tree.Collection;
 import org.neutrino.syntax.Tree.If;
 import org.neutrino.syntax.Tree.Lambda;
 
@@ -388,7 +389,7 @@ public class Parser {
     List<RValue> keywords;
     if (isKeyword) {
       expect(Type.COLON);
-      keywords = Arrays.asList(RInteger.get(index), RString.of(name));
+      keywords = Arrays.<RValue>asList(RInteger.get(index), RString.of(name));
     } else {
       keywords = Collections.<RValue>singletonList(RInteger.get(index));
     }
@@ -737,14 +738,27 @@ public class Parser {
     return result;
   }
 
+  private Collection.Entry parseCollectionEntry(int[] implicitIndex) throws SyntaxError {
+    Tree.Expression key = parseExpression(false);
+    if (at(Type.COLON)) {
+      expect(Type.COLON);
+      Tree.Expression value = parseExpression(false);
+      return new Collection.Entry(key, value);
+    } else {
+      int index = implicitIndex[0]++;
+      return new Collection.Entry(new Tree.Number(index), key);
+    }
+  }
+
   private Tree.Expression parsePrimitiveCollectionContents(Type end) throws SyntaxError {
-    List<Tree.Expression> values = new ArrayList<Tree.Expression>();
+    List<Collection.Entry> values = new ArrayList<Collection.Entry>();
+    int[] implicitIndex = { 0 };
     if (!at(Type.RBRACK)) {
-      Tree.Expression first = parseExpression(false);
+      Collection.Entry first = parseCollectionEntry(implicitIndex);
       values.add(first);
       while (at(Type.COMMA)) {
         expect(Type.COMMA);
-        Tree.Expression next = parseExpression(false);
+        Collection.Entry next = parseCollectionEntry(implicitIndex);
         values.add(next);
       }
     }

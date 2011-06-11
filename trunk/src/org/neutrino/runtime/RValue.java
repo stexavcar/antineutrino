@@ -1,7 +1,7 @@
 package org.neutrino.runtime;
 
 
-public abstract class RValue implements Comparable<RValue> {
+public interface RValue extends Comparable<RValue> {
 
   public enum State {
 
@@ -26,25 +26,14 @@ public abstract class RValue implements Comparable<RValue> {
     INTEGER, STRING;
   }
 
-  public abstract RProtocol[] getTypeIds();
+  public RProtocol[] getTypeIds();
 
-  public abstract State getState();
+  public State getState();
 
-  public String toExternalString() {
-    return toString();
-  }
+  public Kind getKind();
 
-  public Object toObject() {
-    return null;
-  }
+  public Object toObject();
 
-  public Kind getKind() {
-    return null;
-  }
-
-  @Override
-  public int compareTo(RValue that) {
-    throw new UnsupportedOperationException(this.getClass().getSimpleName());
-  }
+  public String toExternalString();
 
 }
