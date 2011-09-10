@@ -111,9 +111,9 @@ public class MethodLookupHelper {
     }
   }
 
-  public Lambda lookupLambda(RValue... args) {
+  public Lambda lookupLambda(String name, RValue... args) {
     Frame fakeFrame = new Frame(null, new CodeBundle(new byte[0], Arrays.asList(), 0));
-    fakeFrame.stack.push(RString.of("()"));
+    fakeFrame.stack.push(RString.of(name));
     List<CallInfo.ArgumentEntry> entries = new ArrayList<CallInfo.ArgumentEntry>();
     for (int i = 0; i < args.length; i++) {
       fakeFrame.stack.push(args[i]);

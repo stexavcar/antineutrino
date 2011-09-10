@@ -152,6 +152,9 @@ def BuildPib(target, source, **kwargs):
     goodfiles = fnmatch.filter(files, '*.n')
     for f in goodfiles:
       env.Depends(result, join(base, f))
+    goodfiles = fnmatch.filter(files, '*.module')
+    for f in goodfiles:
+      env.Depends(result, join(base, f))
   return result
 
 libpib = join(pib_path, 'lib.pib')

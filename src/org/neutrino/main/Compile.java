@@ -49,7 +49,7 @@ public class Compile {
         System.out.println(line);
       return null;
     }
-    top.preCompileModules();
+    top.preCompileModules(universe);
     top.writeTo(universe);
     universe.evaluateStatics();
     return universe;

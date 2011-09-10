@@ -1,0 +1,7 @@
+@native("Module")
+protocol CoreModule {
+
+  def this.import(module) => internal "import";
+
+}
+

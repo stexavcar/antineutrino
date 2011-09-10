@@ -61,6 +61,15 @@ public class Source {
     return null;
   }
 
+  public Tree.Declaration findAnnotated(String name) {
+    for (Tree.Declaration decl : code.getDeclarations()) {
+      if (decl.getAnnotation(name) != null) {
+        return decl;
+      }
+    }
+    return null;
+  }
+
   public Tree.Method findMethod(String holder, String name) {
     for (Tree.Declaration decl : code.getDeclarations()) {
       if (!(decl instanceof Tree.Method))

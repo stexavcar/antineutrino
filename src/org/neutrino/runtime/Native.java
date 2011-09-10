@@ -538,6 +538,28 @@ public class Native {
     }
   };
 
+  @Marker("import") static final Impl IMPORT = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RModule module = (RModule) args.getThis();
+      RModule value = (RModule) args.getArgument(0);
+      module.addDelegateNamespace(value);
+      return RNull.getInstance();
+    }
+  };
+
+  @Marker("lookup_module") static final Impl LOOKUP_MODULE = new Impl() {
+    @Override
+    public RValue call(Arguments args) {
+      RPlatform platform = (RPlatform) args.getThis();
+      RValue name = args.getArgument(0);
+      RModule module = platform.lookupModule(name);
+      if (module == null)
+        throw new InterpreterError.Failure("Couldn't find module " + name, args.frame);
+      return module;
+    }
+  };
+
   @SuppressWarnings("serial")
   private static final Map<String, Impl> IMPLS = new HashMap<String, Impl>() {{
     try {

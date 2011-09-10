@@ -100,6 +100,7 @@ def CompilerGrower.new_handler_table() {
   result["org.neutrino.runtime.RObjectArray"] := new DummyCodec("a");
   result["org.neutrino.runtime.RValue$State"] := new DummyCodec("s");
   result["org.neutrino.runtime.RFunction"] := new DummyCodec("f");
+  result["org.neutrino.runtime.RModule"] := new DummyCodec("m");
   result["built-in"] := new BuiltinCodec();
   result;
 }

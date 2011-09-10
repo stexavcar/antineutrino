@@ -504,6 +504,11 @@ public abstract class Expression {
       value.accept(visitor);
     }
 
+    @Override
+    public String toString() {
+      return "setField(" + object + ", " + field + ", " + value + ")";
+    }
+
   }
 
   public static class GetField extends Expression {

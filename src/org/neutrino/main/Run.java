@@ -36,10 +36,10 @@ public class Run {
     RValue entryPointValue = universe.getEntryPoint(RString.of(entryPoint));
     assert entryPointValue != null : "No entry point found.";
     RObjectArray argsObject = buildStringList(args);
-    Lambda entryPointLambda = universe.getLambda(entryPointValue,
+    Lambda entryPointLambda = universe.getLambda("()", entryPointValue,
         argsObject);
     if (entryPointLambda == null)
-      entryPointLambda = universe.getLambda(entryPointValue);
+      entryPointLambda = universe.getLambda("()", entryPointValue);
     Interpreter.run(entryPointLambda, argsObject);
   }
 
