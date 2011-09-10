@@ -7,8 +7,6 @@ import java.util.List;
 
 import org.javatrino.ast.Symbol;
 import org.neutrino.compiler.CompilerUniverse;
-import org.neutrino.compiler.ResolverSymbol;
-import org.neutrino.compiler.ResolverSymbol.LocalSymbol;
 import org.neutrino.compiler.Source;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Parameter;
@@ -938,7 +936,6 @@ public class Tree {
     private final List<Expression> protocols;
     private final String displayName;
 
-    private List<ResolverSymbol> captures;
     private List<RFieldKey> captureFields;
 
     public New(Source origin, List<Field> fields, List<String> protocolNames,
@@ -981,16 +978,8 @@ public class Tree {
       return this.displayName;
     }
 
-    public void setCaptures(List<ResolverSymbol> captures,
-        List<RFieldKey> fields) {
-      assert this.captures == null;
-      this.captures = captures;
+    public void setCaptures(List<RFieldKey> fields) {
       this.captureFields = fields;
-    }
-
-    public List<ResolverSymbol> getCaptures() {
-      assert this.captures != null;
-      return this.captures;
     }
 
     public List<RFieldKey> getCaptureFields() {
@@ -1054,7 +1043,6 @@ public class Tree {
     private final Expression body;
     private final boolean isReference;
     private final Symbol symbol;
-    private LocalSymbol resolverSymbol;
 
     public LocalDefinition(List<Annotation> annots, String name,
         Expression value, Expression body, boolean isReference) {
@@ -1065,18 +1053,8 @@ public class Tree {
       this.symbol = new Symbol(Symbol.kLocalSymbol);
     }
 
-    public void bind(LocalSymbol resolverSymbol) {
-      assert this.resolverSymbol == null;
-      this.resolverSymbol = resolverSymbol;
-    }
-
     public boolean isReference() {
       return this.isReference;
-    }
-
-    public LocalSymbol getResolverSymbol() {
-      assert this.resolverSymbol != null;
-      return this.resolverSymbol;
     }
 
     public Symbol getSymbol() {

@@ -41,7 +41,9 @@ import org.neutrino.syntax.Tree.Protocol;
  */
 public class Source {
 
-  private static final String EXTENSION = ".n";
+  private static final String MODULE_EXTENSION = ".module";
+  private static final String SOURCE_EXTENSION = ".n";
+
   private final String name;
   private final String contents;
   private Tree.Unit code;
@@ -89,14 +91,22 @@ public class Source {
     }
   }
 
+  public static Source createSource(File file) throws IOException {
+    return create(file, SOURCE_EXTENSION);
+  }
+
+  public static Source createModule(File file) throws IOException {
+    return create(file, MODULE_EXTENSION);
+  }
+
   /**
    * Creates and returns a source object for the source in the given
    * file or, if the file is not a neutrino source file, returns null.
    */
-  public static Source create(File file) throws IOException {
+  private static Source create(File file, String ext) throws IOException {
     assert file.exists() && file.isFile();
     String fileName = file.getName();
-    if (!fileName.endsWith(EXTENSION))
+    if (!fileName.endsWith(ext))
       return null;
     String contents = readFile(file);
     return create(file.getPath(), contents);

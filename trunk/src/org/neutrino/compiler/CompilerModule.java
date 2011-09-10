@@ -8,7 +8,6 @@ import java.util.TreeMap;
 import org.neutrino.pib.Module;
 import org.neutrino.pib.Universe;
 import org.neutrino.syntax.SyntaxError;
-import org.neutrino.syntax.Tree;
 
 /**
  * A single neutrino module.
@@ -18,6 +17,7 @@ import org.neutrino.syntax.Tree;
 public class CompilerModule {
 
   private final String name;
+  private Source manifest;
   private final Map<String, CompilerModule> modules = new TreeMap<String, CompilerModule>();
   private final Map<String, Source> sources = new TreeMap<String, Source>();
 
@@ -44,39 +44,17 @@ public class CompilerModule {
         CompilerModule child = ensureModule(shortName, fullName);
         child.includeFromPath(file);
       } else {
-        Source source = Source.create(file);
-        if (source != null)
+        Source source = Source.createSource(file);
+        if (source == null) {
+          Source manifest = Source.createModule(file);
+          if (manifest != null) {
+            this.manifest = manifest;
+          }
+        } else {
           sources.put(source.getName(), source);
+        }
       }
     }
-  }
-
-  public Tree.Declaration findDeclaration(String name) {
-    for (Source source : sources.values()) {
-      Tree.Declaration result = source.findDeclaration(name);
-      if (result != null)
-        return result;
-    }
-    for (CompilerModule module : modules.values()) {
-      Tree.Declaration result = module.findDeclaration(name);
-      if (result != null)
-        return result;
-    }
-    return null;
-  }
-
-  public Tree.Method findMethod(String holder, String name) {
-    for (Source source : sources.values()) {
-      Tree.Method result = source.findMethod(holder, name);
-      if (result != null)
-        return result;
-    }
-    for (CompilerModule module : modules.values()) {
-      Tree.Method result = module.findMethod(holder, name);
-      if (result != null)
-        return result;
-    }
-    return null;
   }
 
   public CompilerModule ensureModule(String shortName, String fullName) {
@@ -94,6 +72,8 @@ public class CompilerModule {
    * errors will be issued at this point.
    */
   public void parseAll() throws SyntaxError {
+    if (manifest != null)
+      manifest.ensureParsed();
     for (Source source : sources.values())
       source.ensureParsed();
     for (CompilerModule child : modules.values())
