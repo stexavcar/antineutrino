@@ -2,7 +2,6 @@ package org.neutrino.compiler;
 
 import org.neutrino.pib.Universe;
 import org.neutrino.syntax.SyntaxError;
-import org.neutrino.syntax.Tree.Declaration;
 
 
 public class CompilerUniverse {
@@ -22,8 +21,8 @@ public class CompilerUniverse {
     root.writeTo(universe);
   }
 
-  public Declaration findDeclaration(String name) {
-    return root.findDeclaration(name);
+  public void preCompileModules() {
+
   }
 
 }

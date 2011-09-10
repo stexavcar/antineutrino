@@ -73,7 +73,7 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
           visitLazyField(field);
         }
       }
-      that.setCaptures(capturingScope.getOuterTransient(), capturingScope.getOuterTransientFields());
+      that.setCaptures(capturingScope.getOuterTransientFields());
     } finally {
       scope = prevScope;
     }
@@ -106,7 +106,6 @@ public class LexicalAnalyzer extends Tree.ExpressionVisitor<Void> {
     try {
       LocalScope local = Scope.localScope(that, methodScope.nextLocal(),
           prevScope);
-      that.bind(local.getSymbol());
       scope = local;
       that.getBody().accept(this);
     } finally {

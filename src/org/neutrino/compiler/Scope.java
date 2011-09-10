@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.javatrino.ast.Symbol;
-import org.neutrino.compiler.ResolverSymbol.LocalSymbol;
 import org.neutrino.pib.Parameter;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.syntax.Tree.LocalDefinition;
@@ -24,16 +23,11 @@ public abstract class Scope {
 
   public static class CapturingScope extends Scope {
 
-    private final List<ResolverSymbol> outerTransient = new ArrayList<ResolverSymbol>();
     private final List<RFieldKey> outerCaptureFields = new ArrayList<RFieldKey>();
     private final Scope outerScope;
 
     public CapturingScope(Scope outer) {
       this.outerScope = outer;
-    }
-
-    public List<ResolverSymbol> getOuterTransient() {
-      return outerTransient;
     }
 
     public List<RFieldKey> getOuterTransientFields() {
@@ -50,16 +44,12 @@ public abstract class Scope {
   public static class MethodScope extends Scope {
 
     private final List<Parameter> params;
-    private final List<ResolverSymbol> symbols;
     private final Scope outerScope;
     private int localCount = 0;
 
     public MethodScope(List<Parameter> params, Scope outer) {
       this.params = params;
       this.outerScope = outer;
-      this.symbols = new ArrayList<ResolverSymbol>();
-      for (int i = 0; i < params.size(); i++)
-        symbols.add(ResolverSymbol.parameter(i, params.size()));
     }
 
     public List<Parameter> getParameters() {
@@ -104,24 +94,20 @@ public abstract class Scope {
 
     private final Scope outer;
     private final String name;
-    private final LocalSymbol resolverSymbol;
+    private final boolean isReference;
     private final Symbol symbol;
 
     private LocalScope(LocalDefinition def, int index, Scope outer) {
       this.outer = outer;
       this.name = def.getName();
       this.symbol = def.getSymbol();
-      this.resolverSymbol = ResolverSymbol.local(def.isReference(), index);
-    }
-
-    public LocalSymbol getSymbol() {
-      return resolverSymbol;
+      this.isReference = def.isReference();
     }
 
     @Override
     public LookupResult lookup(String name) {
       if (name.equals(this.name))
-        return new LookupResult(this.symbol, resolverSymbol.isReference());
+        return new LookupResult(this.symbol, isReference);
       return outer.lookup(name);
     }
 
