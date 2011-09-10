@@ -12,6 +12,7 @@ import org.neutrino.plankton.Store;
 import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Native;
 import org.neutrino.runtime.RFunction;
+import org.neutrino.runtime.RModule;
 import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
@@ -23,6 +24,7 @@ public class Module {
 
   public Map<RValue, Binding> defs;
 
+  public @Store RModule wrapper;
   public @Store List<Method> methods;
   public @Store Universe universe;
   public @Store Map<RProtocol, List<RProtocol>> inheritance = new HashMap<RProtocol, List<RProtocol>>();
@@ -32,13 +34,15 @@ public class Module {
 
   private Module(Universe universe, Map<RValue, Binding> defs, List<Method> methods,
       Map<RProtocol, List<RProtocol>> inheritance,
-      Map<RValue, List<Annotation>> globalAnnots, Map<RValue, RValue> globals) {
+      Map<RValue, List<Annotation>> globalAnnots, Map<RValue, RValue> globals,
+      RModule wrapper) {
     this.defs = defs;
     this.methods = methods;
     this.universe = universe;
     this.inheritance = inheritance;
     this.globalAnnots = globalAnnots;
     this.globals = globals;
+    this.wrapper = wrapper;
   }
 
   public Module() { }
@@ -47,13 +51,18 @@ public class Module {
     return universe;
   }
 
-  public static Module newEmpty(Universe universe) {
+  public static Module newEmpty(Universe universe, RModule wrapper) {
     return new Module(universe,
         new HashMap<RValue, Binding>(),
         new ArrayList<Method>(),
         new HashMap<RProtocol, List<RProtocol>>(),
         new HashMap<RValue, List<Annotation>>(),
-        new HashMap<RValue, RValue>());
+        new HashMap<RValue, RValue>(),
+        wrapper);
+  }
+
+  public RModule getWrapper() {
+    return wrapper;
   }
 
   public RValue getEntryPoint(RValue name) {

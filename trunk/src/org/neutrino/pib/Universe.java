@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,7 @@ import org.neutrino.plankton.ClassIndex;
 import org.neutrino.plankton.IBuiltinObjectIndex;
 import org.neutrino.plankton.PlanktonEncoder;
 import org.neutrino.plankton.Store;
+import org.neutrino.runtime.Interpreter;
 import org.neutrino.runtime.Lambda;
 import org.neutrino.runtime.MethodLookupHelper;
 import org.neutrino.runtime.Native;
@@ -25,9 +27,11 @@ import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RFunction;
 import org.neutrino.runtime.RImpl;
 import org.neutrino.runtime.RInteger;
+import org.neutrino.runtime.RModule;
 import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RObject;
 import org.neutrino.runtime.RObjectArray;
+import org.neutrino.runtime.RPlatform;
 import org.neutrino.runtime.RProtocol;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
@@ -41,27 +45,35 @@ import org.neutrino.syntax.Annotation;
  */
 public class Universe {
 
-  public @Store Map<String, Module> modules;
+  private final RPlatform platform = new RPlatform(this);
+  public @Store Map<RValue, Module> modules;
   private final MethodLookupHelper methodLookupHelper = new MethodLookupHelper(this);
 
-  public Universe(Map<String, Module> modules) {
+  public Universe(Map<RValue, Module> modules) {
     this.modules = modules;
   }
 
   public Universe() { }
 
   public static Universe newEmpty() {
-    return new Universe(new HashMap<String, Module>());
+    return new Universe(new HashMap<RValue, Module>());
   }
 
   public void retainModules(List<String> values) {
     if (values.isEmpty())
       return;
-    modules.keySet().retainAll(values);
+    Set<RString> strObjs = new HashSet<RString>();
+    for (String str : values)
+      strObjs.add(RString.of(str));
+    modules.keySet().retainAll(strObjs);
   }
 
-  public Module createModule(String name) {
-    Module result = Module.newEmpty(this);
+  public RPlatform getPlatform() {
+    return platform;
+  }
+
+  public Module createModule(RValue name, RModule wrapper) {
+    Module result = Module.newEmpty(this, wrapper);
     modules.put(name, result);
     return result;
   }
@@ -110,8 +122,8 @@ public class Universe {
     return methodLookupHelper.lookupMethod(info, stack);
   }
 
-  public Lambda getLambda(RValue... args) {
-    return methodLookupHelper.lookupLambda(args);
+  public Lambda getLambda(String name, RValue... args) {
+    return methodLookupHelper.lookupLambda(name, args);
   }
 
   public void writePlankton(OutputStream out) throws IOException {
@@ -126,11 +138,11 @@ public class Universe {
       module.evaluateStatics();
   }
 
-  public Set<Map.Entry<String, Module>> getModules() {
+  public Set<Map.Entry<RValue, Module>> getModules() {
     return modules.entrySet();
   }
 
-  public Module getModule(String name) {
+  public Module getModule(RValue name) {
     return modules.get(name);
   }
 
@@ -162,6 +174,7 @@ public class Universe {
     add(RObjectArray.class);
     add(RBoolean.class);
     add(RNull.class);
+    add(RModule.class);
     Expression.register(this);
   }};
 
@@ -193,13 +206,19 @@ public class Universe {
   private static final List<String> PROTOCOLS = Arrays.asList(
       "Protocol", "FieldKey", "String", "Integer", "ObjectArray", "ByteArray",
       "True", "False", "continuation", "file", "null", "ref", "Lambda",
-      "Function", "PrimitiveMap");
+      "Function", "PrimitiveMap", "Module", "Platform");
 
   static {
     for (String name : PROTOCOLS) {
       RValue key = RString.of(name);
       addBuiltin(name, new RProtocol(Collections.<Annotation>emptyList(), key, key));
     }
+  }
+
+  public RValue call(String name, RValue... args) {
+    Lambda lambda = getLambda(name, args);
+    assert lambda != null;
+    return Interpreter.run(lambda, args);
   }
 
 }

@@ -86,6 +86,8 @@ public class Tree {
 
     public abstract RValue getName();
 
+    public abstract RValue getMaterialized();
+
     public Annotation getAnnotation(String tag) {
       for (Annotation annot : getAnnotations()) {
         if (annot.getTag().equals(tag))
@@ -131,6 +133,11 @@ public class Tree {
     public String toString() {
       String an = annotationsToString(getAnnotations());
       return "(def " + an + name + " " + value + ")";
+    }
+
+    @Override
+    public RValue getMaterialized() {
+      return null;
     }
 
   }
@@ -253,6 +260,11 @@ public class Tree {
     }
 
     @Override
+    public RValue getMaterialized() {
+      return null;
+    }
+
+    @Override
     public RValue getName() {
       return null;
     }
@@ -290,6 +302,11 @@ public class Tree {
       this.name = name;
       this.params = params;
       this.body = body;
+    }
+
+    @Override
+    public RValue getMaterialized() {
+      return null;
     }
 
     public List<Parameter> getParameters() {

@@ -1,8 +1,9 @@
 @module
+@primordial
 protocol Core {
 
   @static def proto.new() => new Core { };
-  
+
   def this.configure(platform) {
   
   }

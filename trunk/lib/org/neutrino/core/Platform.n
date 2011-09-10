@@ -1,0 +1,7 @@
+@native("Platform")
+protocol CorePlatform {
+
+  def this.lookup_module(name is String) => internal "lookup_module";
+
+}
+
