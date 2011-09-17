@@ -279,7 +279,7 @@ public class Source {
       CodeBundle bundle = Compiler.compile(module, Source.this, that.getBody(),
           that.getParameters());
       module.createMethod(new Method(resolveAnnotations(that.getAnnotations()),
-          signature, false, bundle.body, bundle.rewrites, module));
+          signature, false, bundle.body, bundle.rewrites, module, name));
     }
 
     public void visitMethodDefinition(Tree.Method that) {
@@ -293,7 +293,7 @@ public class Source {
         index++;
       }
       module.createMethod(new Method(resolveAnnotations(that.getAnnotations()),
-          signature, false, bundle.body, bundle.rewrites, module));
+          signature, false, bundle.body, bundle.rewrites, module, name));
     }
 
     public void visitInheritance(Inheritance that) {

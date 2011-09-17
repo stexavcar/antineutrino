@@ -362,7 +362,8 @@ public class BytecodeCompiler extends Visitor {
             false,
             that.body,
             null,
-            module)));
+            module,
+            null)));
     lambda.accept(this);
     assm.withEscape();
   }
