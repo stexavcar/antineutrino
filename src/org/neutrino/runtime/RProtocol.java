@@ -45,7 +45,7 @@ public class RProtocol extends RAbstractValue {
 
   @Override
   public String toString() {
-    return "#<a Protocol: " + id + ">";
+    return "%" + id.toExternalString();
   }
 
   @Override

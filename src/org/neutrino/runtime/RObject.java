@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.javatrino.ast.Method;
+import org.javatrino.utils.Utils;
 import org.neutrino.plankton.Store;
 
 public class RObject extends RAbstractValue {
@@ -52,7 +53,15 @@ public class RObject extends RAbstractValue {
 
   @Override
   public String toString() {
-    return "#<an Object: " + impl.getProtocols() + ">";
+    List<RProtocol> protocols = impl.getProtocols();
+    if (protocols.isEmpty()) {
+      return "#<an Object>";
+    } else if (protocols.size() == 1) {
+      RProtocol protocol = protocols.get(0);
+      return "#<an " + protocol.getId().toExternalString() + ">";
+    } else {
+      return "#<an Object: " + Utils.join(protocols, ", ") + ">";
+    }
   }
 
   @Override

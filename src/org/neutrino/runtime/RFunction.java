@@ -1,5 +1,6 @@
 package org.neutrino.runtime;
 
+
 public class RFunction extends RAbstractValue {
 
   private static final RProtocol[] PROTOS = RProtocol.getCanonicals("Function");
@@ -12,6 +13,11 @@ public class RFunction extends RAbstractValue {
   @Override
   public State getState() {
     return State.IMMUTABLE;
+  }
+
+  @Override
+  public String toExternalString() {
+    return "#<a Function>";
   }
 
 }

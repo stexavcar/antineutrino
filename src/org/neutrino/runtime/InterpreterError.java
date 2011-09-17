@@ -2,8 +2,12 @@ package org.neutrino.runtime;
 
 import java.io.PrintStream;
 import java.util.ArrayList;
+import java.util.List;
 
 import org.javatrino.bytecode.Opcode;
+import org.javatrino.utils.Utils;
+import org.neutrino.runtime.lookup.CallInfo;
+import org.neutrino.runtime.lookup.CallInfo.ArgumentEntry;
 
 @SuppressWarnings("serial")
 public class InterpreterError extends RuntimeException {
@@ -27,17 +31,23 @@ public class InterpreterError extends RuntimeException {
     return trace;
   }
 
-  private String renderValueType(Frame frame, RValue value) {
-    if (value instanceof RProtocol) {
-      return "%" + ((RProtocol) value).getName();
+  private String renderValueType(RValue value) {
+    return (value == null) ? "(null)" : value.toExternalString();
+  }
+
+  private static String[] getBrackets(String methodName) {
+    String start, end;
+    if (methodName.equals("()")) {
+      start = "(";
+      end = ")";
+    } else if (methodName.equals("[]")) {
+      start = "[";
+      end = "]";
     } else {
-      for (RProtocol proto : value.getTypeIds()) {
-        if (proto != null) {
-          return proto.getName().toExternalString();
-        }
-      }
-      return "?";
+      start = methodName + "(";
+      end = ")";
     }
+    return new String[] { start, end };
   }
 
   private StackTraceElement[] buildStackTrace() {
@@ -48,25 +58,37 @@ public class InterpreterError extends RuntimeException {
       if (opcode == Opcode.kCall) {
         int index = current.bundle.getCode()[current.pc + 1];
         int argc = current.bundle.getCode()[current.pc + 2];
-        Object name = current.getLiteral(index);
-        RValue self = current.getArgument(argc, 0);
-        String recvType = renderValueType(current, self);
-        StringBuilder argTypes = new StringBuilder();
-        if (argc > 1) {
-          argTypes.append("[");
-          for (int i = 1; i < argc; i++) {
-            if (i > 1) argTypes.append(", ");
-            RValue arg = current.getArgument(argc, i);
-            argTypes.append(renderValueType(current, arg));
-          }
-          argTypes.append("]");
+        CallInfo info = (CallInfo) current.getLiteral(index);
+        RValue self = getArgument(info, current, argc, RInteger.get(0));
+        String selfStr = renderValueType(self);
+        String name = renderArgument(info, current, argc, RString.of("name"));
+        String[] bracks = getBrackets(name);
+        List<String> args = new ArrayList<String>();
+        for (int i = 1; i < argc - 1; i++) {
+          String arg = renderArgument(info, current, argc, RInteger.get(i));
+          args.add(arg);
         }
-        trace.add(new StackTraceElement(recvType, name.toString() + argTypes,
+        String argsStr = Utils.join(args, ", ");
+        trace.add(new StackTraceElement(selfStr, bracks[0] + argsStr + bracks[1],
             current.bundle.fileName, -1));
       }
       current = current.parent;
     }
     return trace.toArray(new StackTraceElement[trace.size()]);
+  }
+
+  private RValue getArgument(CallInfo info, Frame frame, int argc, RValue tag) {
+    for (ArgumentEntry entry : info.entries) {
+      if (entry.tag.equals(tag)) {
+        return frame.getArgument(argc, entry.index);
+      }
+    }
+    return null;
+  }
+
+
+  private String renderArgument(CallInfo info, Frame frame, int argc, RValue tag) {
+    return renderValueType(getArgument(info, frame, argc, tag));
   }
 
   @Override
@@ -113,7 +135,7 @@ public class InterpreterError extends RuntimeException {
     @Override
     public String getMessage() {
       StackTraceElement topFrame = getStackTrace()[0];
-      return "Method " + topFrame.getClassName() + "/"
+      return "Method " + topFrame.getClassName() + "."
           + topFrame.getMethodName() + " not found";
     }
 

@@ -21,12 +21,13 @@ public class Method {
   public @Store Expression body;
   public @Store Map<Symbol, Expression> rewrites;
   public @Store Module module;
+  public @Store String fileName;
 
   private CodeBundle bundle;
 
   public Method(List<Annotation> annotations, List<Pattern> signature,
       boolean acceptsExtraArguments, Expression body, Map<Symbol, Expression> rewrites,
-      Module module) {
+      Module module, String fileName) {
     assert module != null;
     this.annotations = (annotations == null)
         ? Collections.<Annotation>emptyList()
@@ -36,6 +37,7 @@ public class Method {
     this.body = body;
     this.rewrites = rewrites;
     this.module = module;
+    this.fileName = fileName;
   }
 
   public Method() { }
@@ -55,7 +57,8 @@ public class Method {
     if (map.isEmpty()) {
       return this;
     } else if (this.rewrites == null || this.rewrites.isEmpty()) {
-      return new Method(annotations, signature, acceptsExtraArguments, body, map, module);
+      return new Method(annotations, signature, acceptsExtraArguments, body, map,
+          module, fileName);
     } else {
       assert false;
       return null;
@@ -73,7 +76,7 @@ public class Method {
         if (pattern != null)
           syms.add(pattern.symbol);
       }
-      bundle = new CodeBundle(module, null, body, syms, rewrites);
+      bundle = new CodeBundle(module, fileName, body, syms, rewrites);
     }
     return bundle;
   }
