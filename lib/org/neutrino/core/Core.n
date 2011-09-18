@@ -5,6 +5,4 @@ def print(obj) {
   obj;
 }
 
-def fail(message is String) => internal "fail";
-
 def apply(name is String, args is PrimitiveArray) => internal "apply";

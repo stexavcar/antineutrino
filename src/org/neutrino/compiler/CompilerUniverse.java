@@ -28,6 +28,11 @@ public class CompilerUniverse {
       if (module.isPrimordial())
         module.ensureWritten(universe);
     }
+    // Load all manifests.
+    for (CompilerModule module : root.getModules()) {
+      if (!module.isPrimordial())
+        module.writeManifest(universe);
+    }
     // Bind handlers for all non-primordial modules.
     for (CompilerModule module : root.getModules()) {
       if (!module.isPrimordial())

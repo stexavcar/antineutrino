@@ -112,10 +112,15 @@ public class CompilerModule {
       child.buildSkeleton(universe);
   }
 
-  public void loadHandler(Universe universe) {
+  public void writeManifest(Universe universe) {
     if (manifest == null)
       return;
     manifest.writeTo(universe.getModule(name));
+  }
+
+  public void loadHandler(Universe universe) {
+    if (manifest == null)
+      return;
     Declaration decl = manifest.findAnnotated("module");
     if (decl == null)
       return;
