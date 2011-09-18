@@ -1,16 +1,16 @@
 /* A materialized boolean represented by 32-bit integers 0 and 1. */
 @no_override
 @intrinsic("int32")
-protocol bool_t;
+protocol bool_t {
 
-@cast
-@type(bool_t)
-def bool_t.yes => int32_t.of(1);
+  @static @cast @type(bool_t)
+  def proto.yes => int32_t.of(1);
 
-@cast
-@type(bool_t)
-def bool_t.no => int32_t.of(0);
+  @static @cast @type(bool_t)
+  def proto.no => int32_t.of(0);
 
-@cast // conditionals currently yield int32_t
-@type(bool_t)
-def (this is bool_t).negate() => if this then bool_t.no else bool_t.yes;
+  @cast // conditionals currently yield int32_t
+  @type(bool_t)
+  def this.negate() => if this then bool_t.no else bool_t.yes;
+
+}

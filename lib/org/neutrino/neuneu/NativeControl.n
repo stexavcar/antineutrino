@@ -1,12 +1,10 @@
 @intrinsic
-protocol Control;
+protocol Control {
 
-@inline
-@type(int32_t)
-@intrinsic("if_else")
-def Control.if(cond is bool_t, then_part, else_part);
+  @static @inline @type(int32_t) @intrinsic("if_else")
+  def proto.if(cond is bool_t, then_part, else_part);
 
-@inline
-@type(int32_t)
-@intrinsic("debug_interrupt")
-def Control.halt();
+  @static @inline @type(int32_t) @intrinsic("debug_interrupt")
+  def proto.halt();
+
+}
