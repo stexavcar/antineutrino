@@ -31,13 +31,6 @@ protocol Platform {
 
 }
 
-protocol NeutrinoCompiler;
-
-def NeutrinoCompiler.new() => new NeutrinoCompiler {
-  methods_seen := new HashMap(),
-  method_worklist := new ArrayList()
-};
-
 @entry_point("compile")
 def compiler_entry_point(args) {
   def object_format := args[0];
@@ -46,52 +39,6 @@ def compiler_entry_point(args) {
   def in_name := args[2];
   def out_name := args[3];
   new NeutrinoCompiler().compile(platform, in_name, out_name);
-}
-
-def (this is NeutrinoCompiler).add_dylib_bridge(binary, name, argc) {
-  def bridge := binary.add_code_block(name);
-  bridge.enter_frame(0);
-  bridge.mov(dest: Memory.at(rEsp), src: rEax);
-  bridge.call(CallTarget.extern("_" + name));
-  bridge.exit_frame();  
-}
-
-def (this is NeutrinoCompiler).emit_method(universe, method, assm) {
-  def libc := method.get_annotation("libc");
-  if libc = null
-    then this.emit_plain_method(universe, method, assm);
-    else this.emit_libc_method(universe, method, assm);
-  assm.exit_frame();
-}
-
-def (this is NeutrinoCompiler).emit_plain_method(universe, method, assm) {
-  def should_print := (method.get_annotation("print") != null);
-  method.ensure_analyzed(universe);
-  assm.enter_frame(4 * method.local_count);
-  new CodeGenerator(universe, assm, this, method).generate(method.body);
-  assm.pop(rEax);
-}
-
-def (this is NeutrinoCompiler).emit_libc_method(universe, method, assm) {
-  def libc_name := method.get_annotation("libc")[0];
-  def argc := method.signature.length - 2; // discount the receiver and name
-  assm.enter_frame(4 * argc);
-  // Align ESP to a 16-byte boundary.  Since the stack grows down this
-  // will cause the stack to grow.
-  assm.ahnd(rEsp, 16rFFFFFFF0);
-  for (i in 0 .. argc) {
-    def index := argc - i - 1;
-    assm.mov(dest: rEax, src: Memory.at_disp(rEbp, 8 + (4 * index)));
-    assm.mov(dest: Memory.at_disp(rEsp, 4 * index), src: rEax);
-  }
-  assm.call(Symbol.dylib(libc_name));
-}
-
-def (this is NeutrinoCompiler).emit_boilerplate(binary, entry_point) {
-  def main := binary.add_code_block(binary.file_format.entry_point_name);
-  main.enter_frame(0);
-  main.call(Symbol.local(entry_point));
-  main.exit_frame();  
 }
 
 def get_binary_name(method) {
@@ -108,16 +55,106 @@ def get_binary_name(method) {
   result.to_string();
 }
 
-def (this is NeutrinoCompiler).ensure_generated(method) {
-  def name := get_binary_name(method);
-  if this.methods_seen[name] = null then {
-    this.methods_seen[name] := false;
-    this.method_worklist.add(method);
-  }
-}
+/**
+ * Main class responsible for compiling a neutrino universe to a native
+ * executable.
+ */
+protocol NeutrinoCompiler {
 
-def (this is NeutrinoCompiler).emit_methods(universe, binary) {
-  with_escape (done) {
+  @static def proto.new() => new NeutrinoCompiler {
+    methods_seen := new HashMap(),
+    method_worklist := new ArrayList()
+  }
+
+  /**
+   * Entry-point method.  Reads a universe from the given in file and compiles
+   * it to a binary for the given platform, storing the result in the given out
+   * file.
+   */
+  def this.compile(platform, in_name, out_name) {
+    def universe := this.read_universe(in_name);
+    def binary := this.build_binary(platform, universe);
+    def data := binary.encode;
+    open_file(out_name).write_binary(data);  
+  }
+  
+  /**
+   * Reads and decodes a plankton object from the given file.
+   */
+  def this.read_universe(filename) {
+    def raw_data := open_file(filename).read_binary();
+    def input := new BlobInputStream(raw_data);
+    new PlanktonDecoder(input, new CompilerGrower()).read();
+  }
+
+  /**
+   * Generic method for emitting the code for a given method onto the given
+   * assembler.  Dispatches to the appropriate implementation based on the
+   * type of the method.
+   */
+  def this.emit_method(universe, method, assm) {
+    if method.get_annotation("libc") = null
+      then this.emit_plain_method(universe, method, assm);
+      else this.emit_libc_method(universe, method, assm);
+    assm.exit_frame();
+  }
+
+  /**
+   * Emits a standard method where we have the syntax tree.
+   */
+  def this.emit_plain_method(universe, method, assm) {
+    def should_print := (method.get_annotation("print") != null);
+    method.ensure_analyzed(universe);
+    assm.enter_frame(4 * method.local_count);
+    new CodeGenerator(universe, assm, this, method).generate(method.body);
+    assm.pop(rEax);
+  }
+
+  /**
+   * Emits a native libc bridge method.
+   */
+  def this.emit_libc_method(universe, method, assm) {
+    def libc_name := method.get_annotation("libc")[0];
+    def argc := method.signature.length - 2; // discount the receiver and name
+    assm.enter_frame(4 * argc);
+    // Align ESP to a 16-byte boundary.  Since the stack grows down this
+    // will cause the stack to grow.
+    assm.ahnd(rEsp, 16rFFFFFFF0);
+    for (i in 0 .. argc) {
+      def index := argc - i - 1;
+      assm.mov(dest: rEax, src: Memory.at_disp(rEbp, 8 + (4 * index)));
+      assm.mov(dest: Memory.at_disp(rEsp, 4 * index), src: rEax);
+    }
+    assm.call(Symbol.dylib(libc_name));
+  }
+
+  /**
+   * Emits the per-binary boilerplate.
+   */
+  def this.emit_binary_boilerplate(binary, entry_point) {
+    def main := binary.add_code_block(binary.file_format.entry_point_name);
+    main.enter_frame(0);
+    main.call(Symbol.local(entry_point));
+    main.exit_frame();  
+  }
+
+  /**
+   * Ensures that the given method is on the worklist of methods to
+   * generate.
+   */
+  def this.ensure_generated(method) {
+    def name := get_binary_name(method);
+    if this.methods_seen[name] = null then {
+      this.methods_seen[name] := false;
+      this.method_worklist.add(method);
+    }
+  }
+
+  /**
+   * Worklist loop that keeps emitting methods until the methods worklist is
+   * empty.
+   */
+  def this.emit_methods(universe, binary) => with_escape (done) {
     Control.repeat(fn {
       if this.method_worklist.length = 0
         then done(null);
@@ -130,56 +167,58 @@ def (this is NeutrinoCompiler).emit_methods(universe, binary) {
       }
     });
   }
-}
 
-def (this is NeutrinoCompiler).emit_data(binary) {
-  def assm := binary.add_data_block("x");
-  assm.write(small_integer_t.of(5));
-}
-
-def (this is NeutrinoCompiler).build_binary(platform, universe) {
-  def binary := new Binary(platform.architecture, platform.object_format);
-  // Locate entry point
-  def entry_point_method := with_escape (yield) {
+  /**
+   * Emit any static data that needs to be written into the binary.
+   */
+  def this.emit_data(binary) {
+    def assm := binary.add_data_block("x");
+    assm.write(small_integer_t.of(5));
+  }
+  
+  /**
+   * Scans through the given universe and returns the method annotated as
+   * the neuneu entry point, or null if there is no such method.
+   */
+  def this.find_entry_point(universe) => with_escape (yield) {
     for (method in universe.methods) {
       if method.get_annotation("neuneu_entry_point") != null
         then yield(method);
     }
-    null;
   }
-  if entry_point_method = null
-    then fail("No neuneu_entry_point defined.");
 
-  // Emit standard boilerplate
-  this.emit_boilerplate(binary, get_binary_name(entry_point_method));
-  this.ensure_generated(entry_point_method);
-  this.emit_methods(universe, binary);
-  this.emit_data(binary);
-  binary;
+  /**
+   * Toplevel method that compiles a parsed universe into a binary object
+   * appropriate for the given platform.
+   */
+  def this.build_binary(platform, universe) {
+    def binary := new Binary(platform.architecture, platform.object_format);
+    def entry_point_method := this.find_entry_point(universe);
+    if entry_point_method = null
+      then fail("No neuneu_entry_point defined.");
+    this.emit_binary_boilerplate(binary, get_binary_name(entry_point_method));
+    this.ensure_generated(entry_point_method);
+    this.emit_methods(universe, binary);
+    this.emit_data(binary);
+    binary;
+  }
+  
 }
 
-protocol CompilerGrower;
+/**
+ * Custom grower for reading universes.
+ */
+protocol CompilerGrower {
 
-def CompilerGrower.new() => new CompilerGrower {
-  handler_table := CompilerGrower.new_handler_table()
-}
+  @static def proto.new() => new CompilerGrower {
+    handler_table := CompilerGrower.new_handler_table()
+  }
 
-def (this is CompilerGrower).get_codec(tag) {
-  def handler := this.handler_table[tag];
-  if handler = null then
-    fail("Has no codec for ${tag}.");
-  handler;
-}
+  def this.get_codec(tag) {
+    def handler := this.handler_table[tag];
+    if handler = null then
+      fail("Has no codec for ${tag}.");
+    handler;
+  }
 
-def (this is NeutrinoCompiler).read_universe(filename) {
-  def raw_data := open_file(filename).read_binary();
-  def input := new BlobInputStream(raw_data);
-  new PlanktonDecoder(input, new CompilerGrower()).read();
-}
-
-def (this is NeutrinoCompiler).compile(platform, in_name, out_name) {
-  def universe := this.read_universe(in_name);
-  def binary := this.build_binary(platform, universe);
-  def data := binary.encode;
-  open_file(out_name).write_binary(data);  
 }
