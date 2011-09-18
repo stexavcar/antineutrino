@@ -1,19 +1,26 @@
-protocol EntryPoint;
+/**
+ * Main entry-point for neuneu binary.
+ */
+protocol Boot {
 
-@entry_point("neuneu") // Make this callable from the java implementation
-@neuneu_entry_point // Mark this as the entry point for the neutrino implementation
-def Boot.entry_point() {
-  libc.exit(Boot.boot());
-}
+  /**
+   * Bridge function that runs the code of the binary and returns the int
+   * to use as the program's exit code.
+   */
+  @static @type(int32_t) def proto.boot() {
+    def tests := new neu_neu_tests_t();
+    def result := tests.run();
+    tests.free();
+    int32_t.of(0);
+  }
 
-// --- B o o t ---
+  /**
+   * This is called immediately upon execution.
+   */
+  @entry_point("neuneu") // Make this callable from the java implementation
+  @neuneu_entry_point // Mark this as the entry point for the neutrino implementation
+  @static def proto.entry_point() {
+    libc.exit(Boot.boot());
+  }
 
-protocol Boot;
-
-@type(int32_t)
-def Boot.boot() {
-  def tests := new neu_neu_tests_t();
-  def result := tests.run();
-  tests.free();
-  int32_t.of(0);
 }
