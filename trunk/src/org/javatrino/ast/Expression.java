@@ -10,6 +10,7 @@ import org.neutrino.plankton.ClassIndex;
 import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RFieldKey;
 import org.neutrino.runtime.RValue;
+import org.neutrino.syntax.Annotation;
 
 
 public abstract class Expression {
@@ -178,11 +179,14 @@ public abstract class Expression {
     public @Store Symbol symbol;
     public @Store Expression value;
     public @Store Expression body;
+    public @Store List<Annotation> annotations;
 
-    private Definition(Symbol symbol, Expression value, Expression body) {
+    private Definition(Symbol symbol, Expression value, Expression body,
+        List<Annotation> annotations) {
       this.symbol = symbol;
       this.value = value;
       this.body = body;
+      this.annotations = annotations;
     }
 
     public Definition() { }
@@ -609,8 +613,9 @@ public abstract class Expression {
       return new Internal(name, argc);
     }
 
-    public static Definition eDefinition(Symbol symbol, Expression value, Expression body) {
-      return new Definition(symbol, value, body);
+    public static Definition eDefinition(Symbol symbol, Expression value, Expression body,
+        List<Annotation> annots) {
+      return new Definition(symbol, value, body, annots);
     }
 
     public static Global eGlobal(RValue name) {

@@ -4,7 +4,7 @@ protocol neu_neu_tests_t;
 @cast
 @type(neu_neu_tests_t)
 def neu_neu_tests_t.new() {
-  def addr := libc.malloc(int32_t.of(4));
+  @type(address_t) def addr := libc.malloc(int32_t.of(4));
   addr[int32_t.of(0)] := int32_t.of(0);
   addr;
 }

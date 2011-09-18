@@ -1060,9 +1060,11 @@ public class Tree {
     private final Expression body;
     private final boolean isReference;
     private final Symbol symbol;
+    private final List<Tree.Annotation> annots;
 
-    public LocalDefinition(List<Annotation> annots, String name,
+    public LocalDefinition(List<Tree.Annotation> annots, String name,
         Expression value, Expression body, boolean isReference) {
+      this.annots = annots;
       this.name = name;
       this.value = value;
       this.body = body;
@@ -1072,6 +1074,10 @@ public class Tree {
 
     public boolean isReference() {
       return this.isReference;
+    }
+
+    public List<Annotation> getAnnotations() {
+      return this.annots;
     }
 
     public Symbol getSymbol() {

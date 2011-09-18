@@ -183,6 +183,29 @@ public class Source {
 
   }
 
+  public static List<Annotation> resolveAnnotations(Module module, List<Tree.Annotation> annots) {
+    if (annots.isEmpty()) {
+      return Collections.emptyList();
+    } else {
+      List<Annotation> result = new ArrayList<Annotation>();
+      for (Tree.Annotation annot : annots) {
+        List<RValue> args;
+        if (annot.getArguments().isEmpty()) {
+          args = Collections.emptyList();
+        } else {
+          args = new ArrayList<RValue>();
+          for (Tree.Expression value : annot.getArguments()) {
+            RValue obj = value.getValue(module);
+            assert obj != null;
+            args.add(obj);
+          }
+        }
+        result.add(new Annotation(annot.getTag(), args));
+      }
+      return result;
+    }
+  }
+
   private class BuildingVisitor implements Tree.DeclarationVisitor {
 
     private final Module module;
@@ -192,26 +215,7 @@ public class Source {
     }
 
     private List<Annotation> resolveAnnotations(List<Tree.Annotation> annots) {
-      if (annots.isEmpty()) {
-        return Collections.emptyList();
-      } else {
-        List<Annotation> result = new ArrayList<Annotation>();
-        for (Tree.Annotation annot : annots) {
-          List<RValue> args;
-          if (annot.getArguments().isEmpty()) {
-            args = Collections.emptyList();
-          } else {
-            args = new ArrayList<RValue>();
-            for (Tree.Expression value : annot.getArguments()) {
-              RValue obj = value.getValue(module);
-              assert obj != null;
-              args.add(obj);
-            }
-          }
-          result.add(new Annotation(annot.getTag(), args));
-        }
-        return result;
-      }
+      return Source.resolveAnnotations(module, annots);
     }
 
     public void visitDefinition(Definition that) {

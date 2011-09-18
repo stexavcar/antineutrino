@@ -5,8 +5,8 @@ def (this is neu_neu_tests_t).test_int32_t() {
 
 def (this is neu_neu_tests_t).test_int32_comparison() {
   this.on_start(char_ptr_t.of("int32 comparison"));
-  def i1 := int32_t.of(1);
-  def i2 := int32_t.of(2);
+  @type(int32_t) def i1 := int32_t.of(1);
+  @type(int32_t) def i2 := int32_t.of(2);
   this.assert_equal(i1, i1);
   this.assert_equal(int32_t.of(5), int32_t.of(5));
   this.assert_true(i1 != i2);
@@ -14,7 +14,7 @@ def (this is neu_neu_tests_t).test_int32_comparison() {
 
 def (this is neu_neu_tests_t).test_int32_arith() {
   this.on_start(char_ptr_t.of("int32 arith"));
-  def i1 := int32_t.of(1);
-  def i2 := int32_t.of(2);
+  @type(int32_t) def i1 := int32_t.of(1);
+  @type(int32_t) def i2 := int32_t.of(2);
   this.assert_equal(i2, i1 + i1);
 }

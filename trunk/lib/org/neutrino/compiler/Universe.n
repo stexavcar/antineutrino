@@ -366,6 +366,7 @@ protocol DefExpr is Expr {
     this.symbol := payload["symbol"];
     this.value := payload["value"];
     this.body := payload["body"];
+    this.annots := payload["annotations"];
   }
   
   def this.for(fun) {
@@ -374,6 +375,16 @@ protocol DefExpr is Expr {
   }
   
   def this.to_string() => "def ${this.symbol} := ${this.value} in ${this.body}";
+  
+  def this.get_annotation(name) {
+    with_escape (yield) {
+      for (annot in this.annots) {
+        if annot.tag = name
+          then yield(annot);
+      }
+      null;
+    }
+  }
 
 }
 
@@ -381,6 +392,7 @@ def DefExpr.new_instance() => new DefExpr {
   symbol := null,
   value := null,
   body := null,
+  annots := null,
   info_cache := null
 }
 

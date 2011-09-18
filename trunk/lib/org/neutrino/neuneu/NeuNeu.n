@@ -8,7 +8,7 @@ protocol Boot {
    * to use as the program's exit code.
    */
   @static @type(int32_t) def proto.boot() {
-    def tests := new neu_neu_tests_t();
+    @type(neu_neu_tests_t) def tests := new neu_neu_tests_t();
     def result := tests.run();
     tests.free();
     int32_t.of(0);

@@ -13,10 +13,7 @@ protocol TypeAnalysis {
   
   def this.push_local_scope(node) {
     def prev := this.scope_chain;
-    def next := new DefScope {
-      node := node,
-      prev := prev
-    }
+    def next := new DefScope(node, prev);
     this.scope_chain := next;
   }
 
@@ -35,14 +32,18 @@ protocol TypeAnalysis {
    */
   def this.analyze(method is NewMethod) {
     def inferred_type := this.analyze(method.body);
-    def explicit_type := get_explicit_return_type(method);
-    if explicit_type != null then {
-      def is_cast := (method.get_annotation("cast") != null);
-      def is_legal := this.is_subtype(explicit_type, inferred_type);
+    this.check_assignment(method, inferred_type);
+  }
+  
+  def this.check_assignment(node, found) {
+    def expected := get_explicit_type(node);
+    if expected != null then {
+      def is_cast := (node.get_annotation("cast") != null);
+      def is_legal := this.is_subtype(expected, found);
       if (not is_cast) and (not is_legal) then {
-        fail("Type error in ${method}: ${inferred_type} <:! ${explicit_type}");
+        fail("Type error in ${node}: ${found} <:! ${expected}");
       } else if is_cast and is_legal then {
-        fail("Unnecessary cast in ${method}");
+        fail("Unnecessary cast in ${node}");
       }
     }
   }
@@ -70,7 +71,7 @@ protocol TypeAnalysis {
         node.info.intrinsic := intrinsic[0];
       }
       node.info.c_call := method;
-      get_explicit_return_type(method);
+      get_explicit_type(method);
     }
   }
 
@@ -100,7 +101,8 @@ protocol TypeAnalysis {
   }
 
   def this.do_analyze(node is DefExpr) {
-    this.analyze(node.value);
+    def value := this.analyze(node.value);
+    this.check_assignment(node, value);
     this.local_count := this.local_count + 1;
     this.push_local_scope(node);
     def result := this.analyze(node.body);
@@ -128,8 +130,8 @@ protocol TypeAnalysis {
  * Returns the explicit return type of a method or null if it doesn't have
  * one.
  */
-def get_explicit_return_type(method) {
-  def annot := method.get_annotation("type");
+def get_explicit_type(obj) {
+  def annot := obj.get_annotation("type");
   if annot != null
     then annot[0];
 }
@@ -153,10 +155,15 @@ protocol ArgumentScope {
 }
 
 protocol DefScope {
+  
+  @static def proto.new(node, prev) => new DefScope {
+    node := node,
+    prev := prev
+  }
 
   def this.lookup(symbol) {
     if this.node.symbol = symbol then
-      this.node.value.info.type;
+      get_explicit_type(this.node);
     else if this.prev = null then
       null;
     else

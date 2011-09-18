@@ -24,6 +24,7 @@ import org.neutrino.runtime.RInteger;
 import org.neutrino.runtime.RNull;
 import org.neutrino.runtime.RString;
 import org.neutrino.runtime.RValue;
+import org.neutrino.syntax.Annotation;
 import org.neutrino.syntax.Tree;
 import org.neutrino.syntax.Tree.Collection;
 import org.neutrino.syntax.Tree.Collection.Flavor;
@@ -112,7 +113,7 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
     Expression result = eNewObject();
     if (!sets.isEmpty()) {
       sets.add(eLocal(obj));
-      result = eDefinition(obj, result, eBlock(sets));
+      result = eDefinition(obj, result, eBlock(sets), Annotation.NONE);
     }
     if (!intrinsics.isEmpty())
       result = eAddIntrinsics(result, intrinsics);
@@ -151,7 +152,9 @@ public class ExpressionGenerator extends Tree.ExpressionVisitor<Expression> {
           eArgument(RInteger.get(0), eGlobal(RString.of("Ref"))),
           eArgument(RInteger.get(1), value));
     }
-    return eDefinition(that.getSymbol(), value, body);
+
+    return eDefinition(that.getSymbol(), value, body,
+        Source.resolveAnnotations(module, that.getAnnotations()));
   }
 
   @Override
