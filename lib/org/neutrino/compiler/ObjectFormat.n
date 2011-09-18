@@ -1,3 +1,6 @@
+// Factory for MachO objects.  Used to configure the binary builder.
+protocol MachOFormat;
+
 protocol ObjectFormat;
 
 /**

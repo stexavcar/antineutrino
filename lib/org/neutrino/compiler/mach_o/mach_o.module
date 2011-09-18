@@ -1,0 +1,10 @@
+@module
+protocol MachOModule {
+
+  @static def proto.new() => new MachOModule { };
+
+  def this.configure(module, platform) {
+    module.import(platform.lookup_module("org::neutrino::compiler"));
+  }
+
+}

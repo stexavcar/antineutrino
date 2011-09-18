@@ -2,9 +2,6 @@ def PAGE_SIZE := 16r1000;
 def WORD_ALIGN := 2;
 def WORD_SIZE := 1 << WORD_ALIGN;
 
-// Factory for MachO objects.  Used to configure the binary builder.
-protocol MachOFormat;
-
 def MachOFormat.new() => new MachOFormat { };
 
 def (this is MachOFormat).entry_point_name => "_main";
@@ -445,7 +442,7 @@ def (this is MachOSymbolTable).add_local_data_entry(name, offset, size)
  
 def (this is MachOSymbolTable).add_local_entry(name, offset, size, section) {
   def name_index := this.strtab.ensure(name);
-  def symbol := new LocalSymbol(name_index, offset, section);
+  def symbol := new MachOLocalSymbol(name_index, offset, section);
   this.local_map[name] := symbol;
   this.locals.add(symbol);
 }
@@ -491,23 +488,23 @@ def (this is Symbol).encode(out, macho) {
 
 def Symbol.size => 3 * WORD_SIZE;
 
-protocol LocalSymbol is Symbol;
+protocol MachOLocalSymbol is Symbol;
 
-def LocalSymbol.new(name_index, start, section) => new LocalSymbol {
+def MachOLocalSymbol.new(name_index, start, section) => new MachOLocalSymbol {
   name_index := name_index,
   start := start,
   section := section
 }
 
-def (this is LocalSymbol).type => 16r0F;
+def (this is MachOLocalSymbol).type => 16r0F;
 
-def (this is LocalSymbol).sect(macho)
+def (this is MachOLocalSymbol).sect(macho)
  => macho.index_of(this.section);
 
-def (this is LocalSymbol).value(macho)
+def (this is MachOLocalSymbol).value(macho)
  => this.address(macho);
 
-def (this is LocalSymbol).address(macho)
+def (this is MachOLocalSymbol).address(macho)
  => macho.offset_of(this.section) + this.start;
 
 protocol ExternSymbol is Symbol;
