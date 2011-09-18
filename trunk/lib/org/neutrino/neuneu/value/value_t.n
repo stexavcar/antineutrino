@@ -1,6 +1,7 @@
 @no_override
 protocol value_t;
 
+@cast
 @type(int32_t)
 def (this is value_t).id => this;
 

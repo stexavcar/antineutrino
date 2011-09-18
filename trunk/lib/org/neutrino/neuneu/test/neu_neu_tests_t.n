@@ -1,6 +1,7 @@
 @no_override
 protocol neu_neu_tests_t;
 
+@cast
 @type(neu_neu_tests_t)
 def neu_neu_tests_t.new() {
   def addr := libc.malloc(int32_t.of(4));
@@ -25,6 +26,7 @@ def (this is neu_neu_tests_t).on_start(name is char_ptr_t) {
 @intrinsic("debug_interrupt")
 def neu_neu_tests_t.fail();
 
+@cast
 @type(address_t)
 def (this is neu_neu_tests_t).addr => this;
 

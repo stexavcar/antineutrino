@@ -87,19 +87,6 @@ public class Universe {
     return null;
   }
 
-  public RValue getGlobal(RValue name) {
-    for (Module module : modules.values()) {
-      RValue value = module.lookupLocal(name);
-      if (value != null)
-        return value;
-    }
-    return null;
-  }
-
-  public RProtocol getProtocol(RValue name) {
-    return (RProtocol) getGlobal(name);
-  }
-
   private final Map<RProtocol, RProtocol[]> parentCache = new HashMap<RProtocol, RProtocol[]>();
 
   public RProtocol[] getParents(RProtocol id) {
