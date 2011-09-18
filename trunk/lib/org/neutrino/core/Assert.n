@@ -1,0 +1,10 @@
+def fail(message is String) => internal "fail";
+
+def assert_true(cond) => if not cond then fail("");
+
+def assert_false(cond) => assert_true(not cond);
+
+def assert_equal(expected, found) {
+  if not expected = found then
+    fail("${expected} != ${found}");
+}
