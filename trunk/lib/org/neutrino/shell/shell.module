@@ -1,0 +1,10 @@
+@module
+protocol ShellModule {
+
+  @static def proto.new() => new ShellModule { };
+
+  def this.configure(module, platform) {
+    module.import(platform.lookup_module("org::neutrino::core"));
+  }
+
+}
