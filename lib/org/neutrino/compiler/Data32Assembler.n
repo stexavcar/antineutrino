@@ -1,12 +1,14 @@
-protocol Data32Assembler;
+protocol Data32Assembler {
 
-def Data32Assembler.new(name, binary) => new Data32Assembler {
-  name := name,
-  binary := binary,
-  out := new BlobStream()
+  @static def proto.new(name, binary) => new Data32Assembler {
+    name := name,
+    binary := binary,
+    out := new BlobStream()
+  }
+
+  def this.data => this.out.get_blob();
+
+  def this.write(arg is small_integer_t)
+   => this.out.write_int32(arg.value << 2);
+
 }
-
-def (this is Data32Assembler).data => this.out.get_blob();
-
-def (this is Data32Assembler).write(arg is small_integer_t)
- => this.out.write_int32(arg.value << 2);
