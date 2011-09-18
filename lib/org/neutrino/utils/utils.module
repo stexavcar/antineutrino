@@ -1,10 +1,11 @@
 @module
-protocol Utils {
+protocol UtilsModule {
 
-  @static def proto.new() => new Utils { };
+  @static def proto.new() => new UtilsModule { };
 
   def this.configure(module, platform) {
     module.import(platform.lookup_module("org::neutrino::core"));
+    module.import(platform.lookup_module("org::neutrino::neuneu"));
   }
 
 }
