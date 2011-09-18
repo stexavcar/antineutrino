@@ -1,741 +1,354 @@
 def PAGE_SIZE := 16r1000;
 def WORD_ALIGN := 2;
 def WORD_SIZE := 1 << WORD_ALIGN;
-
-def MachOFormat.new() => new MachOFormat { };
-
-def (this is MachOFormat).entry_point_name => "_main";
-
-def (this is MachOFormat).builder(binary) => new MachO(binary);
-
-// A mach-o file, or at least the parts of it that are relevant for
-// generating object files for neutrino programs.
-protocol MachO is ObjectFormat;
-
-def MachO.new(binary) {
-  def reloc_table := new MachORelocationTable();
-  def strtab := new MachOStringTable();
-  def symtab := new MachOSymbolTable(strtab);
-  def text := new MachOTextSection(reloc_table, symtab);
-  def cstrings := new MachOCStringSection();
-  def indirect_symbols := new IndirectSymbols();
-  def jump_table := new MachOJumpTable();
-  def data := new MachODataSection(reloc_table);
-  def result := new MachO {
-    binary := binary,
-    text := text,
-    cstrings := cstrings,
-    strtab := strtab,
-    symtab := symtab,
-    indirect_symbols := indirect_symbols,
-    jump_table := jump_table,
-    reloc_table := reloc_table,
-    data := data,
-    sections := new ArrayList() [ text, data, jump_table, cstrings ],
-    dark_sections := new ArrayList() [ strtab, symtab, indirect_symbols, reloc_table ],
-    layout := new Layouter(),
-    local_calls := new ArrayList(),
-    dylib_calls := new ArrayList(),
-    dysym_indices := new HashMap()
-  }
-  symtab.macho := result;
-  result;
-}
-
-/*
- * struct mach_header {
- *   uint32_t magic;
- *   cpu_type_t cputype;
- *   cpu_subtype_t cpusubtype;
- *   uint32_t filetype;
- *   uint32_t ncmds;
- *   uint32_t sizeofcmds;
- *   uint32_t flags;
- * }
- */
-def (this is MachO).encode_mach_header(out) {
-  def info := this.layout.info(MachO.header_name);
-  assert_equal(info.start, out.length);
-  out.write_int32(16rFEEDFACE);
-  out.write_int32(7); // CPU_TYPE_X86
-  out.write_int32(3); // cpusubtype
-  out.write_int32(1); // MH_OBJECT
-  out.write_int32(this.ncmds);
-  def start_info := this.layout.info(MachO.commands_start_marker);
-  def end_info := this.layout.info(MachO.commands_end_marker);
-  def sizeofcmds := end_info.end - start_info.start;
-  out.write_int32(sizeofcmds);
-  out.write_int32(5);
-  assert_equal(info.end, out.length);  
-}
-
-def (this is MachO).encode(out) {
-  this.encode_mach_header(out);
-  this.encode_load_commands(out);
-  this.encode_sections(out);
-}
-
-def (this is MachO).encode_load_commands(out) {
-  this.encode_segment_command(out);
-  this.encode_section_headers(out);
-  this.encode_symtab_command(out);
-  this.encode_dysymtab_command(out);
-}
-
-def MachO.commands_start_marker => "COMMANDS{";
-
-def MachO.commands_end_marker => "COMMANDS}";
-
-def MachO.segments_start_marker => "SEGMENTS{";
-
-def MachO.segments_end_marker => "SEGMENTS}";
-
-def (this is MachO).calculate_layout() {
-  def layout := this.layout;
-  // Add the mach header
-  layout.add_section(MachO.header_name, null, MachO.header_size,
-      WORD_SIZE);
-  // Add segment load command with section headers
-  layout.next_section(MachO.commands_start_marker, 0, 1);
-  layout.next_section(MachO.segment_command_name,
-      MachO.sizeof_segment_command, WORD_SIZE);
-  for (section in this.sections) {
-    layout.next_section(section.header_name,
-        MachO.section_header_size, WORD_SIZE);
-  }
-  // Add remaining load commands
-  layout.next_section(MachO.symtab_command_name,
-      MachO.sizeof_symtab_command, WORD_SIZE);
-  layout.next_section(MachO.dysymtab_command_name,
-      MachO.sizeof_dysymtab_command, WORD_SIZE);
-  layout.next_section(MachO.commands_end_marker, 0, 1);
-  // Add sections
-  layout.next_section(MachO.segments_start_marker, 0, 1);
-  for (section in this.all_sections) {
-    def name := section.name;
-    def alignment := 1 << section.align;
-    layout.next_section(section.name, section.size, alignment);
-  }
-  // Make sure the layout is padded to word size, independent of the
-  // alignment of the last section.
-  layout.next_section(MachO.segments_end_marker, 0, WORD_SIZE);
-  layout.calculate();
-}
-
-def (this is MachO).add_data_block(name, code) {
-  def offset := this.data.add_code(code);
-  this.symtab.add_local_data_entry(name, offset, code.length);
-}
-
-protocol RelocationInfo;
-
-def (this is RelocationInfo).length => 2;
-
-def (this is RelocationInfo).is_extern => false;
-
-def (this is RelocationInfo).is_relative => false;
-
-def (this is RelocationInfo).type => 0;
-
-def (this is RelocationInfo).encode(out, macho) {
-  def address := this.address(macho);
-  def symbolnum := this.symbolnum(macho);
-  def pcrel := if this.is_relative then 1 else 0;
-  def length := this.length;
-  def extern := if this.is_extern then 1 else 0;
-  def type := this.type;
-  out.write_int32(address);
-  out.write_int32((type << 28) | (extern << 27) | (length << 25) | (pcrel << 24) | symbolnum);
-}
-
-def RelocationInfo.size => 2 * WORD_SIZE;
-
-protocol CallRelocationInfo is RelocationInfo;
-
-def CallRelocationInfo.new(section, relocation) => new CallRelocationInfo {
-  section := section,
-  relocation := relocation
-};
-
-def (this is CallRelocationInfo).address(macho) {
-  def relocation := this.relocation;
-  def source_offset := macho.symtab.address_of(relocation.assm.name);
-  def section_offset := macho.offset_of(macho.text);
-  (source_offset - section_offset) + relocation.offset;
-}
-
-def (this is CallRelocationInfo).affects(section) => section = this.section;
-
-def (this is CallRelocationInfo).is_relative => this.relocation.is_relative;
-
-def (this is CallRelocationInfo).symbolnum(macho) => macho.index_of(macho.text);
-
-protocol MachORelocationTable;
-
-def MachORelocationTable.new() => new MachORelocationTable {
-  entries := new ArrayList()
-}
-
-def (this is MachORelocationTable).name => "#RELOCATION";
-
-def (this is MachORelocationTable).align => WORD_ALIGN;
-
-def (this is MachORelocationTable).add_entry(entry) {
-  this.entries.add(entry);
-}
-
-def (this is MachORelocationTable).encode(out, macho) {
-  for (entry in this.entries)
-    entry.encode(out, macho);
-}
-
-def (this is MachORelocationTable).count_for(section) {
-  ref result := 0;
-  for (entry in this.entries) {
-    if entry.affects(section)
-      then result := result + 1;
-  }
-  result;
-}
-
-def (this is MachORelocationTable).count
- => this.entries.length;
-
-def (this is MachORelocationTable).size
- => this.entries.length * RelocationInfo.size;
-
-protocol MachOSection;
-
-protocol MachOJumpTable is MachOSection;
-
-def (this is MachOSection).header_name => "${this.name}.header";
-
-def (this is MachOSection).name => "${this.segname}.${this.sectname}";
-
-def (this is MachOSection).finalize(macho);
-
-def MachOJumpTable.new() => new MachOJumpTable {
-  count := 0
-}
-
-def (this is MachOJumpTable).add_extern() => this.count := (this.count + 1);
-
-def (this is MachOJumpTable).size => 5 * this.count;
-
-def (this is MachOJumpTable).segname => "__IMPORT";
-
-def (this is MachOJumpTable).sectname => "__jump_table";
-
-def (this is MachOJumpTable).flags => 16r84000408;
-
-def (this is MachOJumpTable).reserved2 => 5;
-
-def (this is MachOJumpTable).align => 0;
-
-def (this is MachOJumpTable).nreloc => 0;
-
-def (this is MachOJumpTable).encode(out, macho) {
-  for (i in 0 .. this.size)
-    out.write_int8(16rF4); // HLT
-}
-
-protocol MachOTextSection is MachOSection;
-
-def MachOTextSection.new(reloc_table, symtab) => new MachOTextSection {
-  reloc_table := reloc_table,
-  symtab := symtab,
-  code := new BlobStream()
-}
-
-def (this is MachOTextSection).code_block_offset(name)
- => this.symtab.address_of(name);
-
-def (this is MachOTextSection).length => this.code.get();
-
-def (this is MachOTextSection).nreloc => this.reloc_table.count;
-
-def (this is MachOTextSection).segname => "__TEXT";
-
-def (this is MachOTextSection).sectname => "__text";
-
-def (this is MachOTextSection).flags => 16r80000400;
-
-def (this is MachOTextSection).reserved2 => 0;
-
-def (this is MachOTextSection).align => WORD_ALIGN;
-
-def (this is MachOTextSection).add_code(code) {
-  def offset := this.code.length;
-  this.code.write_data(code);
-  offset;
-}
-
-def (this is MachOTextSection).rewrite_int32(offset, value) {
-  this.code.rewrite_int32(offset, value);
-}
-
-def (this is MachOTextSection).size
- => this.code.length;
-
-def (this is MachOTextSection).encode(out, macho) {
-  out.write_data(this.code.get_blob());
-}
-
-protocol MachODataSection is MachOSection;
-
-def MachODataSection.new(reloc_table) => new MachODataSection {
-  reloc_table := reloc_table,
-  data := new BlobStream()
-}
-
-def (this is MachODataSection).add_code(code) {
-  def offset := this.data.length;
-  this.data.write_data(code);
-  offset;
-}
-
-def (this is MachODataSection).nreloc => 0;
-
-def (this is MachODataSection).segname => "__DATA";
-
-def (this is MachODataSection).sectname => "__data";
-
-def (this is MachODataSection).flags => 16r00000000;
-
-def (this is MachODataSection).reserved2 => 0;
-
-def (this is MachODataSection).align => WORD_ALIGN;
-
-def (this is MachODataSection).size => this.data.length;
-
-def (this is MachODataSection).encode(out, macho) {
-  out.write_data(this.data);
-}
-
-// A c_string section.  Strings in this section end up in the address
-// space of the running program.
-protocol MachOCStringSection is MachOSection;
-
-def MachOCStringSection.new() => new MachOCStringSection {
-  order := new ArrayList(),
-  strings := new HashMap(),
-  length := 0
-}
-
-def (this is MachOCStringSection).nreloc => 0;
-
-def (this is MachOCStringSection).segname => "__TEXT";
-
-def (this is MachOCStringSection).sectname => "__cstring";
-
-def (this is MachOCStringSection).flags => 16r00000002;
-
-def (this is MachOCStringSection).reserved2 => 0;
-
-def (this is MachOCStringSection).align => 0;
-
-def (this is MachOCStringSection)[str] => this.strings[str];
-
-def (this is MachOCStringSection).size => this.length;
-
-def (this is MachOCStringSection).ensure(str) {
-  def prev := this.strings[str];
-  if prev = null then {
-    def offset := this.length;
-    this.order.add(str);
-    this.strings[str] := offset;
-    this.length := offset + str.length + 1;
-    offset;
-  } else {
-    prev;
-  }
-}
-
-def (this is MachOCStringSection).encode(out, macho) {
-  for (str in this.order)
-    out.write_c_string(str);
-}
-
-/*
- * This string table is only seen by the linker and loader, the
- * strings here are not loaded into the address space of the program.
- */
-protocol MachOStringTable;
-
-def MachOStringTable.new() {
-  def result := new MachOStringTable {
-    string_map := new HashMap(),
-    strings := new ArrayList(),
-    cursor := 0
-  }
-  result.ensure("");
-  result;
-}
-
-def (this is MachOStringTable).ensure(name) {
-  def prev := this.string_map[name];
-  if prev = null then {
-    def result := this.cursor;
-    this.cursor := this.cursor + name.length + 1;
-    this.strings.add(name);
-    this.string_map[name] := result;
-    result;
-  } else {
-    prev;
-  }
-}
-
-def (this is MachOStringTable)[name] => this.string_map[name];
-
-def (this is MachOStringTable).encode(out, macho) {
-  for (str in this.strings)
-    out.write_c_string(str);
-}
-
-def (this is MachOStringTable).size {
-  ref result := 0;
-  for (str in this.strings)
-    result := result + str.length + 1;
-  result;
-}
-
-def (this is MachOStringTable).name => "#STRINGS";
-
-def (this is MachOStringTable).align => 0;
-
-def (this is MachOStringTable).length => this.strings.length;
-
-protocol IndirectSymbols;
-
-def IndirectSymbols.new() => new IndirectSymbols {
-  count := 0
-}
-
-def (this is IndirectSymbols).name => "#INDIRECT";
-
-def (this is IndirectSymbols).align => WORD_ALIGN;
-
-def (this is IndirectSymbols).add() => this.count := (this.count + 1);
-
-def (this is IndirectSymbols).encode(out, macho) {
-  for (i in 0 .. this.count)
-    out.write_int32(i);
-}
-
-def (this is IndirectSymbols).size => WORD_SIZE * this.count;
-
-protocol MachOSymbolTable;
-
-def MachOSymbolTable.new(strtab) => new MachOSymbolTable {
-  strtab := strtab,
-  locals := new ArrayList(),
-  externs := new ArrayList(),
-  local_map := new HashMap(),
-  macho := null
-}
-
-def (this is MachOSymbolTable).add_local_code_entry(name, offset, size)
- => this.add_local_entry(name, offset, size, this.macho.text);
- 
-def (this is MachOSymbolTable).add_local_data_entry(name, offset, size)
- => this.add_local_entry(name, offset, size, this.macho.data);
- 
-def (this is MachOSymbolTable).add_local_entry(name, offset, size, section) {
-  def name_index := this.strtab.ensure(name);
-  def symbol := new MachOLocalSymbol(name_index, offset, section);
-  this.local_map[name] := symbol;
-  this.locals.add(symbol);
-}
-
-def (this is MachOSymbolTable).address_of(name)
- => this.local_map[name].address(this.macho);
-
-def (this is MachOSymbolTable).add_extern(name) {
-  def name_index := this.strtab.ensure(name);
-  this.externs.add(new ExternSymbol(name_index));
-}
-
-def (this is MachOSymbolTable).local_count => this.locals.length;
-
-def (this is MachOSymbolTable).external_count => this.externs.length;
-
-def (this is MachOSymbolTable).name => "#SYMBOLS";
-
-def (this is MachOSymbolTable).align => WORD_ALIGN;
-
-def (this is MachOSymbolTable).length => this.symbols.length;
-
-def (this is MachOSymbolTable).symbols => this.locals + this.externs;
-
-def (this is MachOSymbolTable).encode(out, macho) {
-  for (symbol in this.externs + this.locals)
-    symbol.encode(out, macho);
-}
-
-def (this is MachOSymbolTable).size => this.length * Symbol.size;
-
-protocol Symbol;
-
-def (this is Symbol).desc => 16r0000;
-
-def (this is Symbol).encode(out, macho) {
-  out.write_int32(this.name_index);
-  out.write_int8(this.type);
-  out.write_int8(this.sect(macho));
-  out.write_int16(this.desc);
-  out.write_int32(this.value(macho));
-}
-
-def Symbol.size => 3 * WORD_SIZE;
-
-protocol MachOLocalSymbol is Symbol;
-
-def MachOLocalSymbol.new(name_index, start, section) => new MachOLocalSymbol {
-  name_index := name_index,
-  start := start,
-  section := section
-}
-
-def (this is MachOLocalSymbol).type => 16r0F;
-
-def (this is MachOLocalSymbol).sect(macho)
- => macho.index_of(this.section);
-
-def (this is MachOLocalSymbol).value(macho)
- => this.address(macho);
-
-def (this is MachOLocalSymbol).address(macho)
- => macho.offset_of(this.section) + this.start;
-
-protocol ExternSymbol is Symbol;
-
-def ExternSymbol.new(name_index) => new ExternSymbol {
-  name_index := name_index
-}
-
-def (this is ExternSymbol).type => 16r01;
-
-def (this is ExternSymbol).sect(macho) => 0;
-
-def (this is ExternSymbol).value(macho) => 0;
-
-def MachO.header_name => "mach_header";
-
-def MachO.header_size => 7 * WORD_SIZE;
-
-def (this is MachO).nsects => this.sections.length;
-
-def (this is MachO).ncmds => 3;
-
-def MachO.sizeof_segment_command => SEGMENT_COMMAND_SIZE;
-
-def MachO.segment_command_name => "LC_SEGMENT";
-
-def MachO.section_header_size => 17 * WORD_SIZE;
-
-def (this is MachO).sizeof_segment_command => SEGMENT_COMMAND_SIZE + (this.nsects * SECTION_HEADER_SIZE);
-
-def MachO.symtab_command_name => "LC_SYMTAB";
-
-def MachO.sizeof_symtab_command => 6 * WORD_SIZE;
-
-def MachO.dysymtab_command_name => "LC_DYSYMTAB";
-
-def MachO.sizeof_dysymtab_command => 20 * WORD_SIZE;
-
 def SEGMENT_COMMAND_SIZE := 56;
 def SECTION_HEADER_SIZE := 68;
 
-def (this is MachO).encode_symtab_command(out) {
-  def info := this.layout.info(MachO.symtab_command_name);
-  assert_equal(info.start, out.length);
-  out.write_int32(16r2); // LC_SYMTAB
-  out.write_int32(info.size);
-  def symbols_info := this.layout.info(this.symtab.name);
-  out.write_int32(this.offset_of(this.symtab));
-  out.write_int32(this.symtab.length);
-  out.write_int32(this.offset_of(this.strtab));
-  out.write_int32(this.strtab.size);
-  assert_equal(info.end, out.length);
-}
+// A mach-o file, or at least the parts of it that are relevant for
+// generating object files for neutrino programs.
+protocol MachO is ObjectFormat {
 
-def (this is MachO).encode_dysymtab_command(out) {
-  def info := this.layout.info(MachO.dysymtab_command_name);
-  assert_equal(info.start, out.length);
-  out.write_int32(16rB); // LC_DYSYMTAB
-  out.write_int32(MachO.sizeof_dysymtab_command);
-  out.write_int32(0);
-  out.write_int32(0);
-  out.write_int32(this.symtab.external_count);
-  out.write_int32(this.symtab.local_count);
-  out.write_int32(0);
-  out.write_int32(this.symtab.external_count);
-  out.write_int32(0);
-  out.write_int32(0);
-  out.write_int32(0);
-  out.write_int32(0);
-  out.write_int32(0);
-  out.write_int32(0);
-  out.write_int32(this.offset_of(this.indirect_symbols));
-  out.write_int32(this.symtab.external_count);
-  out.write_int32(0);
-  out.write_int32(0);
-  out.write_int32(0);
-  out.write_int32(0);
-  assert_equal(info.end, out.length);
-}
+  @static def proto.commands_start_marker => "COMMANDS{";
 
-/*
- * struct segment_command {
- *   uint32_t cmd;
- *   uint32_t cmdsize;
- *   char segname[16];
- *   uint32_t vmaddr;
- *   uint32_t vmsize;
- *   uint32_t fileoff;
- *   uint32_t filesize;
- *   vm_prot_t maxprot;
- *   vm_prot_t initprot;
- *   uint32_t nsects;
- *   uint32_t flags;
- * }
- */
-def (this is MachO).encode_segment_command(out) {
-  def layout := this.layout;
-  def info := layout.info(MachO.segment_command_name);
-  assert_equal(info.start, out.length);
-  out.write_int32(16r01); // LC_SEGMENT
-  out.write_int32(this.sizeof_segment_command);
-  out.write_c_string("", 16);
-  def segments_start_info := layout.info(MachO.segments_start_marker);
-  def segments_end_info := layout.info(MachO.segments_end_marker);
-  def size := segments_end_info.end - segments_start_info.start;
-  out.write_int32(0);
-  out.write_int32(size);
-  out.write_int32(segments_start_info.start);
-  out.write_int32(size);
-  out.write_int32(7);
-  out.write_int32(5);
-  out.write_int32(this.nsects);
-  out.write_int32(0); // flags
-  assert_equal(info.end, out.length);
-}
+  @static def proto.commands_end_marker => "COMMANDS}";
 
-/*
- * struct section {
- *   char sectname[16];
- *   char segname[16];
- *   uint32_t addr;
- *   uint32_t size;
- *   uint32_t offset;
- *   uint32_t align;
- *   uint32_t reloff;
- *   uint32_t nreloc;
- *   uint32_t flags;
- *   uint32_t reserved1;
- *   uint32_t reserved2;
- * }
- */
-def (this is MachO).encode_section_headers(out) {
-  for (section in this.sections) {
-    def header_info := this.layout.info(section.header_name);
-    def section_info := this.layout.info(section.name);
-    assert_equal(header_info.start, out.length);
-    out.write_c_string(section.sectname, 16);
-    out.write_c_string(section.segname, 16);
-    out.write_int32(section_info.start);
-    out.write_int32(section_info.size);
-    out.write_int32(section_info.start);
-    out.write_int32(section.align);
-    if section.nreloc = 0 then
-      out.write_int32(0);
-    else
-      out.write_int32(this.offset_of(this.reloc_table));
-    out.write_int32(section.nreloc);
-    out.write_int32(section.flags);
-    out.write_int32(0);
-    out.write_int32(section.reserved2);
-    assert_equal(header_info.end, out.length);
-  }
-}
+  @static def proto.segments_start_marker => "SEGMENTS{";
 
-def (this is MachO).all_sections => this.sections + this.dark_sections;
+  @static def proto.segments_end_marker => "SEGMENTS}";
+  
+  @static def proto.header_name => "mach_header";
 
-def (this is MachO).encode_sections(out) {
-  for (section in this.all_sections) {
-    def info := this.layout.info(section.name);
-    assert_true(out.length <= info.start);
-    out.pad_to(info.start);
-    section.encode(out, this);
-    assert_true(out.length <= info.end);
-    out.pad_to(info.end);
-  }
-}
+  @static def proto.header_size => 7 * WORD_SIZE;
 
-def (this is MachO).index_of(target) {
-  ref offset := 1;
-  with_escape (yield) {
-    for (section in this.all_sections) {
-      if section = target
-        then yield(offset);
-      offset := offset + 1;
+  @static def proto.sizeof_segment_command => SEGMENT_COMMAND_SIZE;
+
+  @static def proto.segment_command_name => "LC_SEGMENT";
+
+  @static def proto.section_header_size => 17 * WORD_SIZE;
+
+  @static def proto.symtab_command_name => "LC_SYMTAB";
+
+  @static def proto.sizeof_symtab_command => 6 * WORD_SIZE;
+
+  @static def proto.dysymtab_command_name => "LC_DYSYMTAB";
+
+  @static def proto.sizeof_dysymtab_command => 20 * WORD_SIZE;
+
+  @static def proto.new(binary) {
+    def reloc_table := new RelocationTable();
+    def strtab := new StringTable();
+    def symtab := new SymbolTable(strtab);
+    def text := new TextSection(reloc_table, symtab);
+    def cstrings := new CStringSection();
+    def indirect_symbols := new IndirectSymbols();
+    def jump_table := new JumpTable();
+    def data := new DataSection(reloc_table);
+    def result := new MachO {
+      binary := binary,
+      text := text,
+      cstrings := cstrings,
+      strtab := strtab,
+      symtab := symtab,
+      indirect_symbols := indirect_symbols,
+      jump_table := jump_table,
+      reloc_table := reloc_table,
+      data := data,
+      sections := new ArrayList() [ text, data, jump_table, cstrings ],
+      dark_sections := new ArrayList() [ strtab, symtab, indirect_symbols, reloc_table ],
+      layout := new Layouter(),
+      local_calls := new ArrayList(),
+      dylib_calls := new ArrayList(),
+      dysym_indices := new HashMap()
     }
-    null;
+    symtab.macho := result;
+    result;
   }
-}
 
-def (this is MachO).offset_of(target)
- => this.layout.info(target.name).start;
-
-def (this is MachO).preprocess_relocation(relocation)
- => this.preprocess_symbol(relocation, relocation.target);
-
-def (this is MachO).preprocess_symbol(relocation, symbol is DylibSymbol) {
-  def name := symbol.name;
-  def index := this.dysym_indices[name];
-  if index = null then {
-    def new_index := this.dysym_indices.size;
-    this.dysym_indices[name] := new_index;
-    this.jump_table.add_extern();
-    this.indirect_symbols.add();
-    this.symtab.add_extern(name);
+  /*
+   * struct mach_header {
+   *   uint32_t magic;
+   *   cpu_type_t cputype;
+   *   cpu_subtype_t cpusubtype;
+   *   uint32_t filetype;
+   *   uint32_t ncmds;
+   *   uint32_t sizeofcmds;
+   *   uint32_t flags;
+   * }
+   */
+  def this.encode_mach_header(out) {
+    def info := this.layout.info(MachO.header_name);
+    assert_equal(info.start, out.length);
+    out.write_int32(16rFEEDFACE);
+    out.write_int32(7); // CPU_TYPE_X86
+    out.write_int32(3); // cpusubtype
+    out.write_int32(1); // MH_OBJECT
+    out.write_int32(this.ncmds);
+    def start_info := this.layout.info(MachO.commands_start_marker);
+    def end_info := this.layout.info(MachO.commands_end_marker);
+    def sizeofcmds := end_info.end - start_info.start;
+    out.write_int32(sizeofcmds);
+    out.write_int32(5);
+    assert_equal(info.end, out.length);  
   }
-  def entry := new CallRelocationInfo(this.text, relocation);
-  this.reloc_table.add_entry(entry);
-}
 
-def (this is MachO).preprocess_symbol(relocation, symbol is StringSymbol) {
-  this.reloc_table.add_entry(new CallRelocationInfo(this.text, relocation));
-  this.cstrings.ensure(symbol.value);
-}
-
-def (this is MachO).preprocess_symbol(relocation, symbol is LocalSymbol) {
-  if not relocation.is_relative then {
-    def section := this.symtab.local_map[symbol.name].section;
-    this.reloc_table.add_entry(new CallRelocationInfo(section, relocation));
+  def this.encode(out) {
+    this.encode_mach_header(out);
+    this.encode_load_commands(out);
+    this.encode_sections(out);
   }
-}
 
-def (this is MachO).symbol_address(target is DylibSymbol) {
-  def jump_table_address := this.offset_of(this.jump_table);
-  def index := this.dysym_indices[target.name];
-  jump_table_address + (5 * index);  
-}
-
-def (this is MachO).symbol_address(target is LocalSymbol)
- => this.symtab.address_of(target.name);
-
-def (this is MachO).symbol_address(target is StringSymbol)
- => this.offset_of(this.cstrings) + this.cstrings[target.value];
-
-def (this is MachO).process_relocation(relocation) {
-  def target_addr := this.symbol_address(relocation.target);
-  def source_addr := this.symtab.address_of(relocation.assm.name);
-  def instr_addr := source_addr + relocation.offset;
-  def instr_offset := instr_addr - this.offset_of(this.text);
-  if relocation.is_relative then {
-    this.text.rewrite_int32(instr_offset, target_addr - (instr_addr + WORD_SIZE));
-  } else {
-    this.text.rewrite_int32(instr_offset, target_addr);
+  def this.encode_load_commands(out) {
+    this.encode_segment_command(out);
+    this.encode_section_headers(out);
+    this.encode_symtab_command(out);
+    this.encode_dysymtab_command(out);
   }
+
+  def this.calculate_layout() {
+    def layout := this.layout;
+    // Add the mach header
+    layout.add_section(MachO.header_name, null, MachO.header_size,
+        WORD_SIZE);
+    // Add segment load command with section headers
+    layout.next_section(MachO.commands_start_marker, 0, 1);
+    layout.next_section(MachO.segment_command_name,
+        MachO.sizeof_segment_command, WORD_SIZE);
+    for (section in this.sections) {
+      layout.next_section(section.header_name,
+          MachO.section_header_size, WORD_SIZE);
+    }
+    // Add remaining load commands
+    layout.next_section(MachO.symtab_command_name,
+        MachO.sizeof_symtab_command, WORD_SIZE);
+    layout.next_section(MachO.dysymtab_command_name,
+        MachO.sizeof_dysymtab_command, WORD_SIZE);
+    layout.next_section(MachO.commands_end_marker, 0, 1);
+    // Add sections
+    layout.next_section(MachO.segments_start_marker, 0, 1);
+    for (section in this.all_sections) {
+      def name := section.name;
+      def alignment := 1 << section.align;
+      layout.next_section(section.name, section.size, alignment);
+    }
+    // Make sure the layout is padded to word size, independent of the
+    // alignment of the last section.
+    layout.next_section(MachO.segments_end_marker, 0, WORD_SIZE);
+    layout.calculate();
+  }
+
+  def this.add_data_block(name, code) {
+    def offset := this.data.add_code(code);
+    this.symtab.add_local_data_entry(name, offset, code.length);
+  }
+  
+  def this.nsects => this.sections.length;
+
+  def this.ncmds => 3;
+
+  def this.sizeof_segment_command => SEGMENT_COMMAND_SIZE + (this.nsects * SECTION_HEADER_SIZE);
+
+  def this.encode_symtab_command(out) {
+    def info := this.layout.info(MachO.symtab_command_name);
+    assert_equal(info.start, out.length);
+    out.write_int32(16r2); // LC_SYMTAB
+    out.write_int32(info.size);
+    def symbols_info := this.layout.info(this.symtab.name);
+    out.write_int32(this.offset_of(this.symtab));
+    out.write_int32(this.symtab.length);
+    out.write_int32(this.offset_of(this.strtab));
+    out.write_int32(this.strtab.size);
+    assert_equal(info.end, out.length);
+  }
+
+  def this.encode_dysymtab_command(out) {
+    def info := this.layout.info(MachO.dysymtab_command_name);
+    assert_equal(info.start, out.length);
+    out.write_int32(16rB); // LC_DYSYMTAB
+    out.write_int32(MachO.sizeof_dysymtab_command);
+    out.write_int32(0);
+    out.write_int32(0);
+    out.write_int32(this.symtab.external_count);
+    out.write_int32(this.symtab.local_count);
+    out.write_int32(0);
+    out.write_int32(this.symtab.external_count);
+    out.write_int32(0);
+    out.write_int32(0);
+    out.write_int32(0);
+    out.write_int32(0);
+    out.write_int32(0);
+    out.write_int32(0);
+    out.write_int32(this.offset_of(this.indirect_symbols));
+    out.write_int32(this.symtab.external_count);
+    out.write_int32(0);
+    out.write_int32(0);
+    out.write_int32(0);
+    out.write_int32(0);
+    assert_equal(info.end, out.length);
+  }
+
+  /*
+   * struct segment_command {
+   *   uint32_t cmd;
+   *   uint32_t cmdsize;
+   *   char segname[16];
+   *   uint32_t vmaddr;
+   *   uint32_t vmsize;
+   *   uint32_t fileoff;
+   *   uint32_t filesize;
+   *   vm_prot_t maxprot;
+   *   vm_prot_t initprot;
+   *   uint32_t nsects;
+   *   uint32_t flags;
+   * }
+   */
+  def this.encode_segment_command(out) {
+    def layout := this.layout;
+    def info := layout.info(MachO.segment_command_name);
+    assert_equal(info.start, out.length);
+    out.write_int32(16r01); // LC_SEGMENT
+    out.write_int32(this.sizeof_segment_command);
+    out.write_c_string("", 16);
+    def segments_start_info := layout.info(MachO.segments_start_marker);
+    def segments_end_info := layout.info(MachO.segments_end_marker);
+    def size := segments_end_info.end - segments_start_info.start;
+    out.write_int32(0);
+    out.write_int32(size);
+    out.write_int32(segments_start_info.start);
+    out.write_int32(size);
+    out.write_int32(7);
+    out.write_int32(5);
+    out.write_int32(this.nsects);
+    out.write_int32(0); // flags
+    assert_equal(info.end, out.length);
+  }
+
+  /*
+   * struct section {
+   *   char sectname[16];
+   *   char segname[16];
+   *   uint32_t addr;
+   *   uint32_t size;
+   *   uint32_t offset;
+   *   uint32_t align;
+   *   uint32_t reloff;
+   *   uint32_t nreloc;
+   *   uint32_t flags;
+   *   uint32_t reserved1;
+   *   uint32_t reserved2;
+   * }
+   */
+  def this.encode_section_headers(out) {
+    for (section in this.sections) {
+      def header_info := this.layout.info(section.header_name);
+      def section_info := this.layout.info(section.name);
+      assert_equal(header_info.start, out.length);
+      out.write_c_string(section.sectname, 16);
+      out.write_c_string(section.segname, 16);
+      out.write_int32(section_info.start);
+      out.write_int32(section_info.size);
+      out.write_int32(section_info.start);
+      out.write_int32(section.align);
+      if section.nreloc = 0 then
+        out.write_int32(0);
+      else
+        out.write_int32(this.offset_of(this.reloc_table));
+      out.write_int32(section.nreloc);
+      out.write_int32(section.flags);
+      out.write_int32(0);
+      out.write_int32(section.reserved2);
+      assert_equal(header_info.end, out.length);
+    }
+  }
+
+  def this.all_sections => this.sections + this.dark_sections;
+
+  def this.encode_sections(out) {
+    for (section in this.all_sections) {
+      def info := this.layout.info(section.name);
+      assert_true(out.length <= info.start);
+      out.pad_to(info.start);
+      section.encode(out, this);
+      assert_true(out.length <= info.end);
+      out.pad_to(info.end);
+    }
+  }
+
+  def this.index_of(target) {
+    ref offset := 1;
+    with_escape (yield) {
+      for (section in this.all_sections) {
+        if section = target
+          then yield(offset);
+        offset := offset + 1;
+      }
+      null;
+    }
+  }
+
+  def this.offset_of(target)
+   => this.layout.info(target.name).start;
+
+  def this.preprocess_relocation(relocation)
+   => this.preprocess_symbol(relocation, relocation.target);
+
+  def this.preprocess_symbol(relocation, symbol is DylibSymbol) {
+    def name := symbol.name;
+    def index := this.dysym_indices[name];
+    if index = null then {
+      def new_index := this.dysym_indices.size;
+      this.dysym_indices[name] := new_index;
+      this.jump_table.add_extern();
+      this.indirect_symbols.add();
+      this.symtab.add_extern(name);
+    }
+    def entry := new CallRelocationInfo(this.text, relocation);
+    this.reloc_table.add_entry(entry);
+  }
+
+  def this.preprocess_symbol(relocation, symbol is StringSymbol) {
+    this.reloc_table.add_entry(new CallRelocationInfo(this.text, relocation));
+    this.cstrings.ensure(symbol.value);
+  }
+
+  def this.preprocess_symbol(relocation, symbol is LocalSymbol) {
+    if not relocation.is_relative then {
+      def section := this.symtab.local_map[symbol.name].section;
+      this.reloc_table.add_entry(new CallRelocationInfo(section, relocation));
+    }
+  }
+
+  def this.symbol_address(target is DylibSymbol) {
+    def jump_table_address := this.offset_of(this.jump_table);
+    def index := this.dysym_indices[target.name];
+    jump_table_address + (5 * index);  
+  }
+
+  def this.symbol_address(target is LocalSymbol)
+   => this.symtab.address_of(target.name);
+
+  def this.symbol_address(target is StringSymbol)
+   => this.offset_of(this.cstrings) + this.cstrings[target.value];
+
+  def this.process_relocation(relocation) {
+    def target_addr := this.symbol_address(relocation.target);
+    def source_addr := this.symtab.address_of(relocation.assm.name);
+    def instr_addr := source_addr + relocation.offset;
+    def instr_offset := instr_addr - this.offset_of(this.text);
+    if relocation.is_relative then {
+      this.text.rewrite_int32(instr_offset, target_addr - (instr_addr + WORD_SIZE));
+    } else {
+      this.text.rewrite_int32(instr_offset, target_addr);
+    }
+  }
+
+}
+
+protocol ObjectSection {
+
+  def this.header_name => "${this.name}.header";
+
+  def this.name => "${this.segname}.${this.sectname}";
+
+  def this.finalize(macho);
+
 }

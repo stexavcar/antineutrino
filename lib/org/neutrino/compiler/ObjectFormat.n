@@ -1,29 +1,31 @@
 // Factory for MachO objects.  Used to configure the binary builder.
 protocol MachOFormat;
 
-protocol ObjectFormat;
+protocol ObjectFormat {
 
-/**
- *  Called by the binary when all data has been added to this object.
- */
-def (this is ObjectFormat).finalize() {
-  // First allow all sections to finalize themselves.
-  for (section in this.sections)
-    section.finalize(this);
-  // Preprocess relocations, if necessary
-  for (reloc in this.binary.relocs)
-    this.preprocess_relocation(reloc);
-  // All data must have been written by now.  Calculate layout.
-  this.calculate_layout();
-  // Now actually process the relocations.
-  for (reloc in this.binary.relocs)
-    this.process_relocation(reloc);
-}
+  /**
+   *  Called by the binary when all data has been added to this object.
+   */
+  def this.finalize() {
+    // First allow all sections to finalize themselves.
+    for (section in this.sections)
+      section.finalize(this);
+    // Preprocess relocations, if necessary
+    for (reloc in this.binary.relocs)
+      this.preprocess_relocation(reloc);
+    // All data must have been written by now.  Calculate layout.
+    this.calculate_layout();
+    // Now actually process the relocations.
+    for (reloc in this.binary.relocs)
+      this.process_relocation(reloc);
+  }
 
-/**
- * Add a named code block to the text section of this object.
- */
-def (this is ObjectFormat).add_code_block(name, code) {
-  def offset := this.text.add_code(code);
-  this.symtab.add_local_code_entry(name, offset, code.length);
+  /**
+   * Add a named code block to the text section of this object.
+   */
+  def this.add_code_block(name, code) {
+    def offset := this.text.add_code(code);
+    this.symtab.add_local_code_entry(name, offset, code.length);
+  }
+
 }

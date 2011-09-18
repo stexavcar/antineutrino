@@ -1,0 +1,102 @@
+protocol SymbolTable {
+
+  @static def proto.new(strtab) => new SymbolTable {
+    strtab := strtab,
+    locals := new ArrayList(),
+    externs := new ArrayList(),
+    local_map := new HashMap(),
+    macho := null
+  }
+
+  def this.add_local_code_entry(name, offset, size)
+   => this.add_local_entry(name, offset, size, this.macho.text);
+ 
+  def this.add_local_data_entry(name, offset, size)
+   => this.add_local_entry(name, offset, size, this.macho.data);
+ 
+  def this.add_local_entry(name, offset, size, section) {
+    def name_index := this.strtab.ensure(name);
+    def symbol := new MachOLocalSymbol(name_index, offset, section);
+    this.local_map[name] := symbol;
+    this.locals.add(symbol);
+  }
+
+  def this.address_of(name)
+   => this.local_map[name].address(this.macho);
+
+  def this.add_extern(name) {
+    def name_index := this.strtab.ensure(name);
+    this.externs.add(new ExternSymbol(name_index));
+  }
+
+  def this.local_count => this.locals.length;
+
+  def this.external_count => this.externs.length;
+
+  def this.name => "#SYMBOLS";
+
+  def this.align => WORD_ALIGN;
+
+  def this.length => this.symbols.length;
+
+  def this.symbols => this.locals + this.externs;
+
+  def this.encode(out, macho) {
+    for (symbol in this.externs + this.locals)
+      symbol.encode(out, macho);
+  }
+
+  def this.size => this.length * Symbol.size;
+
+}
+
+protocol Symbol {
+
+  def this.desc => 16r0000;
+
+  def this.encode(out, macho) {
+    out.write_int32(this.name_index);
+    out.write_int8(this.type);
+    out.write_int8(this.sect(macho));
+    out.write_int16(this.desc);
+    out.write_int32(this.value(macho));
+  }
+
+  @static def proto.size => 3 * WORD_SIZE;
+
+}
+
+protocol MachOLocalSymbol is Symbol {
+
+  @static def proto.new(name_index, start, section) => new MachOLocalSymbol {
+    name_index := name_index,
+    start := start,
+    section := section
+  }
+
+  def this.type => 16r0F;
+
+  def this.sect(macho)
+   => macho.index_of(this.section);
+
+  def this.value(macho)
+   => this.address(macho);
+
+  def this.address(macho)
+   => macho.offset_of(this.section) + this.start;
+
+}
+
+protocol ExternSymbol is Symbol {
+
+  @static def proto.new(name_index) => new ExternSymbol {
+    name_index := name_index
+  }
+
+  def this.type => 16r01;
+
+  def this.sect(macho) => 0;
+
+  def this.value(macho) => 0;
+
+}

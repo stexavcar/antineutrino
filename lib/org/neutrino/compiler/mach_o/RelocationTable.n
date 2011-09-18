@@ -1,0 +1,82 @@
+protocol RelocationTable {
+
+  @static def proto.new() => new RelocationTable {
+    entries := new ArrayList()
+  }
+
+  def this.name => "#RELOCATION";
+
+  def this.align => WORD_ALIGN;
+
+  def this.add_entry(entry) {
+    this.entries.add(entry);
+  }
+
+  def this.encode(out, macho) {
+    for (entry in this.entries)
+      entry.encode(out, macho);
+  }
+
+  def this.count_for(section) {
+    ref result := 0;
+    for (entry in this.entries) {
+      if entry.affects(section)
+        then result := result + 1;
+    }
+    result;
+  }
+
+  def this.count
+   => this.entries.length;
+
+  def this.size
+   => this.entries.length * RelocationInfo.size;
+
+}
+
+protocol RelocationInfo {
+
+  def this.length => 2;
+
+  def this.is_extern => false;
+
+  def this.is_relative => false;
+
+  def this.type => 0;
+
+  def this.encode(out, macho) {
+    def address := this.address(macho);
+    def symbolnum := this.symbolnum(macho);
+    def pcrel := if this.is_relative then 1 else 0;
+    def length := this.length;
+    def extern := if this.is_extern then 1 else 0;
+    def type := this.type;
+    out.write_int32(address);
+    out.write_int32((type << 28) | (extern << 27) | (length << 25) | (pcrel << 24) | symbolnum);
+  }
+
+  @static def proto.size => 2 * WORD_SIZE;
+
+}
+
+protocol CallRelocationInfo is RelocationInfo {
+
+  @static def proto.new(section, relocation) => new CallRelocationInfo {
+    section := section,
+    relocation := relocation
+  }
+
+  def this.address(macho) {
+    def relocation := this.relocation;
+    def source_offset := macho.symtab.address_of(relocation.assm.name);
+    def section_offset := macho.offset_of(macho.text);
+    (source_offset - section_offset) + relocation.offset;
+  }
+
+  def this.affects(section) => section = this.section;
+
+  def this.is_relative => this.relocation.is_relative;
+
+  def this.symbolnum(macho) => macho.index_of(macho.text);
+
+}

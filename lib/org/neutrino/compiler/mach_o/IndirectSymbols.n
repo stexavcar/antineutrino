@@ -1,0 +1,20 @@
+protocol IndirectSymbols {
+
+  @static def proto.new() => new IndirectSymbols {
+    count := 0
+  }
+
+  def this.name => "#INDIRECT";
+
+  def this.align => WORD_ALIGN;
+
+  def this.add() => this.count := (this.count + 1);
+
+  def this.encode(out, macho) {
+    for (i in 0 .. this.count)
+      out.write_int32(i);
+  }
+
+  def this.size => WORD_SIZE * this.count;
+
+}

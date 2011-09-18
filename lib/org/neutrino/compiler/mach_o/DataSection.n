@@ -1,0 +1,32 @@
+protocol DataSection is ObjectSection {
+
+  @static def this.new(reloc_table) => new DataSection {
+    reloc_table := reloc_table,
+    data := new BlobStream()
+  }
+
+  def this.add_code(code) {
+    def offset := this.data.length;
+    this.data.write_data(code);
+    offset;
+  }
+
+  def this.nreloc => 0;
+
+  def this.segname => "__DATA";
+
+  def this.sectname => "__data";
+
+  def this.flags => 16r00000000;
+
+  def this.reserved2 => 0;
+
+  def this.align => WORD_ALIGN;
+
+  def this.size => this.data.length;
+
+  def this.encode(out, macho) {
+    out.write_data(this.data);
+  }
+
+}

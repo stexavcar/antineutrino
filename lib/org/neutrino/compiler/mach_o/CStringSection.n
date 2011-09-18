@@ -1,0 +1,45 @@
+// A c_string section.  Strings in this section end up in the address
+// space of the running program.
+protocol CStringSection is ObjectSection {
+
+  @static def proto.new() => new CStringSection {
+    order := new ArrayList(),
+    strings := new HashMap(),
+    length := 0
+  }
+
+  def this.nreloc => 0;
+
+  def this.segname => "__TEXT";
+
+  def this.sectname => "__cstring";
+
+  def this.flags => 16r00000002;
+
+  def this.reserved2 => 0;
+
+  def this.align => 0;
+
+  def this[str] => this.strings[str];
+
+  def this.size => this.length;
+
+  def this.ensure(str) {
+    def prev := this.strings[str];
+    if prev = null then {
+      def offset := this.length;
+      this.order.add(str);
+      this.strings[str] := offset;
+      this.length := offset + str.length + 1;
+      offset;
+    } else {
+      prev;
+    }
+  }
+
+  def this.encode(out, macho) {
+    for (str in this.order)
+      out.write_c_string(str);
+  }
+
+}

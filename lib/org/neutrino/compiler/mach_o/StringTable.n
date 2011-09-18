@@ -1,0 +1,50 @@
+/*
+ * This string table is only seen by the linker and loader, the
+ * strings here are not loaded into the address space of the program.
+ */
+protocol StringTable {
+
+  @static def proto.new() {
+    def result := new StringTable {
+      string_map := new HashMap(),
+      strings := new ArrayList(),
+      cursor := 0
+    }
+    result.ensure("");
+    result;
+  }
+
+  def this.ensure(name) {
+    def prev := this.string_map[name];
+    if prev = null then {
+      def result := this.cursor;
+      this.cursor := this.cursor + name.length + 1;
+      this.strings.add(name);
+      this.string_map[name] := result;
+      result;
+    } else {
+      prev;
+    }
+  }
+
+  def this[name] => this.string_map[name];
+
+  def this.encode(out, macho) {
+    for (str in this.strings)
+      out.write_c_string(str);
+  }
+
+  def this.size {
+    ref result := 0;
+    for (str in this.strings)
+      result := result + str.length + 1;
+    result;
+  }
+
+  def this.name => "#STRINGS";
+
+  def this.align => 0;
+
+  def this.length => this.strings.length;
+
+}
