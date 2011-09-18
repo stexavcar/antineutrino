@@ -1,0 +1,10 @@
+@module
+protocol CompilerTestModule {
+
+  @static def proto.new() => new CompilerTestModule { };
+
+  def this.configure(module, platform) {
+    module.import(platform.lookup_module("org::neutrino::compiler"));
+  }
+
+}

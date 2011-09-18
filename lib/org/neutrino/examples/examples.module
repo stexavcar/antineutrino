@@ -1,0 +1,10 @@
+@module
+protocol ExamplesModule {
+
+  @static def proto.new() => new ExamplesModule { };
+
+  def this.configure(module, platform) {
+    module.import(platform.lookup_module("org::neutrino::utils"));
+  }
+
+}
