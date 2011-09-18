@@ -99,6 +99,10 @@ public class Module {
     return globals.get(name);
   }
 
+  private boolean hasEvaluatedStatics() {
+    return defs == null;
+  }
+
   public void evaluateStatics() {
     for (RValue name : defs.keySet())
       this.ensureGlobal(name);
@@ -110,7 +114,12 @@ public class Module {
   }
 
   private RValue getGlobal(RValue name, boolean strict) {
-    RValue localValue = globals.get(name);
+    RValue localValue;
+    if (hasEvaluatedStatics()) {
+      localValue = globals.get(name);
+    } else {
+      localValue = ensureGlobal(name);
+    }
     if (localValue != null) {
       return localValue;
     }
