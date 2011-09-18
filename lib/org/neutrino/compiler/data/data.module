@@ -1,0 +1,10 @@
+@module
+protocol CompilerDataModule {
+
+  @static def proto.new() => new CompilerDataModule { };
+
+  def this.configure(module, platform) {
+    module.import(platform.lookup_module("org::neutrino::compiler"));
+  }
+
+}

@@ -1,0 +1,9 @@
+protocol IntegerData {
+  
+  @static def proto.new(value is Integer) => new IntegerData {
+    value := value
+  }
+  
+  def this.encode => this.value << 2;
+  
+}
