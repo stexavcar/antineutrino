@@ -1,5 +1,6 @@
 package org.neutrino.syntax;
 
+import java.util.Collections;
 import java.util.List;
 
 import org.neutrino.pib.Module;
@@ -7,6 +8,8 @@ import org.neutrino.plankton.Store;
 import org.neutrino.runtime.RValue;
 
 public class Annotation {
+
+  public static final List<Annotation> NONE = Collections.emptyList();
 
   public @Store String tag;
   public @Store List<RValue> args;

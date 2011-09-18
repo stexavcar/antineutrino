@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -198,7 +197,7 @@ public class Universe {
   static {
     for (String name : PROTOCOLS) {
       RValue key = RString.of(name);
-      addBuiltin(name, new RProtocol(Collections.<Annotation>emptyList(), key, key));
+      addBuiltin(name, new RProtocol(Annotation.NONE, key, key));
     }
   }
 

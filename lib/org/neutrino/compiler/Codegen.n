@@ -67,7 +67,7 @@ protocol CodeGenerator {
     } else {
       def c_call := info.c_call;
       if c_call = null
-        then fail("Illegal plain call ${node}");
+        then fail("Illegal plain call to ${node} in ${this.method}");
       this.compiler.ensure_generated(c_call);
       this.emit_c_call(node, get_binary_name(c_call));
     }

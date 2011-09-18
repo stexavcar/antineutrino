@@ -1,7 +1,6 @@
 package org.javatrino.ast;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -29,9 +28,7 @@ public class Method {
       boolean acceptsExtraArguments, Expression body, Map<Symbol, Expression> rewrites,
       Module module, String fileName) {
     assert module != null;
-    this.annotations = (annotations == null)
-        ? Collections.<Annotation>emptyList()
-        : annotations;
+    this.annotations = (annotations == null) ? Annotation.NONE : annotations;
     this.signature = signature;
     this.acceptsExtraArguments = acceptsExtraArguments;
     this.body = body;
