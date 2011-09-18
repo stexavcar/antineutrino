@@ -255,6 +255,7 @@ public abstract class Expression {
     public RValue getStaticValue(Module module) {
       RValue result = module.getGlobal(name);
       if (result == null) {
+        module.getGlobal(name);
         throw new AssertionError("Couldn't find " + name + " from "
             + module.wrapper);
       }
