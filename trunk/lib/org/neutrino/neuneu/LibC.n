@@ -1,32 +1,28 @@
 @intrinsic
-protocol libc;
+protocol libc {
 
-@libc("_sleep")
-@type(int32_t)
-def libc.sleep(arg is int32_t);
+  @static @libc("_sleep") @type(int32_t)
+  def proto.sleep(arg is int32_t);
 
-@libc("_exit")
-def libc.exit(arg is int32_t);
+  @static @libc("_exit")
+  def proto.exit(arg is int32_t);
 
-@libc("_malloc")
-@type(address_t)
-def libc.malloc(size is int32_t);
+  @static @libc("_malloc") @type(address_t)
+  def proto.malloc(size is int32_t);
 
-@libc("_free")
-def libc.free(memory is address_t);
+  @static @libc("_free")
+  def proto.free(memory is address_t);
 
-@libc("_putchar")
-@type(int32_t)
-def libc.putchar(arg is int32_t);
+  @static @libc("_putchar") @type(int32_t)
+  def proto.putchar(arg is int32_t);
 
-@libc("_puts")
-@type(int32_t)
-def libc.puts(arg is char_ptr_t);
+  @static @libc("_puts") @type(int32_t)
+  def proto.puts(arg is char_ptr_t);
 
-@libc("_strlen")
-@type(int32_t)
-def libc.strlen(arg is char_ptr_t);
+  @static @libc("_strlen") @type(int32_t)
+  def proto.strlen(arg is char_ptr_t);
 
-@libc("_strcmp")
-@type(int32_t)
-def libc.strcmp(a is char_ptr_t, b is char_ptr_t);
+  @static @libc("_strcmp") @type(int32_t)
+  def proto.strcmp(a is char_ptr_t, b is char_ptr_t);
+
+}

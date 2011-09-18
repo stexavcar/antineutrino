@@ -1,7 +1,7 @@
 @intrinsic
-protocol data;
+protocol data {
 
-@inline
-@type(value_t)
-@intrinsic("static_data_ptr")
-def data.at(name is String);
+  @static @inline @type(value_t) @intrinsic("static_data_ptr")
+  def proto.at(name is String);
+
+}
