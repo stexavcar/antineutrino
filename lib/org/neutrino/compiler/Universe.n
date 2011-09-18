@@ -190,7 +190,7 @@ protocol NewMethod {
 def (this is NewMethod).ensure_analyzed(universe) {
   if not this.has_been_analyzed then {
     def analysis := new TypeAnalysis(universe, this);
-    analysis.analyze(this.body);
+    analysis.analyze(this);
     this.local_count := analysis.local_count;
     this.has_been_analyzed := true;
   }

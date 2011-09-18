@@ -1,10 +1,14 @@
 package org.neutrino.pib;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.javatrino.ast.Method;
 import org.neutrino.compiler.Source;
@@ -23,6 +27,7 @@ import org.neutrino.syntax.Tree;
 public class Module {
 
   public Map<RValue, Binding> defs;
+  private Collection<Module> delegates;
 
   public @Store RModule wrapper;
   public @Store List<Method> methods;
@@ -83,7 +88,11 @@ public class Module {
   }
 
   public RValue lookupLocal(RValue name) {
-    return globals.get(name);
+    if (hasEvaluatedStatics()) {
+      return globals.get(name);
+    } else {
+      return ensureGlobal(name);
+    }
   }
 
   public RValue ensureGlobal(RValue name) {
@@ -110,31 +119,48 @@ public class Module {
   }
 
   public RValue getGlobal(RValue name) {
-    return getGlobal(name, false);
-  }
-
-  private RValue getGlobal(RValue name, boolean strict) {
-    RValue localValue;
-    if (hasEvaluatedStatics()) {
-      localValue = globals.get(name);
-    } else {
-      localValue = ensureGlobal(name);
+    // First a fast case for when the global is in this module and has been
+    // evaluated.
+    RValue localResult = globals.get(name);
+    if (localResult != null) {
+      return localResult;
     }
-    if (localValue != null) {
-      return localValue;
-    }
-    List<RModule> delegates = wrapper.delegates;
-    if (delegates.isEmpty() && !strict) {
-      return universe.getGlobal(name);
-    } else {
-      for (RModule delegate : delegates) {
-        RValue delegateValue = delegate.owner.getGlobal(name, true);
-        if (delegateValue != null) {
-          return delegateValue;
-        }
+    for (Module delegate : getDelegates()) {
+      RValue delegateValue = delegate.lookupLocal(name);
+      if (delegateValue != null) {
+        return delegateValue;
       }
     }
     return null;
+  }
+
+  private Collection<Module> getDelegates() {
+    if (delegates == null)
+      delegates = buildDelegates();
+    return delegates;
+  }
+
+  private Collection<Module> buildDelegates() {
+    if (wrapper.delegates.isEmpty()) {
+      return universe.modules.values();
+    } else {
+      Set<RValue> seen = new HashSet<RValue>();
+      List<Module> result = new ArrayList<Module>();
+      LinkedList<Module> worklist = new LinkedList<Module>();
+      worklist.add(this);
+      while (!worklist.isEmpty()) {
+        Module next = worklist.removeFirst();
+        RValue name = next.getWrapper().getName();
+        if (!seen.contains(name)) {
+          seen.add(name);
+          result.add(next);
+          for (RModule delegate : next.wrapper.delegates) {
+            worklist.addLast(delegate.owner);
+          }
+        }
+      }
+      return result;
+    }
   }
 
   public void addParents(List<RProtocol> out, RProtocol id) {

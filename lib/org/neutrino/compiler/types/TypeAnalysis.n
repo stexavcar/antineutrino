@@ -1,0 +1,214 @@
+/**
+ * The analysis that decides for each syntax tree node what concrete type the
+ * value will be.
+ */
+protocol TypeAnalysis {
+
+  @static def proto.new(universe, method) => new TypeAnalysis {
+    universe := universe,
+    method := method,
+    scope_chain := new ArgumentScope(method),
+    local_count := 0
+  }
+  
+  def this.push_local_scope(node) {
+    def prev := this.scope_chain;
+    def next := new DefScope {
+      node := node,
+      prev := prev
+    }
+    this.scope_chain := next;
+  }
+
+  def this.pop_local_scope() {
+    this.scope_chain := this.scope_chain.prev;
+  }
+
+  def this.local_type(symbol)
+   => if this.scope_chain = null
+        then null
+        else this.scope_chain.lookup(symbol);
+
+  /**
+   * Ensures that the body of this method is analyzed and checks that the
+   * value returned matches the declared return type.
+   */
+  def this.analyze(method is NewMethod) {
+    def inferred_type := this.analyze(method.body);
+    def explicit_type := get_explicit_return_type(method);
+    if explicit_type != null then {
+      def is_cast := (method.get_annotation("cast") != null);
+      def is_legal := this.is_subtype(explicit_type, inferred_type);
+      if (not is_cast) and (not is_legal) then {
+        fail("Type error in ${method}: ${inferred_type} <:! ${explicit_type}");
+      } else if is_cast and is_legal then {
+        fail("Unnecessary cast in ${method}");
+      }
+    }
+  }
+  
+  def this.is_subtype(expected, found)
+    => (found = null) or (expected = found);
+
+  def this.analyze(node) {
+    def type := this.do_analyze(node);
+    if type != null then
+      node.info.type := type;
+    type;
+  }
+  
+  def this.do_analyze(node is CallExpr) {
+    def types := new ArrayList();
+    for (arg in node.arguments) {
+      def type := this.analyze(arg);
+      types.add(type);
+    }
+    def method := this.universe.find_method(node.name, types);
+    if method != null then {
+      if method.get_annotation("inline") != null then {
+        def intrinsic := method.get_annotation("intrinsic");
+        node.info.intrinsic := intrinsic[0];
+      }
+      node.info.c_call := method;
+      get_explicit_return_type(method);
+    }
+  }
+
+  def this.do_analyze(node is ConstantExpr)
+   => this.value_type(node.value);
+
+  def this.do_analyze(node is GlobalExpr) {
+    def name := node.name;
+    def value := this.universe.lookup_static_global(name);
+    if value = null
+      then null;
+      else this.value_type(value);
+  }
+
+  def this.do_analyze(node is String) {
+    fail("Improperly deserialized type '${node}'.");
+  }
+
+  def this.do_analyze(node is LocalExpr)
+   => this.local_type(node.symbol);
+
+  def this.do_analyze(node is BlockExpr) {
+    ref last := null;
+    for (value in node.values)
+      last := this.analyze(value);
+    last;
+  }
+
+  def this.do_analyze(node is DefExpr) {
+    this.analyze(node.value);
+    this.local_count := this.local_count + 1;
+    this.push_local_scope(node);
+    def result := this.analyze(node.body);
+    this.pop_local_scope();
+    result;
+  }
+
+  def this.do_analyze(node is AddIntrinsics)
+   => this.analyze(node.object);
+
+  def this.do_analyze(node is NewObject)
+   => "Object";
+
+  def this.value_type(obj is Integer) => BuiltinCodec.get("Integer");
+
+  def this.value_type(obj is String) => BuiltinCodec.get("String");
+
+  def this.value_type(obj is ProtocolAst) => obj;
+
+  def this.value_type(obj) => null;
+
+}
+
+/**
+ * Returns the explicit return type of a method or null if it doesn't have
+ * one.
+ */
+def get_explicit_return_type(method) {
+  def annot := method.get_annotation("type");
+  if annot != null
+    then annot[0];
+}
+
+protocol ArgumentScope {
+
+  @static def proto.new(method) => new ArgumentScope {
+    method := method
+  }
+
+  def this.lookup(symbol) {
+    with_escape (return) => {
+      for (param in this.method.signature) {
+        if param.symbol = symbol
+          then return(param.test.upper_bound);
+      }
+      null;
+    }
+  }
+
+}
+
+protocol DefScope {
+
+  def this.lookup(symbol) {
+    if this.node.symbol = symbol then
+      this.node.value.info.type;
+    else if this.prev = null then
+      null;
+    else
+      this.prev.lookup(symbol);
+  }
+
+}
+
+def (this is Universe).is_static_subtype(proto, found) {
+  if proto = found then {
+    true;
+  } else {
+    def check_supers := proto != null and proto.get_annotation("no_override") != null;
+    if check_supers then {
+      with_escape (yield) {
+        for (super in this.supers(found)) {
+          if this.is_static_subtype(proto, super)
+            then yield(true);
+        }
+        false;
+      }
+    } else {
+      false;
+    }
+  }
+}
+
+def (this is Universe).is_matching_argument(param is EqTest, type_found)
+ => param.value = type_found;
+
+def (this is Universe).is_matching_argument(param is IsTest, type_found)
+ => this.is_static_subtype(param.type, type_found);
+
+def (this is Universe).is_matching_argument(param is AnyTest, type_found)
+ => true;
+
+def (this is Universe).find_method(name, types) {
+  with_escape (return) {
+    for (method in this.methods) {
+      if method.name = name then {
+        def signature := method.signature;
+        if signature.length = (types.length + 1) then {
+          with_escape (break) {
+            for (i in 1 .. signature.length) {
+              if not this.is_matching_argument(signature[i].test, types[i - 1])
+                then break(null);
+            }
+            return(method);
+          }
+        }
+      }
+    }
+    null;
+  }
+}

@@ -4,6 +4,7 @@ protocol CompilerModule {
   @static def proto.new() => new CompilerModule { };
 
   def this.configure(module, platform) {
+    module.import(platform.lookup_module("org::neutrino::compiler::types"));
     module.import(platform.lookup_module("org::neutrino::plankton"));
     module.import(platform.lookup_module("org::neutrino::utils"));
     module.import(platform.lookup_module("org::neutrino::neuneu::value"));

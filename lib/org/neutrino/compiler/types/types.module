@@ -1,0 +1,10 @@
+@module
+protocol CompilerTypesModule {
+
+  @static def proto.new() => new CompilerTypesModule { };
+
+  def this.configure(module, platform) {
+    module.import(platform.lookup_module("org::neutrino::compiler"));
+  }
+
+}
