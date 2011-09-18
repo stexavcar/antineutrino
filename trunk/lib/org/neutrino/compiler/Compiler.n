@@ -173,7 +173,7 @@ protocol NeutrinoCompiler {
    */
   def this.emit_data(binary) {
     def assm := binary.add_data_block("x");
-    assm.write(small_integer_t.of(5));
+    assm.write(new IntegerData(5));
   }
   
   /**

@@ -8,7 +8,7 @@ protocol Data32Assembler {
 
   def this.data => this.out.get_blob();
 
-  def this.write(arg is small_integer_t)
-   => this.out.write_int32(arg.value << 2);
+  def this.write(arg is IntegerData)
+   => this.out.write_int32(arg.encode);
 
 }
