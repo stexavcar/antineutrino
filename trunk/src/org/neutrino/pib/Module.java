@@ -43,6 +43,7 @@ public class Module {
     this.globalAnnots = globalAnnots;
     this.globals = globals;
     this.wrapper = wrapper;
+    this.wrapper.setOwner(this);
   }
 
   public Module() { }
@@ -81,7 +82,7 @@ public class Module {
     return "a Module {globals: " + globals + ", methods: " + methods + "}";
   }
 
-  public RValue lookupGlobal(RValue name) {
+  public RValue lookupLocal(RValue name) {
     return globals.get(name);
   }
 
@@ -105,7 +106,26 @@ public class Module {
   }
 
   public RValue getGlobal(RValue name) {
-    return universe.getGlobal(name);
+    return getGlobal(name, false);
+  }
+
+  private RValue getGlobal(RValue name, boolean strict) {
+    RValue localValue = globals.get(name);
+    if (localValue != null) {
+      return localValue;
+    }
+    List<RModule> delegates = wrapper.delegates;
+    if (delegates.isEmpty() && !strict) {
+      return universe.getGlobal(name);
+    } else {
+      for (RModule delegate : delegates) {
+        RValue delegateValue = delegate.owner.getGlobal(name, true);
+        if (delegateValue != null) {
+          return delegateValue;
+        }
+      }
+    }
+    return null;
   }
 
   public void addParents(List<RProtocol> out, RProtocol id) {

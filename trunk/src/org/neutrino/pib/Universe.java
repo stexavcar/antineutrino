@@ -89,7 +89,7 @@ public class Universe {
 
   public RValue getGlobal(RValue name) {
     for (Module module : modules.values()) {
-      RValue value = module.lookupGlobal(name);
+      RValue value = module.lookupLocal(name);
       if (value != null)
         return value;
     }
