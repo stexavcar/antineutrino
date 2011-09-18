@@ -1,0 +1,11 @@
+@module
+protocol LanguageTestModule {
+
+  @static def proto.new() => new LanguageTestModule { };
+
+  def this.configure(module, platform) {
+    module.import(platform.lookup_module("org::neutrino::core"));
+    module.import(platform.lookup_module("org::neutrino::neuneu"));
+  }
+
+}
