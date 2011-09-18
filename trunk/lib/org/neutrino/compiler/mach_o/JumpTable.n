@@ -1,0 +1,28 @@
+protocol JumpTable is ObjectSection {
+
+  @static def proto.new() => new JumpTable {
+    count := 0
+  }
+
+  def this.add_extern() => this.count := (this.count + 1);
+
+  def this.size => 5 * this.count;
+
+  def this.segname => "__IMPORT";
+
+  def this.sectname => "__jump_table";
+
+  def this.flags => 16r84000408;
+
+  def this.reserved2 => 5;
+
+  def this.align => 0;
+
+  def this.nreloc => 0;
+
+  def this.encode(out, macho) {
+    for (i in 0 .. this.size)
+      out.write_int8(16rF4); // HLT
+  }
+
+}

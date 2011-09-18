@@ -1,0 +1,43 @@
+protocol TextSection is ObjectSection {
+
+  @static def proto.new(reloc_table, symtab) => new TextSection {
+    reloc_table := reloc_table,
+    symtab := symtab,
+    code := new BlobStream()
+  }
+
+  def this.code_block_offset(name)
+   => this.symtab.address_of(name);
+
+  def this.length => this.code.get();
+
+  def this.nreloc => this.reloc_table.count;
+
+  def this.segname => "__TEXT";
+
+  def this.sectname => "__text";
+
+  def this.flags => 16r80000400;
+
+  def this.reserved2 => 0;
+
+  def this.align => WORD_ALIGN;
+
+  def this.add_code(code) {
+    def offset := this.code.length;
+    this.code.write_data(code);
+    offset;
+  }
+
+  def this.rewrite_int32(offset, value) {
+    this.code.rewrite_int32(offset, value);
+  }
+
+  def this.size
+   => this.code.length;
+
+  def this.encode(out, macho) {
+    out.write_data(this.code.get_blob());
+  }
+
+}
