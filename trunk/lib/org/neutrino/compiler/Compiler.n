@@ -172,10 +172,12 @@ protocol NeutrinoCompiler {
    * Emit any static data that needs to be written into the binary.
    */
   def this.emit_data(binary) {
-    def assm := binary.add_data_block("x");
-    assm.write(new IntegerData(5));
+    def x_assm := binary.add_data_block("x");
+    x_assm.write(new small_integer_d(5));
+    def o_assm := binary.add_data_block("o");
+    o_assm.write(new object_d());
   }
-  
+
   /**
    * Scans through the given universe and returns the method annotated as
    * the neuneu entry point, or null if there is no such method.
