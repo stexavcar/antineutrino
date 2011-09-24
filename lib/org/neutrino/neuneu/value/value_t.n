@@ -1,22 +1,23 @@
 @no_override
-protocol value_t;
+protocol value_t {
 
-@cast
-@type(int32_t)
-def (this is value_t).id => this;
+  @cast @type(int32_t)
+  def this.id => this;
 
-@type(value_t)
-def value_t.from_id(arg is int32_t)
- => arg;
+  @static @type(value_t)
+  def proto.from_id(arg is int32_t)
+   => arg;
 
-@type(bool_t)
-def (this is value_t).is_small_integer
- => (this.id & int32_t.of(3)) = int32_t.of(0);
+  @type(bool_t)
+  def this.is_small_integer
+   => (this.id & int32_t.of(3)) = int32_t.of(0);
 
-@type(bool_t)
-def (this is value_t).is_object
- => (this.id & int32_t.of(3)) = int32_t.of(1);
+  @type(bool_t)
+  def this.is_object
+   => (this.id & int32_t.of(3)) = int32_t.of(1);
 
-@type(bool_t)
-def (this is value_t)=(that is value_t)
- => this.id = that.id;
+  @type(bool_t)
+  def this=(that is value_t)
+   => this.id = that.id;
+
+}

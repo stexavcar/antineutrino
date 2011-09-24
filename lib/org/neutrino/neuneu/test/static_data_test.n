@@ -1,8 +1,13 @@
 def (this is neu_neu_tests_t).test_static_data() {
   this.on_start(char_ptr_t.of("static data"));
+  // Test of a simple integer.
   @type(value_t) def x := data.at("x");
   this.assert_true(x.is_small_integer);
   this.assert_true(not x.is_object);
   @type(small_integer_t) def i := small_integer_t.cast(x);
   this.assert_equal(int32_t.of(5), i.value);
+  // Test of a simple object value.
+  @type(value_t) def o := data.at("o");
+  this.assert_true(o.is_object);
+  
 }

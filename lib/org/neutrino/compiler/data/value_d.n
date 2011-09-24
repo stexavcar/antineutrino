@@ -1,0 +1,27 @@
+protocol value_d {
+  
+}
+
+/**
+ * A compile-time representation of what becomes at runtime a small_integer_t.
+ */
+protocol small_integer_d is value_d {
+  
+  @static def proto.new(value is Integer) => new small_integer_d {
+    value := value
+  }
+  
+  def this.encode => this.value << 2;
+  
+}
+
+/**
+ * A compile-time representation of what becomes at runtime an object_t.
+ */
+protocol object_d is value_d {
+  
+  @static def proto.new() => new object_d { }
+  
+  def this.encode => 1;
+  
+}
