@@ -4,8 +4,16 @@ def WORD_SIZE := 1 << WORD_ALIGN;
 def SEGMENT_COMMAND_SIZE := 56;
 def SECTION_HEADER_SIZE := 68;
 
-// A mach-o file, or at least the parts of it that are relevant for
-// generating object files for neutrino programs.
+/**
+ * A mach-o file, or at least the parts of it that are relevant for
+ * generating object files for neutrino programs.
+ *
+ * This code is based on the file format reference (FFR) in
+ * http://developer.apple.com/library/mac/\
+ * #documentation/DeveloperTools/Conceptual/MachORuntime/Reference/reference.html.
+ *
+ * Use the otool utility that comes with MacOS to inspect generated objects.
+ */
 protocol MachO is ObjectFormat {
 
   @static def proto.commands_start_marker => "COMMANDS{";
@@ -63,6 +71,16 @@ protocol MachO is ObjectFormat {
     symtab.macho := result;
     result;
   }
+  
+  /**
+   * Write the contents of this binary to the given output stream.  See FFR
+   * fig. 1.
+   */
+  def this.encode(out) {
+    this.encode_mach_header(out);
+    this.encode_load_commands(out);
+    this.encode_sections(out);
+  }
 
   /*
    * struct mach_header {
@@ -89,12 +107,6 @@ protocol MachO is ObjectFormat {
     out.write_int32(sizeofcmds);
     out.write_int32(5);
     assert_equal(info.end, out.length);  
-  }
-
-  def this.encode(out) {
-    this.encode_mach_header(out);
-    this.encode_load_commands(out);
-    this.encode_sections(out);
   }
 
   def this.encode_load_commands(out) {
@@ -138,7 +150,7 @@ protocol MachO is ObjectFormat {
 
   def this.add_data_block(name, code) {
     def offset := this.data.add_code(code);
-    this.symtab.add_local_data_entry(name, offset, code.length);
+    this.symtab.add_data_segment_symbol(name, offset, code.length);
   }
   
   def this.nsects => this.sections.length;
@@ -299,7 +311,7 @@ protocol MachO is ObjectFormat {
       this.dysym_indices[name] := new_index;
       this.jump_table.add_extern();
       this.indirect_symbols.add();
-      this.symtab.add_extern(name);
+      this.symtab.add_extern_symbol(name);
     }
     def entry := new CallRelocationInfo(this.text, relocation);
     this.reloc_table.add_entry(entry);

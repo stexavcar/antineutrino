@@ -1,0 +1,25 @@
+/**
+ * A simple integer interval.
+ */
+protocol Interval is Sequence {
+
+  def this=(other) => (this.from = other.from) and (this.to = other.to);
+
+  def this.for(fun) => this.for(fun, this.from);
+
+  def this.for(fun, i) {
+    if i != this.to then {
+      fun(i);
+      this.for(fun, i + this.dir);
+    }
+  }
+  
+  def this.is_empty => this.from != this.to;
+
+}
+
+def (this is Integer)..(that is Integer) => new Interval {
+  from := this,
+  to := that,
+  dir := if this < that then 1 else 0-1
+}

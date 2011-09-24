@@ -33,26 +33,4 @@ protocol Integer {
 
   def this>>(that is Integer) => internal "int>>int";
 
-  def this..(that) => new Interval {
-    from := this,
-    to := that,
-    dir := if this < that then 1 else 0-1
-  }
-
-}
-
-protocol Interval is Sequence {
-
-  def this=(other) => this.from = other.from and this.to = other.to;
-
-  def this.for(fun) => this.for(fun, this.from);
-
-  def this.for(fun, i) =>
-    if i = this.to then {
-      this;
-    } else {
-      fun(i);
-      this.for(fun, i + this.dir);
-    }
-
 }

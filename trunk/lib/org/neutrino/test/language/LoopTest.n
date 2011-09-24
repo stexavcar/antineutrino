@@ -1,6 +1,7 @@
 def (this is LanguageTest).test_loops() {
   this.test_raw_loops();
   this.test_intervals();
+  this.test_repeats();
 }
 
 def (this is LanguageTest).test_raw_loops() {
@@ -22,10 +23,19 @@ def (this is LanguageTest).test_raw_loops() {
 def (this is LanguageTest).test_intervals() {
   this.on_start("intervals");
   ref expected := 0;
-  def r := (0 .. 10).for(fn (i) {
+  (0 .. 10).for(fn (i) {
     assert_equal(i, expected);
     expected := i + 1;
   });
   assert_equal(10, expected);
-  assert_equal(0 .. 10, r);
+}
+
+def (this is LanguageTest).test_repeats() {
+  this.on_start("repeats");
+  ref expected := 0;
+  for (i in 123.repeat(12)) {
+    assert_equal(123, i);
+    expected := expected + 1;
+  }
+  assert_equal(12, expected);
 }

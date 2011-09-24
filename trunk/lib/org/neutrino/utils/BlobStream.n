@@ -46,7 +46,14 @@ protocol BlobStream is ArrayBackedStream {
       this.add(data[i]);
   }
 
+  def this.write_int32_block(data, from, to) {
+    for (i in from .. to)
+      this.write_int32(data[i]);
+  }
+
   def this.write_data(data) => this.write_data(data, 0, data.length);
+
+  def this.write_int32_block(data) => this.write_int32_block(data, 0, data.length);
 
   def this.write_c_string(str, length) {
     ref pos := 0;

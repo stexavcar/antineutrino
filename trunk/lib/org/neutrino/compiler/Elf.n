@@ -349,7 +349,7 @@ def ElfSymbolTable.new(strtab) {
   result;
 }
 
-def (this is ElfSymbolTable).add_local_code_entry(name, offset, size) {
+def (this is ElfSymbolTable).add_text_segment_symbol(name, offset, size) {
   def name_index := this.strtab.ensure(name);
   def entry := new ElfSymbolTableEntry(name_index, offset, size);
   this.entries.add(entry);

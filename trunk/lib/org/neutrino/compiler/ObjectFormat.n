@@ -25,7 +25,7 @@ protocol ObjectFormat {
    */
   def this.add_code_block(name, code) {
     def offset := this.text.add_code(code);
-    this.symtab.add_local_code_entry(name, offset, code.length);
+    this.symtab.add_text_segment_symbol(name, offset, code.length);
   }
 
 }
