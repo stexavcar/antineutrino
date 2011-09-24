@@ -1,0 +1,34 @@
+/**
+ * A simple collection that consists of the same element repeated a fixed
+ * number of times.
+ */
+protocol Repeat is Sequence {
+  
+  def this=(that) => (this.value = that.value) and (this.length = that.length);
+  
+  def this.for(fun) => this.for(fun, 0);
+
+  def this.for(fun, i) {
+    if i != this.length then {
+      fun(this.value);
+      this.for(fun, i + 1);
+    }
+  }
+  
+  def this[index] {
+    assert_true(0 <= index and index <= this.length);
+    this.value;
+  }
+  
+  def this.is_empty => this.length > 0;
+  
+}
+
+/**
+ * Returns a collection that contains this object the specified number of
+ * times.
+ */
+def (this is Integer).repeat(times) => new Repeat {
+  value := this,
+  length := times
+}

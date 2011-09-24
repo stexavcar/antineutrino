@@ -1,3 +1,10 @@
+/**
+ * The relocation table used by the linker and loader to update all internal
+ * pointers as the object is relocated.
+ *
+ * The relocation table is not a true section but a sequence of relocation
+ * info entries that come at a specified offset in the binary. 
+ */
 protocol RelocationTable {
 
   @static def proto.new() => new RelocationTable {
@@ -34,6 +41,9 @@ protocol RelocationTable {
 
 }
 
+/**
+ * A single entry in a relocation table.  See relocation_info in the FFR.
+ */
 protocol RelocationInfo {
 
   def this.length => 2;
@@ -59,6 +69,9 @@ protocol RelocationInfo {
 
 }
 
+/**
+ * A relocation table entry that marks the location of a call.
+ */
 protocol CallRelocationInfo is RelocationInfo {
 
   @static def proto.new(section, relocation) => new CallRelocationInfo {

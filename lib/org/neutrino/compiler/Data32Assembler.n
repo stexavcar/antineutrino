@@ -1,3 +1,9 @@
+/**
+ * Primitive static data assembler.  Works by, for each object that hasn't
+ * been written before, allocating a block of the appropriate size, recording
+ * the location of that block, and then updating the fields while recursively
+ * writing out any referenced objects.
+ */
 protocol Data32Assembler {
 
   @static def proto.new(name, binary) => new Data32Assembler {
@@ -8,7 +14,41 @@ protocol Data32Assembler {
 
   def this.data => this.out.get_blob();
 
-  def this.write(arg is value_d)
-   => this.out.write_int32(arg.encode);
+  /**
+   * Writes an object to this assembler, putting a reference to the object
+   * as the first word.
+   */
+  def this.write(arg) {
+    this.out.write_int32(0);
+    this.rewrite(0, arg);
+  }
+
+  /**
+   * Write an encoded integer at the specified index.
+   */
+  def this.rewrite(index, arg is small_integer_d) {
+    this.out.rewrite_int32(index, arg.encode);
+  }
+
+  /**
+   * Write an encoded object reference at the specified index, writing the
+   * contents of the object at the end of the stream if necessary.
+   */
+  def this.rewrite(index, arg is object_d) {
+    if not arg.is_written
+      then this.append_object(arg);
+    this.out.rewrite_int32(index, arg.encode);
+  }
+  
+  /**
+   * Appends the contents of an object to this stream.
+   */
+  def this.append_object(obj) {
+    // First remember where we put the object.
+    def offset := this.out.length;
+    obj.mark_as_written(offset);
+    // Then allocate a chunk of the output stream.
+    this.out.write_int32_block(16rFABACEAE.repeat(obj.field_count));
+  }
 
 }

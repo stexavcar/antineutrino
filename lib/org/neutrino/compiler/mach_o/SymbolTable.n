@@ -1,3 +1,9 @@
+/**
+ * The binary's symbol table.  Contains two list of entries, the internal and
+ * the internal symbols.  Each symbol is stored in a SymbolTableEntry object.
+ *
+ * See symtab_command in FFR.
+ */
 protocol SymbolTable {
 
   @static def proto.new(strtab) => new SymbolTable {
@@ -8,15 +14,28 @@ protocol SymbolTable {
     macho := null
   }
 
-  def this.add_local_code_entry(name, offset, size)
+  /**
+   * Adds a local symbol with the specified name that points to the given
+   * range in the text segment.
+   */
+  def this.add_text_segment_symbol(name, offset, size)
    => this.add_local_entry(name, offset, size, this.macho.text);
  
-  def this.add_local_data_entry(name, offset, size)
+  /**
+   * Adds a local symbol with the specified name that points to the given
+   * range in the data segment.
+   */
+  def this.add_data_segment_symbol(name, offset, size)
    => this.add_local_entry(name, offset, size, this.macho.data);
  
+  /**
+   * Adds a local symbol.  Since we don't know what the offset of the
+   * section will be we store a reference to the section and resolve the
+   * offset after the binary has been laid out.
+   */
   def this.add_local_entry(name, offset, size, section) {
     def name_index := this.strtab.ensure(name);
-    def symbol := new MachOLocalSymbol(name_index, offset, section);
+    def symbol := new LocalSymbolTableEntry(name_index, offset, section);
     this.local_map[name] := symbol;
     this.locals.add(symbol);
   }
@@ -24,9 +43,12 @@ protocol SymbolTable {
   def this.address_of(name)
    => this.local_map[name].address(this.macho);
 
-  def this.add_extern(name) {
+  /**
+   * Adds an external reference with the given name.
+   */
+  def this.add_extern_symbol(name) {
     def name_index := this.strtab.ensure(name);
-    this.externs.add(new ExternSymbol(name_index));
+    this.externs.add(new ExternSymbolTableEntry(name_index));
   }
 
   def this.local_count => this.locals.length;
@@ -46,11 +68,14 @@ protocol SymbolTable {
       symbol.encode(out, macho);
   }
 
-  def this.size => this.length * MachOSymbol.size;
+  def this.size => this.length * SymbolTableEntry.size;
 
 }
 
-protocol MachOSymbol {
+/**
+ * A single entry in the nlist associated with a symbol table.
+ */
+protocol SymbolTableEntry {
 
   def this.desc => 16r0000;
 
@@ -66,15 +91,18 @@ protocol MachOSymbol {
 
 }
 
-protocol MachOLocalSymbol is MachOSymbol {
+/**
+ * An nlist entry for a symbol whose definition is within this binary.
+ */
+protocol LocalSymbolTableEntry is SymbolTableEntry {
 
-  @static def proto.new(name_index, start, section) => new MachOLocalSymbol {
+  @static def proto.new(name_index, start, section) => new LocalSymbolTableEntry {
     name_index := name_index,
     start := start,
     section := section
   }
 
-  def this.type => 16r0F;
+  def this.type => 16r0F; // N_TYPE | N_EXT
 
   def this.sect(macho)
    => macho.index_of(this.section);
@@ -87,13 +115,16 @@ protocol MachOLocalSymbol is MachOSymbol {
 
 }
 
-protocol ExternSymbol is MachOSymbol {
+/**
+ * An nlist entry for a symbol whose definition is external to this binary.
+ */
+protocol ExternSymbolTableEntry is SymbolTableEntry {
 
-  @static def proto.new(name_index) => new ExternSymbol {
+  @static def proto.new(name_index) => new ExternSymbolTableEntry {
     name_index := name_index
   }
 
-  def this.type => 16r01;
+  def this.type => 16r01; // N_EXT
 
   def this.sect(macho) => 0;
 

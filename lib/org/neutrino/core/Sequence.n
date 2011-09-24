@@ -1,7 +1,6 @@
 /*
  * Provides ordered sequence behaviour.
  */
-
 protocol Sequence {
 
   def this.is_empty => with_escape (yield) {

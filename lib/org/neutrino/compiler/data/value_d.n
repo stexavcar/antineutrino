@@ -20,8 +20,32 @@ protocol small_integer_d is value_d {
  */
 protocol object_d is value_d {
   
-  @static def proto.new() => new object_d { }
+  @static def proto.new() => new object_d {
+    offset := null
+  }
   
-  def this.encode => 1;
+  /**
+   * Has this object been written yet?
+   */
+  def this.is_written => (this.offset != null);
+
+  /**
+   * How many fields does the serialized representation of this object have?
+   */
+  def this.field_count => 3;
+  
+  /**
+   * Sets the offset where this object has been written.  Can only be
+   * called once, so a given object can only be serialized once.
+   */
+  def this.mark_as_written(offset) {
+    assert_true(not this.is_written);
+    this.offset := offset;
+  }
+
+  def this.encode {
+    assert_true(this.is_written);
+    (this.offset << 2) | 1;
+  }
   
 }
