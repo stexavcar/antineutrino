@@ -2,26 +2,34 @@ protocol Operand;
 
 protocol Register is Operand;
 
-protocol Memory is Operand;
+protocol Memory is Operand {
 
-def Memory.at(base) => new Memory(base, 0);
+  @static def proto.at(base) => new Memory(base, 0);
 
-def Memory.at_disp(base, disp) => new Memory(base, disp);
+  @static def proto.at_disp(base, disp) => new Memory(base, disp);
+
+}
 
 protocol Immediate;
 
 def Integer is Immediate;
 
-protocol Symbol is Immediate;
+protocol Symbol is Immediate {
+  
+  @static def proto.dylib(name) => new DylibSymbol { name := name };
+  
+  @static def proto.local(name) => new LocalSymbol { name := name };
+  
+  @static def proto.string(value) => new StringSymbol { value := value };
+  
+  @static def proto.data(value) => new DataSymbol { value := value };
+
+}
 
 protocol LocalSymbol is Symbol;
 
-def Symbol.local(name) => new LocalSymbol { name := name };
-
 protocol DylibSymbol is Symbol;
-
-def Symbol.dylib(name) => new DylibSymbol { name := name };
 
 protocol StringSymbol is Symbol;
 
-def Symbol.string(value) => new StringSymbol { value := value };
+protocol DataSymbol is Symbol;

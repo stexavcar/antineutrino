@@ -15,10 +15,10 @@ protocol libc {
 
   @static @libc("_putchar") @type(int32_t)
   def proto.putchar(arg is int32_t);
-
+  
   @static @libc("_puts") @type(int32_t)
   def proto.puts(arg is char_ptr_t);
-
+  
   @static @libc("_strlen") @type(int32_t)
   def proto.strlen(arg is char_ptr_t);
 

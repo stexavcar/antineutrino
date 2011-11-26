@@ -5,6 +5,7 @@ def IntrinsicManager.new() {
   // Int32
   map["int32.cast"] := (fn (g, n) => g.int32_cast(n));
   map["add_int32"] := (fn (g, n) => g.add_int32(n));
+  map["sub_int32"] := (fn (g, n) => g.sub_int32(n));
   map["and_int32"] := (fn (g, n) => g.and_int32(n));
   map["sar_int32"] := (fn (g, n) => g.sar_int32(n));
   map["shl_int32"] := (fn (g, n) => g.shl_int32(n));
@@ -50,12 +51,18 @@ def (this is CodeGenerator).int32_binary(node, do_op) {
   // Do the operation
   do_op(rEax, rEbx);
   // Push the result back onto the stack.
-  this.assm.push(rEax);  
+  this.assm.push(rEax);
 }
 
 def (this is CodeGenerator).add_int32(node) {
   this.int32_binary(node, fn (dest, src) {
     this.assm.add(dest, src);
+  });
+}
+
+def (this is CodeGenerator).sub_int32(node) {
+  this.int32_binary(node, fn (dest, src) {
+    this.assm.sub(dest, src);
   });
 }
 
@@ -75,7 +82,7 @@ def (this is CodeGenerator).int32_shift(node, do_op) {
   // Do the operation
   do_op(rEax);
   // Push the result back onto the stack.
-  this.assm.push(rEax);  
+  this.assm.push(rEax);
 }
 
 def (this is CodeGenerator).sar_int32(node) {
@@ -165,7 +172,7 @@ def (this is CodeGenerator).if_else(node) {
   this.emit_thunk_body(node.arguments[2]);
   this.assm.jmp(bottom);
   this.assm.bind(else_label);
-  this.emit_thunk_body(node.arguments[3]);  
+  this.emit_thunk_body(node.arguments[3]);
   this.assm.bind(bottom);
 }
 

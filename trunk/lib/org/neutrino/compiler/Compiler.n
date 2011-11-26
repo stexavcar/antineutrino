@@ -172,10 +172,13 @@ protocol NeutrinoCompiler {
    * Emit any static data that needs to be written into the binary.
    */
   def this.emit_data(binary) {
-    def x_assm := binary.add_data_block("x");
+    def x_assm := binary.enter_data_block("x");
     x_assm.write(new small_integer_d(5));
-    def o_assm := binary.add_data_block("o");
+    x_assm.exit();
+    
+    def o_assm := binary.enter_data_block("o");
     o_assm.write(new object_d());
+    o_assm.exit();
   }
 
   /**

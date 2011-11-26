@@ -45,7 +45,7 @@ protocol object_d is value_d {
 
   def this.encode {
     assert_true(this.is_written);
-    (this.offset << 2) | 1;
+    this.offset | 1;
   }
   
 }

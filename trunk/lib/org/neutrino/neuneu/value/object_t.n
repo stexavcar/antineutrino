@@ -1,14 +1,15 @@
 @no_override
 protocol object_t is value_t {
 
-  @static @type(object_t)
+  @static @cast @type(object_t)
   def proto.cast(arg is value_t)
    => arg;
 
-  @type(address_t)
+  @cast @type(address_t)
   def this.address
-   => this.id - 1;
+   => this.id - int32_t.of(1);
 
+  @cast @type(value_t)
   def this.header
    => this.address[int32_t.of(0)];
 
