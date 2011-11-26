@@ -8,6 +8,9 @@ protocol int32_t {
   @inline @type(int32_t) @intrinsic("add_int32")
   def this+(that is int32_t);
 
+  @inline @type(int32_t) @intrinsic("sub_int32")
+  def this-(that is int32_t);
+
   @inline @type(int32_t) @intrinsic("and_int32")
   def this&(that is int32_t);
 

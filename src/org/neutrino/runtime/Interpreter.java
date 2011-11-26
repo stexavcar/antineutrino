@@ -68,7 +68,6 @@ public class Interpreter {
     byte[] code = frame.bundle.getCode();
     while (true) {
       int opcode = code[frame.pc];
-      // System.out.println(count);
       count++;
       switch (opcode) {
       case Opcode.kNull:

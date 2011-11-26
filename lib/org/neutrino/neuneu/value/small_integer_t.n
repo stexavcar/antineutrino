@@ -1,17 +1,33 @@
+/**
+ * A small (< 30 bits) tagged integer.
+ */
 @no_override
 protocol small_integer_t is value_t {
 
+  /**
+   * Typecasts the given argument to a small_integer_t.
+   */
   @static @cast @type(small_integer_t)
   def proto.cast(arg is value_t)
    => arg;
 
+  /**
+   * Encodes a 32-bit integer as a tagged object.
+   */
   @static @cast @type(small_integer_t)
   def proto.of(arg is int32_t)
    => arg << int32_t.of(2);
 
+  /**
+   * Returns the value encoded in this tagged object.
+   */
   @type(int32_t)
   def this.value => this.id >> int32_t.of(2);
 
+  /**
+   * Returns a tagged object with the value of this one plus the given
+   * tagged integer.
+   */
   @cast @type(small_integer_t)
   def this+(that is small_integer_t)
    => this.id + that.id;

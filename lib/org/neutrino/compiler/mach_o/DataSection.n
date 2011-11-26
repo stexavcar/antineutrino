@@ -11,7 +11,7 @@ protocol DataSection is ObjectSection {
     offset;
   }
 
-  def this.nreloc => 0;
+  def this.nreloc => this.reloc_table.count;
 
   def this.segname => "__DATA";
 

@@ -12,7 +12,8 @@ def SECTION_HEADER_SIZE := 68;
  * http://developer.apple.com/library/mac/\
  * #documentation/DeveloperTools/Conceptual/MachORuntime/Reference/reference.html.
  *
- * Use the otool utility that comes with MacOS to inspect generated objects.
+ * Use the otool utility that comes with MacOS to inspect generated objects
+ * and the nm utility to dump symbol tables.
  */
 protocol MachO is ObjectFormat {
 
@@ -23,7 +24,7 @@ protocol MachO is ObjectFormat {
   @static def proto.segments_start_marker => "SEGMENTS{";
 
   @static def proto.segments_end_marker => "SEGMENTS}";
-  
+
   @static def proto.header_name => "mach_header";
 
   @static def proto.header_size => 7 * WORD_SIZE;
@@ -43,14 +44,15 @@ protocol MachO is ObjectFormat {
   @static def proto.sizeof_dysymtab_command => 20 * WORD_SIZE;
 
   @static def proto.new(binary) {
-    def reloc_table := new RelocationTable();
+    def text_reloc_table := new RelocationTable("TEXT");
+    def data_reloc_table := new RelocationTable("DATA");
     def strtab := new StringTable();
     def symtab := new SymbolTable(strtab);
-    def text := new TextSection(reloc_table, symtab);
+    def text := new TextSection(text_reloc_table, symtab);
     def cstrings := new CStringSection();
     def indirect_symbols := new IndirectSymbols();
     def jump_table := new JumpTable();
-    def data := new DataSection(reloc_table);
+    def data := new DataSection(data_reloc_table);
     def result := new MachO {
       binary := binary,
       text := text,
@@ -59,10 +61,12 @@ protocol MachO is ObjectFormat {
       symtab := symtab,
       indirect_symbols := indirect_symbols,
       jump_table := jump_table,
-      reloc_table := reloc_table,
+      text_reloc_table := text_reloc_table,
+      data_reloc_table := data_reloc_table,
       data := data,
       sections := new ArrayList() [ text, data, jump_table, cstrings ],
-      dark_sections := new ArrayList() [ strtab, symtab, indirect_symbols, reloc_table ],
+      dark_sections := new ArrayList() [ strtab, symtab, indirect_symbols,
+         text_reloc_table, data_reloc_table ],
       layout := new Layouter(),
       local_calls := new ArrayList(),
       dylib_calls := new ArrayList(),
@@ -71,7 +75,7 @@ protocol MachO is ObjectFormat {
     symtab.macho := result;
     result;
   }
-  
+
   /**
    * Write the contents of this binary to the given output stream.  See FFR
    * fig. 1.
@@ -106,7 +110,7 @@ protocol MachO is ObjectFormat {
     def sizeofcmds := end_info.end - start_info.start;
     out.write_int32(sizeofcmds);
     out.write_int32(5);
-    assert_equal(info.end, out.length);  
+    assert_equal(info.end, out.length);
   }
 
   def this.encode_load_commands(out) {
@@ -152,7 +156,7 @@ protocol MachO is ObjectFormat {
     def offset := this.data.add_code(code);
     this.symtab.add_data_segment_symbol(name, offset, code.length);
   }
-  
+
   def this.nsects => this.sections.length;
 
   def this.ncmds => 3;
@@ -263,7 +267,7 @@ protocol MachO is ObjectFormat {
       if section.nreloc = 0 then
         out.write_int32(0);
       else
-        out.write_int32(this.offset_of(this.reloc_table));
+        out.write_int32(this.offset_of(section.reloc_table));
       out.write_int32(section.nreloc);
       out.write_int32(section.flags);
       out.write_int32(0);
@@ -314,25 +318,29 @@ protocol MachO is ObjectFormat {
       this.symtab.add_extern_symbol(name);
     }
     def entry := new CallRelocationInfo(this.text, relocation);
-    this.reloc_table.add_entry(entry);
+    this.text_reloc_table.add_entry(entry);
   }
 
   def this.preprocess_symbol(relocation, symbol is StringSymbol) {
-    this.reloc_table.add_entry(new CallRelocationInfo(this.text, relocation));
+    this.text_reloc_table.add_entry(new CallRelocationInfo(this.text, relocation));
     this.cstrings.ensure(symbol.value);
+  }
+
+  def this.preprocess_symbol(relocation, symbol is DataSymbol) {
+    this.data_reloc_table.add_entry(new DataRelocationInfo(this.data, relocation));
   }
 
   def this.preprocess_symbol(relocation, symbol is LocalSymbol) {
     if not relocation.is_relative then {
       def section := this.symtab.local_map[symbol.name].section;
-      this.reloc_table.add_entry(new CallRelocationInfo(section, relocation));
+      this.text_reloc_table.add_entry(new CallRelocationInfo(section, relocation));
     }
   }
 
   def this.symbol_address(target is DylibSymbol) {
     def jump_table_address := this.offset_of(this.jump_table);
     def index := this.dysym_indices[target.name];
-    jump_table_address + (5 * index);  
+    jump_table_address + (5 * index);
   }
 
   def this.symbol_address(target is LocalSymbol)
@@ -340,6 +348,9 @@ protocol MachO is ObjectFormat {
 
   def this.symbol_address(target is StringSymbol)
    => this.offset_of(this.cstrings) + this.cstrings[target.value];
+
+  def this.symbol_address(target is DataSymbol)
+   => this.offset_of(this.data) + target.value;
 
   def this.process_relocation(relocation) {
     def target_addr := this.symbol_address(relocation.target);
